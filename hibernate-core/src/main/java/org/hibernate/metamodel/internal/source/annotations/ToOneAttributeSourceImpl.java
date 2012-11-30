@@ -46,6 +46,7 @@ import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
+import org.hibernate.type.ForeignKeyDirection;
 
 /**
  * @author Hardy Ferentschik
@@ -66,11 +67,11 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 
 	@Override
 	public Nature getNature() {
-		if ( MappedAttribute.Nature.ONE_TO_ONE.equals( associationAttribute.getNature() ) ) {
-			return Nature.ONE_TO_ONE;
-		}
-		else if ( MappedAttribute.Nature.MANY_TO_ONE.equals( associationAttribute.getNature() ) ) {
+		if ( MappedAttribute.Nature.MANY_TO_ONE.equals( associationAttribute.getNature() ) ) {
 			return Nature.MANY_TO_ONE;
+		}
+		else if ( MappedAttribute.Nature.ONE_TO_ONE.equals( associationAttribute.getNature() ) ) {
+				throw new UnsupportedOperationException( "One-to-one using annotations is not supported yet." );
 		}
 		else {
 			throw new AssertionError(
@@ -175,6 +176,13 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 		sb.append( ", cascadeStyles=" ).append( cascadeStyles );
 		sb.append( '}' );
 		return sb.toString();
+	}
+
+	@Override
+	public ForeignKeyDirection getForeignKeyDirection() {
+		return getNature() == Nature.ONE_TO_ONE && !associationAttribute.isOptional() ?
+				ForeignKeyDirection.FROM_PARENT :
+				ForeignKeyDirection.TO_PARENT;
 	}
 
 	public class AnnotationJoinColumnResolutionDelegate

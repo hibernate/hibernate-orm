@@ -42,7 +42,6 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -311,7 +310,6 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testProxyEviction() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

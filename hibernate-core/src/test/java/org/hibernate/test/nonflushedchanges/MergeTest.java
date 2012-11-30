@@ -12,7 +12,6 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.criterion.Projections;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 import static org.junit.Assert.assertEquals;
@@ -67,7 +66,6 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeBidiPrimayKeyOneToOne() throws Exception {
 		rebuildSessionFactory();

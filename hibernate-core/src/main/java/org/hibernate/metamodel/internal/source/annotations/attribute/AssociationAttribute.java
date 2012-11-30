@@ -77,6 +77,7 @@ public class AssociationAttribute extends MappedAttribute {
 	private final boolean isOrphanRemoval;
 	private final FetchStyle fetchStyle;
 	private final boolean mapsId;
+	private final boolean hasPrimaryKeyJoinColumn;
 	private final String referencedIdAttributeName;
 	private final List<Column> joinColumnValues;
 	private final AnnotationInstance joinTableAnnotation;
@@ -130,6 +131,7 @@ public class AssociationAttribute extends MappedAttribute {
 		this.fetchStyle = determineFetchStyle();
 		this.referencedIdAttributeName = determineMapsId();
 		this.mapsId = referencedIdAttributeName != null;
+		this.hasPrimaryKeyJoinColumn = determineHasPrimaryKeyJoinColumn();
 
 		this.joinTableAnnotation = determineExplicitJoinTable( annotations );
 	}
@@ -168,6 +170,10 @@ public class AssociationAttribute extends MappedAttribute {
 
 	public boolean mapsId() {
 		return mapsId;
+	}
+
+	public boolean hasPrimaryKeyJoinColumn() {
+		return hasPrimaryKeyJoinColumn;
 	}
 
 	public List<Column> getJoinColumnValues() {
@@ -408,6 +414,12 @@ public class AssociationAttribute extends MappedAttribute {
 			);
 		}
 		return JandexHelper.getValue( mapsIdAnnotation, "value", String.class );
+	}
+
+	private boolean determineHasPrimaryKeyJoinColumn() {
+		AnnotationInstance primaryKeyJoinColumnAnnotation = JandexHelper.getSingleAnnotation( annotations(), JPADotNames.PRIMARY_KEY_JOIN_COLUMN );
+		AnnotationInstance primaryKeyJoinColumnsAnnotation = JandexHelper.getSingleAnnotation( annotations(), JPADotNames.PRIMARY_KEY_JOIN_COLUMNS );
+		return primaryKeyJoinColumnAnnotation != null || primaryKeyJoinColumnsAnnotation != null;
 	}
 
 	private List<Column> determineJoinColumnAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {

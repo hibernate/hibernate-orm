@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -27,49 +27,51 @@ import java.util.List;
 
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
-import org.hibernate.jaxb.spi.hbm.JaxbManyToOneElement;
+import org.hibernate.jaxb.spi.hbm.JaxbOneToOneElement;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.type.ForeignKeyDirection;
 
 /**
- * Implementation for {@code <many-to-one/>} mappings
+ * Implementation for {@code <one-to-one/>} mappings
  *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
-	private final JaxbManyToOneElement manyToOneElement;
+class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
+	private final JaxbOneToOneElement oneToOneElement;
 	private final List<RelationalValueSource> valueSources;
 
-	ManyToOneAttributeSourceImpl(
+	OneToOneAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
-			final JaxbManyToOneElement manyToOneElement,
+			final JaxbOneToOneElement oneToOneElement,
 			final String logicalTableName,
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
-		super( sourceMappingDocument, naturalIdMutability, manyToOneElement.getPropertyRef() );
-		this.manyToOneElement = manyToOneElement;
+		super( sourceMappingDocument, naturalIdMutability, oneToOneElement.getPropertyRef() );
+		this.oneToOneElement = oneToOneElement;
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getColumnAttribute() {
-						return manyToOneElement.getColumnAttribute();
+						// Not applicable to one-to-one
+						return null;
 					}
 
 					@Override
 					public String getFormulaAttribute() {
-						return manyToOneElement.getFormulaAttribute();
+						return oneToOneElement.getFormulaAttribute();
 					}
 
 					@Override
 					public List<JaxbColumnElement> getColumn() {
-						return manyToOneElement.getColumn();
+						// Not applicable to one-to-one
+						return null;
 					}
 
 					@Override
 					public List<String> getFormula() {
-						return manyToOneElement.getFormula();
+						return oneToOneElement.getFormula();
 					}
 
 					@Override
@@ -79,12 +81,12 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 
 					@Override
 					public boolean isIncludedInInsertByDefault() {
-						return manyToOneElement.isInsert();
+						return true;
 					}
 
 					@Override
 					public boolean isIncludedInUpdateByDefault() {
-						return manyToOneElement.isUpdate();
+						return false;
 					}
 				}
 		);
@@ -92,63 +94,68 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 
 	@Override
 	public String getName() {
-			return manyToOneElement.getName();
+		return oneToOneElement.getName();
 	}
 
 	@Override
 	public String getPropertyAccessorName() {
-		return manyToOneElement.getAccess();
+		return oneToOneElement.getAccess();
 	}
 
 	@Override
 	public boolean isIncludedInOptimisticLocking() {
-		return manyToOneElement.isOptimisticLock();
+		return false;
 	}
 
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
-		return Helper.interpretCascadeStyles( manyToOneElement.getCascade(), bindingContext() );
+		return Helper.interpretCascadeStyles( oneToOneElement.getCascade(), bindingContext() );
 	}
 
 	@Override
 	protected String getFetchSelectionString() {
-		return manyToOneElement.getFetch() != null ?
-				manyToOneElement.getFetch().value() :
+		return oneToOneElement.getFetch() != null ?
+				oneToOneElement.getFetch().value() :
 				null;
 	}
 
 	@Override
 	protected String getLazySelectionString() {
-		return manyToOneElement.getLazy() != null ?
-				manyToOneElement.getLazy().value() :
+		return oneToOneElement.getLazy() != null ?
+				oneToOneElement.getLazy().value() :
 				null;
 	}
 
 	@Override
 	protected String getOuterJoinSelectionString() {
-		return manyToOneElement.getOuterJoin() != null ?
-				manyToOneElement.getOuterJoin().value() :
+		return oneToOneElement.getOuterJoin() != null ?
+				oneToOneElement.getOuterJoin().value() :
 				null;
 	}
 
 	@Override
 	public Nature getNature() {
-		return Nature.MANY_TO_ONE;
+		return Nature.ONE_TO_ONE;
+	}
+
+	@Override
+	public boolean isVirtualAttribute() {
+		return false;
 	}
 
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
-		return manyToOneElement.isInsert();
+		return true;
 	}
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		return manyToOneElement.isUpdate();
+		return true;
 	}
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		return ! Helper.getValue( manyToOneElement.isNotNull(), false );
+		return false;
 	}
 
 	@Override
@@ -158,24 +165,23 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 
 	@Override
 	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
-		return manyToOneElement.getMeta();
+		return oneToOneElement.getMeta();
 	}
 
 	@Override
 	public String getReferencedEntityName() {
-		return manyToOneElement.getClazz() != null
-				? manyToOneElement.getClazz()
-				: manyToOneElement.getEntityName();
+		return oneToOneElement.getClazz() != null
+				? oneToOneElement.getClazz()
+				: oneToOneElement.getEntityName();
 	}
 
 	@Override
 	public String getExplicitForeignKeyName() {
-		return manyToOneElement.getForeignKey();
+		return oneToOneElement.getForeignKey();
 	}
 
 	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
-		return ForeignKeyDirection.TO_PARENT;
+		return oneToOneElement.isConstrained()  ? ForeignKeyDirection.FROM_PARENT : ForeignKeyDirection.TO_PARENT;
 	}
-
 }

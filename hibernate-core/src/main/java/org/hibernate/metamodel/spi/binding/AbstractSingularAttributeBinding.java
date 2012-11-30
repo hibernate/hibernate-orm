@@ -113,5 +113,9 @@ public abstract class AbstractSingularAttributeBinding
 		return naturalIdMutability;
 	}
 
+	public void setAlternateUniqueKey(boolean isAlternateUniqueKey) {
+		super.setAlternateUniqueKey( isAlternateUniqueKey );
+	}
+
 	protected abstract void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings);
 }

@@ -152,4 +152,8 @@ public final class CollectionHelper {
 	public static boolean isNotEmpty(Object[] objs){
 		return !isEmpty( objs );
 	}
+
+	public static <T> List<T> createEmptyList(Class<T> elementClass) {
+		return Collections.emptyList();
+	}
 }

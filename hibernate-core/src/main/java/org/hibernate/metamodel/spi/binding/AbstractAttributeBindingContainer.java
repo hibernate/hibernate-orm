@@ -145,6 +145,33 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 	}
 
 	@Override
+	public OneToOneAttributeBinding makeOneToOneAttributeBinding(
+			SingularAttribute attribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
+			MetaAttributeContext metaAttributeContext,
+			EntityBinding referencedEntityBinding,
+			SingularAttributeBinding referencedAttributeBinding,
+			boolean isConstrained) {
+		final OneToOneAttributeBinding binding = new OneToOneAttributeBinding(
+				this,
+				attribute,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				naturalIdMutability,
+				metaAttributeContext,
+				referencedEntityBinding,
+				referencedAttributeBinding,
+				isConstrained
+		);
+		registerAttributeBinding( binding );
+		return binding;
+	}
+
+	@Override
 	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(
 			SingularAttribute attribute,
 			String propertyAccessorName,

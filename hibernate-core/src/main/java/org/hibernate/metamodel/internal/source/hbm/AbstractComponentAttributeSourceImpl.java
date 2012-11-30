@@ -113,8 +113,12 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	}
 
 	protected AttributeSource buildAttributeSource(JaxbOneToOneElement attributeElement) {
-		// todo : implement
-		throw new NotYetImplementedException();
+		return new OneToOneAttributeSourceImpl(
+				sourceMappingDocument(),
+				attributeElement,
+				logicalTableName,
+				naturalIdMutability
+		);
 	}
 
 	protected AttributeSource buildAttributeSource(JaxbAnyElement attributeElement) {

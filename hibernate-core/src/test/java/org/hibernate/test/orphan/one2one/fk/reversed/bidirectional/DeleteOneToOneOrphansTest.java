@@ -38,6 +38,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class DeleteOneToOneOrphansTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -64,7 +65,6 @@ public class DeleteOneToOneOrphansTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOrphanedWhileManaged() {
 		createData();
 

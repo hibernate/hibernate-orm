@@ -142,6 +142,33 @@ public abstract class AbstractCompositeAttributeBindingContainer
 	}
 
 	@Override
+	public OneToOneAttributeBinding makeOneToOneAttributeBinding(
+			SingularAttribute attribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
+			MetaAttributeContext metaAttributeContext,
+			EntityBinding referencedEntityBinding,
+			SingularAttributeBinding referencedAttributeBinding,
+			boolean isConstrained) {
+		if ( !isModifiable() ) {
+			throw new UnsupportedOperationException( "Attribute bindings are read-only and cannot be modified." );
+		}
+		return super.makeOneToOneAttributeBinding(
+				attribute,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				naturalIdMutability,
+				metaAttributeContext,
+				referencedEntityBinding,
+				referencedAttributeBinding,
+				isConstrained
+		);
+	}
+
+	@Override
 	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(
 			SingularAttribute attribute,
 			String propertyAccessorName,

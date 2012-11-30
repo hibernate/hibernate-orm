@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -36,7 +35,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-565" )
-@FailureExpectedWithNewMetamodel
 public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

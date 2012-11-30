@@ -214,7 +214,16 @@ public abstract class AbstractEntitySourceImpl
 											   List<JaxbOneToOneElement> elements,
 											   String logicalTableName,
 											   SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
-		// todo : implement
+		for ( JaxbOneToOneElement element : elements ) {
+			results.add(
+					new OneToOneAttributeSourceImpl(
+							sourceMappingDocument(),
+							element,
+							logicalTableName,
+							naturalIdMutability
+					)
+			);
+		}
 	}
 
 	protected void processAnyAttributes(List<AttributeSource> results,
@@ -288,9 +297,9 @@ public abstract class AbstractEntitySourceImpl
 
 
 	private Set<SecondaryTableSource> buildSecondaryTables() {
-		//if ( ! JoinElementSource.class.isInstance( entityElement ) ) {
-		//	return Collections.emptySet();
-		//}
+		if ( ! JoinElementSource.class.isInstance( entityElement ) ) {
+			return Collections.emptySet();
+		}
 
 		final Set<SecondaryTableSource> secondaryTableSources = new HashSet<SecondaryTableSource>();
 		for ( JaxbJoinElement joinElement :  ( (JoinElementSource) entityElement ).getJoin() ) {

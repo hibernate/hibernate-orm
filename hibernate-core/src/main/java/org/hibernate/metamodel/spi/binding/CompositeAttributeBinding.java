@@ -365,6 +365,30 @@ public class CompositeAttributeBinding
 	}
 
 	@Override
+	public OneToOneAttributeBinding makeOneToOneAttributeBinding(
+			SingularAttribute attribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			NaturalIdMutability naturalIdMutability,
+			MetaAttributeContext metaAttributeContext,
+			EntityBinding referencedEntityBinding,
+			SingularAttributeBinding referencedAttributeBinding,
+			boolean isConstrained) {
+		return compositeAttributeBindingContainer.makeOneToOneAttributeBinding(
+				attribute,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				naturalIdMutability,
+				metaAttributeContext,
+				referencedEntityBinding,
+				referencedAttributeBinding,
+				isConstrained
+		);
+	}
+
+	@Override
 	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(
 			SingularAttribute attribute,
 			String propertyAccessorName,

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,8 +23,10 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
@@ -32,12 +34,12 @@ import org.hibernate.metamodel.spi.source.MetaAttributeContext;
  * TODO : javadoc
  *
  * @author Gail Badner
- * @author Steve Ebersole
  */
-public class ManyToOneAttributeBinding
+public class OneToOneAttributeBinding
 		extends AbstractSingularAssociationAttributeBinding {
+	final boolean isConstrained;
 
-	public ManyToOneAttributeBinding(
+	public OneToOneAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
 			String propertyAccessorName,
@@ -47,7 +49,7 @@ public class ManyToOneAttributeBinding
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
-			List<RelationalValueBinding> relationalValueBindings) {
+			boolean isConstrained) {
 		super(
 				container,
 				attribute,
@@ -56,13 +58,17 @@ public class ManyToOneAttributeBinding
 				lazy,
 				naturalIdMutability,
 				metaAttributeContext,
-				referencedEntityBinding, relationalValueBindings, referencedAttributeBinding
+				referencedEntityBinding,
+				CollectionHelper.createEmptyList( RelationalValueBinding.class ),
+				referencedAttributeBinding
+
 		);
+		this.isConstrained = isConstrained;
 	}
 
 	@Override
 	public boolean isNullable() {
-		return hasNullableRelationalValueBinding( relationalValueBindings );
+		return !isConstrained;
 	}
 
 }

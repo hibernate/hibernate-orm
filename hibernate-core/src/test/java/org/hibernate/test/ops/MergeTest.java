@@ -35,7 +35,6 @@ import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -83,7 +82,6 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testMergeBidiPrimayKeyOneToOne() throws Exception {
 		rebuildSessionFactory();
 		Session s = openSession();

@@ -167,6 +167,33 @@ public interface AttributeBindingContainer {
 	 * Factory method for many-to-one attribute bindings.
 	 *
 	 *
+	 *
+	 * @param attribute The attribute for which to make a binding.
+	 * @param propertyAccessorName
+	 * @param includedInOptimisticLocking
+	 * @param lazy
+	 * @param metaAttributeContext
+	 * @param referencedEntityBinding
+	 * @param referencedAttributeBinding
+	 * @param isConstrained
+	 * @return The attribute binding instance.
+	 */
+	public OneToOneAttributeBinding makeOneToOneAttributeBinding(
+			SingularAttribute attribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean lazy,
+			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
+			MetaAttributeContext metaAttributeContext,
+			EntityBinding referencedEntityBinding,
+			SingularAttributeBinding referencedAttributeBinding,
+			boolean isConstrained);
+
+
+	/**
+	 * Factory method for many-to-one attribute bindings.
+	 *
+	 *
 	 * @param attribute The attribute for which to make a binding.
 	 * @param propertyAccessorName
 	 * @param includedInOptimisticLocking

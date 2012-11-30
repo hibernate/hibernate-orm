@@ -79,6 +79,7 @@ import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.binding.ManyToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.OneToManyPluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.OneToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
@@ -157,6 +158,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.jboss.logging.Logger;
@@ -276,7 +279,7 @@ public class Binder {
 
 	private AttributeBinding attributeBinding( final String entityName, final String attributeName ) {
 		// Check if binding has already been created
-		final EntityBinding entityBinding = findOrBindingEntityBinding( entityName );
+		final EntityBinding entityBinding = findOrBindEntityBinding( entityName );
 		final AttributeSource attributeSource = attributeSourcesByName.get( attributeSourcesByNameKey( entityName, attributeName ) );
 		bindAttribute( entityBinding, attributeSource );
 		return entityBinding.locateAttributeBinding( attributeName );
@@ -978,6 +981,21 @@ public class Binder {
 		}
 	}
 
+	private SingularAttributeBinding determineReferencedAttributeBinding(
+			ForeignKeyContributingSource foreignKeyContributingSource,
+			EntityBinding referencedEntityBinding) {
+		final JoinColumnResolutionDelegate resolutionDelegate =
+				foreignKeyContributingSource.getForeignKeyTargetColumnResolutionDelegate();
+		final JoinColumnResolutionContext resolutionContext = resolutionDelegate == null ? null : new JoinColumnResolutionContextImpl(
+				referencedEntityBinding
+		);
+		return determineReferencedAttributeBinding(
+				resolutionDelegate,
+				resolutionContext,
+				referencedEntityBinding
+		);
+	}
+
 	private ForeignKey bindForeignKey(
 			String foreignKeyName,
 			List<Column> sourceColumns,
@@ -1228,112 +1246,233 @@ public class Binder {
 				base
 		);
 	}
+	private static interface ToOneAttributeBindingContext {
+		SingularAssociationAttributeBinding createToOneAttributeBinding(
+				EntityBinding referencedEntityBinding,
+				SingularAttributeBinding referencedAttributeBinding
+		);
+		EntityType resolveEntityType(
+				EntityBinding referencedEntityBinding,
+				SingularAttributeBinding referencedAttributeBinding
+		);
+	}
 
 	private ManyToOneAttributeBinding bindManyToOneAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final ToOneAttributeSource attributeSource,
 			SingularAttribute attribute ) {
-		if( attribute == null ){
-			attribute = createSingularAttribute( attributeBindingContainer, attributeSource );
-		}
+		final SingularAttribute actualAttribute =
+				attribute != null ?
+						attribute :
+						createSingularAttribute( attributeBindingContainer, attributeSource );
 
-		final TableSpecification table = locateTableSpecificationForAttribute( attributeBindingContainer, attributeSource );
+		ToOneAttributeBindingContext toOneAttributeBindingContext = new ToOneAttributeBindingContext() {
+			@Override
+			public SingularAssociationAttributeBinding createToOneAttributeBinding(
+					EntityBinding referencedEntityBinding,
+					SingularAttributeBinding referencedAttributeBinding
+			) {
+				/**
+				 * this is not correct, here, if no @JoinColumn defined, we simply create the FK column only with column calucated
+				 * but what we should do is get all the column info from the referenced column(s), including nullable, size etc.
+				 */
+				final TableSpecification table = locateTableSpecificationForAttribute( attributeBindingContainer, attributeSource );
+				final List<RelationalValueBinding> relationalValueBindings =
+						bindValues(
+								attributeBindingContainer,
+								attributeSource,
+								actualAttribute,
+								table,
+								attributeSource.getDefaultNamingStrategies(
+										attributeBindingContainer.seekEntityBinding().getEntity().getName(),
+										table.getLogicalName().getText(),
+										referencedAttributeBinding
+								),
+								false
+						);
 
-		//find the referenced entitybinding
-		ValueHolder< Class< ? >> referencedJavaTypeValue = createSingularAttributeJavaType( attribute );
-		final String referencedEntityName =
-				bindingContext().qualifyClassName( attributeSource.getReferencedEntityName() != null
-						? attributeSource.getReferencedEntityName()
-						: referencedJavaTypeValue.getValue().getName() );
-		final EntityBinding referencedEntityBinding = findOrBindingEntityBinding( referencedEntityName );
-		//now find the referenced attribute binding, either the referenced entity's id attribute or the referenced attribute
-		//todo referenced entityBinding null check?
-		// Foreign key...
-		final JoinColumnResolutionDelegate resolutionDelegate =
-				attributeSource.getForeignKeyTargetColumnResolutionDelegate();
-		final JoinColumnResolutionContext resolutionContext = resolutionDelegate == null ? null : new JoinColumnResolutionContextImpl(
-				referencedEntityBinding,
-				attributeSource
-		);
-		final AttributeBinding referencedAttributeBinding = determineReferencedAttributeBinding(
-				resolutionDelegate,
-				resolutionContext,
-				referencedEntityBinding
-		);
-		if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
-			throw bindingContext().makeMappingException(
-					String.format(
-							"Attribute [%s] defined foreign key referencing non-singular attribute [%s]",
-							attributeSource.getName(),
-							referencedAttributeBinding.getAttribute().getName() ) );
-		}
-		/**
-		 * this is not correct, here, if no @JoinColumn defined, we simply create the FK column only with column calucated
-		 * but what we should do is get all the column info from the referenced column(s), including nullable, size etc.
-		 */
-		final List<RelationalValueBinding> relationalValueBindings =
-				bindValues(
-						attributeBindingContainer,
-						attributeSource,
-						attribute,
-						table,
-						attributeSource.getDefaultNamingStrategies(
-								attributeBindingContainer.seekEntityBinding().getEntity().getName(),
-								table.getLogicalName().getText(),
-								referencedAttributeBinding
-						),
-						false
+				// todo : currently a chicken-egg problem here between creating the attribute binding and binding its FK values...
+				// now we have everything to create a ManyToOneAttributeBinding
+				return attributeBindingContainer.makeManyToOneAttributeBinding(
+								actualAttribute,
+								propertyAccessorName( attributeSource ),
+								attributeSource.isIncludedInOptimisticLocking(),
+								attributeSource.isLazy(),
+								attributeSource.getNaturalIdMutability(),
+								createMetaAttributeContext( attributeBindingContainer, attributeSource ),
+								referencedEntityBinding,
+								referencedAttributeBinding,
+								relationalValueBindings
+						);
+			}
+
+			@Override
+			public EntityType resolveEntityType(
+					EntityBinding referencedEntityBinding,
+					SingularAttributeBinding referencedAttributeBinding) {
+				final boolean isRefToPk =
+						referencedEntityBinding
+								.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding(
+								referencedAttributeBinding );
+				final String uniqueKeyAttributeName =
+						isRefToPk ? null : referencedAttributeBinding.getAttribute().getName();
+				return metadata.getTypeResolver().getTypeFactory().manyToOne(
+						referencedEntityBinding.getEntity().getName(),
+						uniqueKeyAttributeName,
+						attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
+						attributeSource.isUnWrapProxy(),
+						true, //TODO: is isEmbedded() obsolete?
+						false, //TODO: should be attributeBinding.isIgnoreNotFound(),
+						false //TODO: determine if isLogicalOneToOne
 				);
+			}
+		};
 
-		// todo : currently a chicken-egg problem here between creating the attribute binding and binding its FK values...
-		// now we have everything to create a ManyToOneAttributeBinding
-		final ManyToOneAttributeBinding attributeBinding =
-				attributeBindingContainer.makeManyToOneAttributeBinding(
-						attribute,
+		final ManyToOneAttributeBinding attributeBinding = (ManyToOneAttributeBinding) bindToOneAttribute(
+				actualAttribute,
+				attributeSource,
+				toOneAttributeBindingContext
+		);
+		typeHelper.bindJdbcDataType(
+				attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping(),
+				attributeBinding.getRelationalValueBindings()
+		);
+		bindForeignKey(
+				attributeSource.getExplicitForeignKeyName(),
+				extractColumnsFromRelationalValueBindings( attributeBinding.getRelationalValueBindings() ),
+				determineForeignKeyTargetColumns(
+						attributeBinding.getReferencedEntityBinding(),
+						attributeSource
+				)
+		);
+		return attributeBinding;
+	}
+
+	private OneToOneAttributeBinding bindOneToOneAttribute(
+			final AttributeBindingContainer attributeBindingContainer,
+			final ToOneAttributeSource attributeSource,
+			SingularAttribute attribute ) {
+		final SingularAttribute actualAttribute =
+				attribute != null ?
+						attribute :
+						createSingularAttribute( attributeBindingContainer, attributeSource );
+
+		ToOneAttributeBindingContext toOneAttributeBindingContext = new ToOneAttributeBindingContext() {
+			@Override
+			public SingularAssociationAttributeBinding createToOneAttributeBinding(
+					EntityBinding referencedEntityBinding,
+					SingularAttributeBinding referencedAttributeBinding
+			) {
+				// todo : currently a chicken-egg problem here between creating the attribute binding and binding its FK values...
+				return attributeBindingContainer.makeOneToOneAttributeBinding(
+						actualAttribute,
 						propertyAccessorName( attributeSource ),
 						attributeSource.isIncludedInOptimisticLocking(),
 						attributeSource.isLazy(),
 						attributeSource.getNaturalIdMutability(),
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 						referencedEntityBinding,
-						(SingularAttributeBinding) referencedAttributeBinding,
-						relationalValueBindings
+						referencedAttributeBinding,
+						attributeSource.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT
 				);
+			}
 
-		bindForeignKey(
-				attributeSource.getExplicitForeignKeyName(),
-				extractColumnsFromRelationalValueBindings( attributeBinding.getRelationalValueBindings() ),
-				determineForeignKeyTargetColumns( referencedEntityBinding, attributeSource )
+			@Override
+			public EntityType resolveEntityType(
+					EntityBinding referencedEntityBinding,
+					SingularAttributeBinding referencedAttributeBinding) {
+				final boolean isRefToPk =
+						referencedEntityBinding
+								.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding(
+								referencedAttributeBinding );
+				final String uniqueKeyAttributeName =
+						isRefToPk ? null : referencedAttributeBinding.getAttribute().getName();
+				return metadata.getTypeResolver().getTypeFactory().oneToOne(
+						referencedEntityBinding.getEntity().getName(),
+						attributeSource.getForeignKeyDirection(),
+						uniqueKeyAttributeName,
+						attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
+						attributeSource.isUnWrapProxy(),
+						true, //TODO: is isEmbedded() obsolete?
+						attributeBindingContainer.seekEntityBinding().getEntityName(),
+						actualAttribute.getName()
+				);
+			}
+		};
+
+		OneToOneAttributeBinding attributeBinding = (OneToOneAttributeBinding) bindToOneAttribute(
+				actualAttribute,
+				attributeSource,
+				toOneAttributeBindingContext
 		);
-		attributeBinding.setCascadeStyle( determineCascadeStyle( attributeSource.getCascadeStyles() ) );
-		attributeBinding.setFetchTiming( attributeSource.getFetchTiming() );
-		attributeBinding.setFetchStyle( attributeSource.getFetchStyle() );
-		attributeBinding.setUnWrapProxy( attributeSource.isUnWrapProxy() );
+		if ( attributeSource.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT ) {
+			List<Column> foreignKeyColumns = extractColumnsFromRelationalValueBindings(
+					attributeBinding
+							.getContainer()
+							.seekEntityBinding()
+							.getHierarchyDetails()
+							.getEntityIdentifier()
+							.getAttributeBinding()
+							.getRelationalValueBindings()
+			);
+
+			bindForeignKey(
+					attributeSource.getExplicitForeignKeyName(),
+					foreignKeyColumns,
+					determineForeignKeyTargetColumns(
+							attributeBinding.getReferencedEntityBinding(),
+							attributeSource
+					)
+			);
+		}
+		return attributeBinding;
+	}
+
+	private SingularAssociationAttributeBinding bindToOneAttribute(
+			SingularAttribute attribute,
+			ToOneAttributeSource attributeSource,
+			final ToOneAttributeBindingContext attributeBindingContext) {
+
+		final ValueHolder< Class< ? >> referencedEntityJavaTypeValue = createSingularAttributeJavaType( attribute );
+		final EntityBinding referencedEntityBinding = findOrBindEntityBinding(
+				referencedEntityJavaTypeValue,
+				attributeSource.getReferencedEntityName()
+		);
+
 		// Type resolution...
 		if ( !attribute.isTypeResolved() ) {
 			attribute.resolveType( referencedEntityBinding.getEntity() );
 		}
-		final boolean isRefToPk =
-				referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding(
-						referencedAttributeBinding );
-		final String uniqueKeyAttributeName = isRefToPk ? null : referencedAttributeBinding.getAttribute().getName();
-		Type resolvedType =
-				metadata.getTypeResolver().getTypeFactory().manyToOne(
-						attributeBinding.getReferencedEntityName(),
-						uniqueKeyAttributeName,
-						attributeBinding.getFetchTiming() != FetchTiming.IMMEDIATE,
-						attributeBinding.isUnWrapProxy(),
-						true, //TODO: is isEmbedded() obsolete?
-						false, //TODO: should be attributeBinding.isIgnoreNotFound(),
-						false //TODO: determine if isLogicalOneToOne
+
+		//now find the referenced attribute binding, either the referenced entity's id attribute or the referenced attribute
+		//todo referenced entityBinding null check?
+		final SingularAttributeBinding referencedAttributeBinding = determineReferencedAttributeBinding(
+				attributeSource,
+				referencedEntityBinding
+		);
+		// todo : currently a chicken-egg problem here between creating the attribute binding and binding its FK values...
+		// now we have everything to create the attribute binding
+		final SingularAssociationAttributeBinding attributeBinding =
+				attributeBindingContext.createToOneAttributeBinding(
+						referencedEntityBinding,
+						referencedAttributeBinding
 				);
+
+		if ( referencedAttributeBinding != referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() ) {
+			referencedAttributeBinding.setAlternateUniqueKey( true );
+		}
+
+		attributeBinding.setCascadeStyle( determineCascadeStyle( attributeSource.getCascadeStyles() ) );
+		attributeBinding.setFetchTiming( attributeSource.getFetchTiming() );
+		attributeBinding.setFetchStyle( attributeSource.getFetchStyle() );
+
+		final Type resolvedType =
+				attributeBindingContext.resolveEntityType( referencedEntityBinding, referencedAttributeBinding );
 		bindHibernateTypeDescriptor(
 				attributeBinding.getHibernateTypeDescriptor(),
 				attributeSource.getTypeInformation(),
-				referencedJavaTypeValue );
+				referencedEntityJavaTypeValue );
 		bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
-		typeHelper.bindJdbcDataType( resolvedType, relationalValueBindings );
-
 
 		return attributeBinding;
 	}
@@ -1521,7 +1660,7 @@ public class Binder {
 				defaultElementJavaTypeName
 		);
 
-		Type resolvedElementType = metadata.getTypeResolver().getTypeFactory().manyToOne(
+		final Type resolvedElementType = metadata.getTypeResolver().getTypeFactory().manyToOne(
 				referencedEntityBinding.getEntity().getName(),
 				elementSource.getReferencedEntityAttributeName(),
 				false,
@@ -1767,7 +1906,7 @@ public class Binder {
 						createAttributePath( attributeBinding )
 				) );
 			}
-			EntityBinding referencedEntityBinding = findOrBindingEntityBinding( referencedEntityName );
+			EntityBinding referencedEntityBinding = findOrBindEntityBinding( referencedEntityName );
  			bindOneToManyCollectionKey( attributeBinding, attributeSource, referencedEntityBinding );
 			bindOneToManyCollectionElement(
 					(OneToManyPluralAttributeElementBinding) attributeBinding.getPluralAttributeElementBinding(),
@@ -1789,7 +1928,7 @@ public class Binder {
 						createAttributePath( attributeBinding )
 				) );
 			}
-			EntityBinding referencedEntityBinding = findOrBindingEntityBinding( referencedEntityName );
+			EntityBinding referencedEntityBinding = findOrBindEntityBinding( referencedEntityName );
 			bindManyToManyCollectionKey( attributeBinding, attributeSource, referencedEntityBinding );
 			bindManyToManyCollectionElement(
 					(ManyToManyPluralAttributeElementBinding) attributeBinding.getPluralAttributeElementBinding(),
@@ -1955,6 +2094,12 @@ public class Binder {
 		switch ( nature ) {
 			case BASIC:
 				return bindBasicAttribute( attributeBindingContainer, attributeSource, attribute );
+			case ONE_TO_ONE:
+				return bindOneToOneAttribute(
+						attributeBindingContainer,
+						ToOneAttributeSource.class.cast( attributeSource ),
+						attribute
+				);
 			case MANY_TO_ONE:
 				return bindManyToOneAttribute(
 						attributeBindingContainer,
@@ -2600,7 +2745,7 @@ public class Binder {
 		return ( SingularAttributeBinding ) referencedAttributeBinding;
 	}
 
-	private AttributeBinding determineReferencedAttributeBinding(
+	private SingularAttributeBinding determineReferencedAttributeBinding(
 			JoinColumnResolutionDelegate resolutionDelegate,
 			JoinColumnResolutionContext resolutionContext,
 			EntityBinding referencedEntityBinding) {
@@ -2609,9 +2754,24 @@ public class Binder {
 		}
 
 		final String explicitName = resolutionDelegate.getReferencedAttributeName();
-		return explicitName != null
+		final AttributeBinding referencedAttributeBinding = explicitName != null
 				? referencedEntityBinding.locateAttributeBinding( explicitName )
 				:referencedEntityBinding.locateAttributeBinding( resolutionDelegate.getJoinColumns( resolutionContext ) );
+		if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
+			throw bindingContext().makeMappingException(
+					String.format(
+							"Foreign key references a non-singular attribute [%s]",
+							referencedAttributeBinding.getAttribute().getName() ) );
+		}
+		return (SingularAttributeBinding) referencedAttributeBinding;
+	}
+
+	private EntityBinding findOrBindEntityBinding(ValueHolder< Class< ? >> entityJavaTypeValue, String explicitEntityName) {
+		final String referencedEntityName =
+				bindingContext().qualifyClassName( explicitEntityName != null
+						? explicitEntityName
+						: entityJavaTypeValue.getValue().getName() );
+		return findOrBindEntityBinding( referencedEntityName );
 	}
 
 	/**
@@ -2619,7 +2779,7 @@ public class Binder {
 	 * @param entityName
 	 * @return
 	 */
-	private EntityBinding findOrBindingEntityBinding(final String entityName) {
+	private EntityBinding findOrBindEntityBinding(final String entityName) {
 		// Check if binding has already been created
 		EntityBinding entityBinding = metadata.getEntityBinding( entityName );
 		if ( entityBinding == null ) {
@@ -2634,7 +2794,7 @@ public class Binder {
 			if ( SubclassEntitySource.class.isInstance( entitySource ) ) {
 				String superEntityName = ( (SubclassEntitySource) entitySource ).superclassEntitySource()
 						.getEntityName();
-				EntityBinding superEntityBinding = findOrBindingEntityBinding( superEntityName );
+				EntityBinding superEntityBinding = findOrBindEntityBinding( superEntityName );
 				entityBinding = bindSubEntity( entitySource, superEntityBinding );
 			}
 			else {
@@ -2857,12 +3017,10 @@ public class Binder {
 
 	public class JoinColumnResolutionContextImpl implements JoinColumnResolutionContext {
 		private final EntityBinding referencedEntityBinding;
-		private final ToOneAttributeSource attributeSource;
 
 
-		public JoinColumnResolutionContextImpl(EntityBinding referencedEntityBinding, ToOneAttributeSource attributeSource) {
+		public JoinColumnResolutionContextImpl(EntityBinding referencedEntityBinding) {
 			this.referencedEntityBinding = referencedEntityBinding;
-			this.attributeSource = attributeSource;
 		}
 
 		@Override
@@ -2897,12 +3055,19 @@ public class Binder {
 			}
 			final AttributeBinding referencedAttributeBinding =
 					referencedEntityBinding.locateAttributeBinding( attributeName );
-			if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
+			if ( referencedAttributeBinding == null ) {
 				throw bindingContext().makeMappingException(
 						String.format(
-								"Many-to-one attribute [%s] named plural attribute as property-ref [%s]",
-								attributeSource.getName(),
-								attributeName ) );
+								"Could not resolve named property-ref [%s] against entity [%s]",
+								attributeName,
+								referencedEntityBinding.getEntity().getName() ) );
+			}
+			if ( ! referencedAttributeBinding.getAttribute().isSingular() ) {
+				throw bindingContext().makeMappingException(
+						String.format(
+								"Property-ref [%s] against entity [%s] is a plural attribute; it must be a singular attribute.",
+								attributeName,
+								referencedEntityBinding.getEntity().getName() ) );
 			}
 			List< Value > values = new ArrayList< Value >();
 			SingularAttributeBinding referencedAttributeBindingAsSingular =

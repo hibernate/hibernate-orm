@@ -77,6 +77,8 @@ public interface SingularAttributeBinding extends AttributeBinding {
 	 */
 	public NaturalIdMutability getNaturalIdMutability();
 
+	public void setAlternateUniqueKey(boolean alternateUniqueKey);
+
 	public enum NaturalIdMutability {
 		MUTABLE,
 		IMMUTABLE,

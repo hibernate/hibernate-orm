@@ -35,7 +35,6 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 import static org.junit.Assert.assertEquals;

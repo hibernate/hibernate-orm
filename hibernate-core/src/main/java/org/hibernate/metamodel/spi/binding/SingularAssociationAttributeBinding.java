@@ -41,6 +41,4 @@ public interface SingularAssociationAttributeBinding extends SingularAttributeBi
 	public EntityBinding getReferencedEntityBinding();
 
 	public SingularAttributeBinding getReferencedAttributeBinding();
-	public boolean isUnWrapProxy();
-	public void setUnWrapProxy(boolean unWrapProxy);
 }

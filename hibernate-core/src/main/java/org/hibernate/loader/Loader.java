@@ -255,13 +255,16 @@ public abstract class Loader {
 			List<AfterLoadAction> afterLoadActions) {
 		if ( dialect.useFollowOnLocking() ) {
 			LOG.usingFollowOnLocking();
-			final LockOptions lockOptions = parameters.getLockOptions();
+			// currently only one lock mode is allowed in follow-on locking
+			final LockMode lockMode = determineFollowOnLockMode( parameters.getLockOptions() );
+			final LockOptions lockOptions = new LockOptions( lockMode );
+			lockOptions.setTimeOut( parameters.getLockOptions().getTimeOut() );
+			lockOptions.setScope( parameters.getLockOptions().getScope() );
 			afterLoadActions.add(
 					new AfterLoadAction() {
-						private final LockOptions originalLockOptions = lockOptions.makeCopy();
 						@Override
 						public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
-							( (Session) session ).buildLockRequest( originalLockOptions ).lock( persister.getEntityName(), entity );
+							( (Session) session ).buildLockRequest( lockOptions ).lock( persister.getEntityName(), entity );
 						}
 					}
 			);
@@ -269,6 +272,16 @@ public abstract class Loader {
 			return true;
 		}
 		return false;
+	}
+
+	protected LockMode determineFollowOnLockMode(LockOptions lockOptions) {
+		final LockMode lockModeToUse = lockOptions.findGreatestLockMode();
+
+		if ( lockOptions.hasAliasSpecificLockModes() ) {
+			LOG.aliasSpecificLockingWithFollowOnLocking( lockModeToUse );
+		}
+
+		return lockModeToUse;
 	}
 
 	private String prependComment(String sql, QueryParameters parameters) {

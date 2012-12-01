@@ -75,7 +75,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	@FailureExpectedWithNewMetamodel
 	public void testExistingModifiableAfterSetSessionReadOnly() {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
@@ -170,7 +169,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s.close();
 
 	}
-	@FailureExpectedWithNewMetamodel
 	@Test
 	@SuppressWarnings( {"unchecked"})
 	public void testExistingReadOnlyAfterSetSessionModifiable() {
@@ -260,7 +258,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s.close();
 
 	}
-	@FailureExpectedWithNewMetamodel
 	@Test
 	@SuppressWarnings( {"unchecked"})
 	public void testExistingReadOnlyAfterSetSessionModifiableExisting() {
@@ -351,7 +348,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s.close();
 
 	}
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	@Test
  	public void testExistingReadOnlyAfterSetSessionModifiableExistingEntityReadOnly() {
@@ -445,7 +441,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testExistingReadOnlyAfterSetSessionModifiableProxyExisting() {
@@ -536,7 +531,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s.close();
 
 	}
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testExistingReadOnlyAfterSetSessionModifiableExistingProxyReadOnly() {
@@ -629,7 +623,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 	}
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultModifiableWithReadOnlyQueryForEntity() {
@@ -716,7 +709,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 	}
-	@FailureExpectedWithNewMetamodel
+
 	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultReadOnlyWithModifiableQueryForEntity() {
@@ -791,7 +784,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 	}
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultReadOnlyWithQueryForEntity() {
@@ -879,7 +871,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 	}
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultModifiableWithQueryForEntity() {
@@ -1001,7 +992,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 	}
-	@FailureExpectedWithNewMetamodel
+
 	@Test
 	@SuppressWarnings( {"unchecked"})
 	public void testDefaultReadOnlyWithModifiableFilterCollectionEntities() {
@@ -1093,7 +1084,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 	}
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultModifiableWithReadOnlyFilterCollectionEntities() {
@@ -1171,7 +1161,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 	}
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultReadOnlyWithFilterCollectionEntities() {
@@ -1260,7 +1249,6 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 	}
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultModifiableWithFilterCollectionEntities() {

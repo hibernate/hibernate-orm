@@ -48,7 +48,6 @@ import static org.junit.Assert.assertTrue;
 		condition = LazyOneToOneTest.DomainClassesInstrumentedMatcher.class,
 		message = "Test domain classes were not instrumented"
 )
-@FailureExpectedWithNewMetamodel
 public class LazyOneToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

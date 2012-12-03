@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javassist.CannotCompileException;
+import javassist.ClassPool;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.BadBytecode;
 import javassist.bytecode.Bytecode;
@@ -43,6 +44,8 @@ import javassist.bytecode.Descriptor;
 import javassist.bytecode.FieldInfo;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.Opcode;
+import javassist.bytecode.StackMapTable;
+import javassist.bytecode.stackmap.MapMaker;
 
 /**
  * The thing that handles actual class enhancement in regards to
@@ -50,6 +53,7 @@ import javassist.bytecode.Opcode;
  *
  * @author Muga Nishizawa
  * @author Steve Ebersole
+ * @author Dustin Schultz
  */
 public class FieldTransformer {
 
@@ -79,13 +83,20 @@ public class FieldTransformer {
 	                                                                + HANDLER_FIELD_DESCRIPTOR + ")V";
 
 	private FieldFilter filter;
+	
+	private ClassPool classPool;
 
 	public FieldTransformer() {
-		this(null);
+		this(null, null);
 	}
 
-	public FieldTransformer(FieldFilter f) {
+	public FieldTransformer(FieldFilter f, ClassPool c) {
 		filter = f;
+		classPool = c;
+	}
+	
+	public void setClassPool(ClassPool c) {
+		classPool = c;
 	}
 
 	public void setFieldFilter(FieldFilter f) {
@@ -130,7 +141,7 @@ public class FieldTransformer {
 	}
 
 	private void addGetFieldHandlerMethod(ClassFile classfile)
-			throws CannotCompileException {
+			throws CannotCompileException, BadBytecode {
 		ConstPool cp = classfile.getConstPool();
 		int this_class_index = cp.getThisClassInfo();
 		MethodInfo minfo = new MethodInfo(cp, GETFIELDHANDLER_METHOD_NAME,
@@ -148,11 +159,13 @@ public class FieldTransformer {
 		code.addOpcode(Opcode.ARETURN);
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
+		StackMapTable smt = MapMaker.make(classPool, minfo);
+		minfo.getCodeAttribute().setAttribute(smt);
 		classfile.addMethod(minfo);
 	}
 
 	private void addSetFieldHandlerMethod(ClassFile classfile)
-			throws CannotCompileException {
+			throws CannotCompileException, BadBytecode {
 		ConstPool cp = classfile.getConstPool();
 		int this_class_index = cp.getThisClassInfo();
 		MethodInfo minfo = new MethodInfo(cp, SETFIELDHANDLER_METHOD_NAME,
@@ -172,6 +185,8 @@ public class FieldTransformer {
 		code.addOpcode(Opcode.RETURN);
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
+		StackMapTable smt = MapMaker.make(classPool, minfo);
+		minfo.getCodeAttribute().setAttribute(smt);
 		classfile.addMethod(minfo);
 	}
 
@@ -185,7 +200,7 @@ public class FieldTransformer {
 	}
 
 	private void addReadWriteMethods(ClassFile classfile)
-			throws CannotCompileException {
+			throws CannotCompileException, BadBytecode {
 		List fields = classfile.getFields();
 		for (Iterator field_iter = fields.iterator(); field_iter.hasNext();) {
 			FieldInfo finfo = (FieldInfo) field_iter.next();
@@ -205,7 +220,7 @@ public class FieldTransformer {
 	}
 
 	private void addReadMethod(ClassFile classfile, FieldInfo finfo)
-			throws CannotCompileException {
+			throws CannotCompileException, BadBytecode {
 		ConstPool cp = classfile.getConstPool();
 		int this_class_index = cp.getThisClassInfo();
 		String desc = "()" + finfo.getDescriptor();
@@ -254,11 +269,13 @@ public class FieldTransformer {
 
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
+		StackMapTable smt = MapMaker.make(classPool, minfo);
+		minfo.getCodeAttribute().setAttribute(smt);
 		classfile.addMethod(minfo);
 	}
 
 	private void addWriteMethod(ClassFile classfile, FieldInfo finfo)
-			throws CannotCompileException {
+			throws CannotCompileException, BadBytecode {
 		ConstPool cp = classfile.getConstPool();
 		int this_class_index = cp.getThisClassInfo();
 		String desc = "(" + finfo.getDescriptor() + ")V";
@@ -320,11 +337,13 @@ public class FieldTransformer {
 
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
+		StackMapTable smt = MapMaker.make(classPool, minfo);
+		minfo.getCodeAttribute().setAttribute(smt);
 		classfile.addMethod(minfo);
 	}
 
 	private void transformInvokevirtualsIntoPutAndGetfields(ClassFile classfile)
-			throws CannotCompileException {
+			throws CannotCompileException, BadBytecode {
 		List methods = classfile.getMethods();
 		for (Iterator method_iter = methods.iterator(); method_iter.hasNext();) {
 			MethodInfo minfo = (MethodInfo) method_iter.next();
@@ -341,15 +360,13 @@ public class FieldTransformer {
 			}
 			CodeIterator iter = codeAttr.iterator();
 			while (iter.hasNext()) {
-				try {
-					int pos = iter.next();
-					pos = transformInvokevirtualsIntoGetfields(classfile, iter, pos);
-					pos = transformInvokevirtualsIntoPutfields(classfile, iter, pos);
-				} catch ( BadBytecode e ){
-					throw new CannotCompileException( e );
-				}
-
+				int pos = iter.next();
+				pos = transformInvokevirtualsIntoGetfields(classfile, iter, pos);
+				pos = transformInvokevirtualsIntoPutfields(classfile, iter, pos);
 			}
+			
+			StackMapTable smt = MapMaker.make(classPool, minfo);
+			minfo.getCodeAttribute().setAttribute(smt);
 		}
 	}
 

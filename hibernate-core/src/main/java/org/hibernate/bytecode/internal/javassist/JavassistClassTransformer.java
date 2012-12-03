@@ -30,6 +30,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.ProtectionDomain;
 
+import javassist.ClassClassPath;
+import javassist.ClassPool;
 import javassist.bytecode.ClassFile;
 import org.jboss.logging.Logger;
 
@@ -44,6 +46,7 @@ import org.hibernate.internal.CoreMessageLogger;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ * @author Dustin Schultz
  */
 public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 
@@ -70,7 +73,17 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 			LOG.unableToBuildEnhancementMetamodel( className );
 			return classfileBuffer;
 		}
-		FieldTransformer transformer = getFieldTransformer( classfile );
+		// This is the same as ClassPool.getDefault() but ensures a new ClassPool per
+		ClassPool cp = new ClassPool();
+		cp.appendSystemPath();
+		cp.appendClassPath(new ClassClassPath(this.getClass()));
+		cp.appendClassPath(new ClassClassPath(classfile.getClass()));
+		try {
+			cp.makeClassIfNew(new ByteArrayInputStream(classfileBuffer));
+		} catch (IOException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		FieldTransformer transformer = getFieldTransformer( classfile, cp );
 		if ( transformer != null ) {
 			LOG.debugf( "Enhancing %s", className );
 			DataOutputStream out = null;
@@ -97,7 +110,7 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 		return classfileBuffer;
 	}
 
-	protected FieldTransformer getFieldTransformer(final ClassFile classfile) {
+	protected FieldTransformer getFieldTransformer(final ClassFile classfile, final ClassPool classPool) {
 		if ( alreadyInstrumented( classfile ) ) {
 			return null;
 		}
@@ -118,7 +131,7 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 					public boolean handleWriteAccess(String fieldOwnerClassName, String fieldName) {
 						return fieldFilter.shouldTransformFieldAccess( classfile.getName(), fieldOwnerClassName, fieldName );
 					}
-				}
+				}, classPool
 		);
 	}
 

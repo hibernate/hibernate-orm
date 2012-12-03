@@ -61,8 +61,17 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 			relationalValueSources.add( new ColumnSourceImpl( 
 					associationAttribute, null, column ) );
 		}
+		for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
+			relationalValueSources.add( new ColumnSourceImpl( 
+					associationAttribute, null, column ) );
+		}
 		
 		for ( Column column : associationAttribute.getJoinColumnValues() ) {
+			if ( column.getReferencedColumnName() != null ) {
+				referencedColumnNames.add( column.getReferencedColumnName() );
+			}
+		}
+		for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
 			if ( column.getReferencedColumnName() != null ) {
 				referencedColumnNames.add( column.getReferencedColumnName() );
 			}
@@ -81,7 +90,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public String getReferencedEntityAttributeName() {
-		// JPA does not have the concept of property refs. Instead column names via @JoinColumn are used
+		// HBM only
 		return null;
 	}
 
@@ -118,7 +127,8 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public boolean isUnique() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		// TODO
+		return false;
 	}
 
 	@Override
@@ -156,8 +166,8 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 		return false;
 	}
 
-	// TODO: Taken from and in duplicate of ToOneAttributeSourceImpl.  Look into
-	// abstracting some of this out.
+	// TODO: This obviously won't work.  We need a new way to handle
+	// inverse foreign key resolution.
 	public class AnnotationJoinColumnResolutionDelegate
 			implements ForeignKeyContributingSource.JoinColumnResolutionDelegate {
 		private final String logicalJoinTableName;
@@ -181,12 +191,24 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 				);
 				values.add( resolvedColumn );
 			}
+//			for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
+//				if ( column.getReferencedColumnName() == null ) {
+//					return context.resolveRelationalValuesForAttribute( null );
+//				}
+//				org.hibernate.metamodel.spi.relational.Column resolvedColumn = context.resolveColumn(
+//						column.getReferencedColumnName(),
+//						logicalJoinTableName,
+//						null,
+//						null
+//				);
+//				values.add( resolvedColumn );
+//			}
 			return values;
 		}
 
 		@Override
 		public String getReferencedAttributeName() {
-			// in annotations we are not referencing attribute but column names via @JoinColumn(s)
+			// HBM only
 			return null;
 		}
 

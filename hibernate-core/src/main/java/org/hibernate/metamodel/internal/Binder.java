@@ -590,7 +590,7 @@ public class Binder {
 		typeHelper.bindJdbcDataType( resolvedElementType, indexBinding.getIndexRelationalValue() );
 	}
 
-	void bindCollectionTableForeignKey(
+	private void bindCollectionTableForeignKey(
 			final AbstractPluralAttributeBinding attributeBinding,
 			final PluralAttributeKeySource keySource,
 			TableSpecification collectionTable) {
@@ -1204,7 +1204,7 @@ public class Binder {
 		}
 	}
 
-	LocalBindingContext bindingContext() {
+	public LocalBindingContext bindingContext() {
 		return bindingContexts.peek();
 	}
 
@@ -2613,6 +2613,11 @@ public class Binder {
 	private List< Column > determineForeignKeyTargetColumns(
 			final EntityBinding entityBinding,
 			ForeignKeyContributingSource foreignKeyContributingSource ) {
+		
+		// TODO: This method, JoinColumnResolutionContext,
+		// and JoinColumnResolutionDelegate need re-worked.  There is currently
+		// no way to bind to a collection's inverse foreign key.
+		
 		final JoinColumnResolutionDelegate fkColumnResolutionDelegate =
 				foreignKeyContributingSource.getForeignKeyTargetColumnResolutionDelegate();
 
@@ -2650,14 +2655,14 @@ public class Binder {
 							if ( referencedAttributeBinding == null ) {
 								throw bindingContext().makeMappingException(
 										String.format(
-												"Could not resolve named property-ref [%s] against entity [%s]",
+												"Could not resolve named referenced property [%s] against entity [%s]",
 												attributeName,
 												entityBinding.getEntity().getName() ) );
 							}
 							if ( ! referencedAttributeBinding.getAttribute().isSingular() ) {
 								throw bindingContext().makeMappingException(
 										String.format(
-												"Property-ref [%s] against entity [%s] is a plural attribute; it must be a singular attribute.",
+												"Referenced property [%s] against entity [%s] is a plural attribute; it must be a singular attribute.",
 												attributeName,
 												entityBinding.getEntity().getName() ) );
 							}

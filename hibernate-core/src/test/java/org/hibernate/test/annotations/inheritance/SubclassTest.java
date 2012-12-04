@@ -23,9 +23,13 @@
  */
 package org.hibernate.test.annotations.inheritance;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -37,19 +41,12 @@ import org.hibernate.test.annotations.inheritance.singletable.Funk;
 import org.hibernate.test.annotations.inheritance.singletable.Music;
 import org.hibernate.test.annotations.inheritance.singletable.Noise;
 import org.hibernate.test.annotations.inheritance.singletable.Rock;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class SubclassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {

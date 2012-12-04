@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal;
 
 import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -75,9 +76,9 @@ import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
+import org.hibernate.metamodel.spi.binding.ManyToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
-import org.hibernate.metamodel.spi.binding.ManyToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.OneToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.OneToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -802,7 +803,9 @@ public class Binder {
 		if ( discriminatorValue != null ) {
 			rootEntityBinding.setDiscriminatorMatchValue( discriminatorValue );
 		}
-		else {
+		else if ( !Modifier.isAbstract( bindingContext().locateClassByName( rootEntitySource.getEntityName() ).getModifiers() ) ) {
+			// Use the class name as a default if no dscriminator value.
+			// However, skip abstract classes -- obviously no discriminators there.
 			rootEntityBinding.setDiscriminatorMatchValue( rootEntitySource.getEntityName() );
 		}
 		// Configure discriminator hibernate type

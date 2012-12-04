@@ -109,7 +109,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 			case ELEMENT_COLLECTION_EMBEDDABLE: {
 				// TODO: cascadeStyles?
 				return new CompositePluralAttributeElementSourceImpl(
-						associationAttribute, (RootEntityClass) entityClass );
+						associationAttribute, entityClass );
 			}
 		}
 		throw new AssertionError( "Unexpected attribute nature for a association:" + associationAttribute.getNature() );

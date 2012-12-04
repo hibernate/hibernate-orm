@@ -76,7 +76,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 		this.componentClassReference = makeClassReference( componentSourceElement.getClazz() );
 		this.logicalTableName = logicalTableName;
 		this.path = parentContainer.getPath() + '.' + componentSourceElement.getName();
-
+		
 		this.subAttributeSources = buildAttributeSources();
 	}
 

@@ -29,6 +29,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.AccessType;
+
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
@@ -49,6 +51,7 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	private static final String PATH_SEPARATOR = ".";
@@ -56,12 +59,17 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	private final ValueHolder<Class<?>> classReference;
 	private final Map<String, AttributeOverride> attributeOverrides;
 	private final String path;
+	private final AccessType classAccessType;
 
-	public ComponentAttributeSourceImpl(EmbeddableClass embeddableClass, String parentPath, Map<String, AttributeOverride> attributeOverrides) {
+	public ComponentAttributeSourceImpl(EmbeddableClass embeddableClass,
+			String parentPath,
+			Map<String, AttributeOverride> attributeOverrides,
+			AccessType classAccessType) {
 		this.embeddableClass = embeddableClass;
 		this.classReference = new ValueHolder<Class<?>>( embeddableClass.getConfiguredClass() );
 		this.attributeOverrides = attributeOverrides;
 		this.path = StringHelper.isEmpty( parentPath ) ? embeddableClass.getEmbeddedAttributeName() : parentPath + "." + embeddableClass.getEmbeddedAttributeName();
+		this.classAccessType = classAccessType;
 	}
 
 	@Override
@@ -101,7 +109,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public String getPropertyAccessorName() {
-		return embeddableClass.getClassAccessType().toString().toLowerCase();
+		return classAccessType.toString().toLowerCase();
 	}
 
 	@Override
@@ -129,7 +137,8 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 								new ComponentAttributeSourceImpl(
 										embeddable,
 										getPath(),
-										createAggregatedOverrideMap()
+										createAggregatedOverrideMap(),
+										classAccessType
 								)
 						);
 					}

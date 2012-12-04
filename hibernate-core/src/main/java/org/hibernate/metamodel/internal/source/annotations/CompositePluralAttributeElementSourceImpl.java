@@ -32,7 +32,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.Association
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
-import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.spi.binding.CascadeType;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
@@ -47,7 +47,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	private static final String PATH_SEPARATOR = ".";
 	
 	private final AssociationAttribute associationAttribute;
-	private final RootEntityClass rootEntityClass;
+	private final EntityClass entityClass;
 	
 	private List<AttributeSource> attributeSources
 			= new ArrayList<AttributeSource>();
@@ -56,9 +56,9 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	
 	public CompositePluralAttributeElementSourceImpl(
 			AssociationAttribute associationAttribute,
-			RootEntityClass rootEntityClass ) {
+			EntityClass rootEntityClass ) {
 		this.associationAttribute = associationAttribute;
-		this.rootEntityClass = rootEntityClass;
+		this.entityClass = rootEntityClass;
 		
 		buildAttributeSources();
 	}
@@ -123,7 +123,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	}
 	
 	private void buildAttributeSources() {
-		EmbeddableClass embeddableClass = rootEntityClass
+		EmbeddableClass embeddableClass = entityClass
 				.getCollectionEmbeddedClasses()
 				.get( associationAttribute.getName() );
 		
@@ -133,8 +133,8 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 		for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
 			AttributeOverride attributeOverride = null;
 			String tmp = getPath() + PATH_SEPARATOR + attribute.getName();
-			if ( rootEntityClass.getAttributeOverrideMap().containsKey( tmp ) ) {
-				attributeOverride = rootEntityClass.getAttributeOverrideMap().get( tmp );
+			if ( entityClass.getAttributeOverrideMap().containsKey( tmp ) ) {
+				attributeOverride = entityClass.getAttributeOverrideMap().get( tmp );
 			}
 			attribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
 			attributeSources.add( new SingularAttributeSourceImpl( attribute, attributeOverride ) );
@@ -145,7 +145,8 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 					new ComponentAttributeSourceImpl(
 							embeddable,
 							getPath(),
-							createAggregatedOverrideMap( embeddableClass, rootEntityClass.getAttributeOverrideMap() )
+							createAggregatedOverrideMap( embeddableClass, entityClass.getAttributeOverrideMap() ),
+							embeddable.getClassAccessType()
 					)
 			);
 		}

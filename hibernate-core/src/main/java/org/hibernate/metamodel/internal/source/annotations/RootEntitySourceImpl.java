@@ -193,7 +193,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 			// todo : no idea how to obtain overrides here...
 			Map<String, AttributeOverride> overrides = getEntityClass().getAttributeOverrideMap();
-			componentAttributeSource = new ComponentAttributeSourceImpl( embeddableClass, "", overrides );
+			componentAttributeSource = new ComponentAttributeSourceImpl( embeddableClass, "", overrides, embeddableClass.getClassAccessType() );
 		}
 
 		@Override

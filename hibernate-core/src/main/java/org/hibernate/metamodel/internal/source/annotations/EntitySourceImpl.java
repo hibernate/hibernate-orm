@@ -223,7 +223,8 @@ public class EntitySourceImpl implements EntitySource {
 					new ComponentAttributeSourceImpl(
 							component,
 							"",
-							entityClass.getAttributeOverrideMap()
+							entityClass.getAttributeOverrideMap(),
+							entityClass.getClassAccessType()
 					)
 			);
 		}

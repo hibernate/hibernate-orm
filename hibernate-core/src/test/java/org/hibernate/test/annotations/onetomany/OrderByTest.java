@@ -82,7 +82,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-465")
-	@RequiresDialect(value = H2Dialect.class, comment = "By default H2 puts NULL values first, so testing 'NULLS LAST' expression.")
+	@RequiresDialect(value = H2Dialect.class, comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
 	public void testAnnotationNullsFirstLast() {
 		Session session = openSession();
 
@@ -138,7 +138,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-465")
-	@RequiresDialect(value = H2Dialect.class, comment = "By default H2 puts NULL values first, so testing 'NULLS LAST' expression.")
+	@RequiresDialect(value = H2Dialect.class, comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
 	public void testCriteriaNullsFirstLast() {
 		Session session = openSession();
 
@@ -173,7 +173,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-465")
-	@RequiresDialect(value = H2Dialect.class, comment = "By default H2 puts NULL values first, so testing 'NULLS LAST' expression.")
+	@RequiresDialect(value = H2Dialect.class, comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
 	public void testNullsFirstLastSpawnMultipleColumns() {
 		Session session = openSession();
 
@@ -219,7 +219,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-465")
-	@RequiresDialect(value = H2Dialect.class, comment = "By default H2 puts NULL values first, so testing 'NULLS LAST' expression.")
+	@RequiresDialect(value = H2Dialect.class, comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
 	public void testHqlNullsFirstLast() {
 		Session session = openSession();
 

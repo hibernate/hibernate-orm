@@ -11,7 +11,7 @@ import javax.persistence.OneToMany;
 
 /**
  * Entity used to test {@code NULL} values ordering in SQL {@code ORDER BY} clause.
- * Implementation note: By default H2 puts {@code NULL} values first.
+ * Implementation note: By default H2 places {@code NULL} values first.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
@@ -24,7 +24,7 @@ public class Zoo implements Serializable {
 
 	@OneToMany
 	@JoinColumn(name = "zoo_id")
-	@org.hibernate.annotations.OrderBy(clause = "name asc nulls last") // By default H2 puts NULL values first.
+	@org.hibernate.annotations.OrderBy(clause = "name asc nulls last") // By default H2 places NULL values first.
 	private Set<Tiger> tigers = new HashSet<Tiger>();
 
 	@OneToMany

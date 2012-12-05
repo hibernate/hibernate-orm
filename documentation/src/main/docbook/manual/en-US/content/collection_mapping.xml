@@ -483,8 +483,8 @@ public class Part {
         <literal>@javax.persistence.OrderBy</literal> to your property. This
         annotation takes as parameter a list of comma separated properties (of
         the target entity) and orders the collection accordingly (eg
-        <code>firstname asc, age desc</code>), if the string is empty, the
-        collection will be ordered by the primary key of the target
+        <code>firstname asc, age desc, weight asc nulls last</code>), if the string
+        is empty, the collection will be ordered by the primary key of the target
         entity.</para>
 
         <example>

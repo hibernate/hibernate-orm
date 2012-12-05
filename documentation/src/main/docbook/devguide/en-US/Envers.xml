@@ -898,7 +898,9 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
             <para>
                 The <literal>minimize()</literal> and <literal>maximize()</literal> methods return a criteria,
                 to which you can add constraints, which must be met by the entities with the
-                maximized/minimized properties.
+                maximized/minimized properties. <literal>AggregatedAuditExpression#computeAggregationInInstanceContext()</literal>
+                enables the possibility to compute aggregated expression in the context of each entity instance
+                separately. It turns out useful when querying for latest revisions of all entities of a particular type.
             </para>
 
             <para>

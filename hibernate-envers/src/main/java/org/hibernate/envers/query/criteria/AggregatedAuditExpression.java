@@ -37,8 +37,7 @@ import org.hibernate.envers.tools.query.QueryBuilder;
 public class AggregatedAuditExpression implements AuditCriterion, ExtendableCriterion {
     private PropertyNameGetter propertyNameGetter;
     private AggregatedMode mode;
-	// Correlate subquery with outer query by entity id.
-	private boolean correlate = false;
+	private boolean correlate = false; // Correlate subquery with outer query by entity id.
     private List<AuditCriterion> criterions;
 
     public AggregatedAuditExpression(PropertyNameGetter propertyNameGetter, AggregatedMode mode) {
@@ -98,10 +97,12 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
     }
 
 	/**
-	 * Correlates aggregated subquery with the main query by entity id.
+	 * Compute aggregated expression in the context of each entity instance separately. Useful for retrieving latest
+	 * revisions of all entities of a particular type.<br/>
+	 * Implementation note: Correlates subquery with the outer query by entity id.
 	 * @return this (for method chaining).
 	 */
-	public AggregatedAuditExpression correlateSubquery() {
+	public AggregatedAuditExpression computeAggregationInInstanceContext() {
 		correlate = true;
 		return this;
 	}

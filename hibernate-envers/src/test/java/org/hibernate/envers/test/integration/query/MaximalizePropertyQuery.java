@@ -189,7 +189,7 @@ public class MaximalizePropertyQuery extends BaseEnversJPAFunctionalTestCase {
 	public void testAllLatestRevisionsOfEntityType() {
 		List result = getAuditReader().createQuery()
 				.forRevisionsOfEntity( StrIntTestEntity.class, false, true )
-				.add( AuditEntity.revisionNumber().maximize().correlateSubquery() )
+				.add( AuditEntity.revisionNumber().maximize().computeAggregationInInstanceContext() )
 				.addOrder( AuditEntity.property( "id" ).asc() )
 				.getResultList();
 

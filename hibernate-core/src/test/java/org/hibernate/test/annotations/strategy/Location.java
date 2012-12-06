@@ -1,10 +1,13 @@
 //$Id$
 package org.hibernate.test.annotations.strategy;
 
+import javax.persistence.Embeddable;
+
 
 /**
  * @author Emmanuel Bernard
  */
+@Embeddable
 public class Location {
 	private String city;
 	private String country;

@@ -1,12 +1,14 @@
 //$Id$
 package org.hibernate.test.annotations.cid;
 import java.io.Serializable;
+
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard
  */
-
+@Embeddable
 public class ParentPk implements Serializable {
 	public String getFirstName() {
 		return firstName;

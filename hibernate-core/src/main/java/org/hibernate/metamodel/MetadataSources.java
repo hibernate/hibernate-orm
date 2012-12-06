@@ -28,11 +28,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -53,12 +50,14 @@ import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MappingNotFoundException;
 import org.hibernate.service.ServiceRegistry;
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
@@ -512,7 +511,8 @@ public class MetadataSources {
 		
 		processedClasses.add( clazz );
 
-		indexResource( clazz.getName().replace( '.', '/' ) + ".class", indexer );
+		ClassInfo classInfo = indexResource(
+				clazz.getName().replace( '.', '/' ) + ".class", indexer );
 
 		// index all super classes of the specified class. Using org.hibernate.cfg.Configuration it was not
 		// necessary to add all annotated classes. Entities would be enough. Mapped superclasses would be
@@ -537,6 +537,16 @@ public class MetadataSources {
 					// do nothing
 				}
 			}
+		}
+		
+		// Also check for classes within a @Target annotation.
+		for ( AnnotationInstance targetAnnotation : JandexHelper.getAnnotations(
+				classInfo, HibernateDotNames.TARGET ) ) {
+			String targetClassName = targetAnnotation.value().asClass().name()
+					.toString();
+			Class<?> targetClass = serviceRegistry.getService(
+					ClassLoaderService.class ).classForName( targetClassName );
+			indexClass(targetClass, indexer, processedClasses );
 		}
 	}
 

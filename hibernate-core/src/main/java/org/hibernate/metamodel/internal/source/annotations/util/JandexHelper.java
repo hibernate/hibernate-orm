@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -186,7 +187,11 @@ public class JandexHelper {
 	 */
 	public static List<AnnotationInstance> getAnnotations( 
 			ClassInfo classInfo, DotName annotationName ) {
-		return classInfo.annotations().get( annotationName );
+		if ( classInfo.annotations().containsKey( annotationName ) ) {
+			return classInfo.annotations().get( annotationName );
+		} else {
+			return Collections.emptyList();
+		}
 	}
 
 	/**

@@ -339,9 +339,12 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 	protected File buildLargeJar() {
 		String fileName = "large.jar";
 		JavaArchive archive = ShrinkWrap.create( JavaArchive.class, fileName );
-		// Build a large jar by adding all EntityManager packages and
-		// subpackages on the classpath.
-		archive.addPackages(true, "org.hibernate.ejb", "org.hibernate.jpa" );
+		// Build a large jar by adding a lorem ipsum file repeatedly.
+		for ( int i = 0; i < 100; i++ ) {
+			ArchivePath path = ArchivePaths.create( "META-INF/file" + i );
+			archive.addAsResource( new File( "src/test/resources/org/hibernate/jpa/test/packaging/loremipsum.txt" ),
+					path );
+		}
 
 		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );

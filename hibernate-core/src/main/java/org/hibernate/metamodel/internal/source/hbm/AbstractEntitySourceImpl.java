@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.Origin;
@@ -47,7 +48,6 @@ import org.hibernate.jaxb.spi.hbm.JaxbMapElement;
 import org.hibernate.jaxb.spi.hbm.JaxbOneToOneElement;
 import org.hibernate.jaxb.spi.hbm.JaxbPropertyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSetElement;
-import org.hibernate.jaxb.spi.hbm.JaxbSynchronizeElement;
 import org.hibernate.jaxb.spi.hbm.JaxbTuplizerElement;
 import org.hibernate.jaxb.spi.hbm.JoinElementSource;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
@@ -280,7 +280,10 @@ public abstract class AbstractEntitySourceImpl
 	}
 	protected void processIdBagAttributes(List<AttributeSource> results,
 											 List<JaxbIdbagElement> propertyElements){
-		// todo : implement
+
+		if ( !propertyElements.isEmpty() ) {
+			throw new NotYetImplementedException( "<idbag> is not supported yet" );
+		}
 	}
 	protected void processBagAttributes(List<AttributeSource> results,
 											 List<JaxbBagElement> propertyElements) {

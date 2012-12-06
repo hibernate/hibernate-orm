@@ -39,6 +39,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel( message = "<idbag> not supported" )
 public class PersistentIdBagTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -46,7 +47,6 @@ public class PersistentIdBagTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testWriteMethodDirtying() {
 		IdbagOwner parent = new IdbagOwner( "root" );
 		IdbagOwner child = new IdbagOwner( "c1" );

@@ -35,7 +35,7 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel( message = "Bug with qualified entity class not in specified package" )
 public class ManyToManyAssociationClassCompositeIdTest extends AbstractManyToManyAssociationClassTest {
 	@Override
 	public String[] getMappings() {

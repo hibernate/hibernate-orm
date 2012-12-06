@@ -37,6 +37,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel( message = "Joined attributes are not supported yet" )
 public class OneToManyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -51,7 +52,6 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
                     "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
     )
 
-	@FailureExpectedWithNewMetamodel
 	public void testOneToManyLinkTable() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

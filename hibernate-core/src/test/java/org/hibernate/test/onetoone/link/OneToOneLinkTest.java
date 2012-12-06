@@ -42,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel( message = "Joined attributes are not supported yet" )
 public class OneToOneLinkTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -49,7 +50,6 @@ public class OneToOneLinkTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOneToOneViaAssociationTable() {
 		Person p = new Person();
 		p.setName("Gavin King");

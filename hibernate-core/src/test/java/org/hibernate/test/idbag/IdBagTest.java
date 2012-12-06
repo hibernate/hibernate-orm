@@ -40,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel( message = "<idbag> not supported" )
 public class IdBagTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -86,7 +87,6 @@ public class IdBagTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testJoin() throws HibernateException, SQLException {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

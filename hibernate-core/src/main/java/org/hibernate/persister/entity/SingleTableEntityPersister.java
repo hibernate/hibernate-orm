@@ -34,6 +34,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -622,6 +623,19 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				continue; // skip identifier binding
 			}
 			propertyTableNumbers[ i++ ] = 0;
+
+			if ( attributeBinding.getAttribute().isSingular() ) {
+				SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+				for ( RelationalValueBinding relationalValueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
+					if ( ! relationalValueBinding.isDerived() ) {
+						org.hibernate.metamodel.spi.relational.Column column =
+								(org.hibernate.metamodel.spi.relational.Column) relationalValueBinding.getValue();
+						if ( ! entityBinding.getPrimaryTable().equals( column.getTable() ) ) {
+							throw new NotYetImplementedException( "joined attributes are not supported yet." );
+						}
+					}
+				}
+			}
 		}
 
 		//TODO: code duplication with JoinedSubclassEntityPersister

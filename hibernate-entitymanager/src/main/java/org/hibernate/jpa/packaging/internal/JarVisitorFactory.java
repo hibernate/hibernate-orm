@@ -21,6 +21,7 @@
  */
 package org.hibernate.jpa.packaging.internal;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,13 +29,13 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jpa.internal.EntityManagerMessageLogger;
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
+ * @author Brett Meyer
  */
 public class JarVisitorFactory {
 
@@ -194,18 +195,16 @@ public class JarVisitorFactory {
 		}
 	}
 
-	public static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
-		int size;
-		byte[] tmpByte = new byte[ 4096 ];
-		byte[] entryBytes = new byte[0];
-		for ( ; ; ) {
-			size = inputStream.read( tmpByte );
-			if ( size == -1 ) break;
-			byte[] current = new byte[ entryBytes.length + size ];
-			System.arraycopy( entryBytes, 0, current, 0, entryBytes.length );
-			System.arraycopy( tmpByte, 0, current, entryBytes.length, size );
-			entryBytes = current;
+	public static byte[] getBytesFromInputStream(
+			InputStream inputStream) throws IOException {
+		
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		int numBytes;
+		byte[] data = new byte[4096];
+		while ( ( numBytes = inputStream.read( data, 0, data.length ) ) != -1 ) {
+			buffer.write( data, 0, numBytes );
 		}
-		return entryBytes;
+		buffer.flush();
+		return buffer.toByteArray();
 	}
 }

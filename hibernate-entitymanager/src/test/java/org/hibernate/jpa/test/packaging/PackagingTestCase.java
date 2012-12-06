@@ -73,6 +73,7 @@ import static org.junit.Assert.fail;
 
 /**
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 	protected static ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
@@ -329,6 +330,18 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 
 		ArchivePath path = ArchivePaths.create( "META-INF/orm.xml" );
 		archive.addAsResource( "externaljar/META-INF/orm.xml", path );
+
+		File testPackage = new File( packageTargetDir, fileName );
+		archive.as( ZipExporter.class ).exportTo( testPackage, true );
+		return testPackage;
+	}
+
+	protected File buildLargeJar() {
+		String fileName = "large.jar";
+		JavaArchive archive = ShrinkWrap.create( JavaArchive.class, fileName );
+		// Build a large jar by adding all EntityManager packages and
+		// subpackages on the classpath.
+		archive.addPackages(true, "org.hibernate.ejb", "org.hibernate.jpa" );
 
 		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );

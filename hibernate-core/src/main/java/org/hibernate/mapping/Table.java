@@ -55,9 +55,9 @@ public class Table implements RelationalModel, Serializable {
 	private Map columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
-	private Map indexes = new HashMap();
-	private Map foreignKeys = new HashMap();
-	private Map<String,UniqueKey> uniqueKeys = new HashMap<String,UniqueKey>();
+	private Map indexes = new LinkedHashMap();
+	private Map foreignKeys = new LinkedHashMap();
+	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
 	private final int uniqueInteger;
 	private boolean quoted;
 	private boolean schemaQuoted;

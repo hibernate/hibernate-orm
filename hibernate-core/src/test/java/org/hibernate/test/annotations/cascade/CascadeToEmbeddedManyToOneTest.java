@@ -30,10 +30,8 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-@FailureExpectedWithNewMetamodel
 public class CascadeToEmbeddedManyToOneTest extends BaseCoreFunctionalTestCase {
 
 	@Test

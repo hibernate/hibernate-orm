@@ -102,6 +102,11 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 
 	@Override
 	public DerivedValue locateOrCreateDerivedValue(String fragment) {
+		DerivedValue value = locateDerivedValue( fragment );
+		return value != null ? value : createDerivedValue( fragment );
+	}
+
+	protected DerivedValue locateDerivedValue(String fragment) {
 		final Identifier identifier = Identifier.toIdentifier( fragment );
 		if ( valueMap.containsKey( identifier ) ) {
 			Value value = valueMap.get( identifier );
@@ -109,6 +114,11 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 				return DerivedValue.class.cast( value );
 			}
 		}
+		return null;
+	}
+
+	protected DerivedValue createDerivedValue(String fragment) {
+		final Identifier identifier = Identifier.toIdentifier( fragment );
 		final DerivedValue value = new DerivedValue( this, valueList.size(), fragment );
 		valueMap.put( identifier, value );
 		valueList.add( value );

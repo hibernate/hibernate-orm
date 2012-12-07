@@ -498,6 +498,7 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	public void add(SubclassEntitySourceImpl subclassEntitySource) {
+		subclassEntitySource.injectHierarchy( entityHierarchy );
 		entityHierarchy.processSubclass( subclassEntitySource );
 		subclassEntitySources.add( subclassEntitySource );
 	}

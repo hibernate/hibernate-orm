@@ -65,6 +65,7 @@ import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.binding.Cascadeable;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.CompositePluralAttributeElementBinding;
@@ -181,10 +182,10 @@ public class Binder {
 			Binder.class.getName()
 	);
 
-	private static org.hibernate.internal.util.ValueHolder< Class< ? >> createSingularAttributeJavaType(
+	private static ValueHolder< Class< ? >> createSingularAttributeJavaType(
 			final Class< ? > attributeContainerClassReference,
 			final String attributeName ) {
-		org.hibernate.internal.util.ValueHolder.DeferredInitializer< Class< ? >> deferredInitializer =
+		ValueHolder.DeferredInitializer< Class< ? >> deferredInitializer =
 				new org.hibernate.internal.util.ValueHolder.DeferredInitializer< Class< ? >>() {
 					public Class< ? > initialize() {
 						return ReflectHelper.reflectedPropertyClass(
@@ -192,7 +193,7 @@ public class Binder {
 								attributeName );
 					}
 				};
-		return new org.hibernate.internal.util.ValueHolder< Class< ? >>( deferredInitializer );
+		return new ValueHolder< Class< ? >>( deferredInitializer );
 	}
 
 	private static org.hibernate.internal.util.ValueHolder< Class< ? >> createSingularAttributeJavaType(
@@ -557,7 +558,23 @@ public class Binder {
 				defaultElementJavaClassReference == null ? null : defaultElementJavaClassReference.getValue().getName()
 		);
 		bindHibernateResolvedType( elementBinding.getHibernateTypeDescriptor(), resolvedType );
-		elementBinding.setCascadeStyle( determineCascadeStyle( elementSource.getCascadeStyles() ) );
+		/**
+		 * TODO
+		 * don't know why, but see org.hibernate.mapping.Property#getCompositeCascadeStyle
+		 *
+		 * and not sure if this is the right place to apply this logic, apparently source level is not okay, so here it is, for now.
+		 */
+		for ( AttributeBinding ab : compositeAttributeBindingContainer.attributeBindings() ) {
+			if ( ab.isCascadeable() ) {
+				CascadeStyle cascadeStyle = Cascadeable.class.cast( ab ).getCascadeStyle();
+				if ( cascadeStyle != CascadeStyles.NONE ) {
+					elementBinding.setCascadeStyle( CascadeStyles.ALL );
+				}
+			}
+		}
+		if ( elementBinding.getCascadeStyle() == null || elementBinding.getCascadeStyle() == CascadeStyles.NONE ) {
+			elementBinding.setCascadeStyle( determineCascadeStyle( elementSource.getCascadeStyles() ) );
+		}
 	}
 
 	private void bindCollectionIndex(
@@ -832,6 +849,7 @@ public class Binder {
 			// Create new entity binding
 			entityBinding = createEntityBinding( entitySource, superEntityBinding );
 			entityBinding.setMutable( entityBinding.getHierarchyDetails().getRootEntityBinding().isMutable() );
+			markSuperEntityTableAbstractIfNecessary(superEntityBinding);
 			bindPrimaryTable( entityBinding, entitySource );
 			bindSubEntityPrimaryKey( entityBinding, entitySource );
 			bindSecondaryTables( entityBinding, entitySource );
@@ -844,11 +862,30 @@ public class Binder {
 		}
 	}
 
+	private void markSuperEntityTableAbstractIfNecessary(EntityBinding superEntityBinding) {
+		if ( superEntityBinding == null ) {
+			return;
+		}
+		if ( superEntityBinding.getHierarchyDetails().getInheritanceType() != InheritanceType.TABLE_PER_CLASS ) {
+			return;
+		}
+		if ( superEntityBinding.isAbstract() != Boolean.TRUE ) {
+			return;
+		}
+		if ( !Table.class.isInstance( superEntityBinding.getPrimaryTable() ) ) {
+			return;
+		}
+		Table.class.cast( superEntityBinding.getPrimaryTable() ).setPhysicalTable( false );
+	}
+
 	private void bindSubEntityPrimaryKey(final EntityBinding entityBinding, final EntitySource entitySource) {
 		final InheritanceType inheritanceType = entityBinding.getHierarchyDetails().getInheritanceType();
 		final EntityBinding superEntityBinding = entityBinding.getSuperEntityBinding();
 		if ( superEntityBinding == null ) {
 			throw new AssertionFailure( "super entitybinding is null " );
+		}
+		if ( inheritanceType == InheritanceType.TABLE_PER_CLASS ) {
+
 		}
 		if ( inheritanceType == InheritanceType.JOINED ) {
 			SubclassEntitySource subclassEntitySource = (SubclassEntitySource) entitySource;
@@ -1957,11 +1994,14 @@ public class Binder {
 			);
 		}
 
-		if ( attributeSource instanceof IndexedPluralAttributeSource ) {
+		if ( attributeBinding.getAttribute().getNature().isIndexable() && attributeSource instanceof IndexedPluralAttributeSource ) {
+			attributeBinding.setIndex( true );
 			bindCollectionIndex(
 					( IndexedPluralAttributeBinding ) attributeBinding,
 					( ( IndexedPluralAttributeSource ) attributeSource ).getIndexSource(),
 					defaultCollectionIndexJavaTypeName( reflectedCollectionJavaTypes ) );
+		} else {
+			attributeBinding.setIndex( false );
 		}
 
 		bindCollectionTablePrimaryKey( attributeBinding, attributeSource );
@@ -1974,6 +2014,7 @@ public class Binder {
 		final InheritanceType inheritanceType = entityBinding.getHierarchyDetails().getInheritanceType();
 		final TableSpecification table;
 		final String tableName;
+		// single table and sub entity
 		if ( superEntityBinding != null && inheritanceType == InheritanceType.SINGLE_TABLE ) {
 			table = superEntityBinding.getPrimaryTable();
 			tableName = superEntityBinding.getPrimaryTableName();
@@ -1983,7 +2024,15 @@ public class Binder {
 					: entitySource.getEntityName();
 			entityBinding.setDiscriminatorMatchValue( discriminatorValue );
 		}
+
+		// single table and root entity
+		// joined
+		// table per class and non-abstract  entity
 		else {
+			Table includedTable = null;
+			if(superEntityBinding!=null && inheritanceType == InheritanceType.TABLE_PER_CLASS && Table.class.isInstance( superEntityBinding.getPrimaryTable() )){
+				includedTable = Table.class.cast(  superEntityBinding.getPrimaryTable());
+			}
 			table = createTable(
 					entitySource.getPrimaryTable(), new DefaultNamingStrategy() {
 
@@ -1993,7 +2042,8 @@ public class Binder {
 							.getEntity().getName();
 					return bindingContexts.peek().getNamingStrategy().classToTableName( name );
 				}
-			}
+			},
+					includedTable
 			);
 			tableName = table.getLogicalName().getText();
 		}
@@ -2029,6 +2079,8 @@ public class Binder {
 						column = table.createColumn( joinColumnSource.getName() );
 						if ( joinColumnSource.getSqlType() != null ) {
 							column.setSqlType( joinColumnSource.getSqlType() );
+						} else {
+							throw new NotYetImplementedException( "join key column sql type is not binded if not explicitly set" );
 						}
 					}
 					joinColumns.add( column );
@@ -2534,10 +2586,15 @@ public class Binder {
 				? attributeBindingContainer.getAttributeContainer().createSyntheticSingularAttribute( attributeSource.getName() )
 				: attributeBindingContainer.getAttributeContainer().createSingularAttribute( attributeSource.getName() );
 	}
+	private TableSpecification createTable(final TableSpecificationSource tableSpecSource,
+										   final DefaultNamingStrategy defaultNamingStrategy){
+		return createTable( tableSpecSource, defaultNamingStrategy, null );
 
+	}
 	private TableSpecification createTable(
 			final TableSpecificationSource tableSpecSource,
-			final DefaultNamingStrategy defaultNamingStrategy) {
+			final DefaultNamingStrategy defaultNamingStrategy,
+			final Table includedTable) {
 
 		final LocalBindingContext bindingContext = bindingContexts.peek();
 		final MappingDefaults mappingDefaults = bindingContext.getMappingDefaults();
@@ -2556,7 +2613,7 @@ public class Binder {
 				throw bindingContext().makeMappingException( "An explicit name must be specified for the table" );
 			}
 			String tableName = defaultNamingStrategy.defaultName();
-			tableSpec = createTableSpecification( bindingContext, schema, tableName );
+			tableSpec = createTableSpecification( bindingContext, schema, tableName, includedTable );
 		}
 		else if ( tableSpecSource instanceof TableSource ) {
 			final TableSource tableSource = ( TableSource ) tableSpecSource;
@@ -2567,7 +2624,7 @@ public class Binder {
 				}
 				tableName = defaultNamingStrategy.defaultName();
 			}
-			tableSpec = createTableSpecification( bindingContext, schema, tableName );
+			tableSpec = createTableSpecification( bindingContext, schema, tableName, includedTable );
 		}
 		else {
 			final InLineViewSource inLineViewSource = ( InLineViewSource ) tableSpecSource;
@@ -2581,13 +2638,25 @@ public class Binder {
 	}
 
 	private TableSpecification createTableSpecification(LocalBindingContext bindingContext, Schema schema, String tableName) {
-		TableSpecification tableSpec;
+		return createTableSpecification( bindingContext, schema, tableName, null );
+	}
+
+	private TableSpecification createTableSpecification(LocalBindingContext bindingContext, Schema schema, String tableName, Table includedTable) {
 		tableName = quotedIdentifier( tableName );
 		final Identifier logicalTableId = Identifier.toIdentifier( tableName );
 		tableName = quotedIdentifier( bindingContext.getNamingStrategy().tableName( tableName ) );
 		final Identifier physicalTableId = Identifier.toIdentifier( tableName );
 		final Table table = schema.locateTable( logicalTableId );
-		tableSpec = ( table == null ? schema.createTable( logicalTableId, physicalTableId ) : table );
+		if ( table != null ) {
+			return table;
+		}
+		TableSpecification tableSpec;
+		if ( includedTable == null ) {
+			tableSpec = schema.createTable( logicalTableId, physicalTableId );
+		}
+		else {
+			tableSpec = schema.createDenormalizedTable( logicalTableId, physicalTableId, includedTable );
+		}
 		return tableSpec;
 	}
 

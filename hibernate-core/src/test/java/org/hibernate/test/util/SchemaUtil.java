@@ -26,12 +26,16 @@ package org.hibernate.test.util;
 import java.util.Iterator;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
+import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 
 /**
@@ -42,7 +46,7 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 public abstract class SchemaUtil {
 	
 	public static boolean isColumnPresent(
-			String tableName, String columnName, Metadata metadata ) {
+			String tableName, String columnName, MetadataImplementor metadata ) {
 		try {
 			TableSpecification table = getTable( tableName, metadata );
 			return ( table.locateColumn( columnName ) == null ) ? false : true;
@@ -51,7 +55,7 @@ public abstract class SchemaUtil {
 		}
 	}
 
-	public static boolean isTablePresent( String tableName, Metadata metadata ) {
+	public static boolean isTablePresent( String tableName, MetadataImplementor metadata ) {
 		try {
 			TableSpecification table = getTable( tableName, metadata );
 			return ( table == null ) ? false : true;
@@ -61,33 +65,51 @@ public abstract class SchemaUtil {
 	}
 	
 	public static EntityBinding getEntityBinding( 
-			Class<?> entityClass, Metadata metadata ) {
+			Class<?> entityClass, MetadataImplementor metadata ) {
 		return metadata.getEntityBinding( entityClass.getName() );
 	}
 	
 	public static TableSpecification getTable( 
-			Class<?> entityClass, Metadata metadata ) throws AssertionFailure {
+			Class<?> entityClass, MetadataImplementor metadata ) throws AssertionFailure {
 		return getEntityBinding( entityClass, metadata ).getPrimaryTable();
+	}
+
+	public static TableSpecification getTable(String schemaName, String tableName, MetadataImplementor metadata) throws AssertionFailure{
+		if( StringHelper.isNotEmpty(schemaName)){
+			Schema schema = metadata.getDatabase().getSchema( null, schemaName );
+			if(schema == null){
+				throw new AssertionFailure( "can't find schema "+ schemaName );
+			}
+			return schema.locateTable( Identifier.toIdentifier(tableName) );
+		} else {
+			Iterable<Schema> schemas = metadata.getDatabase().getSchemas();
+			for(Schema schema : schemas){
+				TableSpecification table = schema.locateTable( Identifier.toIdentifier( tableName ) );
+				if(table != null){
+					return table;
+				}
+			}
+		}
+		throw new AssertionFailure( "can't find table " +tableName );
 	}
 	
 	public static TableSpecification getTable( 
-			String tableName, Metadata metadata ) throws AssertionFailure {
-		final EntityBinding binding = metadata.getEntityBinding( tableName );
-		return binding.locateTable( tableName );
+			String tableName, MetadataImplementor metadata ) throws AssertionFailure {
+		return getTable( null, tableName, metadata );
 	}
 	
 	public static Column getColumn( Class<?> entityClass, String columnName,
-			Metadata metadata ) throws AssertionFailure {
+									MetadataImplementor metadata ) throws AssertionFailure {
 		return getTable( entityClass, metadata ).locateColumn( columnName );
 	}
 	
 	public static Column getColumn( String tableName, String columnName,
-			Metadata metadata ) throws AssertionFailure {
+									MetadataImplementor metadata ) throws AssertionFailure {
 		return getTable( tableName, metadata ).locateColumn( columnName );
 	}
 	
 	public static Column getColumnByAttribute( Class<?> entityClass,
-			String attributeName, Metadata metadata ) throws AssertionFailure {
+			String attributeName, MetadataImplementor metadata ) throws AssertionFailure {
 		EntityBinding binding = getEntityBinding( entityClass, metadata );
 		AttributeBinding attributeBinding = binding.locateAttributeBinding(
 				attributeName );
@@ -96,7 +118,7 @@ public abstract class SchemaUtil {
 	}
 	
 	public static PrimaryKey getPrimaryKey( Class<?> entityClass,
-			Metadata metadata ) throws AssertionFailure {
+											MetadataImplementor metadata ) throws AssertionFailure {
 		return getTable( entityClass, metadata ).getPrimaryKey();
 	}
 	

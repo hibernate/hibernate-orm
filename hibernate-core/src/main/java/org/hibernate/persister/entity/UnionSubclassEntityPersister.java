@@ -260,9 +260,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private CustomSQLMetadata parse(CustomSQL customSql) {
-		final String sql = customSql.getSql();
-		final boolean callable = sql != null && customSql.isCallable();
-		final ExecuteUpdateResultCheckStyle checkStyle = sql == null
+
+		final boolean callable = customSql != null && customSql.isCallable();
+		final String sql = customSql == null ? null: customSql.getSql();
+		final ExecuteUpdateResultCheckStyle checkStyle = customSql == null
 				? ExecuteUpdateResultCheckStyle.COUNT
 				: customSql.getCheckStyle() == null
 				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
@@ -341,11 +342,13 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		//TODO: i'm not sure, but perhaps we should exclude
 		//      abstract denormalized tables?
 
-		int spacesSize = 1 + entityBinding.getSynchronizedTableNames().length;
+		String[] synchronizedTableNames = entityBinding.getSynchronizedTableNames();
+		int spacesSize = 1 +synchronizedTableNames.length;
 		spaces = new String[spacesSize];
 		spaces[0] = tableName;
-		String[] synchronizedTableNames = entityBinding.getSynchronizedTableNames();
-		System.arraycopy( synchronizedTableNames, 0, spaces, 1, spacesSize );
+		if ( ArrayHelper.isNotEmpty( synchronizedTableNames ) ) {
+			System.arraycopy( synchronizedTableNames, 0, spaces, 1, spacesSize );
+		}
 
 		HashSet<String> subclassTables = new HashSet<String>();
 		Iterable<EntityBinding> iter = entityBinding.getPreOrderSubEntityBindingClosure();
@@ -543,68 +546,95 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private boolean isNotAbstractUnionTable(EntityBinding entityBinding) {
-		return !entityBinding.isAbstract() && entityBinding.getHierarchyDetails()
-				.getInheritanceType() != InheritanceType.TABLE_PER_CLASS;
+//		return !entityBinding.isAbstract() && entityBinding.getHierarchyDetails()
+//				.getInheritanceType() != InheritanceType.TABLE_PER_CLASS;
+		return !entityBinding.isAbstract();
 	}
-
+	private void visitEntityHierarchy(EntityBinding entityBinding, Callback callback){
+		EntityBinding rootEntityBinding = entityBinding.getHierarchyDetails().getRootEntityBinding();
+		callback.execute( rootEntityBinding );
+		visitSubEntityBindings( rootEntityBinding, callback );
+	}
+	private void visitSubEntityBindings(EntityBinding superEntityBinding, Callback callback){
+		Iterable<EntityBinding> entityBindings= superEntityBinding.getDirectSubEntityBindings();
+		for(EntityBinding entityBinding : entityBindings){
+			callback.execute( entityBinding );
+		}
+		for(EntityBinding entityBinding : entityBindings){
+			visitSubEntityBindings( entityBinding, callback );
+		}
+	}
+	private static interface Callback{
+		void execute(EntityBinding entityBinding);
+	}
 	protected String generateSubquery(EntityBinding entityBinding){
-		Dialect dialect = getFactory().getDialect();
-		Settings settings = getFactory().getSettings();
+		final Dialect dialect = getFactory().getDialect();
 
 		if ( !entityBinding.hasSubEntityBindings() ) {
 			return entityBinding.getPrimaryTable().getQualifiedName( dialect );
 		}
 
-		HashSet<org.hibernate.metamodel.spi.relational.Column> columns = new LinkedHashSet<org.hibernate.metamodel.spi.relational.Column>();
-		Iterable<EntityBinding> subEntityBindings = entityBinding.getPreOrderSubEntityBindingClosure();
-		Iterator<EntityBinding> siter = new JoinedIterator<EntityBinding>(
-				new SingletonIterator<EntityBinding>(entityBinding),
-				subEntityBindings.iterator()
-		);
-		while ( siter.hasNext() ) {
-			EntityBinding eb = siter.next();
-			if ( isNotAbstractUnionTable( eb ) ) {
-				TableSpecification table = entityBinding.getPrimaryTable();
-				for ( Value v : table.values() ) {
-					if ( org.hibernate.metamodel.spi.relational.Column.class.isInstance( v ) ) {
-						columns.add( org.hibernate.metamodel.spi.relational.Column.class.cast( v ) );
+		final HashSet<org.hibernate.metamodel.spi.relational.Column> columns = new LinkedHashSet<org.hibernate.metamodel.spi.relational.Column>();
+//		Iterable<EntityBinding> subEntityBindings = entityBinding.getHierarchyDetails()..getEntityBindingClosure();
+
+//		for(EntityBinding eb : subEntityBindings){
+//			if ( isNotAbstractUnionTable( eb ) ) {
+//				TableSpecification table = entityBinding.getPrimaryTable();
+//				for ( Value v : table.values() ) {
+//					if ( org.hibernate.metamodel.spi.relational.Column.class.isInstance( v ) ) {
+//						columns.add( org.hibernate.metamodel.spi.relational.Column.class.cast( v ) );
+//					}
+//				}
+//			}
+//		}
+
+		visitEntityHierarchy(
+				entityBinding, new Callback() {
+			@Override
+			public void execute(EntityBinding eb) {
+				if ( isNotAbstractUnionTable( eb ) ) {
+					TableSpecification table = eb.getPrimaryTable();
+					for ( Value v : table.values() ) {
+						if ( org.hibernate.metamodel.spi.relational.Column.class.isInstance( v ) ) {
+							columns.add( org.hibernate.metamodel.spi.relational.Column.class.cast( v ) );
+						}
 					}
 				}
 			}
 		}
+		);
 
-		StringBuilder buf = new StringBuilder()
+
+		final StringBuilder buf = new StringBuilder()
 				.append("( ");
 
-		siter = new JoinedIterator<EntityBinding>(
-				new SingletonIterator<EntityBinding>(entityBinding),
-				subEntityBindings.iterator()
-		);
-
-		while ( siter.hasNext() ) {
-			EntityBinding eb = siter.next();
-			TableSpecification table = eb.getPrimaryTable();
-			if ( isNotAbstractUnionTable( eb )) {
-				//TODO: move to .sql package!!
-				buf.append("select ");
-				for(org.hibernate.metamodel.spi.relational.Column column : columns){
-					if(!table.hasValue( column )){
-						buf.append( dialect.getSelectClauseNullString(column.getJdbcDataType().getTypeCode()) )
-								.append(" as ");
+		visitSubEntityBindings( entityBinding, new Callback() {
+			@Override
+			public void execute(EntityBinding eb) {
+				TableSpecification table = eb.getPrimaryTable();
+				if ( isNotAbstractUnionTable( eb )) {
+					//TODO: move to .sql package!!
+					buf.append("select ");
+					for(org.hibernate.metamodel.spi.relational.Column column : columns){
+						if(!table.hasValue( column )){
+							buf.append( dialect.getSelectClauseNullString(column.getJdbcDataType().getTypeCode()) )
+									.append(" as ");
+						}
+						buf.append( column.getColumnName().getText( dialect ) );
+						buf.append( ", " );
 					}
-					buf.append( column.getColumnName().getText( dialect ) );
-					buf.append( ", " );
-				}
-				buf.append( eb.getSubEntityBindingId() )
-						.append( " as clazz_" );
-				buf.append(" from ")
-						.append( table.getQualifiedName( dialect ));
-				buf.append(" union ");
-				if ( dialect.supportsUnionAll() ) {
-					buf.append("all ");
+					buf.append( eb.getSubEntityBindingId() )
+							.append( " as clazz_" );
+					buf.append(" from ")
+							.append( table.getQualifiedName( dialect ));
+					buf.append(" union ");
+					if ( dialect.supportsUnionAll() ) {
+						buf.append("all ");
+					}
 				}
 			}
-		}
+		} );
+
 
 		if ( buf.length() > 2 ) {
 			//chop the last union (all)

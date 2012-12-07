@@ -131,7 +131,7 @@ public class EntitySourceImpl implements EntitySource {
 
 	@Override
 	public boolean isAbstract() {
-		return false;
+		return entityClass.isAbstract();
 	}
 
 	@Override

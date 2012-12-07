@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -57,7 +58,7 @@ public class Atmosphere {
 	@ElementCollection
 	@Column(name="composition_rate")
 	@MapKeyJoinColumns( { @MapKeyJoinColumn(name="gas_id" ) } ) //use @MapKeyJoinColumns explicitly for tests
-	@JoinTable(name = "Composite", joinColumns = @JoinColumn(name = "atmosphere_id"))
+	@CollectionTable(name = "Composite", joinColumns = @JoinColumn(name = "atmosphere_id"))
 	public Map<Gas, Double> composition = new HashMap<Gas, Double>();
 
 	//use default JPA 2 column name for map key

@@ -44,6 +44,9 @@ public class SchemaValidatorImpl implements SchemaValidator {
 	public void doValidation(Database database, DatabaseInformation databaseInformation) {
 		for ( Schema schema : database.getSchemas() ) {
 			for ( Table table : schema.getTables() ) {
+				if( !table.isPhysicalTable() ){
+					continue;
+				}
 				final TableInformation tableInformation = databaseInformation.getTableInformation(
 						table.getTableName()
 				);

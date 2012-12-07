@@ -29,6 +29,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
@@ -45,7 +47,7 @@ import org.hibernate.metamodel.spi.source.MetaAttributeContext;
  */
 public class CompositeAttributeBinding
 		extends AbstractSingularAttributeBinding
-		implements SingularNonAssociationAttributeBinding, CompositeAttributeBindingContainer {
+		implements SingularNonAssociationAttributeBinding, CompositeAttributeBindingContainer, Cascadeable {
 
 	private final AbstractCompositeAttributeBindingContainer compositeAttributeBindingContainer;
 
@@ -218,6 +220,34 @@ public class CompositeAttributeBinding
 	public boolean hasDerivedValue() {
 		// todo : not sure this is even relevant for components
 		return false;
+	}
+
+	@Override
+	public boolean isCascadeable() {
+		for ( AttributeBinding attributeBinding : attributeBindings() ) {
+			if ( attributeBinding.isCascadeable() ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public CascadeStyle getCascadeStyle() {
+		for ( AttributeBinding attributeBinding : attributeBindings() ) {
+			if ( attributeBinding.isCascadeable() ) {
+				CascadeStyle cascadeStyle = Cascadeable.class.cast( attributeBinding ).getCascadeStyle();
+				if ( cascadeStyle != CascadeStyles.NONE ) {
+					return CascadeStyles.ALL;
+				}
+			}
+		}
+		return CascadeStyles.NONE;
+	}
+
+	@Override
+	public void setCascadeStyle(CascadeStyle cascadeStyle) {
+		throw new IllegalAccessError( "Composite attribute is not supposed to have cascade" );
 	}
 
 	@Override

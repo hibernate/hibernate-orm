@@ -94,6 +94,11 @@ public class ConfiguredClass {
 	private final Class<?> clazz;
 
 	/**
+	 * Is this class abstract?
+	 */
+	private final boolean isAbstract;
+
+	/**
 	 * The default access type for this entity
 	 */
 	private final AccessType classAccessType;
@@ -154,6 +159,7 @@ public class ConfiguredClass {
 		this.parent = parent;
 		this.classInfo = classInfo;
 		this.clazz = context.locateClassByName( classInfo.toString() );
+		this.isAbstract = ReflectHelper.isAbstractClass( this.clazz );
 		this.classAccessType = determineClassAccessType( defaultAccessType );
 		this.customTuplizer = determineCustomTuplizer();
 
@@ -181,6 +187,10 @@ public class ConfiguredClass {
 
 	public ConfiguredClass getParent() {
 		return parent;
+	}
+
+	public boolean isAbstract() {
+		return isAbstract;
 	}
 
 	public EntityBindingContext getLocalBindingContext() {

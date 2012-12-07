@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -53,7 +54,7 @@ class CodedPairSetHolder implements Serializable {
 	private String code;
 
 	@ElementCollection
-	@JoinTable(name = "CODED_PAIR_HOLDER_PAIR_SET", joinColumns = @JoinColumn(name = "CODED_PAIR_HOLDER_ID"))
+	@CollectionTable(name = "CODED_PAIR_HOLDER_PAIR_SET", joinColumns = @JoinColumn(name = "CODED_PAIR_HOLDER_ID"))
 	@ForeignKey(name = "FK_PAIR_SET")
 	private final Set<PersonPair> pairs = new HashSet<PersonPair>(0);
 

@@ -128,15 +128,15 @@ public abstract class AbstractConstraint implements Constraint {
 	}
 
 	protected void internalAddColumn(Column column) {
-		if ( column.getTable() != getTable() ) {
-			throw new AssertionFailure(
-					String.format(
-							"Unable to add column to constraint; tables [%s, %s] did not match",
-							column.getTable().toLoggableString(),
-							getTable().toLoggableString()
-					)
-			);
-		}
+//		if ( column.getTable() != getTable() ) {
+//			throw new AssertionFailure(
+//					String.format(
+//							"Unable to add column to constraint; tables [%s, %s] did not match",
+//							column.getTable().toLoggableString(),
+//							getTable().toLoggableString()
+//					)
+//			);
+//		}
 		columns.add( column );
 	}
 

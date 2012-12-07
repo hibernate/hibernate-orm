@@ -26,7 +26,6 @@ package org.hibernate.test.annotations.collectionelement.indexedCollection;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +33,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class IndexedCollectionOfElementsTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testIndexedCollectionOfElements() throws Exception {

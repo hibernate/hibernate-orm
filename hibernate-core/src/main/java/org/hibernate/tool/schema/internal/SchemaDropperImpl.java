@@ -80,6 +80,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		for ( Schema schema : database.getSchemas() ) {
 			for ( Table table : schema.getTables() ) {
+				if( !table.isPhysicalTable() ){
+					continue;
+				}
 				if ( dialect.dropConstraints() ) {
 					// we need to drop constraints prior to dropping table
 

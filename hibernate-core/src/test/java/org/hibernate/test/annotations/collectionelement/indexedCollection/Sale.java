@@ -2,6 +2,7 @@
 package org.hibernate.test.annotations.collectionelement.indexedCollection;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -22,7 +23,7 @@ import org.hibernate.annotations.Type;
 public class Sale {
 	@Id @GeneratedValue private Integer id;
 	@ElementCollection
-    @JoinTable(
+    @CollectionTable(
         name = "contact",
         joinColumns = @JoinColumn(name = "n_key_person"))
     @CollectionId(

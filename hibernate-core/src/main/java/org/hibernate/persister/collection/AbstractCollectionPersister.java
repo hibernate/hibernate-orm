@@ -821,7 +821,7 @@ public abstract class AbstractCollectionPersister
 
 		// INDEX AND ROW SELECT
 
-		hasIndex = collection.getAttribute().getNature().isIndexable();
+		hasIndex = collection.hasIndex();
 		indexContainsFormula = false;
 		if ( hasIndex ) {
 			// NativeSQL: collect index column and auto-aliases
@@ -926,7 +926,7 @@ public abstract class AbstractCollectionPersister
 		}
 
 		sqlSelectSizeString = generateSelectSizeString(
-				collection.getAttribute().getNature().isIndexable() &&
+				collection.hasIndex() &&
 						collection.getAttribute().getNature() != PluralAttribute.Nature.MAP
 		);
 		sqlDetectRowByIndexString = generateDetectRowByIndexString();

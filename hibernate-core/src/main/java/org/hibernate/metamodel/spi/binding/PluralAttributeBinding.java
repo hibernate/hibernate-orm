@@ -78,6 +78,8 @@ public interface PluralAttributeBinding extends AttributeBinding, Fetchable {
 
 	boolean isSorted();
 
+	boolean hasIndex();
+
 	Comparator getComparator();
 
 	int getBatchSize();

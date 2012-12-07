@@ -94,6 +94,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 
 			for ( Table table : schema.getTables() ) {
+				if( !table.isPhysicalTable() ){
+					continue;
+				}
 				checkExportIdentifier( table, exportIdentifiers );
 				applySqlStrings( targets, dialect.getTableExporter().getSqlCreateStrings( table, jdbcEnvironment ) );
 

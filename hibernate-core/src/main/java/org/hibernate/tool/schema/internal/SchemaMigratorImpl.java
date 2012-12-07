@@ -82,6 +82,9 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 			}
 
 			for ( Table table : schema.getTables() ) {
+				if( !table.isPhysicalTable() ){
+					continue;
+				}
 				checkExportIdentifier( table, exportIdentifiers );
 				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getTableName() );
 				if ( tableInformation == null ) {

@@ -48,6 +48,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	private Identifier logicalName;
 	private ObjectName qualifiedName;
 	private String exportIdentifier;
+	private boolean isPhysicalTable = true;
 
 	private final Set<Index> indexes = new LinkedHashSet<Index>();
 	private final Set<UniqueKey> uniqueKeys = new LinkedHashSet<UniqueKey>();
@@ -93,6 +94,19 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	 */
 	public Identifier getPhysicalName() {
 		return physicalName;
+	}
+
+	/**
+	 * Is this a physical table or should it be a virtual table representing as root entity in table-per-class hierarchy.
+	 *
+	 * It's {@code false} only when the entity is {@code abstract} and also having union sub-class
+	 */
+	public boolean isPhysicalTable() {
+		return isPhysicalTable;
+	}
+
+	public void setPhysicalTable(boolean physicalTable) {
+		isPhysicalTable = physicalTable;
 	}
 
 	/**
@@ -245,13 +259,8 @@ public class Table extends AbstractTableSpecification implements Exportable {
 				alter.append( " default " )
 						.append( defaultValue );
 			}
-
-			if ( column.isNullable() ) {
-				alter.append( dialect.getNullColumnString() );
-			}
-			else {
-				alter.append( " not null" );
-			}
+			String nullablePostfix = column.isNullable() ? dialect.getNullColumnString() : " not null";
+			alter.append( nullablePostfix );
 
 			boolean useUniqueConstraint = column.isUnique()
 					&& dialect.supportsUnique()

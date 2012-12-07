@@ -88,6 +88,12 @@ public class Schema {
 		return table;
 	}
 
+	public DenormalizedTable createDenormalizedTable(Identifier logicalTableName, Identifier physicalTableName, Table includedTable) {
+		DenormalizedTable table = new DenormalizedTable( this, logicalTableName, physicalTableName, includedTable );
+		tables.put( logicalTableName, table );
+		return table;
+	}
+
 	public Iterable<Table> getTables() {
 		return tables.values();
 	}

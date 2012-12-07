@@ -35,23 +35,21 @@ import org.hibernate.engine.spi.Mapping;
 public class UniqueKey extends Constraint {
 
 	public String sqlConstraintString(Dialect dialect) {
+		// TODO: This may not be necessary, but not all callers currently
+		// check it on their own.  Go through their logic.
+		if ( !isGenerated( dialect ) ) return null;
+		
 		StringBuilder buf = new StringBuilder( "unique (" );
-		boolean hadNullableColumn = false;
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
 			Column column = (Column) iter.next();
-			if ( !hadNullableColumn && column.isNullable() ) {
-				hadNullableColumn = true;
-			}
 			buf.append( column.getQuotedName( dialect ) );
 			if ( iter.hasNext() ) {
 				buf.append( ", " );
 			}
 		}
-		//do not add unique constraint on DB not supporting unique and nullable columns
-		return !hadNullableColumn || dialect.supportsNotNullUnique() ?
-				buf.append( ')' ).toString() :
-				null;
+		
+		return buf.append( ')' ).toString();
 	}
 
 	@Override
@@ -60,18 +58,19 @@ public class UniqueKey extends Constraint {
 			String constraintName,
 			String defaultCatalog,
 			String defaultSchema) {
+		// TODO: This may not be necessary, but not all callers currently
+		// check it on their own.  Go through their logic.
+		if ( !isGenerated( dialect ) ) return null;
+		
 		StringBuilder buf = new StringBuilder(
-				dialect.getAddUniqueConstraintString( constraintName )
-		).append( '(' );
+		dialect.getAddUniqueConstraintString( constraintName ) ).append( '(' );
 		Iterator iter = getColumnIterator();
-		boolean nullable = false;
 		while ( iter.hasNext() ) {
 			Column column = (Column) iter.next();
-			if ( !nullable && column.isNullable() ) nullable = true;
 			buf.append( column.getQuotedName( dialect ) );
 			if ( iter.hasNext() ) buf.append( ", " );
 		}
-		return !nullable || dialect.supportsNotNullUnique() ? buf.append( ')' ).toString() : null;
+		return buf.append( ')' ).toString();
 	}
 
 	@Override
@@ -97,12 +96,13 @@ public class UniqueKey extends Constraint {
 
 	@Override
     public boolean isGenerated(Dialect dialect) {
+		if ( !dialect.supportsUniqueConstraintInCreateAlterTable() ) return false;
 		if ( dialect.supportsNotNullUnique() ) return true;
+		
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
-			if ( ( (Column) iter.next() ).isNullable() ) {
-				return false;
-			}
+			// Dialect does not support "not null unique" and this column is not null.
+			if ( ! ( (Column) iter.next() ).isNullable() ) return false;
 		}
 		return true;
 	}

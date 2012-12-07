@@ -48,21 +48,22 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 
 	@Override
     public boolean isCreationVetoed(Dialect dialect) {
-		if ( dialect.supportsNotNullUnique() ) {
-			return false;
-		}
-
+		if ( !dialect.supportsUniqueConstraintInCreateAlterTable() ) return true;
+		if ( dialect.supportsNotNullUnique() ) return false;
+		
 		for ( Column column : getColumns() ) {
-			if ( column.isNullable() ) {
-				return true;
-			}
+			// Dialect does not support "not null unique" and this column is not null.
+			if ( ! column.isNullable() ) return true;
 		}
 		return false;
 	}
 
 	public String sqlConstraintStringInCreateTable(Dialect dialect) {
+		// TODO: This may not be necessary, but not all callers currently
+		// check it on their own.  Go through their logic.
+		if ( isCreationVetoed( dialect ) ) return null;
+				
 		StringBuilder buf = new StringBuilder( "unique (" );
-		boolean hadNullableColumn = false;
 		boolean first = true;
 		for ( Column column : getColumns() ) {
 			if ( first ) {
@@ -71,23 +72,19 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 			else {
 				buf.append( ", " );
 			}
-			if ( !hadNullableColumn && column.isNullable() ) {
-				hadNullableColumn = true;
-			}
 			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
 		}
-		//do not add unique constraint on DB not supporting unique and nullable columns
-		return !hadNullableColumn || dialect.supportsNotNullUnique() ?
-				buf.append( ')' ).toString() :
-				null;
+		return buf.append( ')' ).toString();
 	}
 
 	@Override
     public String sqlConstraintStringInAlterTable(Dialect dialect) {
+		// TODO: This may not be necessary, but not all callers currently
+		// check it on their own.  Go through their logic.
+		if ( isCreationVetoed( dialect ) ) return null;
+				
 		StringBuilder buf = new StringBuilder(
-				dialect.getAddUniqueConstraintString( getName() )
-		).append( '(' );
-		boolean nullable = false;
+		dialect.getAddUniqueConstraintString( getName() ) ).append( '(' );
 		boolean first = true;
 		for ( Column column : getColumns() ) {
 			if ( first ) {
@@ -96,11 +93,8 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 			else {
 				buf.append( ", " );
 			}
-			if ( !nullable && column.isNullable() ) {
-				nullable = true;
-			}
 			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
 		}
-		return !nullable || dialect.supportsNotNullUnique() ? buf.append( ')' ).toString() : null;
+		return buf.append( ')' ).toString();
 	}
 }

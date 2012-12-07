@@ -199,15 +199,19 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 			}
 
-			boolean useUniqueConstraint = col.isUnique() &&
-					( col.isNullable() || dialect.supportsNotNullUnique() );
-			if ( useUniqueConstraint ) {
-				if ( dialect.supportsUnique() ) {
-					buf.append( " unique" );
-				}
-				else {
+			// If the column is 1.) unique and nullable or 2.) unique,
+			// not null, and the dialect supports unique not null			
+			if ( col.isUnique()
+					&& ( col.isNullable()
+							|| dialect.supportsNotNullUnique() ) ) {
+				if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
+					// If the constraint is supported, do not add to the column syntax.
 					UniqueKey uk = getOrCreateUniqueKey( col.getColumnName().encloseInQuotesIfQuoted( dialect ) + '_' );
 					uk.addColumn( col );
+				}
+				else if ( dialect.supportsUnique() ) {
+					// Otherwise, add to the column syntax if supported.
+					buf.append( " unique" );
 				}
 			}
 

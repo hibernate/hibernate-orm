@@ -1977,6 +1977,11 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	/**
+	 * Does this dialect support columns that are both unique and not null.
+	 * 
+	 * @return True if supported, false otherwise.
+	 */
 	public boolean supportsNotNullUnique() {
 		return true;
 	}

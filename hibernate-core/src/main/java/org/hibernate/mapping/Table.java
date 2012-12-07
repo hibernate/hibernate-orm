@@ -422,10 +422,13 @@ public class Table implements RelationalModel, Serializable {
 					alter.append( " not null" );
 				}
 
-				boolean useUniqueConstraint = column.isUnique() &&
-						dialect.supportsUnique() &&
-						( column.isNullable() || dialect.supportsNotNullUnique() );
-				if ( useUniqueConstraint ) {
+				// If the column is 1.) unique, 2.) the dialect supports the
+				// unique syntax, 3.) the column is nullable or supports
+				// "not null unique", and 4.) a constraint will not be created
+				if ( column.isUnique() && dialect.supportsUnique()
+						&& ( column.isNullable()
+								|| dialect.supportsNotNullUnique() )
+						&& !dialect.supportsUniqueConstraintInCreateAlterTable() ) {
 					alter.append( " unique" );
 				}
 
@@ -523,16 +526,20 @@ public class Table implements RelationalModel, Serializable {
 				}
 
 			}
-
-			boolean useUniqueConstraint = col.isUnique() &&
-					( col.isNullable() || dialect.supportsNotNullUnique() );
-			if ( useUniqueConstraint ) {
-				if ( dialect.supportsUnique() ) {
-					buf.append( " unique" );
-				}
-				else {
+			
+			// If the column is 1.) unique and nullable or 2.) unique,
+			// not null, and the dialect supports unique not null			
+			if ( col.isUnique()
+					&& ( col.isNullable()
+							|| dialect.supportsNotNullUnique() ) ) {
+				if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
+					// If the constraint is supported, do not add to the column syntax.
 					UniqueKey uk = getOrCreateUniqueKey( col.getQuotedName( dialect ) + '_' );
 					uk.addColumn( col );
+				}
+				else if ( dialect.supportsUnique() ) {
+					// Otherwise, add to the column syntax if supported.
+					buf.append( " unique" );
 				}
 			}
 

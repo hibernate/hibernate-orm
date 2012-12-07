@@ -27,7 +27,6 @@ import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.*;
-import org.hibernate.testing.FailureExpected;
 import org.junit.Test;
 
 import org.hibernate.IrrelevantEntity;
@@ -173,7 +172,9 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 		assertTrue( ((TransactionContext) secondSession).isFlushBeforeCompletionEnabled() );
 
 		// now try it out
-		Integer id = (Integer) secondSession.save( new IrrelevantEntity() );
+		final IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
+		irrelevantEntity.setName("testing flush");
+		Integer id = (Integer) secondSession.save( irrelevantEntity );
 		session.getTransaction().commit();
 		assertFalse( ((SessionImplementor) session).isClosed() );
 		assertTrue( ((SessionImplementor) secondSession).isClosed() );

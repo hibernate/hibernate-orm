@@ -57,8 +57,8 @@ tokens
 	ASCENDING="asc";
 	DESCENDING="desc";
 	NULLS="nulls";
-	FIRST="first";
-	LAST="last";
+	FIRST;
+	LAST;
 }
 
 
@@ -305,8 +305,17 @@ nullOrdering! { trace("nullOrdering"); }
     ;
 
 nullPrecedence { trace("nullPrecedence"); }
-    : FIRST
-    | LAST
+    : IDENT {
+            if ( "first".equalsIgnoreCase( #nullPrecedence.getText() ) ) {
+                #nullPrecedence.setType( FIRST );
+            }
+            else if ( "last".equalsIgnoreCase( #nullPrecedence.getText() ) ) {
+                #nullPrecedence.setType( LAST );
+            }
+            else {
+                throw new SemanticException( "Expecting 'first' or 'last', but found '" +  #nullPrecedence.getText() + "' as null ordering precedence." );
+            }
+    }
     ;
 
 /**

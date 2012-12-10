@@ -57,8 +57,7 @@ public class ComponentJoin extends FromElement {
 		fromClause.addJoinByPathMap( componentPath, this );
 		initializeComponentJoin( new ComponentFromElementType( this ) );
 
-		String[] cols = origin.getPropertyMapping( "" ).toColumns( getTableAlias(), componentProperty );
-		this.columns = cols.length == 0 ? new String[] { null} : cols;
+		this.columns = origin.getPropertyMapping( "" ).toColumns( getTableAlias(), componentProperty );
 		StringBuilder buf = new StringBuilder();
 		for ( int j = 0; j < columns.length; j++ ) {
 			final String column = columns[j];

@@ -31,9 +31,11 @@ import javassist.CannotCompileException;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.Bytecode;
 import javassist.bytecode.ClassFile;
+import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.Opcode;
+import javassist.bytecode.StackMapTable;
 import javassist.util.proxy.FactoryHelper;
 import javassist.util.proxy.RuntimeSupport;
 
@@ -244,6 +246,7 @@ class BulkAccessorFactory {
 		MethodInfo mi = new MethodInfo( cp, GENERATED_SETTER_NAME, desc );
 
 		Bytecode code = new Bytecode( cp, 4, 6 );
+		StackMapTable stackmap = null;
 		/* | this | bean | args | i | raw bean | exception | */
 		if ( setters.length > 0 ) {
 			int start, end; // required to exception table
@@ -321,7 +324,8 @@ class BulkAccessorFactory {
 			/* current stack len = 0 */
 			// register in exception table
 			int throwableType_index = cp.addClassInfo( THROWABLE_CLASS_NAME );
-			code.addExceptionHandler( start, end, code.currentPc(), throwableType_index );
+			int handler_pc = code.currentPc();
+			code.addExceptionHandler( start, end, handler_pc, throwableType_index );
 			// astore 5 // store exception
 			code.addAstore( 5 );
 			// new // BulkAccessorException
@@ -337,13 +341,24 @@ class BulkAccessorFactory {
 			code.addInvokespecial( BULKEXCEPTION_CLASS_NAME, MethodInfo.nameInit, cons_desc );
 			// athrow
 			code.addOpcode( Opcode.ATHROW );
+			StackMapTable.Writer writer = new StackMapTable.Writer(32);
+			int[] localTags = { StackMapTable.OBJECT, StackMapTable.OBJECT, StackMapTable.OBJECT, StackMapTable.INTEGER };
+			int[] localData = { cp.getThisClassInfo(), cp.addClassInfo("java/lang/Object"),
+                        	cp.addClassInfo("[Ljava/lang/Object;"), 0};
+			int[] stackTags = { StackMapTable.OBJECT };
+			int[] stackData = { throwableType_index };
+			writer.fullFrame(handler_pc, localTags, localData, stackTags, stackData);
+			stackmap = writer.toStackMapTable(cp);
 		}
 		else {
 			// return
 			code.addOpcode( Opcode.RETURN );
 		}
-
-		mi.setCodeAttribute( code.toCodeAttribute() );
+		CodeAttribute ca = code.toCodeAttribute();
+		if (stackmap != null) {
+			ca.setAttribute(stackmap);
+		}
+		mi.setCodeAttribute( ca );
 		mi.setAccessFlags( AccessFlag.PUBLIC );
 		classfile.addMethod( mi );
 	}

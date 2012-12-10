@@ -32,8 +32,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.jpa.test.criteria.components.Client_;
-import org.hibernate.jpa.test.criteria.components.Name_;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;

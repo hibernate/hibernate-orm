@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
+import java.util.EnumSet;
+
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
@@ -13,17 +15,16 @@ import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 		implements IndexedPluralAttributeSource {
 	private final PluralAttributeIndexSource indexSource;
+	private final static EnumSet<MappedAttribute.Nature> validNatures = EnumSet.of(
+			MappedAttribute.Nature.MANY_TO_MANY,
+			MappedAttribute.Nature.ONE_TO_MANY,
+			MappedAttribute.Nature.ELEMENT_COLLECTION_BASIC,
+			MappedAttribute.Nature.ELEMENT_COLLECTION_EMBEDDABLE);
 
 	public IndexedPluralAttributeSourceImpl(PluralAssociationAttribute attribute,
 			EntityClass entityClass ) {
 		super( attribute, entityClass );
-		if ( getNature() == org.hibernate.metamodel.spi.source.PluralAttributeSource.Nature.SET || getNature() == org.hibernate.metamodel.spi.source.PluralAttributeSource.Nature.MAP ) {
-			throw new MappingException(
-					"Set / Map could not be an indexed column",
-					attribute.getContext().getOrigin()
-			);
-		}
-		if ( attribute.getNature() != MappedAttribute.Nature.MANY_TO_MANY && attribute.getNature() != MappedAttribute.Nature.ONE_TO_MANY ) {
+		if ( !validNatures.contains( attribute.getNature() ) ) {
 			throw new MappingException(
 					"Indexed column could be only mapped on the MANY side",
 					attribute.getContext().getOrigin()

@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.annotations.attribute;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.FetchType;
 
@@ -47,6 +48,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 
 /**
  * Represents an collection (collection, list, set, map) association attribute.
@@ -74,6 +76,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final String inverseForeignKeyName;
 	private final String explicitForeignKeyName;
 
+	private final PluralAttributeSource.Nature pluralAttributeNature;
+
 	private LazyCollectionOption lazyOption;
 
 	public static PluralAssociationAttribute createPluralAssociationAttribute(ClassInfo entityClassInfo,
@@ -94,6 +98,10 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				annotations,
 				context
 		);
+	}
+
+	public PluralAttributeSource.Nature getPluralAttributeNature() {
+		return pluralAttributeNature;
 	}
 
 	public String getWhereClause() {
@@ -240,7 +248,26 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 			);
 		}
 		this.isIndexed = orderColumnAnnotation != null || indexColumnAnnotation != null;
+		this.pluralAttributeNature = resolvePluralAttributeNature();
+	}
 
+	private PluralAttributeSource.Nature resolvePluralAttributeNature() {
+
+		if ( Map.class.isAssignableFrom( getAttributeType() ) ) {
+			return PluralAttributeSource.Nature.MAP;
+		}
+		else if ( List.class.isAssignableFrom( getAttributeType() ) ) {
+			return isIndexed() ? PluralAttributeSource.Nature.LIST : PluralAttributeSource.Nature.BAG;
+		}
+		else if ( Set.class.isAssignableFrom( getAttributeType() ) ) {
+			return PluralAttributeSource.Nature.SET;
+		}
+		else if ( getAttributeType().isArray() ) {
+			return PluralAttributeSource.Nature.ARRAY;
+		}
+		else {
+			return PluralAttributeSource.Nature.BAG;
+		}
 	}
 
 	private OnDeleteAction determineOnDeleteAction() {

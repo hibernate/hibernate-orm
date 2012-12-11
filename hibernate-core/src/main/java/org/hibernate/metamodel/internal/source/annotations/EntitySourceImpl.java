@@ -53,6 +53,7 @@ import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
@@ -238,14 +239,14 @@ public class EntitySourceImpl implements EntitySource {
 				}
 				case MANY_TO_MANY:
 				case ONE_TO_MANY:
-					AttributeSource source = ((PluralAssociationAttribute)associationAttribute).isIndexed() ?
-							new IndexedPluralAttributeSourceImpl((PluralAssociationAttribute) associationAttribute, entityClass )
-							:new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute, entityClass );
-					attributeList.add( source );
-					break;
 				case ELEMENT_COLLECTION_BASIC:
 				case ELEMENT_COLLECTION_EMBEDDABLE: {
-					source = new PluralAttributeSourceImpl( ( PluralAssociationAttribute ) associationAttribute, entityClass );
+					PluralAssociationAttribute pluralAssociationAttribute = (PluralAssociationAttribute) associationAttribute;
+					PluralAttributeSource.Nature pluralAttributeNature = pluralAssociationAttribute.getPluralAttributeNature();
+
+					AttributeSource source = pluralAssociationAttribute.isIndexed() ?
+							new IndexedPluralAttributeSourceImpl( pluralAssociationAttribute, entityClass )
+							: new PluralAttributeSourceImpl( pluralAssociationAttribute, entityClass );
 					attributeList.add( source );
 					break;
 				}

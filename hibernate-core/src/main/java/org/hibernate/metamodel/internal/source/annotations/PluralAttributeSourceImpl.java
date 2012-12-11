@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.jandex.AnnotationInstance;
+
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
@@ -62,11 +64,11 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 			final PluralAssociationAttribute associationAttribute,
 			final EntityClass entityClass ) {
 		this.associationAttribute = associationAttribute;
-		this.nature = resolveAttributeNature();
 		this.entityClass = entityClass;
 		this.keySource = new PluralAttributeKeySourceImpl( associationAttribute );
-		this.elementSource = determineElementSource();
 		this.typeSource = new ExplicitHibernateTypeSourceImpl( associationAttribute );
+		this.nature = associationAttribute.getPluralAttributeNature();
+		this.elementSource = determineElementSource( associationAttribute, entityClass );
 	}
 
 	@Override
@@ -91,12 +93,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		}
 	}
 
-	@Override
-	public String getMappedBy() {
-		return associationAttribute.getMappedBy();
-	}
-
-	private PluralAttributeElementSource determineElementSource() {
+	private static PluralAttributeElementSource determineElementSource(PluralAssociationAttribute associationAttribute, EntityClass entityClass) {
 		switch ( associationAttribute.getNature() ) {
 			case MANY_TO_MANY:
 				return new ManyToManyPluralAttributeElementSourceImpl( associationAttribute );
@@ -109,7 +106,8 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 			case ELEMENT_COLLECTION_EMBEDDABLE: {
 				// TODO: cascadeStyles?
 				return new CompositePluralAttributeElementSourceImpl(
-						associationAttribute, entityClass );
+						associationAttribute, entityClass
+				);
 			}
 		}
 		throw new AssertionError( "Unexpected attribute nature for a association:" + associationAttribute.getNature() );
@@ -124,13 +122,8 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	public TableSpecificationSource getCollectionTableSpecificationSource() {
 		// todo - see org.hibernate.metamodel.internal.Binder#bindOneToManyCollectionKey
 		// todo - needs to cater for @CollectionTable and @JoinTable
-
-		if ( associationAttribute.getJoinTableAnnotation() == null ) {
-			return null;
-		}
-		else {
-			return new TableSourceImpl( associationAttribute.getJoinTableAnnotation() );
-		}
+		final AnnotationInstance joinTableAnnotation = associationAttribute.getJoinTableAnnotation();
+		return joinTableAnnotation == null ? null : new TableSourceImpl( joinTableAnnotation );
 	}
 
 	@Override
@@ -159,8 +152,13 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	}
 
 	@Override
+	public String getMappedBy() {
+		return associationAttribute.getMappedBy();
+	}
+
+	@Override
 	public boolean isInverse() {
-		return associationAttribute.getMappedBy() != null;
+		return getMappedBy() != null;
 	}
 
 	@Override
@@ -244,10 +242,12 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		if ( associationAttribute.isExtraLazy() ) {
 			return FetchTiming.EXTRA_DELAYED;
 		}
-		if ( associationAttribute.isLazy() ) {
+		else if ( associationAttribute.isLazy() ) {
 			return FetchTiming.DELAYED;
 		}
-		return FetchTiming.IMMEDIATE;
+		else {
+			return FetchTiming.IMMEDIATE;
+		}
 	}
 
 	@Override
@@ -255,22 +255,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		return associationAttribute.getFetchStyle();
 	}
 
-	private Nature resolveAttributeNature() {
-		if ( Map.class.isAssignableFrom( associationAttribute.getAttributeType() ) ) {
-			return PluralAttributeSource.Nature.MAP;
-		}
-		else if ( List.class.isAssignableFrom( associationAttribute.getAttributeType() ) ) {
-			return associationAttribute.isIndexed()? Nature.LIST : Nature.BAG;
-		}
-		else if ( Set.class.isAssignableFrom( associationAttribute.getAttributeType() ) ) {
-			return PluralAttributeSource.Nature.SET;
-		} else if ( associationAttribute.getAttributeType().isArray() ) {
-			return PluralAttributeSource.Nature.ARRAY;
-		}
-		else {
-			return PluralAttributeSource.Nature.BAG;
-		}
-	}
+
 }
 
 

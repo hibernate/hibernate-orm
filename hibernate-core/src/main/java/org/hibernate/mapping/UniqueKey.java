@@ -22,35 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-import java.util.Iterator;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 
 /**
  * A relational unique key constraint
  *
- * @author Gavin King
+ * @author Brett Meyer
  */
 public class UniqueKey extends Constraint {
-
-	public String sqlConstraintString(Dialect dialect) {
-		// TODO: This may not be necessary, but not all callers currently
-		// check it on their own.  Go through their logic.
-		if ( !isGenerated( dialect ) ) return null;
-		
-		StringBuilder buf = new StringBuilder( "unique (" );
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			Column column = (Column) iter.next();
-			buf.append( column.getQuotedName( dialect ) );
-			if ( iter.hasNext() ) {
-				buf.append( ", " );
-			}
-		}
-		
-		return buf.append( ')' ).toString();
-	}
 
 	@Override
     public String sqlConstraintString(
@@ -58,53 +38,34 @@ public class UniqueKey extends Constraint {
 			String constraintName,
 			String defaultCatalog,
 			String defaultSchema) {
-		// TODO: This may not be necessary, but not all callers currently
-		// check it on their own.  Go through their logic.
-		if ( !isGenerated( dialect ) ) return null;
-		
-		StringBuilder buf = new StringBuilder(
-		dialect.getAddUniqueConstraintString( constraintName ) ).append( '(' );
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			Column column = (Column) iter.next();
-			buf.append( column.getQuotedName( dialect ) );
-			if ( iter.hasNext() ) buf.append( ", " );
-		}
-		return buf.append( ')' ).toString();
+		return dialect.getUniqueDelegate().uniqueConstraintSql( this );
 	}
 
 	@Override
-    public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-			return super.sqlCreateString( dialect, p, defaultCatalog, defaultSchema );
-		}
-		else {
-			return Index.buildSqlCreateIndexString( dialect, getName(), getTable(), getColumnIterator(), true,
-					defaultCatalog, defaultSchema );
-		}
+    public String sqlCreateString(Dialect dialect, Mapping p,
+    		String defaultCatalog, String defaultSchema) {
+		return dialect.getUniqueDelegate().applyUniquesOnAlter(
+				this, defaultCatalog, defaultSchema );
 	}
 
 	@Override
-    public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-			return super.sqlDropString( dialect, defaultCatalog, defaultSchema );
-		}
-		else {
-			return Index.buildSqlDropIndexString( dialect, getTable(), getName(), defaultCatalog, defaultSchema );
-		}
+    public String sqlDropString(Dialect dialect, String defaultCatalog,
+    		String defaultSchema) {
+		return dialect.getUniqueDelegate().dropUniquesOnAlter(
+				this, defaultCatalog, defaultSchema );
 	}
 
-	@Override
-    public boolean isGenerated(Dialect dialect) {
-		if ( !dialect.supportsUniqueConstraintInCreateAlterTable() ) return false;
-		if ( dialect.supportsNotNullUnique() ) return true;
-		
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			// Dialect does not support "not null unique" and this column is not null.
-			if ( ! ( (Column) iter.next() ).isNullable() ) return false;
-		}
-		return true;
-	}
+//	@Override
+//    public boolean isGenerated(Dialect dialect) {
+//		if ( !dialect.supportsUniqueConstraintInCreateAlterTable() ) return false;
+//		if ( dialect.supportsNotNullUnique() ) return true;
+//		
+//		Iterator iter = getColumnIterator();
+//		while ( iter.hasNext() ) {
+//			// Dialect does not support "not null unique" and this column is not null.
+//			if ( ! ( (Column) iter.next() ).isNullable() ) return false;
+//		}
+//		return true;
+//	}
 
 }

@@ -1049,17 +1049,15 @@ public class Configuration implements Serializable {
 			Table table = (Table) iter.next();
 			if ( table.isPhysicalTable() ) {
 
-				if ( !dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-					Iterator subIter = table.getUniqueKeyIterator();
-					while ( subIter.hasNext() ) {
-						UniqueKey uk = (UniqueKey) subIter.next();
-						String constraintString = uk.sqlCreateString( dialect, mapping, defaultCatalog, defaultSchema );
-						if (constraintString != null) script.add( constraintString );
-					}
+				Iterator subIter = table.getUniqueKeyIterator();
+				while ( subIter.hasNext() ) {
+					UniqueKey uk = (UniqueKey) subIter.next();
+					String constraintString = uk.sqlCreateString( dialect, mapping, defaultCatalog, defaultSchema );
+					if (constraintString != null) script.add( constraintString );
 				}
 
 
-				Iterator subIter = table.getIndexIterator();
+				subIter = table.getIndexIterator();
 				while ( subIter.hasNext() ) {
 					Index index = (Index) subIter.next();
 					script.add(

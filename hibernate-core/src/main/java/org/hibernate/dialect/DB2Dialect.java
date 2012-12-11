@@ -30,7 +30,6 @@ import java.sql.Types;
 
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
@@ -276,10 +275,6 @@ public class DB2Dialect extends Dialect {
 	}
 	@Override
 	public boolean supportsOuterJoinForUpdate() {
-		return false;
-	}
-	@Override
-	public boolean supportsNotNullUnique() {
 		return false;
 	}
 	@Override

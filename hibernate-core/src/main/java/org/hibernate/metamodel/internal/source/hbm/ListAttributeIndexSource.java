@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
@@ -112,7 +113,7 @@ public class ListAttributeIndexSource extends AbstractHbmSourceNode implements P
 
 			@Override
 			public String getName() {
-				return indexElement.getType();
+				return StringHelper.isEmpty( indexElement.getType() ) ? "integer" : indexElement.getType();
 			}
 
 			@Override

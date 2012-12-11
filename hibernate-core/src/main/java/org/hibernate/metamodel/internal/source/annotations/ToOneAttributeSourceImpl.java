@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -71,7 +72,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 			return Nature.MANY_TO_ONE;
 		}
 		else if ( MappedAttribute.Nature.ONE_TO_ONE.equals( associationAttribute.getNature() ) ) {
-				throw new UnsupportedOperationException( "One-to-one using annotations is not supported yet." );
+				throw new NotYetImplementedException( "One-to-one using annotations is not supported yet." );
 		}
 		else {
 			throw new AssertionError(

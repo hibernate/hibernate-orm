@@ -24,12 +24,10 @@
 package org.hibernate.test.querycache;
 
 import org.hibernate.CacheMode;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
 public class HqlQueryCachePutResultTransformerTest extends HqlQueryCacheIgnoreResultTransformerTest {
 	@Override
 	protected CacheMode getQueryCacheMode() {

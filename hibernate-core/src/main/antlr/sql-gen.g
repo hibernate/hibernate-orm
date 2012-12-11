@@ -27,8 +27,11 @@ options {
    /** the buffer resulting SQL statement is written to */
 	private StringBuilder buf = new StringBuilder();
 
+	private boolean captureExpression = false;
+	private StringBuilder expr = new StringBuilder();
+
 	protected void out(String s) {
-		buf.append(s);
+		getStringBuilder().append( s );
 	}
 
 	/**
@@ -72,7 +75,7 @@ options {
 	}
 
 	protected StringBuilder getStringBuilder() {
-		return buf;
+		return captureExpression ? expr : buf;
 	}
 
 	protected void nyi(AST n) {
@@ -91,6 +94,34 @@ options {
 
 	protected void commaBetweenParameters(String comma) {
 		out(comma);
+	}
+
+	protected void captureExpressionStart() {
+		captureExpression = true;
+	}
+
+	protected void captureExpressionFinish() {
+		captureExpression = false;
+	}
+
+	protected String resetCapture() {
+		final String expression = expr.toString();
+		expr = new StringBuilder();
+		return expression;
+	}
+
+	/**
+	 * Implementation note: This is just a stub. SqlGenerator contains the effective implementation.
+	 */
+	protected String renderOrderByElement(String expression, String order, String nulls) {
+		final StringBuilder orderByElement = new StringBuilder( expression );
+		if ( order != null ) {
+			orderByElement.append( " " ).append( order );
+		}
+		if ( nulls != null ) {
+			orderByElement.append( " " ).append( nulls );
+		}
+		return orderByElement.toString();
 	}
 }
 
@@ -152,9 +183,14 @@ whereClauseExpr
 	| booleanExpr[ false ]
 	;
 
-orderExprs
+orderExprs { String ordExp = null; String ordDir = null; String ordNul = null; }
 	// TODO: remove goofy space before the comma when we don't have to regression test anymore.
-	: ( expr ) (dir:orderDirection { out(" "); out(dir); })? (nullOrdering)? ( {out(", "); } orderExprs )?
+	// Dialect is provided a hook to render each ORDER BY element, so the expression is being captured instead of
+	// printing to the SQL output directly. See Dialect#renderOrderByElement(String, String, String, String).
+	: { captureExpressionStart(); } ( expr ) { captureExpressionFinish(); ordExp = resetCapture(); }
+	    (dir:orderDirection { ordDir = #dir.getText(); })? (ordNul=nullOrdering)?
+	        { out( renderOrderByElement( ordExp, ordDir, ordNul ) ); }
+	    ( {out(", "); } orderExprs )?
 	;
 
 groupExprs
@@ -167,8 +203,8 @@ orderDirection
 	| DESCENDING
 	;
 
-nullOrdering
-    : nls:NULLS fl:nullPrecedence { out(" "); out(nls); out(" "); out(fl); }
+nullOrdering returns [String nullOrdExp = null]
+    : nls:NULLS fl:nullPrecedence { nullOrdExp = #nls.getText() + " " + #fl.getText(); }
     ;
 
 nullPrecedence

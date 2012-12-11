@@ -366,4 +366,9 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			out( d );
 		}
 	}
+
+	@Override
+	protected String renderOrderByElement(String expression, String order, String nulls) {
+		return sessionFactory.getDialect().renderOrderByElement( expression, null, order, nulls );
+	}
 }

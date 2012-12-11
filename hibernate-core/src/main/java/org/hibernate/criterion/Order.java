@@ -88,18 +88,23 @@ public class Order implements Serializable {
 		Type type = criteriaQuery.getTypeUsingProjection(criteria, propertyName);
 		StringBuilder fragment = new StringBuilder();
 		for ( int i=0; i<columns.length; i++ ) {
+			final StringBuilder expression = new StringBuilder();
 			SessionFactoryImplementor factory = criteriaQuery.getFactory();
 			boolean lower = ignoreCase && type.sqlTypes( factory )[i]==Types.VARCHAR;
 			if (lower) {
-				fragment.append( factory.getDialect().getLowercaseFunction() )
-					.append('(');
+				expression.append( factory.getDialect().getLowercaseFunction() ).append('(');
 			}
-			fragment.append( columns[i] );
-			if (lower) fragment.append(')');
-			fragment.append( ascending ? " asc" : " desc" );
-			if ( nullPrecedence != null ) {
-				fragment.append( " " ).append( nullPrecedence.getSqlClause() );
-			}
+			expression.append( columns[i] );
+			if (lower) expression.append(')');
+			fragment.append(
+					factory.getDialect()
+							.renderOrderByElement(
+									expression.toString(),
+									null,
+									ascending ? "asc" : "desc",
+									nullPrecedence != null ? nullPrecedence.getSqlClause() : null
+							)
+			);
 			if ( i<columns.length-1 ) fragment.append(", ");
 		}
 		return fragment.toString();

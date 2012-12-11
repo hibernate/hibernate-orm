@@ -2179,6 +2179,31 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * @param expression The SQL order expression. In case of {@code @OrderBy} annotation user receives property placeholder
+	 * (e.g. attribute name enclosed in '{' and '}' signs).
+	 * @param collation Collation string in format {@code collate IDENTIFIER}, or {@code null}
+	 * if expression has not been explicitly specified.
+	 * @param order Order direction. Possible values: {@code asc}, {@code desc}, or {@code null}
+	 * if expression has not been explicitly specified.
+	 * @param nulls Nulls precedence. Possible values: {@code nulls first}, {@code nulls last}, or {@code null}
+	 * if expression has not been explicitly specified.
+	 * @return Renders single element of {@code ORDER BY} clause.
+	 */
+	public String renderOrderByElement(String expression, String collation, String order, String nulls) {
+		final StringBuilder orderByElement = new StringBuilder( expression );
+		if ( collation != null ) {
+			orderByElement.append( " " ).append( collation );
+		}
+		if ( order != null ) {
+			orderByElement.append( " " ).append( order );
+		}
+		if ( nulls != null ) {
+			orderByElement.append( " " ).append( nulls );
+		}
+		return orderByElement.toString();
+	}
+
+	/**
 	 * Does this dialect require that parameters appearing in the <tt>SELECT</tt> clause be wrapped in <tt>cast()</tt>
 	 * calls to tell the db parser the expected type.
 	 *

@@ -26,6 +26,7 @@ package org.hibernate.sql.ordering.antlr;
 import antlr.collections.AST;
 import org.jboss.logging.Logger;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.internal.util.StringHelper;
 
@@ -40,6 +41,12 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 
 	private static final Logger LOG = Logger.getLogger( OrderByFragmentRenderer.class.getName() );
 	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
+
+	private final Dialect dialect;
+
+	public OrderByFragmentRenderer(Dialect dialect) {
+		this.dialect = dialect;
+	}
 
 	@Override
     protected void out(AST ast) {
@@ -74,5 +81,10 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 		}
 		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
 		LOG.trace( prefix + ruleName );
+	}
+
+	@Override
+	protected String renderOrderByElement(String expression, String collation, String order, String nulls) {
+		return dialect.renderOrderByElement( expression, collation, order, nulls );
 	}
 }

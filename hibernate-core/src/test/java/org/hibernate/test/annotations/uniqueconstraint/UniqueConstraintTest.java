@@ -1,15 +1,12 @@
 package org.hibernate.test.annotations.uniqueconstraint;
 
-import org.junit.Test;
+import static org.junit.Assert.fail;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
@@ -25,7 +22,6 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
     }
 
 	@Test
-	@RequiresDialectFeature( DialectChecks.SupportNotNullUnique.class )
     public void testUniquenessConstraintWithSuperclassProperty() throws Exception {
         Session s = openSession();
         Transaction tx = s.beginTransaction();

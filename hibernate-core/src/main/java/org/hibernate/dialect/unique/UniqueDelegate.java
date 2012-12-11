@@ -22,6 +22,7 @@ package org.hibernate.dialect.unique;
 
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 
 /**
  * Dialect-level delegate in charge of applying "uniqueness" to a column.
@@ -39,7 +40,57 @@ import org.hibernate.mapping.Table;
  */
 public interface UniqueDelegate {
 	
-	public void applyUnique( Table table, Column column, StringBuilder sb );
+	/**
+	 * If the delegate supports unique constraints, this method should simply
+	 * create the UniqueKey on the Table.  Otherwise, the constraint isn't
+	 * supported and "unique" should be added to the column definition.
+	 * 
+	 * @param table
+	 * @param column
+	 * @return String
+	 */
+	public String applyUniqueToColumn( Table table, Column column );
 	
-	public void createUniqueConstraint( Table table, StringBuilder sb );
+	/**
+	 * If creating unique constraints in separate alter statements are not
+	 * supported, this method should return the syntax necessary to create
+	 * the constraint on the original create table statement.
+	 * 
+	 * @param table
+	 * @return String
+	 */
+	public String applyUniquesToTable( Table table );
+	
+	/**
+	 * If creating unique constraints in separate alter statements is
+	 * supported, generate the necessary "alter" syntax for the given key.
+	 * 
+	 * @param uniqueKey
+	 * @param defaultCatalog
+	 * @param defaultSchema
+	 * @return String
+	 */
+	public String applyUniquesOnAlter( UniqueKey uniqueKey,
+			String defaultCatalog, String defaultSchema );
+	
+	/**
+	 * If dropping unique constraints in separate alter statements is
+	 * supported, generate the necessary "alter" syntax for the given key.
+	 * 
+	 * @param uniqueKey
+	 * @param defaultCatalog
+	 * @param defaultSchema
+	 * @return String
+	 */
+	public String dropUniquesOnAlter( UniqueKey uniqueKey,
+			String defaultCatalog, String defaultSchema );
+	
+	/**
+	 * Generates the syntax necessary to create the unique constraint (reused
+	 * by all methods).  Ex: "unique (column1, column2, ...)"
+	 * 
+	 * @param uniqueKey
+	 * @return String
+	 */
+	public String uniqueConstraintSql( UniqueKey uniqueKey );
 }

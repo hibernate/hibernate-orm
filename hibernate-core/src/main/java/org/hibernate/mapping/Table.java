@@ -26,7 +26,6 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -423,7 +422,9 @@ public class Table implements RelationalModel, Serializable {
 					alter.append( " not null" );
 				}
 
-				dialect.getUniqueDelegate().applyUnique( this, column, alter );
+				if ( column.isUnique() ) {
+					alter.append( dialect.getUniqueDelegate().applyUniqueToColumn( this, column ) );
+				}
 
 				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
 					alter.append( " check(" )
@@ -520,8 +521,10 @@ public class Table implements RelationalModel, Serializable {
 
 			}
 			
-			dialect.getUniqueDelegate().applyUnique( this, col, buf );
-
+			if ( col.isUnique() ) {
+				buf.append( dialect.getUniqueDelegate().applyUniqueToColumn( this, col ) );
+			}
+				
 			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
 				buf.append( " check (" )
 						.append( col.getCheckConstraint() )
@@ -543,7 +546,7 @@ public class Table implements RelationalModel, Serializable {
 					.append( getPrimaryKey().sqlConstraintString( dialect ) );
 		}
 
-		dialect.getUniqueDelegate().createUniqueConstraint( this, buf );
+		buf.append( dialect.getUniqueDelegate().applyUniquesToTable( this ) );
 
 		if ( dialect.supportsTableCheck() ) {
 			Iterator chiter = checkConstraints.iterator();

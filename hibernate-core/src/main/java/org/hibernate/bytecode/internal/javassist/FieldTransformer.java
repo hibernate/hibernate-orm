@@ -159,8 +159,11 @@ public class FieldTransformer {
 		code.addOpcode(Opcode.ARETURN);
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
-		StackMapTable smt = MapMaker.make(classPool, minfo);
-		minfo.getCodeAttribute().setAttribute(smt);
+		CodeAttribute codeAttribute = minfo.getCodeAttribute();
+		if (codeAttribute != null) {
+			StackMapTable smt = MapMaker.make(classPool, minfo);
+			codeAttribute.setAttribute(smt);
+		}
 		classfile.addMethod(minfo);
 	}
 
@@ -185,8 +188,11 @@ public class FieldTransformer {
 		code.addOpcode(Opcode.RETURN);
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
-		StackMapTable smt = MapMaker.make(classPool, minfo);
-		minfo.getCodeAttribute().setAttribute(smt);
+		CodeAttribute codeAttribute = minfo.getCodeAttribute();
+		if (codeAttribute != null) {
+			StackMapTable smt = MapMaker.make(classPool, minfo);
+			codeAttribute.setAttribute(smt);
+		}
 		classfile.addMethod(minfo);
 	}
 
@@ -269,8 +275,11 @@ public class FieldTransformer {
 
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
-		StackMapTable smt = MapMaker.make(classPool, minfo);
-		minfo.getCodeAttribute().setAttribute(smt);
+		CodeAttribute codeAttribute = minfo.getCodeAttribute();
+		if (codeAttribute != null) {
+			StackMapTable smt = MapMaker.make(classPool, minfo);
+			codeAttribute.setAttribute(smt);
+		}
 		classfile.addMethod(minfo);
 	}
 
@@ -337,8 +346,11 @@ public class FieldTransformer {
 
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
-		StackMapTable smt = MapMaker.make(classPool, minfo);
-		minfo.getCodeAttribute().setAttribute(smt);
+		CodeAttribute codeAttribute = minfo.getCodeAttribute();
+		if (codeAttribute != null) {
+			StackMapTable smt = MapMaker.make(classPool, minfo);
+			codeAttribute.setAttribute(smt);
+		}
 		classfile.addMethod(minfo);
 	}
 
@@ -364,9 +376,8 @@ public class FieldTransformer {
 				pos = transformInvokevirtualsIntoGetfields(classfile, iter, pos);
 				pos = transformInvokevirtualsIntoPutfields(classfile, iter, pos);
 			}
-			
 			StackMapTable smt = MapMaker.make(classPool, minfo);
-			minfo.getCodeAttribute().setAttribute(smt);
+			codeAttr.setAttribute(smt);
 		}
 	}
 

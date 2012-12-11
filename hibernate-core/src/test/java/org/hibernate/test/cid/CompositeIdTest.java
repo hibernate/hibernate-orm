@@ -36,7 +36,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.hql.spi.QueryTranslator;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -46,7 +45,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

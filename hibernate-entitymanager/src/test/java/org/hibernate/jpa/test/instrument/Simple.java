@@ -3,7 +3,7 @@ package org.hibernate.jpa.test.instrument;
 
 import java.util.Collection;
 
-import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
+import org.hibernate.jpa.internal.instrument.InterceptFieldClassFileTransformer;
 
 
 /**

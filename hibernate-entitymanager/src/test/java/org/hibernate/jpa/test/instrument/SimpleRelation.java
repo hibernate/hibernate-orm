@@ -1,4 +1,4 @@
-package org.hibernate.ejb.test.instrument;
+package org.hibernate.jpa.test.instrument;
 
 /**
  * A simple entity relation used by {@link Simple} to ensure that enhanced

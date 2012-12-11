@@ -30,7 +30,7 @@ public class InterceptFieldClassFileTransformerTest {
 	
 	@Before
 	public void setup() {
-		entities.add( "org.hibernate.ejb.test.instrument.Simple" );
+		entities.add( "org.hibernate.jpa.test.instrument.Simple" );
 		// use custom class loader which enhances the class
 		InstrumentedClassLoader cl = new InstrumentedClassLoader( Thread.currentThread().getContextClassLoader() );
 		cl.setEntities( entities );

@@ -422,15 +422,7 @@ public class Table implements RelationalModel, Serializable {
 					alter.append( " not null" );
 				}
 
-				// If the column is 1.) unique, 2.) the dialect supports the
-				// unique syntax, 3.) the column is nullable or supports
-				// "not null unique", and 4.) a constraint will not be created
-				if ( column.isUnique() && dialect.supportsUnique()
-						&& ( column.isNullable()
-								|| dialect.supportsNotNullUnique() )
-						&& !dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-					alter.append( " unique" );
-				}
+				dialect.getUniqueDelegate().applyUnique( this, column, alter );
 
 				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
 					alter.append( " check(" )
@@ -527,21 +519,7 @@ public class Table implements RelationalModel, Serializable {
 
 			}
 			
-			// If the column is 1.) unique and nullable or 2.) unique,
-			// not null, and the dialect supports unique not null			
-			if ( col.isUnique()
-					&& ( col.isNullable()
-							|| dialect.supportsNotNullUnique() ) ) {
-				if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-					// If the constraint is supported, do not add to the column syntax.
-					UniqueKey uk = getOrCreateUniqueKey( col.getQuotedName( dialect ) + '_' );
-					uk.addColumn( col );
-				}
-				else if ( dialect.supportsUnique() ) {
-					// Otherwise, add to the column syntax if supported.
-					buf.append( " unique" );
-				}
-			}
+			dialect.getUniqueDelegate().applyUnique( this, col, buf );
 
 			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
 				buf.append( " check (" )
@@ -564,21 +542,7 @@ public class Table implements RelationalModel, Serializable {
 					.append( getPrimaryKey().sqlConstraintString( dialect ) );
 		}
 
-		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-			Iterator ukiter = getUniqueKeyIterator();
-			while ( ukiter.hasNext() ) {
-				UniqueKey uk = (UniqueKey) ukiter.next();
-				String constraint = uk.sqlConstraintString( dialect );
-				if ( constraint != null ) {
-					buf.append( ", " ).append( constraint );
-				}
-			}
-		}
-		/*Iterator idxiter = getIndexIterator();
-		while ( idxiter.hasNext() ) {
-			Index idx = (Index) idxiter.next();
-			buf.append(',').append( idx.sqlConstraintString(dialect) );
-		}*/
+		dialect.getUniqueDelegate().createUniqueConstraint( this, buf );
 
 		if ( dialect.supportsTableCheck() ) {
 			Iterator chiter = checkConstraints.iterator();

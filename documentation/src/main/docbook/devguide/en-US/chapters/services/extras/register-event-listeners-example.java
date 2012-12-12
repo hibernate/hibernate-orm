@@ -18,6 +18,6 @@ public class MyIntegrator implements org.hibernate.integrator.spi.Integrator {
         //     2) This form adds the specified listener(s) to the beginning of the listener chain
         eventListenerRegistry.prependListeners( EventType.AUTO_FLUSH, myListenersToBeCalledFirst );
         //     3) This form adds the specified listener(s) to the end of the listener chain
-        eventListenerRegistry.prependListeners( EventType.AUTO_FLUSH, myListenersToBeCalledLast );
+        eventListenerRegistry.appendListeners( EventType.AUTO_FLUSH, myListenersToBeCalledLast );
     }
 }

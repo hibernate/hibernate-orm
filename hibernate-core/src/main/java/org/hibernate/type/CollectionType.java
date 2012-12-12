@@ -81,11 +81,23 @@ public abstract class CollectionType extends AbstractType implements Association
 	private final String foreignKeyPropertyName;
 	private final boolean isEmbeddedInXML;
 
+	/**
+	 * @deprecated Use {@link #CollectionType(TypeFactory.TypeScope, String, String)} instead
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType(TypeFactory.TypeScope typeScope, String role, String foreignKeyPropertyName, boolean isEmbeddedInXML) {
 		this.typeScope = typeScope;
 		this.role = role;
 		this.foreignKeyPropertyName = foreignKeyPropertyName;
 		this.isEmbeddedInXML = isEmbeddedInXML;
+	}
+
+	public CollectionType(TypeFactory.TypeScope typeScope, String role, String foreignKeyPropertyName) {
+		this.typeScope = typeScope;
+		this.role = role;
+		this.foreignKeyPropertyName = foreignKeyPropertyName;
+		this.isEmbeddedInXML = true;
 	}
 
 	public boolean isEmbeddedInXML() {

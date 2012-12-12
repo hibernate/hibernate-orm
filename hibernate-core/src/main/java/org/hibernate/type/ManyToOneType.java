@@ -70,6 +70,12 @@ public class ManyToOneType extends EntityType {
 		this( scope, referencedEntityName, null, lazy, true, false, false, false );
 	}
 
+
+	/**
+	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, String, boolean, boolean, boolean, boolean ) } instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public ManyToOneType(
 			TypeFactory.TypeScope scope,
 			String referencedEntityName,
@@ -80,6 +86,19 @@ public class ManyToOneType extends EntityType {
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
 		super( scope, referencedEntityName, uniqueKeyPropertyName, !lazy, isEmbeddedInXML, unwrapProxy );
+		this.ignoreNotFound = ignoreNotFound;
+		this.isLogicalOneToOne = isLogicalOneToOne;
+	}
+
+	public ManyToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			boolean isLogicalOneToOne) {
+		super( scope, referencedEntityName, uniqueKeyPropertyName, !lazy, unwrapProxy );
 		this.ignoreNotFound = ignoreNotFound;
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}

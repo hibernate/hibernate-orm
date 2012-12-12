@@ -166,8 +166,13 @@ public interface Type extends Serializable {
 	 * @return The java type class handled by this type.
 	 */
 	public Class getReturnedClass();
-	
+
+	/**
+	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
+	@Deprecated
 	public boolean isXMLElement();
 
 	/**
@@ -392,7 +397,11 @@ public interface Type extends Serializable {
 	 * @param factory The session factory
 	 *
 	 * @throws HibernateException An error from Hibernate
+	 *
+	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
 	 */
+	@Deprecated
 	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory)
 	throws HibernateException;
 
@@ -405,7 +414,11 @@ public interface Type extends Serializable {
 	 * @return an instance of the {@link #getReturnedClass() mapped class}
 	 *
 	 * @throws HibernateException An error from Hibernate
+	 *
+	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
 	 */
+	@Deprecated
 	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException;
 
 	/**

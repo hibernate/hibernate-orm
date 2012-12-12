@@ -47,54 +47,22 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 	}
 
 	@Override
-    public boolean isCreationVetoed(Dialect dialect) {
-		if ( !dialect.supportsUniqueConstraintInCreateAlterTable() ) return true;
-		if ( dialect.supportsNotNullUnique() ) return false;
-		
-		for ( Column column : getColumns() ) {
-			// Dialect does not support "not null unique" and this column is not null.
-			if ( ! column.isNullable() ) return true;
-		}
-		return false;
-	}
-
-	public String sqlConstraintStringInCreateTable(Dialect dialect) {
-		// TODO: This may not be necessary, but not all callers currently
-		// check it on their own.  Go through their logic.
-		if ( isCreationVetoed( dialect ) ) return null;
-				
-		StringBuilder buf = new StringBuilder( "unique (" );
-		boolean first = true;
-		for ( Column column : getColumns() ) {
-			if ( first ) {
-				first = false;
-			}
-			else {
-				buf.append( ", " );
-			}
-			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
-		}
-		return buf.append( ')' ).toString();
+	public String[] sqlCreateStrings(Dialect dialect) {
+		return new String[] {
+				dialect.getUniqueDelegate().applyUniquesOnAlter( this )
+		};
 	}
 
 	@Override
-    public String sqlConstraintStringInAlterTable(Dialect dialect) {
-		// TODO: This may not be necessary, but not all callers currently
-		// check it on their own.  Go through their logic.
-		if ( isCreationVetoed( dialect ) ) return null;
-				
-		StringBuilder buf = new StringBuilder(
-		dialect.getAddUniqueConstraintString( getName() ) ).append( '(' );
-		boolean first = true;
-		for ( Column column : getColumns() ) {
-			if ( first ) {
-				first = false;
-			}
-			else {
-				buf.append( ", " );
-			}
-			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
-		}
-		return buf.append( ')' ).toString();
+	public String[] sqlDropStrings(Dialect dialect) {
+		return new String[] {
+				dialect.getUniqueDelegate().dropUniquesOnAlter( this )
+		};
+	}
+
+	@Override
+    protected String sqlConstraintStringInAlterTable(Dialect dialect) {
+		// not used
+		return "";
 	}
 }

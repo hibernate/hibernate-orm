@@ -20,9 +20,9 @@
  */
 package org.hibernate.dialect.unique;
 
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.relational.Table;
+import org.hibernate.metamodel.relational.UniqueKey;
 
 /**
  * Dialect-level delegate in charge of applying "uniqueness" to a column.
@@ -49,7 +49,29 @@ public interface UniqueDelegate {
 	 * @param column
 	 * @return String
 	 */
+	public String applyUniqueToColumn( org.hibernate.mapping.Table table,
+			org.hibernate.mapping.Column column );
+	
+	/**
+	 * If the delegate supports unique constraints, this method should simply
+	 * create the UniqueKey on the Table.  Otherwise, the constraint isn't
+	 * supported and "unique" should be added to the column definition.
+	 * 
+	 * @param table
+	 * @param column
+	 * @return String
+	 */
 	public String applyUniqueToColumn( Table table, Column column );
+	
+	/**
+	 * If creating unique constraints in separate alter statements are not
+	 * supported, this method should return the syntax necessary to create
+	 * the constraint on the original create table statement.
+	 * 
+	 * @param table
+	 * @return String
+	 */
+	public String applyUniquesToTable( org.hibernate.mapping.Table table );
 	
 	/**
 	 * If creating unique constraints in separate alter statements are not
@@ -70,8 +92,17 @@ public interface UniqueDelegate {
 	 * @param defaultSchema
 	 * @return String
 	 */
-	public String applyUniquesOnAlter( UniqueKey uniqueKey,
+	public String applyUniquesOnAlter( org.hibernate.mapping.UniqueKey uniqueKey,
 			String defaultCatalog, String defaultSchema );
+	
+	/**
+	 * If creating unique constraints in separate alter statements is
+	 * supported, generate the necessary "alter" syntax for the given key.
+	 * 
+	 * @param uniqueKey
+	 * @return String
+	 */
+	public String applyUniquesOnAlter( UniqueKey uniqueKey );
 	
 	/**
 	 * If dropping unique constraints in separate alter statements is
@@ -82,8 +113,26 @@ public interface UniqueDelegate {
 	 * @param defaultSchema
 	 * @return String
 	 */
-	public String dropUniquesOnAlter( UniqueKey uniqueKey,
+	public String dropUniquesOnAlter( org.hibernate.mapping.UniqueKey uniqueKey,
 			String defaultCatalog, String defaultSchema );
+	
+	/**
+	 * If dropping unique constraints in separate alter statements is
+	 * supported, generate the necessary "alter" syntax for the given key.
+	 * 
+	 * @param uniqueKey
+	 * @return String
+	 */
+	public String dropUniquesOnAlter( UniqueKey uniqueKey );
+	
+	/**
+	 * Generates the syntax necessary to create the unique constraint (reused
+	 * by all methods).  Ex: "unique (column1, column2, ...)"
+	 * 
+	 * @param uniqueKey
+	 * @return String
+	 */
+	public String uniqueConstraintSql( org.hibernate.mapping.UniqueKey uniqueKey );
 	
 	/**
 	 * Generates the syntax necessary to create the unique constraint (reused

@@ -38,7 +38,9 @@ public class UniqueKey extends Constraint {
 			String constraintName,
 			String defaultCatalog,
 			String defaultSchema) {
-		return dialect.getUniqueDelegate().uniqueConstraintSql( this );
+//		return dialect.getUniqueDelegate().uniqueConstraintSql( this );
+		// Not used.
+		return "";
 	}
 
 	@Override

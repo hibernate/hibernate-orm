@@ -199,20 +199,8 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 			}
 
-			// If the column is 1.) unique and nullable or 2.) unique,
-			// not null, and the dialect supports unique not null			
-			if ( col.isUnique()
-					&& ( col.isNullable()
-							|| dialect.supportsNotNullUnique() ) ) {
-				if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-					// If the constraint is supported, do not add to the column syntax.
-					UniqueKey uk = getOrCreateUniqueKey( col.getColumnName().encloseInQuotesIfQuoted( dialect ) + '_' );
-					uk.addColumn( col );
-				}
-				else if ( dialect.supportsUnique() ) {
-					// Otherwise, add to the column syntax if supported.
-					buf.append( " unique" );
-				}
+			if ( col.isUnique() ) {
+				buf.append( dialect.getUniqueDelegate().applyUniqueToColumn( this, col ) );
 			}
 
 			if ( col.getCheckCondition() != null && dialect.supportsColumnCheck() ) {
@@ -231,14 +219,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 					.append( getPrimaryKey().sqlConstraintStringInCreateTable( dialect ) );
 		}
 
-		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-			for ( UniqueKey uk : uniqueKeys.values() ) {
-				String constraint = uk.sqlConstraintStringInCreateTable( dialect );
-				if ( constraint != null ) {
-					buf.append( ", " ).append( constraint );
-				}
-			}
-		}
+		buf.append( dialect.getUniqueDelegate().applyUniquesToTable( this ) );
 
 		if ( dialect.supportsTableCheck() ) {
 			for ( CheckConstraint checkConstraint : checkConstraints ) {

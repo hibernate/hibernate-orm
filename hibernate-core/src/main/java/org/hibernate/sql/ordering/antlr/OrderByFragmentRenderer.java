@@ -27,6 +27,7 @@ import antlr.collections.AST;
 import org.jboss.logging.Logger;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.internal.util.StringHelper;
 
@@ -42,10 +43,10 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 	private static final Logger LOG = Logger.getLogger( OrderByFragmentRenderer.class.getName() );
 	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
 
-	private final Dialect dialect;
+	private final SessionFactoryImplementor sessionFactory;
 
-	public OrderByFragmentRenderer(Dialect dialect) {
-		this.dialect = dialect;
+	public OrderByFragmentRenderer(SessionFactoryImplementor sessionFactory) {
+		this.sessionFactory = sessionFactory;
 	}
 
 	@Override
@@ -85,6 +86,9 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 
 	@Override
 	protected String renderOrderByElement(String expression, String collation, String order, String nulls) {
-		return dialect.renderOrderByElement( expression, collation, order, nulls );
+		return sessionFactory.getDialect().renderOrderByElement(
+				expression, collation, order,
+				nulls != null ? nulls : sessionFactory.getSettings().getDefaultNullOrdering().getSqlClause()
+		);
 	}
 }

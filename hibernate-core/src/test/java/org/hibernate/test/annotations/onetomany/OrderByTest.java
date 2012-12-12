@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.cfg.NullOrderType;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.RequiresDialect;
@@ -162,7 +162,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		session.getTransaction().begin();
 		Criteria criteria = session.createCriteria( Zoo.class );
-		criteria.addOrder( org.hibernate.criterion.Order.asc( "name" ).nulls( org.hibernate.criterion.Order.NullPrecedence.LAST ) );
+		criteria.addOrder( org.hibernate.criterion.Order.asc( "name" ).nulls( NullOrderType.LAST ) );
 		Iterator<Zoo> iterator = (Iterator<Zoo>) criteria.list().iterator();
 		Assert.assertEquals( zoo2.getName(), iterator.next().getName() );
 		Assert.assertNull( iterator.next().getName() );

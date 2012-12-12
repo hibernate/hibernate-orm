@@ -248,6 +248,14 @@ public class SettingsFactory implements Serializable {
 		}
 		settings.setOrderInsertsEnabled( orderInserts );
 
+		String defaultNullOrdering = ConfigurationHelper.getString(
+				AvailableSettings.DEFAULT_NULL_ORDERING, properties, "none", "none", "first", "last"
+		);
+		if ( debugEnabled ) {
+			LOG.debugf( "Default null ordering: %s", defaultNullOrdering );
+		}
+		settings.setDefaultNullOrdering( NullOrderType.getType( defaultNullOrdering ) );
+
 		//Query parser settings:
 
 		settings.setQueryTranslatorFactory( createQueryTranslatorFactory( properties, serviceRegistry ) );

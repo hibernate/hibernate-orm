@@ -28,6 +28,7 @@ import java.sql.Types;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.NullOrderType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
@@ -37,24 +38,10 @@ import org.hibernate.type.Type;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class Order implements Serializable {
-	public static enum NullPrecedence {
-		FIRST("nulls first"), LAST("nulls last");
-
-		private final String sqlClause;
-
-		private NullPrecedence(String sqlClause) {
-			this.sqlClause = sqlClause;
-		}
-
-		public String getSqlClause() {
-			return sqlClause;
-		}
-	}
-
 	private boolean ascending;
 	private boolean ignoreCase;
 	private String propertyName;
-	private NullPrecedence nullPrecedence;
+	private NullOrderType nullPrecedence;
 	
 	public String toString() {
 		return propertyName + ' ' + ( ascending ? "asc" : "desc" ) + ( nullPrecedence != null ? ' ' + nullPrecedence.getSqlClause() : "" );
@@ -65,7 +52,7 @@ public class Order implements Serializable {
 		return this;
 	}
 
-	public Order nulls(NullPrecedence nullPrecedence) {
+	public Order nulls(NullOrderType nullPrecedence) {
 		this.nullPrecedence = nullPrecedence;
 		return this;
 	}
@@ -102,7 +89,7 @@ public class Order implements Serializable {
 									expression.toString(),
 									null,
 									ascending ? "asc" : "desc",
-									nullPrecedence != null ? nullPrecedence.getSqlClause() : null
+									nullPrecedence != null ? nullPrecedence.getSqlClause() : factory.getSettings().getDefaultNullOrdering().getSqlClause()
 							)
 			);
 			if ( i<columns.length-1 ) fragment.append(", ");

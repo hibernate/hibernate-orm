@@ -69,7 +69,7 @@ public class AuditInterceptor extends EmptyInterceptor {
 
     public void afterTransactionCompletion(Transaction tx) {
         if ( tx.wasCommitted() ) {
-            System.out.println("Creations: " + creates + ", Updates: " + updates, "Loads: " + loads);
+            System.out.println("Creations: " + creates + ", Updates: " + updates + "Loads: " + loads);
         }
         updates=0;
         creates=0;

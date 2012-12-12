@@ -35,8 +35,19 @@ import org.hibernate.persister.collection.CollectionPersister;
 public class SortedSetType extends SetType {
 	private final Comparator comparator;
 
+	/**
+	 * @deprecated Use {@link #SortedSetType(org.hibernate.type.TypeFactory.TypeScope, String, String, java.util.Comparator)}
+	 * instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public SortedSetType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Comparator comparator, boolean isEmbeddedInXML) {
 		super( typeScope, role, propertyRef, isEmbeddedInXML );
+		this.comparator = comparator;
+	}
+
+	public SortedSetType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Comparator comparator) {
+		super( typeScope, role, propertyRef );
 		this.comparator = comparator;
 	}
 

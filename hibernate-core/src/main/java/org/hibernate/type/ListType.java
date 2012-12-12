@@ -34,8 +34,17 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 public class ListType extends CollectionType {
 
+	/**
+	 * @deprecated Use {@link #ListType(org.hibernate.type.TypeFactory.TypeScope, String, String)}
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public ListType(TypeFactory.TypeScope typeScope, String role, String propertyRef, boolean isEmbeddedInXML) {
 		super( typeScope, role, propertyRef, isEmbeddedInXML );
+	}
+
+	public ListType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
+		super( typeScope, role, propertyRef );
 	}
 
 	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key) {

@@ -76,7 +76,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
 	 * says to return the "implementation target" of lazy prooxies; typically only possible
 	 * with lazy="no-proxy".
+	 *
+	 * @deprecated Use {@link #EntityType(TypeFactory.TypeScope, String, String, boolean, boolean )} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
 	 */
+	@Deprecated
 	protected EntityType(
 			TypeFactory.TypeScope scope,
 			String entityName,
@@ -88,6 +92,32 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		this.associatedEntityName = entityName;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
 		this.isEmbeddedInXML = isEmbeddedInXML;
+		this.eager = eager;
+		this.unwrapProxy = unwrapProxy;
+	}
+
+	/**
+	 * Constructs the requested entity type mapping.
+	 *
+	 * @param scope The type scope
+	 * @param entityName The name of the associated entity.
+	 * @param uniqueKeyPropertyName The property-ref name, or null if we
+	 * reference the PK of the associated entity.
+	 * @param eager Is eager fetching enabled.
+	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
+	 * says to return the "implementation target" of lazy prooxies; typically only possible
+	 * with lazy="no-proxy".
+	 */
+	protected EntityType(
+			TypeFactory.TypeScope scope,
+			String entityName,
+			String uniqueKeyPropertyName,
+			boolean eager,
+			boolean unwrapProxy) {
+		this.scope = scope;
+		this.associatedEntityName = entityName;
+		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
+		this.isEmbeddedInXML = true;
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
 	}
@@ -476,6 +506,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 	}
 
+	/**
+	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	protected boolean isNotEmbedded(SessionImplementor session) {
 //		return !isEmbeddedInXML;
 		return false;

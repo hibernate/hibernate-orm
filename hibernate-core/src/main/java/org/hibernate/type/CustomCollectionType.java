@@ -48,6 +48,11 @@ public class CustomCollectionType extends CollectionType {
 	private final UserCollectionType userType;
 	private final boolean customLogging;
 
+	/**
+	 * @deprecated Use {@link #CustomCollectionType(TypeFactory.TypeScope, Class, String, String )} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CustomCollectionType(
 			TypeFactory.TypeScope typeScope,
 			Class userTypeClass,
@@ -55,13 +60,27 @@ public class CustomCollectionType extends CollectionType {
 			String foreignKeyPropertyName,
 			boolean isEmbeddedInXML) {
 		super( typeScope, role, foreignKeyPropertyName, isEmbeddedInXML );
+		userType = createUserCollectionType( userTypeClass );
+		customLogging = LoggableUserType.class.isAssignableFrom( userTypeClass );
+	}
 
+	public CustomCollectionType(
+			TypeFactory.TypeScope typeScope,
+			Class userTypeClass,
+			String role,
+			String foreignKeyPropertyName) {
+		super( typeScope, role, foreignKeyPropertyName );
+		userType = createUserCollectionType( userTypeClass );
+		customLogging = LoggableUserType.class.isAssignableFrom( userTypeClass );
+	}
+
+	private static UserCollectionType createUserCollectionType(Class userTypeClass) {
 		if ( !UserCollectionType.class.isAssignableFrom( userTypeClass ) ) {
 			throw new MappingException( "Custom type does not implement UserCollectionType: " + userTypeClass.getName() );
 		}
 
 		try {
-			userType = ( UserCollectionType ) userTypeClass.newInstance();
+			return ( UserCollectionType ) userTypeClass.newInstance();
 		}
 		catch ( InstantiationException ie ) {
 			throw new MappingException( "Cannot instantiate custom type: " + userTypeClass.getName() );
@@ -69,8 +88,6 @@ public class CustomCollectionType extends CollectionType {
 		catch ( IllegalAccessException iae ) {
 			throw new MappingException( "IllegalAccessException trying to instantiate custom type: " + userTypeClass.getName() );
 		}
-
-		customLogging = LoggableUserType.class.isAssignableFrom( userTypeClass );
 	}
 
 	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key)

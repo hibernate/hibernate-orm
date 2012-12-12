@@ -47,6 +47,12 @@ public class OneToOneType extends EntityType {
 	private final String propertyName;
 	private final String entityName;
 
+	/**
+	 * @deprecated Use {@link #OneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, String, boolean, boolean, String, String)}
+	 *  instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public OneToOneType(
 			TypeFactory.TypeScope scope,
 			String referencedEntityName,
@@ -62,7 +68,22 @@ public class OneToOneType extends EntityType {
 		this.propertyName = propertyName;
 		this.entityName = entityName;
 	}
-	
+
+	public OneToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			ForeignKeyDirection foreignKeyType,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName) {
+		super( scope, referencedEntityName, uniqueKeyPropertyName, !lazy, unwrapProxy );
+		this.foreignKeyType = foreignKeyType;
+		this.propertyName = propertyName;
+		this.entityName = entityName;
+	}
+
 	public String getPropertyName() {
 		return propertyName;
 	}

@@ -63,7 +63,7 @@ public class Array extends List {
     public CollectionType getDefaultCollectionType() throws MappingException {
 		return getMappings().getTypeResolver()
 				.getTypeFactory()
-				.array( getRole(), getReferencedPropertyName(), isEmbedded(), getElementClass() );
+				.array( getRole(), getReferencedPropertyName(), getElementClass() );
 	}
 
 	@Override

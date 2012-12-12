@@ -51,7 +51,6 @@ public class OneToMany implements Value {
 				null, 
 				false,
 				false,
-				isEmbedded(),
 				isIgnoreNotFound(),
 				false
 			);

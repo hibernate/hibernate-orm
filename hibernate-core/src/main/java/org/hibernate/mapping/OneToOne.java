@@ -84,7 +84,6 @@ public class OneToOne extends ToOne {
 					referencedPropertyName,
 					isLazy(),
 					isUnwrapProxy(),
-					isEmbedded(),
 					entityName,
 					propertyName
 			);

@@ -59,17 +59,7 @@ options {
 	 * Implementation note: This is just a stub. OrderByFragmentRenderer contains the effective implementation.
 	 */
 	protected String renderOrderByElement(String expression, String collation, String order, String nulls) {
-		final StringBuilder orderByElement = new StringBuilder( expression );
-		if ( collation != null ) {
-			orderByElement.append( " " ).append( collation );
-		}
-		if ( order != null ) {
-			orderByElement.append( " " ).append( order );
-		}
-		if ( nulls != null ) {
-			orderByElement.append( " " ).append( nulls );
-		}
-		return orderByElement.toString();
+		throw new UnsupportedOperationException("Concrete ORDER BY renderer should override this method.");
 	}
 }
 

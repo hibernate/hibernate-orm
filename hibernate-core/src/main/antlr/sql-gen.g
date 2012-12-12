@@ -114,14 +114,7 @@ options {
 	 * Implementation note: This is just a stub. SqlGenerator contains the effective implementation.
 	 */
 	protected String renderOrderByElement(String expression, String order, String nulls) {
-		final StringBuilder orderByElement = new StringBuilder( expression );
-		if ( order != null ) {
-			orderByElement.append( " " ).append( order );
-		}
-		if ( nulls != null ) {
-			orderByElement.append( " " ).append( nulls );
-		}
-		return orderByElement.toString();
+		throw new UnsupportedOperationException("Concrete SQL generator should override this method.");
 	}
 }
 

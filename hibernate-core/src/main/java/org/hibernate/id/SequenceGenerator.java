@@ -49,7 +49,6 @@ import org.hibernate.type.Type;
  * Mapping parameters supported: sequence, parameters.
  *
  * @see SequenceHiLoGenerator
- * @see TableHiLoGenerator
  * @author Gavin King
  */
 public class SequenceGenerator

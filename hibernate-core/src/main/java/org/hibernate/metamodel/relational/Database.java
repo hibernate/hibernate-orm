@@ -115,10 +115,8 @@ public class Database {
 		for ( Schema schema : schemaMap.values() ) {
 			for ( Table table : schema.getTables() ) {
 
-				if ( ! dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-					for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-						addSqlCreateStrings( dialect, exportIdentifiers, script, uniqueKey );
-					}
+				for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
+					addSqlCreateStrings( dialect, exportIdentifiers, script, uniqueKey );
 				}
 
 				for ( Index index : table.getIndexes() ) {

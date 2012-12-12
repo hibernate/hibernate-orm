@@ -39,7 +39,7 @@ public class Bag extends Collection {
 	public CollectionType getDefaultCollectionType() {
 		return getMappings().getTypeResolver()
 				.getTypeFactory()
-				.bag( getRole(), getReferencedPropertyName(), isEmbedded() );
+				.bag( getRole(), getReferencedPropertyName() );
 	}
 
 	void createPrimaryKey() {

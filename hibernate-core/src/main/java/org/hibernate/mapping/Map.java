@@ -44,17 +44,17 @@ public class Map extends IndexedCollection {
 		if ( isSorted() ) {
 			return getMappings().getTypeResolver()
 					.getTypeFactory()
-					.sortedMap( getRole(), getReferencedPropertyName(), isEmbedded(), getComparator() );
+					.sortedMap( getRole(), getReferencedPropertyName(), getComparator() );
 		}
 		else if ( hasOrder() ) {
 			return getMappings().getTypeResolver()
 					.getTypeFactory()
-					.orderedMap( getRole(), getReferencedPropertyName(), isEmbedded() );
+					.orderedMap( getRole(), getReferencedPropertyName() );
 		}
 		else {
 			return getMappings().getTypeResolver()
 					.getTypeFactory()
-					.map( getRole(), getReferencedPropertyName(), isEmbedded() );
+					.map( getRole(), getReferencedPropertyName() );
 		}
 	}
 

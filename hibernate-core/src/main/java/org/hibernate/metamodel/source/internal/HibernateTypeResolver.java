@@ -159,9 +159,7 @@ class HibernateTypeResolver {
 									typeName,
 									getTypeParameters( attributeBinding.getHibernateTypeDescriptor() ),
 									attributeBinding.getAttribute().getName(),
-									attributeBinding.getReferencedPropertyName(),
-									attributeBinding.getCollectionElement().getCollectionElementNature() ==
-											CollectionElementNature.COMPOSITE
+									attributeBinding.getReferencedPropertyName()
 							);
 		}
 		else {
@@ -182,16 +180,13 @@ class HibernateTypeResolver {
 			case SET: {
 				return typeFactory.set(
 						attributeBinding.getAttribute().getName(),
-						attributeBinding.getReferencedPropertyName(),
-						attributeBinding.getCollectionElement().getCollectionElementNature() == CollectionElementNature.COMPOSITE
+						attributeBinding.getReferencedPropertyName()
 				);
 			}
 			case BAG: {
 				return typeFactory.bag(
 						attributeBinding.getAttribute().getName(),
-						attributeBinding.getReferencedPropertyName(),
-						attributeBinding.getCollectionElement()
-								.getCollectionElementNature() == CollectionElementNature.COMPOSITE
+						attributeBinding.getReferencedPropertyName()
 				);
 			}
 			default: {

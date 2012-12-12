@@ -384,7 +384,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		else {
 			return mappings.getTypeResolver()
 					.getTypeFactory()
-					.customCollection( typeName, typeParameters, role, referencedPropertyName, isEmbedded() );
+					.customCollection( typeName, typeParameters, role, referencedPropertyName );
 		}
 	}
 

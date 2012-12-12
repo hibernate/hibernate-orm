@@ -40,12 +40,8 @@ import org.hibernate.type.Type;
  * oracle-style sequence that generates hi values. The user may specify a
  * maximum lo value to determine how often new hi values are fetched.<br>
  * <br>
- * If sequences are not available, <tt>TableHiLoGenerator</tt> might be an
- * alternative.<br>
- * <br>
  * Mapping parameters supported: sequence, max_lo, parameters.
  *
- * @see TableHiLoGenerator
  * @author Gavin King
  */
 public class SequenceHiLoGenerator extends SequenceGenerator {

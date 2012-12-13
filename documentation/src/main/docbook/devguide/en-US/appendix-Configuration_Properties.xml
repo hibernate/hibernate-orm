@@ -129,7 +129,7 @@
             <entry>hibernate.order_by.default_null_ordering</entry>
             <entry><para><literal>none</literal>, <literal>first</literal> or <literal>last</literal></para></entry>
             <entry>Defines precedence of null values in <literal>ORDER BY</literal> clause. Defaults to
-            <literal>none</literal> which depends on the underlying RDBMS implementation.</entry>
+            <literal>none</literal> which varies between RDBMS implementation.</entry>
           </row>
           <row>
             <entry>hibernate.generate_statistics</entry>

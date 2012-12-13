@@ -43,6 +43,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.SQLFunction;
@@ -2185,11 +2186,10 @@ public abstract class Dialect implements ConversionContext {
 	 * if expression has not been explicitly specified.
 	 * @param order Order direction. Possible values: {@code asc}, {@code desc}, or {@code null}
 	 * if expression has not been explicitly specified.
-	 * @param nulls Nulls precedence. Possible values: {@code nulls first}, {@code nulls last}, or {@code null}
-	 * if expression has not been explicitly specified.
+	 * @param nulls Nulls precedence. Default value: {@link NullPrecedence#NONE}.
 	 * @return Renders single element of {@code ORDER BY} clause.
 	 */
-	public String renderOrderByElement(String expression, String collation, String order, String nulls) {
+	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
 		final StringBuilder orderByElement = new StringBuilder( expression );
 		if ( collation != null ) {
 			orderByElement.append( " " ).append( collation );
@@ -2197,8 +2197,8 @@ public abstract class Dialect implements ConversionContext {
 		if ( order != null ) {
 			orderByElement.append( " " ).append( order );
 		}
-		if ( nulls != null ) {
-			orderByElement.append( " " ).append( nulls );
+		if ( nulls != NullPrecedence.NONE ) {
+			orderByElement.append( " nulls " ).append( nulls.name().toLowerCase() );
 		}
 		return orderByElement.toString();
 	}

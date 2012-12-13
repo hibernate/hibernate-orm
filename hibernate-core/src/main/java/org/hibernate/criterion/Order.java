@@ -28,7 +28,7 @@ import java.sql.Types;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.NullOrderType;
+import org.hibernate.NullPrecedence;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
@@ -41,10 +41,10 @@ public class Order implements Serializable {
 	private boolean ascending;
 	private boolean ignoreCase;
 	private String propertyName;
-	private NullOrderType nullPrecedence;
+	private NullPrecedence nullPrecedence;
 	
 	public String toString() {
-		return propertyName + ' ' + ( ascending ? "asc" : "desc" ) + ( nullPrecedence != null ? ' ' + nullPrecedence.getSqlClause() : "" );
+		return propertyName + ' ' + ( ascending ? "asc" : "desc" ) + ( nullPrecedence != null ? ' ' + nullPrecedence.name().toLowerCase() : "" );
 	}
 	
 	public Order ignoreCase() {
@@ -52,7 +52,7 @@ public class Order implements Serializable {
 		return this;
 	}
 
-	public Order nulls(NullOrderType nullPrecedence) {
+	public Order nulls(NullPrecedence nullPrecedence) {
 		this.nullPrecedence = nullPrecedence;
 		return this;
 	}
@@ -89,7 +89,7 @@ public class Order implements Serializable {
 									expression.toString(),
 									null,
 									ascending ? "asc" : "desc",
-									nullPrecedence != null ? nullPrecedence.getSqlClause() : factory.getSettings().getDefaultNullOrdering().getSqlClause()
+									nullPrecedence != null ? nullPrecedence : factory.getSettings().getDefaultNullOrdering()
 							)
 			);
 			if ( i<columns.length-1 ) fragment.append(", ");

@@ -197,7 +197,7 @@ orderDirection
 	;
 
 nullOrdering returns [String nullOrdExp = null]
-    : nls:NULLS fl:nullPrecedence { nullOrdExp = #nls.getText() + " " + #fl.getText(); }
+    : NULLS fl:nullPrecedence { nullOrdExp = #fl.getText(); }
     ;
 
 nullPrecedence

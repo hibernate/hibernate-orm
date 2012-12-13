@@ -93,5 +93,5 @@ orderingSpecification returns [String ordSpecExp = null]
     ;
 
 nullOrdering returns [String nullOrdExp = null]
-    : n:NULL_ORDER { nullOrdExp = "nulls " + #n.getText(); }
+    : n:NULL_ORDER { nullOrdExp = #n.getText(); }
     ;

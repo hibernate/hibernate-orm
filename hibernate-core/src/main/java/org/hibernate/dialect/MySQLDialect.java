@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.JDBCException;
+import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -334,12 +335,12 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String renderOrderByElement(String expression, String collation, String order, String nulls) {
+	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
 		final StringBuilder orderByElement = new StringBuilder();
-		if ( nulls != null ) {
+		if ( nulls != NullPrecedence.NONE ) {
 			// Workaround for NULLS FIRST / LAST support.
 			orderByElement.append( "case when " ).append( expression ).append( " is null then " );
-			if ( "nulls first".equals( nulls ) ) {
+			if ( nulls == NullPrecedence.FIRST ) {
 				orderByElement.append( "0 else 1" );
 			}
 			else {
@@ -347,8 +348,8 @@ public class MySQLDialect extends Dialect {
 			}
 			orderByElement.append( " end, " );
 		}
-		// Nulls precedence has already been handled so passing null value.
-		orderByElement.append( super.renderOrderByElement( expression, collation, order, null ) );
+		// Nulls precedence has already been handled so passing NONE value.
+		orderByElement.append( super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE ) );
 		return orderByElement.toString();
 	}
 

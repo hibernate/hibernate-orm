@@ -401,7 +401,7 @@ public interface AvailableSettings {
 	public static final String ORDER_INSERTS = "hibernate.order_inserts";
 
 	/**
-	 * Default precedence of null values in {@code ORDER BY} clause.  Supported values: {@code none} (default),
+	 * Default precedence of null values in {@code ORDER BY} clause.  Supported options: {@code none} (default),
 	 * {@code first}, {@code last}.
 	 */
 	public static final String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";

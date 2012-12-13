@@ -33,6 +33,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.NullPrecedence;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
@@ -47,6 +48,7 @@ import org.hibernate.hql.spi.PersistentTableBulkIdStrategy;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.hql.spi.TemporaryTableBulkIdStrategy;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.NullPrecedenceReader;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
@@ -249,12 +251,12 @@ public class SettingsFactory implements Serializable {
 		settings.setOrderInsertsEnabled( orderInserts );
 
 		String defaultNullOrdering = ConfigurationHelper.getString(
-				AvailableSettings.DEFAULT_NULL_ORDERING, properties, "none", "none", "first", "last"
+				AvailableSettings.DEFAULT_NULL_ORDERING, properties, "none", "first", "last"
 		);
 		if ( debugEnabled ) {
 			LOG.debugf( "Default null ordering: %s", defaultNullOrdering );
 		}
-		settings.setDefaultNullOrdering( NullOrderType.getType( defaultNullOrdering ) );
+		settings.setDefaultNullOrdering( NullPrecedenceReader.parse( defaultNullOrdering ) );
 
 		//Query parser settings:
 

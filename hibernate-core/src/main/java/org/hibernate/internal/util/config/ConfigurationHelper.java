@@ -86,21 +86,21 @@ public final class ConfigurationHelper {
 	 * Get the config value as a {@link String}.
 	 *
 	 * @param name The config setting name.
-	 * @param values The map of config values.
+	 * @param values The map of config parameters.
 	 * @param defaultValue The default value to use if not found.
-	 * @param supportedValues List of supported values (must include the default one).
+	 * @param otherSupportedValues List of other supported values. Does not need to contain the default one.
 	 *
 	 * @return The value.
 	 *
 	 * @throws ConfigurationException Unsupported value provided.
 	 *
 	 */
-	public static String getString(String name, Map values, String defaultValue, String ... supportedValues) {
+	public static String getString(String name, Map values, String defaultValue, String ... otherSupportedValues) {
 		final String value = getString( name, values, defaultValue );
-		if ( ArrayHelper.indexOf( supportedValues, value ) == -1 ) {
+		if ( !defaultValue.equals( value ) && ArrayHelper.indexOf( otherSupportedValues, value ) == -1 ) {
 			throw new ConfigurationException(
 					"Unsupported configuration [name=" + name + ", value=" + value + "]. " +
-							"Choose value between: '" + StringHelper.join( "', '", supportedValues ) + "'."
+							"Choose value between: '" + defaultValue + "', '" + StringHelper.join( "', '", otherSupportedValues ) + "'."
 			);
 		}
 		return value;

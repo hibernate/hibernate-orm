@@ -26,9 +26,10 @@ package org.hibernate.sql.ordering.antlr;
 import antlr.collections.AST;
 import org.jboss.logging.Logger;
 
-import org.hibernate.dialect.Dialect;
+import org.hibernate.NullPrecedence;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.internal.util.NullPrecedenceReader;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -86,9 +87,7 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 
 	@Override
 	protected String renderOrderByElement(String expression, String collation, String order, String nulls) {
-		return sessionFactory.getDialect().renderOrderByElement(
-				expression, collation, order,
-				nulls != null ? nulls : sessionFactory.getSettings().getDefaultNullOrdering().getSqlClause()
-		);
+		final NullPrecedence nullPrecedence = NullPrecedenceReader.parse( nulls, sessionFactory.getSettings().getDefaultNullOrdering() );
+		return sessionFactory.getDialect().renderOrderByElement( expression, collation, order, nullPrecedence );
 	}
 }

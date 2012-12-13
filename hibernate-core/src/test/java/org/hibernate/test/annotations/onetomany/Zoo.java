@@ -34,7 +34,7 @@ public class Zoo implements Serializable {
 
 	@OneToMany
 	@JoinColumn(name = "zoo_id")
-	@javax.persistence.OrderBy("lastName desc nulls last, firstName asc nulls last") // Sorting by multiple columns.
+	@javax.persistence.OrderBy("lastName desc nulls last, firstName asc nulls LaSt") // Sorting by multiple columns.
 	private Set<Visitor> visitors = new HashSet<Visitor>();
 
 	public Zoo() {

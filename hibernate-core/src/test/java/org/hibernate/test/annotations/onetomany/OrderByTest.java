@@ -31,8 +31,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.Criteria;
+import org.hibernate.NullPrecedence;
 import org.hibernate.Session;
-import org.hibernate.cfg.NullOrderType;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.RequiresDialect;
@@ -162,7 +162,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		session.getTransaction().begin();
 		Criteria criteria = session.createCriteria( Zoo.class );
-		criteria.addOrder( org.hibernate.criterion.Order.asc( "name" ).nulls( NullOrderType.LAST ) );
+		criteria.addOrder( org.hibernate.criterion.Order.asc( "name" ).nulls( NullPrecedence.LAST ) );
 		Iterator<Zoo> iterator = (Iterator<Zoo>) criteria.list().iterator();
 		Assert.assertEquals( zoo2.getName(), iterator.next().getName() );
 		Assert.assertNull( iterator.next().getName() );
@@ -248,7 +248,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		session.getTransaction().commit();
 
 		session.getTransaction().begin();
-		List<Zoo> orderedResults = (List<Zoo>) session.createQuery( "from Zoo z order by z.name nulls last" ).list();
+		List<Zoo> orderedResults = (List<Zoo>) session.createQuery( "from Zoo z order by z.name nulls lAsT" ).list();
 		Assert.assertEquals( Arrays.asList( zoo2, zoo1 ), orderedResults );
 		session.getTransaction().commit();
 

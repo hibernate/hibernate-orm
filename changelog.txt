@@ -5,6 +5,55 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.1.9 (2012.12.13)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-1168] - Problem combining locking and paging on Oracle
+    * [HHH-3854] - Issue with greedy loading of associations (default-lazy=false )
+    * [HHH-4562] - Some kind of typo in chapter 7.3.1
+    * [HHH-5910] - Hbm2ddl.SchemaExport creates audit table for abstract audited classes
+    * [HHH-5973] - Typo in documentation about Interceptors
+    * [HHH-7029] - Javadoc says the opposite as in code example
+    * [HHH-7233] - unmuck EntityManager#getSingleResult wrt auto-setting of max results
+    * [HHH-7377] - NullPointerException in conjunction with natural IDs after Session.clear()
+    * [HHH-7435] - Performance bottleneck on Javassist
+    * [HHH-7643] - java.io.NotSerializableException org.hibernate.type.EnumType
+    * [HHH-7747] - CNFE regression in field level class enhancing (FieldTransformer)
+    * [HHH-7748] - EnumType crashes because of unsupported JDBC API in Oracle
+    * [HHH-7757] - NOT IN handled incorrectly with tuples for dialects that do not support tuple syntax
+    * [HHH-7767] - JoinWalker creates ".." substring in association path
+    * [HHH-7768] - Names of invalid named queries incorrectly concatenated
+    * [HHH-7769] - Define short-names for built-in MultiTableBulkIdStrategy impls
+    * [HHH-7780] - many envers tests are failing
+    * [HHH-7785] - Schema export does not generate unique constraints for HSQLDialect any more
+    * [HHH-7800] - maximize() builds incorrect query if used inside an AuditDisjunction
+    * [HHH-7816] - DDL opertations will incorrectly commit current transaction on Oracle XA
+    * [HHH-7819] - Correct test issues found in CI hibernate-core-master-matrix job
+    * [HHH-7823] - BatchFetchQueue.clear() does not clear batchLoadableCollections
+    * [HHH-7825] - org.hibernate.type.descriptor.java.DataHelper is incompatible with FireBird JDBC
+    * [HHH-7839] - Documentation bug at SimpleNaturalIdLoadAccess.getReference(Object naturalIdValue)
+    * [HHH-7849] - Unable to join on an embedded field
+    * [HHH-7850] - java7 verify error in org.hibernate.test.bytecode.javassist.ReflectionOptimizerTest caused by BulkAccessorFactory
+
+** Deprecation
+    * [HHH-7771] - Deprecate obsolete Type, AssociationType, and TypeFactory methods
+    * [HHH-7777] - Deprecate XmlRepresentableType
+    * [HHH-7856] - Deprecate TableHiLoGenerator and TableGenerator
+
+** Improvement
+    * [HHH-7806] - Failure of lazy initialization of collection no longer reports role
+    * [HHH-7811] - grammar error in devguide for HB
+    * [HHH-7813] - mistake in code examples in devguide for HB
+    * [HHH-7826] - Generate 'unique' constraints in stable order
+    * [HHH-7835] - Inefficient implementation of JarVisitorFactory.getBytesFromInputStream
+    * [HHH-7840] - org.hibernate.id.IncrementGenerator very slow
+
+** Task
+    * [HHH-7773] - Backout HHH-7544 (Pull Request 379)
+    * [HHH-7782] - Deprecate PersistentElementHolder, PersistentIndexedElementHolder, PersistentListElementHolder and PersistentMapElementHolder
+    * [HHH-7860] - Log a warning when embed-xml attribute is used in mappings
+
 Changes in version 4.1.8 (2012.10.31)
 ------------------------------------------------------------------------------------------------------------------------
 

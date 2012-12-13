@@ -33,9 +33,12 @@ import org.jboss.logging.MessageLogger;
 
 import org.hibernate.internal.CoreMessageLogger;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
+
+import javax.persistence.EntityNotFoundException;
 
 /**
  * The jboss-logging {@link MessageLogger} for the hibernate-entitymanager module.  It reserves message ids ranging from
@@ -100,4 +103,11 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
     @LogMessage( level = INFO )
     @Message( value = "Using provided datasource", id = 15012 )
     void usingProvidedDataSource();
+
+
+    @LogMessage( level = DEBUG )
+    @Message( value = "Returning null (as required by JPA spec) rather than throwing EntityNotFoundException, " +
+            "as the entity (%s) does not exist", id = 15013 )
+    void ignoringEntityNotFound( String entityName,
+                           @Cause EntityNotFoundException e );
 }

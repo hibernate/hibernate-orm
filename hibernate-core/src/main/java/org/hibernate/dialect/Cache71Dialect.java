@@ -50,6 +50,7 @@ import org.hibernate.exception.internal.CacheSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Lockable;
@@ -494,7 +495,7 @@ public class Cache71Dialect extends Dialect {
 		return true;
 	}
 
-	public Class getNativeIdentifierGeneratorClass() {
+	public Class<? extends IdentifierGenerator> getNativeIdentifierGeneratorClass() {
 		return IdentityGenerator.class;
 	}
 

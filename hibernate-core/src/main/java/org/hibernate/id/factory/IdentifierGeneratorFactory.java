@@ -39,7 +39,9 @@ public interface IdentifierGeneratorFactory {
 	 * Get the dialect.
 	 *
 	 * @return the dialect
+	 * @deprecated Get the dialect from service registry instead.
 	 */
+	@Deprecated
 	public Dialect getDialect();
 
 	/**
@@ -49,6 +51,7 @@ public interface IdentifierGeneratorFactory {
 	 * @deprecated The intention is that Dialect should be required to be specified up-front and it would then get
 	 * ctor injected.
 	 */
+	@Deprecated
 	public void setDialect(Dialect dialect);
 
 	/**
@@ -68,5 +71,5 @@ public interface IdentifierGeneratorFactory {
 	 * @param strategy The strategy
 	 * @return The generator class.
 	 */
-	public Class getIdentifierGeneratorClass(String strategy);
+	public Class<? extends IdentifierGenerator> getIdentifierGeneratorClass(String strategy);
 }

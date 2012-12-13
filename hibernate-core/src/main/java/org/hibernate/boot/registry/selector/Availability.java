@@ -24,10 +24,30 @@
 package org.hibernate.boot.registry.selector;
 
 /**
+ * Availability of strategy selector
+ *
  * @author Steve Ebersole
  */
-public interface Availability {
-	public Class getStrategyRole();
+public interface Availability<T> {
+	/**
+	 * The strategy role class or interface.
+	 *
+	 * @return The class of strategy role, can't be {@code null}.
+	 */
+	public Class<T> getStrategyRole();
+
+	/**
+	 * Alternative name(s) instead of the implementation's FQN  used for look up implementation of target strategy.
+	 * This is the place to define some short / simple names for the implementation.
+	 *
+	 * @return Names used for look up the strategy implementation, or {@code null} then only FQN will be used.
+	 */
 	public Iterable<String> getSelectorNames();
-	public Class getStrategyImplementation();
+
+	/**
+	 * The {@code getStrategyRole()}'s implementation class.
+	 *
+	 * @return The implementation class of target strategy role, can't be {@code null}.
+	 */
+	public Class<? extends T> getStrategyImplementation();
 }

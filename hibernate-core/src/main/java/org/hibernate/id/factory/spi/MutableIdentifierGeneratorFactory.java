@@ -1,5 +1,6 @@
 package org.hibernate.id.factory.spi;
 
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.service.Service;
 
@@ -9,5 +10,5 @@ import org.hibernate.service.Service;
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
 public interface MutableIdentifierGeneratorFactory extends IdentifierGeneratorFactory, Service {
-	public void register(String strategy, Class generatorClass);
+	public void register(String strategy, Class<? extends IdentifierGenerator> generatorClass);
 }

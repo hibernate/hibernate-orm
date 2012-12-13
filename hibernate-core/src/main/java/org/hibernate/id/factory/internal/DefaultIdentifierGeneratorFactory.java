@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.jboss.logging.Logger;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.Assigned;
@@ -66,12 +67,60 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
                                                                        DefaultIdentifierGeneratorFactory.class.getName());
 
 	private transient Dialect dialect;
-	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
+	private transient StrategySelector strategySelector;
+	@Override
+	public void register(String strategy, Class<? extends IdentifierGenerator> generatorClass) {
+		strategySelector.registerStrategyImplementor( IdentifierGenerator.class, strategy, generatorClass );
+	}
 
-	/**
-	 * Constructs a new DefaultIdentifierGeneratorFactory.
-	 */
-	public DefaultIdentifierGeneratorFactory() {
+	@Override
+	public Dialect getDialect() {
+		return dialect;
+	}
+
+	@Override
+	public void setDialect(Dialect dialect) {
+		LOG.debugf( "Setting dialect [%s]", dialect );
+		this.dialect = dialect;
+	}
+
+	@Override
+	public IdentifierGenerator createIdentifierGenerator(String strategy, Type type, Properties config) {
+		try {
+			IdentifierGenerator identifierGenerator = strategySelector.resolveStrategy(
+					IdentifierGenerator.class,
+					strategy
+			);
+			if ( identifierGenerator instanceof Configurable ) {
+				( (Configurable) identifierGenerator ).configure( type, config, dialect );
+			}
+			return identifierGenerator;
+		}
+		catch ( Exception e ) {
+			final String entityName = config.getProperty( IdentifierGenerator.ENTITY_NAME );
+			throw new MappingException(
+					String.format(
+							"Could not instantiate id generator [entity-name=%s]",
+							entityName
+					), e
+			);
+		}
+	}
+
+	@Override
+	public Class<? extends IdentifierGenerator> getIdentifierGeneratorClass(String strategy) {
+		return strategySelector.selectStrategyImplementor( IdentifierGenerator.class, strategy );
+	}
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		this.strategySelector = serviceRegistry.getService( StrategySelector.class );
+		registerDefaultStrategies();
+	}
+
+	private void registerDefaultStrategies() {
+		register( "native", dialect.getNativeIdentifierGeneratorClass() );
 		register( "uuid2", UUIDGenerator.class );
 		register( "guid", GUIDGenerator.class );			// can be done with UUIDGenerator + strategy
 		register( "uuid", UUIDHexGenerator.class );			// "deprecated" for new use
@@ -89,61 +138,5 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 		register( "enhanced-table", TableGenerator.class );
 	}
 
-	public void register(String strategy, Class generatorClass) {
-		LOG.debugf( "Registering IdentifierGenerator strategy [%s] -> [%s]", strategy, generatorClass.getName() );
-		final Class previous = generatorStrategyToClassNameMap.put( strategy, generatorClass );
-		if ( previous != null ) {
-			LOG.debugf( "    - overriding [%s]", previous.getName() );
-		}
-	}
 
-	@Override
-	public Dialect getDialect() {
-		return dialect;
-	}
-
-	@Override
-	public void setDialect(Dialect dialect) {
-		LOG.debugf( "Setting dialect [%s]", dialect );
-		this.dialect = dialect;
-	}
-
-	@Override
-	public IdentifierGenerator createIdentifierGenerator(String strategy, Type type, Properties config) {
-		try {
-			Class clazz = getIdentifierGeneratorClass( strategy );
-			IdentifierGenerator identifierGenerator = ( IdentifierGenerator ) clazz.newInstance();
-			if ( identifierGenerator instanceof Configurable ) {
-				( ( Configurable ) identifierGenerator ).configure( type, config, dialect );
-			}
-			return identifierGenerator;
-		}
-		catch ( Exception e ) {
-			final String entityName = config.getProperty( IdentifierGenerator.ENTITY_NAME );
-			throw new MappingException( String.format( "Could not instantiate id generator [entity-name=%s]", entityName ), e );
-		}
-	}
-
-	@Override
-	public Class getIdentifierGeneratorClass(String strategy) {
-		if ( "native".equals( strategy ) ) {
-			return dialect.getNativeIdentifierGeneratorClass();
-		}
-
-		Class generatorClass = generatorStrategyToClassNameMap.get( strategy );
-		try {
-			if ( generatorClass == null ) {
-				generatorClass = ReflectHelper.classForName( strategy );
-			}
-		}
-		catch ( ClassNotFoundException e ) {
-			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
-		}
-		return generatorClass;
-	}
-
-	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		this.dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
-	}
 }

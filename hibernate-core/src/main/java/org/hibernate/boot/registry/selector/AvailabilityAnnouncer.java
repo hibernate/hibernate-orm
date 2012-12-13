@@ -25,7 +25,7 @@ package org.hibernate.boot.registry.selector;
 
 /**
  * Responsible for announcing the availability of strategy selector(s).  Can be registered directly with the
- * {@link org.hibernate.boot.registry.BootstrapServiceRegistry} or located via discovery
+ * {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder} or located via Java service loader discovery.
  *
  * todo : better name?
  *

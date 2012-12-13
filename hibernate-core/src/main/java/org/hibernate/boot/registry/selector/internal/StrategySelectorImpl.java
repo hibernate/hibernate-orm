@@ -59,24 +59,20 @@ public class StrategySelectorImpl implements StrategySelector {
 
 		Class old = namedStrategyImplementorMap.put( name, implementation );
 		if ( old == null ) {
-			log.trace(
-					String.format(
-							"Registering named strategy selector [%s] : [%s] -> [%s]",
-							strategy.getName(),
-							name,
-							implementation.getName()
-					)
+			log.tracef(
+					"Registering named strategy selector [%s] : [%s] -> [%s]",
+					strategy.getName(),
+					name,
+					implementation.getName()
 			);
 		}
 		else {
-			log.debug(
-					String.format(
-							"Registering named strategy selector [%s] : [%s] -> [%s] (replacing [%s])",
-							strategy.getName(),
-							name,
-							implementation.getName(),
-							old.getName()
-					)
+			log.debugf(
+					"Registering named strategy selector [%s] : [%s] -> [%s] (replacing [%s])",
+					strategy.getName(),
+					name,
+					implementation.getName(),
+					old.getName()
 			);
 		}
 	}
@@ -89,9 +85,9 @@ public class StrategySelectorImpl implements StrategySelector {
 			return;
 		}
 
-		final Iterator itr = namedStrategyImplementorMap.values().iterator();
+		final Iterator<Class> itr = namedStrategyImplementorMap.values().iterator();
 		while ( itr.hasNext() ) {
-			final Class registered = (Class) itr.next();
+			final Class registered = itr.next();
 			if ( registered.equals( implementation ) ) {
 				itr.remove();
 			}
@@ -115,7 +111,14 @@ public class StrategySelectorImpl implements StrategySelector {
 		}
 
 		try {
-			return classLoaderService.classForName( name );
+			Class impl = classLoaderService.classForName( name );
+			if ( strategy.isAssignableFrom( impl ) ) {
+				return (Class<? extends T>)impl;
+			} else {
+				throw new StrategySelectionException(
+						"Unable to resolve name [" + name + "] as strategy [" + strategy.getName() + "]"
+				);
+			}
 		}
 		catch (ClassLoadingException e) {
 			throw new StrategySelectionException(

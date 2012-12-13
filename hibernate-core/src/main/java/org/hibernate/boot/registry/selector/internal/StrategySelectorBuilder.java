@@ -153,12 +153,21 @@ public class StrategySelectorBuilder {
 
 	@SuppressWarnings("unchecked")
 	private void applyFromAvailability(StrategySelectorImpl strategySelector, Availability availability) {
-		for ( String name : availability.getSelectorNames() ) {
+		if ( availability.getSelectorNames() == null || !availability.getSelectorNames().iterator().hasNext() ) {
 			strategySelector.registerStrategyImplementor(
 					availability.getStrategyRole(),
-					name,
+					availability.getStrategyImplementation().getName(),
 					availability.getStrategyImplementation()
 			);
+		}
+		else {
+			for ( String name : availability.getSelectorNames() ) {
+				strategySelector.registerStrategyImplementor(
+						availability.getStrategyRole(),
+						name,
+						availability.getStrategyImplementation()
+				);
+			}
 		}
 	}
 

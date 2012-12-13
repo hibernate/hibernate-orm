@@ -84,7 +84,7 @@ public final class Settings {
 	private boolean namedQueryStartupCheckingEnabled;
 	private EntityTuplizerFactory entityTuplizerFactory;
 	private boolean checkNullability;
-	private NullPrecedence defaultNullOrdering;
+	private NullPrecedence defaultNullPrecedence;
 	private boolean initializeLazyStateOutsideTransactions;
 //	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
 //	private BytecodeProvider bytecodeProvider;
@@ -273,8 +273,8 @@ public final class Settings {
 //		return componentTuplizerFactory;
 //	}
 
-	public NullPrecedence getDefaultNullOrdering() {
-		return defaultNullOrdering;
+	public NullPrecedence getDefaultNullPrecedence() {
+		return defaultNullPrecedence;
 	}
 
 	// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -496,7 +496,7 @@ public final class Settings {
 		this.batchFetchStyle = batchFetchStyle;
 	}
 
-	void setDefaultNullOrdering(NullPrecedence defaultNullOrdering) {
-		this.defaultNullOrdering = defaultNullOrdering;
+	void setDefaultNullPrecedence(NullPrecedence defaultNullPrecedence) {
+		this.defaultNullPrecedence = defaultNullPrecedence;
 	}
 }

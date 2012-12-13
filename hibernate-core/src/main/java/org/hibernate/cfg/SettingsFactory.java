@@ -48,7 +48,6 @@ import org.hibernate.hql.spi.PersistentTableBulkIdStrategy;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.hql.spi.TemporaryTableBulkIdStrategy;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.NullPrecedenceReader;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
@@ -250,13 +249,13 @@ public class SettingsFactory implements Serializable {
 		}
 		settings.setOrderInsertsEnabled( orderInserts );
 
-		String defaultNullOrdering = ConfigurationHelper.getString(
+		String defaultNullPrecedence = ConfigurationHelper.getString(
 				AvailableSettings.DEFAULT_NULL_ORDERING, properties, "none", "first", "last"
 		);
 		if ( debugEnabled ) {
-			LOG.debugf( "Default null ordering: %s", defaultNullOrdering );
+			LOG.debugf( "Default null ordering: %s", defaultNullPrecedence );
 		}
-		settings.setDefaultNullOrdering( NullPrecedenceReader.parse( defaultNullOrdering ) );
+		settings.setDefaultNullPrecedence( NullPrecedence.parse( defaultNullPrecedence ) );
 
 		//Query parser settings:
 

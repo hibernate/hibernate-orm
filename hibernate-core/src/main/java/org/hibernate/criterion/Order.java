@@ -89,7 +89,7 @@ public class Order implements Serializable {
 									expression.toString(),
 									null,
 									ascending ? "asc" : "desc",
-									nullPrecedence != null ? nullPrecedence : factory.getSettings().getDefaultNullOrdering()
+									nullPrecedence != null ? nullPrecedence : factory.getSettings().getDefaultNullPrecedence()
 							)
 			);
 			if ( i<columns.length-1 ) fragment.append(", ");

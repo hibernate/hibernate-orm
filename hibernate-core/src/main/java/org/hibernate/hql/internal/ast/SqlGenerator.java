@@ -46,7 +46,6 @@ import org.hibernate.hql.internal.ast.tree.ParameterContainer;
 import org.hibernate.hql.internal.ast.tree.ParameterNode;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.NullPrecedenceReader;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
@@ -371,7 +370,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	@Override
 	protected String renderOrderByElement(String expression, String order, String nulls) {
-		final NullPrecedence nullPrecedence = NullPrecedenceReader.parse( nulls, sessionFactory.getSettings().getDefaultNullOrdering() );
+		final NullPrecedence nullPrecedence = NullPrecedence.parse( nulls, sessionFactory.getSettings().getDefaultNullPrecedence() );
 		return sessionFactory.getDialect().renderOrderByElement( expression, null, order, nullPrecedence );
 	}
 }

@@ -251,10 +251,6 @@ public class HSQLDialect extends Dialect {
 		}
 	}
 
-	public boolean supportsUnique() {
-		return false;
-	}
-
 	public boolean supportsLimit() {
 		return true;
 	}

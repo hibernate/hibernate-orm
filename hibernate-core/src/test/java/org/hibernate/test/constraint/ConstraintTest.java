@@ -20,18 +20,23 @@
  */
 package org.hibernate.test.constraint;
 
-import javax.persistence.Column;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
+import org.hibernate.mapping.Column;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 /**
- * HHH-7797 re-wrote the way dialects handle unique constraints.  Test as
- * many variations of unique, not null, and primary key constraints as possible.
+ * HHH-7797 re-wrote the way dialects handle unique constraints.  Test
+ * variations of unique & not null to ensure the constraints are created
+ * correctly for each dialect.
  * 
  * @author Brett Meyer
  */
@@ -47,18 +52,34 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	public void testConstraints() {
-		// nothing yet -- more interested in DDL creation
+		Column column = (Column) configuration().getClassMapping( Entity1.class.getName() )
+				.getProperty( "foo1" ).getColumnIterator().next();
+		assertFalse( column.isNullable() );
+		assertTrue( column.isUnique() );
+
+		column = (Column) configuration().getClassMapping( Entity1.class.getName() )
+				.getProperty( "foo2" ).getColumnIterator().next();
+		assertTrue( column.isNullable() );
+		assertTrue( column.isUnique() );
+
+		column = (Column) configuration().getClassMapping( Entity1.class.getName() )
+				.getProperty( "id" ).getColumnIterator().next();
+		assertFalse( column.isNullable() );
+		assertTrue( column.isUnique() );
 	}
 	
-	// Primary key w/ not null and unique
 	@Entity
+	@Table( name = "Entity1" )
 	public static class Entity1 {
 		@Id
 		@GeneratedValue
-//		@Column( nullable = false, unique = true)
+		@javax.persistence.Column( nullable = false, unique = true)
 		public long id;
 		
-		@Column( nullable = false, unique = true)
-		public String foo;
+		@javax.persistence.Column( nullable = false, unique = true)
+		public String foo1;
+		
+		@javax.persistence.Column( nullable = true, unique = true)
+		public String foo2;
 	}
 }

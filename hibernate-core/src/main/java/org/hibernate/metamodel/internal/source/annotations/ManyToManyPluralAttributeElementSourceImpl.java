@@ -57,18 +57,6 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 			PluralAssociationAttribute associationAttribute) {
 		this.associationAttribute = associationAttribute;
 		
-//		if ( associationAttribute.getMappedBy() != null ) {
-//			// TODO: Pull some of this into JandexHelper.
-//			Index index = JandexHelper.indexForClass(
-//					associationAttribute.getContext().getServiceRegistry()
-//							.getService( ClassLoaderService.class ),
-//					associationAttribute.getAttributeType() );
-//			ClassInfo classInfo = index.getClassByName( DotName.createSimple(
-//					associationAttribute.getAttributeType().getName() ) );
-//			Map<DotName, List<AnnotationInstance>> annotations = JandexHelper
-//					.getMemberAnnotations(
-//							classInfo, associationAttribute.getMappedBy() );
-//		}
 		for ( Column column : associationAttribute.getJoinColumnValues() ) {
 			relationalValueSources.add( new ColumnSourceImpl( 
 					associationAttribute, null, column ) );
@@ -119,8 +107,8 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public String getExplicitForeignKeyName() {
-//		return associationAttribute.getInverseForeignKeyName();
-		return null;
+		// TODO: If inverse/mappedBy side, will need the implicitForeignKeyName
+		return associationAttribute.getExplicitForeignKeyName();
 	}
 
 	@Override

@@ -24,29 +24,11 @@ import org.hibernate.annotations.Cascade;
 @Table(name="`Employer`")
 @SuppressWarnings({"serial", "unchecked"})
 public class Employer implements Serializable {
+	
+	@Id
+	@GeneratedValue
 	private Integer id;
-	private Collection employees;
-	private List contractors;
-
-	@ManyToMany(
-			targetEntity = org.hibernate.test.annotations.manytomany.Contractor.class,
-			cascade = {CascadeType.PERSIST, CascadeType.MERGE}
-	)
-	@JoinTable(
-			name = "EMPLOYER_CONTRACTOR",
-			joinColumns = {@JoinColumn(name = "EMPLOYER_ID")},
-			inverseJoinColumns = {@JoinColumn(name = "CONTRACTOR_ID")}
-	)
-	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-	@OrderBy("name desc")	
-	public List getContractors() {
-		return contractors;
-	}
-
-	public void setContractors(List contractors) {
-		this.contractors = contractors;
-	}
-
+	
 	@ManyToMany(
 			targetEntity = org.hibernate.test.annotations.manytomany.Employee.class,
 			cascade = {CascadeType.PERSIST, CascadeType.MERGE}
@@ -58,12 +40,32 @@ public class Employer implements Serializable {
 	)
 	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
 	@OrderBy("name asc")
+	private Collection employees;
+//	private List contractors;
+
+//	@ManyToMany(
+//			targetEntity = org.hibernate.test.annotations.manytomany.Contractor.class,
+//			cascade = {CascadeType.PERSIST, CascadeType.MERGE}
+//	)
+//	@JoinTable(
+//			name = "EMPLOYER_CONTRACTOR",
+//			joinColumns = {@JoinColumn(name = "EMPLOYER_ID")},
+//			inverseJoinColumns = {@JoinColumn(name = "CONTRACTOR_ID")}
+//	)
+//	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+//	@OrderBy("name desc")	
+//	public List getContractors() {
+//		return contractors;
+//	}
+//
+//	public void setContractors(List contractors) {
+//		this.contractors = contractors;
+//	}
+
 	public Collection getEmployees() {
 		return employees;
 	}
 
-	@Id
-	@GeneratedValue
 	public Integer getId() {
 		return id;
 	}

@@ -216,10 +216,6 @@ public class H2Dialect extends Dialect {
 		return " for update";
 	}
 
-	public boolean supportsUnique() {
-		return true;
-	}
-
 	public boolean supportsLimit() {
 		return true;
 	}

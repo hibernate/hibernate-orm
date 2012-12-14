@@ -28,11 +28,15 @@ import org.hibernate.metamodel.relational.UniqueKey;
  * Dialect-level delegate in charge of applying "uniqueness" to a column.
  * Uniqueness can be defined in 1 of 3 ways:
  * 
- * 1.) Add a unique constraint via separate create/alter table statements.
+ * 1.) Add a unique constraint via separate alter table statements.
  * 2.) Add a unique constraint via dialect-specific syntax in table create statement.
  * 3.) Add "unique" syntax to the column itself.
  * 
  * #1 & #2 are preferred, if possible -- #3 should be solely a fall-back.
+ * 
+ * TODO: This could eventually be simplified.  With AST, 1 "applyUniqueness"
+ * method might be possible. But due to .cfg and .mapping still resolving
+ * around StringBuilders, separate methods were needed.
  * 
  * See HHH-7797.
  * 
@@ -43,7 +47,8 @@ public interface UniqueDelegate {
 	/**
 	 * If the delegate supports unique constraints, this method should simply
 	 * create the UniqueKey on the Table.  Otherwise, the constraint isn't
-	 * supported and "unique" should be added to the column definition.
+	 * supported and "unique" should be returned in order to add it
+	 * to the column definition.
 	 * 
 	 * @param table
 	 * @param column
@@ -55,7 +60,8 @@ public interface UniqueDelegate {
 	/**
 	 * If the delegate supports unique constraints, this method should simply
 	 * create the UniqueKey on the Table.  Otherwise, the constraint isn't
-	 * supported and "unique" should be added to the column definition.
+	 * supported and "unique" should be returned in order to add it
+	 * to the column definition.
 	 * 
 	 * @param table
 	 * @param column
@@ -64,9 +70,9 @@ public interface UniqueDelegate {
 	public String applyUniqueToColumn( Table table, Column column );
 	
 	/**
-	 * If creating unique constraints in separate alter statements are not
-	 * supported, this method should return the syntax necessary to create
-	 * the constraint on the original create table statement.
+	 * If constraints are supported, but not in seperate alter statements,
+	 * return uniqueConstraintSql in order to add the constraint to the
+	 * original table definition.
 	 * 
 	 * @param table
 	 * @return String
@@ -74,9 +80,9 @@ public interface UniqueDelegate {
 	public String applyUniquesToTable( org.hibernate.mapping.Table table );
 	
 	/**
-	 * If creating unique constraints in separate alter statements are not
-	 * supported, this method should return the syntax necessary to create
-	 * the constraint on the original create table statement.
+	 * If constraints are supported, but not in seperate alter statements,
+	 * return uniqueConstraintSql in order to add the constraint to the
+	 * original table definition.
 	 * 
 	 * @param table
 	 * @return String

@@ -102,14 +102,6 @@ public class TimesTenDialect extends Dialect {
 	public boolean qualifyIndexName() {
             return false;
 	}
-
-	public boolean supportsUnique() {
-		return false;
-	}
-    
-	public boolean supportsUniqueConstraintInCreateAlterTable() {
-		return false;
-	}
 	
     public String getAddColumnString() {
             return "add";

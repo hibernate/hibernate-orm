@@ -1,10 +1,35 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.metamodel.spi.relational;
 
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.internal.util.collections.JoinedIterable;
 
@@ -46,15 +71,44 @@ public class DenormalizedTable extends Table {
 		DerivedValue value = includedTable.locateDerivedValue( fragment );
 		return value != null ? value : super.locateDerivedValue( fragment );
 	}
-
+	//todo other constraints other than fk
+	//we have to copy all FKs defined in the parent table to this sub table, can this be doing only once? like using ValueHolder?
 	@Override
 	public Iterable<ForeignKey> getForeignKeys() {
-		return new JoinedIterable<ForeignKey>(
-				Arrays.asList(
-						includedTable.getForeignKeys(),
-						super.getForeignKeys()
-				)
-		);
+		copyFKsFromParentTable();
+		return super.getForeignKeys();
+	}
+	private Set<ForeignKey> alreadyCopiedNonNameParentFK = new HashSet<ForeignKey>(  );
+	private void copyFKsFromParentTable() {
+		Iterable<ForeignKey> fksInSuperTable = includedTable.getForeignKeys();
+		final String fkNamePostfix = Integer.toHexString( getTableName().hashCode() );
+		for ( ForeignKey fk : fksInSuperTable ) {
+
+			String name = fk.getName();
+			if ( name == null ) {
+				if(!alreadyCopiedNonNameParentFK.contains( fk )){
+					copyFK( fk, name );
+					alreadyCopiedNonNameParentFK.add( fk );
+				}
+			}
+			else {
+				String fkName = name + fkNamePostfix;
+				ForeignKey copiedFK = super.locateForeignKey( fkName );
+				if ( copiedFK == null ) {
+					copyFK( fk, fkName );
+				}
+			}
+		}
+	}
+
+	private void copyFK(ForeignKey fk, String fkName) {
+		ForeignKey copiedFK = createForeignKey( fk.getTargetTable(), fkName );
+		copiedFK.setDeleteRule( fk.getDeleteRule() );
+		copiedFK.setUpdateRule( fk.getUpdateRule() );
+		Iterable<ForeignKey.ColumnMapping> columnMappings = fk.getColumnMappings();
+		for ( ForeignKey.ColumnMapping cm : columnMappings ) {
+			copiedFK.addColumnMapping( cm.getSourceColumn(), cm.getTargetColumn() );
+		}
 	}
 
 	@Override
@@ -72,5 +126,14 @@ public class DenormalizedTable extends Table {
 	@Override
 	public PrimaryKey getPrimaryKey() {
 		return includedTable.getPrimaryKey();
+	}
+
+	@Override
+	protected void sameTableCheck(Column column) {
+		try{
+			super.sameTableCheck( column );
+		} catch ( IllegalArgumentException e  ){
+			includedTable.sameTableCheck( column );
+		}
 	}
 }

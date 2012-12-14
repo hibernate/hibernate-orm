@@ -46,7 +46,6 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 @SuppressWarnings( {"UnnecessaryBoxing"})
-@FailureExpectedWithNewMetamodel
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String[] getMappings() {
@@ -54,6 +53,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testUnionSubclass() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

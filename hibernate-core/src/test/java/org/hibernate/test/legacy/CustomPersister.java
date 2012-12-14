@@ -31,6 +31,7 @@ import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -54,6 +55,17 @@ public class CustomPersister implements EntityPersister {
 			Mapping mapping) {
 		this.factory = factory;
 	}
+
+
+	public CustomPersister(
+			final EntityBinding entityBinding,
+			final EntityRegionAccessStrategy cacheAccessStrategy,
+			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+			final SessionFactoryImplementor factory,
+			final Mapping mapping) throws HibernateException {
+		this.factory = factory;
+	}
+
 
 	public boolean hasLazyProperties() {
 		return false;

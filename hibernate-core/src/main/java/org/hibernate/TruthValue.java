@@ -34,5 +34,15 @@ package org.hibernate;
 public enum TruthValue {
 	TRUE,
 	FALSE,
-	UNKNOWN
+	UNKNOWN;
+
+	public static boolean toBoolean(TruthValue value, boolean defaultValue) {
+		if ( value == TruthValue.TRUE ) {
+			return true;
+		}
+		if ( value == TruthValue.FALSE ) {
+			return false;
+		}
+		return defaultValue;
+	}
 }

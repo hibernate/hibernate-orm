@@ -187,10 +187,16 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
 		return propertyRef == null
 				? null
-				: new JoinColumnResolutionDelegateImpl();
+				: new JoinColumnResolutionDelegateImpl( propertyRef );
 	}
 
-	public class JoinColumnResolutionDelegateImpl implements JoinColumnResolutionDelegate {
+	public static class JoinColumnResolutionDelegateImpl implements JoinColumnResolutionDelegate {
+		private final String propertyRef;
+
+		public JoinColumnResolutionDelegateImpl(String propertyRef) {
+			this.propertyRef = propertyRef;
+		}
+
 		@Override
 		public String getReferencedAttributeName() {
 			return propertyRef;

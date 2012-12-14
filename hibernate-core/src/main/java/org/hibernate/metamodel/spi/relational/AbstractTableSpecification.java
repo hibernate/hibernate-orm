@@ -173,15 +173,19 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	public PrimaryKey getPrimaryKey() {
 		return primaryKey;
 	}
-
+	@Override
 	public int generateColumnListId(Iterable<Column> columns) {
 		int result = getLogicalName().hashCode();
 		for ( Column column : columns ) {
-			if ( !this.equals( column.getTable() ) ) {
-				throw new IllegalArgumentException( "All columns must be from this table." );
-			}
+			sameTableCheck( column );
 			result = 31 * result + column.getColumnName().hashCode();
 		}
 		return result;
+	}
+
+	protected void sameTableCheck(Column column) {
+		if ( !this.equals( column.getTable() ) ) {
+			throw new IllegalArgumentException( "All columns must be from this table." );
+		}
 	}
 }

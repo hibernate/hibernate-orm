@@ -35,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
+//@FailureExpectedWithNewMetamodel
 public class IJ2Test extends LegacyTestCase {
 
 	@Override

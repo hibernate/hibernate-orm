@@ -264,6 +264,17 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 		return secondaryTable.getSecondaryTableReference();
 	}
 
+	public AttributeBinding locateAttributeBinding(String name, boolean searchParent) {
+		AttributeBinding attributeBinding = locateAttributeBinding( name );
+		if ( attributeBinding == null && searchParent && getSuperEntityBinding() != null ) {
+			return getSuperEntityBinding().locateAttributeBinding( name, searchParent );
+		}
+		else {
+			return attributeBinding;
+		}
+	}
+
+
 	public String getPrimaryTableName() {
 		return primaryTableName;
 	}

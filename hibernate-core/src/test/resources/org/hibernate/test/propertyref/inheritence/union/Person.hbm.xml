@@ -5,19 +5,19 @@
 
 <hibernate-mapping package="org.hibernate.test.propertyref.inheritence.union">
 
-	<class name="Person" table="U_SBCLS_PROPREF_PERS">
+	<class name="Person" >
 		<id name="id">
-			<generator class="hilo"/>
+			<generator class="seqhilo"/>
 		</id>
 		<property name="name" length="100"/>
 		<property name="personId" length="8" unique="true"/>
 				
-		<union-subclass name="Customer" table="U_SBCLS_PROPREF_CUST">
+		<union-subclass name="Customer" >
             <property name="customerId" length="8" unique="true"/>
 		</union-subclass>
 	</class>
 	
-	<class name="Account" table="U_SBCLS_PROPREF_ACCT">
+	<class name="Account" >
 		<id name="accountId" length="32">
 			<generator class="uuid.hex"/>
 		</id>

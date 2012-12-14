@@ -244,16 +244,6 @@ public class Binder {
 		return unsavedValue;
 	}
 
-	private static boolean toBoolean( final TruthValue truthValue, final boolean truthValueDefault ) {
-		if ( truthValue == TruthValue.TRUE ) {
-			return true;
-		}
-		if ( truthValue == TruthValue.FALSE ) {
-			return false;
-		}
-		return truthValueDefault;
-	}
-
 	private final MetadataImplementor metadata;
 	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 	private final ObjectNameNormalizer nameNormalizer;
@@ -2030,8 +2020,10 @@ public class Binder {
 		// table per class and non-abstract  entity
 		else {
 			Table includedTable = null;
-			if(superEntityBinding!=null && inheritanceType == InheritanceType.TABLE_PER_CLASS && Table.class.isInstance( superEntityBinding.getPrimaryTable() )){
-				includedTable = Table.class.cast(  superEntityBinding.getPrimaryTable());
+			if ( superEntityBinding != null
+					&& inheritanceType == InheritanceType.TABLE_PER_CLASS
+					&& Table.class.isInstance( superEntityBinding.getPrimaryTable() ) ) {
+				includedTable = Table.class.cast( superEntityBinding.getPrimaryTable() );
 			}
 			table = createTable(
 					entitySource.getPrimaryTable(), new DefaultNamingStrategy() {
@@ -2289,11 +2281,11 @@ public class Binder {
 				if ( valueSource.getNature() == RelationalValueSource.Nature.COLUMN ) {
 					final ColumnSource columnSource = ( ColumnSource ) valueSource;
 					final boolean isIncludedInInsert =
-							toBoolean(
+							TruthValue.toBoolean(
 									columnSource.isIncludedInInsert(),
 									valueSourceContainer.areValuesIncludedInInsertByDefault() );
 					final boolean isIncludedInUpdate =
-							toBoolean(
+							TruthValue.toBoolean(
 									columnSource.isIncludedInUpdate(),
 									valueSourceContainer.areValuesIncludedInUpdateByDefault() );
 					Column column = createColumn(
@@ -2452,7 +2444,7 @@ public class Binder {
 		else {
 			// if the column is already non-nullable, leave it alone
 			if ( column.isNullable() ) {
-				column.setNullable( toBoolean( columnSource.isNullable(), isNullableByDefault ) );
+				column.setNullable( TruthValue.toBoolean( columnSource.isNullable(), isNullableByDefault ) );
 			}
 		}
 		column.setDefaultValue( columnSource.getDefaultValue() );
@@ -2598,8 +2590,9 @@ public class Binder {
 
 		final LocalBindingContext bindingContext = bindingContexts.peek();
 		final MappingDefaults mappingDefaults = bindingContext.getMappingDefaults();
-		final String explicitCatalogName = tableSpecSource == null ? null : tableSpecSource.getExplicitCatalogName();
-		final String explicitSchemaName = tableSpecSource == null ? null : tableSpecSource.getExplicitSchemaName();
+		final boolean isTableSourceNull = tableSpecSource == null;
+		final String explicitCatalogName =  isTableSourceNull ? null : tableSpecSource.getExplicitCatalogName();
+		final String explicitSchemaName = isTableSourceNull ? null : tableSpecSource.getExplicitSchemaName();
 		final Schema.Name schemaName =
 				new Schema.Name(
 						createIdentifier( explicitCatalogName, mappingDefaults.getCatalogName() ),
@@ -2608,7 +2601,7 @@ public class Binder {
 		final Schema schema = metadata.getDatabase().locateSchema( schemaName );
 
 		TableSpecification tableSpec = null;
-		if ( tableSpecSource == null ) {
+		if ( isTableSourceNull ) {
 			if ( defaultNamingStrategy == null ) {
 				throw bindingContext().makeMappingException( "An explicit name must be specified for the table" );
 			}
@@ -2723,7 +2716,7 @@ public class Binder {
 								return values;
 							}
 							final AttributeBinding referencedAttributeBinding =
-									entityBinding.locateAttributeBinding( attributeName );
+									entityBinding.locateAttributeBinding( attributeName, true );
 							if ( referencedAttributeBinding == null ) {
 								throw bindingContext().makeMappingException(
 										String.format(
@@ -2831,9 +2824,12 @@ public class Binder {
 		}
 
 		final String explicitName = resolutionDelegate.getReferencedAttributeName();
-		final AttributeBinding referencedAttributeBinding = explicitName != null
-				? referencedEntityBinding.locateAttributeBinding( explicitName )
-				:referencedEntityBinding.locateAttributeBinding( resolutionDelegate.getJoinColumns( resolutionContext ) );
+		final AttributeBinding referencedAttributeBinding = locateAttributeBinding(
+				resolutionDelegate,
+				resolutionContext,
+				referencedEntityBinding,
+				explicitName
+		);
 		if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
 			throw bindingContext().makeMappingException(
 					String.format(
@@ -2842,6 +2838,26 @@ public class Binder {
 		}
 		return (SingularAttributeBinding) referencedAttributeBinding;
 	}
+
+	private AttributeBinding locateAttributeBinding(JoinColumnResolutionDelegate resolutionDelegate,
+													JoinColumnResolutionContext resolutionContext,
+													EntityBinding referencedEntityBinding,
+													String explicitName) {
+		AttributeBinding attributeBinding = explicitName != null
+				? referencedEntityBinding.locateAttributeBinding( explicitName )
+				: referencedEntityBinding.locateAttributeBinding( resolutionDelegate.getJoinColumns( resolutionContext ) );
+		if ( attributeBinding == null && referencedEntityBinding.getSuperEntityBinding() != null ) {
+			return locateAttributeBinding(
+					resolutionDelegate,
+					resolutionContext,
+					referencedEntityBinding.getSuperEntityBinding(),
+					explicitName
+			);
+		} else {
+			return attributeBinding;
+		}
+	}
+
 
 	private EntityBinding findOrBindEntityBinding(ValueHolder< Class< ? >> entityJavaTypeValue, String explicitEntityName) {
 		final String referencedEntityName =

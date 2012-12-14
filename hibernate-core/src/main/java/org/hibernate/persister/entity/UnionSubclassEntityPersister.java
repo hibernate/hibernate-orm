@@ -608,7 +608,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		final StringBuilder buf = new StringBuilder()
 				.append("( ");
 
-		visitSubEntityBindings( entityBinding, new Callback() {
+		visitEntityHierarchy( entityBinding, new Callback() {
 			@Override
 			public void execute(EntityBinding eb) {
 				TableSpecification table = eb.getPrimaryTable();

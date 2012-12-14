@@ -67,7 +67,7 @@ public class MetaAttributeContext {
 
 	public MetaAttribute getMetaAttribute(String key) {
 		MetaAttribute value = getLocalMetaAttribute( key );
-		if ( value == null ) {
+		if ( value == null && parentContext != null ) {
 			// recursive call
 			value = parentContext.getMetaAttribute( key );
 		}

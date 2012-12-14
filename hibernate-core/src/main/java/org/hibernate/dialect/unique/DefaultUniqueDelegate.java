@@ -42,19 +42,22 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	}
 
 	@Override
-	public String applyUniqueToColumn( org.hibernate.mapping.Table table,
+	public void generateUniqueKey( org.hibernate.mapping.Table table,
 			org.hibernate.mapping.Column column ) {
 		org.hibernate.mapping.UniqueKey uk = table.getOrCreateUniqueKey(
 				column.getQuotedName( dialect ) + '_' );
 		uk.addColumn( column );
-		return "";
 	}
 
 	@Override
-	public String applyUniqueToColumn( Table table, Column column ) {
+	public void generateUniqueKey( Table table, Column column ) {
 		UniqueKey uk = table.getOrCreateUniqueKey( column.getColumnName()
 				.encloseInQuotesIfQuoted( dialect ) + '_' );
 		uk.addColumn( column );
+	}
+	
+	@Override
+	public String applyUniqueToColumn() {
 		return "";
 	}
 
@@ -85,8 +88,8 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	@Override
 	public String applyUniquesOnAlter( UniqueKey uniqueKey  ) {
 		// Do this here, rather than allowing UniqueKey/Constraint to do it.
-				// We need full, simplified control over whether or not it happens.
-				return new StringBuilder( "alter table " )
+		// We need full, simplified control over whether or not it happens.
+		return new StringBuilder( "alter table " )
 				.append( uniqueKey.getTable().getQualifiedName( dialect ) )
 				.append( " add constraint " )
 				.append( uniqueKey.getName() )

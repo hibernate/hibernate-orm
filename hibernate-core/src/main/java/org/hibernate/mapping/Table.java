@@ -422,7 +422,10 @@ public class Table implements RelationalModel, Serializable {
 				}
 
 				if ( column.isUnique() ) {
-					alter.append( dialect.getUniqueDelegate().applyUniqueToColumn( this, column ) );
+					dialect.getUniqueDelegate().generateUniqueKey(
+							this, column );
+					alter.append(
+							dialect.getUniqueDelegate().applyUniqueToColumn() );
 				}
 
 				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
@@ -521,8 +524,8 @@ public class Table implements RelationalModel, Serializable {
 			}
 			
 			if ( col.isUnique() ) {
-				buf.append( dialect.getUniqueDelegate().applyUniqueToColumn( this, col ) );
-			}
+				dialect.getUniqueDelegate().generateUniqueKey( this, col );
+				buf.append( dialect.getUniqueDelegate().applyUniqueToColumn() );			}
 				
 			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
 				buf.append( " check (" )

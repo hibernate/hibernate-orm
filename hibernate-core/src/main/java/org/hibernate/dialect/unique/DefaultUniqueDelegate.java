@@ -44,20 +44,6 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	@Override
 	public String applyUniqueToColumn( org.hibernate.mapping.Table table,
 			org.hibernate.mapping.Column column ) {
-//		if ( column.isUnique()
-//				&& ( column.isNullable()
-//						|| dialect.supportsNotNullUnique() ) ) {
-//			if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-//				// If the constraint is supported, do not add to the column syntax.
-//				UniqueKey uk = getOrCreateUniqueKey( column.getQuotedName( dialect ) + '_' );
-//				uk.addColumn( column );
-//			}
-//			else if ( dialect.supportsUnique() ) {
-//				// Otherwise, add to the column syntax if supported.
-//				sb.append( " unique" );
-//			}
-//		}
-		
 		org.hibernate.mapping.UniqueKey uk = table.getOrCreateUniqueKey(
 				column.getQuotedName( dialect ) + '_' );
 		uk.addColumn( column );
@@ -66,20 +52,6 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 
 	@Override
 	public String applyUniqueToColumn( Table table, Column column ) {
-//		if ( column.isUnique()
-//				&& ( column.isNullable()
-//						|| dialect.supportsNotNullUnique() ) ) {
-//			if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-//				// If the constraint is supported, do not add to the column syntax.
-//				UniqueKey uk = getOrCreateUniqueKey( column.getQuotedName( dialect ) + '_' );
-//				uk.addColumn( column );
-//			}
-//			else if ( dialect.supportsUnique() ) {
-//				// Otherwise, add to the column syntax if supported.
-//				sb.append( " unique" );
-//			}
-//		}
-		
 		UniqueKey uk = table.getOrCreateUniqueKey( column.getColumnName()
 				.encloseInQuotesIfQuoted( dialect ) + '_' );
 		uk.addColumn( column );
@@ -88,41 +60,19 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 
 	@Override
 	public String applyUniquesToTable( org.hibernate.mapping.Table table ) {
-		// TODO: Am I correct that this shouldn't be done unless the constraint
-		// isn't created in an alter table?
-//		Iterator uniqueKeyIterator = table.getUniqueKeyIterator();
-//		while ( uniqueKeyIterator.hasNext() ) {
-//			UniqueKey uniqueKey = (UniqueKey) uniqueKeyIterator.next();
-//			
-//			sb.append( ", " ).append( createUniqueConstraint( uniqueKey) );
-//		}
 		return "";
 	}
 
 	@Override
 	public String applyUniquesToTable( Table table ) {
-		// TODO: Am I correct that this shouldn't be done unless the constraint
-		// isn't created in an alter table?
-//		Iterator uniqueKeyIterator = table.getUniqueKeyIterator();
-//		while ( uniqueKeyIterator.hasNext() ) {
-//			UniqueKey uniqueKey = (UniqueKey) uniqueKeyIterator.next();
-//			
-//			sb.append( ", " ).append( createUniqueConstraint( uniqueKey) );
-//		}
 		return "";
 	}
 	
 	@Override
 	public String applyUniquesOnAlter( org.hibernate.mapping.UniqueKey uniqueKey,
 			String defaultCatalog, String defaultSchema ) {
-//		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-//			return super.sqlCreateString( dialect, p, defaultCatalog, defaultSchema );
-//		}
-//		else {
-//			return Index.buildSqlCreateIndexString( dialect, getName(), getTable(), getColumnIterator(), true,
-//					defaultCatalog, defaultSchema );
-//		}
-		
+		// Do this here, rather than allowing UniqueKey/Constraint to do it.
+		// We need full, simplified control over whether or not it happens.
 		return new StringBuilder( "alter table " )
 				.append( uniqueKey.getTable().getQualifiedName(
 						dialect, defaultCatalog, defaultSchema ) )
@@ -134,15 +84,9 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	
 	@Override
 	public String applyUniquesOnAlter( UniqueKey uniqueKey  ) {
-//		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-//			return super.sqlCreateString( dialect, p, defaultCatalog, defaultSchema );
-//		}
-//		else {
-//			return Index.buildSqlCreateIndexString( dialect, getName(), getTable(), getColumnIterator(), true,
-//					defaultCatalog, defaultSchema );
-//		}
-		
-		return new StringBuilder( "alter table " )
+		// Do this here, rather than allowing UniqueKey/Constraint to do it.
+				// We need full, simplified control over whether or not it happens.
+				return new StringBuilder( "alter table " )
 				.append( uniqueKey.getTable().getQualifiedName( dialect ) )
 				.append( " add constraint " )
 				.append( uniqueKey.getName() )
@@ -153,13 +97,8 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	@Override
 	public String dropUniquesOnAlter( org.hibernate.mapping.UniqueKey uniqueKey,
 			String defaultCatalog, String defaultSchema ) {
-//		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-//			return super.sqlDropString( dialect, defaultCatalog, defaultSchema );
-//		}
-//		else {
-//			return Index.buildSqlDropIndexString( dialect, getTable(), getName(), defaultCatalog, defaultSchema );
-//		}
-		
+		// Do this here, rather than allowing UniqueKey/Constraint to do it.
+		// We need full, simplified control over whether or not it happens.
 		return new StringBuilder( "alter table " )
 				.append( uniqueKey.getTable().getQualifiedName(
 						dialect, defaultCatalog, defaultSchema ) )
@@ -170,13 +109,8 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	
 	@Override
 	public String dropUniquesOnAlter( UniqueKey uniqueKey  ) {
-//		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-//			return super.sqlDropString( dialect, defaultCatalog, defaultSchema );
-//		}
-//		else {
-//			return Index.buildSqlDropIndexString( dialect, getTable(), getName(), defaultCatalog, defaultSchema );
-//		}
-		
+		// Do this here, rather than allowing UniqueKey/Constraint to do it.
+		// We need full, simplified control over whether or not it happens.
 		return new StringBuilder( "alter table " )
 				.append( uniqueKey.getTable().getQualifiedName( dialect ) )
 				.append( " drop constraint " )
@@ -186,10 +120,6 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	
 	@Override
 	public String uniqueConstraintSql( org.hibernate.mapping.UniqueKey uniqueKey ) {
-		// TODO: This may not be necessary, but not all callers currently
-		// check it on their own.  Go through their logic.
-//		if ( !isGenerated( dialect ) ) return null;
-		
 		StringBuilder sb = new StringBuilder();
 		sb.append( " unique (" );
 		Iterator columnIterator = uniqueKey.getColumnIterator();
@@ -207,10 +137,6 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	
 	@Override
 	public String uniqueConstraintSql( UniqueKey uniqueKey ) {
-		// TODO: This may not be necessary, but not all callers currently
-		// check it on their own.  Go through their logic.
-//		if ( !isGenerated( dialect ) ) return null;
-		
 		StringBuilder sb = new StringBuilder();
 		sb.append( " unique (" );
 		Iterator columnIterator = uniqueKey.getColumns().iterator();

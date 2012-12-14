@@ -401,11 +401,6 @@ public class Cache71Dialect extends Dialect {
 		return false;
 	}
 
-	public boolean supportsUnique() {
-		// Does this dialect support the UNIQUE column syntax?
-		return true;
-	}
-
 	/**
 	 * The syntax used to add a foreign key constraint to a table.
 	 *

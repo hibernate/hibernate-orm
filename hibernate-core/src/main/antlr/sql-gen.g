@@ -179,7 +179,7 @@ whereClauseExpr
 orderExprs { String ordExp = null; String ordDir = null; String ordNul = null; }
 	// TODO: remove goofy space before the comma when we don't have to regression test anymore.
 	// Dialect is provided a hook to render each ORDER BY element, so the expression is being captured instead of
-	// printing to the SQL output directly. See Dialect#renderOrderByElement(String, String, String, String).
+	// printing to the SQL output directly. See Dialect#renderOrderByElement(String, String, String, NullPrecedence).
 	: { captureExpressionStart(); } ( expr ) { captureExpressionFinish(); ordExp = resetCapture(); }
 	    (dir:orderDirection { ordDir = #dir.getText(); })? (ordNul=nullOrdering)?
 	        { out( renderOrderByElement( ordExp, ordDir, ordNul ) ); }

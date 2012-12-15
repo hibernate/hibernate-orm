@@ -86,7 +86,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-465")
 	@RequiresDialect(value = { H2Dialect.class, MySQLDialect.class },
 			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression. " +
-					"For MySQL testing overridden Dialect#renderOrderByElement(String, String, String, String) method. " +
+					"For MySQL testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
 					"MySQL does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
 	public void testAnnotationNullsFirstLast() {
 		Session session = openSession();
@@ -145,7 +145,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-465")
 	@RequiresDialect(value = { H2Dialect.class, MySQLDialect.class },
 			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression. " +
-					"For MySQL testing overridden Dialect#renderOrderByElement(String, String, String, String) method. " +
+					"For MySQL testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
 					"MySQL does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
 	public void testCriteriaNullsFirstLast() {
 		Session session = openSession();
@@ -183,7 +183,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-465")
 	@RequiresDialect(value = { H2Dialect.class, MySQLDialect.class },
 			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression. " +
-					"For MySQL testing overridden Dialect#renderOrderByElement(String, String, String, String) method. " +
+					"For MySQL testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
 					"MySQL does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
 	public void testNullsFirstLastSpawnMultipleColumns() {
 		Session session = openSession();
@@ -232,7 +232,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-465")
 	@RequiresDialect(value = { H2Dialect.class, MySQLDialect.class },
 			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression. " +
-					"For MySQL testing overridden Dialect#renderOrderByElement(String, String, String, String) method. " +
+					"For MySQL testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
 					"MySQL does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
 	public void testHqlNullsFirstLast() {
 		Session session = openSession();

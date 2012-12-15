@@ -1,7 +1,7 @@
 package org.hibernate;
 
 /**
- * Defines precedence of null values within  {@code ORDER BY} clause.
+ * Defines precedence of null values within {@code ORDER BY} clause.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */

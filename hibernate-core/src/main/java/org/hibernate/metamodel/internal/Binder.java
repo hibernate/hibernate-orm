@@ -582,12 +582,12 @@ public class Binder {
 				attributeBinding.getPluralAttributeElementBinding().getNature() != PluralAttributeElementBinding.Nature.ONE_TO_MANY )
 				.get( 0 ).getValue() );
 		if ( attributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
-			if ( !Column.class.isInstance( indexBinding.getIndexRelationalValue() ) ) {
-				throw new NotYetImplementedException( "derived value as collection index is not supported yet." );
+			if ( Column.class.isInstance( indexBinding.getIndexRelationalValue() ) ) {
+				// TODO: fix this when column nullability is refactored
+				( (Column) indexBinding.getIndexRelationalValue() ).setNullable( true );
 			}
-			// TODO: fix this when column nullability is refactored
-			( (Column) indexBinding.getIndexRelationalValue() ).setNullable( true );
 		}
+		// TODO: create a foreign key if non-inverse and the index is an association
 
 		bindHibernateTypeDescriptor(
 				indexBinding.getHibernateTypeDescriptor(),
@@ -639,12 +639,8 @@ public class Binder {
 						keySource
 				);
 
-		final String foreignKeyName =
-				StringHelper.isEmpty( keySource.getExplicitForeignKeyName() )
-						? null
-						: quotedIdentifier( keySource.getExplicitForeignKeyName() );
 		ForeignKey foreignKey = bindForeignKey(
-				foreignKeyName,
+				quoteIdentifierIfNonEmpty( keySource.getExplicitForeignKeyName() ),
 				sourceColumns,
 				targetColumns
 		);
@@ -1367,14 +1363,16 @@ public class Binder {
 				attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping(),
 				attributeBinding.getRelationalValueBindings()
 		);
-		bindForeignKey(
-				attributeSource.getExplicitForeignKeyName(),
-				extractColumnsFromRelationalValueBindings( attributeBinding.getRelationalValueBindings() ),
-				determineForeignKeyTargetColumns(
-						attributeBinding.getReferencedEntityBinding(),
-						attributeSource
-				)
-		);
+		if ( !hasDerivedValue( attributeBinding.getRelationalValueBindings() ) ) {
+			bindForeignKey(
+					quoteIdentifierIfNonEmpty( attributeSource.getExplicitForeignKeyName() ),
+					extractColumnsFromRelationalValueBindings( attributeBinding.getRelationalValueBindings() ),
+					determineForeignKeyTargetColumns(
+							attributeBinding.getReferencedEntityBinding(),
+							attributeSource
+					)
+			);
+		}
 		return attributeBinding;
 	}
 
@@ -1447,7 +1445,7 @@ public class Binder {
 			);
 
 			bindForeignKey(
-					attributeSource.getExplicitForeignKeyName(),
+					quoteIdentifierIfNonEmpty( attributeSource.getExplicitForeignKeyName() ),
 					foreignKeyColumns,
 					determineForeignKeyTargetColumns(
 							attributeBinding.getReferencedEntityBinding(),
@@ -1678,8 +1676,13 @@ public class Binder {
 				)
 		);
 
-		if ( !elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().isInverse() ) {
-			bindCollectionTableElementForeignKey( elementBinding, elementSource, referencedEntityBinding );
+		if ( !elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().isInverse() &&
+				! hasDerivedValue( elementBinding.getRelationalValueBindings() ) ) {
+			bindForeignKey(
+					quoteIdentifierIfNonEmpty( elementSource.getExplicitForeignKeyName() ),
+					extractColumnsFromRelationalValueBindings( elementBinding.getRelationalValueBindings() ),
+					determineForeignKeyTargetColumns( referencedEntityBinding, elementSource )
+			);
 		}
 
 		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();
@@ -1710,32 +1713,13 @@ public class Binder {
 		//TODO: initialize filters from elementSource
 	}
 
-	private void bindCollectionTableElementForeignKey(
-			ManyToManyPluralAttributeElementBinding elementBinding,
-			final ManyToManyPluralAttributeElementSource elementSource,
-			final EntityBinding referencedEntityBinding) {
-		List<Column> sourceColumns = new ArrayList<Column>( elementBinding.getRelationalValueBindings().size() );
-		for ( RelationalValueBinding relationalValueBinding : elementBinding.getRelationalValueBindings() ) {
-			final Value value = relationalValueBinding.getValue();
-			// todo : currently formulas are not supported here... :(
-			if ( !Column.class.isInstance( value ) ) {
-				throw new NotYetImplementedException(
-						"Derived values are not supported when creating a foreign key that targets columns." );
+	private boolean hasDerivedValue(List<RelationalValueBinding> relationalValueBindings) {
+		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
+			if ( DerivedValue.class.isInstance( relationalValueBinding.getValue() ) ) {
+				return true;
 			}
-			sourceColumns.add( (Column) value );
 		}
-
-		List<Column> targetColumns =
-				determineForeignKeyTargetColumns(
-						referencedEntityBinding,
-						elementSource
-				);
-
-		final String foreignKeyName =
-				StringHelper.isEmpty( elementSource.getExplicitForeignKeyName() )
-						? null
-						: quotedIdentifier( elementSource.getExplicitForeignKeyName() );
-		bindForeignKey( foreignKeyName, sourceColumns, targetColumns );
+		return false;
 	}
 
 	// TODO: should this be moved to CascadeStyles as a static method?
@@ -2081,7 +2065,7 @@ public class Binder {
 
 			// TODO: make the foreign key column the primary key???
 			final ForeignKey foreignKey = bindForeignKey(
-					secondaryTableSource.getExplicitForeignKeyName(),
+					quoteIdentifierIfNonEmpty( secondaryTableSource.getExplicitForeignKeyName() ),
 					joinColumns,
 					determineForeignKeyTargetColumns( entityBinding, secondaryTableSource )
 			);
@@ -3030,6 +3014,10 @@ public class Binder {
 		return propertyAccessorName == null
 				? bindingContexts.peek().getMappingDefaults().getPropertyAccessorName()
 				: propertyAccessorName;
+	}
+
+	private String quoteIdentifierIfNonEmpty(String name) {
+		return StringHelper.isEmpty( name ) ? null : quotedIdentifier( name );
 	}
 
 	private String quotedIdentifier( final String name ) {

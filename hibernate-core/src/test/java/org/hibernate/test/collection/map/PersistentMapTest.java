@@ -42,7 +42,6 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

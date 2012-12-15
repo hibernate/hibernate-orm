@@ -28,6 +28,7 @@ import java.util.Map;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.NullPrecedence;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
@@ -83,6 +84,7 @@ public final class Settings {
 	private boolean namedQueryStartupCheckingEnabled;
 	private EntityTuplizerFactory entityTuplizerFactory;
 	private boolean checkNullability;
+	private NullPrecedence defaultNullPrecedence;
 	private boolean initializeLazyStateOutsideTransactions;
 //	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
 //	private BytecodeProvider bytecodeProvider;
@@ -271,6 +273,9 @@ public final class Settings {
 //		return componentTuplizerFactory;
 //	}
 
+	public NullPrecedence getDefaultNullPrecedence() {
+		return defaultNullPrecedence;
+	}
 
 	// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -489,5 +494,9 @@ public final class Settings {
 
 	void setBatchFetchStyle(BatchFetchStyle batchFetchStyle) {
 		this.batchFetchStyle = batchFetchStyle;
+	}
+
+	void setDefaultNullPrecedence(NullPrecedence defaultNullPrecedence) {
+		this.defaultNullPrecedence = defaultNullPrecedence;
 	}
 }

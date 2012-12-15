@@ -26,6 +26,8 @@ package org.hibernate.sql.ordering.antlr;
 import antlr.collections.AST;
 import org.jboss.logging.Logger;
 
+import org.hibernate.NullPrecedence;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.internal.util.StringHelper;
 
@@ -40,6 +42,12 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 
 	private static final Logger LOG = Logger.getLogger( OrderByFragmentRenderer.class.getName() );
 	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
+
+	private final SessionFactoryImplementor sessionFactory;
+
+	public OrderByFragmentRenderer(SessionFactoryImplementor sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
 
 	@Override
     protected void out(AST ast) {
@@ -74,5 +82,11 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 		}
 		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
 		LOG.trace( prefix + ruleName );
+	}
+
+	@Override
+	protected String renderOrderByElement(String expression, String collation, String order, String nulls) {
+		final NullPrecedence nullPrecedence = NullPrecedence.parse( nulls, sessionFactory.getSettings().getDefaultNullPrecedence() );
+		return sessionFactory.getDialect().renderOrderByElement( expression, collation, order, nullPrecedence );
 	}
 }

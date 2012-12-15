@@ -119,7 +119,7 @@ List cats = sess.createCriteria(Cat.class)
 
         <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
     .add( Restrictions.like("name", "F%")
-    .addOrder( Order.asc("name") )
+    .addOrder( Order.asc("name").nulls(NullPrecedence.LAST) )
     .addOrder( Order.desc("age") )
     .setMaxResults(50)
     .list();]]></programlisting>

@@ -28,25 +28,32 @@ import java.sql.Types;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.NullPrecedence;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
 /**
  * Represents an order imposed upon a <tt>Criteria</tt> result set
  * @author Gavin King
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class Order implements Serializable {
-
 	private boolean ascending;
 	private boolean ignoreCase;
 	private String propertyName;
+	private NullPrecedence nullPrecedence;
 	
 	public String toString() {
-		return propertyName + ' ' + (ascending?"asc":"desc");
+		return propertyName + ' ' + ( ascending ? "asc" : "desc" ) + ( nullPrecedence != null ? ' ' + nullPrecedence.name().toLowerCase() : "" );
 	}
 	
 	public Order ignoreCase() {
 		ignoreCase = true;
+		return this;
+	}
+
+	public Order nulls(NullPrecedence nullPrecedence) {
+		this.nullPrecedence = nullPrecedence;
 		return this;
 	}
 
@@ -68,15 +75,23 @@ public class Order implements Serializable {
 		Type type = criteriaQuery.getTypeUsingProjection(criteria, propertyName);
 		StringBuilder fragment = new StringBuilder();
 		for ( int i=0; i<columns.length; i++ ) {
+			final StringBuilder expression = new StringBuilder();
 			SessionFactoryImplementor factory = criteriaQuery.getFactory();
 			boolean lower = ignoreCase && type.sqlTypes( factory )[i]==Types.VARCHAR;
 			if (lower) {
-				fragment.append( factory.getDialect().getLowercaseFunction() )
-					.append('(');
+				expression.append( factory.getDialect().getLowercaseFunction() ).append('(');
 			}
-			fragment.append( columns[i] );
-			if (lower) fragment.append(')');
-			fragment.append( ascending ? " asc" : " desc" );
+			expression.append( columns[i] );
+			if (lower) expression.append(')');
+			fragment.append(
+					factory.getDialect()
+							.renderOrderByElement(
+									expression.toString(),
+									null,
+									ascending ? "asc" : "desc",
+									nullPrecedence != null ? nullPrecedence : factory.getSettings().getDefaultNullPrecedence()
+							)
+			);
 			if ( i<columns.length-1 ) fragment.append(", ");
 		}
 		return fragment.toString();

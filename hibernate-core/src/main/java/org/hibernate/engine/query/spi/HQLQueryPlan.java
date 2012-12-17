@@ -309,24 +309,20 @@ public class HQLQueryPlan implements Serializable {
 			);
 		}
 
-		Iterator itr = recognizer.getNamedParameterDescriptionMap().entrySet().iterator();
 		Map<String, NamedParameterDescriptor> namedParamDescriptorMap = new HashMap<String, NamedParameterDescriptor>();
-		while( itr.hasNext() ) {
-			final Map.Entry entry = ( Map.Entry ) itr.next();
-			final String name = ( String ) entry.getKey();
-			final ParamLocationRecognizer.NamedParameterDescription description =
-					( ParamLocationRecognizer.NamedParameterDescription ) entry.getValue();
+		Map<String, ParamLocationRecognizer.NamedParameterDescription> map = recognizer.getNamedParameterDescriptionMap();
+		for ( final String name : map.keySet() ) {
+			final ParamLocationRecognizer.NamedParameterDescription description = map.get( name );
 			namedParamDescriptorMap.put(
 					name,
 					new NamedParameterDescriptor(
 							name,
-					        parameterTranslations.getNamedParameterExpectedType( name ),
-					        description.buildPositionsArray(),
-					        description.isJpaStyle()
+							parameterTranslations.getNamedParameterExpectedType( name ),
+							description.buildPositionsArray(),
+							description.isJpaStyle()
 					)
 			);
 		}
-
 		return new ParameterMetadata( ordinalParamDescriptors, namedParamDescriptorMap );
 	}
 	public QueryTranslator[] getTranslators() {

@@ -139,23 +139,23 @@ public class QueryPlanCache implements Serializable {
 		final int size = recognizer.getOrdinalParameterLocationList().size();
 		OrdinalParameterDescriptor[] ordinalDescriptors = new OrdinalParameterDescriptor[ size ];
 		for ( int i = 0; i < size; i++ ) {
-			final Integer position = ( Integer ) recognizer.getOrdinalParameterLocationList().get( i );
+			final Integer position = recognizer.getOrdinalParameterLocationList().get( i );
 			ordinalDescriptors[i] = new OrdinalParameterDescriptor( i, null, position );
 		}
-
-		Iterator itr = recognizer.getNamedParameterDescriptionMap().entrySet().iterator();
-		Map<String,NamedParameterDescriptor> namedParamDescriptorMap = new HashMap<String,NamedParameterDescriptor>();
-		while( itr.hasNext() ) {
-			final Map.Entry entry = ( Map.Entry ) itr.next();
-			final String name = ( String ) entry.getKey();
-			final ParamLocationRecognizer.NamedParameterDescription description =
-					( ParamLocationRecognizer.NamedParameterDescription ) entry.getValue();
+		Map<String, NamedParameterDescriptor> namedParamDescriptorMap = new HashMap<String, NamedParameterDescriptor>();
+		Map<String, ParamLocationRecognizer.NamedParameterDescription> map = recognizer.getNamedParameterDescriptionMap();
+		for ( final String name : map.keySet() ) {
+			final ParamLocationRecognizer.NamedParameterDescription description = map.get( name );
 			namedParamDescriptorMap.put(
-					name ,
-					new NamedParameterDescriptor( name, null, description.buildPositionsArray(), description.isJpaStyle() )
+					name,
+					new NamedParameterDescriptor(
+							name,
+							null,
+							description.buildPositionsArray(),
+							description.isJpaStyle()
+					)
 			);
 		}
-
 		return new ParameterMetadata( ordinalDescriptors, namedParamDescriptorMap );
 	}
 

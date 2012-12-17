@@ -88,7 +88,7 @@ public class ParameterParser {
 			else {
 				if ( c == ':' ) {
 					// named parameter
-					int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS, indx + 1 );
+					int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS_BITSET, indx + 1 );
 					int chopLocation = right < 0 ? sqlString.length() : right;
 					String param = sqlString.substring( indx + 1, chopLocation );
 					if ( StringHelper.isEmpty( param ) ) {

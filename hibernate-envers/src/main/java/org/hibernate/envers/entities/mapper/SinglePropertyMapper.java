@@ -25,7 +25,6 @@ package org.hibernate.envers.entities.mapper;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Oracle8iDialect;
@@ -34,7 +33,6 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
-import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.DirectPropertyAccessor;
@@ -64,12 +62,19 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 
     public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
         data.put(propertyData.getName(), newObj);
-        boolean dbLogicallyDifferent = true;
-        if ((session.getFactory().getDialect() instanceof Oracle8iDialect) && (newObj instanceof String || oldObj instanceof String)) {
-            // Don't generate new revision when database replaces empty string with NULL during INSERT or UPDATE statements.
-            dbLogicallyDifferent = !(StringTools.isEmpty((String) newObj) && StringTools.isEmpty((String) oldObj));
+
+        if (session.getFactory().getDialect() instanceof Oracle8iDialect) {
+            // Don't generate a new revision when Oracle replaces empty string with NULL during INSERT or UPDATE statements.
+            if ("".equals(newObj)) {
+                newObj = null;
+            }
+
+            if ("".equals(oldObj)) {
+                oldObj = null;
+            }
         }
-        return dbLogicallyDifferent && !Tools.objectsEqual(newObj, oldObj);
+
+        return !Tools.objectsEqual(newObj, oldObj);
     }
 
 	@Override

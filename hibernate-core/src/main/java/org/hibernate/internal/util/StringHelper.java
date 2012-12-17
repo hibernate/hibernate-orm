@@ -27,6 +27,7 @@ package org.hibernate.internal.util;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.UUID;
@@ -472,21 +473,23 @@ public final class StringHelper {
 		}
 		return qualified;
 	}
-
-	public static int firstIndexOfChar(String sqlString, String string, int startindex) {
-		int matchAt = -1;
-		for ( int i = 0; i < string.length(); i++ ) {
-			int curMatch = sqlString.indexOf( string.charAt( i ), startindex );
-			if ( curMatch >= 0 ) {
-				if ( matchAt == -1 ) { // first time we find match!
-					matchAt = curMatch;
-				}
-				else {
-					matchAt = Math.min( matchAt, curMatch );
-				}
+	public static int firstIndexOfChar(String sqlString, BitSet keys, int startindex) {
+		for ( int i = startindex, size = sqlString.length(); i < size; i++ ) {
+			if ( keys.get( sqlString.charAt( i ) ) ) {
+				return i;
 			}
 		}
-		return matchAt;
+		return -1;
+
+	}
+
+	public static int firstIndexOfChar(String sqlString, String string, int startindex) {
+		BitSet keys = new BitSet();
+		for ( int i = 0, size = string.length(); i < size; i++ ) {
+			keys.set( string.charAt( i ) );
+		}
+		return firstIndexOfChar( sqlString, keys, startindex );
+
 	}
 
 	public static String truncate(String string, int length) {

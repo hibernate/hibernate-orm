@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.internal.classic;
+import java.util.BitSet;
 import java.util.StringTokenizer;
 
 import org.hibernate.QueryException;
@@ -33,6 +34,12 @@ public final class ParserHelper {
 	public static final String HQL_VARIABLE_PREFIX = ":";
 
 	public static final String HQL_SEPARATORS = " \n\r\f\t,()=<>&|+-=/*'^![]#~\\";
+	public static final BitSet HQL_SEPARATORS_BITSET = new BitSet(  );
+	static {
+		for(int i=0;i<HQL_SEPARATORS.length();i++){
+			HQL_SEPARATORS_BITSET.set( HQL_SEPARATORS.charAt( i ) );
+		}
+	}
 	//NOTICE: no " or . since they are part of (compound) identifiers
 	public static final String PATH_SEPARATORS = ".";
 

@@ -425,8 +425,8 @@ public class Table implements RelationalModel, Serializable {
 				if ( column.isUnique() ) {
 					dialect.getUniqueDelegate().generateUniqueKey(
 							this, column );
-					alter.append(
-							dialect.getUniqueDelegate().applyUniqueToColumn() );
+					alter.append( dialect.getUniqueDelegate()
+							.applyUniqueToColumn( column ) );
 				}
 
 				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
@@ -526,7 +526,9 @@ public class Table implements RelationalModel, Serializable {
 			
 			if ( col.isUnique() ) {
 				dialect.getUniqueDelegate().generateUniqueKey( this, col );
-				buf.append( dialect.getUniqueDelegate().applyUniqueToColumn() );			}
+				buf.append( dialect.getUniqueDelegate()
+						.applyUniqueToColumn( col ) );
+			}
 				
 			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
 				buf.append( " check (" )

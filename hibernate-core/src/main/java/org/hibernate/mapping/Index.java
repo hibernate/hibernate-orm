@@ -79,7 +79,6 @@ public class Index implements RelationalModel, Serializable {
 			String defaultCatalog,
 			String defaultSchema
 	) {
-		//TODO handle supportsNotNullUnique=false, but such a case does not exist in the wild so far
 		StringBuilder buf = new StringBuilder( "create" )
 				.append( unique ?
 						" unique" :

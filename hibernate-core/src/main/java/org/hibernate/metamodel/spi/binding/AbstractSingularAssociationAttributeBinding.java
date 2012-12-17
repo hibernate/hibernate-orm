@@ -63,9 +63,6 @@ public class AbstractSingularAssociationAttributeBinding extends AbstractSingula
 		if ( referencedAttributeBinding == null ) {
 			throw new IllegalArgumentException( "referencedAttributeBinding must be non-null." );
 		}
-		if ( !EntityBinding.class.isInstance( referencedAttributeBinding.getContainer() ) ) {
-			throw new AssertionFailure( "Illegal attempt to resolve many-to-one reference based on non-entity attribute" );
-		}
 		this.referencedEntityBinding = referencedEntityBinding;
 		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
 		this.referencedAttributeBinding = referencedAttributeBinding;

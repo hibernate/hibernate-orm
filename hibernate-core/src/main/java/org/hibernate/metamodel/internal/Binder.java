@@ -1341,7 +1341,7 @@ public class Binder {
 								.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding(
 								referencedAttributeBinding );
 				final String uniqueKeyAttributeName =
-						isRefToPk ? null : referencedAttributeBinding.getAttribute().getName();
+						isRefToPk ? null : getRelativePathFromEntityName( referencedAttributeBinding );
 				return metadata.getTypeResolver().getTypeFactory().manyToOne(
 						referencedEntityBinding.getEntity().getName(),
 						uniqueKeyAttributeName,
@@ -1414,7 +1414,7 @@ public class Binder {
 								.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding(
 								referencedAttributeBinding );
 				final String uniqueKeyAttributeName =
-						isRefToPk ? null : referencedAttributeBinding.getAttribute().getName();
+						isRefToPk ? null : getRelativePathFromEntityName( referencedAttributeBinding );
 				return metadata.getTypeResolver().getTypeFactory().oneToOne(
 						referencedEntityBinding.getEntity().getName(),
 						attributeSource.getForeignKeyDirection(),
@@ -1503,6 +1503,11 @@ public class Binder {
 		bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
 
 		return attributeBinding;
+	}
+
+	private String getRelativePathFromEntityName(AttributeBinding attributeBinding) {
+		final String fullPath = attributeBinding.getContainer().getPathBase() + "." + attributeBinding.getAttribute().getName();
+		return fullPath.substring( attributeBinding.getContainer().seekEntityBinding().getEntityName().length() + 1 );
 	}
 
 	private TableSpecification locateTableSpecificationForAttribute(
@@ -2700,7 +2705,7 @@ public class Binder {
 								return values;
 							}
 							final AttributeBinding referencedAttributeBinding =
-									entityBinding.locateAttributeBinding( attributeName, true );
+									entityBinding.locateAttributeBindingByPath( attributeName, true );
 							if ( referencedAttributeBinding == null ) {
 								throw bindingContext().makeMappingException(
 										String.format(
@@ -2808,12 +2813,27 @@ public class Binder {
 		}
 
 		final String explicitName = resolutionDelegate.getReferencedAttributeName();
-		final AttributeBinding referencedAttributeBinding = locateAttributeBinding(
-				resolutionDelegate,
-				resolutionContext,
-				referencedEntityBinding,
-				explicitName
-		);
+		final AttributeBinding referencedAttributeBinding = explicitName != null
+				? referencedEntityBinding.locateAttributeBindingByPath( explicitName, true )
+				: referencedEntityBinding.locateAttributeBinding( resolutionDelegate.getJoinColumns( resolutionContext ), true );
+
+		if ( referencedAttributeBinding == null ) {
+			if ( explicitName != null ) {
+				throw bindingContext().makeMappingException(
+						String.format(
+								"No attribute binding found with name: %s.%s",
+								referencedEntityBinding.getEntityName(),
+								explicitName
+						)
+				);
+			}
+			else {
+				throw new NotYetImplementedException(
+						"No support yet for referenced join columns unless they correspond with columns bound for an attribute binding."
+				);
+			}
+		}
+
 		if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
 			throw bindingContext().makeMappingException(
 					String.format(
@@ -2822,26 +2842,6 @@ public class Binder {
 		}
 		return (SingularAttributeBinding) referencedAttributeBinding;
 	}
-
-	private AttributeBinding locateAttributeBinding(JoinColumnResolutionDelegate resolutionDelegate,
-													JoinColumnResolutionContext resolutionContext,
-													EntityBinding referencedEntityBinding,
-													String explicitName) {
-		AttributeBinding attributeBinding = explicitName != null
-				? referencedEntityBinding.locateAttributeBinding( explicitName )
-				: referencedEntityBinding.locateAttributeBinding( resolutionDelegate.getJoinColumns( resolutionContext ) );
-		if ( attributeBinding == null && referencedEntityBinding.getSuperEntityBinding() != null ) {
-			return locateAttributeBinding(
-					resolutionDelegate,
-					resolutionContext,
-					referencedEntityBinding.getSuperEntityBinding(),
-					explicitName
-			);
-		} else {
-			return attributeBinding;
-		}
-	}
-
 
 	private EntityBinding findOrBindEntityBinding(ValueHolder< Class< ? >> entityJavaTypeValue, String explicitEntityName) {
 		final String referencedEntityName =

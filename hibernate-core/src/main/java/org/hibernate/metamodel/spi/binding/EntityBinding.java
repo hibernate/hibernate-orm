@@ -30,9 +30,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.MappingException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
@@ -40,11 +42,11 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterable;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
-import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
@@ -274,6 +276,34 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 		}
 	}
 
+	public AttributeBinding locateAttributeBinding(List<Value> values, boolean searchParent) {
+		AttributeBinding attributeBinding = locateAttributeBinding( values );
+		if ( attributeBinding == null && searchParent && getSuperEntityBinding() != null ) {
+			return getSuperEntityBinding().locateAttributeBinding( values, searchParent );
+		}
+		else {
+			return attributeBinding;
+		}
+	}
+
+	public AttributeBinding locateAttributeBindingByPath(String path, boolean searchParent) {
+		if ( path == null ) {
+			throw new IllegalArgumentException( "path must be non-null." );
+		}
+		final String pathDelimiter = "\\.";
+		String[] tokens = path.split( pathDelimiter );
+		AttributeBinding attributeBinding = locateAttributeBinding( tokens[ 0 ], searchParent );
+		for ( int i = 1 ; i < tokens.length && attributeBinding != null ; i++ )  {
+			if ( ! attributeBinding.getAttribute().isSingular() ||
+					! ( (SingularAttribute) attributeBinding.getAttribute() ).getSingularAttributeType().isAggregate() ) {
+				// TODO: improve this message!!!
+				throw new MappingException( "improve this!!!" );
+			}
+			AttributeBindingContainer attributeBindingContainer = (AttributeBindingContainer) attributeBinding;
+			attributeBinding = attributeBindingContainer.locateAttributeBinding( tokens[ i ] );
+		}
+		return attributeBinding;
+	}
 
 	public String getPrimaryTableName() {
 		return primaryTableName;
@@ -551,6 +581,28 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 
 		registerAttributeBinding( binding );
 		return binding;
+	}
+
+	public AttributeBinding locateAttributeBindingByPath(String path) {
+		if ( path == null ) {
+			throw new IllegalArgumentException( "path must be non-null." );
+		}
+		final String pathDelimiter = "\\.";
+		String[] tokens = path.split( pathDelimiter );
+		AttributeBinding attributeBinding = locateAttributeBinding( tokens[ 0 ] );
+		if ( attributeBinding == null ) {
+			return superEntityBinding == null ? null : superEntityBinding.locateAttributeBindingByPath( path );
+		}
+		for ( int i = 1 ; i < tokens.length && attributeBinding != null ; i++ )  {
+			if ( ! attributeBinding.getAttribute().isSingular() ||
+					! ( (SingularAttribute) attributeBinding.getAttribute() ).getSingularAttributeType().isAggregate() ) {
+				// TODO: improve this message!!!
+				throw new MappingException( "improve this!!!" );
+			}
+			AttributeBindingContainer attributeBindingContainer = (AttributeBindingContainer) attributeBinding;
+			attributeBinding = attributeBindingContainer.locateAttributeBinding( tokens[ i ] );
+		}
+		return attributeBinding;
 	}
 
 	/**

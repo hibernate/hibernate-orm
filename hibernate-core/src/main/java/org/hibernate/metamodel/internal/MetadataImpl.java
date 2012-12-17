@@ -706,8 +706,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( entityBinding == null ) {
 			throw new MappingException( "Entity binding not known: " + entityName );
 		}
-		// TODO: should this call EntityBinding.getReferencedAttributeBindingString), which does not exist yet?
-		AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( propertyName, true );
+		AttributeBinding attributeBinding = entityBinding.locateAttributeBindingByPath( propertyName, true );
 		if ( attributeBinding == null ) {
 			throw new MappingException( "unknown property: " + entityName + '.' + propertyName );
 		}

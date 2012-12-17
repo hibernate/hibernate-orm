@@ -26,6 +26,8 @@ package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.Oracle9Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.TypedValue;
 
 /**
@@ -42,7 +44,9 @@ public class NotExpression implements Criterion {
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
 	throws HibernateException {
-		if ( criteriaQuery.getFactory().getDialect() instanceof MySQLDialect ) {
+		if ( criteriaQuery.getFactory().getDialect() instanceof MySQLDialect ||
+		     criteriaQuery.getFactory().getDialect() instanceof Oracle9Dialect ||
+		     criteriaQuery.getFactory().getDialect() instanceof Oracle8iDialect ) {
 			return "not (" + criterion.toSqlString(criteria, criteriaQuery) + ')';
 		}
 		else {

@@ -57,17 +57,4 @@ public class UniqueKey extends Constraint {
 				this, defaultCatalog, defaultSchema );
 	}
 
-//	@Override
-//    public boolean isGenerated(Dialect dialect) {
-//		if ( !dialect.supportsUniqueConstraintInCreateAlterTable() ) return false;
-//		if ( dialect.supportsNotNullUnique() ) return true;
-//		
-//		Iterator iter = getColumnIterator();
-//		while ( iter.hasNext() ) {
-//			// Dialect does not support "not null unique" and this column is not null.
-//			if ( ! ( (Column) iter.next() ).isNullable() ) return false;
-//		}
-//		return true;
-//	}
-
 }

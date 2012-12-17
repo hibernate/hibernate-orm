@@ -68,9 +68,20 @@ public interface UniqueDelegate {
 	 * return the syntax necessary to mutate the column definition
 	 * (usually "unique").
 	 * 
+	 * @param column
 	 * @return String
 	 */
-	public String applyUniqueToColumn();
+	public String applyUniqueToColumn( org.hibernate.mapping.Column column );
+	
+	/**
+	 * If the dialect does not supports unique constraints, this method should
+	 * return the syntax necessary to mutate the column definition
+	 * (usually "unique").
+	 * 
+	 * @param column
+	 * @return String
+	 */
+	public String applyUniqueToColumn( Column column );
 	
 	/**
 	 * If constraints are supported, but not in seperate alter statements,

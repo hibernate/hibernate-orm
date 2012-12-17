@@ -1544,7 +1544,6 @@ public class Configuration implements Serializable {
 	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames) {
 		keyName = normalizer.normalizeIdentifierQuoting( keyName );
 
-		UniqueKey uc;
 		int size = columnNames.length;
 		Column[] columns = new Column[size];
 		Set<Column> unbound = new HashSet<Column>();
@@ -1563,8 +1562,10 @@ public class Configuration implements Serializable {
 		}
 		for ( Column column : columns ) {
 			if ( table.containsColumn( column ) ) {
-				uc = table.getOrCreateUniqueKey( keyName );
-				uc.addColumn( table.getColumn( column ) );
+				Column tableColumn = table.getColumn( column );
+				tableColumn.setUnique( true );
+				Dialect.getDialect().getUniqueDelegate().generateUniqueKey(
+						table, tableColumn );
 				unbound.remove( column );
 			}
 		}

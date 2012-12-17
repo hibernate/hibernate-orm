@@ -201,7 +201,8 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 			if ( col.isUnique() ) {
 				dialect.getUniqueDelegate().generateUniqueKey( this, col );
-				buf.append( dialect.getUniqueDelegate().applyUniqueToColumn() );
+				buf.append( dialect.getUniqueDelegate()
+						.applyUniqueToColumn( col ) );
 			}
 
 			if ( col.getCheckCondition() != null && dialect.supportsColumnCheck() ) {

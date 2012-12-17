@@ -35,7 +35,7 @@ import org.hibernate.metamodel.relational.UniqueKey;
  */
 public class DefaultUniqueDelegate implements UniqueDelegate {
 	
-	private final Dialect dialect;
+	protected final Dialect dialect;
 	
 	public DefaultUniqueDelegate( Dialect dialect ) {
 		this.dialect = dialect;
@@ -57,7 +57,12 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	}
 	
 	@Override
-	public String applyUniqueToColumn() {
+	public String applyUniqueToColumn( org.hibernate.mapping.Column column ) {
+		return "";
+	}
+	
+	@Override
+	public String applyUniqueToColumn( Column column ) {
 		return "";
 	}
 

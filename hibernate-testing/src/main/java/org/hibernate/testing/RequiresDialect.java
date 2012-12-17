@@ -34,6 +34,8 @@ import org.hibernate.dialect.Dialect;
  * Annotation used to indicate that a test should be run only when run against the
  * indicated dialects.
  *
+ * @see RequiresDialects
+ *
  * @author Hardy Ferentschik
  */
 @Target({ ElementType.METHOD, ElementType.TYPE })

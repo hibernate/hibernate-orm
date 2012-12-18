@@ -5,6 +5,8 @@ How to build
 
 This README describes some of the basics developers and contributors new to Gradle need to know to get productive quickly.
 
+Use the gradle wrappers if you want to avoid gradle version dependency problems. 
+
 Quickstart
 ----------
 
@@ -54,7 +56,7 @@ subproject and execute that task if the subproject defines it.
 To execute a task in a specific module you can either:
 
 1. `cd` into that module directory and execute the task
-2. name the "task path".  For example, in order to run the tests for the _hibernate-core_ module from the root directory you could say `gradle hibernate-core:test`
+2. name the "task path".  For example, in order to run the tests for the _hibernate-core_ module from the root directory you could say `gradle hibernate-core:test` or `./gradlew hibernate-core:test`
 
 ### Common Java related tasks
 

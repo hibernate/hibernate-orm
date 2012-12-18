@@ -264,7 +264,7 @@ public class Binder {
 		this.nameNormalizer = metadata.getObjectNameNormalizer();
 	}
 
-	private void addUniqueConstraintForNaturalIdColumn(final TableSpecification table, final Column column) {
+	private static void addUniqueConstraintForNaturalIdColumn(final TableSpecification table, final Column column) {
 		final UniqueKey uniqueKey = table.getOrCreateUniqueKey( "natural_id_unique_key_" );
 		uniqueKey.addColumn( column );
 	}
@@ -277,7 +277,7 @@ public class Binder {
 		return entityBinding.locateAttributeBinding( attributeName );
 	}
 
-	private String attributeSourcesByNameKey( final String entityName, final String attributeName ) {
+	private static String attributeSourcesByNameKey( final String entityName, final String attributeName ) {
 		return entityName + "." + attributeName;
 	}
 
@@ -848,7 +848,7 @@ public class Binder {
 		}
 	}
 
-	private void markSuperEntityTableAbstractIfNecessary(EntityBinding superEntityBinding) {
+	private static void markSuperEntityTableAbstractIfNecessary(EntityBinding superEntityBinding) {
 		if ( superEntityBinding == null ) {
 			return;
 		}
@@ -918,7 +918,7 @@ public class Binder {
 		}
 	}
 
-	private String getSqlTypeFromPrimaryKeyJoinColumnSourceIfExist(Column superEntityBindingPrimaryKeyColumn, PrimaryKeyJoinColumnSource primaryKeyJoinColumnSource) {
+	private static String getSqlTypeFromPrimaryKeyJoinColumnSourceIfExist(Column superEntityBindingPrimaryKeyColumn, PrimaryKeyJoinColumnSource primaryKeyJoinColumnSource) {
 		final boolean isColumnDefOverrided = primaryKeyJoinColumnSource != null && StringHelper.isNotEmpty(
 				primaryKeyJoinColumnSource.getColumnDefinition()
 		);
@@ -1079,7 +1079,7 @@ public class Binder {
 		}
 	}
 
-	private void bindHibernateResolvedType( final HibernateTypeDescriptor hibernateTypeDescriptor, final Type resolvedType ) {
+	private static void bindHibernateResolvedType( final HibernateTypeDescriptor hibernateTypeDescriptor, final Type resolvedType ) {
 		// Configure relational value JDBC type from Hibernate type descriptor now that its configured
 		if ( resolvedType != null ) {
 			hibernateTypeDescriptor.setResolvedTypeMapping( resolvedType );
@@ -1505,7 +1505,7 @@ public class Binder {
 		return attributeBinding;
 	}
 
-	private String getRelativePathFromEntityName(AttributeBinding attributeBinding) {
+	private static String getRelativePathFromEntityName(AttributeBinding attributeBinding) {
 		final String fullPath = attributeBinding.getContainer().getPathBase() + "." + attributeBinding.getAttribute().getName();
 		return fullPath.substring( attributeBinding.getContainer().seekEntityBinding().getEntityName().length() + 1 );
 	}
@@ -1718,7 +1718,7 @@ public class Binder {
 		//TODO: initialize filters from elementSource
 	}
 
-	private boolean hasDerivedValue(List<RelationalValueBinding> relationalValueBindings) {
+	private static boolean hasDerivedValue(List<RelationalValueBinding> relationalValueBindings) {
 		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
 			if ( DerivedValue.class.isInstance( relationalValueBinding.getValue() ) ) {
 				return true;
@@ -1729,7 +1729,7 @@ public class Binder {
 
 	// TODO: should this be moved to CascadeStyles as a static method?
 	// TODO: sources already factor in default cascade; should that be done here instead?
-	private CascadeStyle determineCascadeStyle(Iterable<CascadeStyle> cascadeStyles) {
+	private static CascadeStyle determineCascadeStyle(Iterable<CascadeStyle> cascadeStyles) {
 		CascadeStyle cascadeStyleResult;
 		List<CascadeStyle> cascadeStyleList = new ArrayList<CascadeStyle>();
 		for ( CascadeStyle style : cascadeStyles ) {
@@ -2334,7 +2334,7 @@ public class Binder {
 		}
 	}
 
-	private String createAttributePath(final AttributeBinding attributeBinding) {
+	private static String createAttributePath(final AttributeBinding attributeBinding) {
 		return new StringBuffer( attributeBinding.getContainer().getPathBase() )
 				.append( '.' )
 				.append( attributeBinding.getAttribute().getName() )
@@ -2524,13 +2524,13 @@ public class Binder {
 		return Identifier.toIdentifier( name );
 	}
 
-	private MetaAttributeContext createMetaAttributeContext(
+	private static MetaAttributeContext createMetaAttributeContext(
 			final AttributeBindingContainer attributeBindingContainer,
 			final AttributeSource attributeSource ) {
 		return createMetaAttributeContext( attributeBindingContainer, attributeSource.getMetaAttributeSources() );
 	}
 
-	private MetaAttributeContext createMetaAttributeContext(
+	private static MetaAttributeContext createMetaAttributeContext(
 			final AttributeBindingContainer attributeBindingContainer,
 			final Iterable<? extends MetaAttributeSource > metaAttributeSources ) {
 		return createMetaAttributeContext(
@@ -2540,7 +2540,7 @@ public class Binder {
 		);
 	}
 
-	private MetaAttributeContext createMetaAttributeContext(
+	private static  MetaAttributeContext createMetaAttributeContext(
 			final Iterable<? extends MetaAttributeSource > metaAttributeSources,
 			final boolean onlyInheritable,
 			final MetaAttributeContext parentContext ) {
@@ -2560,7 +2560,7 @@ public class Binder {
 		return subContext;
 	}
 
-	private SingularAttribute createSingularAttribute(
+	private static SingularAttribute createSingularAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final SingularAttributeSource attributeSource ) {
 		return attributeSource.isVirtualAttribute()
@@ -2587,7 +2587,7 @@ public class Binder {
 						createIdentifier( explicitCatalogName, mappingDefaults.getCatalogName() ),
 						createIdentifier( explicitSchemaName, mappingDefaults.getSchemaName() )
 				);
-		final Schema schema = metadata.getDatabase().locateSchema( schemaName );
+		final Schema schema = bindingContext.getMetadataImplementor().getDatabase().locateSchema( schemaName );
 
 		TableSpecification tableSpec = null;
 		if ( isTableSourceNull ) {
@@ -2619,10 +2619,6 @@ public class Binder {
 		return tableSpec;
 	}
 
-	private TableSpecification createTableSpecification(LocalBindingContext bindingContext, Schema schema, String tableName) {
-		return createTableSpecification( bindingContext, schema, tableName, null );
-	}
-
 	private TableSpecification createTableSpecification(LocalBindingContext bindingContext, Schema schema, String tableName, Table includedTable) {
 		tableName = quotedIdentifier( tableName );
 		final Identifier logicalTableId = Identifier.toIdentifier( tableName );
@@ -2642,21 +2638,21 @@ public class Binder {
 		return tableSpec;
 	}
 
-	private String defaultCollectionElementJavaTypeName(
+	private static String defaultCollectionElementJavaTypeName(
 			HibernateTypeHelper.ReflectedCollectionJavaTypes reflectedCollectionJavaTypes ) {
 		return reflectedCollectionJavaTypes != null && reflectedCollectionJavaTypes.getCollectionElementType() != null
 				? reflectedCollectionJavaTypes.getCollectionElementType().getName()
 				: null;
 	}
 
-	private String defaultCollectionIndexJavaTypeName(
+	private static String defaultCollectionIndexJavaTypeName(
 			HibernateTypeHelper.ReflectedCollectionJavaTypes reflectedCollectionJavaTypes ) {
 		return reflectedCollectionJavaTypes != null && reflectedCollectionJavaTypes.getCollectionIndexType() != null
 				? reflectedCollectionJavaTypes.getCollectionIndexType().getName()
 				: null;
 	}
 
-	private String defaultCollectionJavaTypeName(
+	private static String defaultCollectionJavaTypeName(
 			HibernateTypeHelper.ReflectedCollectionJavaTypes reflectedCollectionJavaTypes,
 			PluralAttributeSource attributeSource ) {
 		return reflectedCollectionJavaTypes != null && reflectedCollectionJavaTypes.getCollectionType() != null
@@ -2664,7 +2660,7 @@ public class Binder {
 				: attributeSource.getNature().reportedJavaType().getName();
 	}
 
-	private List< Column > determineForeignKeyTargetColumns(
+	private  List< Column > determineForeignKeyTargetColumns(
 			final EntityBinding entityBinding,
 			ForeignKeyContributingSource foreignKeyContributingSource ) {
 		
@@ -2883,7 +2879,7 @@ public class Binder {
 	}
 
 	// TODO: try to get rid of this...
-	private List<Column> extractColumnsFromRelationalValueBindings(
+	private static List<Column> extractColumnsFromRelationalValueBindings(
 			List<RelationalValueBinding> valueBindings) {
 		List<Column> columns = new ArrayList<Column>( valueBindings.size() );
 		for ( RelationalValueBinding relationalValueBinding : valueBindings ) {
@@ -2898,7 +2894,7 @@ public class Binder {
 		return columns;
 	}
 
-	private boolean hasAnyNonNullableColumns(List<RelationalValueBinding> relationalValueBindings) {
+	private static boolean hasAnyNonNullableColumns(List<RelationalValueBinding> relationalValueBindings) {
 		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
 			if ( Column.class.isInstance( relationalValueBinding.getValue() ) && !relationalValueBinding.isNullable() ) {
 				return true;
@@ -2958,7 +2954,7 @@ public class Binder {
 		return foreignKey;
 	}
 
-	private ForeignKey locateForeignKeyByColumnMapping(
+	private static ForeignKey locateForeignKeyByColumnMapping(
 			List<Column> sourceColumns,
 			List<Column> targetColumns) {
 		final TableSpecification sourceTable = sourceColumns.get( 0 ).getTable();
@@ -2993,11 +2989,11 @@ public class Binder {
 		}
 	}
 
-	private PluralAttributeElementBinding.Nature pluralAttributeElementNature(PluralAttributeSource attributeSource) {
+	private static PluralAttributeElementBinding.Nature pluralAttributeElementNature(PluralAttributeSource attributeSource) {
 		return PluralAttributeElementBinding.Nature.valueOf( attributeSource.getElementSource().getNature().name() );
 	}
 
-	private PluralAttributeIndexBinding.Nature pluralAttributeIndexNature(PluralAttributeSource attributeSource) {
+	private static PluralAttributeIndexBinding.Nature pluralAttributeIndexNature(PluralAttributeSource attributeSource) {
 		if ( ! IndexedPluralAttributeSource.class.isInstance( attributeSource ) ) {
 			return null;
 		}
@@ -3025,7 +3021,7 @@ public class Binder {
 	}
 
 
-	private String getReferencedPropertyNameIfNotId(PluralAttributeBinding pluralAttributeBinding) {
+	private static String getReferencedPropertyNameIfNotId(PluralAttributeBinding pluralAttributeBinding) {
 		EntityIdentifier entityIdentifier =
 				pluralAttributeBinding.getContainer().seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
 		final String idAttributeName =

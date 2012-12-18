@@ -35,6 +35,7 @@ import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -397,6 +398,12 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		@Override
 		public CacheEntryStructure getCacheEntryStructure() {
+			return null;
+		}
+
+		@Override
+		public CacheEntry buildCacheEntry(
+				Object entity, Object[] state, Object version, SessionImplementor session) {
 			return null;
 		}
 

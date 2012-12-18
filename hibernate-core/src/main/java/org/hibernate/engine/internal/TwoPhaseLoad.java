@@ -196,14 +196,7 @@ public final class TwoPhaseLoad {
 			}
 
 			Object version = Versioning.getVersion(hydratedState, persister);
-			CacheEntry entry = new CacheEntry(
-					hydratedState,
-					persister,
-					entityEntry.isLoadedWithLazyPropertiesUnfetched(),
-					version,
-					session,
-					entity
-			);
+			CacheEntry entry = persister.buildCacheEntry( entity, hydratedState, version, session );
 			CacheKey cacheKey = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
 
 			// explicit handling of caching for rows just inserted and then somehow forced to be read

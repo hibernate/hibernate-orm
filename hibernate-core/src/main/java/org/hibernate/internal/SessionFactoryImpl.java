@@ -329,6 +329,8 @@ public final class SessionFactoryImpl
 
 		final String cacheRegionPrefix = settings.getCacheRegionPrefix() == null ? "" : settings.getCacheRegionPrefix() + ".";
 
+		final PersisterFactory persisterFactory = serviceRegistry.getService( PersisterFactory.class );
+
 		entityPersisters = new HashMap();
 		Map entityAccessStrategies = new HashMap();
 		Map<String,ClassMetadata> classMeta = new HashMap<String,ClassMetadata>();
@@ -380,7 +382,7 @@ public final class SessionFactoryImpl
 				}
 			}
 			
-			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
+			EntityPersister cp = persisterFactory.createEntityPersister(
 					model,
 					accessStrategy,
 					naturalIdAccessStrategy,
@@ -409,7 +411,7 @@ public final class SessionFactoryImpl
 				entityAccessStrategies.put( cacheRegionName, accessStrategy );
 				cacheAccess.addCacheRegion( cacheRegionName, collectionRegion );
 			}
-			CollectionPersister persister = serviceRegistry.getService( PersisterFactory.class ).createCollectionPersister(
+			CollectionPersister persister = persisterFactory.createCollectionPersister(
 					cfg,
 					model,
 					accessStrategy,

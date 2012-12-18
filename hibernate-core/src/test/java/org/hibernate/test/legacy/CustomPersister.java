@@ -13,7 +13,9 @@ import org.hibernate.MappingException;
 import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
+import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -564,6 +566,19 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public CacheEntryStructure getCacheEntryStructure() {
 		return new UnstructuredCacheEntry();
+	}
+
+	@Override
+	public CacheEntry buildCacheEntry(
+			Object entity, Object[] state, Object version, SessionImplementor session) {
+		return new StandardCacheEntryImpl(
+				state,
+				this,
+				this.hasUninitializedLazyProperties( entity ),
+				version,
+				session,
+				entity
+		);
 	}
 
 	@Override

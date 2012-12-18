@@ -93,6 +93,7 @@ public final class Settings {
 
 	private MultiTableBulkIdStrategy multiTableBulkIdStrategy;
 	private BatchFetchStyle batchFetchStyle;
+	private boolean directReferenceCacheEntriesEnabled;
 
 
 	/**
@@ -237,6 +238,10 @@ public final class Settings {
 
 	public boolean isStructuredCacheEntriesEnabled() {
 		return structuredCacheEntriesEnabled;
+	}
+
+	public boolean isDirectReferenceCacheEntriesEnabled() {
+		return directReferenceCacheEntriesEnabled;
 	}
 
 	public EntityMode getDefaultEntityMode() {
@@ -489,5 +494,9 @@ public final class Settings {
 
 	void setBatchFetchStyle(BatchFetchStyle batchFetchStyle) {
 		this.batchFetchStyle = batchFetchStyle;
+	}
+
+	public void setDirectReferenceCacheEntriesEnabled(boolean directReferenceCacheEntriesEnabled) {
+		this.directReferenceCacheEntriesEnabled = directReferenceCacheEntriesEnabled;
 	}
 }

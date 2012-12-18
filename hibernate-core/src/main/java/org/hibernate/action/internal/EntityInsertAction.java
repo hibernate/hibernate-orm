@@ -108,16 +108,12 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		final SessionFactoryImplementor factory = getSession().getFactory();
 
 		if ( isCachePutEnabled( persister, session ) ) {
-			
-			CacheEntry ce = new CacheEntry(
+			CacheEntry ce = persister.buildCacheEntry(
+					instance,
 					getState(),
-					persister, 
-					persister.hasUninitializedLazyProperties( instance ),
 					version,
-					session,
-					instance
-				);
-			
+					session
+			);
 			cacheEntry = persister.getCacheEntryStructure().structure(ce);
 			final CacheKey ck = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
 			boolean put = persister.getCacheAccessStrategy().insert( ck, cacheEntry, version );

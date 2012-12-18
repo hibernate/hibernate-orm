@@ -39,7 +39,6 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.impl.ClassLoaderAwareCache;
 import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampTypeOverrides;
 import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
@@ -563,10 +562,6 @@ public class InfinispanRegionFactory implements RegionFactory {
    }
 
    protected AdvancedCache createCacheWrapper(AdvancedCache cache) {
-      if (Caches.isClustered(cache))
-         return new ClassLoaderAwareCache(cache,
-               Thread.currentThread().getContextClassLoader());
-
       return cache;
    }
 

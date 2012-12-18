@@ -42,7 +42,7 @@ import org.infinispan.notifications.cachelistener.event.Event;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.impl.ClassLoaderAwareCache;
+import org.hibernate.test.cache.infinispan.util.ClassLoaderAwareCache;
 import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.Region;
@@ -167,7 +167,7 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
             SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader(null, null, notFoundClasses, cl);
             Thread.currentThread().setContextClassLoader(visible);
             super.event(event);
-            Thread.currentThread().setContextClassLoader(cl);            
+            Thread.currentThread().setContextClassLoader(cl);
          }
       }
    }

@@ -31,7 +31,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
+ * Structured CacheEntry format for entities.  Used to store the entry into the second-level cache
+ * as a Map so that users can more easily see the cached state.
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class StructuredCacheEntry implements CacheEntryStructure {
 
@@ -52,7 +56,7 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 		for ( int i=0; i<names.length; i++ ) {
 			state[i] = (Serializable) map.get( names[i] );
 		}
-		return new CacheEntry(state, subclass, lazyPropertiesUnfetched, version);
+		return new StandardCacheEntryImpl( state, subclass, lazyPropertiesUnfetched, version );
 	}
 
 	public Object structure(Object item) {

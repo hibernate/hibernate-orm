@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,25 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.spi.entry;
+package org.hibernate.cache.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import java.io.Serializable;
+
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Unstructured CacheEntry format (used to store entities and collections).
+ * Provides central access to putting and getting data into and out of the shared cache.
+ * <p/>
+ * Scope-wise, this delegate is per-session
  *
- * @author Gavin King
  * @author Steve Ebersole
  */
-public class UnstructuredCacheEntry implements CacheEntryStructure {
-	public static final UnstructuredCacheEntry INSTANCE = new UnstructuredCacheEntry();
+public interface SharedCacheDelegate {
 
-	public Object structure(Object item) {
-		return item;
-	}
+	public void storeEntity(Object entity, EntityPersister persister, Serializable id);
+	public Object retrieveEntity(EntityPersister persister, Serializable id, Object optionalEntityInstance);
 
-	public Object destructure(Object map, SessionFactoryImplementor factory) {
-		return map;
-	}
 
 }

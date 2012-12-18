@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,40 +24,52 @@
 package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.Interceptor;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Structured CacheEntry format for persistent Maps.
- *
- * @author Gavin King
+ * @author Steve Ebersole
  */
-public class StructuredMapCacheEntry implements CacheEntryStructure {
+public class ReferenceCacheEntryImpl implements CacheEntry {
+	private final Object reference;
+	private final String subclass;
 
-	public Object structure(Object item) {
-		CollectionCacheEntry entry = (CollectionCacheEntry) item;
-		Serializable[] state = entry.getState();
-		Map map = new HashMap(state.length);
-		for ( int i=0; i<state.length; ) {
-			map.put( state[i++], state[i++] );
-		}
-		return map;
-	}
-	
-	public Object destructure(Object item, SessionFactoryImplementor factory) {
-		Map map = (Map) item;
-		Serializable[] state = new Serializable[ map.size()*2 ];
-		int i=0;
-		Iterator iter = map.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
-			state[i++] = (Serializable) me.getKey();
-			state[i++] = (Serializable) me.getValue();
-		}
-		return new CollectionCacheEntry(state);
+	public ReferenceCacheEntryImpl(Object reference, String subclass) {
+		this.reference = reference;
+		this.subclass = subclass;
 	}
 
+	@Override
+	public boolean isReferenceEntry() {
+		return true;
+	}
+
+	@Override
+	public String getSubclass() {
+		return subclass;
+	}
+
+	@Override
+	public Object getVersion() {
+		// reference data cannot be versioned
+		return null;
+	}
+
+	@Override
+	public boolean areLazyPropertiesUnfetched() {
+		// reference data cannot define lazy attributes
+		return false;
+	}
+
+	@Override
+	public Serializable[] getDisassembledState() {
+		// reference data is not disassembled into the cache
+		return null;
+	}
+
+	public Object getReference() {
+		return reference;
+	}
 }

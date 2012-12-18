@@ -308,6 +308,15 @@ public class SettingsFactory implements Serializable {
 		}
 		settings.setStructuredCacheEntriesEnabled( useStructuredCacheEntries );
 
+		boolean useDirectReferenceCacheEntries = ConfigurationHelper.getBoolean(
+				AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES,
+				properties,
+				false
+		);
+		if ( debugEnabled ) {
+			LOG.debugf( "Second-level cache direct-reference entries: %s", enabledDisabled(useDirectReferenceCacheEntries) );
+		}
+		settings.setDirectReferenceCacheEntriesEnabled( useDirectReferenceCacheEntries );
 
 		//Statistics and logging:
 

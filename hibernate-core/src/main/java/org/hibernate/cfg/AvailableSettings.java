@@ -586,4 +586,10 @@ public interface AvailableSettings {
 	 * {@link org.hibernate.loader.BatchFetchStyle} instance.
 	 */
 	public static final String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
+
+	/**
+	 * Enable direct storage of entity references into the second level cache when applicable (immutable data, etc).
+	 * Default is to not store direct references.
+	 */
+	public static final String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
 }

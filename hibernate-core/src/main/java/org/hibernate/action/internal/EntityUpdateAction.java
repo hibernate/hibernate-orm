@@ -185,14 +185,7 @@ public final class EntityUpdateAction extends EntityAction {
 			}
 			else {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
-				CacheEntry ce = new CacheEntry(
-						state, 
-						persister, 
-						persister.hasUninitializedLazyProperties( instance ),
-						nextVersion,
-						getSession(),
-						instance
-				);
+				CacheEntry ce = persister.buildCacheEntry( instance,state, nextVersion, getSession() );
 				cacheEntry = persister.getCacheEntryStructure().structure( ce );
 				boolean put = persister.getCacheAccessStrategy().update( ck, cacheEntry, nextVersion, previousVersion );
 				if ( put && factory.getStatistics().isStatisticsEnabled() ) {

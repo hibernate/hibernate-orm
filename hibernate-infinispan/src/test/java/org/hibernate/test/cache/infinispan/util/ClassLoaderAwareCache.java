@@ -1,4 +1,4 @@
-package org.hibernate.cache.infinispan.impl;
+package org.hibernate.test.cache.infinispan.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;

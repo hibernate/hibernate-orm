@@ -41,6 +41,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.LockTimeoutException;
@@ -221,6 +223,80 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-6627")
+	public void testPaginationWithAggregation() {
+		Session session = openSession();
+		Transaction tx = session.beginTransaction();
+
+		// populating test data
+		Category category1 = new Category( 1, "Category1" );
+		Category category2 = new Category( 2, "Category2" );
+		Category category3 = new Category( 3, "Category3" );
+		session.persist( category1 );
+		session.persist( category2 );
+		session.persist( category3 );
+		session.flush();
+		session.persist( new Product2( 1, "Kit1", category1 ) );
+		session.persist( new Product2( 2, "Kit2", category1 ) );
+		session.persist( new Product2( 3, "Kit3", category1 ) );
+		session.persist( new Product2( 4, "Kit4", category2 ) );
+		session.persist( new Product2( 5, "Kit5", category2 ) );
+		session.persist( new Product2( 6, "Kit6", category3 ) );
+		session.flush();
+		session.clear();
+
+		// count number of products in each category
+		List<Object[]> result = session.createCriteria( Category.class, "c" ).createAlias( "products", "p" )
+				.setProjection(
+						Projections.projectionList()
+								.add( Projections.groupProperty( "c.id" ) )
+								.add( Projections.countDistinct( "p.id" ) )
+				)
+				.addOrder( Order.asc( "c.id" ) )
+				.setFirstResult( 1 ).setMaxResults( 3 ).list();
+
+		assertEquals( 2, result.size() );
+		assertArrayEquals( new Object[] { 2, 2L }, result.get( 0 ) ); // two products of second category
+		assertArrayEquals( new Object[] { 3, 1L }, result.get( 1 ) ); // one products of third category
+
+		tx.rollback();
+		session.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7752")
+	public void testPaginationWithFormulaSubquery() {
+		Session session = openSession();
+		Transaction tx = session.beginTransaction();
+
+		// populating test data
+		Folder folder1 = new Folder( 1L, "Folder1" );
+		Folder folder2 = new Folder( 2L, "Folder2" );
+		Folder folder3 = new Folder( 3L, "Folder3" );
+		session.persist( folder1 );
+		session.persist( folder2 );
+		session.persist( folder3 );
+		session.flush();
+		session.persist( new Contact( 1L, "Lukasz", "Antoniak", "owner", folder1 ) );
+		session.persist( new Contact( 2L, "Kinga", "Mroz", "co-owner", folder2 ) );
+		session.flush();
+		session.clear();
+		session.refresh( folder1 );
+		session.refresh( folder2 );
+		session.clear();
+
+		List<Long> folderCount = session.createQuery( "select count(distinct f) from Folder f" ).setMaxResults( 1 ).list();
+		assertEquals( Arrays.asList( 3L ), folderCount );
+
+		List<Folder> distinctFolders = session.createQuery( "select distinct f from Folder f order by f.id desc" )
+				.setFirstResult( 1 ).setMaxResults( 2 ).list();
+		assertEquals( Arrays.asList( folder2, folder1 ), distinctFolders );
+
+		tx.rollback();
+		session.close();
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-3961")
 	public void testLockNowaitSqlServer() throws Exception {
 		Session s = openSession();
@@ -280,14 +356,12 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		s.delete( kit );
 		s.getTransaction().commit();
-
-
 	}
 
 	@Override
 	protected java.lang.Class<?>[] getAnnotatedClasses() {
 		return new java.lang.Class[] {
-				Product2.class
+				Product2.class, Category.class, Folder.class, Contact.class
 		};
 	}
 }

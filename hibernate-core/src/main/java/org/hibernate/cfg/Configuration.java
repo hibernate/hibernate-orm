@@ -51,6 +51,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -60,10 +61,6 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.jboss.logging.Logger;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
@@ -82,6 +79,7 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
@@ -137,7 +135,6 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.internal.JACCConfiguration;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
@@ -148,6 +145,9 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+import org.jboss.logging.Logger;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
 
 /**
  * An instance of <tt>Configuration</tt> allows the application
@@ -1228,15 +1228,6 @@ public class Configuration implements Serializable {
 							)
 					);
 				}
-
-//broken, 'cos we don't generate these with names in SchemaExport
-//				subIter = table.getUniqueKeyIterator();
-//				while ( subIter.hasNext() ) {
-//					UniqueKey uk = (UniqueKey) subIter.next();
-//					if ( tableInfo==null || tableInfo.getIndexMetadata( uk.getFilterName() ) == null ) {
-//						script.add( uk.sqlCreateString(dialect, mapping) );
-//					}
-//				}
 			}
 		}
 
@@ -1560,12 +1551,10 @@ public class Configuration implements Serializable {
 				unboundNoLogical.add( new Column( logicalColumnName ) );
 			}
 		}
+		UniqueKey uk = table.getOrCreateUniqueKey( keyName );
 		for ( Column column : columns ) {
 			if ( table.containsColumn( column ) ) {
-				Column tableColumn = table.getColumn( column );
-				tableColumn.setUnique( true );
-				Dialect.getDialect().getUniqueDelegate().generateUniqueKey(
-						table, tableColumn );
+				uk.addColumn( column );
 				unbound.remove( column );
 			}
 		}

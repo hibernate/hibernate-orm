@@ -422,8 +422,9 @@ public class Table implements RelationalModel, Serializable {
 				}
 
 				if ( column.isUnique() ) {
-					dialect.getUniqueDelegate().generateUniqueKey(
-							this, column );
+					UniqueKey uk = getOrCreateUniqueKey( 
+							column.getQuotedName( dialect ) + '_' );
+					uk.addColumn( column );
 					alter.append( dialect.getUniqueDelegate()
 							.applyUniqueToColumn( column ) );
 				}
@@ -524,7 +525,9 @@ public class Table implements RelationalModel, Serializable {
 			}
 			
 			if ( col.isUnique() ) {
-				dialect.getUniqueDelegate().generateUniqueKey( this, col );
+				UniqueKey uk = getOrCreateUniqueKey( 
+						col.getQuotedName( dialect ) + '_' );
+				uk.addColumn( col );
 				buf.append( dialect.getUniqueDelegate()
 						.applyUniqueToColumn( col ) );
 			}

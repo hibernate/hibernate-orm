@@ -41,7 +41,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class TypedManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -49,6 +48,7 @@ public class TypedManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCreateQuery() {
 		Customer cust = new Customer();
 		cust.setCustomerId("abc123");

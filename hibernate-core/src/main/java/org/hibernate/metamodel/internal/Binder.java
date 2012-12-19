@@ -2885,10 +2885,14 @@ public class Binder {
 	}
 
 	private EntityBinding findOrBindEntityBinding(ValueHolder< Class< ? >> entityJavaTypeValue, String explicitEntityName) {
+//		final String referencedEntityName =
+//				bindingContext().qualifyClassName( explicitEntityName != null
+//						? explicitEntityName
+//						: entityJavaTypeValue.getValue().getName() );
 		final String referencedEntityName =
-				bindingContext().qualifyClassName( explicitEntityName != null
+				explicitEntityName != null
 						? explicitEntityName
-						: entityJavaTypeValue.getValue().getName() );
+						: entityJavaTypeValue.getValue().getName();
 		return findOrBindEntityBinding( referencedEntityName );
 	}
 

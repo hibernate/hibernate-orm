@@ -294,6 +294,7 @@ public class EntityIdentifier {
 			}
 
 			params.setProperty( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
+			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, entityBinding.getJpaEntityName() );
 
 			//init the table here instead of earlier, so that we can get a quoted table name
 			//TODO: would it be better to simply pass the qualified table name, instead of

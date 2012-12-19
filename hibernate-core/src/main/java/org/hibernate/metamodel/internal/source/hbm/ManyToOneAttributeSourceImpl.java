@@ -164,7 +164,7 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	@Override
 	public String getReferencedEntityName() {
 		return manyToOneElement.getClazz() != null
-				? manyToOneElement.getClazz()
+				? bindingContext().qualifyClassName( manyToOneElement.getClazz() )
 				: manyToOneElement.getEntityName();
 	}
 

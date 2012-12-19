@@ -25,9 +25,10 @@ package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -41,7 +42,7 @@ import org.hibernate.dialect.Dialect;
 public abstract class AbstractConstraint implements Constraint {
 	private final TableSpecification table;
 	private String name;
-	private List<Column> columns = new ArrayList<Column>();
+	private final Map<Identifier, Column> columnMap = new LinkedHashMap<Identifier, Column>();
 
 	protected AbstractConstraint(TableSpecification table, String name) {
 		this.table = table;
@@ -108,19 +109,19 @@ public abstract class AbstractConstraint implements Constraint {
 	}
 
 	protected int generateConstraintColumnListId() {
-		return table.generateColumnListId( columns );
+		return table.generateColumnListId( getColumns() );
 	}
 
 	public List<Column> getColumns() {
-		return Collections.unmodifiableList( columns );
+		return Collections.unmodifiableList( new ArrayList<Column>( columnMap.values() ) );
 	}
 
 	public int getColumnSpan() {
-		return columns.size();
+		return columnMap.size();
 	}
 
-	protected List<Column> internalColumnAccess() {
-		return columns;
+	protected Map<Identifier, Column> internalColumnAccess() {
+		return columnMap;
 	}
 
 	public void addColumn(Column column) {
@@ -137,7 +138,7 @@ public abstract class AbstractConstraint implements Constraint {
 //					)
 //			);
 //		}
-		columns.add( column );
+		columnMap.put( column.getColumnName(), column );
 	}
 
 	protected boolean isCreationVetoed(Dialect dialect) {

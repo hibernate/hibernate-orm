@@ -171,7 +171,7 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	@Override
 	public String getReferencedEntityName() {
 		return oneToOneElement.getClazz() != null
-				? oneToOneElement.getClazz()
+				? bindingContext().qualifyClassName( oneToOneElement.getClazz() )
 				: oneToOneElement.getEntityName();
 	}
 

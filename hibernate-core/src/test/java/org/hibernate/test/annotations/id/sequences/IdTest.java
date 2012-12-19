@@ -50,7 +50,6 @@ import org.hibernate.test.annotations.id.sequences.entities.Store;
 import org.hibernate.test.annotations.id.sequences.entities.Tree;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -298,7 +297,6 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-6790")
-	@FailureExpectedWithNewMetamodel
 	public void testSequencePerEntity() {
 		Session session = openSession();
 		session.beginTransaction();

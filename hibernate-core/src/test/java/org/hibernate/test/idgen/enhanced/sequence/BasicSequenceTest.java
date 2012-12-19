@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@FailureExpectedWithNewMetamodel
 public class BasicSequenceTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

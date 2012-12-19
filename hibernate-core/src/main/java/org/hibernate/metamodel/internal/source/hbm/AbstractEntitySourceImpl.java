@@ -73,6 +73,7 @@ public abstract class AbstractEntitySourceImpl
 	private final EntityElement entityElement;
 	private final String className;
 	private final String entityName;
+	private final String jpaEntityName;
 
 	private List<SubclassEntitySource> subclassEntitySources = new ArrayList<SubclassEntitySource>();
 
@@ -87,9 +88,14 @@ public abstract class AbstractEntitySourceImpl
 		this.entityElement = entityElement;
 
 		this.className = bindingContext().qualifyClassName( entityElement.getName() );
-		this.entityName = StringHelper.isNotEmpty( entityElement.getEntityName() )
-				? entityElement.getEntityName()
-				: className;
+		if ( StringHelper.isNotEmpty( entityElement.getEntityName() ) ) {
+			this.entityName = entityElement.getEntityName();
+			this.jpaEntityName = entityElement.getEntityName();
+		}
+		else {
+			this.entityName = className;
+			this.jpaEntityName = StringHelper.unqualify( className );
+		}
 	}
 
 	@Override
@@ -375,7 +381,7 @@ public abstract class AbstractEntitySourceImpl
 
 	@Override
 	public String getJpaEntityName() {
-		return null;
+		return jpaEntityName;
 	}
 
 	@Override

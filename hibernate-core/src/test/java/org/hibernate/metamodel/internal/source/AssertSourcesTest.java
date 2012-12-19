@@ -95,12 +95,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 
 		assertEquals( User.class.getName(), entitySource.getClassName() );
 		assertEquals( User.class.getName(), entitySource.getEntityName() );
-		if ( HbmMetadataSourceProcessorImpl.class.isInstance( processor ) ) {
-			assertNull( entitySource.getJpaEntityName() );
-		}
-		else {
-			assertEquals( StringHelper.unqualify( User.class.getName() ), entitySource.getJpaEntityName() );
-		}
+		assertEquals( StringHelper.unqualify( User.class.getName() ), entitySource.getJpaEntityName() );
 
 		assertEquals( EntityMode.POJO, entitySource.getEntityMode() );
 		assertNull( entitySource.getCaching() );

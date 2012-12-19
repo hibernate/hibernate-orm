@@ -101,7 +101,7 @@ public class MetamodelBuilder {
 	}
 
 	private EntityTypeImpl locateOrBuildEntityType(EntityBinding binding) {
-		EntityTypeImpl entityType = entityTypeMap.get( binding.getClassReference() );
+		EntityTypeImpl entityType = entityTypeByNameMap.get( binding.getEntityName() );
 		if ( entityType == null ) {
 			entityType = buildEntityType( binding );
 		}
@@ -122,6 +122,7 @@ public class MetamodelBuilder {
 		);
 
 		entityTypeMap.put( javaType, entityType );
+		entityTypeByNameMap.put( entityBinding.getEntityName(), entityType );
 		return entityType;
 	}
 
@@ -235,7 +236,7 @@ public class MetamodelBuilder {
 		processSuperType( descriptor, entityBinding );
 
 		final AbstractIdentifiableType jpaDescriptor = Entity.class.isInstance( descriptor )
-				? entityTypeMap.get( descriptor.getClassReference() )
+				? entityTypeByNameMap.get( descriptor.getName() )
 				: mappedSuperclassTypeMap.get(  descriptor.getClassReference() );
 
 		applyIdMetadata( descriptor, entityBinding.getHierarchyDetails(), jpaDescriptor );

@@ -190,7 +190,6 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 		int id = 5;
 		Session s;
 		Transaction tx;
-		
 		s = openSession();
 		tx = s.beginTransaction();
 		Sky sky = new Sky();
@@ -198,9 +197,6 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 		sky.color = "green";
 		sky.day = "monday";
 		sky.month = "March";
-		s.persist( sky );
-		tx.commit();
-		s.close();
 
 		Sky otherSky = new Sky();
 		otherSky.id = new Long( id++ );
@@ -214,25 +210,17 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 		sameSky.day = "monday";
 		sameSky.month = "March";
 
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			s.persist( otherSky );
-			tx.commit();
-			fail( "unique constraints not respected" );
-		}
-		catch (HibernateException e) {
-			//success
-		}
-		finally {
-			if ( tx != null ) tx.rollback();
-			s.close();
-		}
+		s.save( sky );
+		s.flush();
+
+		s.save( otherSky );
+		tx.commit();
+		s.close();
 
 		s = openSession();
 		tx = s.beginTransaction();
 		try {
-			s.persist( sameSky );
+			s.save( sameSky );
 			tx.commit();
 			fail( "unique constraints not respected" );
 		}

@@ -45,25 +45,6 @@ import org.hibernate.metamodel.relational.UniqueKey;
 public interface UniqueDelegate {
 	
 	/**
-	 * If the dialect supports unique constraints, create and add a UniqueKey
-	 * to the Table.
-	 * 
-	 * @param table
-	 * @param column
-	 */
-	public void generateUniqueKey( org.hibernate.mapping.Table table,
-			org.hibernate.mapping.Column column );
-	
-	/**
-	 * If the dialect supports unique constraints, create and add a UniqueKey
-	 * to the Table.
-	 * 
-	 * @param table
-	 * @param column
-	 */
-	public void generateUniqueKey( Table table, Column column );
-	
-	/**
 	 * If the dialect does not supports unique constraints, this method should
 	 * return the syntax necessary to mutate the column definition
 	 * (usually "unique").

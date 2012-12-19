@@ -40,21 +40,6 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	public DefaultUniqueDelegate( Dialect dialect ) {
 		this.dialect = dialect;
 	}
-
-	@Override
-	public void generateUniqueKey( org.hibernate.mapping.Table table,
-			org.hibernate.mapping.Column column ) {
-		org.hibernate.mapping.UniqueKey uk = table.getOrCreateUniqueKey(
-				column.getQuotedName( dialect ) + '_' );
-		uk.addColumn( column );
-	}
-
-	@Override
-	public void generateUniqueKey( Table table, Column column ) {
-		UniqueKey uk = table.getOrCreateUniqueKey( column.getColumnName()
-				.encloseInQuotesIfQuoted( dialect ) + '_' );
-		uk.addColumn( column );
-	}
 	
 	@Override
 	public String applyUniqueToColumn( org.hibernate.mapping.Column column ) {

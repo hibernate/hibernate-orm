@@ -200,7 +200,9 @@ public class Table extends AbstractTableSpecification implements Exportable {
 			}
 
 			if ( col.isUnique() ) {
-				dialect.getUniqueDelegate().generateUniqueKey( this, col );
+				UniqueKey uk = getOrCreateUniqueKey( col.getColumnName()
+						.encloseInQuotesIfQuoted( dialect ) + '_' );
+				uk.addColumn( col );
 				buf.append( dialect.getUniqueDelegate()
 						.applyUniqueToColumn( col ) );
 			}

@@ -24,6 +24,7 @@
 package org.hibernate.test.component.basic2;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -33,6 +34,7 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class ComponentJoinsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {

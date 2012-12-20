@@ -1631,7 +1631,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(
 			value = "Encountered request for locking however dialect reports that database prefers locking be done in a " +
 					"separate select (follow-on locking); results will be locked after initial query executes",
-			id = 444
+			id = 454
 	)
 	void usingFollowOnLocking();
 
@@ -1639,7 +1639,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(
 			value = "Alias-specific lock modes requested, which is not currently supported with follow-on locking; " +
 					"all acquired locks will be [%s]",
-			id = 445
+			id = 455
 	)
 	void aliasSpecificLockingWithFollowOnLocking(LockMode lockMode);
 
@@ -1647,7 +1647,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(
 			value = "embed-xml attributes were intended to be used for DOM4J entity mode. Since that entity mode has been " +
 					"removed, embed-xml attributes are no longer supported and should be removed from mappings.",
-			id = 446
+			id = 456
 	)
 	void embedXmlAttributesNoLongerSupported();
 }

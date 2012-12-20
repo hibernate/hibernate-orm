@@ -28,7 +28,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -52,18 +53,16 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	public void testConstraints() {
-		Column column = (Column) configuration().getClassMapping( Entity1.class.getName() )
-				.getProperty( "foo1" ).getColumnIterator().next();
+		
+		Column column = SchemaUtil.getColumn( Entity1.class, "foo1", metadata() );
 		assertFalse( column.isNullable() );
 		assertTrue( column.isUnique() );
 
-		column = (Column) configuration().getClassMapping( Entity1.class.getName() )
-				.getProperty( "foo2" ).getColumnIterator().next();
+		column = SchemaUtil.getColumn( Entity1.class, "foo2", metadata() );
 		assertTrue( column.isNullable() );
 		assertTrue( column.isUnique() );
 
-		column = (Column) configuration().getClassMapping( Entity1.class.getName() )
-				.getProperty( "id" ).getColumnIterator().next();
+		column = SchemaUtil.getColumn( Entity1.class, "id", metadata() );
 		assertFalse( column.isNullable() );
 		assertTrue( column.isUnique() );
 	}

@@ -41,7 +41,7 @@ import static org.junit.Assert.fail;
 public abstract class AbstractConstraintNameTests extends BaseUnitTestCase {
 	private static final JdbcDataType INTEGER = new JdbcDataType( Types.INTEGER, "INTEGER", Long.class );
 	protected static final String[] COLUMN_NAMES = new String[] { "col_1", "col_2", "col_3" };
-	private Dialect dialect = new H2Dialect();
+	protected Dialect dialect = new H2Dialect();
 
 	@Test
 	public void testConstraintNameUninitializedInConstructor() {
@@ -155,7 +155,7 @@ public abstract class AbstractConstraintNameTests extends BaseUnitTestCase {
 		);
 	}
 
-	private void checkNameInDDL(AbstractConstraint constraint, String expectedNameInDDL) {
+	protected void checkNameInDDL(AbstractConstraint constraint, String expectedNameInDDL) {
 		// since the name is null, the generated name should be in the DDL
 		String sqlConstraintStringInAlterTable = constraint.sqlConstraintStringInAlterTable( dialect );
 		assertTrue( sqlConstraintStringInAlterTable.contains( expectedNameInDDL ));

@@ -23,9 +23,9 @@ package org.hibernate.dialect.unique;
 import java.util.Iterator;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.Index;
-import org.hibernate.metamodel.relational.UniqueKey;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
 
 /**
  * DB2 does not allow unique constraints on nullable columns.  Rather than
@@ -56,9 +56,27 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	@Override
 	public String applyUniquesOnAlter( UniqueKey uniqueKey ) {
 		if ( hasNullable( uniqueKey ) ) {
-			return Index.buildSqlCreateIndexString(
-					dialect, uniqueKey.getName(), uniqueKey.getTable(),
-					uniqueKey.getColumns(), true );
+			// TODO: This borrows from Index's old way of doing things.  This
+			// should be using StandardIndexExporter.  However, not all callers
+			// have JdbcEnvironment available.  We'll need to refactor a bit...
+			String keyName = dialect.qualifyIndexName() ? uniqueKey.getName()
+					: StringHelper.unqualify( uniqueKey.getName() );
+			StringBuilder buf = new StringBuilder( "create unique index " )
+					.append( keyName ).append( " on " )
+					.append( uniqueKey.getTable().getQualifiedName( dialect ) )
+					.append( " (" );
+			boolean first = true;
+			for ( Column column : uniqueKey.getColumns() ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					buf.append( ", " );
+				}
+				buf.append( ( column.getColumnName().getText( dialect ) ) );
+			}
+			buf.append( ")" );
+			return buf.toString();
 		} else {
 			return super.applyUniquesOnAlter( uniqueKey );
 		}
@@ -80,8 +98,12 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	@Override
 	public String dropUniquesOnAlter( UniqueKey uniqueKey ) {
 		if ( hasNullable( uniqueKey ) ) {
-			return Index.buildSqlDropIndexString(
-					dialect, uniqueKey.getTable(), uniqueKey.getName() );
+			// TODO: This borrows from Index's old way of doing things.  This
+			// should be using StandardIndexExporter.  However, not all callers
+			// have JdbcEnvironment available.  We'll need to refactor a bit...
+			return "drop index " + StringHelper.qualify(
+					uniqueKey.getTable().getQualifiedName( dialect ),
+							uniqueKey.getName() );
 		} else {
 			return super.dropUniquesOnAlter( uniqueKey );
 		}

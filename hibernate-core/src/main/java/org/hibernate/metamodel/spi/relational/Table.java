@@ -26,7 +26,6 @@ package org.hibernate.metamodel.spi.relational;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -262,11 +261,12 @@ public class Table extends AbstractTableSpecification implements Exportable {
 			String nullablePostfix = column.isNullable() ? dialect.getNullColumnString() : " not null";
 			alter.append( nullablePostfix );
 
-			boolean useUniqueConstraint = column.isUnique()
-					&& dialect.supportsUnique()
-					&& ( !column.isNullable() || dialect.supportsNotNullUnique() );
-			if ( useUniqueConstraint ) {
-				alter.append( " unique" );
+			if ( column.isUnique() ) {
+				UniqueKey uk = getOrCreateUniqueKey(
+						column.getColumnName().getText( dialect ) + '_' );
+				uk.addColumn( column );
+				alter.append( dialect.getUniqueDelegate().applyUniqueToColumn(
+						column ) );
 			}
 
 			final String checkCondition = column.getCheckCondition();

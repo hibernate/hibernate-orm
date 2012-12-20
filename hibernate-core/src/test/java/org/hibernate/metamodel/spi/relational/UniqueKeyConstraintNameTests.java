@@ -23,12 +23,34 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Gail Badner
+ * @author Brett Meyer
  */
 public class UniqueKeyConstraintNameTests extends AbstractConstraintNameTests {
+	
 	@Override
-	protected AbstractConstraint createConstraint(TableSpecification table, String constraintName) {
+	protected AbstractConstraint createConstraint(
+			TableSpecification table, String constraintName ) {
 		return table.getOrCreateUniqueKey( constraintName );
+	}
+	
+	@Override
+	protected void checkNameInDDL(
+			AbstractConstraint constraint, String expectedNameInDDL ) {
+		// sqlConstraintStringInAlterTable is not used in UniqueKey --
+		// UniqueDelegate handles it.  Must prevent the check from
+		// happening here.
+
+		String[] sqlCreateStrings = constraint.sqlCreateStrings( dialect );
+		assertEquals( 1, sqlCreateStrings.length );
+		assertTrue( sqlCreateStrings[0].contains( expectedNameInDDL ) );
+
+		String[] sqlDropStrings = constraint.sqlDropStrings( dialect );
+		assertEquals( 1, sqlDropStrings.length );
+		assertTrue( sqlDropStrings[0].contains( expectedNameInDDL ) );
 	}
 }

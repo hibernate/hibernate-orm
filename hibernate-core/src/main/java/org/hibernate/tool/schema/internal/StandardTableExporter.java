@@ -27,13 +27,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.spi.relational.CheckConstraint;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
-import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -106,16 +105,12 @@ public class StandardTableExporter implements Exporter<Table> {
 
 			}
 
-			boolean useUniqueConstraint = col.isUnique() &&
-					( !col.isNullable() || dialect.supportsNotNullUnique() );
-			if ( useUniqueConstraint ) {
-				if ( dialect.supportsUnique() ) {
-					buf.append( " unique" );
-				}
-				else {
-					UniqueKey uk = table.getOrCreateUniqueKey( col.getColumnName().getText( dialect ) + '_' );
-					uk.addColumn( col );
-				}
+			if ( col.isUnique() ) {
+				UniqueKey uk = table.getOrCreateUniqueKey(
+						col.getColumnName().getText( dialect ) + '_' );
+				uk.addColumn( col );
+				buf.append( dialect.getUniqueDelegate().applyUniqueToColumn(
+						col ) );
 			}
 
 			if ( col.getCheckCondition() != null && dialect.supportsColumnCheck() ) {
@@ -134,14 +129,7 @@ public class StandardTableExporter implements Exporter<Table> {
 					.append( table.getPrimaryKey().sqlConstraintStringInCreateTable( dialect ) );
 		}
 
-		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-			for ( UniqueKey uk : table.getUniqueKeys() ) {
-				String constraint = uk.sqlConstraintStringInCreateTable( dialect );
-				if ( constraint != null ) {
-					buf.append( ", " ).append( constraint );
-				}
-			}
-		}
+		buf.append( dialect.getUniqueDelegate().applyUniquesToTable( table ) );
 
 		if ( dialect.supportsTableCheck() ) {
 			for ( CheckConstraint checkConstraint : table.getCheckConstraints() ) {

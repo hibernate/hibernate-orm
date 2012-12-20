@@ -23,9 +23,9 @@ package org.hibernate.dialect.unique;
 import java.util.Iterator;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.Table;
-import org.hibernate.metamodel.relational.UniqueKey;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
 
 /**
  * The default UniqueDelegate implementation for most dialects.  Uses
@@ -82,7 +82,7 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 		return new StringBuilder( "alter table " )
 				.append( uniqueKey.getTable().getQualifiedName( dialect ) )
 				.append( " add constraint " )
-				.append( uniqueKey.getName() )
+				.append( uniqueKey.getExportedName() )
 				.append( uniqueConstraintSql( uniqueKey ) )
 				.toString();
 	}
@@ -107,7 +107,7 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 		return new StringBuilder( "alter table " )
 				.append( uniqueKey.getTable().getQualifiedName( dialect ) )
 				.append( " drop constraint " )
-				.append( dialect.quote( uniqueKey.getName() ) )
+				.append( dialect.quote( uniqueKey.getExportedName() ) )
 				.toString();
 	}
 	
@@ -134,9 +134,8 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 		sb.append( " unique (" );
 		Iterator columnIterator = uniqueKey.getColumns().iterator();
 		while ( columnIterator.hasNext() ) {
-			org.hibernate.mapping.Column column
-					= (org.hibernate.mapping.Column) columnIterator.next();
-			sb.append( column.getQuotedName( dialect ) );
+			Column column = (Column) columnIterator.next();
+			sb.append( column.getColumnName().getText( dialect ) );
 			if ( columnIterator.hasNext() ) {
 				sb.append( ", " );
 			}

@@ -81,7 +81,6 @@ import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.ANSIJoinFragment;
@@ -93,7 +92,6 @@ import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
-import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
@@ -1879,7 +1877,6 @@ public abstract class Dialect implements ConversionContext {
 	private StandardTableExporter tableExporter = new StandardTableExporter( this );
 	private StandardSequenceExporter sequenceExporter = new StandardSequenceExporter( this );
 	private StandardIndexExporter indexExporter = new StandardIndexExporter( this );
-	private StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
 	private StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this );
 	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
 
@@ -1893,10 +1890,6 @@ public abstract class Dialect implements ConversionContext {
 
 	public Exporter<Index> getIndexExporter() {
 		return indexExporter;
-	}
-
-	public Exporter<UniqueKey> getUniqueKeyExporter() {
-		return uniqueKeyExporter;
 	}
 
 	public Exporter<ForeignKey> getForeignKeyExporter() {

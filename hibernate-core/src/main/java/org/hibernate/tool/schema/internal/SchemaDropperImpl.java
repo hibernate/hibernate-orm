@@ -99,10 +99,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 					for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
 						checkExportIdentifier( uniqueKey, exportIdentifiers );
-						applySqlStrings(
-								targets,
-								dialect.getUniqueKeyExporter().getSqlDropStrings( uniqueKey, jdbcEnvironment )
-						);
+						applySqlStrings( targets, dialect.getUniqueDelegate()
+								.dropUniquesOnAlter( uniqueKey ) );
 					}
 
 					for ( Index index : table.getIndexes() ) {

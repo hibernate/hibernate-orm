@@ -57,21 +57,24 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 			PluralAssociationAttribute associationAttribute) {
 		this.associationAttribute = associationAttribute;
 		
+//		if ( associationAttribute.getMappedBy() != null ) {
+//			// TODO: Pull some of this into JandexHelper.
+//			Index index = JandexHelper.indexForClass(
+//					associationAttribute.getContext().getServiceRegistry()
+//							.getService( ClassLoaderService.class ),
+//					associationAttribute.getAttributeType() );
+//			ClassInfo classInfo = index.getClassByName( DotName.createSimple(
+//					associationAttribute.getAttributeType().getName() ) );
+//			Map<DotName, List<AnnotationInstance>> annotations = JandexHelper
+//					.getMemberAnnotations(
+//							classInfo, associationAttribute.getMappedBy() );
+//		}
 		for ( Column column : associationAttribute.getJoinColumnValues() ) {
-			relationalValueSources.add( new ColumnSourceImpl( 
-					associationAttribute, null, column ) );
-		}
-		for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
 			relationalValueSources.add( new ColumnSourceImpl( 
 					associationAttribute, null, column ) );
 		}
 		
 		for ( Column column : associationAttribute.getJoinColumnValues() ) {
-			if ( column.getReferencedColumnName() != null ) {
-				referencedColumnNames.add( column.getReferencedColumnName() );
-			}
-		}
-		for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
 			if ( column.getReferencedColumnName() != null ) {
 				referencedColumnNames.add( column.getReferencedColumnName() );
 			}
@@ -116,7 +119,8 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public String getExplicitForeignKeyName() {
-		return associationAttribute.getInverseForeignKeyName();
+//		return associationAttribute.getInverseForeignKeyName();
+		return null;
 	}
 
 	@Override
@@ -166,8 +170,6 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 		return false;
 	}
 
-	// TODO: This obviously won't work.  We need a new way to handle
-	// inverse foreign key resolution.
 	public class AnnotationJoinColumnResolutionDelegate
 			implements ForeignKeyContributingSource.JoinColumnResolutionDelegate {
 		private final String logicalJoinTableName;
@@ -191,18 +193,6 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 				);
 				values.add( resolvedColumn );
 			}
-//			for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
-//				if ( column.getReferencedColumnName() == null ) {
-//					return context.resolveRelationalValuesForAttribute( null );
-//				}
-//				org.hibernate.metamodel.spi.relational.Column resolvedColumn = context.resolveColumn(
-//						column.getReferencedColumnName(),
-//						logicalJoinTableName,
-//						null,
-//						null
-//				);
-//				values.add( resolvedColumn );
-//			}
 			return values;
 		}
 

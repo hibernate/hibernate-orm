@@ -35,6 +35,8 @@ import org.hibernate.TypeMismatchException;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
+import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
@@ -529,52 +531,172 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			final LoadEventListener.LoadType options) {
 
 		final SessionImplementor source = event.getSession();
-
 		final boolean useCache = persister.hasCache()
 				&& source.getCacheMode().isGetEnabled()
 				&& event.getLockMode().lessThan(LockMode.READ);
 
-		if ( useCache ) {
+		if ( ! useCache ) {
+			// we can't use cache here
+			return null;
+		}
 
-			final SessionFactoryImplementor factory = source.getFactory();
+		final SessionFactoryImplementor factory = source.getFactory();
+		final CacheKey ck = source.generateCacheKey(
+				event.getEntityId(),
+				persister.getIdentifierType(),
+				persister.getRootEntityName()
+		);
 
-			final CacheKey ck = source.generateCacheKey(
-					event.getEntityId(),
-					persister.getIdentifierType(),
-					persister.getRootEntityName()
-			);
-			Object ce = persister.getCacheAccessStrategy().get( ck, source.getTimestamp() );
-			if ( factory.getStatistics().isStatisticsEnabled() ) {
-				if ( ce == null ) {
-					factory.getStatisticsImplementor().secondLevelCacheMiss(
-							persister.getCacheAccessStrategy().getRegion().getName()
-					);
-				}
-				else {
-					factory.getStatisticsImplementor().secondLevelCacheHit(
-							persister.getCacheAccessStrategy().getRegion().getName()
-					);
-				}
+		Object ce = persister.getCacheAccessStrategy().get( ck, source.getTimestamp() );
+
+		if ( factory.getStatistics().isStatisticsEnabled() ) {
+			if ( ce == null ) {
+				factory.getStatisticsImplementor().secondLevelCacheMiss(
+						persister.getCacheAccessStrategy().getRegion().getName()
+				);
 			}
-
-			if ( ce != null ) {
-				CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, factory );
-
-				// Entity was found in second-level cache...
-				return assembleCacheEntry(
-						entry,
-						event.getEntityId(),
-						persister,
-						event
+			else {
+				factory.getStatisticsImplementor().secondLevelCacheHit(
+						persister.getCacheAccessStrategy().getRegion().getName()
 				);
 			}
 		}
 
-		return null;
+		if ( ce == null ) {
+			// nothing was found in cache
+			return null;
+		}
+
+		CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, factory );
+		return convertCacheEntryToEntity( entry, event.getEntityId(), persister, event );
+	}
+
+	private Object convertCacheEntryToEntity(
+			CacheEntry entry,
+			Serializable entityId,
+			EntityPersister persister,
+			LoadEvent event) {
+
+		final EventSource session = event.getSession();
+		final SessionFactoryImplementor factory = session.getFactory();
+		final EntityPersister subclassPersister = factory.getEntityPersister( entry.getSubclass() );
+
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
+					"Converting second-level cache entry [%s] into entity : %s",
+					entry,
+					MessageHelper.infoString( persister, entityId, factory )
+			);
+		}
+
+		final Object entity;
+		if ( entry.isReferenceEntry() ) {
+			final Object optionalObject = event.getInstanceToLoad();
+			if ( optionalObject != null ) {
+				throw new HibernateException(
+						String.format(
+								"Attempt to load entity [%s] from cache using provided object instance, but cache " +
+										"is storing references",
+								MessageHelper.infoString( persister, entityId, factory )
+						)
+				);
+			}
+
+			entity = ( (ReferenceCacheEntryImpl) entry ).getReference();
+			if ( entity == null ) {
+				throw new IllegalStateException(
+						"Reference cache entry contained null : " + MessageHelper.infoString( persister, entityId, factory )
+				);
+			}
+		}
+		else {
+			final Object optionalObject = event.getInstanceToLoad();
+			entity = optionalObject == null
+					? session.instantiate( subclassPersister, entityId )
+					: optionalObject;
+		}
+
+		// make it circular-reference safe
+		final EntityKey entityKey = session.generateEntityKey( entityId, subclassPersister );
+		TwoPhaseLoad.addUninitializedCachedEntity(
+				entityKey,
+				entity,
+				subclassPersister,
+				LockMode.NONE,
+				entry.areLazyPropertiesUnfetched(),
+				entry.getVersion(),
+				session
+		);
+
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final Object[] values;
+		final Object version;
+		final boolean isReadOnly;
+		if ( entry.isReferenceEntry() ) {
+			values = null;
+			version = null;
+			isReadOnly = true;
+		}
+		else {
+			final Type[] types = subclassPersister.getPropertyTypes();
+			// initializes the entity by (desired) side-effect
+			values = ( (StandardCacheEntryImpl) entry).assemble(
+					entity, entityId, subclassPersister, session.getInterceptor(), session
+			);
+			if ( ( (StandardCacheEntryImpl) entry ).isDeepCopyNeeded() ) {
+				TypeHelper.deepCopy(
+						values,
+						types,
+						subclassPersister.getPropertyUpdateability(),
+						values,
+						session
+				);
+			}
+			version = Versioning.getVersion( values, subclassPersister );
+			LOG.tracef( "Cached Version : %s", version );
+
+			final Object proxy = persistenceContext.getProxy( entityKey );
+			if ( proxy != null ) {
+				// there is already a proxy for this impl
+				// only set the status to read-only if the proxy is read-only
+				isReadOnly = ( ( HibernateProxy ) proxy ).getHibernateLazyInitializer().isReadOnly();
+			}
+			else {
+				isReadOnly = session.isDefaultReadOnly();
+			}
+		}
+
+		persistenceContext.addEntry(
+				entity,
+				( isReadOnly ? Status.READ_ONLY : Status.MANAGED ),
+				values,
+				null,
+				entityId,
+				version,
+				LockMode.NONE,
+				true,
+				subclassPersister,
+				false,
+				entry.areLazyPropertiesUnfetched()
+		);
+		subclassPersister.afterInitialize( entity, entry.areLazyPropertiesUnfetched(), session );
+		persistenceContext.initializeNonLazyCollections();
+
+		//PostLoad is needed for EJB3
+		PostLoadEvent postLoadEvent = new PostLoadEvent( session )
+				.setEntity( entity )
+				.setId( entityId )
+				.setPersister( persister );
+
+		for ( PostLoadEventListener listener : postLoadEventListeners( session ) ) {
+			listener.onPostLoad( postLoadEvent );
+		}
+
+		return entity;
 	}
 
 	private Object assembleCacheEntry(
-			final CacheEntry entry,
+			final StandardCacheEntryImpl entry,
 			final Serializable id,
 			final EntityPersister persister,
 			final LoadEvent event) throws HibernateException {
@@ -642,7 +764,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				subclassPersister,
 				false,
 				entry.areLazyPropertiesUnfetched()
-			);
+		);
 		subclassPersister.afterInitialize( result, entry.areLazyPropertiesUnfetched(), session );
 		persistenceContext.initializeNonLazyCollections();
 		// upgrade the lock if necessary:

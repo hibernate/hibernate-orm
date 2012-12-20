@@ -38,7 +38,7 @@ public class IdentifierBag extends IdentifierCollection {
 	public CollectionType getDefaultCollectionType() {
 		return getMappings().getTypeResolver()
 				.getTypeFactory()
-				.idbag( getRole(), getReferencedPropertyName(), isEmbedded() );
+				.idbag( getRole(), getReferencedPropertyName() );
 	}
 
 	public Object accept(ValueVisitor visitor) {

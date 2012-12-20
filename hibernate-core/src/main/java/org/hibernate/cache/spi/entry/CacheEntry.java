@@ -25,137 +25,41 @@ package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.event.spi.PreLoadEvent;
-import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.TypeHelper;
 
 /**
  * A cached instance of a persistent class
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public final class CacheEntry implements Serializable {
+public interface CacheEntry extends Serializable {
+	public boolean isReferenceEntry();
 
-	private final Serializable[] disassembledState;
-	private final String subclass;
-	private final boolean lazyPropertiesAreUnfetched;
-	private final Object version;
-	
-	public String getSubclass() {
-		return subclass;
-	}
-	
-	public boolean areLazyPropertiesUnfetched() {
-		return lazyPropertiesAreUnfetched;
-	}
-	
-	public CacheEntry(
-			final Object[] state, 
-			final EntityPersister persister, 
-			final boolean unfetched, 
-			final Object version,
-			final SessionImplementor session, 
-			final Object owner) 
-	throws HibernateException {
-		//disassembled state gets put in a new array (we write to cache by value!)
-		this.disassembledState = TypeHelper.disassemble(
-				state, 
-				persister.getPropertyTypes(), 
-				persister.isLazyPropertiesCacheable() ? 
-					null : persister.getPropertyLaziness(),
-				session, 
-				owner 
-			);
-		subclass = persister.getEntityName();
-		lazyPropertiesAreUnfetched = unfetched || !persister.isLazyPropertiesCacheable();
-		this.version = version;
-	}
-	
-	public Object getVersion() {
-		return version;
-	}
+	/**
+	 * Hibernate stores all entries pertaining to a given entity hierarchy in a single region.  This attribute
+	 * tells us the specific entity type represented by the cached data.
+	 *
+	 * @return The entry's exact entity type.
+	 */
+	public String getSubclass();
 
-	CacheEntry(Serializable[] state, String subclass, boolean unfetched, Object version) {
-		this.disassembledState = state;
-		this.subclass = subclass;
-		this.lazyPropertiesAreUnfetched = unfetched;
-		this.version = version;
-	}
+	/**
+	 * Retrieves the version (optimistic locking) associated with this cache entry.
+	 *
+	 * @return The version of the entity represented by this entry
+	 */
+	public Object getVersion();
 
-	public Object[] assemble(
-			final Object instance, 
-			final Serializable id, 
-			final EntityPersister persister, 
-			final Interceptor interceptor, 
-			final EventSource session) 
-	throws HibernateException {
+	public boolean areLazyPropertiesUnfetched();
 
-		if ( !persister.getEntityName().equals(subclass) ) {
-			throw new AssertionFailure("Tried to assemble a different subclass instance");
-		}
 
-		return assemble(disassembledState, instance, id, persister, interceptor, session);
-
-	}
-
-	private static Object[] assemble(
-			final Serializable[] values, 
-			final Object result, 
-			final Serializable id, 
-			final EntityPersister persister, 
-			final Interceptor interceptor, 
-			final EventSource session) throws HibernateException {
-			
-		//assembled state gets put in a new array (we read from cache by value!)
-		Object[] assembledProps = TypeHelper.assemble(
-				values, 
-				persister.getPropertyTypes(), 
-				session, result 
-			);
-
-		//persister.setIdentifier(result, id); //before calling interceptor, for consistency with normal load
-
-		//TODO: reuse the PreLoadEvent
-		final PreLoadEvent preLoadEvent = new PreLoadEvent( session )
-				.setEntity( result )
-				.setState( assembledProps )
-				.setId( id )
-				.setPersister( persister );
-
-		final EventListenerGroup<PreLoadEventListener> listenerGroup = session
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( EventType.PRE_LOAD );
-		for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
-			listener.onPreLoad( preLoadEvent );
-		}
-
-		persister.setPropertyValues( result, assembledProps );
-
-		return assembledProps;
-	}
-
-    public Serializable[] getDisassembledState() {
-	    // todo: this was added to support initializing an entity's EntityEntry snapshot during reattach;
-	    // this should be refactored to instead expose a method to assemble a EntityEntry based on this
-	    // state for return.
-	    return disassembledState;
-    }
-
-	public String toString() {
-		return "CacheEntry(" + subclass + ')' + ArrayHelper.toString(disassembledState);
-	}
+	// todo: this was added to support initializing an entity's EntityEntry snapshot during reattach;
+	// this should be refactored to instead expose a method to assemble a EntityEntry based on this
+	// state for return.
+	public Serializable[] getDisassembledState();
 
 }
 

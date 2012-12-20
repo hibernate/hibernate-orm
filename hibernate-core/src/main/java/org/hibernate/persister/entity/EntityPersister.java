@@ -35,6 +35,7 @@ import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cache.spi.OptimisticCacheSource;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -475,7 +476,9 @@ public interface EntityPersister extends OptimisticCacheSource {
 	 * Get the cache structure
 	 */
 	public CacheEntryStructure getCacheEntryStructure();
-	
+
+	public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session);
+
 	/**
 	 * Does this class have a natural id cache
 	 */

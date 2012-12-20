@@ -51,7 +51,6 @@ import org.hibernate.type.Type;
  * Mapping parameters supported: sequence, parameters.
  *
  * @see SequenceHiLoGenerator
- * @see TableHiLoGenerator
  * @author Gavin King
  *
  * @deprecated Going away in 5.0, use {@link org.hibernate.id.enhanced.SequenceStyleGenerator} instead

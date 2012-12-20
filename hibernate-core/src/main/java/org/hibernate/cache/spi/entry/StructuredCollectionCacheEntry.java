@@ -30,9 +30,7 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
- * For other plural attributes except map, this impl is used.
- * </br>
- * Internally, a list that contains all collection states is stored into 2LC.
+ * Structured CacheEntry format for persistent collections (other than Maps, see {@link StructuredMapCacheEntry}).
  *
  * @author Gavin King
  */

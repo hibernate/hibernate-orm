@@ -57,6 +57,8 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
+import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
+import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -158,7 +160,7 @@ public abstract class AbstractEntityPersister
 	private final EntityRegionAccessStrategy cacheAccessStrategy;
 	private final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy;
 	private final boolean isLazyPropertiesCacheable;
-	private final CacheEntryStructure cacheEntryStructure;
+	private final CacheEntryHelper cacheEntryHelper;
 	private final EntityMetamodel entityMetamodel;
 	private final EntityTuplizer entityTuplizer;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -511,9 +513,6 @@ public abstract class AbstractEntityPersister
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
 		isLazyPropertiesCacheable = persistentClass.isLazyPropertiesCacheable();
-		this.cacheEntryStructure = factory.getSettings().isStructuredCacheEntriesEnabled() ?
-				new StructuredCacheEntry(this) :
-				new UnstructuredCacheEntry();
 
 		this.entityMetamodel = new EntityMetamodel( persistentClass, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
@@ -788,6 +787,48 @@ public abstract class AbstractEntityPersister
 
 		temporaryIdTableName = persistentClass.getTemporaryIdTableName();
 		temporaryIdTableDDL = persistentClass.getTemporaryIdTableDDL();
+
+		this.cacheEntryHelper = buildCacheEntryHelper();
+	}
+
+	protected CacheEntryHelper buildCacheEntryHelper() {
+		if ( cacheAccessStrategy == null ) {
+			// the entity defined no caching...
+			return NoopCacheEntryHelper.INSTANCE;
+		}
+
+		if ( canUseReferenceCacheEntries() ) {
+			entityMetamodel.setLazy( false );
+			// todo : do we also need to unset proxy factory?
+			return new ReferenceCacheEntryHelper( this );
+		}
+
+		return factory.getSettings().isStructuredCacheEntriesEnabled()
+				? new StructuredCacheEntryHelper( this )
+				: new StandardCacheEntryHelper( this );
+	}
+
+	protected boolean canUseReferenceCacheEntries() {
+		// todo : should really validate that the cache access type is read-only
+
+		if ( ! factory.getSettings().isDirectReferenceCacheEntriesEnabled() ) {
+			return false;
+		}
+
+		// for now, limit this to just entities that:
+		// 		1) are immutable
+		if ( entityMetamodel.isMutable() ) {
+			return false;
+		}
+
+		//		2)  have no associations.  Eventually we want to be a little more lenient with associations.
+		for ( Type type : getSubclassPropertyTypeClosure() ) {
+			if ( type.isAssociationType() ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 
@@ -799,11 +840,10 @@ public abstract class AbstractEntityPersister
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
-		this.isLazyPropertiesCacheable = entityBinding.getHierarchyDetails().getCaching() != null
-				&& entityBinding.getHierarchyDetails().getCaching().isCacheLazyProperties();
-		this.cacheEntryStructure = factory.getSettings().isStructuredCacheEntriesEnabled()
-				? new StructuredCacheEntry(this)
-				: new UnstructuredCacheEntry();
+		this.isLazyPropertiesCacheable =
+				entityBinding.getHierarchyDetails().getCaching() == null ?
+						false :
+						entityBinding.getHierarchyDetails().getCaching().isCacheLazyProperties();
 		this.entityMetamodel = new EntityMetamodel( entityBinding, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
 		int batch = entityBinding.getBatchSize();
@@ -1143,6 +1183,8 @@ public abstract class AbstractEntityPersister
 
 		temporaryIdTableName = null;
 		temporaryIdTableDDL = null;
+
+		this.cacheEntryHelper = buildCacheEntryHelper();
 	}
 
 	protected static String getTemplateFromString(String string, SessionFactoryImplementor factory) {
@@ -4039,10 +4081,16 @@ public abstract class AbstractEntityPersister
 		return cacheAccessStrategy;
 	}
 
+	@Override
 	public CacheEntryStructure getCacheEntryStructure() {
-		return cacheEntryStructure;
+		return cacheEntryHelper.getCacheEntryStructure();
 	}
-	
+
+	@Override
+	public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
+		return cacheEntryHelper.buildCacheEntry( entity, state, version, session );
+	}
+
 	public boolean hasNaturalIdCache() {
 		return naturalIdRegionAccessStrategy != null;
 	}
@@ -4899,7 +4947,6 @@ public abstract class AbstractEntityPersister
 		return 0;
 	}
 
-
 	Type[] getLazyPropertyTypes() {
 		return lazyPropertyTypes;
 	}
@@ -4914,5 +4961,98 @@ public abstract class AbstractEntityPersister
 
 	String[][] getLazyPropertyColumnAliases() {
 		return lazyPropertyColumnAliases;
+	}
+
+	/**
+	 * Consolidated these onto a single helper because the 2 pieces work in tandem.
+	 */
+	public static interface CacheEntryHelper {
+		public CacheEntryStructure getCacheEntryStructure();
+
+		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session);
+	}
+
+	private static class StandardCacheEntryHelper implements CacheEntryHelper {
+		private final EntityPersister persister;
+
+		private StandardCacheEntryHelper(EntityPersister persister) {
+			this.persister = persister;
+		}
+
+		@Override
+		public CacheEntryStructure getCacheEntryStructure() {
+			return UnstructuredCacheEntry.INSTANCE;
+		}
+
+		@Override
+		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
+			return new StandardCacheEntryImpl(
+					state,
+					persister,
+					persister.hasUninitializedLazyProperties( entity ),
+					version,
+					session,
+					entity
+			);
+		}
+	}
+
+	private static class ReferenceCacheEntryHelper implements CacheEntryHelper {
+		private final EntityPersister persister;
+
+		private ReferenceCacheEntryHelper(EntityPersister persister) {
+			this.persister = persister;
+		}
+
+		@Override
+		public CacheEntryStructure getCacheEntryStructure() {
+			return UnstructuredCacheEntry.INSTANCE;
+		}
+
+		@Override
+		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
+			return new ReferenceCacheEntryImpl( entity, persister.getEntityName() );
+		}
+	}
+
+	private static class StructuredCacheEntryHelper implements CacheEntryHelper {
+		private final EntityPersister persister;
+		private final StructuredCacheEntry structure;
+
+		private StructuredCacheEntryHelper(EntityPersister persister) {
+			this.persister = persister;
+			this.structure = new StructuredCacheEntry( persister );
+		}
+
+		@Override
+		public CacheEntryStructure getCacheEntryStructure() {
+			return structure;
+		}
+
+		@Override
+		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
+			return new StandardCacheEntryImpl(
+					state,
+					persister,
+					persister.hasUninitializedLazyProperties( entity ),
+					version,
+					session,
+					entity
+			);
+		}
+	}
+
+	private static class NoopCacheEntryHelper implements CacheEntryHelper {
+		public static final NoopCacheEntryHelper INSTANCE = new NoopCacheEntryHelper();
+
+		@Override
+		public CacheEntryStructure getCacheEntryStructure() {
+			return UnstructuredCacheEntry.INSTANCE;
+		}
+
+		@Override
+		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
+			throw new HibernateException( "Illegal attempt to build cache entry for non-cached entity" );
+		}
 	}
 }

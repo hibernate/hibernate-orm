@@ -15,7 +15,7 @@
       <term>Optimistic</term>
       <listitem>
         <para>
-          Optimistic locking ssumes that multiple transactions can complete without affecting each other, and that
+          Optimistic locking assumes that multiple transactions can complete without affecting each other, and that
           therefore transactions can proceed without locking the data resources that they affect. Before committing,
           each transaction verifies that no other transaction has modified its data. If the check reveals conflicting
           modifications, the committing transaction rolls back<footnote><para><link xl:href="http://en.wikipedia.org/wiki/Optimistic_locking" /></para></footnote>.

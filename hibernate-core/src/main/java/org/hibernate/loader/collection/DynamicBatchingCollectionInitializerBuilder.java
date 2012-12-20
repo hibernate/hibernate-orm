@@ -28,6 +28,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -250,10 +252,11 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 					selection.getMaxRows() :
 					Integer.MAX_VALUE;
 
-			final ResultSet rs = executeQueryStatement( sql, queryParameters, false, session );
+			final List<AfterLoadAction> afterLoadActions = Collections.emptyList();
+			final ResultSet rs = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
 			final Statement st = rs.getStatement();
 			try {
-				processResultSet( rs, queryParameters, session, true, null, maxRows );
+				processResultSet( rs, queryParameters, session, true, null, maxRows, afterLoadActions );
 			}
 			finally {
 				st.close();

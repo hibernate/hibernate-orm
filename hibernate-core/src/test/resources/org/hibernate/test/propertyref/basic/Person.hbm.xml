@@ -25,7 +25,7 @@
             <generator class="hilo"/>
         </id>
         <property name="name" length="100"/>
-        <property name="userId" column="person_userid" length="8" unique="true"/>
+        <property name="userId" column="person_userid" length="8" unique="true" not-null="true"/>
         <one-to-one name="address" property-ref="person" cascade="all" fetch="join"/>
         <set name="accounts" inverse="true">
             <key column="userId" property-ref="userId"/>

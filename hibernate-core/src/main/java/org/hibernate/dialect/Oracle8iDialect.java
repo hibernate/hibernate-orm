@@ -577,4 +577,8 @@ public class Oracle8iDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean useFollowOnLocking() {
+		return true;
+	}
 }

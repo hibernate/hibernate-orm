@@ -38,6 +38,7 @@ import org.hibernate.MappingException;
 import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.jpa.test.SettingsGenerator;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
@@ -600,6 +601,12 @@ public class PersisterClassProviderTest {
 
 		@Override
 		public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
+			return null;
+		}
+
+		@Override
+		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
+			// TODO Auto-generated method stub
 			return null;
 		}
 	}

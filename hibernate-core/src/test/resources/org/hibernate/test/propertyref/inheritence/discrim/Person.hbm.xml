@@ -11,10 +11,10 @@
 		</id>
 		<discriminator formula="customerId"/>
 		<property name="name" length="100"/>
-		<property name="personId" length="8" unique="true"/>
+		<property name="personId" length="8" unique="true" not-null="true"/>
 				
 		<subclass name="Customer" discriminator-value="not null">
-			<property name="customerId" length="8" unique="true"/>
+			<property name="customerId" length="8" unique="true" not-null="true"/>
 		</subclass>
 	</class>
 	
@@ -22,8 +22,8 @@
 		<id name="accountId" length="32">
 			<generator class="uuid.hex"/>
 		</id>
-		<many-to-one name="person" column="personId" unique="true" property-ref="personId"/>
-		<many-to-one name="customer" column="customerPersonId" unique="true" property-ref="personId"/>
+		<many-to-one name="person" column="personId" unique="true" not-null="true" property-ref="personId"/>
+		<many-to-one name="customer" column="customerPersonId" unique="true" not-null="true" property-ref="personId"/>
 		<property name="type" column="`type`" not-null="true"/>
 	</class>
 

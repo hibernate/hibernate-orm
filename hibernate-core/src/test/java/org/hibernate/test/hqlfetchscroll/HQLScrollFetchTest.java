@@ -176,8 +176,8 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 			}
 		}
 		// check that the same second parent is obtained by calling Session.get()
-		assertSame( pOther, s.get( Parent.class, "parent2" ) );
 		assertNotNull( pOther );
+		assertSame( pOther, s.get( Parent.class, pOther.getId() ) );
 		// access pOther's collection; should be completely loaded
 		assertTrue( Hibernate.isInitialized( pOther.getChildren() ) );
 		assertEquals( childrenOther, pOther.getChildren() );

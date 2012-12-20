@@ -27,7 +27,6 @@ import javax.transaction.Transaction;
 
 import org.hibernate.cache.infinispan.util.Caches;
 import org.infinispan.AdvancedCache;
-import org.infinispan.context.Flag;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -53,17 +52,13 @@ public class TransactionalAccessDelegate {
    private final AdvancedCache cache;
    private final BaseRegion region;
    private final PutFromLoadValidator putValidator;
-   private final AdvancedCache writeCache;
-   private final AdvancedCache putFromLoadCache;
+   private final AdvancedCache<Object, Object> writeCache;
 
    public TransactionalAccessDelegate(BaseRegion region, PutFromLoadValidator validator) {
       this.region = region;
       this.cache = region.getCache();
       this.putValidator = validator;
-      this.writeCache = Caches.isInvalidationCache(cache) ?
-            Caches.ignoreReturnValuesCache(cache, Flag.CACHE_MODE_LOCAL) :
-            Caches.ignoreReturnValuesCache(cache);
-      this.putFromLoadCache = Caches.ignoreReturnValuesCache(cache);
+      this.writeCache = Caches.ignoreReturnValuesCache(cache);
    }
 
    public Object get(Object key, long txTimestamp) throws CacheException {
@@ -100,7 +95,7 @@ public class TransactionalAccessDelegate {
       }
 
       try {
-         putFromLoadCache.putForExternalRead(key, value);
+         writeCache.putForExternalRead(key, value);
       } finally {
          putValidator.releasePutFromLoadLock(key);
       }

@@ -184,7 +184,7 @@ create table Address ( addressId bigint not null primary key, personId bigint no
 </class>]]></programlisting>
         <programlisting><![CDATA[
 create table Person ( personId bigint not null primary key )
-create table PersonAddress ( personId not null, addressId bigint not null primary key )
+create table PersonAddress ( personId bigint not null, addressId bigint not null primary key )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         

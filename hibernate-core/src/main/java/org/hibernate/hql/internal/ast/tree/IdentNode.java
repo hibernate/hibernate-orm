@@ -174,11 +174,12 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 					}
 					setText( joinedFragment );
 				}
+				return true;
 			}
-			else {
+			else if ( columnExpressions.length > 0 ) {
 				setText( columnExpressions[0] );
+				return true;
 			}
-			return true;
 		}
 		return false;
 	}

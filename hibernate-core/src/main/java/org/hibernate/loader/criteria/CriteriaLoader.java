@@ -36,6 +36,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.QueryParameters;
@@ -44,6 +45,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.OuterJoinLoader;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
@@ -190,10 +192,38 @@ public class CriteriaLoader extends OuterJoinLoader {
 		return querySpaces;
 	}
 
-	protected String applyLocks(String sqlSelectString, LockOptions lockOptions, Dialect dialect) throws QueryException {
+	@Override
+	protected String applyLocks(
+			String sql,
+			QueryParameters parameters,
+			Dialect dialect,
+			List<AfterLoadAction> afterLoadActions) throws QueryException {
+		final LockOptions lockOptions = parameters.getLockOptions();
 		if ( lockOptions == null ||
 			( lockOptions.getLockMode() == LockMode.NONE && lockOptions.getAliasLockCount() == 0 ) ) {
-			return sqlSelectString;
+			return sql;
+		}
+
+		if ( dialect.useFollowOnLocking() ) {
+			// Dialect prefers to perform locking in a separate step
+			LOG.usingFollowOnLocking();
+
+			final LockMode lockMode = determineFollowOnLockMode( lockOptions );
+			final LockOptions lockOptionsToUse = new LockOptions( lockMode );
+			lockOptionsToUse.setTimeOut( lockOptions.getTimeOut() );
+			lockOptionsToUse.setScope( lockOptions.getScope() );
+
+			afterLoadActions.add(
+					new AfterLoadAction() {
+						@Override
+						public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
+							( (Session) session ).buildLockRequest( lockOptionsToUse )
+									.lock( persister.getEntityName(), entity );
+						}
+					}
+			);
+			parameters.setLockOptions( new LockOptions() );
+			return sql;
 		}
 
 		final LockOptions locks = new LockOptions(lockOptions.getLockMode());
@@ -213,7 +243,20 @@ public class CriteriaLoader extends OuterJoinLoader {
 				}
 			}
 		}
-		return dialect.applyLocksToSql( sqlSelectString, locks, keyColumnNames );
+		return dialect.applyLocksToSql( sql, locks, keyColumnNames );
+	}
+
+
+
+	protected LockMode determineFollowOnLockMode(LockOptions lockOptions) {
+		final LockMode lockModeToUse = lockOptions.findGreatestLockMode();
+
+		if ( lockOptions.getAliasLockCount() > 1 ) {
+			// > 1 here because criteria always uses alias map for the root lock mode (under 'this_')
+			LOG.aliasSpecificLockingWithFollowOnLocking( lockModeToUse );
+		}
+
+		return lockModeToUse;
 	}
 
 	protected LockMode[] getLockModes(LockOptions lockOptions) {

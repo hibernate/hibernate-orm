@@ -26,7 +26,6 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -56,9 +55,9 @@ public class Table implements RelationalModel, Serializable {
 	private Map columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
-	private Map indexes = new HashMap();
-	private Map foreignKeys = new HashMap();
-	private Map<String,UniqueKey> uniqueKeys = new HashMap<String,UniqueKey>();
+	private Map indexes = new LinkedHashMap();
+	private Map foreignKeys = new LinkedHashMap();
+	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
 	private final int uniqueInteger;
 	private boolean quoted;
 	private boolean schemaQuoted;
@@ -423,11 +422,12 @@ public class Table implements RelationalModel, Serializable {
 					alter.append( " not null" );
 				}
 
-				boolean useUniqueConstraint = column.isUnique() &&
-						dialect.supportsUnique() &&
-						( column.isNullable() || dialect.supportsNotNullUnique() );
-				if ( useUniqueConstraint ) {
-					alter.append( " unique" );
+				if ( column.isUnique() ) {
+					UniqueKey uk = getOrCreateUniqueKey( 
+							column.getQuotedName( dialect ) + '_' );
+					uk.addColumn( column );
+					alter.append( dialect.getUniqueDelegate()
+							.applyUniqueToColumn( column ) );
 				}
 
 				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
@@ -524,19 +524,15 @@ public class Table implements RelationalModel, Serializable {
 				}
 
 			}
-
-			boolean useUniqueConstraint = col.isUnique() &&
-					( col.isNullable() || dialect.supportsNotNullUnique() );
-			if ( useUniqueConstraint ) {
-				if ( dialect.supportsUnique() ) {
-					buf.append( " unique" );
-				}
-				else {
-					UniqueKey uk = getOrCreateUniqueKey( col.getQuotedName( dialect ) + '_' );
-					uk.addColumn( col );
-				}
+			
+			if ( col.isUnique() ) {
+				UniqueKey uk = getOrCreateUniqueKey( 
+						col.getQuotedName( dialect ) + '_' );
+				uk.addColumn( col );
+				buf.append( dialect.getUniqueDelegate()
+						.applyUniqueToColumn( col ) );
 			}
-
+				
 			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
 				buf.append( " check (" )
 						.append( col.getCheckConstraint() )
@@ -558,21 +554,7 @@ public class Table implements RelationalModel, Serializable {
 					.append( getPrimaryKey().sqlConstraintString( dialect ) );
 		}
 
-		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-			Iterator ukiter = getUniqueKeyIterator();
-			while ( ukiter.hasNext() ) {
-				UniqueKey uk = (UniqueKey) ukiter.next();
-				String constraint = uk.sqlConstraintString( dialect );
-				if ( constraint != null ) {
-					buf.append( ", " ).append( constraint );
-				}
-			}
-		}
-		/*Iterator idxiter = getIndexIterator();
-		while ( idxiter.hasNext() ) {
-			Index idx = (Index) idxiter.next();
-			buf.append(',').append( idx.sqlConstraintString(dialect) );
-		}*/
+		buf.append( dialect.getUniqueDelegate().applyUniquesToTable( this ) );
 
 		if ( dialect.supportsTableCheck() ) {
 			Iterator chiter = checkConstraints.iterator();

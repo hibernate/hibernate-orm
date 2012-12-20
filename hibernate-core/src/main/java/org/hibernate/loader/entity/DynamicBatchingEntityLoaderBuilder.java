@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.logging.Logger;
@@ -253,10 +254,11 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					selection.getMaxRows() :
 					Integer.MAX_VALUE;
 
-			final ResultSet rs = executeQueryStatement( sql, queryParameters, false, session );
+			final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
+			final ResultSet rs = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
 			final Statement st = rs.getStatement();
 			try {
-				return processResultSet( rs, queryParameters, session, false, null, maxRows );
+				return processResultSet( rs, queryParameters, session, false, null, maxRows, afterLoadActions );
 			}
 			finally {
 				st.close();

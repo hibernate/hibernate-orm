@@ -25,13 +25,12 @@ package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
- * (De)structure the map type collection attribute that is being cached into 2LC.
+ * Structured CacheEntry format for persistent Maps.
  *
  * @author Gavin King
  */

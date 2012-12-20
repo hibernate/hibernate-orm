@@ -53,6 +53,7 @@ import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
+import org.hibernate.internal.SQLQueryImpl;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateQuery;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -242,12 +243,13 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 
 	@Override
     protected boolean canApplyLockModes() {
-		return org.hibernate.internal.QueryImpl.class.isInstance( query );
+		return org.hibernate.internal.QueryImpl.class.isInstance( query )
+				|| SQLQueryImpl.class.isInstance( query );
 	}
 
 	@Override
 	protected void applyAliasSpecificLockMode(String alias, LockMode lockMode) {
-		( (org.hibernate.internal.QueryImpl) query ).getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		query.getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 	}
 
 	/**
@@ -275,19 +277,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	public X getSingleResult() {
 		try {
-			boolean mucked = false;
-			// IMPL NOTE : the mucking with max results here is attempting to help the user from shooting themselves
-			//		in the foot in the case where they have a large query by limiting the query results to 2 max
-			//    SQLQuery cannot be safely paginated, leaving the user's choice here.
-			if ( getSpecifiedMaxResults() != 1 &&
-					! ( SQLQuery.class.isAssignableFrom( query.getClass() ) ) ) {
-				mucked = true;
-				query.setMaxResults( 2 ); //avoid OOME if the list is huge
-			}
-			List<X> result = query.list();
-			if ( mucked ) {
-				query.setMaxResults( getSpecifiedMaxResults() );
-			}
+			final List<X> result = query.list();
 
 			if ( result.size() == 0 ) {
 				NoResultException nre = new NoResultException( "No entity found for query" );
@@ -295,7 +285,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 				throw nre;
 			}
 			else if ( result.size() > 1 ) {
-				Set<X> uniqueResult = new HashSet<X>(result);
+				final Set<X> uniqueResult = new HashSet<X>(result);
 				if ( uniqueResult.size() > 1 ) {
 					NonUniqueResultException nure = new NonUniqueResultException( "result returns more than one elements" );
 					getEntityManager().handlePersistenceException( nure );
@@ -304,7 +294,6 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 				else {
 					return uniqueResult.iterator().next();
 				}
-
 			}
 			else {
 				return result.get( 0 );
@@ -631,18 +620,16 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			throw new IllegalStateException( "Not a JPAQL/Criteria query" );
 		}
 		this.jpaLockMode = lockModeType;
-		( (org.hibernate.internal.QueryImpl) query ).getLockOptions().setLockMode(
-				LockModeTypeHelper.getLockMode( lockModeType )
-		);
-		if ( getHints()!=null && getHints().containsKey( AvailableSettings.LOCK_TIMEOUT ) ) {
-			applyLockTimeout( ConfigurationHelper.getInteger( getHints().get( AvailableSettings.LOCK_TIMEOUT )) );
+		query.getLockOptions().setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		if ( getHints() != null && getHints().containsKey( AvailableSettings.LOCK_TIMEOUT ) ) {
+			applyLockTimeout( ConfigurationHelper.getInteger( getHints().get( AvailableSettings.LOCK_TIMEOUT ) ) );
 		}
 		return this;
 	}
 
 	@Override
 	protected void applyLockTimeout(int timeout) {
-		( (org.hibernate.internal.QueryImpl) query ).getLockOptions().setTimeOut( timeout );
+		query.getLockOptions().setTimeOut( timeout );
 	}
 
 	@Override

@@ -25,6 +25,7 @@ package org.hibernate.jpa.test.criteria.components;
 
 import java.util.List;
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -62,6 +63,17 @@ public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 		cq.where(cb.equal(root.get("name").get("firstName"), client.getName().getFirstName()));
 		List<Client> list = em.createQuery(cq).getResultList();
 		Assert.assertEquals( 1, list.size() );
+		em.getTransaction().commit();
+		em.close();
+		
+		// HHH-5792
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		TypedQuery< Client > q = em.createQuery(
+				"SELECT c FROM Client c JOIN c.name n WHERE n.firstName = '"
+						+ client.getName().getFirstName() + "'",
+                 Client.class );
+		Assert.assertEquals( 1, q.getResultList().size() );
 		em.getTransaction().commit();
 		em.close();
 

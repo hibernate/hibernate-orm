@@ -422,10 +422,6 @@ public class SybaseASE15Dialect extends SybaseDialect {
 		return false;
 	}
 
-     public boolean supportsUniqueConstraintInCreateAlterTable() {
-         return false;
-     }
-
 	public String getCrossJoinSeparator() {
 		return ", ";
 	}

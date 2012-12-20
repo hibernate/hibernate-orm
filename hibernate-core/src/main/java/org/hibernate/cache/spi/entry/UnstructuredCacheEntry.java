@@ -26,18 +26,14 @@ package org.hibernate.cache.spi.entry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
- * The very simple implementation of {@code CacheEntryStructure} that doing nothing but just return what it get.
- *
- * </br>
- *
- * This is used when {@link org.hibernate.cfg.AvailableSettings#USE_STRUCTURED_CACHE} is set to {@code false}.
- *
- * NOTE: This property is set to {@code false} by default.
+ * Unstructured CacheEntry format (used to store entities and collections).
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class UnstructuredCacheEntry implements CacheEntryStructure<Object, Object> {
-	@Override
+public class UnstructuredCacheEntry implements CacheEntryStructure {
+	public static final UnstructuredCacheEntry INSTANCE = new UnstructuredCacheEntry();
+
 	public Object structure(Object item) {
 		return item;
 	}

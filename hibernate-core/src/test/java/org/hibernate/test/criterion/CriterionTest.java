@@ -23,32 +23,33 @@
  */
 package org.hibernate.test.criterion;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import org.hibernate.Criteria;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.loader.criteria.CriteriaQueryTranslator;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class CriterionTest extends BaseUnitTestCase {
+public class CriterionTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testIlikeRendering() {
 		SessionFactory sf = new Configuration()
 				.addAnnotatedClass( IrrelevantEntity.class )
 				.setProperty( AvailableSettings.DIALECT, IlikeSupportingDialect.class.getName() )
+				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" )
 				.buildSessionFactory();
 		final Criteria criteria = sf.openSession().createCriteria( IrrelevantEntity.class );
 		final CriteriaQueryTranslator translator = new CriteriaQueryTranslator( 
@@ -67,6 +68,7 @@ public class CriterionTest extends BaseUnitTestCase {
 		SessionFactory sf = new Configuration()
 				.addAnnotatedClass( IrrelevantEntity.class )
 				.setProperty( AvailableSettings.DIALECT, NonIlikeSupportingDialect.class.getName() )
+				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" )
 				.buildSessionFactory();
 		final Criteria criteria = sf.openSession().createCriteria( IrrelevantEntity.class );
 		final CriteriaQueryTranslator translator = new CriteriaQueryTranslator(

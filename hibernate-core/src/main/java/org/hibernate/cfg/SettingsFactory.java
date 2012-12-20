@@ -295,6 +295,16 @@ public class SettingsFactory implements Serializable {
 		}
 		settings.setStructuredCacheEntriesEnabled( useStructuredCacheEntries );
 
+		boolean useDirectReferenceCacheEntries = ConfigurationHelper.getBoolean(
+				AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES,
+				properties,
+				false
+		);
+		if ( debugEnabled ) {
+			LOG.debugf( "Second-level cache direct-reference entries: %s", enabledDisabled(useDirectReferenceCacheEntries) );
+		}
+		settings.setDirectReferenceCacheEntriesEnabled( useDirectReferenceCacheEntries );
+
 		boolean useIdentifierRollback = ConfigurationHelper.getBoolean( AvailableSettings.USE_IDENTIFIER_ROLLBACK, properties );
 		if ( debugEnabled ) {
 			LOG.debugf( "Deleted entity synthetic identifier rollback: %s", enabledDisabled(useIdentifierRollback) );

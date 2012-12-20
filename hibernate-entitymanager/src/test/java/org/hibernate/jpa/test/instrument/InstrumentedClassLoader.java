@@ -10,6 +10,7 @@ import org.hibernate.jpa.internal.instrument.InterceptFieldClassFileTransformer;
 
 /**
  * @author Emmanuel Bernard
+ * @author Dustin Schultz
  */
 public class InstrumentedClassLoader extends ClassLoader {
 	private List<String> entities;
@@ -20,9 +21,28 @@ public class InstrumentedClassLoader extends ClassLoader {
 
 	@Override
 	public Class<?> loadClass(String name) throws ClassNotFoundException {
-		if ( name != null && name.startsWith( "java.lang." ) ) return getParent().loadClass( name );
+		// Do not instrument the following packages
+		if (name != null
+				&& (name.startsWith("java.lang.") || 
+					name.startsWith("java.util.")))
+			return getParent().loadClass(name);
 		Class c = findLoadedClass( name );
 		if ( c != null ) return c;
+
+		byte[] transformed = loadClassBytes(name);
+		
+		return defineClass( name, transformed, 0, transformed.length );
+	}
+	
+	/**
+	 * Specialized {@link ClassLoader#loadClass(String)} that returns the class
+	 * as a byte array.
+	 * 
+	 * @param name
+	 * @return
+	 * @throws ClassNotFoundException
+	 */
+	public byte[] loadClassBytes(String name) throws ClassNotFoundException {
 		InputStream is = this.getResourceAsStream( name.replace( ".", "/" ) + ".class" );
 		if ( is == null ) throw new ClassNotFoundException( name );
 		byte[] buffer = new byte[409600];
@@ -66,8 +86,8 @@ public class InstrumentedClassLoader extends ClassLoader {
 		catch (IllegalClassFormatException e) {
 			throw new ClassNotFoundException( name + " not found", e );
 		}
-
-		return defineClass( name, transformed, 0, transformed.length );
+		
+		return transformed;
 	}
 
 	public void setEntities(List<String> entities) {

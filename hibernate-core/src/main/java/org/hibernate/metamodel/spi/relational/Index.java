@@ -50,6 +50,7 @@ public class Index extends AbstractConstraint implements Constraint {
 	protected String getGeneratedNamePrefix() {
 		return "IDX";
 	}
+	
 	@Override
 	public String sqlConstraintStringInAlterTable(Dialect dialect) {
 		StringBuilder buf = new StringBuilder( " index (" );

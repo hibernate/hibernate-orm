@@ -45,6 +45,7 @@ import org.jboss.logging.Message;
 import org.jboss.logging.MessageLogger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.loading.internal.CollectionLoadContext;
@@ -1625,4 +1626,28 @@ public interface CoreMessageLogger extends BasicLogger {
 			"@Access has to be placed on the field with an access type of AccessType.FIELD. " +
 			"Using AccessType.PROPERTY on the field has no effect", id = 453)
 	String accessTypeOverrideShouldBeField( String className );
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Encountered request for locking however dialect reports that database prefers locking be done in a " +
+					"separate select (follow-on locking); results will be locked after initial query executes",
+			id = 444
+	)
+	void usingFollowOnLocking();
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Alias-specific lock modes requested, which is not currently supported with follow-on locking; " +
+					"all acquired locks will be [%s]",
+			id = 445
+	)
+	void aliasSpecificLockingWithFollowOnLocking(LockMode lockMode);
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "embed-xml attributes were intended to be used for DOM4J entity mode. Since that entity mode has been " +
+					"removed, embed-xml attributes are no longer supported and should be removed from mappings.",
+			id = 446
+	)
+	void embedXmlAttributesNoLongerSupported();
 }

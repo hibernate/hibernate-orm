@@ -27,9 +27,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
@@ -61,6 +65,7 @@ import org.junit.Test;
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 @RequiresDialect( H2Dialect.class ) // Nothing dialect-specific -- no need to run in matrix.
 @SuppressWarnings("unchecked")
@@ -306,6 +311,73 @@ public class JarVisitorTest extends PackagingTestCase {
 //
 //		Entry entry = new Entry( Carpet.class.getName(), null );
 //		assertTrue( entries[1].contains( entry ) );
+	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-7835")
+	public void testGetBytesFromInputStream() {
+		try {
+			File file = buildLargeJar();
+
+			long start = System.currentTimeMillis();
+			InputStream stream = new BufferedInputStream(
+					new FileInputStream( file ) );
+			int oldLength = getBytesFromInputStream( stream ).length;
+			stream.close();
+			long oldTime = System.currentTimeMillis() - start;
+
+			start = System.currentTimeMillis();
+			stream = new BufferedInputStream( new FileInputStream( file ) );
+			int newLength = JarVisitorFactory.getBytesFromInputStream(
+					stream ).length;
+			stream.close();
+			long newTime = System.currentTimeMillis() - start;
+
+			assertEquals( oldLength, newLength );
+			assertTrue( oldTime > newTime );
+		}
+		catch ( Exception e ) {
+			fail( e.getMessage() );
+		}
+	}
+
+	// This is the old getBytesFromInputStream from JarVisitorFactory before
+	// it was changed by HHH-7835. Use it as a regression test.
+	private byte[] getBytesFromInputStream(
+			InputStream inputStream) throws IOException {
+		int size;
+
+		byte[] entryBytes = new byte[0];
+		for ( ;; ) {
+			byte[] tmpByte = new byte[4096];
+			size = inputStream.read( tmpByte );
+			if ( size == -1 )
+				break;
+			byte[] current = new byte[entryBytes.length + size];
+			System.arraycopy( entryBytes, 0, current, 0, entryBytes.length );
+			System.arraycopy( tmpByte, 0, current, entryBytes.length, size );
+			entryBytes = current;
+		}
+		return entryBytes;
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7835")
+	public void testGetBytesFromZeroInputStream() {
+		try {
+			// Ensure that JarVisitorFactory#getBytesFromInputStream
+			// can handle 0 length streams gracefully.
+			InputStream emptyStream = new BufferedInputStream( 
+					new FileInputStream( new File(
+					"src/test/resources/org/hibernate/jpa/test/packaging/empty.txt" ) ) );
+			int length = JarVisitorFactory.getBytesFromInputStream( 
+					emptyStream ).length;
+			assertEquals( length, 0 );
+			emptyStream.close();
+		}
+		catch ( Exception e ) {
+			fail( e.getMessage() );
+		}
 	}
 
 	private Filter[] getFilters() {

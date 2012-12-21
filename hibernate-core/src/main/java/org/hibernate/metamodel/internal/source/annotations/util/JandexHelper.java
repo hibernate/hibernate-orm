@@ -328,6 +328,8 @@ public class JandexHelper {
 		return indexer.complete();
 	}
 
+	// TODO: This is usually passed the property name.  Need to be able to check
+	// that against MethodInfos as well some how.
 	public static Map<DotName, List<AnnotationInstance>> getMemberAnnotations(ClassInfo classInfo, String name) {
 		if ( classInfo == null ) {
 			throw new IllegalArgumentException( "classInfo cannot be null" );

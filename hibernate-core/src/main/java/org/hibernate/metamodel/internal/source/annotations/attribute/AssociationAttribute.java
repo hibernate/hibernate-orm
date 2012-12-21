@@ -29,17 +29,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.CascadeType;
 import javax.persistence.FetchType;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.DotName;
-import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -53,6 +50,12 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.MappingException;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+import org.jboss.logging.Logger;
 
 /**
  * Represents an association attribute.
@@ -79,7 +82,6 @@ public class AssociationAttribute extends MappedAttribute {
 	private final boolean mapsId;
 	private final String referencedIdAttributeName;
 	private final List<Column> joinColumnValues;
-	private final List<Column> inverseJoinColumnValues;
 	private final AnnotationInstance joinTableAnnotation;
 	private AttributeTypeResolver resolver;
 
@@ -126,14 +128,28 @@ public class AssociationAttribute extends MappedAttribute {
 		this.isOrphanRemoval = determineOrphanRemoval( associationAnnotation );
 		this.cascadeTypes = determineCascadeTypes( associationAnnotation );
 		this.hibernateCascadeTypes = determineHibernateCascadeTypes( annotations );
-		this.joinColumnValues = determineJoinColumnAnnotations( annotations );
-		this.inverseJoinColumnValues = determineInverseJoinColumnAnnotations( annotations );
 
 		this.fetchStyle = determineFetchStyle();
 		this.referencedIdAttributeName = determineMapsId();
 		this.mapsId = referencedIdAttributeName != null;
 
-		this.joinTableAnnotation = determineExplicitJoinTable( annotations );
+		Map<DotName, List<AnnotationInstance>> joinAnnotations;
+		if ( mappedBy != null ) {
+			// TODO: Pull some of this into JandexHelper.
+			Index index = JandexHelper.indexForClass(
+					getContext().getServiceRegistry().getService(
+							ClassLoaderService.class ), referencedAttributeType );
+			ClassInfo classInfo = index.getClassByName( DotName.createSimple(
+					referencedAttributeType.getName() ) );
+			joinAnnotations = JandexHelper.getMemberAnnotations(
+					classInfo, getMappedBy() );
+		}
+		else {
+			joinAnnotations = annotations;
+		}
+		this.joinColumnValues = determineJoinColumnAnnotations(
+				joinAnnotations, mappedBy != null );
+		this.joinTableAnnotation = determineExplicitJoinTable( joinAnnotations );
 	}
 
 	public boolean isIgnoreNotFound() {
@@ -174,10 +190,6 @@ public class AssociationAttribute extends MappedAttribute {
 
 	public List<Column> getJoinColumnValues() {
 		return joinColumnValues;
-	}
-
-	public List<Column> getInverseJoinColumnValues() {
-		return inverseJoinColumnValues;
 	}
 
 	public AnnotationInstance getJoinTableAnnotation() {
@@ -416,7 +428,8 @@ public class AssociationAttribute extends MappedAttribute {
 		return JandexHelper.getValue( mapsIdAnnotation, "value", String.class );
 	}
 
-	private List<Column> determineJoinColumnAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {
+	private List<Column> determineJoinColumnAnnotations( Map<DotName,
+			List<AnnotationInstance>> annotations, boolean inverse) {
 		ArrayList<Column> joinColumns = new ArrayList<Column>();
 
 		// single @JoinColumn
@@ -462,9 +475,17 @@ public class AssociationAttribute extends MappedAttribute {
 				JPADotNames.JOIN_TABLE
 		);
 		if(joinTableAnnotation != null) {
-			List<AnnotationInstance> columnsList = Arrays.asList(
-					JandexHelper.getValue( joinTableAnnotation, "joinColumns", AnnotationInstance[].class )
-			);
+			List<AnnotationInstance> columnsList;
+			if ( inverse ) {
+				columnsList = Arrays.asList(
+						JandexHelper.getValue( joinTableAnnotation, "inverseJoinColumns", AnnotationInstance[].class )
+				);
+			}
+			else {
+				columnsList = Arrays.asList(
+						JandexHelper.getValue( joinTableAnnotation, "joinColumns", AnnotationInstance[].class )
+				);
+			}
 			for ( AnnotationInstance annotation : columnsList ) {
 				joinColumns.add( new Column( annotation ) );
 			}
@@ -472,27 +493,6 @@ public class AssociationAttribute extends MappedAttribute {
 
 		joinColumns.trimToSize();
 		return joinColumns;
-	}
-
-	private List<Column> determineInverseJoinColumnAnnotations(
-			Map<DotName, List<AnnotationInstance>> annotations) {
-		ArrayList<Column> inverseJoinColumns = new ArrayList<Column>();
-
-		// @JoinColumn as part of @JoinTable
-		AnnotationInstance joinTableAnnotation = JandexHelper
-				.getSingleAnnotation( annotations, JPADotNames.JOIN_TABLE );
-		if(joinTableAnnotation != null) {
-			List<AnnotationInstance> columnsList = Arrays.asList(
-					JandexHelper.getValue( joinTableAnnotation,
-							"inverseJoinColumns", AnnotationInstance[].class )
-			);
-			for ( AnnotationInstance annotation : columnsList ) {
-				inverseJoinColumns.add( new Column( annotation ) );
-			}
-		}
-
-		inverseJoinColumns.trimToSize();
-		return inverseJoinColumns;
 	}
 
 	private AnnotationInstance determineExplicitJoinTable(Map<DotName, List<AnnotationInstance>> annotations) {

@@ -453,7 +453,7 @@ public class ConfiguredClass {
 		Class<?> attributeType = resolvedMember.getType().getErasedType();
 		Class<?> referencedCollectionType = resolveCollectionValuedReferenceType( resolvedMember );
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
-				classInfo, member.getName()
+				classInfo, member.getName(), localBindingContext.getServiceRegistry()
 		);
 
 		MappedAttribute.Nature attributeNature = determineAttributeNature( 

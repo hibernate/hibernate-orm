@@ -24,9 +24,11 @@
 package org.hibernate.metamodel.internal.source.annotations.util;
 
 import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +36,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.service.ServiceRegistry;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -44,10 +50,6 @@ import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
-
-import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * Utility methods for working with the jandex annotation index.
@@ -328,7 +330,8 @@ public class JandexHelper {
 		return indexer.complete();
 	}
 
-	public static Map<DotName, List<AnnotationInstance>> getMemberAnnotations(ClassInfo classInfo, String name) {
+	public static Map<DotName, List<AnnotationInstance>> getMemberAnnotations(
+			ClassInfo classInfo, String name, ServiceRegistry serviceRegistry ) {
 		if ( classInfo == null ) {
 			throw new IllegalArgumentException( "classInfo cannot be null" );
 		}
@@ -336,7 +339,23 @@ public class JandexHelper {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "name cannot be null" );
 		}
-
+		
+		// Allow a property name to be used even if the entity uses method access.
+		// TODO: Is this reliable?  Is there a better way to do it?
+		String getterName = "";
+		try {
+			Class<?> beanClass = serviceRegistry.getService(
+					ClassLoaderService.class ).classForName(
+							classInfo.name().toString() );
+			Method getter = new PropertyDescriptor(name, beanClass)
+					.getReadMethod();
+			if ( getter != null ) {
+				getterName = getter.getName();
+			}
+		} catch ( Exception e ) {
+			// do nothing
+		}
+		
 		Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
 		for ( List<AnnotationInstance> annotationList : classInfo.annotations().values() ) {
 			for ( AnnotationInstance instance : annotationList ) {
@@ -347,7 +366,8 @@ public class JandexHelper {
 				else if ( instance.target() instanceof MethodInfo ) {
 					targetName = ( (MethodInfo) instance.target() ).name();
 				}
-				if ( targetName != null && name.equals( targetName ) ) {
+				if ( targetName != null && ( name.equals( targetName )
+						|| getterName.equals( targetName ) ) ) {
 					addAnnotationToMap( instance, annotations );
 				}
 			}

@@ -57,21 +57,9 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 			PluralAssociationAttribute associationAttribute) {
 		this.associationAttribute = associationAttribute;
 		
-		for ( Column column : associationAttribute.getJoinColumnValues() ) {
-			relationalValueSources.add( new ColumnSourceImpl( 
-					associationAttribute, null, column ) );
-		}
 		for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
 			relationalValueSources.add( new ColumnSourceImpl( 
 					associationAttribute, null, column ) );
-		}
-		
-		for ( Column column : associationAttribute.getJoinColumnValues() ) {
-			if ( column.getReferencedColumnName() != null ) {
-				referencedColumnNames.add( column.getReferencedColumnName() );
-			}
-		}
-		for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
 			if ( column.getReferencedColumnName() != null ) {
 				referencedColumnNames.add( column.getReferencedColumnName() );
 			}
@@ -116,7 +104,8 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public String getExplicitForeignKeyName() {
-		return associationAttribute.getInverseForeignKeyName();
+		// TODO: If inverse, does getInverseForeignKeyName need to be handled?
+		return associationAttribute.getExplicitForeignKeyName();
 	}
 
 	@Override
@@ -166,8 +155,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 		return false;
 	}
 
-	// TODO: This obviously won't work.  We need a new way to handle
-	// inverse foreign key resolution.
+	// TODO: This needs reworked.
 	public class AnnotationJoinColumnResolutionDelegate
 			implements ForeignKeyContributingSource.JoinColumnResolutionDelegate {
 		private final String logicalJoinTableName;
@@ -191,18 +179,6 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 				);
 				values.add( resolvedColumn );
 			}
-//			for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
-//				if ( column.getReferencedColumnName() == null ) {
-//					return context.resolveRelationalValuesForAttribute( null );
-//				}
-//				org.hibernate.metamodel.spi.relational.Column resolvedColumn = context.resolveColumn(
-//						column.getReferencedColumnName(),
-//						logicalJoinTableName,
-//						null,
-//						null
-//				);
-//				values.add( resolvedColumn );
-//			}
 			return values;
 		}
 

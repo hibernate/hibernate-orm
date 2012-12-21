@@ -85,7 +85,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 
 		ClassInfo classInfo = index.getClassByName( DotName.createSimple( Foo.class.getName() ) );
 		Map<DotName, List<AnnotationInstance>> memberAnnotations = JandexHelper.getMemberAnnotations(
-				classInfo, "bar"
+				classInfo, "bar", serviceRegistry
 		);
 		assertTrue(
 				"property bar should defines @Column annotation",
@@ -96,7 +96,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 				memberAnnotations.containsKey( DotName.createSimple( Basic.class.getName() ) )
 		);
 
-		memberAnnotations = JandexHelper.getMemberAnnotations( classInfo, "fubar" );
+		memberAnnotations = JandexHelper.getMemberAnnotations( classInfo, "fubar", serviceRegistry );
 		assertTrue( "there should be no annotations in fubar", memberAnnotations.isEmpty() );
 	}
 

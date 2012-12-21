@@ -51,7 +51,7 @@ public class BagAttributeSourceImpl extends AbstractPluralAttributeSourceImpl im
 
 	@Override
 	public boolean isOrdered() {
-		return StringHelper.isNotEmpty( getOrder() );
+		return getOrder() != null;
 	}
 
 	@Override

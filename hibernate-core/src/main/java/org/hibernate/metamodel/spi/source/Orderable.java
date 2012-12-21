@@ -37,6 +37,14 @@ public interface Orderable {
 	boolean isOrdered();
 
 	/**
+	 * The order by clause used during loading this plural attribute.
+	 *
+	 * <p/>
+	 * If the ordering element is not specified, ordering by
+	 * the primary key of the associated entity is assumed
+	 *
+	 * {@see javax.persistence.OrderBy#value()}
+	 *
 	 * @return  The <b>order by</b> clause used during loading this plural attribute from DB.
 	 */
 	String getOrder();

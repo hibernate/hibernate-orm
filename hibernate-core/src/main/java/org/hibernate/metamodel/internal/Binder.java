@@ -2207,12 +2207,28 @@ public class Binder {
 							error );
 				}
 			}
-			return;
 		}
 		if ( Orderable.class.isInstance( attributeSource ) ) {
-			final Orderable orderable = ( Orderable ) attributeSource;
+			final Orderable orderable = (Orderable) attributeSource;
 			if ( orderable.isOrdered() ) {
-				attributeBinding.setOrderBy( orderable.getOrder() );
+				String orderBy = orderable.getOrder();
+				if ( orderBy.equals( "" ) ) {
+					PrimaryKey pk = attributeBinding.getPluralAttributeKeyBinding()
+							.getReferencedAttributeBinding()
+							.getContainer()
+							.seekEntityBinding()
+							.getPrimaryTable()
+							.getPrimaryKey();
+					List<Column> pkColumns = pk.getColumns();
+					StringBuffer sb = new StringBuffer();
+					for ( final Column column : pkColumns ) {
+						sb.append( column.getColumnName().getText() );
+						sb.append( " asc ," );
+					}
+					orderBy = sb.substring( 0, sb.length()-2 );
+				}
+				attributeBinding.setOrderBy( orderBy );
+
 			}
 		}
 	}

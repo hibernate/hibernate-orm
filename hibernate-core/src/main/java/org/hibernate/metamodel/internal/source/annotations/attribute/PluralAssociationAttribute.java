@@ -380,12 +380,12 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 
 		if ( jpaWhereAnnotation != null ) {
-			// todo
 			// this could be an empty string according to JPA spec 11.1.38 -
 			// If the ordering element is not specified for an entity association, ordering by the primary key of the
 			// associated entity is assumed
 			// The binder will need to take this into account and generate the right property names
 			orderBy = JandexHelper.getValue( jpaWhereAnnotation, "value", String.class );
+			orderBy = orderBy == null ?  "" : orderBy;
 		}
 
 		return orderBy;

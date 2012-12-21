@@ -58,13 +58,11 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	private final ExplicitHibernateTypeSource typeSource;
 	private final PluralAttributeKeySource keySource;
 	private final PluralAttributeElementSource elementSource;
-	private final EntityClass entityClass;
 
 	public PluralAttributeSourceImpl(
 			final PluralAssociationAttribute associationAttribute,
 			final EntityClass entityClass ) {
 		this.associationAttribute = associationAttribute;
-		this.entityClass = entityClass;
 		this.keySource = new PluralAttributeKeySourceImpl( associationAttribute );
 		this.typeSource = new ExplicitHibernateTypeSourceImpl( associationAttribute );
 		this.nature = associationAttribute.getPluralAttributeNature();
@@ -224,7 +222,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	@Override
 	public boolean isOrdered() {
-		return StringHelper.isNotEmpty( getOrder() );
+		return getOrder() != null;
 	}
 
 	@Override

@@ -278,7 +278,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				HibernateDotNames.ON_DELETE
 		);
 		if ( onDeleteAnnotation != null ) {
-			action = JandexHelper.getValue( onDeleteAnnotation, "action", OnDeleteAction.class );
+			action = JandexHelper.getEnumValue( onDeleteAnnotation, "action", OnDeleteAction.class );
 		}
 		return action;
 	}

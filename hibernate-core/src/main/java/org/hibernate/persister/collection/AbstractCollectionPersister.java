@@ -625,7 +625,7 @@ public abstract class AbstractCollectionPersister
 				if ( columnName == null ) {
 					// if the column name is null, it indicates that this index in the property value mapping is
 					// actually represented by a formula.
-					final int propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndex( reference );
+//					final int propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndex( reference );
 					final String formulaTemplate = formulaTemplates[i];
 					result[i] = new FormulaReference() {
 						@Override

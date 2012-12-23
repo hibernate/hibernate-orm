@@ -866,7 +866,7 @@ public abstract class AbstractEntityPersister
 			}
 			else {
 				rootTableKeyColumnReaders[i] = col.getReadFragment();
-				rootTableKeyColumnReaderTemplates[i] = getTemplateFromString( col.getReadFragment(), factory );
+				rootTableKeyColumnReaderTemplates[i] = getTemplateFromString( rootTableKeyColumnReaders[i], factory );
 			}
 			identifierAliases[i] = col.getAlias( factory.getDialect() );
 			i++;

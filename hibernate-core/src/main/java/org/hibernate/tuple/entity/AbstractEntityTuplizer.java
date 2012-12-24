@@ -328,6 +328,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
 			id = entity;
 		}
+		else if ( HibernateProxy.class.isInstance( entity ) ) {
+			id = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
+		}
 		else {
 			if ( idGetter == null ) {
 				if (identifierMapperType==null) {

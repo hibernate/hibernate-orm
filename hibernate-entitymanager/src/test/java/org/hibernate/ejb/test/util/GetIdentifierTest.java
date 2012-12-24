@@ -23,13 +23,14 @@
  */
 package org.hibernate.ejb.test.util;
 
-import javax.persistence.EntityManager;
 
 import org.junit.Test;
-
+import javax.persistence.EntityManager;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.TestForIssue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
@@ -43,6 +44,36 @@ public class GetIdentifierTest extends BaseEntityManagerFunctionalTestCase {
 		em.persist( book );
 		em.flush();
 		assertEquals( book.getId(), em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( book ) );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7561")
+	public void testProxyObject() {
+		EntityManager em = entityManagerFactory().createEntityManager();
+		em.getTransaction().begin();
+		Book book = new Book();
+		em.persist( book );
+		em.flush();
+		em.clear(); // Clear persistence context to receive proxy object below.
+		Book proxy = em.getReference( Book.class, book.getId() );
+		assertTrue( proxy instanceof HibernateProxy );
+		assertEquals( book.getId(), em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( proxy ) );
+		em.getTransaction().rollback();
+		em.close();
+
+		em = entityManagerFactory().createEntityManager();
+		em.getTransaction().begin();
+		Author author = new Author();
+		Article article = new Article( author );
+		em.persist( author );
+		em.persist( article );
+		em.flush();
+		em.clear(); // Clear persistence context to receive proxy relation below.
+		article = em.find( Article.class, article.getId() );
+		assertTrue( article.getAuthor() instanceof HibernateProxy );
+		assertEquals( author.getId(), em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( article.getAuthor() ) );
 		em.getTransaction().rollback();
 		em.close();
 	}
@@ -86,7 +117,8 @@ public class GetIdentifierTest extends BaseEntityManagerFunctionalTestCase {
 				Book.class,
 				Umbrella.class,
 				Sickness.class,
-				Author.class
+				Author.class,
+				Article.class
 		};
 	}
 }

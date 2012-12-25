@@ -39,7 +39,7 @@ public class PersisterTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEntityEntityPersisterAndPersisterSpecified() throws Exception {
 		//checks to see that the persister specified with the @Persister annotation takes precedence if a @Entity.persister() is also specified		
-		PersistentClass persistentClass = (PersistentClass) configuration().getClassMapping( Deck.class.getName() );
+		PersistentClass persistentClass = configuration().getClassMapping( Deck.class.getName() );
 		assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(), EntityPersister.class,
 				persistentClass.getEntityPersisterClass() );
 	}
@@ -47,7 +47,7 @@ public class PersisterTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEntityEntityPersisterSpecified() throws Exception {
 		//tests the persister specified with an @Entity.persister()		
-		PersistentClass persistentClass = (PersistentClass) configuration().getClassMapping( Card.class.getName() );
+		PersistentClass persistentClass = configuration().getClassMapping( Card.class.getName() );
 		assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(),
 				SingleTableEntityPersister.class, persistentClass.getEntityPersisterClass() );
 	}
@@ -55,7 +55,7 @@ public class PersisterTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testCollectionPersisterSpecified() throws Exception {
 		//tests the persister specified by the @Persister annotation on a collection
-		Collection collection = (Collection) configuration().getCollectionMapping( Deck.class.getName() + ".cards" );
+		Collection collection = configuration().getCollectionMapping( Deck.class.getName() + ".cards" );
 		assertEquals( "Incorrect Persister class for collection " + collection.getRole(), CollectionPersister.class,
 				collection.getCollectionPersisterClass() );
 	}

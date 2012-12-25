@@ -1063,19 +1063,19 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 						c.getNonLazySelectDataPoints().iterator().next()
 				)
 		);
-		List list = ( List ) s.createFilter( c.getLazyDataPoints(), "" )
+		List list = s.createFilter( c.getLazyDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( false )
 				.list();
 		assertEquals( 1, list.size() );
 		assertFalse( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazyJoinDataPoints(), "" )
+		list = s.createFilter( c.getNonLazyJoinDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( false )
 				.list();
 		assertEquals( 1, list.size() );
 		assertTrue( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazySelectDataPoints(), "" )
+		list = s.createFilter( c.getNonLazySelectDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( false )
 				.list();
@@ -1141,19 +1141,19 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 				)
 		);
 		expectedReadOnlyObjects = new HashSet();
-		List list = ( List ) s.createFilter( c.getLazyDataPoints(), "" )
+		List list = s.createFilter( c.getLazyDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( true )
 				.list();
 		assertEquals( 1, list.size() );
 		assertTrue( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazyJoinDataPoints(), "" )
+		list = s.createFilter( c.getNonLazyJoinDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( true )
 				.list();
 		assertEquals( 1, list.size() );
 		assertFalse( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazySelectDataPoints(), "" )
+		list = s.createFilter( c.getNonLazySelectDataPoints(), "" )
 				.setMaxResults(1)
 				.setReadOnly( true )
 				.list();
@@ -1233,17 +1233,17 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 						c.getNonLazySelectDataPoints().iterator().next()
 				)
 		);
-		List list = ( List ) s.createFilter( c.getLazyDataPoints(), "" )
+		List list = s.createFilter( c.getLazyDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );
 		assertTrue( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazyJoinDataPoints(), "" )
+		list = s.createFilter( c.getNonLazyJoinDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );
 		assertTrue( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazySelectDataPoints(), "" )
+		list = s.createFilter( c.getNonLazySelectDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );
@@ -1308,17 +1308,17 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 				)
 		);
 		expectedReadOnlyObjects = new HashSet();
-		List list = ( List ) s.createFilter( c.getLazyDataPoints(), "" )
+		List list = s.createFilter( c.getLazyDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );
 		assertFalse( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazyJoinDataPoints(), "" )
+		list = s.createFilter( c.getNonLazyJoinDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );
 		assertFalse( s.isReadOnly( list.get( 0 ) ) );
-		list = ( List ) s.createFilter( c.getNonLazySelectDataPoints(), "" )
+		list = s.createFilter( c.getNonLazySelectDataPoints(), "" )
 				.setMaxResults( 1 )
 				.list();
 		assertEquals( 1, list.size() );

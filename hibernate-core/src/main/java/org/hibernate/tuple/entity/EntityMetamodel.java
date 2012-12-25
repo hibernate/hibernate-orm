@@ -795,7 +795,7 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	public Integer getPropertyIndexOrNull(String propertyName) {
-		return (Integer) propertyIndexes.get( propertyName );
+		return propertyIndexes.get( propertyName );
 	}
 
 	public boolean hasCollections() {

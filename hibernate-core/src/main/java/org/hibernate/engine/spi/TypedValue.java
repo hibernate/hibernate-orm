@@ -26,6 +26,7 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 
 import org.hibernate.EntityMode;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.type.Type;
 
 /**
@@ -37,16 +38,23 @@ import org.hibernate.type.Type;
 public final class TypedValue implements Serializable {
 	private final Type type;
 	private final Object value;
-	private final EntityMode entityMode;
+	private final ValueHolder<Integer> hashcode;
 
-	public TypedValue(Type type, Object value) {
-		this( type, value, EntityMode.POJO );
-	}
-
-	public TypedValue(Type type, Object value, EntityMode entityMode) {
+	public TypedValue(final Type type, final Object value) {
 		this.type = type;
-		this.value=value;
-		this.entityMode = entityMode;
+		this.value = value;
+		this.hashcode = new ValueHolder<Integer>(
+				new ValueHolder.DeferredInitializer<Integer>() {
+					@Override
+					public Integer initialize() {
+						return value == null ? 0 : type.getHashCode( value );
+					}
+				}
+		);
+	}
+	@Deprecated
+	public TypedValue(Type type, Object value, EntityMode entityMode) {
+		this(type, value);
 	}
 
 	public Object getValue() {
@@ -56,19 +64,15 @@ public final class TypedValue implements Serializable {
 	public Type getType() {
 		return type;
 	}
-
+	@Override
 	public String toString() {
 		return value==null ? "null" : value.toString();
 	}
-
+	@Override
 	public int hashCode() {
-		//int result = 17;
-		//result = 37 * result + type.hashCode();
-		//result = 37 * result + ( value==null ? 0 : value.hashCode() );
-		//return result;
-		return value==null ? 0 : type.getHashCode(value );
+		return hashcode.getValue();
 	}
-
+	@Override
 	public boolean equals(Object other) {
 		if ( !(other instanceof TypedValue) ) return false;
 		TypedValue that = (TypedValue) other;

@@ -307,7 +307,7 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Troop troop = ( Troop ) s.get( Troop.class, disney.getId() );
-		Soldier soldier = ( Soldier ) troop.getSoldiers().iterator().next();
+		Soldier soldier = troop.getSoldiers().iterator().next();
 		tx.commit();
 		s.close();
 		troop.getSoldiers().clear();

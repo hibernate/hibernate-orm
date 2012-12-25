@@ -249,7 +249,7 @@ public class RevisionInfoConfiguration {
     }
 
     public RevisionInfoConfigurationResult configure(Configuration cfg, ReflectionManager reflectionManager) {
-        Iterator<PersistentClass> classes = (Iterator<PersistentClass>) cfg.getClassMappings();
+        Iterator<PersistentClass> classes = cfg.getClassMappings();
         boolean revisionEntityFound = false;
         RevisionInfoGenerator revisionInfoGenerator = null;
 

@@ -104,7 +104,7 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		reg = (RegionalArticle) s.get( RegionalArticle.class, (Serializable) reg.getPk() );
+		reg = (RegionalArticle) s.get( RegionalArticle.class, reg.getPk() );
 		assertNotNull( reg );
 		assertNotNull( reg.getPk() );
 		assertEquals( "Je ne veux pes rester sage - Dolly", reg.getName() );
@@ -396,7 +396,7 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 		Set<Manager> topManagement = provider.getOwner().getTopManagement();
 		assertNotNull( "OneToMany not set", topManagement );
 		assertEquals( "Wrong number of elements", 1, topManagement.size() );
-		manager = (Manager) topManagement.iterator().next();
+		manager = topManagement.iterator().next();
 		assertEquals( "Wrong element", "Bill", manager.getName() );
 		s.delete( manager );
 		s.delete( provider );

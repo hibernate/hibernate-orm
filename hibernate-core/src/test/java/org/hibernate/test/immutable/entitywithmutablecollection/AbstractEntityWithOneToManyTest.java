@@ -66,23 +66,23 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 
 	protected void prepareTest() throws Exception {
 		super.prepareTest();
-		isContractPartiesInverse = ( ( SessionFactoryImpl ) sessionFactory() ).getCollectionPersister( Contract.class.getName() + ".parties" ).isInverse();
+		isContractPartiesInverse = sessionFactory().getCollectionPersister( Contract.class.getName() + ".parties" ).isInverse();
 		try {
-			 ( ( SessionFactoryImpl ) sessionFactory() ).getEntityPersister( Party.class.getName() ).getPropertyType( "contract" );
+			 sessionFactory().getEntityPersister( Party.class.getName() ).getPropertyType( "contract" );
 			isContractPartiesBidirectional = true;
 		}
 		catch ( QueryException ex) {
 			isContractPartiesBidirectional = false;
 		}
 		try {
-			 ( ( SessionFactoryImpl ) sessionFactory() ).getEntityPersister( ContractVariation.class.getName() ).getPropertyType( "contract" );
+			 sessionFactory().getEntityPersister( ContractVariation.class.getName() ).getPropertyType( "contract" );
 			isContractVariationsBidirectional = true;
 		}
 		catch ( QueryException ex) {
 			isContractVariationsBidirectional = false;
 		}
 
-		isContractVersioned = ( ( SessionFactoryImpl ) sessionFactory() ).getEntityPersister( Contract.class.getName() ).isVersioned();
+		isContractVersioned = sessionFactory().getEntityPersister( Contract.class.getName() ).isVersioned();
 	}
 
 	@Test

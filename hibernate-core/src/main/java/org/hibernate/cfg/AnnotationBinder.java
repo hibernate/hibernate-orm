@@ -1115,7 +1115,7 @@ public final class AnnotationBinder {
 					jcAnn = jcsAnn.value()[colIndex];
 					inheritanceJoinedColumns[colIndex] = Ejb3JoinColumn.buildJoinColumn(
 							jcAnn, null, superEntity.getIdentifier(),
-							( Map<String, Join> ) null, ( PropertyHolder ) null, mappings
+							null, null, mappings
 					);
 				}
 			}
@@ -1124,7 +1124,7 @@ public final class AnnotationBinder {
 				inheritanceJoinedColumns = new Ejb3JoinColumn[1];
 				inheritanceJoinedColumns[0] = Ejb3JoinColumn.buildJoinColumn(
 						jcAnn, null, superEntity.getIdentifier(),
-						( Map<String, Join> ) null, ( PropertyHolder ) null, mappings
+						null, null, mappings
 				);
 			}
 			LOG.trace( "Subclass joined column(s) created" );

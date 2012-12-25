@@ -289,11 +289,11 @@ public class OuterJoinCriteriaTest extends BaseCoreFunctionalTestCase {
 			Order o = (Order) it.next();
 			if ( order1.getOrderId() == o.getOrderId() ) {
 				assertEquals( 1, o.getLines().size() );
-				assertEquals( "3000", ( ( OrderLine ) o.getLines().iterator().next() ).getArticleId() );
+				assertEquals( "3000", o.getLines().iterator().next().getArticleId() );
 			}
 			else if ( order3.getOrderId() == o.getOrderId() ) {
 				assertEquals( 1, o.getLines().size() );
-				assertEquals( "3000", ( ( OrderLine ) o.getLines().iterator().next() ).getArticleId() );
+				assertEquals( "3000", o.getLines().iterator().next().getArticleId() );
 			}
 			else {
 				fail( "unknown order" );
@@ -332,7 +332,7 @@ public class OuterJoinCriteriaTest extends BaseCoreFunctionalTestCase {
 		for ( Object order : orders ) {
 			Order o = (Order) order;
 			if ( order1.getOrderId() == o.getOrderId() ) {
-				assertEquals( "1000", ( ( OrderLine ) o.getLines().iterator().next() ).getArticleId() );
+				assertEquals( "1000", o.getLines().iterator().next().getArticleId() );
 			}
 			else if ( order2.getOrderId() == o.getOrderId() ) {
 				assertEquals( 0, o.getLines().size() );
@@ -367,11 +367,11 @@ public class OuterJoinCriteriaTest extends BaseCoreFunctionalTestCase {
 			Order o = (Order) it.next();
 			if ( order1.getOrderId() == o.getOrderId() ) {
 				assertEquals( 1, o.getLines().size() );
-				assertEquals( "3000", ( ( OrderLine ) o.getLines().iterator().next() ).getArticleId() );
+				assertEquals( "3000", o.getLines().iterator().next().getArticleId() );
 			}
 			else if ( order3.getOrderId() == o.getOrderId() ) {
 				assertEquals( 1, o.getLines().size() );
-				assertEquals( "3000", ( ( OrderLine ) o.getLines().iterator().next() ).getArticleId() );
+				assertEquals( "3000", o.getLines().iterator().next().getArticleId() );
 			}
 			else {
 				fail( "unknown order" );

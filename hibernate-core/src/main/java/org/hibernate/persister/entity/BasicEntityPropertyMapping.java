@@ -59,7 +59,10 @@ public class BasicEntityPropertyMapping extends AbstractPropertyMapping {
 
 	public String[] toColumns(final String alias, final String propertyName) throws QueryException {
 		return super.toColumns( 
-				persister.generateTableAlias( alias, persister.getSubclassPropertyTableNumber(propertyName) ), 
+				AbstractEntityPersister.generateTableAlias(
+						alias,
+						persister.getSubclassPropertyTableNumber( propertyName )
+				),
 				propertyName 
 			);
 	}

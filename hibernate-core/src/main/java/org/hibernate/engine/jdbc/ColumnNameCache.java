@@ -43,7 +43,7 @@ public class ColumnNameCache {
 	}
 
 	public int getIndexForColumnName(String columnName, ResultSet rs) throws SQLException {
-		Integer cached = ( Integer ) columnNameToIndexCache.get( columnName );
+		Integer cached = columnNameToIndexCache.get( columnName );
 		if ( cached != null ) {
 			return cached.intValue();
 		}

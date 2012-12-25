@@ -2431,7 +2431,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Zoo zooRead = ( Zoo ) results.get( 0 );
 		assertEquals( zoo, zooRead );
 		assertTrue( Hibernate.isInitialized( zooRead.getMammals() ) );
-		Mammal mammalRead = ( Mammal ) ( ( Map ) zooRead.getMammals() ).get( "zebra" );
+		Mammal mammalRead = ( Mammal ) zooRead.getMammals().get( "zebra" );
 		assertEquals( mammal, mammalRead );
 		session.delete( mammalRead );
 		session.delete( zooRead );

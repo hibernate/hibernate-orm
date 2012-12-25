@@ -52,8 +52,6 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		final EntityMode entityMode = persister.getOwnerEntityPersister().getEntityMode();
-
 		ArrayList clonedList = new ArrayList( list.size() );
 		for ( Object element : list ) {
 			Object deepCopy = persister.getElementType().deepCopy( element, persister.getFactory() );

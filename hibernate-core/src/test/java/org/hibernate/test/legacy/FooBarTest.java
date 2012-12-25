@@ -1531,7 +1531,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	private boolean isOuterJoinFetchingDisabled() {
-		return new Integer(0).equals( ( (SessionFactoryImplementor) sessionFactory() ).getSettings().getMaximumFetchDepth() );
+		return new Integer(0).equals( sessionFactory().getSettings().getMaximumFetchDepth() );
 	}
 
 	@Test
@@ -1689,7 +1689,7 @@ public class FooBarTest extends LegacyTestCase {
 		GlarchProxy g = new Glarch();
 		Multiplicity m = new Multiplicity();
 		m.count = 12;
-		m.glarch = (Glarch) g;
+		m.glarch = g;
 		g.setMultiple(m);
 
 		Session s = openSession();
@@ -4864,8 +4864,8 @@ public class FooBarTest extends LegacyTestCase {
 		g2.setStrings(set);
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Serializable gid = (Serializable) s.save(g);
-		Serializable g2id = (Serializable) s.save(g2);
+		Serializable gid = s.save(g);
+		Serializable g2id = s.save(g2);
 		t.commit();
 		assertTrue( g.getVersion()==0 );
 		assertTrue( g2.getVersion()==0 );

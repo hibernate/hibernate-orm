@@ -71,6 +71,6 @@ public class PersistentClassGraphDefiner implements GraphDefiner<PersistentClass
 
     @SuppressWarnings({"unchecked"})
     public List<PersistentClass> getValues() {
-        return Tools.iteratorToList((Iterator<PersistentClass>) cfg.getClassMappings());
+        return Tools.iteratorToList( cfg.getClassMappings() );
     }
 }

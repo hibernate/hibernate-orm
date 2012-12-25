@@ -65,7 +65,7 @@ public class FilterHelper {
 		while ( iter.hasNext() ) {
 			filterAutoAliasFlags[filterCount] = false;
 			final FilterConfiguration filter = (FilterConfiguration) iter.next();
-			filterNames[filterCount] = (String) filter.getName();
+			filterNames[filterCount] = filter.getName();
 			filterConditions[filterCount] = filter.getCondition();
 			filterAliasTableMaps[filterCount] = filter.getAliasTableMap(factory);
 			if ((filterAliasTableMaps[filterCount].isEmpty() || isTableFromPersistentClass(filterAliasTableMaps[filterCount])) && filter.useAutoAliasInjection()){

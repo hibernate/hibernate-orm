@@ -105,7 +105,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	public ComponentTuplizer getComponentTuplizer() {
 		return componentTuplizer;
 	}
-
+	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		int span = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
@@ -113,7 +113,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		}
 		return span;
 	}
-
+	@Override
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
 		//Not called at runtime so doesn't matter if its slow :)
 		int[] sqlTypes = new int[getColumnSpan( mapping )];

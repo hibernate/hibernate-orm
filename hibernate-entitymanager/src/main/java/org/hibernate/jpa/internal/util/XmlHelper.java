@@ -58,7 +58,7 @@ public final class XmlHelper {
 			Node currentChild = children.item( i );
 			if ( currentChild.getNodeType() == Node.ELEMENT_NODE &&
 					( (Element) currentChild ).getTagName().equals( tagName ) ) {
-				goodChildren.add( (Element) currentChild );
+				goodChildren.add( currentChild );
 			}
 		}
 		return goodChildren.iterator();

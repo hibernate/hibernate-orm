@@ -81,7 +81,7 @@ public class DerivedIdentitySimpleParentIdClassDepTest extends BaseCoreFunctiona
 		Query query = s.createQuery("Select d from Dependent d where d.name='LittleP' and d.emp.empName='Paula'");
 		List depList = query.list();
 		assertEquals( 1, depList.size() );
-		Object newDependent = (Dependent) depList.get(0);
+		Object newDependent = depList.get(0);
 		assertSame( d, newDependent );
 		s.getTransaction().rollback();
 		s.close();

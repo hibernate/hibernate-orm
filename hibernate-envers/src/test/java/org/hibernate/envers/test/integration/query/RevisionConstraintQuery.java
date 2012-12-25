@@ -159,10 +159,10 @@ public class RevisionConstraintQuery extends BaseEnversJPAFunctionalTestCase {
                 .add(AuditEntity.id().eq(id1))
                 .getSingleResult();
 
-        Assert.assertEquals(Integer.valueOf(4), (Integer) result[0]);
-        Assert.assertEquals(Long.valueOf(4), (Long) result[1]);
+        Assert.assertEquals(Integer.valueOf(4), result[0] );
+        Assert.assertEquals(Long.valueOf(4), result[1] );
         Assert.assertEquals(Long.valueOf(4), result[2]);
-        Assert.assertEquals(Integer.valueOf(1), (Integer) result[3]);
+        Assert.assertEquals(Integer.valueOf(1), result[3] );
     }
 
     @Test
@@ -186,7 +186,7 @@ public class RevisionConstraintQuery extends BaseEnversJPAFunctionalTestCase {
                 .add(AuditEntity.id().eq(id1))
                 .getSingleResult();
 
-        Assert.assertEquals(Long.valueOf(4), (Long) result);
+        Assert.assertEquals(Long.valueOf(4), result );
     }
 
     @Test

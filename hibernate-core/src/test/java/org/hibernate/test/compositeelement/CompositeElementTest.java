@@ -56,7 +56,7 @@ public class CompositeElementTest extends BaseCoreFunctionalTestCase {
 		Component childComponents = ( Component ) children.getElement();
 		Formula f = ( Formula ) childComponents.getProperty( "bioLength" ).getValue().getColumnIterator().next();
 
-		SQLFunction lengthFunction = ( SQLFunction ) dialect.getFunctions().get( "length" );
+		SQLFunction lengthFunction = dialect.getFunctions().get( "length" );
 		if ( lengthFunction != null ) {
 			ArrayList args = new ArrayList();
 			args.add( "bio" );

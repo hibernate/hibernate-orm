@@ -212,7 +212,7 @@ public class AuditedPropertiesReader {
 	private void readPersistentPropertiesAccess() {
 		Iterator<Property> propertyIter = persistentPropertiesSource.getPropertyIterator();
 		while (propertyIter.hasNext()) {
-			Property property = (Property) propertyIter.next();
+			Property property = propertyIter.next();
 			addPersistentProperty(property);
 			if ("embedded".equals(property.getPropertyAccessorName()) && property.getName().equals(property.getNodeName())) {
 				// If property name equals node name and embedded accessor type is used, processing component
@@ -319,7 +319,7 @@ public class AuditedPropertiesReader {
 			// Marking component properties as placed directly in class (not inside another component).
 			componentData.setBeanName(null);
 
-			PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource((Component) propertyValue);
+			PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource( propertyValue );
 			AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
 					ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg, reflectionManager,
 					propertyNamePrefix + MappingTools.createComponentPrefix(embeddedName)
@@ -338,7 +338,8 @@ public class AuditedPropertiesReader {
 				allClassAudited);
 
 		PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
-				(Component) propertyValue);
+				propertyValue
+		);
 		
 		ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
 				ModificationStore.FULL, componentPropertiesSource,

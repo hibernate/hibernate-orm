@@ -35,7 +35,7 @@ import org.hibernate.mapping.Table;
  */
 public abstract class SchemaUtil {
 	public static boolean isColumnPresent(String tableName, String columnName, Configuration cfg) {
-		final Iterator<Table> tables = ( Iterator<Table> ) cfg.getTableMappings();
+		final Iterator<Table> tables = cfg.getTableMappings();
 		while (tables.hasNext()) {
 			Table table = tables.next();
 			if (tableName.equals( table.getName() ) ) {
@@ -52,7 +52,7 @@ public abstract class SchemaUtil {
 	}
 
 	public static boolean isTablePresent(String tableName, Configuration cfg) {
-		final Iterator<Table> tables = ( Iterator<Table> ) cfg.getTableMappings();
+		final Iterator<Table> tables = cfg.getTableMappings();
 		while (tables.hasNext()) {
 			Table table = tables.next();
 			if (tableName.equals( table.getName() ) ) {

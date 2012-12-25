@@ -292,7 +292,7 @@ public class JoinSequence {
 	}
 
 	public Join getFirstJoin() {
-		return (Join) joins.get( 0 );
+		return joins.get( 0 );
 	}
 
 	public static interface Selector {

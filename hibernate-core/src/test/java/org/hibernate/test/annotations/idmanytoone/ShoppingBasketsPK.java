@@ -33,7 +33,7 @@ public class ShoppingBasketsPK implements Serializable {
 	public int hashCode() {
 		int hashcode = 0;
 		if (getOwner() != null) {
-			hashcode = hashcode + (int) getOwner().getORMID();
+			hashcode = hashcode + getOwner().getORMID();
 		}
 		hashcode = hashcode + (getBasketDatetime() == null ? 0 : getBasketDatetime().hashCode());
 		return hashcode;

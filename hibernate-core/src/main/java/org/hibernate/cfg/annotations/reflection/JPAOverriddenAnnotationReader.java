@@ -311,7 +311,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 	public <T extends Annotation> boolean isAnnotationPresent(Class<T> annotationType) {
 		initAnnotations();
-		return (T) annotationsMap.get( annotationType ) != null;
+		return annotationsMap.containsKey( annotationType );
 	}
 
 	public Annotation[] getAnnotations() {

@@ -243,8 +243,8 @@ public abstract class AbstractCollectionPersister
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		if ( factory.getSettings().isStructuredCacheEntriesEnabled() ) {
 			cacheEntryStructure = collection.isMap() ?
-					(CacheEntryStructure) new StructuredMapCacheEntry() :
-					(CacheEntryStructure) new StructuredCollectionCacheEntry();
+					new StructuredMapCacheEntry() :
+					new StructuredCollectionCacheEntry();
 		}
 		else {
 			cacheEntryStructure = new UnstructuredCacheEntry();

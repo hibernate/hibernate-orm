@@ -380,7 +380,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			// TODO: Fix this so it will work for non-POJO entity mode
 			Type keyType = getPersister( session ).getKeyType();
 			if ( !keyType.getReturnedClass().isInstance( id ) ) {
-				id = (Serializable) keyType.semiResolve(
+				id = keyType.semiResolve(
 						entityEntry.getLoadedValue( foreignKeyPropertyName ),
 						session,
 						owner 

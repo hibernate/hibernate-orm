@@ -216,7 +216,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public void addColumn(Column column) {
-		Column old = (Column) getColumn( column );
+		Column old = getColumn( column );
 		if ( old == null ) {
 			columns.put( column.getCanonicalName(), column );
 			column.uniqueInteger = columns.size();
@@ -622,7 +622,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public UniqueKey addUniqueKey(UniqueKey uniqueKey) {
-		UniqueKey current = (UniqueKey) uniqueKeys.get( uniqueKey.getName() );
+		UniqueKey current = uniqueKeys.get( uniqueKey.getName() );
 		if ( current != null ) {
 			throw new MappingException( "UniqueKey " + uniqueKey.getName() + " already exists!" );
 		}
@@ -638,11 +638,11 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public UniqueKey getUniqueKey(String keyName) {
-		return (UniqueKey) uniqueKeys.get( keyName );
+		return uniqueKeys.get( keyName );
 	}
 
 	public UniqueKey getOrCreateUniqueKey(String keyName) {
-		UniqueKey uk = (UniqueKey) uniqueKeys.get( keyName );
+		UniqueKey uk = uniqueKeys.get( keyName );
 
 		if ( uk == null ) {
 			uk = new UniqueKey();

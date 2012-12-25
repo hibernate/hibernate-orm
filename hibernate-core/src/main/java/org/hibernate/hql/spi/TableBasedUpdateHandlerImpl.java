@@ -193,6 +193,5 @@ public class TableBasedUpdateHandlerImpl
 	}
 
 	protected void handleAddedParametersOnUpdate(PreparedStatement ps, SessionImplementor session, int position) throws SQLException {
-		//To change body of created methods use File | Settings | File Templates.
 	}
 }

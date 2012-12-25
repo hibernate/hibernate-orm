@@ -90,7 +90,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	@SuppressWarnings("unchecked")
 	private static Map wrap(Map properties) {
-		return properties== null ? Collections.emptyMap() : Collections.unmodifiableMap( properties );
+		return properties == null ? Collections.emptyMap() : Collections.unmodifiableMap( properties );
 	}
 
 	/**
@@ -104,14 +104,15 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	}
 
 	private final ProviderUtil providerUtil = new ProviderUtil() {
+		@Override
 		public LoadState isLoadedWithoutReference(Object proxy, String property) {
 			return PersistenceUtilHelper.isLoadedWithoutReference( proxy, property, cache );
 		}
-
+		@Override
 		public LoadState isLoadedWithReference(Object proxy, String property) {
 			return PersistenceUtilHelper.isLoadedWithReference( proxy, property, cache );
 		}
-
+		@Override
 		public LoadState isLoaded(Object o) {
 			return PersistenceUtilHelper.isLoaded(o);
 		}

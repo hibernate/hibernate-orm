@@ -1388,7 +1388,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 
 		s.flush();
 
-		List enrolments = ( List ) s.createCriteria( Enrolment.class).setProjection( Projections.id() ).list();
+		List enrolments = s.createCriteria( Enrolment.class).setProjection( Projections.id() ).list();
 		t.rollback();
 		s.close();
 	}
@@ -1405,7 +1405,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		s.save(course);
 		s.flush();
 		s.clear();
-		List data = ( List ) s.createCriteria( CourseMeeting.class).setProjection( Projections.id() ).list();
+		List data = s.createCriteria( CourseMeeting.class).setProjection( Projections.id() ).list();
 		t.commit();
 		s.close();
 
@@ -1463,7 +1463,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		s.save(course);
 		s.flush();
 
-		List data = ( List ) s.createCriteria( CourseMeeting.class).setProjection( Projections.id().as( "id" ) ).list();
+		List data = s.createCriteria( CourseMeeting.class).setProjection( Projections.id().as( "id" ) ).list();
 		t.rollback();
 		s.close();
 	}
@@ -1480,7 +1480,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		s.save( gaith );
 		s.flush();
 
-		List cityStates = ( List ) s.createCriteria( Student.class).setProjection( Projections.property( "cityState" ) ).list();
+		List cityStates = s.createCriteria( Student.class).setProjection( Projections.property( "cityState" ) ).list();
 		t.rollback();
 		s.close();
 	}
@@ -1496,7 +1496,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		gaith.setCityState( new CityState( "Chicago", "Illinois" ) );
 		s.save(gaith);
 		s.flush();
-		List data = ( List ) s.createCriteria( Student.class)
+		List data = s.createCriteria( Student.class)
 				.setProjection( Projections.projectionList()
 					.add( Projections.property( "cityState" ) )
 					.add( Projections.property("name") ) )
@@ -1545,7 +1545,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		gavin.getEnrolments().add(enrolment);
 		s.save(enrolment);
 		s.flush();
-		List data = ( List ) s.createCriteria( Enrolment.class)
+		List data = s.createCriteria( Enrolment.class)
 				.setProjection( Projections.projectionList()
 					.add( Projections.property( "semester" ) )
 					.add( Projections.property("year") )

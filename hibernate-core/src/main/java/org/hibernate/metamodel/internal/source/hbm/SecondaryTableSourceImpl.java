@@ -26,8 +26,11 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
+import org.hibernate.jaxb.spi.hbm.JaxbFetchStyleAttribute;
 import org.hibernate.jaxb.spi.hbm.JaxbJoinElement;
+import org.hibernate.jaxb.spi.hbm.JaxbOnDeleteAttribute;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
@@ -102,6 +105,33 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 	@Override
 	public List<ColumnSource> getPrimaryKeyColumnSources() {
 		return columnSources;
+	}
+
+	@Override
+	public String getComment() {
+		return joinElement.getComment();
+	}
+
+	@Override
+	public FetchStyle getFetchStyle() {
+		return joinElement.getFetch() == JaxbFetchStyleAttribute.JOIN ?
+				FetchStyle.JOIN :
+				FetchStyle.SELECT;
+	}
+
+	@Override
+	public boolean isInverse() {
+		return joinElement.isInverse();
+	}
+
+	@Override
+	public boolean isOptional() {
+		return joinElement.isOptional();
+	}
+
+	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return joinElement.getKey().getOnDelete() == JaxbOnDeleteAttribute.CASCADE;
 	}
 
 	@Override

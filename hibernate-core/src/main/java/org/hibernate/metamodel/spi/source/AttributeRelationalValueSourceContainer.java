@@ -23,38 +23,18 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import java.util.List;
-
-import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.FetchTiming;
-
 /**
- * @author Steve Ebersole
+ * Contract for a container of {@link RelationalValueSource} references for an attribute.
+ *
+ * It provides the default table that contains the relational values for the singular attribute.
+ *
+ * See {@link RelationalValueSourceContainer} for additional details.
+ *
+ * @author Gail Badner
  */
-public interface SecondaryTableSource extends ForeignKeyContributingSource {
+public interface AttributeRelationalValueSourceContainer extends RelationalValueSourceContainer {
 	/**
-	 * Obtain the table being joined to.
-	 *
-	 * @return The joined table.
+	 * @return returns the default name of the table that contains the relational values.
 	 */
-	public TableSpecificationSource getTableSource();
-
-	/**
-	 * Retrieves the columns defines as making up this secondary tables primary key.  Each entry should have
-	 * a corresponding entry in the foreign-key columns described by the {@link ForeignKeyContributingSource}
-	 * aspect of this contract.
-	 *
-	 * @return The columns defining the primary key for this secondary table
-	 */
-	public List<ColumnSource> getPrimaryKeyColumnSources();
-
-	public String getComment();
-
-	public FetchStyle getFetchStyle();
-
-	public boolean isInverse();
-
-	public boolean isOptional();
-
-	public boolean isCascadeDeleteEnabled();
+	public String getContainingTableName();
 }

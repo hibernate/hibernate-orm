@@ -223,7 +223,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 							null, // root table
 							discriminatorElement.getColumnAttribute(),
 							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE,
-							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE
+							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE,
+							discriminatorElement.isNotNull() ? TruthValue.FALSE : TruthValue.TRUE
 					);
 				}
 				else if ( StringHelper.isNotEmpty( discriminatorElement.getFormulaAttribute() ) ) {

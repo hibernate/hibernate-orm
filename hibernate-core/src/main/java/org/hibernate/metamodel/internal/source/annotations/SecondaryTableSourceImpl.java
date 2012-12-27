@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.TruthValue;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.relational.Value;
@@ -78,6 +79,31 @@ public class SecondaryTableSourceImpl implements SecondaryTableSource {
 	@Override
 	public List<ColumnSource> getPrimaryKeyColumnSources() {
 		return columnSources;
+	}
+
+	@Override
+	public String getComment() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public FetchStyle getFetchStyle() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public boolean isInverse() {
+		return false;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public boolean isOptional() {
+		return false;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return false;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

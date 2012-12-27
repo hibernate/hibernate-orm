@@ -170,6 +170,11 @@ class VersionAttributeSourceImpl
 	}
 
 	@Override
+	public String getContainingTableName() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		return valueSources;
 	}

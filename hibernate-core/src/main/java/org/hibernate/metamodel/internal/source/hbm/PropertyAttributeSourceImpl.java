@@ -45,6 +45,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 	private final ExplicitHibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
 	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
+	private final String containingTableName;
 
 	PropertyAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
@@ -73,6 +74,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 				return parameters;
 			}
 		};
+		this.containingTableName = logicalTableName;
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
@@ -173,6 +175,11 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 	@Override
 	public boolean areValuesNullableByDefault() {
 		return ! Helper.getValue( propertyElement.isNotNull(), false );
+	}
+
+	@Override
+	public String getContainingTableName() {
+		return containingTableName;
 	}
 
 	@Override

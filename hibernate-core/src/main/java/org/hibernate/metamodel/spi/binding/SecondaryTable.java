@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 
@@ -32,6 +33,10 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 public class SecondaryTable {
 	private final TableSpecification secondaryTableReference;
 	private final ForeignKey foreignKeyReference;
+	private FetchStyle fetchStyle;
+	private boolean isInverse;
+	private boolean isOptional;
+	private boolean isCascadeDeleteEnabled;
 
 	public SecondaryTable(TableSpecification secondaryTableReference, ForeignKey foreignKeyReference) {
 		this.secondaryTableReference = secondaryTableReference;
@@ -44,5 +49,41 @@ public class SecondaryTable {
 
 	public ForeignKey getForeignKeyReference() {
 		return foreignKeyReference;
+	}
+
+	public FetchStyle getFetchStyle() {
+		return fetchStyle;
+	}
+
+	public void setFetchStyle(FetchStyle fetchStyle) {
+		this.fetchStyle = fetchStyle;
+	}
+
+	public boolean isInverse() {
+		return isInverse;
+	}
+
+	public void setInverse(boolean isInverse) {
+		this.isInverse = isInverse;
+	}
+
+	public boolean isOptional() {
+		return isOptional;
+	}
+
+	public void setOptional(boolean isOptional) {
+		this.isOptional = isOptional;
+	}
+
+	public boolean isCascadeDeleteEnabled() {
+		return isCascadeDeleteEnabled;
+	}
+
+	public void setCascadeDeleteEnabled(boolean isCascadeDeleteEnabled) {
+		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
+	}
+	public boolean isLazy() {
+		// TODO: need to check attribute bindings using this table
+		return false;
 	}
 }

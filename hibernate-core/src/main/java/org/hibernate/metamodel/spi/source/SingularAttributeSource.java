@@ -31,7 +31,7 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
  *
  * @author Steve Ebersole
  */
-public interface SingularAttributeSource extends AttributeSource, RelationalValueSourceContainer {
+public interface SingularAttributeSource extends AttributeSource, AttributeRelationalValueSourceContainer {
 	/**
 	 * Determine whether this is a virtual attribute or whether it physically exists on the users domain model.
 	 *

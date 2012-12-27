@@ -80,6 +80,11 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 		this.subAttributeSources = buildAttributeSources();
 	}
 
+	@Override
+	public String getContainingTableName() {
+		return logicalTableName;
+	}
+
 	protected abstract List<AttributeSource> buildAttributeSources();
 	protected SingularAttributeSource buildAttributeSource(JaxbPropertyElement attributeElement) {
 		return new PropertyAttributeSourceImpl(

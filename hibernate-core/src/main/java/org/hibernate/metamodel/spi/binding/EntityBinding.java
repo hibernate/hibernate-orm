@@ -27,10 +27,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -71,7 +71,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 	private Entity entity;
 	private TableSpecification primaryTable;
 	private String primaryTableName;
-	private Map<String, SecondaryTable> secondaryTables = new HashMap<String, SecondaryTable>();
+	private Map<String, SecondaryTable> secondaryTables = new LinkedHashMap<String, SecondaryTable>();
 
 	private ValueHolder<Class<?>> proxyInterfaceType;
 
@@ -316,6 +316,81 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 	public void addSecondaryTable(SecondaryTable secondaryTable) {
 		secondaryTables.put( secondaryTable.getSecondaryTableReference().getLogicalName().getText(), secondaryTable );
 	}
+
+	public int getSecondaryTableClosureSpan() {
+		return superEntityBinding != null ?
+				superEntityBinding.getSecondaryTableClosureSpan() + secondaryTables.size() :
+				secondaryTables.size();
+	}
+
+	/**
+	 * Gets the attribute bindings defined on this class, including the
+	 * identifier attribute binding and attribute bindings defined
+	 * as part of a join.
+	 *
+	 * @return The attribute bindings.
+	 */
+	public Iterable<SecondaryTable> getSecondaryTableClosure() {
+		Iterable<SecondaryTable> iterable;
+		if ( superEntityBinding != null ) {
+			List<Iterable<SecondaryTable>> iterables = new ArrayList<Iterable<SecondaryTable>>( 2 );
+			iterables.add( superEntityBinding.getSecondaryTableClosure() );
+			iterables.add( secondaryTables.values() );
+			iterable = new JoinedIterable<SecondaryTable>( iterables );
+		}
+		else {
+			iterable = secondaryTables.values();
+		}
+		return iterable;
+	}
+
+	private Iterable<SecondaryTable> getSubclassSecondaryTables() {
+		List<Iterable<SecondaryTable>> iterables = new ArrayList<Iterable<SecondaryTable>>( subEntityBindings.size() );
+		for ( EntityBinding subEntityBinding : subEntityBindings ) {
+			iterables.add( subEntityBinding.secondaryTables.values() );
+			if ( ! subEntityBinding.subEntityBindings.isEmpty() ) {
+				iterables.add( subEntityBinding.getSubclassSecondaryTables() );
+			}
+		}
+		return new JoinedIterable<SecondaryTable>( iterables );
+	}
+
+	public Iterable<SecondaryTable> getSubclassSecondaryTableClosure() {
+		Iterable<SecondaryTable> iterable;
+		if ( ! subEntityBindings.isEmpty() ) {
+			List<Iterable<SecondaryTable>> iterables = new ArrayList<Iterable<SecondaryTable>>( 2 );
+			iterables.add( getSecondaryTableClosure() );
+			iterables.add( getSubclassSecondaryTables() );
+			iterable = new JoinedIterable<SecondaryTable>( iterables );
+		}
+		else {
+			iterable = getSecondaryTableClosure();
+		}
+		return iterable;
+	}
+
+	public boolean isClassOrSuperclassSecondaryTable(SecondaryTable secondaryTable) {
+		String secondaryTableName = secondaryTable.getSecondaryTableReference().getLogicalName().getText();
+		return secondaryTables.containsKey( secondaryTableName ) ||
+				( superEntityBinding != null && superEntityBinding.isClassOrSuperclassSecondaryTable( secondaryTable ) );
+	}
+
+	public int getSecondaryTableNumber(SingularAttributeBinding attributeBinding) {
+		if ( attributeBinding.getRelationalValueBindings().isEmpty() ) {
+			return 0;
+		}
+		int result=1;
+		Value value = attributeBinding.getRelationalValueBindings().get( 0 ).getValue();
+		TableSpecification table = value.getTable();
+		for ( SecondaryTable secondaryTable : getSubclassSecondaryTableClosure() ) {
+			if ( secondaryTable.getSecondaryTableReference() == table ) {
+				return result;
+			}
+			result++;
+		}
+		return 0;
+	}
+
 
 	public boolean isVersioned() {
 		return getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() != null;

@@ -43,7 +43,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class CollectionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -51,6 +50,7 @@ public class CollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExtraLazy() throws HibernateException, SQLException {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

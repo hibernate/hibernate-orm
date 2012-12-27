@@ -41,6 +41,7 @@ import org.hibernate.type.ForeignKeyDirection;
 class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	private final JaxbOneToOneElement oneToOneElement;
 	private final List<RelationalValueSource> valueSources;
+	private final String containingTableName;
 
 	OneToOneAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
@@ -49,6 +50,7 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
 		super( sourceMappingDocument, naturalIdMutability, oneToOneElement.getPropertyRef() );
 		this.oneToOneElement = oneToOneElement;
+		this.containingTableName = logicalTableName;
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
@@ -156,6 +158,11 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	@Override
 	public boolean areValuesNullableByDefault() {
 		return false;
+	}
+
+	@Override
+	public String getContainingTableName() {
+		return containingTableName;
 	}
 
 	@Override

@@ -385,7 +385,7 @@ public class Binder {
 						attributeBindingContainer,
 						attributeSource,
 						attribute,
-						attributeBindingContainer.getPrimaryTable(),
+						locateDefaultTableSpecificationForAttribute( attributeBindingContainer, attributeSource ),
 						false);
 		final BasicAttributeBinding attributeBinding =
 				attributeBindingContainer.makeBasicAttributeBinding(
@@ -1313,7 +1313,10 @@ public class Binder {
 				 * this is not correct, here, if no @JoinColumn defined, we simply create the FK column only with column calucated
 				 * but what we should do is get all the column info from the referenced column(s), including nullable, size etc.
 				 */
-				final TableSpecification table = locateTableSpecificationForAttribute( attributeBindingContainer, attributeSource );
+				final TableSpecification table = locateDefaultTableSpecificationForAttribute(
+						attributeBindingContainer,
+						attributeSource
+				);
 				final List<RelationalValueBinding> relationalValueBindings =
 						bindValues(
 								attributeBindingContainer,
@@ -1521,16 +1524,12 @@ public class Binder {
 		return fullPath.substring( attributeBinding.getContainer().seekEntityBinding().getEntityName().length() + 1 );
 	}
 
-	private TableSpecification locateTableSpecificationForAttribute(
+	private TableSpecification locateDefaultTableSpecificationForAttribute(
 			AttributeBindingContainer attributeBindingContainer,
 			SingularAttributeSource attributeSource) {
-		String tableName = null;
-		if ( ! attributeSource.relationalValueSources().isEmpty() ) {
-			 tableName = attributeSource.relationalValueSources().get( 0 ).getContainingTableName();
-		}
-		return tableName == null ?
+		return attributeSource.getContainingTableName() == null ?
 				attributeBindingContainer.getPrimaryTable() :
-				attributeBindingContainer.seekEntityBinding().locateTable( tableName );
+				attributeBindingContainer.seekEntityBinding().locateTable( attributeSource.getContainingTableName() );
 	}
 
 	private AbstractPluralAttributeBinding bindMapAttribute(
@@ -2067,12 +2066,13 @@ public class Binder {
 	private void bindSecondaryTables( final EntityBinding entityBinding, final EntitySource entitySource ) {
 		for ( final SecondaryTableSource secondaryTableSource : entitySource.getSecondaryTables() ) {
 			final TableSpecification table = createTable( secondaryTableSource.getTableSource(), null );
+			table.addComment( secondaryTableSource.getComment() );
 
-			List<Column> joinColumns;
+			List<RelationalValueBinding> joinRelationalValueBindings;
 			// TODO: deal with property-refs???
 			if ( secondaryTableSource.getPrimaryKeyColumnSources().isEmpty() ) {
 				final List<Column> joinedColumns = entityBinding.getPrimaryTable().getPrimaryKey().getColumns();
-				joinColumns = new ArrayList<Column>( joinedColumns.size() );
+				joinRelationalValueBindings = new ArrayList<RelationalValueBinding>( joinedColumns.size() );
 				for ( Column joinedColumn : joinedColumns ) {
 					Column joinColumn = table.locateOrCreateColumn(
 							bindingContext().getNamingStrategy().joinKeyColumnName(
@@ -2080,34 +2080,50 @@ public class Binder {
 									entityBinding.getPrimaryTable().getLogicalName().getText()
 							)
 					);
-					joinColumns.add( joinColumn );
+					joinRelationalValueBindings.add( new RelationalValueBinding( joinColumn, true, false ) );
 				}
 			}
 			else {
-				joinColumns = new ArrayList<Column>( secondaryTableSource.getPrimaryKeyColumnSources().size() );
-				for ( final ColumnSource joinColumnSource : secondaryTableSource.getPrimaryKeyColumnSources() ) {
+				joinRelationalValueBindings = new ArrayList<RelationalValueBinding>( secondaryTableSource.getPrimaryKeyColumnSources().size() );
+				final List<Column> primaryKeyColumns = entityBinding.getPrimaryTable().getPrimaryKey().getColumns();
+				if ( primaryKeyColumns.size() != secondaryTableSource.getPrimaryKeyColumnSources().size() ) {
+					throw bindingContext().makeMappingException(
+							String.format(
+									"The number of primary key column sources provided for a secondary table is not equal to the number of columns in the primary key for [%s].",
+									entityBinding.getEntityName()
+							)
+					);
+				}
+				for ( int i = 0 ; i < primaryKeyColumns.size() ; i++ ) {
 					// todo : apply naming strategy to infer missing column name
+					final ColumnSource joinColumnSource = secondaryTableSource.getPrimaryKeyColumnSources().get( i );
 					Column column = table.locateColumn( joinColumnSource.getName() );
 					if ( column == null ) {
 						column = table.createColumn( joinColumnSource.getName() );
 						if ( joinColumnSource.getSqlType() != null ) {
 							column.setSqlType( joinColumnSource.getSqlType() );
-						} else {
-							throw new NotYetImplementedException( "join key column sql type is not binded if not explicitly set" );
 						}
 					}
-					joinColumns.add( column );
+					joinRelationalValueBindings.add( new RelationalValueBinding( column, true, false ) );
 				}
 			}
 
+			typeHelper.bindJdbcDataType(
+					entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding().getHibernateTypeDescriptor().getResolvedTypeMapping(),
+					joinRelationalValueBindings
+			);
 			// TODO: make the foreign key column the primary key???
 			final ForeignKey foreignKey = bindForeignKey(
 					quoteIdentifierIfNonEmpty( secondaryTableSource.getExplicitForeignKeyName() ),
-					joinColumns,
+					extractColumnsFromRelationalValueBindings( joinRelationalValueBindings ),
 					determineForeignKeyTargetColumns( entityBinding, secondaryTableSource )
 			);
-
-			entityBinding.addSecondaryTable( new SecondaryTable( table, foreignKey ) );
+			SecondaryTable secondaryTable = new SecondaryTable( table, foreignKey );
+			secondaryTable.setFetchStyle( secondaryTableSource.getFetchStyle() );
+			secondaryTable.setInverse( secondaryTableSource.isInverse() );
+			secondaryTable.setOptional( secondaryTableSource.isOptional() );
+			secondaryTable.setCascadeDeleteEnabled( secondaryTableSource.isCascadeDeleteEnabled() );
+			entityBinding.addSecondaryTable( secondaryTable );
 		}
 	}
 

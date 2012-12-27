@@ -89,6 +89,11 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
+	public String getContainingTableName() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
 		if ( ! attribute.getColumnValues().isEmpty() ) {

@@ -45,7 +45,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

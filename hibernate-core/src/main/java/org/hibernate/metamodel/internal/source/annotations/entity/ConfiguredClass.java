@@ -30,6 +30,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +47,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
@@ -513,6 +515,7 @@ public class ConfiguredClass {
 			case ONE_TO_ONE:
 			case MANY_TO_ONE: {
 				final AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
+						classInfo,
 						attributeName,
 						resolvedMember.getType().getErasedType(),
 						attributeNature,
@@ -599,39 +602,36 @@ public class ConfiguredClass {
 			List<AnnotationInstance>> annotations,
 			Class<?> attributeType,
 			Class<?> referencedCollectionType ) {
-		EnumMap<MappedAttribute.Nature, AnnotationInstance> discoveredAttributeTypes =
-				new EnumMap<MappedAttribute.Nature, AnnotationInstance>( MappedAttribute.Nature.class );
-
+		EnumSet<MappedAttribute.Nature>  discoveredAttributeTypes = EnumSet.noneOf( MappedAttribute.Nature.class );
 		AnnotationInstance oneToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_ONE );
 		if ( oneToOne != null ) {
-			discoveredAttributeTypes.put( MappedAttribute.Nature.ONE_TO_ONE, oneToOne );
+			discoveredAttributeTypes.add( MappedAttribute.Nature.ONE_TO_ONE );
 		}
 
 		AnnotationInstance oneToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY );
 		if ( oneToMany != null ) {
-			discoveredAttributeTypes.put( MappedAttribute.Nature.ONE_TO_MANY, oneToMany );
+			discoveredAttributeTypes.add( MappedAttribute.Nature.ONE_TO_MANY );
 		}
 
 		AnnotationInstance manyToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_ONE );
 		if ( manyToOne != null ) {
-			discoveredAttributeTypes.put( MappedAttribute.Nature.MANY_TO_ONE, manyToOne );
+			discoveredAttributeTypes.add( MappedAttribute.Nature.MANY_TO_ONE );
 		}
 
 		AnnotationInstance manyToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY );
 		if ( manyToMany != null ) {
-			discoveredAttributeTypes.put( MappedAttribute.Nature.MANY_TO_MANY, manyToMany );
+			discoveredAttributeTypes.add( MappedAttribute.Nature.MANY_TO_MANY );
 		}
 
 		AnnotationInstance embeddedId = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED_ID );
 		if ( embeddedId != null ) {
-			discoveredAttributeTypes.put( MappedAttribute.Nature.EMBEDDED_ID, embeddedId );
+			discoveredAttributeTypes.add( MappedAttribute.Nature.EMBEDDED_ID );
 		}
 
 		AnnotationInstance embedded = JandexHelper.getSingleAnnotation( 
 				annotations, JPADotNames.EMBEDDED );
 		if ( embedded != null ) {
-			discoveredAttributeTypes.put( MappedAttribute.Nature.EMBEDDED, 
-					embedded );
+			discoveredAttributeTypes.add( MappedAttribute.Nature.EMBEDDED );
 		} else if ( embeddedId == null ) {
 			// For backward compatibility, we're allowing attributes of an
 			// @Embeddable type to leave off @Embedded.  Check the type's
@@ -644,8 +644,7 @@ public class ConfiguredClass {
 					&& JandexHelper.getSingleAnnotation( 
 							typeClassInfo.annotations(),
 							JPADotNames.EMBEDDABLE ) != null ) {
-				discoveredAttributeTypes.put( MappedAttribute.Nature.EMBEDDED,
-						null );
+				discoveredAttributeTypes.add( MappedAttribute.Nature.EMBEDDED );
 			}
 		}
 
@@ -653,19 +652,9 @@ public class ConfiguredClass {
 				annotations,
 				JPADotNames.ELEMENT_COLLECTION
 		);
-		if ( elementCollection != null ) {
-			// class info can be null for types like string, etc where there are no annotations
-			ClassInfo classInfo = getLocalBindingContext().getIndex().getClassByName(
-					DotName.createSimple(
-							referencedCollectionType.getName()
-					)
-			);
-			if ( classInfo != null && classInfo.annotations().get( JPADotNames.EMBEDDABLE ) != null ) {
-				discoveredAttributeTypes.put( MappedAttribute.Nature.ELEMENT_COLLECTION_EMBEDDABLE, elementCollection );
-			}
-			else {
-				discoveredAttributeTypes.put( MappedAttribute.Nature.ELEMENT_COLLECTION_BASIC, elementCollection );
-			}
+		if ( elementCollection != null || ( discoveredAttributeTypes.isEmpty() && CollectionHelper.isCollectionOrArray( attributeType ) )) {
+			boolean isEmbeddable = isEmbeddableType( referencedCollectionType );
+			discoveredAttributeTypes.add( isEmbeddable? MappedAttribute.Nature.ELEMENT_COLLECTION_EMBEDDABLE : MappedAttribute.Nature.ELEMENT_COLLECTION_BASIC );
 		}
 
 		int size = discoveredAttributeTypes.size();
@@ -673,10 +662,20 @@ public class ConfiguredClass {
 			case 0:
 				return MappedAttribute.Nature.BASIC;
 			case 1:
-				return discoveredAttributeTypes.keySet().iterator().next();
+				return discoveredAttributeTypes.iterator().next();
 			default:
 				throw new AnnotationException( "More than one association type configured for property  " + getName() + " of class " + getName() );
 		}
+	}
+
+	private boolean isEmbeddableType(Class<?> referencedCollectionType) {
+		// class info can be null for types like string, etc where there are no annotations
+		ClassInfo classInfo = getLocalBindingContext().getIndex().getClassByName(
+				DotName.createSimple(
+						referencedCollectionType.getName()
+				)
+		);
+		return classInfo != null && classInfo.annotations().get( JPADotNames.EMBEDDABLE ) != null;
 	}
 
 	private ResolvedMember findResolvedMember(String name, ResolvedMember[] resolvedMembers) {

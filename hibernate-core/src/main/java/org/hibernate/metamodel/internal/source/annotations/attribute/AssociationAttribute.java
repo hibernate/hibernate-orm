@@ -49,12 +49,16 @@ import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHe
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.internal.source.annotations.xml.mocker.MockHelper;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
 /**
@@ -87,6 +91,7 @@ public class AssociationAttribute extends MappedAttribute {
 	private AttributeTypeResolver resolver;
 
 	public static AssociationAttribute createAssociationAttribute(
+			ClassInfo classInfo,
 			String name,
 			Class<?> attributeType,
 			Nature attributeNature,
@@ -94,6 +99,7 @@ public class AssociationAttribute extends MappedAttribute {
 			Map<DotName, List<AnnotationInstance>> annotations,
 			EntityBindingContext context) {
 		return new AssociationAttribute(
+				classInfo,
 				name,
 				attributeType,
 				attributeType,
@@ -105,6 +111,7 @@ public class AssociationAttribute extends MappedAttribute {
 	}
 
 	AssociationAttribute(
+			ClassInfo classInfo,
 			String name,
 			Class<?> attributeType,
 			Class<?> referencedAttributeType,
@@ -119,6 +126,23 @@ public class AssociationAttribute extends MappedAttribute {
 				annotations,
 				attributeNature.getAnnotationDotName()
 		);
+		if ( associationAnnotation == null &&
+				( attributeNature == Nature.ELEMENT_COLLECTION_BASIC || attributeNature == Nature.ELEMENT_COLLECTION_EMBEDDABLE ) ) {
+
+			AnnotationTarget target = MockHelper.getTarget(
+					context.getServiceRegistry(),
+					classInfo,
+					name,
+					MockHelper.TargetType.valueOf( accessType.toUpperCase() )
+			);
+
+
+			associationAnnotation = AnnotationInstance.create(
+					attributeNature.getAnnotationDotName(),
+					target,
+					MockHelper.EMPTY_ANNOTATION_VALUE_ARRAY
+			);
+		}
 
 		// using jandex we don't really care which exact type of annotation we are dealing with
 		this.referencedEntityType = determineReferencedEntityType( associationAnnotation, referencedAttributeType );

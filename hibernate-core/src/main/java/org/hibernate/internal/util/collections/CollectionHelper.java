@@ -156,4 +156,20 @@ public final class CollectionHelper {
 	public static <T> List<T> createEmptyList(Class<T> elementClass) {
 		return Collections.emptyList();
 	}
+
+	public static boolean isCollectionOrArray(Class clazz) {
+		if ( clazz == null ) {
+			return false;
+		}
+		if ( Collection.class.isAssignableFrom( clazz ) ) {
+			return true;
+		}
+		if ( Map.class.isAssignableFrom( clazz ) ) {
+			return true;
+		}
+//		if ( clazz.isArray() ) {
+//			return true;
+//		}
+		return false;
+	}
 }

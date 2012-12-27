@@ -1065,7 +1065,7 @@ public abstract class CollectionBinder {
 			TableBinder associationTableBinder,
 			XProperty property,
 			PropertyHolder parentPropertyHolder,
-			String hqlOrderBy,
+			final String hqlOrderBy,
 			Mappings mappings) throws MappingException {
 
 		PersistentClass collectionEntity = (PersistentClass) persistentClasses.get( collType.getName() );
@@ -1286,7 +1286,6 @@ public abstract class CollectionBinder {
 				collValue.setElement( component );
 
 				if ( StringHelper.isNotEmpty( hqlOrderBy ) ) {
-					String path = collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName();
 					String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 					if ( orderBy != null ) {
 						collValue.setOrderBy( orderBy );

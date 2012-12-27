@@ -64,7 +64,7 @@ public class SetAttributeSourceImpl extends AbstractPluralAttributeSourceImpl im
 
 	@Override
 	public boolean isOrdered() {
-		return getOrder() != null;
+		return StringHelper.isNotEmpty( getOrder() );
 	}
 
 	@Override

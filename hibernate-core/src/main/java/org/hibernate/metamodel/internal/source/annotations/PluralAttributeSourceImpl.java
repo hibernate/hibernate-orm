@@ -24,9 +24,6 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 
@@ -35,8 +32,8 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
-import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
@@ -61,7 +58,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	public PluralAttributeSourceImpl(
 			final PluralAssociationAttribute associationAttribute,
-			final EntityClass entityClass ) {
+			final ConfiguredClass entityClass ) {
 		this.associationAttribute = associationAttribute;
 		this.keySource = new PluralAttributeKeySourceImpl( associationAttribute );
 		this.typeSource = new ExplicitHibernateTypeSourceImpl( associationAttribute );
@@ -91,7 +88,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		}
 	}
 
-	private static PluralAttributeElementSource determineElementSource(PluralAssociationAttribute associationAttribute, EntityClass entityClass) {
+	private static PluralAttributeElementSource determineElementSource(PluralAssociationAttribute associationAttribute, ConfiguredClass entityClass) {
 		switch ( associationAttribute.getNature() ) {
 			case MANY_TO_MANY:
 				return new ManyToManyPluralAttributeElementSourceImpl( associationAttribute );
@@ -222,7 +219,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	@Override
 	public boolean isOrdered() {
-		return getOrder() != null;
+		return StringHelper.isNotEmpty( getOrder() );
 	}
 
 	@Override

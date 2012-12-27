@@ -23,9 +23,13 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 
 import javax.persistence.FetchType;
 
@@ -77,17 +81,22 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final String explicitForeignKeyName;
 
 	private final PluralAttributeSource.Nature pluralAttributeNature;
+	private static final EnumSet<PluralAttributeSource.Nature> SHOULD_NOT_HAS_COLLECTION_ID = EnumSet.of( PluralAttributeSource.Nature.SET,
+			PluralAttributeSource.Nature.MAP, PluralAttributeSource.Nature.LIST, PluralAttributeSource.Nature.ARRAY );
 
 	private LazyCollectionOption lazyOption;
+	private final boolean isCollectionIdPresent;
 
-	public static PluralAssociationAttribute createPluralAssociationAttribute(ClassInfo entityClassInfo,
-																			  String name,
-																			  Class<?> attributeType,
-																			  Class<?> referencedAttributeType,
-																			  Nature attributeNature,
-																			  String accessType,
-																			  Map<DotName, List<AnnotationInstance>> annotations,
-																			  EntityBindingContext context) {
+
+	public static PluralAssociationAttribute createPluralAssociationAttribute(
+			ClassInfo entityClassInfo,
+			String name,
+			Class<?> attributeType,
+			Class<?> referencedAttributeType,
+			Nature attributeNature,
+			String accessType,
+			Map<DotName, List<AnnotationInstance>> annotations,
+			EntityBindingContext context) {
 		return new PluralAssociationAttribute(
 				entityClassInfo,
 				name,
@@ -171,15 +180,16 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		return isIndexed;
 	}
 
-	private PluralAssociationAttribute(ClassInfo entityClassInfo,
-									   String name,
-									   Class<?> attributeType,
-									   Class<?> referencedAttributeType,
-									   Nature associationType,
-									   String accessType,
-									   Map<DotName, List<AnnotationInstance>> annotations,
-									   EntityBindingContext context) {
-		super( name, attributeType, referencedAttributeType, associationType, accessType, annotations, context );
+	private PluralAssociationAttribute(
+			final ClassInfo entityClassInfo,
+			final String name,
+			final Class<?> attributeType,
+			final Class<?> referencedAttributeType,
+			final Nature associationType,
+			final String accessType,
+			final Map<DotName, List<AnnotationInstance>> annotations,
+			final EntityBindingContext context) {
+		super( entityClassInfo, name, attributeType, referencedAttributeType, associationType, accessType, annotations, context );
 		this.entityClassInfo = entityClassInfo;
 		this.whereClause = determineWereClause();
 		this.orderBy = determineOrderBy();
@@ -215,7 +225,10 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				HibernateDotNames.SQL_DELETE_ALL, annotations()
 		);
 		this.onDeleteAction = determineOnDeleteAction();
-
+		this.isCollectionIdPresent = JandexHelper.getSingleAnnotation(
+				annotations,
+				HibernateDotNames.COLLECTION_ID
+		) != null;
 		final AnnotationInstance sortAnnotation =  JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.SORT );
 		if ( sortAnnotation == null ) {
 			this.sorted = false;
@@ -249,15 +262,58 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 		this.isIndexed = orderColumnAnnotation != null || indexColumnAnnotation != null;
 		this.pluralAttributeNature = resolvePluralAttributeNature();
+
+		validateMapping();
 	}
 
+	private void validateMapping() {
+		checkSortedTypeIsSortable();
+		checkIfCollectionIdIsWronglyPlaced();
+	}
+
+	private void checkIfCollectionIdIsWronglyPlaced() {
+		if ( isCollectionIdPresent && SHOULD_NOT_HAS_COLLECTION_ID.contains( pluralAttributeNature ) ) {
+			throw new MappingException(
+					"The Collection type doesn't support @CollectionId annotation: " + getRole(),
+					getContext().getOrigin()
+			);
+		}
+	}
+
+	private void checkSortedTypeIsSortable() {
+		//shortcut, a little performance improvement of avoiding the class type check
+		if ( pluralAttributeNature == PluralAttributeSource.Nature.MAP
+				|| pluralAttributeNature == PluralAttributeSource.Nature.SET ) {
+			if ( SortedMap.class.isAssignableFrom( getAttributeType() )
+					|| SortedSet.class.isAssignableFrom( getAttributeType() ) ) {
+				if ( !isSorted() ) {
+					throw new MappingException(
+							"A sorted collection has to define @Sort: " + getRole(),
+							getContext().getOrigin()
+					);
+				}
+			}
+		}
+
+	}
+
+
+	//TODO org.hibernate.cfg.annotations.CollectionBinder#hasToBeSorted
 	private PluralAttributeSource.Nature resolvePluralAttributeNature() {
 
 		if ( Map.class.isAssignableFrom( getAttributeType() ) ) {
 			return PluralAttributeSource.Nature.MAP;
 		}
 		else if ( List.class.isAssignableFrom( getAttributeType() ) ) {
-			return isIndexed() ? PluralAttributeSource.Nature.LIST : PluralAttributeSource.Nature.BAG;
+			if ( isIndexed() ) {
+				return PluralAttributeSource.Nature.LIST;
+			}
+			else if ( isCollectionIdPresent ) {
+				return PluralAttributeSource.Nature.ID_BAG;
+			}
+			else {
+				return PluralAttributeSource.Nature.BAG;
+			}
 		}
 		else if ( Set.class.isAssignableFrom( getAttributeType() ) ) {
 			return PluralAttributeSource.Nature.SET;
@@ -265,22 +321,24 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		else if ( getAttributeType().isArray() ) {
 			return PluralAttributeSource.Nature.ARRAY;
 		}
+		else if ( Collection.class.isAssignableFrom( getAttributeType() ) ) {
+			return isCollectionIdPresent ? PluralAttributeSource.Nature.ID_BAG : PluralAttributeSource.Nature.BAG;
+		}
 		else {
 			return PluralAttributeSource.Nature.BAG;
 		}
 	}
 
-	private OnDeleteAction determineOnDeleteAction() {
 
-		OnDeleteAction action = null;
+	private OnDeleteAction determineOnDeleteAction() {
 		final AnnotationInstance onDeleteAnnotation = JandexHelper.getSingleAnnotation(
 				annotations(),
 				HibernateDotNames.ON_DELETE
 		);
 		if ( onDeleteAnnotation != null ) {
-			action = JandexHelper.getEnumValue( onDeleteAnnotation, "action", OnDeleteAction.class );
+			return JandexHelper.getEnumValue( onDeleteAnnotation, "action", OnDeleteAction.class );
 		}
-		return action;
+		return null;
 	}
 
 	@Override
@@ -369,9 +427,10 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		);
 
 		if ( jpaWhereAnnotation != null && hibernateWhereAnnotation != null ) {
-			throw new AnnotationException(
+			throw new MappingException(
 					"Cannot use sql order by clause (@org.hibernate.annotations.OrderBy) " +
-							"in conjunction with JPA order by clause (@java.persistence.OrderBy) on  " + getRole()
+							"in conjunction with JPA order by clause (@java.persistence.OrderBy) on  " + getRole(),
+					getContext().getOrigin()
 			);
 		}
 
@@ -385,10 +444,19 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 			// associated entity is assumed
 			// The binder will need to take this into account and generate the right property names
 			orderBy = JandexHelper.getValue( jpaWhereAnnotation, "value", String.class );
-			orderBy = orderBy == null ?  "" : orderBy;
+			if ( orderBy == null ) {
+				orderBy = isBasicCollection() ?  "$element$ asc" :"id asc" ;
+			}
+			if ( orderBy.equalsIgnoreCase( "desc" ) ) {
+				orderBy = isBasicCollection() ? "$element$ desc" :"id desc";
+			}
 		}
 
 		return orderBy;
+	}
+
+	private boolean isBasicCollection(){
+		return getNature() == Nature.ELEMENT_COLLECTION_BASIC || getNature() == Nature.ELEMENT_COLLECTION_EMBEDDABLE;
 	}
 
 	private Caching determineCachingSettings() {
@@ -418,6 +486,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 		return caching;
 	}
+
+
 }
 
 

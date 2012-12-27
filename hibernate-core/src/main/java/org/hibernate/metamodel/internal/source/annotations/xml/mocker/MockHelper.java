@@ -53,7 +53,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
  */
 public class MockHelper {
 
-	static final AnnotationValue[] EMPTY_ANNOTATION_VALUE_ARRAY = new AnnotationValue[0];
+	public static final AnnotationValue[] EMPTY_ANNOTATION_VALUE_ARRAY = new AnnotationValue[0];
 	static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
 	/**
@@ -305,9 +305,9 @@ public class MockHelper {
 		);
 	}
 
-	enum TargetType {METHOD, FIELD, PROPERTY}
+	public enum TargetType {METHOD, FIELD, PROPERTY}
 
-	static AnnotationTarget getTarget(ServiceRegistry serviceRegistry, ClassInfo classInfo, String name, TargetType type) {
+	public static AnnotationTarget getTarget(ServiceRegistry serviceRegistry, ClassInfo classInfo, String name, TargetType type) {
 		Class clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( classInfo.toString() );
 		switch ( type ) {
 			case FIELD:
@@ -440,7 +440,7 @@ public class MockHelper {
 		return Type.create( DotName.createSimple( clazz.getName() ), getTypeKind( clazz ) );
 	}
 
-	private static Type.Kind getTypeKind(Class clazz) {
+	public static Type.Kind getTypeKind(Class clazz) {
 		Type.Kind kind;
 		if ( clazz == Void.TYPE ) {
 			kind = Type.Kind.VOID;

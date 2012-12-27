@@ -57,6 +57,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	private final Set<CascadeStyle> cascadeStyles;
 
 	public ToOneAttributeSourceImpl(AssociationAttribute associationAttribute) {
+
 		super( associationAttribute );
 		this.associationAttribute = associationAttribute;
 		this.cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet(
@@ -75,9 +76,8 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 				throw new NotYetImplementedException( "One-to-one using annotations is not supported yet." );
 		}
 		else {
-			throw new AssertionError(
-					"Wrong attribute nature for toOne attribute: " + associationAttribute.getNature()
-			);
+			throw new AssertionError(String.format( "Wrong attribute nature[%s] for toOne attribute: %s",
+					associationAttribute.getNature(), associationAttribute.getRole() ));
 		}
 	}
 

@@ -4,6 +4,7 @@ import java.util.EnumSet;
 
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
@@ -15,16 +16,16 @@ import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 		implements IndexedPluralAttributeSource {
 	private final PluralAttributeIndexSource indexSource;
-	private final static EnumSet<MappedAttribute.Nature> validNatures = EnumSet.of(
+	private final static EnumSet<MappedAttribute.Nature> VALID_NATURES = EnumSet.of(
 			MappedAttribute.Nature.MANY_TO_MANY,
 			MappedAttribute.Nature.ONE_TO_MANY,
 			MappedAttribute.Nature.ELEMENT_COLLECTION_BASIC,
 			MappedAttribute.Nature.ELEMENT_COLLECTION_EMBEDDABLE);
 
 	public IndexedPluralAttributeSourceImpl(PluralAssociationAttribute attribute,
-			EntityClass entityClass ) {
+			ConfiguredClass entityClass ) {
 		super( attribute, entityClass );
-		if ( !validNatures.contains( attribute.getNature() ) ) {
+		if ( !VALID_NATURES.contains( attribute.getNature() ) ) {
 			throw new MappingException(
 					"Indexed column could be only mapped on the MANY side",
 					attribute.getContext().getOrigin()

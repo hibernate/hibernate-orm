@@ -31,8 +31,8 @@ import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
-import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.spi.binding.CascadeType;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
@@ -47,7 +47,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	private static final String PATH_SEPARATOR = ".";
 	
 	private final AssociationAttribute associationAttribute;
-	private final EntityClass entityClass;
+	private final ConfiguredClass entityClass;
 	
 	private List<AttributeSource> attributeSources
 			= new ArrayList<AttributeSource>();
@@ -56,7 +56,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	
 	public CompositePluralAttributeElementSourceImpl(
 			AssociationAttribute associationAttribute,
-			EntityClass rootEntityClass ) {
+			ConfiguredClass rootEntityClass ) {
 		this.associationAttribute = associationAttribute;
 		this.entityClass = rootEntityClass;
 		
@@ -152,8 +152,8 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 		}
 		for ( AssociationAttribute associationAttribute : embeddableClass.getAssociationAttributes() ) {
 			associationAttribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
-			attributeSources.add( new ToOneAttributeSourceImpl( associationAttribute ) );
 		}
+		SourceHelper.resolveAssociationAttributes( embeddableClass, attributeSources );
 	}
 
 	private Map<String, AttributeOverride> createAggregatedOverrideMap(

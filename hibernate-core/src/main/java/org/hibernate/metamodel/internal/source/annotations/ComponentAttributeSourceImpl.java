@@ -144,8 +144,8 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 					}
 					for ( AssociationAttribute associationAttribute : embeddableClass.getAssociationAttributes() ) {
 						associationAttribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
-						attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );
 					}
+					SourceHelper.resolveAssociationAttributes( embeddableClass, attributeList );
 					return Collections.unmodifiableList( attributeList );
 				}
 			}

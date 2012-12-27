@@ -1980,23 +1980,7 @@ public class Binder {
 		if ( Orderable.class.isInstance( attributeSource ) ) {
 			final Orderable orderable = (Orderable) attributeSource;
 			if ( orderable.isOrdered() ) {
-				String orderBy = orderable.getOrder();
-				if ( orderBy.equals( "" ) ) {
-					PrimaryKey pk = attributeBinding.getPluralAttributeKeyBinding()
-							.getReferencedAttributeBinding()
-							.getContainer()
-							.seekEntityBinding()
-							.getPrimaryTable()
-							.getPrimaryKey();
-					List<Column> pkColumns = pk.getColumns();
-					StringBuffer sb = new StringBuffer();
-					for ( final Column column : pkColumns ) {
-						sb.append( column.getColumnName().getText() );
-						sb.append( " asc ," );
-					}
-					orderBy = sb.substring( 0, sb.length() - 2 );
-				}
-				attributeBinding.setOrderBy( orderBy );
+				attributeBinding.setOrderBy( orderable.getOrder() );
 
 			}
 		}
@@ -2250,47 +2234,52 @@ public class Binder {
 		}
 	}
 
+	/**
+	 * TODO : It is really confusing that we have so many different <tt>natures</tt>
+	 */
 	private void bindCollectionTablePrimaryKey(
 			final AbstractPluralAttributeBinding attributeBinding,
 			final PluralAttributeSource attributeSource) {
-		PluralAttributeSource.Nature pluralAttributeNature = attributeSource.getNature();
-		if ( attributeSource.getElementSource().getNature() == PluralAttributeElementSource.Nature.ONE_TO_MANY
-				|| pluralAttributeNature == PluralAttributeSource.Nature.BAG ) {
+		final PluralAttributeSource.Nature pluralAttributeSourceNature = attributeSource.getNature();
+		final PluralAttributeElementSource.Nature pluralElementSourceNature = attributeSource.getElementSource().getNature();
+		final PluralAttributeElementBinding.Nature pluralElementBindingNature = attributeBinding.getPluralAttributeElementBinding().getNature();
+
+		//TODO what is this case? it would be really good to add a comment
+		if ( pluralElementSourceNature == PluralAttributeElementSource.Nature.ONE_TO_MANY
+				|| pluralAttributeSourceNature == PluralAttributeSource.Nature.BAG ) {
 			return;
 		}
-		if ( attributeBinding.getPluralAttributeElementBinding()
-				.getNature() == PluralAttributeElementBinding.Nature.BASIC ) {
-			if ( pluralAttributeNature == PluralAttributeSource.Nature.SET ) {
-				bindBasicSetCollectionTablePrimaryKey( (SetBinding) attributeBinding );
-			}
-			else if (
-					pluralAttributeNature == PluralAttributeSource.Nature.LIST
-							|| pluralAttributeNature == PluralAttributeSource.Nature.MAP
-							|| pluralAttributeNature == PluralAttributeSource.Nature.ARRAY ) {
-				bindIndexedCollectionTablePrimaryKey( (IndexedPluralAttributeBinding) attributeBinding );
-			}
-			else {
-				throw new NotYetImplementedException(
-						String.format( "%s of basic elements is not supported yet.", pluralAttributeNature )
-				);
+		if ( pluralElementBindingNature == PluralAttributeElementBinding.Nature.BASIC ) {
+			switch ( pluralAttributeSourceNature ) {
+				case SET:
+					bindBasicSetCollectionTablePrimaryKey( (SetBinding) attributeBinding );
+					break;
+				case LIST:
+				case MAP:
+				case ARRAY:
+					bindIndexedCollectionTablePrimaryKey( (IndexedPluralAttributeBinding) attributeBinding );
+					break;
+				default:
+					throw new NotYetImplementedException(
+							String.format( "%s of basic elements is not supported yet.", pluralAttributeSourceNature )
+					);
 			}
 		}
-		else if ( attributeBinding.getPluralAttributeElementBinding()
-				.getNature() == PluralAttributeElementBinding.Nature.MANY_TO_MANY ) {
+		else if ( pluralElementBindingNature == PluralAttributeElementBinding.Nature.MANY_TO_MANY ) {
 			if ( !attributeBinding.getPluralAttributeKeyBinding().isInverse() ) {
-				if ( pluralAttributeNature == PluralAttributeSource.Nature.SET ) {
-					bindSetCollectionTablePrimaryKey( (SetBinding) attributeBinding );
-				}
-				else if (
-						pluralAttributeNature == PluralAttributeSource.Nature.LIST
-								|| pluralAttributeNature == PluralAttributeSource.Nature.MAP
-								|| pluralAttributeNature == PluralAttributeSource.Nature.ARRAY ) {
-					bindIndexedCollectionTablePrimaryKey( (IndexedPluralAttributeBinding) attributeBinding );
-				}
-				else {
-					throw new NotYetImplementedException(
-							String.format( "Many-to-many %s is not supported yet.", pluralAttributeNature )
-					);
+				switch ( pluralAttributeSourceNature ) {
+					case SET:
+						bindSetCollectionTablePrimaryKey( (SetBinding) attributeBinding );
+						break;
+					case LIST:
+					case MAP:
+					case ARRAY:
+						bindIndexedCollectionTablePrimaryKey( (IndexedPluralAttributeBinding) attributeBinding );
+						break;
+					default:
+						throw new NotYetImplementedException(
+								String.format( "Many-to-many %s is not supported yet.", pluralAttributeSourceNature )
+						);
 				}
 			}
 		}

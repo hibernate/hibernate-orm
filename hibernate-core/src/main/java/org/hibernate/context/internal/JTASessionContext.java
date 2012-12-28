@@ -23,8 +23,9 @@
  */
 package org.hibernate.context.internal;
 
-import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javax.transaction.Synchronization;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
@@ -67,7 +68,7 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 public class JTASessionContext extends AbstractCurrentSessionContext {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JTASessionContext.class.getName());
 
-	private transient Map currentSessionMap = new Hashtable();
+	private transient Map<Object, Session> currentSessionMap = new ConcurrentHashMap<Object, Session>();
 
 	public JTASessionContext(SessionFactoryImplementor factory) {
 		super( factory );
@@ -103,7 +104,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 
 		final Object txnIdentifier = jtaPlatform.getTransactionIdentifier( txn );
 
-		Session currentSession = ( Session ) currentSessionMap.get( txnIdentifier );
+		Session currentSession = currentSessionMap.get( txnIdentifier );
 
 		if ( currentSession == null ) {
 			currentSession = buildOrObtainSession();

@@ -62,6 +62,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -163,7 +164,11 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			metadataImplementor = buildMetadata( bootRegistry, serviceRegistry );
 			afterConstructAndConfigureMetadata( metadataImplementor );
 			applyCacheSettings(metadataImplementor);
-			sessionFactory = ( SessionFactoryImplementor ) metadataImplementor.buildSessionFactory();
+			SessionFactoryBuilder sessionFactoryBuilder = metadataImplementor.getSessionFactoryBuilder();
+			if(configuration.getEntityNotFoundDelegate()!=null){
+				sessionFactoryBuilder.with( configuration.getEntityNotFoundDelegate() );
+			}
+			sessionFactory = ( SessionFactoryImplementor )sessionFactoryBuilder.build();
 		}
 		else {
 			// this is done here because Configuration does not currently support 4.0 xsd

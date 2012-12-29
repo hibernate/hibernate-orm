@@ -129,6 +129,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -214,6 +215,7 @@ public final class SessionFactoryImpl
 	private final transient SessionFactoryOptions sessionFactoryOptions;
 	private final transient CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
 	private final transient CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
+	private transient EntityNameResolver entityNameResolver = new CoordinatingEntityNameResolver();
 
 	@SuppressWarnings( {"unchecked", "ThrowableResultOfMethodCallIgnored"})
 	public SessionFactoryImpl(
@@ -1019,7 +1021,12 @@ public final class SessionFactoryImpl
 		return typeResolver;
 	}
 
-	private void registerEntityNameResolvers(EntityPersister persister) {
+	@Override
+    public EntityNameResolver getEntityNameResolver() {
+        return entityNameResolver;
+    }
+
+    private void registerEntityNameResolvers(EntityPersister persister) {
 		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizer() == null ) {
 			return;
 		}
@@ -1717,6 +1724,33 @@ public final class SessionFactoryImpl
 			return this;
 		}
 	}
+	
+	   private class CoordinatingEntityNameResolver implements EntityNameResolver {
+	        public String resolveEntityName(Object entity) {
+	            String entityName = getInterceptor().getEntityName( entity );
+	            if ( entityName != null ) {
+	                return entityName;
+	            }
+
+	            for ( EntityNameResolver resolver : SessionFactoryImpl.this.iterateEntityNameResolvers() ) {
+	                entityName = resolver.resolveEntityName( entity );
+	                if ( entityName != null ) {
+	                    break;
+	                }
+	            }
+
+	            if ( entityName != null ) {
+	                return entityName;
+	            }
+
+	            // the old-time stand-by...
+	            if ( HibernateProxy.class.isInstance( entity ) ) {
+	                 return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getEntityName();
+	            }
+	            return entity.getClass().getName();
+	        }
+	    }
+
 
 	@Override
 	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
@@ -1755,6 +1789,7 @@ public final class SessionFactoryImpl
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
 		LOG.trace( "Deserializing" );
 		in.defaultReadObject();
+		entityNameResolver = new CoordinatingEntityNameResolver();
 		LOG.debugf( "Deserialized: %s", uuid );
 	}
 

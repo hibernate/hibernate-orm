@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+      "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+          "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.any">
+
+    <class entity-name="dbobject1" name="DBObject" table="T_ANY_DBOBJECT1" >
+        <tuplizer class="org.hibernate.test.any.DBObjectTuplizer"/>
+        <id name="id" column="ID_">
+            <generator class="increment" />
+        </id>
+        <property name="entityName" formula="'dbobject1'" />
+    </class>
+
+    <class entity-name="dbobject2" name="DBObject" table="T_ANY_DBOBJECT2" >
+        <tuplizer class="org.hibernate.test.any.DBObjectTuplizer"/>
+        <id name="id" column="ID_">
+            <generator class="increment" />
+        </id>
+        <property name="entityName" formula="'dbobject2'" />
+    </class>
+    
+    <class name="DBObjectReference" table="T_ANY_DBOBJECTREFERENCE">
+        <id name="id" column="ID_">
+            <generator class="increment" />
+        </id>
+        <any name="ref" id-type="long" cascade="none">
+            <meta-value value="1" class="dbobject1"/>
+            <meta-value value="2" class="dbobject2"/>
+            <column name="DATATYPE_"/>
+            <column name="DATAID_"/>
+        </any>
+    </class>
+
+ </hibernate-mapping>

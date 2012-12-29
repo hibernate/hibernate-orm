@@ -198,12 +198,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) 
 	throws HibernateException {
-		//TODO: terrible implementation!
-		return value == null
-				? "null"
-				: factory.getTypeHelper()
-						.entity( HibernateProxyHelper.getClassWithoutInitializingProxy( value ) )
-						.toLoggableString( value, factory );
+	    if (value == null) {
+	        return "null";
+	    }
+	    String entityName = factory.getEntityNameResolver().resolveEntityName(value);
+	    return factory.getTypeHelper().entity(entityName).toLoggableString(value, factory);
 	}
 
 	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {

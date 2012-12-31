@@ -179,7 +179,9 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	private String getAlias(String expression) {
 		Matcher matcher = ALIAS_PATTERN.matcher( expression );
 		if ( matcher.find() ) {
-			return matcher.group( 0 ).replaceFirst( "(?i)\\sas\\s", "" ).trim();
+			// Taking advantage of Java regular expressions greedy behavior while extracting the last AS keyword.
+			// Note that AS keyword can appear in CAST operator, e.g. 'cast(tab1.col1 as varchar(255)) as col1'.
+			return matcher.group( 0 ).replaceFirst( "(?i)(.)*\\sas\\s", "" ).trim();
 		}
 		return null;
 	}

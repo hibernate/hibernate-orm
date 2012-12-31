@@ -192,7 +192,7 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 				throw new HibernateException( "Unexpected error trying to determine REF_CURSOR field value : " + e.getMessage() );
 			}
 		}
-		return refCursorTypeCode.intValue();
+		return refCursorTypeCode;
 	}
 
 

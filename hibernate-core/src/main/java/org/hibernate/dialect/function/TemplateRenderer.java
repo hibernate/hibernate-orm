@@ -84,7 +84,7 @@ public class TemplateRenderer {
 		chunks = chunkList.toArray( new String[chunkList.size()] );
 		paramIndexes = new int[paramList.size()];
 		for ( int i = 0; i < paramIndexes.length; ++i ) {
-			paramIndexes[i] = paramList.get( i ).intValue();
+			paramIndexes[i] = paramList.get( i );
 		}
 	}
 

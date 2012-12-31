@@ -384,8 +384,7 @@ public final class ASTUtil {
 	public static Map generateTokenNameCache(Class tokenTypeInterface) {
 		final Field[] fields = tokenTypeInterface.getFields();
 		Map cache = new HashMap( (int)( fields.length * .75 ) + 1 );
-		for ( int i = 0; i < fields.length; i++ ) {
-			final Field field = fields[i];
+		for ( final Field field : fields ) {
 			if ( Modifier.isStatic( field.getModifiers() ) ) {
 				try {
 					cache.put( field.get( null ), field.getName() );
@@ -429,10 +428,10 @@ public final class ASTUtil {
 		String tokenTypeName = Integer.toString( tokenType );
 		if ( tokenTypeInterface != null ) {
 			Field[] fields = tokenTypeInterface.getFields();
-			for ( int i = 0; i < fields.length; i++ ) {
-				final Integer fieldValue = extractIntegerValue( fields[i] );
-				if ( fieldValue != null && fieldValue.intValue() == tokenType ) {
-					tokenTypeName = fields[i].getName();
+			for ( Field field : fields ) {
+				final Integer fieldValue = extractIntegerValue( field );
+				if ( fieldValue != null && fieldValue == tokenType ) {
+					tokenTypeName = field.getName();
 					break;
 				}
 			}
@@ -451,7 +450,7 @@ public final class ASTUtil {
 				rtn =  ( ( Short ) value ).intValue();
 			}
 			else if ( value instanceof Long ) {
-				if ( ( ( Long ) value ).longValue() <= Integer.MAX_VALUE ) {
+				if ( ( Long ) value  <= Integer.MAX_VALUE ) {
 					rtn = ( ( Long ) value ).intValue();
 				}
 			}

@@ -550,9 +550,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			qe.setQueryString( queryString );
 			throw qe;
 		}
-		if ( o instanceof Integer ) {
-			return new int[]{ ( ( Integer ) o ).intValue() };
-		}
+		if ( o instanceof Integer ) return new int[] { (Integer) o };
 		else {
 			return ArrayHelper.toIntArray( ( ArrayList ) o );
 		}

@@ -79,7 +79,7 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
 
 	@SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })
 	public Integer next(Integer current, SessionImplementor session) {
-		return Integer.valueOf( current.intValue() + 1 );
+		return current+1;
 	}
 
 	public Comparator<Integer> getComparator() {

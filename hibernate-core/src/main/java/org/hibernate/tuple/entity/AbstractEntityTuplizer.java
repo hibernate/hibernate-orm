@@ -645,13 +645,13 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 				: propertyPath;
 		}
 		index = entityMetamodel.getPropertyIndexOrNull( basePropertyName );
-		final Object baseValue = getPropertyValue( entity, index.intValue() );
+		final Object baseValue = getPropertyValue( entity, index );
 		if ( loc > 0 ) {
 			if ( baseValue == null ) {
 				return null;
 			}
 			return getComponentValue(
-					(ComponentType) entityMetamodel.getPropertyTypes()[index.intValue()],
+					(ComponentType) entityMetamodel.getPropertyTypes()[index],
 					baseValue,
 					propertyPath.substring(loc+1)
 			);

@@ -62,7 +62,7 @@ public class JdbcTypeJavaClassMappings {
 	public int determineJdbcTypeCodeForJavaClass(Class cls) {
 		Integer typeCode = JdbcTypeJavaClassMappings.javaClassToJdbcTypeCodeMap.get( cls );
 		if ( typeCode != null ) {
-			return typeCode.intValue();
+			return typeCode;
 		}
 
 		int specialCode = cls.hashCode();

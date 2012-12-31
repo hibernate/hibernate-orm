@@ -134,7 +134,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	throws HibernateException, SQLException {
 
 		Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-		int index = ( (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() ) ).intValue();
+		int index = (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
 		for ( int i = tempList.size(); i<=index; i++) {
 			tempList.add(i, null);
 		}
@@ -205,7 +205,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
-		java.util.List deletes = new ArrayList();
+		java.util.List<Integer> deletes = new ArrayList<Integer>();
 		Serializable sn = getSnapshot();
 		int snSize = Array.getLength(sn);
 		int arraySize = Array.getLength(array);

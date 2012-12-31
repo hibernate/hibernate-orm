@@ -192,10 +192,10 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		query.setReadOnly( nqd.isReadOnly() );
 
 		if ( nqd.getTimeout() != null ) {
-			query.setTimeout( nqd.getTimeout().intValue() );
+			query.setTimeout( nqd.getTimeout() );
 		}
 		if ( nqd.getFetchSize() != null ) {
-			query.setFetchSize( nqd.getFetchSize().intValue() );
+			query.setFetchSize( nqd.getFetchSize() );
 		}
 		if ( nqd.getCacheMode() != null ) {
 			query.setCacheMode( nqd.getCacheMode() );

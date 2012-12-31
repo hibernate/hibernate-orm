@@ -133,7 +133,7 @@ public final class ConfigurationHelper {
 			return defaultValue;
 		}
 		if ( Integer.class.isInstance( value ) ) {
-			return ( (Integer) value ).intValue();
+			return (Integer) value;
 		}
 		if ( String.class.isInstance( value ) ) {
 			return Integer.parseInt( (String) value );

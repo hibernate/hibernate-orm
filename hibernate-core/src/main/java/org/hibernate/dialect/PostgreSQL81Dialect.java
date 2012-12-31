@@ -354,7 +354,7 @@ public class PostgreSQL81Dialect extends Dialect {
 	private static ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
 		public String extractConstraintName(SQLException sqle) {
 			try {
-				int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle )).intValue();
+				int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) );
 				switch (sqlState) {
 					// CHECK VIOLATION
 					case 23514: return extractUsingTemplate("violates check constraint \"","\"", sqle.getMessage());

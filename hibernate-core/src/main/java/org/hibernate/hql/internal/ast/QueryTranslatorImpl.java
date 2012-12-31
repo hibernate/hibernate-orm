@@ -359,15 +359,13 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			// NOTE : firstRow is zero-based
 			int first = !hasLimit || queryParameters.getRowSelection().getFirstRow() == null
 						? 0
-						: queryParameters.getRowSelection().getFirstRow().intValue();
+						: queryParameters.getRowSelection().getFirstRow();
 			int max = !hasLimit || queryParameters.getRowSelection().getMaxRows() == null
 						? -1
-						: queryParameters.getRowSelection().getMaxRows().intValue();
-			int size = results.size();
+						: queryParameters.getRowSelection().getMaxRows();
 			List tmp = new ArrayList();
 			IdentitySet distinction = new IdentitySet();
-			for ( int i = 0; i < size; i++ ) {
-				final Object result = results.get( i );
+			for ( final Object result : results ) {
 				if ( !distinction.add( result ) ) {
 					continue;
 				}

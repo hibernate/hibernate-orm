@@ -84,22 +84,11 @@ public enum CacheMode {
 			return null;
 		}
 
-		if ( GET.name().equalsIgnoreCase( setting ) ) {
-			return CacheMode.GET;
+		try {
+			return CacheMode.valueOf( setting.toUpperCase() );
 		}
-		if ( IGNORE.name().equalsIgnoreCase( setting ) ) {
-			return CacheMode.IGNORE;
+		catch ( IllegalArgumentException e ) {
+			throw new MappingException( "Unknown Cache Mode: " + setting );
 		}
-		if ( NORMAL.name().equalsIgnoreCase( setting ) ) {
-			return CacheMode.NORMAL;
-		}
-		if ( PUT.name().equalsIgnoreCase( setting ) ) {
-			return CacheMode.PUT;
-		}
-		if ( REFRESH.name().equalsIgnoreCase( setting ) ) {
-			return CacheMode.REFRESH;
-		}
-
-		throw new MappingException( "Unknown Cache Mode: " + setting );
 	}
 }

@@ -137,7 +137,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	 * Maps each top-level result variable to its SelectExpression;
 	 * (excludes result variables defined in subqueries)
 	 **/
-	private Map<String, SelectExpression> selectExpressionsByResultVariable = new HashMap();
+	private Map<String, SelectExpression> selectExpressionsByResultVariable = new HashMap<String, SelectExpression>();
 
 	private Set querySpaces = new HashSet();
 
@@ -492,8 +492,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		private void applyParameterSpecifications(ParameterContainer parameterContainer) {
 			if ( parameterContainer.hasEmbeddedParameters() ) {
 				ParameterSpecification[] specs = parameterContainer.getEmbeddedParameters();
-				for ( int i = 0; i < specs.length; i++ ) {
-					applyParameterSpecification( specs[i] );
+				for ( ParameterSpecification spec : specs ) {
+					applyParameterSpecification( spec );
 				}
 			}
 		}
@@ -1064,7 +1064,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			throw qe;
 		}
 		if ( o instanceof Integer ) {
-			return new int[]{( ( Integer ) o ).intValue()};
+			return new int[]{ (Integer) o };
 		}
 		else {
 			return ArrayHelper.toIntArray( (ArrayList) o );

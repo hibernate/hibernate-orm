@@ -107,7 +107,7 @@ public class ComponentMetamodel implements Serializable {
 		if ( index == null ) {
 			throw new HibernateException( "component does not contain such a property [" + propertyName + "]" );
 		}
-		return index.intValue();
+		return index;
 	}
 
 	public StandardProperty getProperty(String propertyName) {

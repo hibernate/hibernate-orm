@@ -79,7 +79,7 @@ public class PersistentListElementHolder extends PersistentIndexedElementHolder 
 			Element elem = (Element) elements.get(i);
 			Object object = elementType.fromXMLNode( elem, persister.getFactory() );
 			Integer index = IntegerType.INSTANCE.fromString( getIndex(elem, indexNodeName, i) );
-			result[ index.intValue() ] = elementType.disassemble( object, getSession(), null );
+			result[index] = elementType.disassemble( object, getSession(), null );
 		}
 		return result;
 	}

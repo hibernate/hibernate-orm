@@ -67,9 +67,9 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 	 * @return <tt>true</tt> if there is another result
 	 */
 	public boolean next() throws HibernateException {
-		if ( maxPosition != null && maxPosition.intValue() <= currentPosition ) {
+		if ( maxPosition != null && maxPosition <= currentPosition ) {
 			currentRow = null;
-			currentPosition = maxPosition.intValue() + 1;
+			currentPosition = maxPosition + 1;
 			return false;
 		}
 
@@ -130,7 +130,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 				getSession(),
 				getQueryParameters(),
 				false,
-		        ( maxPosition != null && currentPosition > maxPosition.intValue() )
+		        ( maxPosition != null && currentPosition > maxPosition )
 		);
 
 		currentRow = new Object[] { loadResult };
@@ -186,10 +186,10 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 	public boolean last() throws HibernateException {
 		boolean more = false;
 		if ( maxPosition != null ) {
-			if ( currentPosition > maxPosition.intValue() ) {
+			if ( currentPosition > maxPosition ) {
 				more = previous();
 			}
-			for ( int i = currentPosition; i < maxPosition.intValue(); i++ ) {
+			for ( int i = currentPosition; i < maxPosition; i++ ) {
 				more = next();
 			}
 		}
@@ -284,7 +284,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 			return false;
 		}
 		else {
-			return currentPosition == maxPosition.intValue();
+			return currentPosition == maxPosition;
 		}
 	}
 
@@ -312,7 +312,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		else if ( rowNumber == -1 ) {
 			return last();
 		}
-		else if ( maxPosition != null && rowNumber == maxPosition.intValue() ) {
+		else if ( maxPosition != null && rowNumber == maxPosition ) {
 			return last();
 		}
 		return scroll( rowNumber - currentPosition );

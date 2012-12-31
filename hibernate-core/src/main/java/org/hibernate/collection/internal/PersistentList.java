@@ -397,7 +397,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	public Object readFrom(ResultSet rs, CollectionPersister persister, CollectionAliases descriptor, Object owner)
 	throws HibernateException, SQLException {
 		Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
-		int index = ( (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() ) ).intValue();
+		int index = (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
 
 		//pad with nulls from the current last element up to the new index
 		for ( int i = list.size(); i<=index; i++) {

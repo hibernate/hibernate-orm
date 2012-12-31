@@ -807,7 +807,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		if ( index == null ) {
 			return null;
 		}
-		return tableNames[propertyTableNumbers[index.intValue()]];
+		return tableNames[propertyTableNumbers[index]];
 	}
 
 	public String[] getConstraintOrderedTableNameClosure() {

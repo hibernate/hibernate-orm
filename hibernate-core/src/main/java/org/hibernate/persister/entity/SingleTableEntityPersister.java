@@ -927,7 +927,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		Type type = propertyMapping.toType(propertyName);
 		if ( type.isAssociationType() && ( (AssociationType) type ).useLHSPrimaryKey() ) return 0;
 		final Integer tabnum = (Integer) propertyTableNumbersByNameAndSubclass.get(entityName + '.' + propertyName);
-		return tabnum==null ? 0 : tabnum.intValue();
+		return tabnum==null ? 0 : tabnum;
 	}
 	
 	protected String getSequentialSelect(String entityName) {
@@ -1011,7 +1011,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	public String getPropertyTableName(String propertyName) {
 		Integer index = getEntityMetamodel().getPropertyIndexOrNull(propertyName);
 		if (index==null) return null;
-		return qualifiedTableNames[ propertyTableNumbers[ index.intValue() ] ];
+		return qualifiedTableNames[ propertyTableNumbers[index] ];
 	}
 	
 	public void postInstantiate() {

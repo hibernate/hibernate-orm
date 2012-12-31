@@ -113,7 +113,7 @@ public final class ArrayHelper {
 		int[] arr = new int[ coll.size() ];
 		int i=0;
 		while( iter.hasNext() ) {
-			arr[i++] = ( (Integer) iter.next() ).intValue();
+			arr[i++] = (Integer) iter.next();
 		}
 		return arr;
 	}
@@ -123,7 +123,7 @@ public final class ArrayHelper {
 		boolean[] arr = new boolean[ coll.size() ];
 		int i=0;
 		while( iter.hasNext() ) {
-			arr[i++] = ( (Boolean) iter.next() ).booleanValue();
+			arr[i++] = (Boolean) iter.next();
 		}
 		return arr;
 	}
@@ -214,23 +214,29 @@ public final class ArrayHelper {
 	}
 
 	public static boolean isAllNegative(int[] array) {
-		for ( int i=0; i<array.length; i++ ) {
-			if ( array[i] >=0 ) return false;
+		for ( int anArray : array ) {
+			if ( anArray >= 0 ) {
+				return false;
+			}
 		}
 		return true;
 	}
 
 	public static boolean isAllTrue(boolean[] array) {
-		for ( int i=0; i<array.length; i++ ) {
-			if ( !array[i] ) return false;
+		for ( boolean anArray : array ) {
+			if ( !anArray ) {
+				return false;
+			}
 		}
 		return true;
 	}
 
 	public static int countTrue(boolean[] array) {
 		int result=0;
-		for ( int i=0; i<array.length; i++ ) {
-			if ( array[i] ) result++;
+		for ( boolean anArray : array ) {
+			if ( anArray ) {
+				result++;
+			}
 		}
 		return result;
 	}
@@ -244,8 +250,10 @@ public final class ArrayHelper {
 	}*/
 
 	public static boolean isAllFalse(boolean[] array) {
-		for ( int i=0; i<array.length; i++ ) {
-			if ( array[i] ) return false;
+		for ( boolean anArray : array ) {
+			if ( anArray ) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -299,8 +307,8 @@ public final class ArrayHelper {
 	public static int hash(Object[] array) {
 		int length = array.length;
 		int seed = SEED;
-		for (int index = 0 ; index < length ; index++) {
-			seed = hash( seed, array[index] == null ? 0 : array[index].hashCode() );
+		for ( Object anArray : array ) {
+			seed = hash( seed, anArray == null ? 0 : anArray.hashCode() );
 		}
 		return seed;
 	}
@@ -311,8 +319,8 @@ public final class ArrayHelper {
 	public static int hash(char[] array) {
 		int length = array.length;
 		int seed = SEED;
-		for (int index = 0 ; index < length ; index++) {
-			seed = hash( seed, array[index] ) ;
+		for ( char anArray : array ) {
+			seed = hash( seed, anArray );
 		}
 		return seed;
 	}
@@ -323,8 +331,8 @@ public final class ArrayHelper {
 	public static int hash(byte[] bytes) {
 		int length = bytes.length;
 		int seed = SEED;
-		for (int index = 0 ; index < length ; index++) {
-			seed = hash( seed, bytes[index] ) ;
+		for ( byte aByte : bytes ) {
+			seed = hash( seed, aByte );
 		}
 		return seed;
 	}

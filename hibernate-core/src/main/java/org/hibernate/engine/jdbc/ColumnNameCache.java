@@ -45,7 +45,7 @@ public class ColumnNameCache {
 	public int getIndexForColumnName(String columnName, ResultSet rs) throws SQLException {
 		Integer cached = columnNameToIndexCache.get( columnName );
 		if ( cached != null ) {
-			return cached.intValue();
+			return cached;
 		}
 		else {
 			int index = rs.findColumn( columnName );

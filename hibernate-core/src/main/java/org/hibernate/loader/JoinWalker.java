@@ -724,7 +724,7 @@ public class JoinWalker {
 
 	protected boolean isTooDeep(int currentDepth) {
 		Integer maxFetchDepth = getFactory().getSettings().getMaximumFetchDepth();
-		return maxFetchDepth!=null && currentDepth >= maxFetchDepth.intValue();
+		return maxFetchDepth!=null && currentDepth >= maxFetchDepth;
 	}
 	
 	protected boolean isTooManyCollections() {
@@ -841,7 +841,7 @@ public class JoinWalker {
 		}
 
 		Integer maxFetchDepth = getFactory().getSettings().getMaximumFetchDepth();
-		final boolean tooDeep = maxFetchDepth!=null && depth >= maxFetchDepth.intValue();
+		final boolean tooDeep = maxFetchDepth!=null && depth >= maxFetchDepth;
 		
 		return !tooDeep && !isDuplicateAssociation(lhsTable, lhsColumnNames, type);
 	}

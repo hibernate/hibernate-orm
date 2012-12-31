@@ -791,7 +791,7 @@ public class EntityMetamodel implements Serializable {
 		if ( index == null ) {
 			throw new HibernateException("Unable to resolve property: " + propertyName);
 		}
-		return index.intValue();
+		return index;
 	}
 
 	public Integer getPropertyIndexOrNull(String propertyName) {

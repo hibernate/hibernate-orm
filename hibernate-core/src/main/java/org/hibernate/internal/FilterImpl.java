@@ -120,7 +120,7 @@ public class FilterImpl implements Filter, Serializable {
 		if ( type == null ) {
 			throw new HibernateException( "Undefined filter parameter [" + name + "]" );
 		}
-		if ( values.size() > 0 ) {
+		if ( !values.isEmpty() ) {
 			Class elementClass = values.iterator().next().getClass();
 			if ( !type.getReturnedClass().isAssignableFrom( elementClass ) ) {
 				throw new HibernateException( "Incorrect type for parameter [" + name + "]" );
@@ -161,9 +161,8 @@ public class FilterImpl implements Filter, Serializable {
 	public void validate() throws HibernateException {
 		// for each of the defined parameters, make sure its value
 		// has been set
-		Iterator itr = definition.getParameterNames().iterator();
-		while ( itr.hasNext() ) {
-			final String parameterName = (String) itr.next();
+
+		for ( final String parameterName : definition.getParameterNames() ) {
 			if ( parameters.get( parameterName ) == null ) {
 				throw new HibernateException(
 						"Filter [" + getName() + "] parameter [" + parameterName + "] value not set"

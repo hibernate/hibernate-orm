@@ -109,6 +109,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
+import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
@@ -1326,14 +1327,16 @@ public final class SessionFactoryImpl
 		return results.toArray( new String[results.size()] );
 	}
 
+	@Override
 	public String getImportedClassName(String className) {
-		String result = imports.get(className);
-		if (result==null) {
+		String result = imports.get( className );
+		if ( result == null ) {
 			try {
 				serviceRegistry.getService( ClassLoaderService.class ).classForName( className );
+				imports.put( className, className );
 				return className;
 			}
-			catch (ClassLoadingException cnfe) {
+			catch ( ClassLoadingException cnfe ) {
 				return null;
 			}
 		}
@@ -1515,8 +1518,8 @@ public final class SessionFactoryImpl
 		return identifierGenerators.get(rootEntityName);
 	}
 
-	private org.hibernate.engine.transaction.spi.TransactionFactory transactionFactory() {
-		return serviceRegistry.getService( org.hibernate.engine.transaction.spi.TransactionFactory.class );
+	private TransactionFactory transactionFactory() {
+		return serviceRegistry.getService( TransactionFactory.class );
 	}
 
 	private boolean canAccessTransactionManager() {

@@ -2381,4 +2381,8 @@ public abstract class Dialect implements ConversionContext {
 	public boolean supportsNotNullUnique() {
 		return true;
 	}
+	
+	public String getNotExpression( String expression ) {
+		return "not " + expression;
+	}
 }

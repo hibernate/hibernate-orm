@@ -25,12 +25,12 @@
 package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.spi.TypedValue;
 
 /**
  * Negates another criterion
  * @author Gavin King
+ * @author Brett Meyer
  */
 public class NotExpression implements Criterion {
 
@@ -40,14 +40,9 @@ public class NotExpression implements Criterion {
 		this.criterion = criterion;
 	}
 
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
-	throws HibernateException {
-		if ( criteriaQuery.getFactory().getDialect() instanceof MySQLDialect ) {
-			return "not (" + criterion.toSqlString(criteria, criteriaQuery) + ')';
-		}
-		else {
-			return "not " + criterion.toSqlString(criteria, criteriaQuery);
-		}
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		return criteriaQuery.getFactory().getDialect().getNotExpression(
+				criterion.toSqlString( criteria, criteriaQuery ) );
 	}
 
 	public TypedValue[] getTypedValues(

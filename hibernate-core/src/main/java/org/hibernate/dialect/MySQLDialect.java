@@ -415,4 +415,9 @@ public class MySQLDialect extends Dialect {
 			}
 		};
 	}
+	
+	@Override
+	public String getNotExpression( String expression ) {
+		return "not (" + expression + ")";
+	}
 }

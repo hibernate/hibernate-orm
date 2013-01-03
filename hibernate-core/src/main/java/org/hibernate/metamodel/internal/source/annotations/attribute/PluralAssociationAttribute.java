@@ -33,6 +33,11 @@ import java.util.SortedSet;
 
 import javax.persistence.FetchType;
 
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+
+import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -48,16 +53,12 @@ import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
 
 /**
  * Represents an collection (collection, list, set, map) association attribute.
  *
  * @author Hardy Ferentschik
  * @author Strong Liu
- * @author Brett Meyer
  */
 public class PluralAssociationAttribute extends AssociationAttribute {
 	private final String whereClause;
@@ -85,15 +86,104 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 
 	private LazyCollectionOption lazyOption;
 	private final boolean isCollectionIdPresent;
-	
-	private final String referencedKeyType;
 
 
-	public PluralAssociationAttribute(
+	public static PluralAssociationAttribute createPluralAssociationAttribute(
+			ClassInfo entityClassInfo,
+			String name,
+			Class<?> attributeType,
+			Class<?> referencedAttributeType,
+			Nature attributeNature,
+			String accessType,
+			Map<DotName, List<AnnotationInstance>> annotations,
+			EntityBindingContext context) {
+		return new PluralAssociationAttribute(
+				entityClassInfo,
+				name,
+				attributeType,
+				referencedAttributeType,
+				attributeNature,
+				accessType,
+				annotations,
+				context
+		);
+	}
+
+	public PluralAttributeSource.Nature getPluralAttributeNature() {
+		return pluralAttributeNature;
+	}
+
+	public String getWhereClause() {
+		return whereClause;
+	}
+
+	public String getOrderBy() {
+		return orderBy;
+	}
+
+	public String getInverseForeignKeyName() {
+		return inverseForeignKeyName;
+	}
+	public String getExplicitForeignKeyName(){
+		return explicitForeignKeyName;
+	}
+
+	public Caching getCaching() {
+		return caching;
+	}
+
+	public String getCustomPersister() {
+		return customPersister;
+	}
+
+	public String getCustomLoaderName() {
+		return customLoaderName;
+	}
+
+	public CustomSQL getCustomInsert() {
+		return customInsert;
+	}
+
+	public CustomSQL getCustomUpdate() {
+		return customUpdate;
+	}
+
+	public CustomSQL getCustomDelete() {
+		return customDelete;
+	}
+
+	public CustomSQL getCustomDeleteAll() {
+		return customDeleteAll;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "PluralAssociationAttribute" );
+		sb.append( "{name='" ).append( getName() ).append( '\'' );
+		sb.append( '}' );
+		return sb.toString();
+	}
+	public OnDeleteAction getOnDeleteAction() {
+		return onDeleteAction;
+	}
+
+	public String getComparatorName() {
+		return comparatorName;
+	}
+
+	public boolean isSorted() {
+		return sorted;
+	}
+
+	public boolean isIndexed() {
+		return isIndexed;
+	}
+
+	private PluralAssociationAttribute(
 			final ClassInfo entityClassInfo,
 			final String name,
 			final Class<?> attributeType,
-			final Class<?> referencedKeyType,
 			final Class<?> referencedAttributeType,
 			final Nature associationType,
 			final String accessType,
@@ -170,89 +260,10 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 					getContext().getOrigin()
 			);
 		}
-		this.isIndexed = orderColumnAnnotation != null
-				|| indexColumnAnnotation != null
-				|| Map.class.isAssignableFrom( getAttributeType() );
+		this.isIndexed = orderColumnAnnotation != null || indexColumnAnnotation != null;
 		this.pluralAttributeNature = resolvePluralAttributeNature();
-		
-		this.referencedKeyType = determineReferencedKeyType( referencedKeyType );
 
 		validateMapping();
-	}
-
-	public PluralAttributeSource.Nature getPluralAttributeNature() {
-		return pluralAttributeNature;
-	}
-
-	public String getWhereClause() {
-		return whereClause;
-	}
-
-	public String getOrderBy() {
-		return orderBy;
-	}
-
-	public String getInverseForeignKeyName() {
-		return inverseForeignKeyName;
-	}
-	public String getExplicitForeignKeyName(){
-		return explicitForeignKeyName;
-	}
-
-	public Caching getCaching() {
-		return caching;
-	}
-
-	public String getCustomPersister() {
-		return customPersister;
-	}
-
-	public String getCustomLoaderName() {
-		return customLoaderName;
-	}
-
-	public CustomSQL getCustomInsert() {
-		return customInsert;
-	}
-
-	public CustomSQL getCustomUpdate() {
-		return customUpdate;
-	}
-
-	public CustomSQL getCustomDelete() {
-		return customDelete;
-	}
-
-	public CustomSQL getCustomDeleteAll() {
-		return customDeleteAll;
-	}
-
-	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "PluralAssociationAttribute" );
-		sb.append( "{name='" ).append( getName() ).append( '\'' );
-		sb.append( '}' );
-		return sb.toString();
-	}
-	public OnDeleteAction getOnDeleteAction() {
-		return onDeleteAction;
-	}
-
-	public String getComparatorName() {
-		return comparatorName;
-	}
-
-	public boolean isSorted() {
-		return sorted;
-	}
-
-	public boolean isIndexed() {
-		return isIndexed;
-	}
-
-	public String getReferencedKeyType() {
-		return referencedKeyType;
 	}
 
 	private void validateMapping() {
@@ -475,27 +486,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 		return caching;
 	}
-	
-	// TODO: For Maps only -- should this be here?
-	private String determineReferencedKeyType(
-			Class<?> referencedKeyType ) {
-		String typeName = null;
 
-		// @MapKeyClass
-		AnnotationInstance mapKeyClassAnnotation
-				= JandexHelper.getSingleAnnotation(
-						annotations(), JPADotNames.MAP_KEY_CLASS );
-		if ( mapKeyClassAnnotation != null ) {
-			typeName = mapKeyClassAnnotation.value().asClass().name().toString();
-		}
-		else {
-			if ( referencedKeyType != null )  {
-				typeName = referencedKeyType.getName();
-			}
-		}
 
-		return typeName;
-	}
 }
 
 

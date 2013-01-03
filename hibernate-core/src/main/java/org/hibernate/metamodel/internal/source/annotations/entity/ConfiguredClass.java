@@ -533,11 +533,10 @@ public class ConfiguredClass {
 			case ELEMENT_COLLECTION_BASIC:
 			case ONE_TO_MANY:
 			case MANY_TO_MANY: {
-				AssociationAttribute attribute = new PluralAssociationAttribute(
+				AssociationAttribute attribute = PluralAssociationAttribute.createPluralAssociationAttribute(
 						classInfo,
 						attributeName,
 						resolvedMember.getType().getErasedType(),
-						resolveCollectionKeyType( resolvedMember ),
 						referencedCollectionType,
 						attributeNature,
 						accessTypeString,
@@ -707,16 +706,6 @@ public class ConfiguredClass {
 		}
 		else if ( Map.class.isAssignableFrom( type ) ) {
 			return resolvedMember.getType().getTypeParameters().get( 1 ).getErasedType();
-		}
-		else {
-			return null;
-		}
-	}
-
-	private Class<?> resolveCollectionKeyType(ResolvedMember resolvedMember) {
-		Class<?> type = resolvedMember.getType().getErasedType();
-		if ( Map.class.isAssignableFrom( type ) ) {
-			return resolvedMember.getType().getTypeParameters().get( 0 ).getErasedType();
 		}
 		else {
 			return null;

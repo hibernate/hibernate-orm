@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
@@ -30,14 +31,7 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 					attribute.getContext().getOrigin()
 			);
 		}
-		switch ( attribute.getPluralAttributeNature() ) {
-		case MAP:
-			// TODO: Need to support MANY_TO_MANY too
-			this.indexSource = new CompositePluralAttributeIndexSourceImpl( attribute );
-			break;
-		default:
-			this.indexSource = new BasicPluralAttributeIndexSourceImpl( attribute );
-		}
+		this.indexSource = new PluralAttributeIndexSourceImpl( this, attribute );
 	}
 
 	@Override

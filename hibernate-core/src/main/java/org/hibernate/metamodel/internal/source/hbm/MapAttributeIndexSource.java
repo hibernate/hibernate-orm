@@ -30,15 +30,14 @@ import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
-import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  *
  */
-// TODO: This probably needs to support non-basic.
-public class MapAttributeIndexSource extends AbstractHbmSourceNode implements BasicPluralAttributeIndexSource {
+public class MapAttributeIndexSource extends AbstractHbmSourceNode implements PluralAttributeIndexSource {
 	private final PluralAttributeIndexBinding.Nature nature;
 	private final List<RelationalValueSource> valueSources;
 	private final ExplicitHibernateTypeSource typeSource;

@@ -112,7 +112,6 @@ import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
@@ -162,6 +161,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -1428,14 +1428,10 @@ public class Binder {
 		if ( attribute == null ) {
 			attribute = attributeBindingContainer.getAttributeContainer().createList( attributeSource.getName() );
 		}
-		int base = 0;
-		if ( IndexedPluralAttributeSource.class.isInstance( attributeSource ) ) { 
-			IndexedPluralAttributeSource indexedAttributeSource
-					= ( IndexedPluralAttributeSource ) attributeSource;
-	 		base = BasicPluralAttributeIndexSource.class.isInstance( attributeSource )
-	 				? BasicPluralAttributeIndexSource.class.cast(
-	 						indexedAttributeSource.getIndexSource() ).base() : 0;
-		}
+		final int base = IndexedPluralAttributeSource.class.isInstance( attributeSource ) ? IndexedPluralAttributeSource.class
+				.cast( attributeSource )
+				.getIndexSource()
+				.base() : 0;
 		return attributeBindingContainer.makeListAttributeBinding(
 				attribute,
 				pluralAttributeElementNature( attributeSource ),
@@ -1454,14 +1450,10 @@ public class Binder {
 		if ( attribute == null ) {
 			attribute = attributeBindingContainer.getAttributeContainer().createArray( attributeSource.getName() );
 		}
-		int base = 0;
-		if ( IndexedPluralAttributeSource.class.isInstance( attributeSource ) ) { 
-			IndexedPluralAttributeSource indexedAttributeSource
-					= ( IndexedPluralAttributeSource ) attributeSource;
-	 		base = BasicPluralAttributeIndexSource.class.isInstance( attributeSource )
-	 				? BasicPluralAttributeIndexSource.class.cast(
-	 						indexedAttributeSource.getIndexSource() ).base() : 0;
-		}
+		final int base = IndexedPluralAttributeSource.class.isInstance( attributeSource ) ? IndexedPluralAttributeSource.class
+				.cast( attributeSource )
+				.getIndexSource()
+				.base() : 0;
 		return attributeBindingContainer.makeArrayAttributeBinding(
 				attribute,
 				pluralAttributeElementNature( attributeSource ),
@@ -1630,8 +1622,8 @@ public class Binder {
 			final PluralAttributeIndexSource attributeSource,
 			final String defaultIndexJavaTypeName) {
 		IndexedPluralAttributeBinding indexedAttributeBinding = attributeBinding;
-		final PluralAttributeIndexBinding indexBinding =
-				indexedAttributeBinding.getPluralAttributeIndexBinding();
+		final BasicPluralAttributeIndexBinding indexBinding =
+				(BasicPluralAttributeIndexBinding) indexedAttributeBinding.getPluralAttributeIndexBinding();
 		indexBinding.setIndexRelationalValue(
 				bindValues(
 						indexedAttributeBinding.getContainer(),

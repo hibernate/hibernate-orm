@@ -36,9 +36,6 @@ public interface PluralAttributeIndexBinding {
 
 	Value getIndexRelationalValue();
 
-	// TODO: Easier to add this here, but maybe it shouldn't be.
-	void setIndexRelationalValue(Value value);
-
 	HibernateTypeDescriptor getHibernateTypeDescriptor();
 
 	Type getPluralAttributeIndexType();

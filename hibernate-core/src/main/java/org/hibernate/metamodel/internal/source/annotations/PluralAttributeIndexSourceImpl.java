@@ -4,28 +4,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.jandex.AnnotationInstance;
+
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
-import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
-import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
- * @author Brett Meyer
  */
-public class BasicPluralAttributeIndexSourceImpl implements BasicPluralAttributeIndexSource {
-//	private final PluralAssociationAttribute attribute;
+public class PluralAttributeIndexSourceImpl implements PluralAttributeIndexSource {
+	private final PluralAssociationAttribute attribute;
+	private final IndexedPluralAttributeSourceImpl indexedPluralAttributeSource;
 	private final int base;
 	private final List<RelationalValueSource> relationalValueSources =  new ArrayList<RelationalValueSource>( 1 );
-	public BasicPluralAttributeIndexSourceImpl(
-			PluralAssociationAttribute attribute ) {
-//		this.attribute = attribute;
+	public PluralAttributeIndexSourceImpl(IndexedPluralAttributeSourceImpl indexedPluralAttributeSource, PluralAssociationAttribute attribute) {
+		this.attribute = attribute;
+		this.indexedPluralAttributeSource = indexedPluralAttributeSource;
 		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
 				attribute.annotations(),
 				HibernateDotNames.INDEX_COLUMN
@@ -45,7 +46,17 @@ public class BasicPluralAttributeIndexSourceImpl implements BasicPluralAttribute
 
 	@Override
 	public PluralAttributeIndexBinding.Nature getNature() {
-		return PluralAttributeIndexBinding.Nature.BASIC;
+		switch ( indexedPluralAttributeSource.getElementSource().getNature() ) {
+			case BASIC:
+				return PluralAttributeIndexBinding.Nature.BASIC;
+			case AGGREGATE:
+				return PluralAttributeIndexBinding.Nature.AGGREGATE;
+			case MANY_TO_ANY:
+				return PluralAttributeIndexBinding.Nature.MANY_TO_ANY;
+			case MANY_TO_MANY:
+				return PluralAttributeIndexBinding.Nature.MANY_TO_MANY;
+		}
+		return null;
 	}
 
 	@Override

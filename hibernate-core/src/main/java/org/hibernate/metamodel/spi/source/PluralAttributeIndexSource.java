@@ -26,10 +26,10 @@ package org.hibernate.metamodel.spi.source;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 
 /**
- *
+ * @author Brett Meyer
  */
 public interface PluralAttributeIndexSource extends RelationalValueSourceContainer {
-	PluralAttributeIndexBinding.Nature getNature();
+	// TODO: Should these be basic only?
 	ExplicitHibernateTypeSource explicitHibernateTypeSource();
-	int base();
+	PluralAttributeIndexBinding.Nature getNature();
 }

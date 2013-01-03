@@ -51,7 +51,15 @@ public class MapBinding extends AbstractPluralAttributeBinding implements Indexe
 				includedInOptimisticLocking,
 				metaAttributeContext
 		);
-		pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding( this, pluralAttributeIndexNature );
+		switch ( pluralAttributeIndexNature ) {
+		// TODO: support MANY_TO_MANY & MANY_TO_ANY
+		case AGGREGATE:
+			pluralAttributeIndexBinding = new CompositePluralAttributeIndexBinding( this, pluralAttributeIndexNature );
+			break;
+		default:
+			// TODO: Will this ever happen?
+			pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding( this, pluralAttributeIndexNature );
+		}
 	}
 
 	/**

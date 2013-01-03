@@ -43,6 +43,7 @@ import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Setter;
 
@@ -139,7 +140,10 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
 		PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
 		if (propertyData.isUsingModifiedFlag()) {
-			if(isFromNullToEmptyOrFromEmptyToNull((PersistentCollection) newObj, (Serializable) oldObj)){
+			if (isNotPersistentCollection(newObj) || isNotPersistentCollection(oldObj)) {
+				// Compare POJOs.
+				data.put(propertyData.getModifiedFlagPropertyName(), !Tools.objectsEqual(newObj, oldObj));
+			} else if (isFromNullToEmptyOrFromEmptyToNull((PersistentCollection) newObj, (Serializable) oldObj)) {
                 data.put(propertyData.getModifiedFlagPropertyName(), true);
 			} else {
 				List<PersistentCollectionChangeData> changes = mapCollectionChanges(
@@ -148,6 +152,10 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
                 data.put(propertyData.getModifiedFlagPropertyName(), !changes.isEmpty());
 			}
 		}
+	}
+
+	private boolean isNotPersistentCollection(Object obj) {
+		return obj != null && !(obj instanceof PersistentCollection);
 	}
 
 	private boolean isFromNullToEmptyOrFromEmptyToNull(PersistentCollection newColl, Serializable oldColl) {

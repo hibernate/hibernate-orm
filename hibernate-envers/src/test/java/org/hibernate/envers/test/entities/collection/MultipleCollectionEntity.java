@@ -82,6 +82,20 @@ public class MultipleCollectionEntity {
 		refEntities2.remove(refEntity2);
 	}
 
+	/**
+	 * For test purpose only.
+	 */
+	public void setRefEntities1(List<MultipleCollectionRefEntity1> refEntities1) {
+		this.refEntities1 = refEntities1;
+	}
+
+	/**
+	 * For test purpose only.
+	 */
+	public void setRefEntities2(List<MultipleCollectionRefEntity2> refEntities2) {
+		this.refEntities2 = refEntities2;
+	}
+
 	@Override
 	public String toString() {
 		return "MultipleCollectionEntity [id=" + id + ", text=" + text

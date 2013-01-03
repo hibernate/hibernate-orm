@@ -2390,4 +2390,8 @@ public abstract class Dialect implements ConversionContext {
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
+	
+	public String getNotExpression( String expression ) {
+		return "not " + expression;
+	}
 }

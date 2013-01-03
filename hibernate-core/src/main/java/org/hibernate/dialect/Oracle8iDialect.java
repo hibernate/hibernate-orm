@@ -581,4 +581,9 @@ public class Oracle8iDialect extends Dialect {
 	public boolean useFollowOnLocking() {
 		return true;
 	}
+	
+	@Override
+	public String getNotExpression( String expression ) {
+		return "not (" + expression + ")";
+	}
 }

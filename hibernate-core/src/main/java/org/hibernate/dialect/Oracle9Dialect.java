@@ -377,4 +377,9 @@ public class Oracle9Dialect extends Dialect {
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}
+	
+	@Override
+	public String getNotExpression( String expression ) {
+		return "not (" + expression + ")";
+	}
 }

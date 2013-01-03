@@ -32,14 +32,14 @@ import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  *
  */
-public class ListAttributeIndexSource extends AbstractHbmSourceNode implements PluralAttributeIndexSource {
+public class ListAttributeIndexSource extends AbstractHbmSourceNode implements BasicPluralAttributeIndexSource {
 	private final List< RelationalValueSource > valueSources;
 	private final ExplicitHibernateTypeSource typeSource;
 	private final int base;

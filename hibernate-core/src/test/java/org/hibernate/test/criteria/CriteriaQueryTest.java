@@ -2028,7 +2028,6 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		s.persist( student1 );
 		s.persist( student2 );
 		s.flush();
-		s.clear();
 		
 		// Although this example is simplified and the "not not" is pointless,
 		// double negatives can occur in some dynamic applications (regardless
@@ -2042,6 +2041,9 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		
 		assertEquals( students.size(), 1 );
 		assertEquals( students.get( 0 ).getStudentNumber(), 1 );
+		
+		s.delete(student1);
+		s.delete(student2);
 		
 		t.commit();
 		session.close();

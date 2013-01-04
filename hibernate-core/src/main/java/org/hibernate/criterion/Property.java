@@ -55,11 +55,11 @@ public class Property extends PropertyProjection {
 		return Restrictions.like(getPropertyName(), value, matchMode);
 	}
 
-	public SimpleExpression eq(Object value) {
+	public Criterion eq(Object value) {
 		return Restrictions.eq(getPropertyName(), value);
 	}
 
-	public SimpleExpression ne(Object value) {
+	public Criterion ne(Object value) {
 		return Restrictions.ne(getPropertyName(), value);
 	}
 

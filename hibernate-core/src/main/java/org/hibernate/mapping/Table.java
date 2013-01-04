@@ -58,11 +58,10 @@ public class Table implements RelationalModel, Serializable {
 	private Map indexes = new LinkedHashMap();
 	private Map foreignKeys = new LinkedHashMap();
 	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
-	private final int uniqueInteger;
+	private int uniqueInteger;
 	private boolean quoted;
 	private boolean schemaQuoted;
 	private boolean catalogQuoted;
-	private static int tableCounter = 0;
 	private List checkConstraints = new ArrayList();
 	private String rowId;
 	private String subselect;
@@ -100,9 +99,7 @@ public class Table implements RelationalModel, Serializable {
 		}
 	}
 
-	public Table() {
-		uniqueInteger = tableCounter++;
-	}
+	public Table() { }
 
 	public Table(String name) {
 		this();
@@ -762,6 +759,12 @@ public class Table implements RelationalModel, Serializable {
 		else {
 			this.catalog = catalog;
 		}
+	}
+
+	// This must be done outside of Table, rather than statically, to ensure
+	// deterministic alias names.  See HHH-2448.
+	public void setUniqueInteger( int uniqueInteger ) {
+		this.uniqueInteger = uniqueInteger;
 	}
 
 	public int getUniqueInteger() {

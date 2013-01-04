@@ -1618,15 +1618,19 @@ public class Configuration implements Serializable {
 				( (SimpleValue) prop.getValue() ).setAlternateUniqueKey( true );
 			}
 		}
-
+		
 		//TODO: Somehow add the newly created foreign keys to the internal collection
 
+		LOG.debug( "Creating tables' unique integer identifiers" );
 		LOG.debug( "Processing foreign key constraints" );
 
 		itr = getTableMappings();
+		int uniqueInteger = 0;
 		Set<ForeignKey> done = new HashSet<ForeignKey>();
 		while ( itr.hasNext() ) {
-			secondPassCompileForeignKeys( (Table) itr.next(), done );
+			Table table = (Table) itr.next();
+			table.setUniqueInteger( uniqueInteger++ );
+			secondPassCompileForeignKeys( table, done );
 		}
 
 	}

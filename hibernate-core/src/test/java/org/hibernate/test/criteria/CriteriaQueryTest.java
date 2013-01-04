@@ -2043,8 +2043,8 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		assertEquals( students.size(), 1 );
 		assertEquals( students.get( 0 ).getStudentNumber(), 1 );
 		
-		t.commit();
-		session.close();
+		t.rollback();
+		s.close();
     }
 
 }

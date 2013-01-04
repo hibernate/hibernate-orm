@@ -113,6 +113,11 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
+	protected boolean requiresImmediateFetch() {
+		return false;
+	}
+
+	@Override
 	protected String getFetchSelectionString() {
 		return manyToOneElement.getFetch() != null ?
 				manyToOneElement.getFetch().value() :

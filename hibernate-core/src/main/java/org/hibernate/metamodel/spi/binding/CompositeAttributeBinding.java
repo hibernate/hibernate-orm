@@ -404,7 +404,8 @@ public class CompositeAttributeBinding
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
-			boolean isConstrained) {
+			boolean isConstrained,
+			List<RelationalValueBinding> valueBindings) {
 		return compositeAttributeBindingContainer.makeOneToOneAttributeBinding(
 				attribute,
 				propertyAccessorName,
@@ -414,7 +415,8 @@ public class CompositeAttributeBinding
 				metaAttributeContext,
 				referencedEntityBinding,
 				referencedAttributeBinding,
-				isConstrained
+				isConstrained,
+				valueBindings
 		);
 	}
 

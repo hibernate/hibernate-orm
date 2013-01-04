@@ -38,7 +38,6 @@ import org.junit.Test;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class KeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -52,6 +51,7 @@ public class KeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCriteriaRestrictionOnKeyManyToOne() {
 		Session s = openSession();
 		s.beginTransaction();

@@ -151,7 +151,8 @@ public abstract class AbstractCompositeAttributeBindingContainer
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
-			boolean isConstrained) {
+			boolean isConstrained,
+			List<RelationalValueBinding> valueBindings) {
 		if ( !isModifiable() ) {
 			throw new UnsupportedOperationException( "Attribute bindings are read-only and cannot be modified." );
 		}
@@ -164,7 +165,8 @@ public abstract class AbstractCompositeAttributeBindingContainer
 				metaAttributeContext,
 				referencedEntityBinding,
 				referencedAttributeBinding,
-				isConstrained
+				isConstrained,
+				valueBindings
 		);
 	}
 

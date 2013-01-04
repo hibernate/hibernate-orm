@@ -154,7 +154,8 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
-			boolean isConstrained) {
+			boolean isConstrained,
+			List<RelationalValueBinding> valueBindings) {
 		final OneToOneAttributeBinding binding = new OneToOneAttributeBinding(
 				this,
 				attribute,
@@ -165,7 +166,8 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 				metaAttributeContext,
 				referencedEntityBinding,
 				referencedAttributeBinding,
-				isConstrained
+				isConstrained,
+				valueBindings
 		);
 		registerAttributeBinding( binding );
 		return binding;

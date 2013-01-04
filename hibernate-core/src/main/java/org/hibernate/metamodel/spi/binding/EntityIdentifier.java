@@ -394,15 +394,6 @@ public class EntityIdentifier {
 							)
 					);
 				}
-				if ( attributeBinding.isAssociation() ) {
-					throw new MappingException(
-							String.format(
-									"The composite ID for [%s] contains an attribute [%s} that is an association.",
-									entityBinding.getEntity().getName(),
-									attributeBinding.getAttribute().getName()
-							)
-					);
-				}
 			}
 		}
 

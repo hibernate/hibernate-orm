@@ -164,9 +164,7 @@ public interface AttributeBindingContainer {
 			MetaAttributeContext metaAttributeContext);
 
 	/**
-	 * Factory method for many-to-one attribute bindings.
-	 *
-	 *
+	 * Factory method for one-to-one attribute bindings.
 	 *
 	 * @param attribute The attribute for which to make a binding.
 	 * @param propertyAccessorName
@@ -187,7 +185,8 @@ public interface AttributeBindingContainer {
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
-			boolean isConstrained);
+			boolean isConstrained,
+			List<RelationalValueBinding> valueBindings);
 
 
 	/**

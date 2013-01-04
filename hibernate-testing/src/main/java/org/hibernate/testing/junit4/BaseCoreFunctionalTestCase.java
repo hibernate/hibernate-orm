@@ -336,7 +336,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 					}
 				}
 			}
-			if ( !hasLob && !entityBinding.getHierarchyDetails().isExplicitPolymorphism() && overrideCacheStrategy() ) {
+			if ( !hasLob && entityBinding.getSuperEntityBinding() == null && overrideCacheStrategy() ) {
 				Caching caching = entityBinding.getHierarchyDetails().getCaching();
 				if ( caching == null ) {
 					caching = new Caching();

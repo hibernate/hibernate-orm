@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,69 +23,66 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
-import org.hibernate.jaxb.spi.hbm.JaxbKeyPropertyElement;
+import org.hibernate.jaxb.spi.hbm.JaxbKeyManyToOneElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.type.ForeignKeyDirection;
 
 /**
- * Implementation for {@code <key-property/>} mappings
+ * Implementation for {@code <key-many-to-one/>} mappings
  *
  * @author Gail Badner
  */
-class KeyAttributeSourceImpl
-		extends AbstractHbmSourceNode
+class KeyManyToOneSourceImpl
+		extends AbstractToOneAttributeSourceImpl
 		implements SingularAttributeSource {
-	private final JaxbKeyPropertyElement keyPropertyElement;
-	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
-	private final ExplicitHibernateTypeSource typeSource;
+	private final JaxbKeyManyToOneElement keyManyToOneElement;
 	private final List<RelationalValueSource> valueSources;
 
-	public KeyAttributeSourceImpl(
+	public KeyManyToOneSourceImpl(
 			MappingDocument mappingDocument,
-			final JaxbKeyPropertyElement keyPropertyElement,
+			final JaxbKeyManyToOneElement keyManyToOneElement,
 			final SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
-		super( mappingDocument );
-		this.keyPropertyElement = keyPropertyElement;
-		this.naturalIdMutability = naturalIdMutability;
-		this.typeSource = new ExplicitHibernateTypeSource() {
-			private final String name = keyPropertyElement.getTypeAttribute() != null
-					? keyPropertyElement.getTypeAttribute()
-					: keyPropertyElement.getType() != null
-					? keyPropertyElement.getType().getName()
-					: null;
-			private final Map<String, String> parameters = ( keyPropertyElement.getType() != null )
-					? Helper.extractParameters( keyPropertyElement.getType().getParam() )
-					: null;
-
-			@Override
-			public String getName() {
-				return name;
-			}
-
-			@Override
-			public Map<String, String> getParameters() {
-				return parameters;
-			}
-		};
+		super( mappingDocument, naturalIdMutability, null );
+		this.keyManyToOneElement = keyManyToOneElement;
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getColumnAttribute() {
-						return keyPropertyElement.getColumnAttribute();
+						return keyManyToOneElement.getColumnAttribute();
+					}
+
+					@Override
+					public String getFormulaAttribute() {
+						return null;
 					}
 
 					@Override
 					public List<JaxbColumnElement> getColumn() {
-						return keyPropertyElement.getColumn();
+						return keyManyToOneElement.getColumn();
+					}
+
+					@Override
+					public List<String> getFormula() {
+						return CollectionHelper.createEmptyList( String.class );
+					}
+
+					@Override
+					public String getContainingTableName() {
+						return null;
 					}
 
 					@Override
@@ -94,8 +91,8 @@ class KeyAttributeSourceImpl
 					}
 
 					@Override
-					public boolean isForceNotNull() {
-						return true;
+					public boolean isIncludedInUpdateByDefault() {
+						return false;
 					}
 				}
 		);
@@ -103,32 +100,12 @@ class KeyAttributeSourceImpl
 
 	@Override
 	public String getName() {
-		return keyPropertyElement.getName();
-	}
-
-	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
-		return typeSource;
+		return keyManyToOneElement.getName();
 	}
 
 	@Override
 	public String getPropertyAccessorName() {
-		return keyPropertyElement.getAccess();
-	}
-
-	@Override
-	public PropertyGeneration getGeneration() {
-		return PropertyGeneration.NEVER;
-	}
-
-	@Override
-	public boolean isLazy() {
-		return false;
-	}
-
-	@Override
-	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
-		return naturalIdMutability;
+		return keyManyToOneElement.getAccess();
 	}
 
 	@Override
@@ -138,12 +115,34 @@ class KeyAttributeSourceImpl
 
 	@Override
 	public Nature getNature() {
-		return Nature.BASIC;
+		return Nature.MANY_TO_ONE;
 	}
 
 	@Override
 	public boolean isVirtualAttribute() {
 		return false;
+	}
+
+	@Override
+	protected boolean requiresImmediateFetch() {
+		return false;
+	}
+
+	@Override
+	protected String getFetchSelectionString() {
+		return null;
+	}
+
+	@Override
+	protected String getLazySelectionString() {
+		return keyManyToOneElement.getLazy() != null ?
+				keyManyToOneElement.getLazy().value() :
+				null;
+	}
+
+	@Override
+	protected String getOuterJoinSelectionString() {
+		return null;
 	}
 
 	@Override
@@ -172,12 +171,27 @@ class KeyAttributeSourceImpl
 	}
 
 	@Override
-	public boolean isSingular() {
-		return true;
+	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		return keyManyToOneElement.getMeta();
 	}
 
 	@Override
-	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
-		return keyPropertyElement.getMeta();
+	public String getReferencedEntityName() {
+		return keyManyToOneElement.getEntityName();
+	}
+
+	@Override
+	public ForeignKeyDirection getForeignKeyDirection() {
+		return ForeignKeyDirection.TO_PARENT;
+	}
+
+	@Override
+	public Iterable<CascadeStyle> getCascadeStyles() {
+		return Collections.singleton( CascadeStyles.NONE );
+	}
+
+	@Override
+	public String getExplicitForeignKeyName() {
+		return keyManyToOneElement.getForeignKey();
 	}
 }

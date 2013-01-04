@@ -146,6 +146,11 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
+	protected boolean requiresImmediateFetch() {
+		return !oneToOneElement.isConstrained();
+	}
+
+	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
 		return true;
 	}

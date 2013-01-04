@@ -37,6 +37,7 @@ import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
+import org.hibernate.type.ForeignKeyDirection;
 
 /**
  * @author Gail Badner
@@ -84,6 +85,7 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 		return getFetchTiming() != FetchTiming.IMMEDIATE;
 	}
 
+	protected abstract boolean requiresImmediateFetch();
 	protected abstract String getFetchSelectionString();
 	protected abstract String getLazySelectionString();
 	protected abstract String getOuterJoinSelectionString();
@@ -99,7 +101,10 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 		final String lazySelection = getLazySelectionString();
 
 		if ( lazySelection == null ) {
-			if ( "join".equals( getFetchSelectionString() ) || "true".equals( getOuterJoinSelectionString() ) ) {
+			if ( requiresImmediateFetch() ) {
+				return FetchTiming.IMMEDIATE;
+			}
+			else if ( "join".equals( getFetchSelectionString() ) || "true".equals( getOuterJoinSelectionString() ) ) {
 				return FetchTiming.IMMEDIATE;
 			}
 			else if ( "false".equals( getOuterJoinSelectionString() ) ) {
@@ -136,7 +141,10 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 		// todo : handle batch fetches?
 
 		if ( getFetchSelectionString() == null ) {
-			if ( getOuterJoinSelectionString() == null ) {
+			if ( requiresImmediateFetch() ) {
+				return FetchStyle.JOIN;
+			}
+			else if ( getOuterJoinSelectionString() == null ) {
 				return FetchStyle.SELECT;
 			}
 			else {

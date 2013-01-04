@@ -52,7 +52,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	private static class TextAsMaterializedClobType extends AbstractSingleColumnStandardBasicType<String> {
 		public final static TextAsMaterializedClobType INSTANCE = new TextAsMaterializedClobType();
@@ -853,6 +852,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImmutableCollectionWithUpdate() {
 		clearCounts();
 
@@ -1074,6 +1074,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testImmutableCollectionWithMerge() {
 		clearCounts();
 

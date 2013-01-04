@@ -29,7 +29,6 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.TruthValue;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.util.StringHelper;
@@ -41,6 +40,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbKeyManyToOneElement;
 import org.hibernate.jaxb.spi.hbm.JaxbKeyPropertyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMultiTenancyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbNaturalIdElement;
+import org.hibernate.jaxb.spi.hbm.JaxbPolymorphismAttribute;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
@@ -63,6 +63,7 @@ import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
 /**
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements RootEntitySource {
 	private final TableSpecificationSource primaryTable;
@@ -160,7 +161,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 	@Override
 	public boolean isExplicitPolymorphism() {
-		return "explicit".equals( entityElement().getPolymorphism() );
+		return JaxbPolymorphismAttribute.EXPLICIT == entityElement().getPolymorphism();
 	}
 
 	@Override
@@ -444,14 +445,11 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		@Override
 		protected List<AttributeSource> buildAttributeSources() {
 			List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
-//			for ( Object attributeElement : compositeIdElement().getKeyPropertyOrKeyManyToOne() ) {
-//				attributeSources.add( buildAttributeSource( attributeElement ) );
-//			}
 			for ( JaxbKeyPropertyElement keyProperty : compositeIdElement().getKeyProperty()){
 				attributeSources.add( new IdentifierKeyAttributeSourceImpl( sourceMappingDocument(), keyProperty ) );
 			}
-			for (JaxbKeyManyToOneElement element : compositeIdElement().getKeyManyToOne()){
-				throw new NotYetImplementedException( "key-many-to-one is not supported yet" );
+			for (JaxbKeyManyToOneElement keyManyToOne : compositeIdElement().getKeyManyToOne()){
+				attributeSources.add( new IdentifierKeyManyToOneSourceImpl( sourceMappingDocument(), keyManyToOne ) );
 			}
 			return attributeSources;
 		}
@@ -525,20 +523,11 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
 			final List<SingularAttributeSource> attributeSources = new ArrayList<SingularAttributeSource>();
 			final JaxbCompositeIdElement compositeId = entityElement().getCompositeId();
-			for(final JaxbKeyPropertyElement keyProperty: compositeId.getKeyProperty()) {
+			for ( final JaxbKeyPropertyElement keyProperty: compositeId.getKeyProperty() ) {
 				attributeSources.add( new IdentifierKeyAttributeSourceImpl( sourceMappingDocument(), keyProperty ) );
 			}
-			for(final JaxbKeyManyToOneElement keyProperty : compositeId.getKeyManyToOne()){
-//				final AttributeSource attributeSource = buildAttributeSource(
-//						keyProperty,
-//						null,
-//						SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
-//				);
-//				if ( ! attributeSource.isSingular() ) {
-//					throw new HibernateException( "Only singular attributes are supported for composite identifiers" );
-//				}
-//				attributeSources.add( (SingularAttributeSource) attributeSource );
-				//todo : implement
+			for ( final JaxbKeyManyToOneElement keyManyToOne : compositeId.getKeyManyToOne() ){
+				attributeSources.add( new IdentifierKeyManyToOneSourceImpl( sourceMappingDocument(), keyManyToOne ) );
 			}
 
 			return attributeSources;

@@ -1,8 +1,13 @@
 package org.hibernate.test.annotations.derivedidentities.e2.a;
 
+import java.util.List;
+
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.PrimaryKey;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -23,6 +28,12 @@ public class DerivedIdentityIdClassParentIdClassDepTest extends BaseCoreFunction
 		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "name", metadata() ) );
 		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "firstName", metadata() ) );
 		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "lastName", metadata() ) );
+		final TableSpecification dependentTable = SchemaUtil.getTable( "Dependent", metadata() );
+		final List<Column> dependentPkColumns = dependentTable.getPrimaryKey().getColumns();
+		assertEquals( 3, dependentPkColumns.size() );
+		assertTrue( dependentPkColumns.contains( dependentTable.locateColumn( "name" ) ) );
+		assertTrue( dependentPkColumns.contains( dependentTable.locateColumn( "FK1" ) ) );
+		assertTrue( dependentPkColumns.contains( dependentTable.locateColumn( "FK2" ) ) );
 		Employee e = new Employee();
 		e.firstName = "Emmanuel";
 		e.lastName = "Bernard";

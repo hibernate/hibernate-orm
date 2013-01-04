@@ -27,6 +27,7 @@ import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOS
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -92,6 +93,7 @@ import org.hibernate.metamodel.spi.binding.SetBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding.NaturalIdMutability;
+import org.hibernate.metamodel.spi.binding.SingularNonAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.domain.Entity;
@@ -775,11 +777,6 @@ public class Binder {
 		for ( SingularAttributeSource attributeSource : identifierSource.getAttributeSourcesMakingUpIdentifier() ) {
 			SingularAttributeBinding singularAttributeBinding =
 					bindIdentifierAttribute( rootEntityBinding, attributeSource );
-			if ( singularAttributeBinding.isAssociation() ) {
-				throw new NotYetImplementedException(
-						"composite IDs containing an association attribute is not implemented yet."
-				);
-			}
 			idAttributeBindings.add( singularAttributeBinding );
 		}
 
@@ -1128,13 +1125,12 @@ public class Binder {
 			public EntityType resolveEntityType(
 					EntityBinding referencedEntityBinding,
 					SingularAttributeBinding referencedAttributeBinding) {
-				final boolean isRefToPk =
-						referencedEntityBinding
-								.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding(
-								referencedAttributeBinding
-						);
+				final SingularNonAssociationAttributeBinding idAttributeBinding =
+						referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
 				final String uniqueKeyAttributeName =
-						isRefToPk ? null : getRelativePathFromEntityName( referencedAttributeBinding );
+						idAttributeBinding == referencedAttributeBinding ?
+								null :
+								getRelativePathFromEntityName( referencedAttributeBinding );
 				return metadata.getTypeResolver().getTypeFactory().manyToOne(
 						referencedEntityBinding.getEntity().getName(),
 						uniqueKeyAttributeName,
@@ -1183,6 +1179,34 @@ public class Binder {
 					EntityBinding referencedEntityBinding,
 					SingularAttributeBinding referencedAttributeBinding
 			) {
+				/**
+				 * this is not correct, here, if no @JoinColumn defined, we simply create the FK column only with column calucated
+				 * but what we should do is get all the column info from the referenced column(s), including nullable, size etc.
+				 */
+				final TableSpecification table = locateDefaultTableSpecificationForAttribute(
+						attributeBindingContainer,
+						attributeSource
+				);
+				final List<RelationalValueBinding> relationalValueBindings;
+				if ( ! attributeSource.relationalValueSources().isEmpty() ) {
+					relationalValueBindings =
+							bindValues(
+									attributeBindingContainer,
+									attributeSource,
+									actualAttribute,
+									table,
+									attributeSource.getDefaultNamingStrategies(
+											attributeBindingContainer.seekEntityBinding().getEntity().getName(),
+											table.getLogicalName().getText(),
+											referencedAttributeBinding
+									),
+									false
+							);
+				}
+				else {
+					relationalValueBindings = Collections.emptyList();
+				}
+
 				// todo : currently a chicken-egg problem here between creating the attribute binding and binding its FK values...
 				return attributeBindingContainer.makeOneToOneAttributeBinding(
 						actualAttribute,
@@ -1193,7 +1217,8 @@ public class Binder {
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 						referencedEntityBinding,
 						referencedAttributeBinding,
-						attributeSource.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT
+						attributeSource.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT,
+						relationalValueBindings
 				);
 			}
 
@@ -1201,22 +1226,34 @@ public class Binder {
 			public EntityType resolveEntityType(
 					EntityBinding referencedEntityBinding,
 					SingularAttributeBinding referencedAttributeBinding) {
-				final boolean isRefToPk =
-						referencedEntityBinding
-								.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding(
-								referencedAttributeBinding
-						);
+				final SingularNonAssociationAttributeBinding idAttributeBinding =
+						referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
 				final String uniqueKeyAttributeName =
-						isRefToPk ? null : getRelativePathFromEntityName( referencedAttributeBinding );
-				return metadata.getTypeResolver().getTypeFactory().oneToOne(
-						referencedEntityBinding.getEntity().getName(),
-						attributeSource.getForeignKeyDirection(),
-						uniqueKeyAttributeName,
-						attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
-						attributeSource.isUnWrapProxy(),
-						attributeBindingContainer.seekEntityBinding().getEntityName(),
-						actualAttribute.getName()
-				);
+						idAttributeBinding == referencedAttributeBinding ?
+								null :
+								getRelativePathFromEntityName( referencedAttributeBinding );
+				if ( attributeSource.relationalValueSources().isEmpty() )  {
+					return metadata.getTypeResolver().getTypeFactory().oneToOne(
+							referencedEntityBinding.getEntity().getName(),
+							attributeSource.getForeignKeyDirection(),
+							uniqueKeyAttributeName,
+							attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
+							attributeSource.isUnWrapProxy(),
+							attributeBindingContainer.seekEntityBinding().getEntityName(),
+							actualAttribute.getName()
+					);
+				}
+				else {
+					return metadata.getTypeResolver().getTypeFactory().specialOneToOne(
+							referencedEntityBinding.getEntity().getName(),
+							attributeSource.getForeignKeyDirection(),
+							uniqueKeyAttributeName,
+							attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
+							attributeSource.isUnWrapProxy(),
+							attributeBindingContainer.seekEntityBinding().getEntityName(),
+							actualAttribute.getName()
+					);
+				}
 			}
 		};
 

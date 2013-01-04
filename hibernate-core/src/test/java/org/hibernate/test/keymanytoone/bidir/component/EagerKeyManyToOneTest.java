@@ -50,7 +50,6 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @SuppressWarnings( {"unchecked"})
-@FailureExpectedWithNewMetamodel
 public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
     public String[] getMappings() {

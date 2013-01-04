@@ -37,7 +37,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class LazyKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

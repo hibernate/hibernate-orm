@@ -78,7 +78,6 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testPropertyIntercept() {
 		Session s = openSession( new PropertyInterceptor() );
 		Transaction t = s.beginTransaction();
@@ -105,7 +104,6 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test
 	@TestForIssue( jiraKey = "HHH-1921" )
-	@FailureExpectedWithNewMetamodel
 	public void testPropertyIntercept2() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -118,7 +116,12 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 				new EmptyInterceptor() {
 					@Override
 					public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
-						currentState[0] = "test";
+						for(int i=0;i<propertyNames.length;i++){
+							if("password".equals( propertyNames[i] )){
+								currentState[i]="test";
+								break;
+							}
+						}
 						return true;
 					}
 				}

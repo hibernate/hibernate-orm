@@ -27,7 +27,6 @@ import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociati
 import org.hibernate.test.manytomanyassociationclass.Group;
 import org.hibernate.test.manytomanyassociationclass.Membership;
 import org.hibernate.test.manytomanyassociationclass.User;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * Tests on many-to-many association using an association class with a composite ID containing
@@ -35,7 +34,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel( message = "Bug with qualified entity class not in specified package" )
 public class ManyToManyAssociationClassCompositeIdTest extends AbstractManyToManyAssociationClassTest {
 	@Override
 	public String[] getMappings() {

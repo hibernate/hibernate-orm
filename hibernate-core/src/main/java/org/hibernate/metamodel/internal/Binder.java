@@ -2444,7 +2444,7 @@ public class Binder {
 				: NaturalIdMutability.NOT_NATURAL_ID;
 		final boolean isNaturalId = naturalIdMutability != NaturalIdMutability.NOT_NATURAL_ID;
 		final boolean isImmutableNaturalId = isNaturalId && ( naturalIdMutability == NaturalIdMutability.IMMUTABLE );
-		final boolean reallyForceNonNullable = forceNonNullable || isNaturalId;
+		final boolean reallyForceNonNullable = forceNonNullable ; //|| isNaturalId; todo is a natural id column should be not nullable?
 
 		if ( valueSourceContainer.relationalValueSources().isEmpty() ) {
 			for ( DefaultNamingStrategy defaultNamingStrategy : defaultNamingStrategyList ) {
@@ -3137,7 +3137,7 @@ public class Binder {
 	private static void addUniqueConstraintForNaturalIdColumn(
 			final TableSpecification table,
 			final Column column) {
-		final UniqueKey uniqueKey = table.getOrCreateUniqueKey( "natural_id_unique_key_" );
+		final UniqueKey uniqueKey = table.getOrCreateUniqueKey( table.getLogicalName().getText()+"_UNIQUEKEY" );
 		uniqueKey.addColumn( column );
 	}
 

@@ -35,7 +35,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
+//@FailureExpectedWithNewMetamodel
 public class NullableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

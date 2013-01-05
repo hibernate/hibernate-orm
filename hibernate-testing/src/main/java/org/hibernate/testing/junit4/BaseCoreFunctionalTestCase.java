@@ -46,6 +46,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
@@ -61,6 +62,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
@@ -161,13 +163,13 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				true
 		);
 		if ( isMetadataUsed ) {
-			metadataImplementor = buildMetadata( bootRegistry, serviceRegistry );
+			MetadataBuilder metadataBuilder = getMetadataBuilder( bootRegistry, serviceRegistry );
+			configMetadataBuilder(metadataBuilder, configuration);
+			metadataImplementor = (MetadataImplementor)metadataBuilder.build();
 			afterConstructAndConfigureMetadata( metadataImplementor );
 			applyCacheSettings(metadataImplementor);
 			SessionFactoryBuilder sessionFactoryBuilder = metadataImplementor.getSessionFactoryBuilder();
-			if(configuration.getEntityNotFoundDelegate()!=null){
-				sessionFactoryBuilder.with( configuration.getEntityNotFoundDelegate() );
-			}
+			configSessionFactoryBuilder(sessionFactoryBuilder, configuration);
 			sessionFactory = ( SessionFactoryImplementor )sessionFactoryBuilder.build();
 		}
 		else {
@@ -176,6 +178,19 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
 		}
 		afterSessionFactoryBuilt();
+	}
+
+	protected void configMetadataBuilder(MetadataBuilder metadataBuilder, Configuration configuration) {
+		//see if the naming strategy is the default one
+		if ( configuration.getNamingStrategy() != EJB3NamingStrategy.INSTANCE ) {
+			metadataBuilder.with( configuration.getNamingStrategy() );
+		}
+	}
+
+	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder, Configuration configuration) {
+		if ( configuration.getEntityNotFoundDelegate() != null ) {
+			sessionFactoryBuilder.with( configuration.getEntityNotFoundDelegate() );
+		}
 	}
 
 	protected void rebuildSessionFactory() {
@@ -190,12 +205,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	}
 
-	private MetadataImplementor buildMetadata(
+	protected MetadataBuilder getMetadataBuilder(
 			BootstrapServiceRegistry bootRegistry,
 			StandardServiceRegistryImpl serviceRegistry) {
 		MetadataSources sources = new MetadataSources( bootRegistry );
 		addMappings( sources );
-		return (MetadataImplementor) sources.getMetadataBuilder( serviceRegistry ).build();
+		return sources.getMetadataBuilder(serviceRegistry);
 	}
 
 	private Configuration constructAndConfigureConfiguration() {

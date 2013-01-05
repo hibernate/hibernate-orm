@@ -165,7 +165,10 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 
 	@Override
 	// TODO: change to return the default name for a single column
-	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding) {
+	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(
+			final String entityName,
+			final String tableName,
+			final AttributeBinding referencedAttributeBinding) {
 		if ( CompositeAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
 			CompositeAttributeBinding compositeAttributeBinding = CompositeAttributeBinding.class.cast(
 					referencedAttributeBinding

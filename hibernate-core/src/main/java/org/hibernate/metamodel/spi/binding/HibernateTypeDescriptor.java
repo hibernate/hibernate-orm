@@ -35,11 +35,12 @@ import org.hibernate.type.Type;
  */
 public class HibernateTypeDescriptor {
 	private String explicitTypeName;
-	private String javaTypeName;
-	private boolean isToOne;
 	private Map<String, String> typeParameters = new HashMap<String, String>(  );
 
+
 	private Type resolvedTypeMapping;
+	private String javaTypeName;
+	private boolean isToOne;
 
 	public String getExplicitTypeName() {
 		return explicitTypeName;
@@ -62,15 +63,11 @@ public class HibernateTypeDescriptor {
 	}
 
 	public void setToOne(boolean toOne) {
-		isToOne = toOne;
+		this.isToOne = toOne;
 	}
 
 	public Map<String, String> getTypeParameters() {
 		return typeParameters;
-	}
-
-	public void setTypeParameters(Map<String, String> typeParameters) {
-		this.typeParameters = typeParameters;
 	}
 
 	public Type getResolvedTypeMapping() {
@@ -79,5 +76,9 @@ public class HibernateTypeDescriptor {
 
 	public void setResolvedTypeMapping(Type resolvedTypeMapping) {
 		this.resolvedTypeMapping = resolvedTypeMapping;
+		if ( getJavaTypeName() == null && resolvedTypeMapping!=null ) {
+			setJavaTypeName( resolvedTypeMapping.getReturnedClass().getName() );
+			setToOne( resolvedTypeMapping.isEntityType()  );
+		}
 	}
 }

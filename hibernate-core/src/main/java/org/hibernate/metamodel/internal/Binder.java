@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.internal;
 
 import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
-
+import static org.hibernate.cfg.ObjectNameNormalizer.NamingStrategyHelper;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -99,7 +99,6 @@ import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
-import org.hibernate.metamodel.spi.relational.AbstractValue;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
@@ -462,21 +461,7 @@ public class Binder {
 		}
 		final RelationalValueSource valueSource = discriminatorSource.getDiscriminatorRelationalValueSource();
 		final TableSpecification table = rootEntityBinding.locateTable( valueSource.getContainingTableName() );
-		AbstractValue value;
-		if ( valueSource.getNature() == RelationalValueSource.Nature.COLUMN ) {
-			value =
-					createColumn(
-							table,
-							(ColumnSource) valueSource,
-							bindingContext().getMappingDefaults().getDiscriminatorColumnName(),
-							false,
-							false,
-							false
-					);
-		}
-		else {
-			value = table.locateOrCreateDerivedValue( ( (DerivedValueSource) valueSource ).getExpression() );
-		}
+		final Value value = buildDiscriminatorRelationValue( valueSource, table );
 		final EntityDiscriminator discriminator =
 				new EntityDiscriminator( value, discriminatorSource.isInserted(), discriminatorSource.isForced() );
 		rootEntityBinding.getHierarchyDetails().setEntityDiscriminator( discriminator );
@@ -488,21 +473,15 @@ public class Binder {
 				bindingContext().locateClassByName( rootEntitySource.getEntityName() )
 						.getModifiers()
 		) ) {
-			// Use the class name as a default if no dscriminator value.
+			// Use the class name as a default if no discriminator value.
 			// However, skip abstract classes -- obviously no discriminators there.
 			rootEntityBinding.setDiscriminatorMatchValue( rootEntitySource.getEntityName() );
 		}
 		// Configure discriminator hibernate type
-		final String typeName =
-				discriminatorSource.getExplicitHibernateTypeName() != null
-						? discriminatorSource.getExplicitHibernateTypeName()
-						: "string";
-		final HibernateTypeDescriptor hibernateTypeDescriptor = discriminator.getExplicitHibernateTypeDescriptor();
-		hibernateTypeDescriptor.setExplicitTypeName( typeName );
-		Type resolvedType = typeHelper.heuristicType( hibernateTypeDescriptor );
-		HibernateTypeHelper.bindHibernateResolvedType( hibernateTypeDescriptor, resolvedType );
-		typeHelper.bindJdbcDataType( resolvedType, value );
+		typeHelper.bindDiscriminatorType( discriminator, value );
 	}
+
+
 
 	private void bindVersion(
 			final EntityBinding rootEntityBinding,
@@ -554,7 +533,10 @@ public class Binder {
 				tenantDiscriminatorValue = rootEntityBinding.getPrimaryTable().locateOrCreateColumn( "tenant_id" );
 			}
 			else {
-				tenantDiscriminatorValue = buildRelationValue( valueSource, rootEntityBinding.getPrimaryTable() );
+				tenantDiscriminatorValue = buildDiscriminatorRelationValue(
+						valueSource,
+						rootEntityBinding.getPrimaryTable()
+				);
 			}
 			rootEntityBinding.getHierarchyDetails()
 					.getTenantDiscrimination()
@@ -596,16 +578,7 @@ public class Binder {
 				includedTable = Table.class.cast( superEntityBinding.getPrimaryTable() );
 			}
 			table = createTable(
-					entitySource.getPrimaryTable(), new DefaultNamingStrategy() {
-
-				@Override
-				public String defaultName() {
-					String name = StringHelper.isNotEmpty( entityBinding.getJpaEntityName() ) ? entityBinding.getJpaEntityName() : entityBinding
-							.getEntity().getName();
-					return bindingContext().getNamingStrategy().classToTableName( name );
-				}
-			},
-					includedTable
+					entitySource.getPrimaryTable(), new TableNamingStrategyHelper( entityBinding ),includedTable
 			);
 			tableName = table.getLogicalName().getText();
 		}
@@ -617,9 +590,9 @@ public class Binder {
 			final EntityBinding entityBinding,
 			final EntitySource entitySource) {
 		for ( final SecondaryTableSource secondaryTableSource : entitySource.getSecondaryTables() ) {
-			final TableSpecification table = createTable( secondaryTableSource.getTableSource(), null );
+			final TableSpecification table = createTable( secondaryTableSource.getTableSource(), new TableNamingStrategyHelper( entityBinding ) );
 			table.addComment( secondaryTableSource.getComment() );
-			List<RelationalValueBinding> joinRelationalValueBindings;
+			final List<RelationalValueBinding> joinRelationalValueBindings;
 			// TODO: deal with property-refs???
 			if ( secondaryTableSource.getPrimaryKeyColumnSources().isEmpty() ) {
 				final List<Column> joinedColumns = entityBinding.getPrimaryTable().getPrimaryKey().getColumns();
@@ -672,7 +645,7 @@ public class Binder {
 
 			// TODO: make the foreign key column the primary key???
 			final ForeignKey foreignKey = bindForeignKey(
-					quoteIdentifierIfNonEmpty( secondaryTableSource.getExplicitForeignKeyName() ),
+					quotedIdentifier( secondaryTableSource.getExplicitForeignKeyName() ),
 					extractColumnsFromRelationalValueBindings( joinRelationalValueBindings ),
 					determineForeignKeyTargetColumns( entityBinding, secondaryTableSource )
 			);
@@ -806,13 +779,6 @@ public class Binder {
 						createMetaAttributeContext( rootEntityBinding, identifierSource.getMetaAttributeSources() ),
 						idAttributeBindings
 				);
-		typeHelper.bindHibernateTypeDescriptor(
-				syntheticAttributeBinding.getHibernateTypeDescriptor(),
-				syntheticAttribute.getSingularAttributeType().getClassName(),
-				null,
-				null
-		);
-
 		// Create the synthetic attribute binding.
 		rootEntityBinding.getHierarchyDetails().getEntityIdentifier().prepareAsNonAggregatedCompositeIdentifier(
 				syntheticAttributeBinding,
@@ -822,13 +788,7 @@ public class Binder {
 				idClassPropertyAccessorName
 		);
 
-		final Type resolvedType = metadata.getTypeResolver().getTypeFactory().embeddedComponent(
-				new ComponentMetamodel( syntheticAttributeBinding, true, false )
-		);
-		HibernateTypeHelper.bindHibernateResolvedType(
-				syntheticAttributeBinding.getHibernateTypeDescriptor(),
-				resolvedType
-		);
+		typeHelper.bindNonAggregatedCompositeIdentifierType( syntheticAttributeBinding, syntheticAttribute );
 	}
 
 	private void bindIdentifierGenerator(final EntityBinding rootEntityBinding) {
@@ -957,7 +917,7 @@ public class Binder {
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 						attributeSource.getGeneration()
 				);
-		typeHelper.bindSingularAttributeTypeInformation(
+		typeHelper.bindSingularAttributeType(
 				attributeSource,
 				attributeBinding
 		);
@@ -1054,19 +1014,16 @@ public class Binder {
 						createMetaAttributeContext( attributeBindingContainer, attributeSource )
 				);
 		bindAttributes( attributeBinding, attributeSource );
-		Type resolvedType = metadata.getTypeResolver().getTypeFactory().component(
-				new ComponentMetamodel( attributeBinding, isAttributeIdentifier, false )
+		typeHelper.bindAggregatedCompositeAttributeType(
+				isAttributeIdentifier,
+				composite,
+				defaultJavaClassReference,
+				attributeBinding
 		);
-		// TODO: binding the HibernateTypeDescriptor should be simplified since we know the class name already
-		typeHelper.bindHibernateTypeDescriptor(
-				attributeBinding.getHibernateTypeDescriptor(),
-				composite.getClassName(),
-				null,
-				defaultJavaClassReference == null ? null : defaultJavaClassReference.getValue().getName()
-		);
-		HibernateTypeHelper.bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
 		return attributeBinding;
 	}
+
+
 
 
 	private ManyToOneAttributeBinding bindManyToOneAttribute(
@@ -1153,7 +1110,7 @@ public class Binder {
 		);
 		if ( !hasDerivedValue( attributeBinding.getRelationalValueBindings() ) ) {
 			bindForeignKey(
-					quoteIdentifierIfNonEmpty( attributeSource.getExplicitForeignKeyName() ),
+					quotedIdentifier( attributeSource.getExplicitForeignKeyName() ),
 					extractColumnsFromRelationalValueBindings( attributeBinding.getRelationalValueBindings() ),
 					determineForeignKeyTargetColumns(
 							attributeBinding.getReferencedEntityBinding(),
@@ -1274,7 +1231,7 @@ public class Binder {
 			);
 
 			bindForeignKey(
-					quoteIdentifierIfNonEmpty( attributeSource.getExplicitForeignKeyName() ),
+					quotedIdentifier( attributeSource.getExplicitForeignKeyName() ),
 					foreignKeyColumns,
 					determineForeignKeyTargetColumns(
 							attributeBinding.getReferencedEntityBinding(),
@@ -1330,9 +1287,9 @@ public class Binder {
 		typeHelper.bindHibernateTypeDescriptor(
 				attributeBinding.getHibernateTypeDescriptor(),
 				attributeSource.getTypeInformation(),
-				referencedEntityJavaTypeValue
+				referencedEntityJavaTypeValue.getValue().getName(),
+				resolvedType
 		);
-		HibernateTypeHelper.bindHibernateResolvedType( attributeBinding.getHibernateTypeDescriptor(), resolvedType );
 		return attributeBinding;
 	}
 
@@ -1382,15 +1339,16 @@ public class Binder {
 
 		final Type resolvedType = typeHelper.resolvePluralType( attributeBinding, attributeSource, nature );
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
-		ReflectedCollectionJavaTypes reflectedCollectionJavaTypes = typeHelper.getReflectedCollectionJavaTypes(
+		ReflectedCollectionJavaTypes reflectedCollectionJavaTypes = HibernateTypeHelper.getReflectedCollectionJavaTypes(
 				attributeBinding
 		);
 		typeHelper.bindHibernateTypeDescriptor(
 				hibernateTypeDescriptor,
 				attributeSource.getTypeInformation(),
-				HibernateTypeHelper.defaultCollectionJavaTypeName( reflectedCollectionJavaTypes, attributeSource )
+				HibernateTypeHelper.defaultCollectionJavaTypeName( reflectedCollectionJavaTypes, attributeSource ),
+				resolvedType
+
 		);
-		HibernateTypeHelper.bindHibernateResolvedType( hibernateTypeDescriptor, resolvedType );
 		// Note: Collection types do not have a relational model
 		attributeBinding.setFetchTiming( attributeSource.getFetchTiming() );
 		attributeBinding.setFetchStyle( attributeSource.getFetchStyle() );
@@ -1563,8 +1521,9 @@ public class Binder {
 			);
 		}
 		attributeBinding.getPluralAttributeKeyBinding().setInverse( false );
-		TableSpecification collectionTable = createBasicCollectionTable(
-				attributeBinding, attributeSource.getCollectionTableSpecificationSource()
+		TableSpecification collectionTable = createTable(
+				attributeSource.getCollectionTableSpecificationSource(),
+				new CollectionTableNamingStrategyHelper( attributeBinding )
 		);
 		if ( StringHelper.isNotEmpty( attributeSource.getCollectionTableComment() ) ) {
 			collectionTable.addComment( attributeSource.getCollectionTableComment() );
@@ -1632,9 +1591,9 @@ public class Binder {
 				elementBinding.getHibernateTypeDescriptor(),
 				aggregate.getClassName(),
 				null,
-				defaultElementJavaClassReference == null ? null : defaultElementJavaClassReference.getValue().getName()
+				defaultElementJavaClassReference == null ? null : defaultElementJavaClassReference.getValue().getName(),
+				resolvedType
 		);
-		HibernateTypeHelper.bindHibernateResolvedType( elementBinding.getHibernateTypeDescriptor(), resolvedType );
 		/**
 		 * TODO
 		 * don't know why, but see org.hibernate.mapping.Property#getCompositeCascadeStyle
@@ -1686,9 +1645,7 @@ public class Binder {
 				attributeSource.explicitHibernateTypeSource(),
 				defaultIndexJavaTypeName
 		);
-		Type resolvedElementType = typeHelper.heuristicType( indexBinding.getHibernateTypeDescriptor() );
-		HibernateTypeHelper.bindHibernateResolvedType( indexBinding.getHibernateTypeDescriptor(), resolvedElementType );
-		typeHelper.bindJdbcDataType( resolvedElementType, indexBinding.getIndexRelationalValue() );
+		typeHelper.bindJdbcDataType( indexBinding.getHibernateTypeDescriptor().getResolvedTypeMapping(), indexBinding.getIndexRelationalValue() );
 	}
 
 
@@ -1717,13 +1674,7 @@ public class Binder {
 		elementBinding.setElementEntityIdentifier(
 				referencedEntityBinding.getHierarchyDetails().getEntityIdentifier()
 		);
-		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();
-		typeHelper.bindHibernateTypeDescriptor(
-				hibernateTypeDescriptor,
-				referencedEntityBinding.getEntity().getName(),
-				null,
-				defaultElementJavaTypeName
-		);
+
 
 		Type resolvedElementType = metadata.getTypeResolver().getTypeFactory().manyToOne(
 				referencedEntityBinding.getEntity().getName(),
@@ -1733,8 +1684,12 @@ public class Binder {
 				false, //TODO: should be attributeBinding.isIgnoreNotFound(),
 				false
 		);
-		HibernateTypeHelper.bindHibernateResolvedType(
-				elementBinding.getHibernateTypeDescriptor(),
+		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();
+		typeHelper.bindHibernateTypeDescriptor(
+				hibernateTypeDescriptor,
+				referencedEntityBinding.getEntity().getName(),
+				null,
+				defaultElementJavaTypeName,
 				resolvedElementType
 		);
 		// no need to bind JDBC data types because element is referenced EntityBinding's ID
@@ -1760,41 +1715,26 @@ public class Binder {
 		if ( !elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().isInverse() &&
 				!hasDerivedValue( elementBinding.getRelationalValueBindings() ) ) {
 			bindForeignKey(
-					quoteIdentifierIfNonEmpty( elementSource.getExplicitForeignKeyName() ),
+					quotedIdentifier( elementSource.getExplicitForeignKeyName() ),
 					extractColumnsFromRelationalValueBindings( elementBinding.getRelationalValueBindings() ),
 					determineForeignKeyTargetColumns( referencedEntityBinding, elementSource )
 			);
 		}
 
-		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();
-		typeHelper.bindHibernateTypeDescriptor(
-				hibernateTypeDescriptor,
-				referencedEntityBinding.getEntity().getName(),
-				null,
-				defaultElementJavaTypeName
-		);
 
-		final Type resolvedElementType = metadata.getTypeResolver().getTypeFactory().manyToOne(
-				referencedEntityBinding.getEntity().getName(),
-				elementSource.getReferencedEntityAttributeName(),
-				false,
-				false,
-				false, //TODO: should be attributeBinding.isIgnoreNotFound(),
-				false
-		);
-		HibernateTypeHelper.bindHibernateResolvedType(
-				elementBinding.getHibernateTypeDescriptor(),
-				resolvedElementType
-		);
-		typeHelper.bindJdbcDataType(
-				resolvedElementType,
-				elementBinding.getRelationalValueBindings()
+		typeHelper.bindManyToManyAttributeType(
+				elementBinding,
+				elementSource,
+				referencedEntityBinding,
+				defaultElementJavaTypeName
 		);
 		elementBinding.setCascadeStyle( determineCascadeStyle( elementSource.getCascadeStyles() ) );
 		elementBinding.setManyToManyWhere( elementSource.getWhere() );
 		elementBinding.setManyToManyOrderBy( elementSource.getOrderBy() );
 		//TODO: initialize filters from elementSource
 	}
+
+
 
 
 	private void bindOneToManyCollectionKey(
@@ -1871,12 +1811,15 @@ public class Binder {
 			);
 		}
 		final boolean isInverse = attributeSource.isInverse();
-		final TableSpecification collectionTable = createManyToManyCollectionTable(
-				attributeBinding,
-				isInverse,
-				attributeSource.getCollectionTableSpecificationSource(),
-				referencedEntityBinding
-		);
+		final TableSpecification collectionTable =
+				createTable(
+						attributeSource.getCollectionTableSpecificationSource(),
+						new ManyToManyCollectionTableNamingStrategyHelper(
+								attributeBinding,
+								isInverse,
+								referencedEntityBinding
+						)
+				);
 		final PluralAttributeKeyBinding keyBinding = attributeBinding.getPluralAttributeKeyBinding();
 		keyBinding.setInverse( isInverse );
 		bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable );
@@ -2056,11 +1999,7 @@ public class Binder {
 											for ( RelationalValueBinding relationalValueBinding : singularAttributeBinding
 													.getRelationalValueBindings() ) {
 												if ( Column.class.isInstance( relationalValueBinding.getValue() ) ) {
-													Identifier columnIdentifier = Identifier.toIdentifier(
-															quotedIdentifier(
-																	logicalColumnName
-															)
-													);
+													Identifier columnIdentifier = createIdentifier( logicalColumnName);
 													Column column = Column.class.cast( relationalValueBinding.getValue() );
 													if ( column.getColumnName().equals( columnIdentifier ) ) {
 														return column;
@@ -2242,7 +2181,7 @@ public class Binder {
 				);
 
 		ForeignKey foreignKey = bindForeignKey(
-				quoteIdentifierIfNonEmpty( keySource.getExplicitForeignKeyName() ),
+				quotedIdentifier( keySource.getExplicitForeignKeyName() ),
 				sourceColumns,
 				targetColumns
 		);
@@ -2512,6 +2451,9 @@ public class Binder {
 				final String columnName =
 						quotedIdentifier( defaultNamingStrategy.defaultName() );
 				final Column column = defaultTable.locateOrCreateColumn( columnName );
+
+
+
 				column.setNullable( !reallyForceNonNullable && valueSourceContainer.areValuesNullableByDefault() );
 				if ( isNaturalId ) {
 					addUniqueConstraintForNaturalIdColumn( defaultTable, column );
@@ -2536,16 +2478,6 @@ public class Binder {
 								.locateTable( valueSource.getContainingTableName() );
 				if ( valueSource.getNature() == RelationalValueSource.Nature.COLUMN ) {
 					final ColumnSource columnSource = (ColumnSource) valueSource;
-					final boolean isIncludedInInsert =
-							TruthValue.toBoolean(
-									columnSource.isIncludedInInsert(),
-									valueSourceContainer.areValuesIncludedInInsertByDefault()
-							);
-					final boolean isIncludedInUpdate =
-							TruthValue.toBoolean(
-									columnSource.isIncludedInUpdate(),
-									valueSourceContainer.areValuesIncludedInUpdateByDefault()
-							);
 					Column column = createColumn(
 							table,
 							columnSource,
@@ -2557,6 +2489,16 @@ public class Binder {
 					if ( isNaturalId ) {
 						addUniqueConstraintForNaturalIdColumn( table, column );
 					}
+					final boolean isIncludedInInsert =
+							TruthValue.toBoolean(
+									columnSource.isIncludedInInsert(),
+									valueSourceContainer.areValuesIncludedInInsertByDefault()
+							);
+					final boolean isIncludedInUpdate =
+							TruthValue.toBoolean(
+									columnSource.isIncludedInUpdate(),
+									valueSourceContainer.areValuesIncludedInUpdateByDefault()
+							);
 					valueBindings.add(
 							new RelationalValueBinding(
 									column,
@@ -2576,7 +2518,7 @@ public class Binder {
 	}
 
 
-	private Value buildRelationValue(
+	private Value buildDiscriminatorRelationValue(
 			final RelationalValueSource valueSource,
 			final TableSpecification table) {
 		if ( valueSource.getNature() == RelationalValueSource.Nature.COLUMN ) {
@@ -2594,70 +2536,6 @@ public class Binder {
 		}
 	}
 
-
-	private TableSpecification createBasicCollectionTable(
-			final AbstractPluralAttributeBinding pluralAttributeBinding,
-			final TableSpecificationSource tableSpecificationSource) {
-		final DefaultNamingStrategy defaultNamingStategy = new DefaultNamingStrategy() {
-
-			@Override
-			public String defaultName() {
-				final EntityBinding owner = pluralAttributeBinding.getContainer().seekEntityBinding();
-				final String ownerTableLogicalName =
-						Table.class.isInstance( owner.getPrimaryTable() )
-								? ( (Table) owner.getPrimaryTable() ).getPhysicalName().getText()
-								: null;
-				return bindingContext().getNamingStrategy().collectionTableName(
-						owner.getEntity().getName(),
-						ownerTableLogicalName,
-						null,
-						null,
-						createAttributePath( pluralAttributeBinding )
-				);
-			}
-		};
-		return createTable( tableSpecificationSource, defaultNamingStategy );
-	}
-
-	private TableSpecification createManyToManyCollectionTable(
-			final AbstractPluralAttributeBinding pluralAttributeBinding,
-			final boolean isInverse,
-			final TableSpecificationSource tableSpecificationSource,
-			final EntityBinding associatedEntityBinding) {
-		final DefaultNamingStrategy defaultNamingStategy = new DefaultNamingStrategy() {
-
-			@Override
-			public String defaultName() {
-				final EntityBinding ownerEntityBinding;
-				final EntityBinding inverseEntityBinding;
-				if ( isInverse ) {
-					ownerEntityBinding = associatedEntityBinding;
-					inverseEntityBinding = pluralAttributeBinding.getContainer().seekEntityBinding();
-				}
-				else {
-					ownerEntityBinding = pluralAttributeBinding.getContainer().seekEntityBinding();
-					inverseEntityBinding = associatedEntityBinding;
-				}
-				final String ownerTableLogicalName =
-						Table.class.isInstance( ownerEntityBinding.getPrimaryTable() )
-								? ( (Table) ownerEntityBinding.getPrimaryTable() ).getPhysicalName().getText()
-								: null;
-				final String inverseTableLogicalName =
-						Table.class.isInstance( inverseEntityBinding.getPrimaryTable() )
-								? ( (Table) inverseEntityBinding.getPrimaryTable() ).getPhysicalName().getText()
-								: null;
-				return bindingContext().getNamingStrategy().collectionTableName(
-						ownerEntityBinding.getEntity().getName(),
-						ownerTableLogicalName,
-						inverseEntityBinding.getEntity().getName(),
-						inverseTableLogicalName,
-						createAttributePath( pluralAttributeBinding )
-				);
-			}
-		};
-		return createTable( tableSpecificationSource, defaultNamingStategy );
-	}
-
 	private Column createColumn(
 			final TableSpecification table,
 			final ColumnSource columnSource,
@@ -2670,8 +2548,10 @@ public class Binder {
 					"Cannot resolve name for column because no name was specified and default name is null."
 			);
 		}
-		final String name = resolveColumnName( columnSource, defaultName, isDefaultAttributeName );
-		final String resolvedColumnName = quotedIdentifier( name );
+		final String resolvedColumnName = nameNormalizer.normalizeDatabaseIdentifier(
+				columnSource.getName(),
+				new ColumnNamingStrategyHelper( defaultName, isDefaultAttributeName )
+		);
 		final Column column = table.locateOrCreateColumn( resolvedColumnName );
 		resolveColumnNullabl( columnSource, forceNotNull, isNullableByDefault, column );
 		column.setDefaultValue( columnSource.getDefaultValue() );
@@ -2710,87 +2590,59 @@ public class Binder {
 		}
 	}
 
-	private String resolveColumnName(
-			final ColumnSource columnSource,
-			final String defaultName,
-			final boolean isDefaultAttributeName) {
-		final String name;
-		if ( StringHelper.isNotEmpty( columnSource.getName() ) ) {
-			name = bindingContext().getNamingStrategy().columnName( columnSource.getName() );
+	private TableSpecification createTable(
+			final TableSpecificationSource tableSpecSource,
+			final NamingStrategyHelper namingStrategyHelper) {
+		return createTable( tableSpecSource, namingStrategyHelper, null );
+	}
+
+	private TableSpecification createTable(
+			final TableSpecificationSource tableSpecSource,
+			final NamingStrategyHelper namingStrategyHelper,
+			final Table includedTable) {
+		if ( tableSpecSource == null && namingStrategyHelper == null ) {
+			throw bindingContext().makeMappingException( "An explicit name must be specified for the table" );
 		}
-		else if ( isDefaultAttributeName ) {
-			name = bindingContext().getNamingStrategy().propertyToColumnName( defaultName );
+		final boolean isTableSourceNull = tableSpecSource == null;
+		final Schema schema = resolveSchema( tableSpecSource );
+
+		TableSpecification tableSpec;
+		if ( isTableSourceNull || tableSpecSource instanceof TableSource  ) {
+			String explicitName = isTableSourceNull ? null : TableSource.class.cast( tableSpecSource ).getExplicitTableName();
+			String tableName = nameNormalizer.normalizeDatabaseIdentifier( explicitName, namingStrategyHelper );
+			String logicTableName = TableNamingStrategyHelper.class.cast( namingStrategyHelper ).getLogicalName( bindingContext().getNamingStrategy());
+			tableSpec = createTableSpecification( schema, tableName, logicTableName, includedTable );
 		}
 		else {
-			name = bindingContext().getNamingStrategy().columnName( defaultName );
+			final InLineViewSource inLineViewSource = (InLineViewSource) tableSpecSource;
+			tableSpec = schema.createInLineView(
+					createIdentifier( inLineViewSource.getLogicalName() ),
+					inLineViewSource.getSelectStatement()
+			);
 		}
-		return name;
+		return tableSpec;
 	}
 
-
-	private TableSpecification createTable(
-			final TableSpecificationSource tableSpecSource,
-			final DefaultNamingStrategy defaultNamingStrategy) {
-		return createTable( tableSpecSource, defaultNamingStrategy, null );
-
-	}
-
-	private TableSpecification createTable(
-			final TableSpecificationSource tableSpecSource,
-			final DefaultNamingStrategy defaultNamingStrategy,
-			final Table includedTable) {
-
-		final LocalBindingContext bindingContext = bindingContext();
-		final MappingDefaults mappingDefaults = bindingContext.getMappingDefaults();
-		final boolean isTableSourceNull = tableSpecSource == null;
-		final String explicitCatalogName = isTableSourceNull ? null : tableSpecSource.getExplicitCatalogName();
-		final String explicitSchemaName = isTableSourceNull ? null : tableSpecSource.getExplicitSchemaName();
+	private Schema resolveSchema(final TableSpecificationSource tableSpecSource) {
+		final boolean tableSourceNull = tableSpecSource == null;
+		final MappingDefaults mappingDefaults = bindingContext().getMappingDefaults();
+		final String explicitCatalogName = tableSourceNull ? null : tableSpecSource.getExplicitCatalogName();
+		final String explicitSchemaName = tableSourceNull ? null : tableSpecSource.getExplicitSchemaName();
 		final Schema.Name schemaName =
 				new Schema.Name(
 						createIdentifier( explicitCatalogName, mappingDefaults.getCatalogName() ),
 						createIdentifier( explicitSchemaName, mappingDefaults.getSchemaName() )
 				);
-		final Schema schema = bindingContext.getMetadataImplementor().getDatabase().locateSchema( schemaName );
-
-		TableSpecification tableSpec;
-		if ( isTableSourceNull ) {
-			if ( defaultNamingStrategy == null ) {
-				throw bindingContext().makeMappingException( "An explicit name must be specified for the table" );
-			}
-			String tableName = defaultNamingStrategy.defaultName();
-			tableSpec = createTableSpecification( bindingContext, schema, tableName, includedTable );
-		}
-		else if ( tableSpecSource instanceof TableSource ) {
-			final TableSource tableSource = (TableSource) tableSpecSource;
-			String tableName = tableSource.getExplicitTableName();
-			if ( tableName == null ) {
-				if ( defaultNamingStrategy == null ) {
-					throw bindingContext().makeMappingException( "An explicit name must be specified for the table" );
-				}
-				tableName = defaultNamingStrategy.defaultName();
-			}
-			tableSpec = createTableSpecification( bindingContext, schema, tableName, includedTable );
-		}
-		else {
-			final InLineViewSource inLineViewSource = (InLineViewSource) tableSpecSource;
-			tableSpec = schema.createInLineView(
-					Identifier.toIdentifier( inLineViewSource.getLogicalName() ),
-					inLineViewSource.getSelectStatement()
-			);
-		}
-
-		return tableSpec;
+		return metadata.getDatabase().locateSchema( schemaName );
 	}
 
 	private TableSpecification createTableSpecification(
-			final LocalBindingContext bindingContext,
 			final Schema schema,
 			final String tableName,
+			final String logicTableName,
 			final Table includedTable) {
-		String name = quotedIdentifier( tableName );
-		final Identifier logicalTableId = Identifier.toIdentifier( name );
-		name = quotedIdentifier( bindingContext.getNamingStrategy().tableName( name ) );
-		final Identifier physicalTableId = Identifier.toIdentifier( name );
+		final Identifier logicalTableId = createIdentifier( logicTableName );
+		final Identifier physicalTableId = createIdentifier( tableName );
 		final Table table = schema.locateTable( logicalTableId );
 		if ( table != null ) {
 			return table;
@@ -2981,17 +2833,16 @@ public class Binder {
 				: propertyAccessorName;
 	}
 
-	private String quoteIdentifierIfNonEmpty(final String name) {
-		return StringHelper.isEmpty( name ) ? null : quotedIdentifier( name );
+	private String quotedIdentifier(final String name) {
+		return nameNormalizer.normalizeIdentifierQuoting( name );
 	}
 
-	private String quotedIdentifier(final String name) {
-		return bindingContext().isGloballyQuotedIdentifiers() ? StringHelper.quote( name ) : name;
+	private Identifier createIdentifier(final String name){
+		return createIdentifier( name, null );
 	}
 
 	private Identifier createIdentifier(final String name, final String defaultName) {
 		String identifier = StringHelper.isEmpty( name ) ? defaultName : name;
-
 		identifier = quotedIdentifier( identifier );
 		return Identifier.toIdentifier( identifier );
 	}
@@ -3199,12 +3050,9 @@ public class Binder {
 		return false;
 	}
 
-	private static String createAttributePath(
+	static String createAttributePath(
 			final AttributeBinding attributeBinding) {
-		return new StringBuffer( attributeBinding.getContainer().getPathBase() )
-				.append( '.' )
-				.append( attributeBinding.getAttribute().getName() )
-				.toString();
+		return attributeBinding.getContainer().getPathBase() + '.' + attributeBinding.getAttribute().getName();
 	}
 
 
@@ -3324,7 +3172,7 @@ public class Binder {
 				String logicalTableName,
 				String logicalSchemaName,
 				String logicalCatalogName) {
-			Identifier tableIdentifier = Identifier.toIdentifier( logicalTableName );
+			Identifier tableIdentifier = createIdentifier( logicalTableName );
 			if ( tableIdentifier == null ) {
 				tableIdentifier = referencedEntityBinding.getPrimaryTable().getLogicalName();
 			}

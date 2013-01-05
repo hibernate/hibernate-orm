@@ -283,6 +283,7 @@ public class HibernateMappingProcessor {
 				? entityElement.getName()
 				: entityElement.getEntityName();
 		metadata.addImport( importName, qualifiedName );
+		metadata.addImport( StringHelper.unqualify(importName  ), qualifiedName );
 
 		if ( JaxbClassElement.class.isInstance( entityElement ) ) {
 			processEntityElementsImport( ( (JaxbClassElement) entityElement ).getSubclass() );

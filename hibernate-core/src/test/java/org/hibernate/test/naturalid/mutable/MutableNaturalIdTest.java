@@ -34,7 +34,6 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -268,7 +267,6 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNaturalIdCache() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -453,7 +451,6 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testQuerying() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

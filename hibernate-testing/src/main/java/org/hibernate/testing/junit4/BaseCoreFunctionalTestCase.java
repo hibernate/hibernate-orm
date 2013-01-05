@@ -191,6 +191,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		if ( configuration.getEntityNotFoundDelegate() != null ) {
 			sessionFactoryBuilder.with( configuration.getEntityNotFoundDelegate() );
 		}
+		if ( configuration.getSessionFactoryObserver() != null ){
+			sessionFactoryBuilder.add( configuration.getSessionFactoryObserver() );
+		}
 	}
 
 	protected void rebuildSessionFactory() {

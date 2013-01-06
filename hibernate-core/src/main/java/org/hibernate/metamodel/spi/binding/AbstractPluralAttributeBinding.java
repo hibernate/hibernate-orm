@@ -291,11 +291,12 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		this.comparator = comparator;
 	}
 
+	@Override
 	public void addFilterConfiguration(FilterConfiguration filterConfiguration) {
 		filterConfigurations.add( filterConfiguration );
 	}
 
-		@Override
+	@Override
 	public List<FilterConfiguration> getFilterConfigurations() {
 		return filterConfigurations;
 	}

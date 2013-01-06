@@ -448,7 +448,6 @@ public class JandexHelper {
 			}
 			returnValue = arr;
 		}
-
 		return type.cast( nullIfUndefined( returnValue, type ) );
 	}
 

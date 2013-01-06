@@ -36,6 +36,7 @@ import antlr.TokenStreamException;
 import antlr.collections.AST;
 import org.jboss.logging.Logger;
 
+import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
@@ -87,7 +88,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	private boolean shallowQuery;
 	private Map tokenReplacements;
 
-	private Map enabledFilters; //TODO:this is only needed during compilation .. can we eliminate the instvar?
+	private Map<String, Filter> enabledFilters; //TODO:this is only needed during compilation .. can we eliminate the instvar?
 
 	private boolean compiled;
 	private QueryLoader queryLoader;
@@ -111,7 +112,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	public QueryTranslatorImpl(
 			String queryIdentifier,
 	        String query,
-	        Map enabledFilters,
+	        Map<String, Filter> enabledFilters,
 	        SessionFactoryImplementor factory) {
 		this.queryIdentifier = queryIdentifier;
 		this.hql = query;
@@ -444,7 +445,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		return hql;
 	}
 
-	public Map getEnabledFilters() {
+	public Map<String, Filter> getEnabledFilters() {
 		return enabledFilters;
 	}
 

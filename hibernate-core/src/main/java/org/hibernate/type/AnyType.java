@@ -35,6 +35,7 @@ import org.dom4j.Node;
 
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
+import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.TransientObjectException;
@@ -355,7 +356,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		return null;
 	}
 
-	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters)
+	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map<String, Filter> enabledFilters)
 	throws MappingException {
 		throw new UnsupportedOperationException();
 	}

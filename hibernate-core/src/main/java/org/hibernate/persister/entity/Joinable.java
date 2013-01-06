@@ -25,6 +25,7 @@
 package org.hibernate.persister.entity;
 import java.util.Map;
 
+import org.hibernate.Filter;
 import org.hibernate.MappingException;
 
 /**
@@ -67,7 +68,7 @@ public interface Joinable {
 	/**
 	 * Get the where clause filter, given a query alias and considering enabled session filters
 	 */
-	public String filterFragment(String alias, Map enabledFilters) throws MappingException;
+	public String filterFragment(String alias, Map<String, Filter> enabledFilters) throws MappingException;
 
 	public String oneToManyFilterFragment(String alias) throws MappingException;
 	/**

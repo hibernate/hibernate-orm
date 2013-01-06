@@ -38,8 +38,10 @@ import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbAnyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbArrayElement;
 import org.hibernate.jaxb.spi.hbm.JaxbBagElement;
+import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbComponentElement;
 import org.hibernate.jaxb.spi.hbm.JaxbDynamicComponentElement;
+import org.hibernate.jaxb.spi.hbm.JaxbFilterElement;
 import org.hibernate.jaxb.spi.hbm.JaxbIdbagElement;
 import org.hibernate.jaxb.spi.hbm.JaxbJoinElement;
 import org.hibernate.jaxb.spi.hbm.JaxbListElement;
@@ -55,6 +57,7 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
@@ -82,7 +85,7 @@ public abstract class AbstractEntitySourceImpl
 	// logically final, but built during 'afterInstantiation' callback
 	private List<AttributeSource> attributeSources;
 	private Set<SecondaryTableSource> secondaryTableSources;
-
+	private final FilterSource[] filterSources;
 	protected AbstractEntitySourceImpl(MappingDocument sourceMappingDocument, EntityElement entityElement) {
 		super( sourceMappingDocument );
 		this.entityElement = entityElement;
@@ -96,6 +99,34 @@ public abstract class AbstractEntitySourceImpl
 			this.entityName = className;
 			this.jpaEntityName = StringHelper.unqualify( className );
 		}
+		this.filterSources = buildFilterSources();
+	}
+
+	private FilterSource[] buildFilterSources() {
+		//todo for now, i think all EntityElement should support this.
+		if ( JaxbClassElement.class.isInstance( entityElement() ) ) {
+			JaxbClassElement jaxbClassElement = JaxbClassElement.class.cast( entityElement() );
+			final int size = jaxbClassElement.getFilter().size();
+			if ( size == 0 ) {
+				return null;
+			}
+
+			FilterSource[] results = new FilterSource[size];
+			for ( int i = 0; i < size; i++ ) {
+				JaxbFilterElement element = jaxbClassElement.getFilter().get( i );
+				results[i] = new FilterSourceImpl( sourceMappingDocument(), element );
+			}
+			return results;
+		}
+		else {
+			return null;
+		}
+
+	}
+
+	@Override
+	public FilterSource[] getFilterSources() {
+		return filterSources;
 	}
 
 	@Override

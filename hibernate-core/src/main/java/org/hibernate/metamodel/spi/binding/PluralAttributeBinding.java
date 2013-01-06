@@ -35,7 +35,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  *
  * @author Steve Ebersole
  */
-public interface PluralAttributeBinding extends AttributeBinding, Fetchable {
+public interface PluralAttributeBinding extends AttributeBinding, Fetchable, Filterable {
 	/**
 	 * Retrieve the plural attribute being bound.
 	 *
@@ -83,8 +83,6 @@ public interface PluralAttributeBinding extends AttributeBinding, Fetchable {
 	Comparator getComparator();
 
 	int getBatchSize();
-
-	List<FilterConfiguration> getFilterConfigurations();
 
 	String getOrderBy();
 

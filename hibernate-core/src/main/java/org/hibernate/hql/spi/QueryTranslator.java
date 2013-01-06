@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
@@ -141,7 +142,7 @@ public interface QueryTranslator {
 	 *
 	 * @return Filters enabled for this query execution.
 	 */
-	Map getEnabledFilters();
+	Map<String, Filter> getEnabledFilters();
 
 	/**
 	 * Returns an array of Types represented in the query result.

@@ -31,11 +31,14 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
+import org.hibernate.jaxb.spi.hbm.JaxbFilterElement;
 import org.hibernate.jaxb.spi.hbm.PluralAttributeElement;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
@@ -58,7 +61,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 	private final PluralAttributeKeySource keySource;
 	private final PluralAttributeElementSource elementSource;
 	private final Caching caching;
-	
+	private final FilterSource[] filterSources;
 	private ValueHolder<Class<?>> elementClassReference;
 
 	protected AbstractPluralAttributeSourceImpl(
@@ -92,6 +95,22 @@ public abstract class AbstractPluralAttributeSourceImpl
 				return Collections.emptyMap();
 			}
 		};
+		this.filterSources = buildFilterSources();
+	}
+
+	private FilterSource[] buildFilterSources() {
+		final int size = pluralAttributeElement.getFilter().size();
+		if ( size == 0 ) {
+			return null;
+		}
+
+		FilterSource[] results = new FilterSource[size];
+		for ( int i = 0; i < size; i++ ) {
+			JaxbFilterElement element = pluralAttributeElement.getFilter().get( i );
+			results[i] = new FilterSourceImpl( sourceMappingDocument(), element );
+		}
+		return results;
+
 	}
 
 	private PluralAttributeElementSource interpretElementType() {
@@ -150,6 +169,11 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 	protected AttributeSourceContainer container() {
 		return container;
+	}
+
+	@Override
+	public FilterSource[] getFilterSources() {
+		return filterSources;
 	}
 
 	@Override

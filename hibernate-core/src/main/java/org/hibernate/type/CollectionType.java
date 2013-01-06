@@ -37,6 +37,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.hibernate.EntityMode;
+import org.hibernate.Filter;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -694,7 +695,7 @@ public abstract class CollectionType extends AbstractType implements Association
 		return getClass().getName() + '(' + getRole() + ')';
 	}
 
-	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters)
+	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map<String, Filter> enabledFilters)
 			throws MappingException {
 		return getAssociatedJoinable( factory ).filterFragment( alias, enabledFilters );
 	}

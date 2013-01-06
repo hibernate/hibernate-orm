@@ -45,7 +45,7 @@ public class FilterSourceImpl implements FilterSource {
 	public FilterSourceImpl(AnnotationInstance filterAnnotation) {
 		this.name = JandexHelper.getValue( filterAnnotation, "name", String.class );
 		this.condition = JandexHelper.getValue( filterAnnotation, "condition", String.class );
-		this.autoAliasInjection = JandexHelper.getValue( filterAnnotation, "deduceAliasInjectionPoints", boolean.class );
+		this.autoAliasInjection = JandexHelper.getValue( filterAnnotation, "deduceAliasInjectionPoints", Boolean.class );
 
 		for ( AnnotationInstance aliasAnnotation : JandexHelper.getValue( filterAnnotation, "aliases", AnnotationInstance[].class ) ) {
 			final String alias = JandexHelper.getValue( aliasAnnotation, "alias", String.class );

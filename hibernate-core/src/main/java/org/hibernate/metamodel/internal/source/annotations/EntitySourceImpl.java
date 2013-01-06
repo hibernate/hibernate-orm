@@ -46,6 +46,7 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
@@ -55,6 +56,7 @@ import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
 
 /**
  * @author Hardy Ferentschik
@@ -63,6 +65,7 @@ public class EntitySourceImpl implements EntitySource {
 	private final EntityClass entityClass;
 	private final Set<SubclassEntitySource> subclassEntitySources;
 	private final String jpaEntityName;
+	private final FilterSource[] filterSources;
 
 	public EntitySourceImpl(EntityClass entityClass) {
 		this.entityClass = entityClass;
@@ -76,6 +79,39 @@ public class EntitySourceImpl implements EntitySource {
 		}
 
 		addImports();
+		this.filterSources = buildFilterSources();
+	}
+
+	private FilterSource[] buildFilterSources() {
+		AnnotationInstance filtersAnnotation = JandexHelper.getSingleAnnotation(
+				entityClass.getClassInfo(),
+				HibernateDotNames.FILTERS ,
+				ClassInfo.class
+		);
+		List<FilterSource> filterSourceList = new ArrayList<FilterSource>();
+		if ( filtersAnnotation != null ) {
+			AnnotationInstance[] annotationInstances = filtersAnnotation.value().asNestedArray();
+			for ( AnnotationInstance filterAnnotation : annotationInstances ) {
+				FilterSource filterSource = new FilterSourceImpl( filterAnnotation );
+				filterSourceList.add( filterSource );
+			}
+
+		}
+		AnnotationInstance filterAnnotation = JandexHelper.getSingleAnnotation(
+				entityClass.getClassInfo(),
+				HibernateDotNames.FILTER ,
+				ClassInfo.class
+		);
+		if ( filterAnnotation != null ) {
+			FilterSource filterSource = new FilterSourceImpl( filterAnnotation );
+			filterSourceList.add( filterSource );
+		}
+		if ( filterSourceList.isEmpty() ) {
+			return null;
+		}
+		else {
+			return filterSourceList.toArray( new FilterSource[filterSourceList.size()] );
+		}
 	}
 
 	public EntityClass getEntityClass() {
@@ -231,6 +267,11 @@ public class EntitySourceImpl implements EntitySource {
 	@Override
 	public void add(SubclassEntitySource subclassEntitySource) {
 		subclassEntitySources.add( subclassEntitySource );
+	}
+
+	@Override
+	public FilterSource[] getFilterSources() {
+		return filterSources;
 	}
 
 	@Override

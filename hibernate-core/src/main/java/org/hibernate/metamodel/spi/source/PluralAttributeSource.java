@@ -43,6 +43,8 @@ public interface PluralAttributeSource
 
 	public PluralAttributeElementSource getElementSource();
 
+	public FilterSource[] getFilterSources();
+
 	public ValueHolder<Class<?>> getElementClassReference();
 
 	public TableSpecificationSource getCollectionTableSpecificationSource();

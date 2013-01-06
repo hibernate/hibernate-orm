@@ -66,6 +66,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -996,7 +997,7 @@ public abstract class AbstractCollectionPersister
 		//if ( elementBinding.getNature() == Nature.MANY_TO_MANY ) {
 		//}
 		//else {
-			manyToManyFilterHelper = new FilterHelper( Collections.emptyList(), factory );
+			manyToManyFilterHelper = new FilterHelper( Collections.<FilterConfiguration>emptyList(), factory );
 			manyToManyWhereString = null;
 			manyToManyWhereTemplate = null;
 			hasManyToManyOrder = false;
@@ -1054,7 +1055,7 @@ public abstract class AbstractCollectionPersister
 		if ( subselectInitializer != null ) {
 			return subselectInitializer;
 		}
-		else if ( session.getEnabledFilters().isEmpty() ) {
+		else if ( session.getLoadQueryInfluencers().hasEnabledFilters() ) {
 			return initializer;
 		}
 		else {
@@ -2081,8 +2082,8 @@ public abstract class AbstractCollectionPersister
 	}
 
 	public boolean isAffectedByEnabledFilters(SessionImplementor session) {
-		return filterHelper.isAffectedBy( session.getEnabledFilters() ) ||
-				( isManyToMany() && manyToManyFilterHelper.isAffectedBy( session.getEnabledFilters() ) );
+		return filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilterNames() ) ||
+				( isManyToMany() && manyToManyFilterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilterNames() ) );
 	}
 
 	public boolean isSubselectLoadable() {

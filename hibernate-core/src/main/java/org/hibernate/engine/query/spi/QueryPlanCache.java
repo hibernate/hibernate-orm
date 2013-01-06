@@ -34,6 +34,7 @@ import java.util.Set;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.Filter;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.cfg.Environment;
@@ -159,7 +160,7 @@ public class QueryPlanCache implements Serializable {
 		return new ParameterMetadata( ordinalDescriptors, namedParamDescriptorMap );
 	}
 
-	public HQLQueryPlan getHQLQueryPlan( String queryString, boolean shallow, Map enabledFilters)
+	public HQLQueryPlan getHQLQueryPlan( String queryString, boolean shallow, Map<String, Filter> enabledFilters)
 			throws QueryException, MappingException {
 		HQLQueryPlanKey key = new HQLQueryPlanKey( queryString, shallow, enabledFilters );
 		HQLQueryPlan value = (HQLQueryPlan) queryPlanCache.get( key );
@@ -216,7 +217,7 @@ public class QueryPlanCache implements Serializable {
 		private final Set<DynamicFilterKey> filterKeys;
 		private final int hashCode;
 
-		public HQLQueryPlanKey(String query, boolean shallow, Map enabledFilters) {
+		public HQLQueryPlanKey(String query, boolean shallow, Map<String, Filter> enabledFilters) {
 			this.query = query;
 			this.shallow = shallow;
 			if ( CollectionHelper.isEmpty( enabledFilters ) ) {
@@ -227,7 +228,7 @@ public class QueryPlanCache implements Serializable {
 						CollectionHelper.determineProperSizing( enabledFilters ),
 						CollectionHelper.LOAD_FACTOR
 				);
-				for ( Object o : enabledFilters.values() ) {
+				for ( Filter o : enabledFilters.values() ) {
 					tmp.add( new DynamicFilterKey( (FilterImpl) o ) );
 				}
 				this.filterKeys = Collections.unmodifiableSet( tmp );

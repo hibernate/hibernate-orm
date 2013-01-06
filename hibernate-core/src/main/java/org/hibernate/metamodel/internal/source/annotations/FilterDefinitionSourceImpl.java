@@ -84,7 +84,7 @@ public class FilterDefinitionSourceImpl implements FilterDefinitionSource {
 		}
 
 		@Override
-		public String getParameterValueTyeName() {
+		public String getParameterValueTypeName() {
 			return type;
 		}
 	}

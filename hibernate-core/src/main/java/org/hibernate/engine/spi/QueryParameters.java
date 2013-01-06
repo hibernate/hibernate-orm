@@ -33,6 +33,7 @@ import java.util.StringTokenizer;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
@@ -463,7 +464,7 @@ public final class QueryParameters {
 	}
 
 	@SuppressWarnings( {"unchecked"})
-	public void processFilters(String sql, Map filters, SessionFactoryImplementor factory) {
+	public void processFilters(String sql, Map<String, Filter> filters, SessionFactoryImplementor factory) {
 		if ( filters.size() == 0 || !sql.contains( ParserHelper.HQL_VARIABLE_PREFIX ) ) {
 			// HELLA IMPORTANT OPTIMIZATION!!!
 			processedPositionalParameterValues = getPositionalParameterValues();

@@ -25,6 +25,7 @@
 package org.hibernate.hql.spi;
 import java.util.Map;
 
+import org.hibernate.Filter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -47,7 +48,7 @@ public interface QueryTranslatorFactory {
 	 * @param factory The session factory.
 	 * @return an appropriate translator.
 	 */
-	public QueryTranslator createQueryTranslator(String queryIdentifier, String queryString, Map filters, SessionFactoryImplementor factory);
+	public QueryTranslator createQueryTranslator(String queryIdentifier, String queryString, Map<String, Filter> filters, SessionFactoryImplementor factory);
 
 	/**
 	 * Construct a {@link FilterTranslator} instance capable of translating
@@ -55,5 +56,5 @@ public interface QueryTranslatorFactory {
 	 *
 	 * @see #createQueryTranslator
 	 */
-	public FilterTranslator createFilterTranslator(String queryIdentifier, String queryString, Map filters, SessionFactoryImplementor factory);
+	public FilterTranslator createFilterTranslator(String queryIdentifier, String queryString, Map<String, Filter> filters, SessionFactoryImplementor factory);
 }

@@ -48,6 +48,7 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
@@ -77,6 +78,7 @@ import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
+import org.hibernate.metamodel.spi.source.FilterParameterSource;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
@@ -290,11 +292,25 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 						new FilterDefinition(
 								filterDefinitionSource.getName(),
 								filterDefinitionSource.getCondition(),
-								null // the params, todo : need to figure out how to handle the type portion
+								resolveFilterDefinitionParamType(filterDefinitionSource.getParameterSources())
 						)
 				);
 			}
 		}
+	}
+
+	private Map<String, org.hibernate.type.Type> resolveFilterDefinitionParamType(Iterable<FilterParameterSource> filterParameterSources){
+		if( CollectionHelper.isEmpty( filterParameterSources )){
+			return null;
+		}
+		Map<String, org.hibernate.type.Type> params = new HashMap<String, org.hibernate.type.Type>(  );
+		for(final FilterParameterSource parameterSource : filterParameterSources){
+			final String name = parameterSource.getParameterName();
+			final String typeName = parameterSource.getParameterValueTypeName();
+			final org.hibernate.type.Type type = getTypeResolver().heuristicType( typeName );
+			params.put( name, type );
+		}
+		return params;
 	}
 
 	@Override

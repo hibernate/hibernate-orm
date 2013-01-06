@@ -25,6 +25,7 @@ package org.hibernate.type;
 
 import java.util.Map;
 
+import org.hibernate.Filter;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.Joinable;
@@ -77,7 +78,7 @@ public interface AssociationType extends Type {
 	 * Get the "filtering" SQL fragment that is applied in the 
 	 * SQL on clause, in addition to the usual join condition
 	 */	
-	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters) 
+	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map<String, Filter> enabledFilters)
 	throws MappingException;
 	
 	/**

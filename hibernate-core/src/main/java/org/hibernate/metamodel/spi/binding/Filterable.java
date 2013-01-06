@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,25 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.source;
+package org.hibernate.metamodel.spi.binding;
+
+import java.util.List;
+
+import org.hibernate.internal.FilterConfiguration;
 
 /**
- * Describes the source of filter parameter information
- *
- * @author Steve Ebersole
+ * @author Strong Liu <stliu@hibernate.org>
  */
-public interface FilterParameterSource {
-	/**
-	 * Retrieve the name of the parameter being described.
-	 *
-	 * @return The name
-	 */
-	public String getParameterName();
+public interface Filterable {
+	public void addFilterConfiguration(FilterConfiguration filterConfiguration);
 
-	/**
-	 * The Hibernate type name that can be used to handle bound parameter values.
-	 *
-	 * @return the type
-	 */
-	public String getParameterValueTypeName();
+	public List<FilterConfiguration> getFilterConfigurations();
 }

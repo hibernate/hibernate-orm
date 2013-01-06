@@ -121,4 +121,5 @@ public interface RootEntitySource extends EntitySource {
  	 * @return The natural id caching configuration.
 	 */
 	public Caching getNaturalIdCaching();
+
 }

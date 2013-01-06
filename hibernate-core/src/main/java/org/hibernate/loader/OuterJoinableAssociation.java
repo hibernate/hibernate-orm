@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Filter;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -52,7 +53,7 @@ public final class OuterJoinableAssociation {
 	private final String[] rhsColumns;
 	private final JoinType joinType;
 	private final String on;
-	private final Map enabledFilters;
+	private final Map<String, Filter> enabledFilters;
 	private final boolean hasRestriction;
 
 	public static OuterJoinableAssociation createRoot(
@@ -83,7 +84,7 @@ public final class OuterJoinableAssociation {
 			String withClause,
 			boolean hasRestriction,
 			SessionFactoryImplementor factory,
-			Map enabledFilters) throws MappingException {
+			Map<String, Filter> enabledFilters) throws MappingException {
 		this.propertyPath = propertyPath;
 		this.joinableType = joinableType;
 		this.lhsAlias = lhsAlias;

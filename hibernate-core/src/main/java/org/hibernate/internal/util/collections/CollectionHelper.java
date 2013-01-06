@@ -135,6 +135,10 @@ public final class CollectionHelper {
         return collection == null || collection.isEmpty();
     }
 
+	public static boolean isEmpty(Iterable iterable){
+		return iterable == null || !iterable.iterator().hasNext();
+	}
+
     public static boolean isEmpty(Map map) {
         return map == null || map.isEmpty();
     }

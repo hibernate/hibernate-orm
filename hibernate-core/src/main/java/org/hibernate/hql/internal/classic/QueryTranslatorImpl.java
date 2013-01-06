@@ -41,6 +41,7 @@ import java.util.Set;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -140,7 +141,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 	private String[] suffixes;
 
-	private Map enabledFilters;
+	private Map<String, Filter> enabledFilters;
 
 	/**
 	 * Construct a query translator
@@ -155,7 +156,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	public QueryTranslatorImpl(
 			String queryIdentifier,
 	        String queryString,
-	        Map enabledFilters,
+	        Map<String, Filter> enabledFilters,
 	        SessionFactoryImplementor factory) {
 		super( factory );
 		this.queryIdentifier = queryIdentifier;
@@ -1163,7 +1164,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		return holderClass;
 	}
 
-	public Map getEnabledFilters() {
+	public Map<String, Filter> getEnabledFilters() {
 		return enabledFilters;
 	}
 

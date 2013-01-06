@@ -8,7 +8,7 @@ import javax.persistence.UniqueConstraint;
  * @author Emmanuel Bernard
  */
 @Entity
-@Table( name = "xPM_Product", uniqueConstraints = {@UniqueConstraint( columnNames = {
+@Table( uniqueConstraints = {@UniqueConstraint( columnNames = {
 		"manufacturerPartNumber", "manufacturerId"} )} )
 public class Product extends Component {
 }

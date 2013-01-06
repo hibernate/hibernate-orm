@@ -36,6 +36,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -60,7 +61,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  * @author Hardy Ferentschik
  * @author Gail Badner
  */
-public class EntityBinding extends AbstractAttributeBindingContainer {
+public class EntityBinding extends AbstractAttributeBindingContainer implements Filterable {
 	private static final String NULL_DISCRIMINATOR_MATCH_VALUE = "null";
 	private static final String NOT_NULL_DISCRIMINATOR_MATCH_VALUE = "not null";
 
@@ -83,7 +84,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 
 	private String discriminatorMatchValue;
 
-	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>();
+	private List<FilterConfiguration> filterConfigurations = new ArrayList<FilterConfiguration>();
 
 	private MetaAttributeContext metaAttributeContext;
 
@@ -412,12 +413,19 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 		this.discriminatorMatchValue = discriminatorMatchValue;
 	}
 
-	public Iterable<FilterDefinition> getFilterDefinitions() {
-		return filterDefinitions;
+	@Override
+	public void addFilterConfiguration(FilterConfiguration filterConfiguration) {
+		filterConfigurations.add( filterConfiguration );
 	}
 
-	public void addFilterDefinition(FilterDefinition filterDefinition) {
-		filterDefinitions.add( filterDefinition );
+	@Override
+	public List<FilterConfiguration> getFilterConfigurations() {
+		if ( superEntityBinding != null ) {
+			List<FilterConfiguration> results = new ArrayList<FilterConfiguration>( filterConfigurations );
+			results.addAll( superEntityBinding.getFilterConfigurations() );
+			return results;
+		}
+		return filterConfigurations;
 	}
 
 	@Override

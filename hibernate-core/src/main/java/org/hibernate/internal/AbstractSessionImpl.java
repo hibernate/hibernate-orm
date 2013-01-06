@@ -266,7 +266,7 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	}
 
 	protected HQLQueryPlan getHQLQueryPlan(String query, boolean shallow) throws HibernateException {
-		return factory.getQueryPlanCache().getHQLQueryPlan( query, shallow, getEnabledFilters() );
+		return factory.getQueryPlanCache().getHQLQueryPlan( query, shallow, getLoadQueryInfluencers().getEnabledFilters() );
 	}
 
 	protected NativeSQLQueryPlan getNativeSQLQueryPlan(NativeSQLQuerySpecification spec) throws HibernateException {

@@ -27,9 +27,12 @@ package org.hibernate.internal;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.hibernate.Filter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.Template;
 
 /**
@@ -51,21 +54,20 @@ public class FilterHelper {
 	 * conditions are the values.
 	 *
 	 * @param filters The map of defined filters.
-	 * @param dialect The sql dialect
 	 * @param factory The session factory
 	 */
-	public FilterHelper(List filters, SessionFactoryImplementor factory) {
-		int filterCount = filters.size();
-		filterNames = new String[filterCount];
-		filterConditions = new String[filterCount];
-		filterAutoAliasFlags = new boolean[filterCount];
-		filterAliasTableMaps = new Map[filterCount];
-		Iterator iter = filters.iterator();
-		filterCount = 0;
+	public FilterHelper(List<FilterConfiguration> filters, SessionFactoryImplementor factory) {
+		int size = filters.size();
+		filterNames = new String[size];
+		filterConditions = new String[size];
+		filterAutoAliasFlags = new boolean[size];
+		filterAliasTableMaps = new Map[size];
+		Iterator<FilterConfiguration> iter = filters.iterator();
+		int filterCount = 0;
 		while ( iter.hasNext() ) {
 			filterAutoAliasFlags[filterCount] = false;
-			final FilterConfiguration filter = (FilterConfiguration) iter.next();
-			filterNames[filterCount] = (String) filter.getName();
+			final FilterConfiguration filter = iter.next();
+			filterNames[filterCount] = filter.getName();
 			filterConditions[filterCount] = filter.getCondition();
 			filterAliasTableMaps[filterCount] = filter.getAliasTableMap(factory);
 			if ((filterAliasTableMaps[filterCount].isEmpty() || isTableFromPersistentClass(filterAliasTableMaps[filterCount])) && filter.useAutoAliasInjection()){
@@ -90,23 +92,23 @@ public class FilterHelper {
 		return aliasTableMap.size() == 1 && aliasTableMap.containsKey(null);
 	}
 
-	public boolean isAffectedBy(Map enabledFilters) {
-		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
-			if ( enabledFilters.containsKey( filterNames[i] ) ) {
+	public boolean isAffectedBy(Set<String> enabledFilters) {
+		for ( String filterName : filterNames ) {
+			if ( enabledFilters.contains( filterName ) ) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	public String render(FilterAliasGenerator aliasGenerator, Map enabledFilters) {
+	public String render(FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
 		StringBuilder buffer = new StringBuilder();
 		render( buffer, aliasGenerator, enabledFilters );
 		return buffer.toString();
 	}
 
-	public void render(StringBuilder buffer, FilterAliasGenerator aliasGenerator, Map enabledFilters) {
-		if ( filterNames != null && filterNames.length > 0 ) {
+	public void render(StringBuilder buffer, FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
+		if ( CollectionHelper.isNotEmpty( filterNames ) ) {
 			for ( int i = 0, max = filterNames.length; i < max; i++ ) {
 				if ( enabledFilters.containsKey( filterNames[i] ) ) {
 					final String condition = filterConditions[i];

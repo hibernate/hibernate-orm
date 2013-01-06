@@ -779,7 +779,7 @@ public abstract class AbstractEntityPersister
 		iter = definedBySubclass.iterator();
 		j = 0;
 		while ( iter.hasNext() ) {
-			propertyDefinedOnSubclass[j++] = ( ( Boolean ) iter.next() ).booleanValue();
+			propertyDefinedOnSubclass[j++] = (Boolean) iter.next();
 		}
 
 		// Handle any filters applied to the class level
@@ -1174,12 +1174,12 @@ public abstract class AbstractEntityPersister
 
 		propertyDefinedOnSubclass = ArrayHelper.toBooleanArray( definedBySubclass );
 
-		List<FilterConfiguration> filterDefaultConditions = new ArrayList<FilterConfiguration>();
-		for ( FilterDefinition filterDefinition : entityBinding.getFilterDefinitions() ) {
-			filterDefaultConditions.add(new FilterConfiguration(filterDefinition.getFilterName(), 
-						filterDefinition.getDefaultFilterCondition(), true, null, null, null));
-		}
-		filterHelper = new FilterHelper( filterDefaultConditions, factory);
+//		List<FilterConfiguration> filterDefaultConditions = new ArrayList<FilterConfiguration>();
+//		for ( FilterDefinition filterDefinition : entityBinding.getFilterDefinitions() ) {
+//			filterDefaultConditions.add(new FilterConfiguration(filterDefinition.getFilterName(),
+//						filterDefinition.getDefaultFilterCondition(), true, null, null, null));
+//		}
+		filterHelper = new FilterHelper( entityBinding.getFilterConfigurations(), factory);
 
 		temporaryIdTableName = null;
 		temporaryIdTableDDL = null;
@@ -3909,7 +3909,7 @@ public abstract class AbstractEntityPersister
 
 	private boolean isAffectedByEnabledFilters(SessionImplementor session) {
 		return session.getLoadQueryInfluencers().hasEnabledFilters()
-				&& filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilters() );
+				&& filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilterNames() );
 	}
 
 	private UniqueEntityLoader getAppropriateLoader(LockOptions lockOptions, SessionImplementor session) {

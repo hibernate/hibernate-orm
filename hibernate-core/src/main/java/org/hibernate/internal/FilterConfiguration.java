@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.persister.entity.Joinable;
 
 /**
@@ -43,6 +44,7 @@ public class FilterConfiguration {
 	private final Map<String, String> aliasTableMap;
 	private final Map<String, String> aliasEntityMap;
 	private final PersistentClass persistentClass;
+	private final EntityBinding entityBinding;
 	public FilterConfiguration(
 			String name,
 			String condition,
@@ -56,6 +58,23 @@ public class FilterConfiguration {
 		this.aliasTableMap = aliasTableMap;
 		this.aliasEntityMap = aliasEntityMap;
 		this.persistentClass = persistentClass;
+		this.entityBinding = null;
+	}
+
+	public FilterConfiguration(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			Map<String, String> aliasTableMap,
+			Map<String, String> aliasEntityMap,
+			EntityBinding entityBinding) {
+		this.name = name;
+		this.condition = condition;
+		this.autoAliasInjection = autoAliasInjection;
+		this.aliasTableMap = aliasTableMap;
+		this.aliasEntityMap = aliasEntityMap;
+		this.persistentClass = null;
+		this.entityBinding = entityBinding;
 	}
 
 	public String getName() {
@@ -81,6 +100,10 @@ public class FilterConfiguration {
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
+			return Collections.singletonMap( null, table );
+		}
+		else if ( entityBinding != null ) {
+			String table = entityBinding.getPrimaryTable().getQualifiedName( factory.getDialect() );
 			return Collections.singletonMap( null, table );
 		}
 		else {

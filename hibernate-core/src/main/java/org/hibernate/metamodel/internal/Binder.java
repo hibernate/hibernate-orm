@@ -54,6 +54,7 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
@@ -121,6 +122,7 @@ import org.hibernate.metamodel.spi.source.DerivedValueSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource.JoinColumnResolutionContext;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource.JoinColumnResolutionDelegate;
@@ -383,6 +385,19 @@ public class Binder {
 			entityBinding.addSynchronizedTableNames( entitySource.getSynchronizedTableNames() );
 		}
 		resolveEntityLaziness( entityBinding, entitySource );
+		if ( entitySource.getFilterSources() != null ) {
+			for ( FilterSource filterSource : entitySource.getFilterSources() ) {
+				FilterConfiguration filterConfiguration = new FilterConfiguration(
+						filterSource.getName(),
+						filterSource.getCondition(),
+						filterSource.shouldAutoInjectAliases(),
+						filterSource.getAliasToTableMap(),
+						filterSource.getAliasToEntityMap(),
+						entityBinding
+				);
+				entityBinding.addFilterConfiguration( filterConfiguration );
+			}
+		}
 		// Register binding with metadata
 		metadata.addEntity( entityBinding );
 		return entityBinding;
@@ -1336,6 +1351,20 @@ public class Binder {
 		// Must do first -- sorting/ordering can determine the resolved type
 		// (ex: Set vs. SortedSet).
 		bindSortingAndOrdering( attributeBinding, attributeSource );
+
+		if ( attributeSource.getFilterSources() != null ) {
+			for ( final FilterSource filterSource : attributeSource.getFilterSources() ) {
+				FilterConfiguration filterConfiguration = new FilterConfiguration(
+						filterSource.getName(),
+						filterSource.getCondition(),
+						filterSource.shouldAutoInjectAliases(),
+						filterSource.getAliasToTableMap(),
+						filterSource.getAliasToEntityMap(),
+						attributeBindingContainer.seekEntityBinding()
+				);
+				attributeBinding.addFilterConfiguration( filterConfiguration );
+			}
+		}
 
 		final Type resolvedType = typeHelper.resolvePluralType( attributeBinding, attributeSource, nature );
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();

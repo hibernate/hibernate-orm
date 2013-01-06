@@ -36,6 +36,7 @@ import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbCompositeIdElement;
 import org.hibernate.jaxb.spi.hbm.JaxbDiscriminatorElement;
+import org.hibernate.jaxb.spi.hbm.JaxbFilterElement;
 import org.hibernate.jaxb.spi.hbm.JaxbKeyManyToOneElement;
 import org.hibernate.jaxb.spi.hbm.JaxbKeyPropertyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMultiTenancyElement;
@@ -49,6 +50,7 @@ import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
+import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
@@ -83,6 +85,8 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		);
 		afterInstantiation();
 	}
+
+
 
 	@Override
 	protected JaxbClassElement entityElement() {

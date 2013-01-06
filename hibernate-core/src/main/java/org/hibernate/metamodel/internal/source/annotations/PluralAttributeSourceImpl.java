@@ -23,7 +23,9 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
 
@@ -34,9 +36,12 @@ import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.Orderable;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
@@ -55,7 +60,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	private final ExplicitHibernateTypeSource typeSource;
 	private final PluralAttributeKeySource keySource;
 	private final PluralAttributeElementSource elementSource;
-
+	private final FilterSource[] filterSources;
 	public PluralAttributeSourceImpl(
 			final PluralAssociationAttribute associationAttribute,
 			final ConfiguredClass entityClass ) {
@@ -64,6 +69,37 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		this.typeSource = new ExplicitHibernateTypeSourceImpl( associationAttribute );
 		this.nature = associationAttribute.getPluralAttributeNature();
 		this.elementSource = determineElementSource( associationAttribute, entityClass );
+		this.filterSources = determineFilterSources(associationAttribute);
+	}
+
+	private FilterSource[] determineFilterSources(PluralAssociationAttribute associationAttribute) {
+		AnnotationInstance filtersAnnotation = JandexHelper.getSingleAnnotation(
+				associationAttribute.annotations(),
+				HibernateDotNames.FILTERS
+		);
+		List<FilterSource> filterSourceList = new ArrayList<FilterSource>();
+		if ( filtersAnnotation != null ) {
+			AnnotationInstance[] annotationInstances = filtersAnnotation.value().asNestedArray();
+			for ( AnnotationInstance filterAnnotation : annotationInstances ) {
+				FilterSource filterSource = new FilterSourceImpl( filterAnnotation );
+				filterSourceList.add( filterSource );
+			}
+
+		}
+		AnnotationInstance filterAnnotation = JandexHelper.getSingleAnnotation(
+				associationAttribute.annotations(),
+				HibernateDotNames.FILTER
+		);
+		if ( filterAnnotation != null ) {
+			FilterSource filterSource = new FilterSourceImpl( filterAnnotation );
+			filterSourceList.add( filterSource );
+		}
+		if ( filterSourceList.isEmpty() ) {
+			return null;
+		}
+		else {
+			return filterSourceList.toArray( new FilterSource[filterSourceList.size()] );
+		}
 	}
 
 	@Override
@@ -74,6 +110,11 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	@Override
 	public PluralAttributeElementSource getElementSource() {
 		return elementSource;
+	}
+
+	@Override
+	public FilterSource[] getFilterSources() {
+		return filterSources;
 	}
 
 	@Override

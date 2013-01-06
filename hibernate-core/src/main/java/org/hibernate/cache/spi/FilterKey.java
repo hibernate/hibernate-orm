@@ -61,9 +61,7 @@ public final class FilterKey implements Serializable {
 	public boolean equals(Object other) {
 		if ( !(other instanceof FilterKey) ) return false;
 		FilterKey that = (FilterKey) other;
-		if ( !that.filterName.equals(filterName) ) return false;
-		if ( !that.filterParameters.equals(filterParameters) ) return false;
-		return true;
+		return that.filterName.equals( filterName ) && that.filterParameters.equals( filterParameters );
 	}
 	
 	public String toString() {

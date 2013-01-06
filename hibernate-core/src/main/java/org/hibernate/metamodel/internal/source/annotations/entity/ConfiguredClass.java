@@ -201,12 +201,7 @@ public class ConfiguredClass {
 
 	public boolean hostsAnnotation(DotName annotationName) {
 		List<AnnotationInstance> annotationList = classInfo.annotations().get( annotationName );
-		if ( annotationList == null ) {
-			return false;
-		}
-		else {
-			return annotationList.size() > 0;
-		}
+		return CollectionHelper.isNotEmpty( annotationList );
 	}
 
 	public Collection<BasicAttribute> getSimpleAttributes() {

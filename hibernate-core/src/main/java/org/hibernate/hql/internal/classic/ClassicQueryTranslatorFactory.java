@@ -25,6 +25,7 @@
 package org.hibernate.hql.internal.classic;
 import java.util.Map;
 
+import org.hibernate.Filter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.spi.FilterTranslator;
 import org.hibernate.hql.spi.QueryTranslator;
@@ -44,7 +45,7 @@ public class ClassicQueryTranslatorFactory implements QueryTranslatorFactory {
 	public QueryTranslator createQueryTranslator(
 			String queryIdentifier,
 	        String queryString,
-	        Map filters,
+	        Map<String, Filter> filters,
 	        SessionFactoryImplementor factory) {
 		return new QueryTranslatorImpl( queryIdentifier, queryString, filters, factory );
 	}
@@ -55,7 +56,7 @@ public class ClassicQueryTranslatorFactory implements QueryTranslatorFactory {
 	public FilterTranslator createFilterTranslator(
 			String queryIdentifier,
 			String queryString,
-	        Map filters,
+	        Map<String, Filter> filters,
 	        SessionFactoryImplementor factory) {
 		return new QueryTranslatorImpl( queryIdentifier, queryString, filters, factory );
 	}

@@ -63,7 +63,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 		// Try to find out the name of the primary key in case the dialect needs it to create an identity
 		String pkColName = null;
-		if ( hasPrimaryKey && isPrimaryKeyIdentity ) {
+		if ( hasPrimaryKey  ) {
 			Column pkColumn = table.getPrimaryKey().getColumns().iterator().next();
 			pkColName = pkColumn.getColumnName().getText( dialect );
 		}
@@ -104,8 +104,8 @@ public class StandardTableExporter implements Exporter<Table> {
 				}
 
 			}
-
-			if ( col.isUnique() ) {
+			//only create unique constraint for non-pk column
+			if ( col.isUnique() && !colName.equals( pkColName )) {
 				UniqueKey uk = table.getOrCreateUniqueKey(
 						col.getColumnName().getText( dialect ) + '_' );
 				uk.addColumn( col );

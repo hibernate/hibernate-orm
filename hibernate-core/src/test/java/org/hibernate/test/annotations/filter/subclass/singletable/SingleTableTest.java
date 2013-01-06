@@ -1,9 +1,7 @@
 package org.hibernate.test.annotations.filter.subclass.singletable;
 
 import org.hibernate.test.annotations.filter.subclass.SubClassTest;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
-@FailureExpectedWithNewMetamodel
 public class SingleTableTest extends SubClassTest{
 
 

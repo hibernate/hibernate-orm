@@ -3,10 +3,8 @@ package org.hibernate.test.annotations.filter.secondarytable;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-@FailureExpectedWithNewMetamodel
 public class SecondaryTableTest extends BaseCoreFunctionalTestCase {
 
 	@Override

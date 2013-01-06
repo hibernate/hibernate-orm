@@ -99,7 +99,7 @@
         </jaxb:bindings>
 
         <jaxb:bindings node="//xsd:complexType[@name='filter-param-element']//xsd:attribute[@name='type']">
-            <jaxb:property name="parameterValueTyeName"/>
+            <jaxb:property name="parameterValueTypeName"/>
         </jaxb:bindings>
 
         <jaxb:bindings node="//xsd:complexType[@name='meta-element']//xsd:attribute[@name='attribute']">

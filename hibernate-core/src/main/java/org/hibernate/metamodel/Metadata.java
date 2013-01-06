@@ -114,7 +114,7 @@ public interface Metadata {
 
 	public Iterable<TypeDefinition> getTypeDefinitions();
 
-	public Iterable<FilterDefinition> getFilterDefinitions();
+	public Map<String, FilterDefinition> getFilterDefinitions();
 
 	public Iterable<NamedQueryDefinition> getNamedQueryDefinitions();
 

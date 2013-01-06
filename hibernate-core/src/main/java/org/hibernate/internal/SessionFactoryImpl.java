@@ -701,10 +701,7 @@ public final class SessionFactoryImpl
 		this.typeResolver = metadata.getTypeResolver().scope( this );
 		this.typeHelper = new TypeLocatorImpl( typeResolver );
 
-		this.filters = new HashMap<String, FilterDefinition>();
-		for ( FilterDefinition filterDefinition : metadata.getFilterDefinitions() ) {
-			filters.put( filterDefinition.getFilterName(), filterDefinition );
-		}
+		this.filters = Collections.unmodifiableMap( metadata.getFilterDefinitions() );
 
 		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
 		LOG.debugf( "Instantiating session factory with properties: %s", properties );

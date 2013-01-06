@@ -320,9 +320,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 		filterDefinitionMap.put( filterDefinition.getFilterName(), filterDefinition );
 	}
-
-	public Iterable<FilterDefinition> getFilterDefinitions() {
-		return filterDefinitionMap.values();
+	@Override
+	public Map<String, FilterDefinition> getFilterDefinitions() {
+		return filterDefinitionMap;
 	}
 
 

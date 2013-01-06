@@ -48,6 +48,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
@@ -387,20 +388,32 @@ public class Binder {
 		resolveEntityLaziness( entityBinding, entitySource );
 		if ( entitySource.getFilterSources() != null ) {
 			for ( FilterSource filterSource : entitySource.getFilterSources() ) {
-				FilterConfiguration filterConfiguration = new FilterConfiguration(
-						filterSource.getName(),
-						filterSource.getCondition(),
-						filterSource.shouldAutoInjectAliases(),
-						filterSource.getAliasToTableMap(),
-						filterSource.getAliasToEntityMap(),
-						entityBinding
-				);
-				entityBinding.addFilterConfiguration( filterConfiguration );
+				entityBinding.addFilterConfiguration( createFilterConfiguration( filterSource, entityBinding ) );
 			}
 		}
 		// Register binding with metadata
 		metadata.addEntity( entityBinding );
 		return entityBinding;
+	}
+
+	private FilterConfiguration createFilterConfiguration(FilterSource filterSource, EntityBinding entityBinding){
+		String condition = filterSource.getCondition();
+		if(StringHelper.isEmpty( condition )){
+			FilterDefinition filterDefinition = metadata.getFilterDefinitions().get( filterSource.getName() );
+			if(filterDefinition == null){
+				throw bindingContext().makeMappingException( String.format( "Filter[$s] doesn't have a condition", filterSource.getName() ) );
+			}
+			condition = filterDefinition.getDefaultFilterCondition();
+		}
+		FilterConfiguration filterConfiguration = new FilterConfiguration(
+				filterSource.getName(),
+				condition,
+				filterSource.shouldAutoInjectAliases(),
+				filterSource.getAliasToTableMap(),
+				filterSource.getAliasToEntityMap(),
+				entityBinding
+		);
+		return filterConfiguration;
 	}
 
 	private void resolveEntityLaziness(
@@ -1354,15 +1367,7 @@ public class Binder {
 
 		if ( attributeSource.getFilterSources() != null ) {
 			for ( final FilterSource filterSource : attributeSource.getFilterSources() ) {
-				FilterConfiguration filterConfiguration = new FilterConfiguration(
-						filterSource.getName(),
-						filterSource.getCondition(),
-						filterSource.shouldAutoInjectAliases(),
-						filterSource.getAliasToTableMap(),
-						filterSource.getAliasToEntityMap(),
-						attributeBindingContainer.seekEntityBinding()
-				);
-				attributeBinding.addFilterConfiguration( filterConfiguration );
+				attributeBinding.addFilterConfiguration( createFilterConfiguration( filterSource, attributeBindingContainer.seekEntityBinding() ) );
 			}
 		}
 

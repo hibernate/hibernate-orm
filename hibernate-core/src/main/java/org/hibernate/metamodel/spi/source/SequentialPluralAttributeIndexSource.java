@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,11 +23,9 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
-
 /**
- *
+ * @author Gail Badner
  */
-public interface PluralAttributeIndexSource extends RelationalValueSourceContainer {
-	PluralAttributeIndexBinding.Nature getNature();
+public interface SequentialPluralAttributeIndexSource extends BasicPluralAttributeIndexSource {
+	int base();
 }

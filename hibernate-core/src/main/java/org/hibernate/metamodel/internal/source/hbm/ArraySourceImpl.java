@@ -28,24 +28,25 @@ import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
+import org.hibernate.metamodel.spi.source.SequentialPluralAttributeIndexSource;
 
 /**
  * @author Brett Meyer
  */
-public class ArrayAttributeSource extends AbstractPluralAttributeSourceImpl implements IndexedPluralAttributeSource {
+public class ArraySourceImpl extends AbstractPluralAttributeSourceImpl implements IndexedPluralAttributeSource {
 
-	private final ListAttributeIndexSource indexSource;
+	private final SequentialPluralAttributeIndexSource indexSource;
 
-	public ArrayAttributeSource(
+	public ArraySourceImpl(
 			MappingDocument sourceMappingDocument,
 			JaxbArrayElement arrayElement,
-			AttributeSourceContainer container ) {
+			AttributeSourceContainer container) {
 		super( sourceMappingDocument, arrayElement, container );
 		JaxbListIndexElement listIndexElement = arrayElement.getListIndex();
 		if ( listIndexElement == null ) {
-			this.indexSource = new ListAttributeIndexSource( sourceMappingDocument(), arrayElement.getIndex() );
+			this.indexSource = new SequentialPluralAttributeIndexSourceImpl( sourceMappingDocument(), arrayElement.getIndex() );
 		} else {
-			this.indexSource = new ListAttributeIndexSource( sourceMappingDocument(), listIndexElement );
+			this.indexSource = new SequentialPluralAttributeIndexSourceImpl( sourceMappingDocument(), listIndexElement );
 		}
 	}
 

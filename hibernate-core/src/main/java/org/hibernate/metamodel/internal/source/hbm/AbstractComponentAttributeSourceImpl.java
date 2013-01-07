@@ -142,35 +142,35 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	}
 	// todo duplicated with org.hibernate.metamodel.internal.source.hbm.AbstractEntitySourceImpl
 	protected AttributeSource buildAttributeSource(JaxbMapElement attributeElement){
-		return new MapAttributeSource(
+		return new MapSource(
 				sourceMappingDocument(),
 				attributeElement,
 				parentContainer
 		);
 	}
 	protected AttributeSource buildAttributeSource(JaxbSetElement attributeElement) {
-		return new SetAttributeSourceImpl(
+		return new SetSourceImpl(
 				sourceMappingDocument(),
 				attributeElement,
 				parentContainer
 		);
 	}
 	protected AttributeSource buildAttributeSource(JaxbListElement attributeElement) {
-		return new ListAttributeSource(
+		return new ListSourceImpl(
 				sourceMappingDocument(),
 				attributeElement,
 				parentContainer
 		);
 	}
 	protected AttributeSource buildAttributeSource(JaxbBagElement attributeElement) {
-		return new BagAttributeSourceImpl(
+		return new BagSourceImpl(
 				sourceMappingDocument(),
 				attributeElement,
 				parentContainer
 		);
 	}
 	protected AttributeSource buildAttributeSource(JaxbArrayElement attributeElement) {
-		return new ArrayAttributeSource(
+		return new ArraySourceImpl(
 				sourceMappingDocument(),
 				attributeElement,
 				parentContainer

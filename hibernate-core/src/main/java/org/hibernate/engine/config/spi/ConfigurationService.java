@@ -33,7 +33,7 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface ConfigurationService extends Service {
-	public Map getSettings();
+	public Map<?,?> getSettings();
 
 	public <T> T getSetting(String name);
 	public <T> T getSetting(String name, Converter<T> converter);

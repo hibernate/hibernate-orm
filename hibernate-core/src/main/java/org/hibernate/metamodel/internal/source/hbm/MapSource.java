@@ -33,28 +33,28 @@ import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 /**
  *
  */
-public class MapAttributeSource extends AbstractPluralAttributeSourceImpl implements IndexedPluralAttributeSource {
+public class MapSource extends AbstractPluralAttributeSourceImpl implements IndexedPluralAttributeSource {
 
-	private final MapAttributeIndexSource indexSource;
+	private final MapKeySourceImpl indexSource;
 
 	/**
 	 * @param sourceMappingDocument
 	 * @param pluralAttributeElement
 	 * @param container
 	 */
-	public MapAttributeSource(
+	public MapSource(
 			MappingDocument sourceMappingDocument,
 			JaxbMapElement mapElement,
-			AttributeSourceContainer container ) {
+			AttributeSourceContainer container) {
 		super( sourceMappingDocument, mapElement, container );
 		JaxbMapKeyElement mapKey = mapElement.getMapKey();
 		if ( mapKey != null ) {
-			this.indexSource = new MapAttributeIndexSource( sourceMappingDocument, mapKey );
+			this.indexSource = new MapKeySourceImpl( sourceMappingDocument, mapKey );
 		}
 		else {
 			JaxbIndexElement indexElement = mapElement.getIndex();
 			if ( indexElement != null ) {
-				this.indexSource = new MapAttributeIndexSource( sourceMappingDocument, indexElement );
+				this.indexSource = new MapKeySourceImpl( sourceMappingDocument, indexElement );
 			}
 			throw new NotYetImplementedException(
 					"<map-key-many-to-many>, <composite-map-key>, <index>, <composite-index>, <index-many-to-many>, and <index-many-to-any>" );
@@ -62,7 +62,7 @@ public class MapAttributeSource extends AbstractPluralAttributeSourceImpl implem
 	}
 
 	@Override
-	public MapAttributeIndexSource getIndexSource() {
+	public MapKeySourceImpl getIndexSource() {
 		return indexSource;
 	}
 

@@ -25,11 +25,13 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.spi.source.AttributeSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -53,11 +55,12 @@ public class SourceHelper {
 				case ONE_TO_MANY:
 				case ELEMENT_COLLECTION_BASIC:
 				case ELEMENT_COLLECTION_EMBEDDABLE: {
-					PluralAssociationAttribute pluralAssociationAttribute = (PluralAssociationAttribute) associationAttribute;
-					AttributeSource source = pluralAssociationAttribute.isIndexed() ?
-							new IndexedPluralAttributeSourceImpl( pluralAssociationAttribute, configuredClass )
-							: new PluralAttributeSourceImpl( pluralAssociationAttribute, configuredClass );
-					attributeList.add( source );
+					attributeList.add(
+							createPluralAttributeSource(
+									configuredClass,
+									(PluralAssociationAttribute) associationAttribute
+							)
+					);
 					break;
 				}
 				default: {
@@ -65,5 +68,38 @@ public class SourceHelper {
 				}
 			}
 		}
+	}
+
+	private static PluralAttributeSource createPluralAttributeSource(
+			ConfiguredClass configuredClass,
+			PluralAssociationAttribute pluralAssociationAttribute) {
+		switch ( pluralAssociationAttribute.getPluralAttributeNature() ) {
+			case BAG: // fall through intentionally
+			case SET: {
+				return new PluralAttributeSourceImpl( pluralAssociationAttribute, configuredClass );
+			}
+			case ARRAY:  // fall through intentionally
+			case MAP:  // fall through intentionally
+			case LIST: {
+				return new IndexedPluralAttributeSourceImpl( pluralAssociationAttribute, configuredClass );
+			}
+			case ID_BAG: {
+				throw new NotYetImplementedException(
+						String.format(
+								"%s attributes are not supported yet",
+								pluralAssociationAttribute.getPluralAttributeNature()
+						)
+				);
+			}
+			default: {
+				throw new AssertionFailure(
+						String.format(
+								"Unknown plural attribute nature: %s",
+								pluralAssociationAttribute.getPluralAttributeNature()
+						)
+				);
+			}
+		}
+
 	}
 }

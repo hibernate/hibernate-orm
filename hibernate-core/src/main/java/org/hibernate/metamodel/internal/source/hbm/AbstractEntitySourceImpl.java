@@ -274,7 +274,7 @@ public abstract class AbstractEntitySourceImpl
 											 List<JaxbMapElement> propertyElements){
 		for ( JaxbMapElement element : propertyElements ) {
 			results.add(
-					new MapAttributeSource(
+					new MapSource(
 							sourceMappingDocument(),
 							element, this
 					)
@@ -285,7 +285,7 @@ public abstract class AbstractEntitySourceImpl
 			List<JaxbArrayElement> propertyElements){
 		for ( JaxbArrayElement element : propertyElements ) {
 			results.add(
-					new ArrayAttributeSource(
+					new ArraySourceImpl(
 							sourceMappingDocument(),
 							element, this
 							)
@@ -296,7 +296,7 @@ public abstract class AbstractEntitySourceImpl
 											 List<JaxbListElement> propertyElements){
 		for ( JaxbListElement element : propertyElements ) {
 			results.add(
-					new ListAttributeSource(
+					new ListSourceImpl(
 							sourceMappingDocument(),
 							element, this
 					)
@@ -307,7 +307,7 @@ public abstract class AbstractEntitySourceImpl
 											 List<JaxbSetElement> propertyElements){
 		for ( JaxbSetElement element : propertyElements ) {
 			results.add(
-					new SetAttributeSourceImpl(
+					new SetSourceImpl(
 							sourceMappingDocument(),
 							element,
 							this
@@ -326,7 +326,7 @@ public abstract class AbstractEntitySourceImpl
 											 List<JaxbBagElement> propertyElements) {
 		for ( JaxbBagElement element : propertyElements ) {
 			results.add(
-					new BagAttributeSourceImpl(
+					new BagSourceImpl(
 							sourceMappingDocument(),
 							element,
 							this

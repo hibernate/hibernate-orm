@@ -31,8 +31,8 @@ import org.hibernate.metamodel.spi.source.Orderable;
 /**
  * @author Steve Ebersole
  */
-public class BagAttributeSourceImpl extends AbstractPluralAttributeSourceImpl implements Orderable {
-	public BagAttributeSourceImpl(
+public class BagSourceImpl extends AbstractPluralAttributeSourceImpl implements Orderable {
+	public BagSourceImpl(
 			MappingDocument sourceMappingDocument,
 			JaxbBagElement bagElement,
 			AttributeSourceContainer container) {

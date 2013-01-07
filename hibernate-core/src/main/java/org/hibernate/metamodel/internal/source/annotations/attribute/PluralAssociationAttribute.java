@@ -37,7 +37,6 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -75,7 +74,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final ClassInfo entityClassInfo;
 	private final boolean isExtraLazy;
 	private final OnDeleteAction onDeleteAction;
-	private final boolean isIndexed;
+	private final boolean isSequentiallyIndexed;
 	// Used for the non-owning side of a ManyToMany relationship
 	private final String inverseForeignKeyName;
 	private final String explicitForeignKeyName;
@@ -176,8 +175,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		return sorted;
 	}
 
-	public boolean isIndexed() {
-		return isIndexed;
+	public boolean isSequentiallyIndexed() {
+		return isSequentiallyIndexed;
 	}
 
 	private PluralAssociationAttribute(
@@ -260,7 +259,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 					getContext().getOrigin()
 			);
 		}
-		this.isIndexed = orderColumnAnnotation != null || indexColumnAnnotation != null;
+		this.isSequentiallyIndexed = orderColumnAnnotation != null || indexColumnAnnotation != null;
 		this.pluralAttributeNature = resolvePluralAttributeNature();
 
 		validateMapping();
@@ -305,7 +304,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 			return PluralAttributeSource.Nature.MAP;
 		}
 		else if ( List.class.isAssignableFrom( getAttributeType() ) ) {
-			if ( isIndexed() ) {
+			if ( isSequentiallyIndexed() ) {
 				return PluralAttributeSource.Nature.LIST;
 			}
 			else if ( isCollectionIdPresent ) {

@@ -1,3 +1,26 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
@@ -12,19 +35,18 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-public class PluralAttributeIndexSourceImpl implements PluralAttributeIndexSource {
+public class BasicPluralAttributeIndexSourceImpl implements BasicPluralAttributeIndexSource {
 	private final PluralAssociationAttribute attribute;
 	private final IndexedPluralAttributeSourceImpl indexedPluralAttributeSource;
-	private final int base;
 	private final List<RelationalValueSource> relationalValueSources =  new ArrayList<RelationalValueSource>( 1 );
-	public PluralAttributeIndexSourceImpl(IndexedPluralAttributeSourceImpl indexedPluralAttributeSource, PluralAssociationAttribute attribute) {
+	public BasicPluralAttributeIndexSourceImpl(IndexedPluralAttributeSourceImpl indexedPluralAttributeSource, PluralAssociationAttribute attribute) {
 		this.attribute = attribute;
 		this.indexedPluralAttributeSource = indexedPluralAttributeSource;
 		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
@@ -37,8 +59,6 @@ public class PluralAttributeIndexSourceImpl implements PluralAttributeIndexSourc
 					JPADotNames.ORDER_COLUMN
 			);
 		}
-		this.base = columnAnnotation.value( "base" ) != null ? columnAnnotation.value( "base" )
-				.asInt() : 0;
 		Column indexColumn = new Column( columnAnnotation );
 		relationalValueSources.add( new ColumnValuesSourceImpl( indexColumn ) );
 
@@ -46,22 +66,7 @@ public class PluralAttributeIndexSourceImpl implements PluralAttributeIndexSourc
 
 	@Override
 	public PluralAttributeIndexBinding.Nature getNature() {
-		switch ( indexedPluralAttributeSource.getElementSource().getNature() ) {
-			case BASIC:
-				return PluralAttributeIndexBinding.Nature.BASIC;
-			case AGGREGATE:
-				return PluralAttributeIndexBinding.Nature.AGGREGATE;
-			case MANY_TO_ANY:
-				return PluralAttributeIndexBinding.Nature.MANY_TO_ANY;
-			case MANY_TO_MANY:
-				return PluralAttributeIndexBinding.Nature.MANY_TO_MANY;
-		}
-		return null;
-	}
-
-	@Override
-	public int base() {
-		return base;
+		return PluralAttributeIndexBinding.Nature.BASIC;
 	}
 
 	@Override

@@ -30,19 +30,19 @@ import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  *
  */
-public class MapAttributeIndexSource extends AbstractHbmSourceNode implements PluralAttributeIndexSource {
+public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPluralAttributeIndexSource {
 	private final PluralAttributeIndexBinding.Nature nature;
 	private final List<RelationalValueSource> valueSources;
 	private final ExplicitHibernateTypeSource typeSource;
 
-	public MapAttributeIndexSource(MappingDocument sourceMappingDocument, final JaxbMapKeyElement mapKey) {
+	public MapKeySourceImpl(MappingDocument sourceMappingDocument, final JaxbMapKeyElement mapKey) {
 		super( sourceMappingDocument );
 		valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
@@ -101,7 +101,7 @@ public class MapAttributeIndexSource extends AbstractHbmSourceNode implements Pl
 		this.nature = PluralAttributeIndexBinding.Nature.BASIC;
 	}
 
-	public MapAttributeIndexSource(MappingDocument sourceMappingDocument, final JaxbIndexElement indexElement) {
+	public MapKeySourceImpl(MappingDocument sourceMappingDocument, final JaxbIndexElement indexElement) {
 		super( sourceMappingDocument );
 		valueSources = Helper.buildValueSources(
 				sourceMappingDocument,
@@ -136,7 +136,7 @@ public class MapAttributeIndexSource extends AbstractHbmSourceNode implements Pl
 
 			@Override
 			public Map<String, String> getParameters() {
-				return java.util.Collections.<String, String>emptyMap();
+				return java.util.Collections.emptyMap();
 			}
 		};
 
@@ -171,10 +171,5 @@ public class MapAttributeIndexSource extends AbstractHbmSourceNode implements Pl
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		return valueSources;
-	}
-
-	@Override
-	public int base() {
-		return 0;
 	}
 }

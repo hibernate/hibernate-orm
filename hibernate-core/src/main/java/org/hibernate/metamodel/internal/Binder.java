@@ -115,6 +115,7 @@ import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
+import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
@@ -130,6 +131,7 @@ import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource.JoinColum
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
@@ -140,7 +142,6 @@ import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.Orderable;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
@@ -148,6 +149,7 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSourceContainer;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
+import org.hibernate.metamodel.spi.source.SequentialPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.Sortable;
@@ -1339,7 +1341,7 @@ public class Binder {
 			case LIST:
 				attributeBinding = bindListAttribute(
 						attributeBindingContainer,
-						attributeSource,
+						(IndexedPluralAttributeSource) attributeSource,
 						attribute
 				);
 				break;
@@ -1353,7 +1355,7 @@ public class Binder {
 			case ARRAY:
 				attributeBinding = bindArrayAttribute(
 						attributeBindingContainer,
-						attributeSource,
+						(IndexedPluralAttributeSource) attributeSource,
 						attribute
 				);
 				break;
@@ -1427,7 +1429,13 @@ public class Binder {
 						)
 				);
 		}
-		bindIndexedPluralAttributeIfPossible( attributeSource, attributeBinding, reflectedCollectionJavaTypes );
+		if ( attributeBinding.hasIndex() ) {
+			bindPluralAttributeIndex(
+					(IndexedPluralAttributeSource) attributeSource,
+					(IndexedPluralAttributeBinding) attributeBinding,
+					reflectedCollectionJavaTypes
+			);
+		}
 		bindCollectionTablePrimaryKey( attributeBinding, attributeSource );
 		metadata.addCollection( attributeBinding );
 		return attributeBinding;
@@ -1452,15 +1460,11 @@ public class Binder {
 
 	private AbstractPluralAttributeBinding bindListAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
-			final PluralAttributeSource attributeSource,
+			final IndexedPluralAttributeSource attributeSource,
 			PluralAttribute attribute) {
 		if ( attribute == null ) {
 			attribute = attributeBindingContainer.getAttributeContainer().createList( attributeSource.getName() );
 		}
-		final int base = IndexedPluralAttributeSource.class.isInstance( attributeSource ) ? IndexedPluralAttributeSource.class
-				.cast( attributeSource )
-				.getIndexSource()
-				.base() : 0;
 		return attributeBindingContainer.makeListAttributeBinding(
 				attribute,
 				pluralAttributeElementNature( attributeSource ),
@@ -1468,21 +1472,17 @@ public class Binder {
 				propertyAccessorName( attributeSource ),
 				attributeSource.isIncludedInOptimisticLocking(),
 				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
-				base
+				getSequentialPluralAttributeIndexBase( attributeSource )
 		);
 	}
 
 	private AbstractPluralAttributeBinding bindArrayAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
-			final PluralAttributeSource attributeSource,
+			final IndexedPluralAttributeSource attributeSource,
 			PluralAttribute attribute) {
 		if ( attribute == null ) {
 			attribute = attributeBindingContainer.getAttributeContainer().createArray( attributeSource.getName() );
 		}
-		final int base = IndexedPluralAttributeSource.class.isInstance( attributeSource ) ? IndexedPluralAttributeSource.class
-				.cast( attributeSource )
-				.getIndexSource()
-				.base() : 0;
 		return attributeBindingContainer.makeArrayAttributeBinding(
 				attribute,
 				pluralAttributeElementNature( attributeSource ),
@@ -1490,8 +1490,22 @@ public class Binder {
 				propertyAccessorName( attributeSource ),
 				attributeSource.isIncludedInOptimisticLocking(),
 				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
-				base
+				getSequentialPluralAttributeIndexBase( attributeSource )
 		);
+	}
+
+	private int getSequentialPluralAttributeIndexBase(IndexedPluralAttributeSource pluralAttributeSource) {
+		final PluralAttributeIndexSource indexedPluralAttributeSource =  pluralAttributeSource.getIndexSource();
+		if ( ! SequentialPluralAttributeIndexSource.class.isInstance( indexedPluralAttributeSource ) ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Expected an argument of type: %s; instead, got %s",
+							SequentialPluralAttributeIndexSource.class.getName(),
+							indexedPluralAttributeSource.getClass().getName()
+					)
+			);
+		}
+		return ( (SequentialPluralAttributeIndexSource) indexedPluralAttributeSource ).base();
 	}
 
 	private AbstractPluralAttributeBinding bindMapAttribute(
@@ -1647,19 +1661,18 @@ public class Binder {
 		}
 	}
 
-	private void bindCollectionIndex(
+	private void bindBasicCollectionIndex(
 			final IndexedPluralAttributeBinding attributeBinding,
-			final PluralAttributeIndexSource attributeSource,
+			final BasicPluralAttributeIndexSource attributeSource,
 			final String defaultIndexJavaTypeName) {
-		IndexedPluralAttributeBinding indexedAttributeBinding = attributeBinding;
 		final BasicPluralAttributeIndexBinding indexBinding =
-				(BasicPluralAttributeIndexBinding) indexedAttributeBinding.getPluralAttributeIndexBinding();
+				(BasicPluralAttributeIndexBinding) attributeBinding.getPluralAttributeIndexBinding();
 		indexBinding.setIndexRelationalValue(
 				bindValues(
-						indexedAttributeBinding.getContainer(),
+						attributeBinding.getContainer(),
 						attributeSource,
-						indexedAttributeBinding.getAttribute(),
-						indexedAttributeBinding.getPluralAttributeKeyBinding().getCollectionTable(),
+						attributeBinding.getAttribute(),
+						attributeBinding.getPluralAttributeKeyBinding().getCollectionTable(),
 						attributeBinding.getPluralAttributeElementBinding()
 								.getNature() != PluralAttributeElementBinding.Nature.ONE_TO_MANY
 				)
@@ -1859,23 +1872,27 @@ public class Binder {
 		bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable );
 	}
 
-
-	private void bindIndexedPluralAttributeIfPossible(
-			final PluralAttributeSource attributeSource,
-			final AbstractPluralAttributeBinding attributeBinding,
+	private void bindPluralAttributeIndex(
+			final IndexedPluralAttributeSource attributeSource,
+			final IndexedPluralAttributeBinding attributeBinding,
 			final ReflectedCollectionJavaTypes reflectedCollectionJavaTypes) {
-		if ( attributeBinding.getAttribute()
-				.getNature()
-				.isIndexable() && attributeSource instanceof IndexedPluralAttributeSource ) {
-			attributeBinding.setIndex( true );
-			bindCollectionIndex(
-					(IndexedPluralAttributeBinding) attributeBinding,
-					( (IndexedPluralAttributeSource) attributeSource ).getIndexSource(),
-					HibernateTypeHelper.defaultCollectionIndexJavaTypeName( reflectedCollectionJavaTypes )
-			);
-		}
-		else {
-			attributeBinding.setIndex( false );
+		switch ( attributeSource.getIndexSource().getNature() ) {
+			case BASIC: {
+				bindBasicCollectionIndex(
+						attributeBinding,
+						(BasicPluralAttributeIndexSource) attributeSource.getIndexSource(),
+						HibernateTypeHelper.defaultCollectionIndexJavaTypeName( reflectedCollectionJavaTypes )
+				);
+				break;
+			}
+			default: {
+				throw new NotYetImplementedException(
+						String.format(
+								"%s collection indexes are not supported yet.",
+								attributeSource.getIndexSource().getNature()
+						)
+				);
+			}
 		}
 	}
 

@@ -59,7 +59,6 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	private String where;
 	private String orderBy;
 	private boolean sorted;
-	private boolean index;
 	private Comparator< ? > comparator;
 
 	private String customLoaderName;
@@ -252,11 +251,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	}
 	@Override
 	public boolean hasIndex() {
-		return index;
-	}
-
-	public void setIndex(boolean index) {
-		this.index = index;
+		return IndexedPluralAttributeBinding.class.isInstance( this );
 	}
 
 	@Override

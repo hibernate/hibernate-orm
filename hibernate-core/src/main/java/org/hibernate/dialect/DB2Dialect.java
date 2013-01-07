@@ -462,5 +462,10 @@ public class DB2Dialect extends Dialect {
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
+	
+	@Override
+	public String getNotExpression( String expression ) {
+		return "not (" + expression + ")";
+	}
 
 }

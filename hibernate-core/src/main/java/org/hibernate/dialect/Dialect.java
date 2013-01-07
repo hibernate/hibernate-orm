@@ -2394,4 +2394,49 @@ public abstract class Dialect implements ConversionContext {
 	public String getNotExpression( String expression ) {
 		return "not " + expression;
 	}
+
+	/**
+	 * Does this dialect support the <tt>UNIQUE</tt> column syntax?
+	 *
+	 * @return boolean
+	 * 
+	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean supportsUnique() {
+		return true;
+	}
+
+    /**
+     * Does this dialect support adding Unique constraints via create and alter table ?
+     * 
+     * @return boolean
+     * 
+     * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+     */
+	@Deprecated
+	public boolean supportsUniqueConstraintInCreateAlterTable() {
+	    return true;
+	}
+
+    /**
+     * The syntax used to add a unique constraint to a table.
+     *
+     * @param constraintName The name of the unique constraint.
+     * @return The "add unique" fragment
+     * 
+     * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+     */
+	@Deprecated
+	public String getAddUniqueConstraintString(String constraintName) {
+        return " add constraint " + constraintName + " unique ";
+    }
+
+	/**
+	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean supportsNotNullUnique() {
+		return true;
+	}
 }

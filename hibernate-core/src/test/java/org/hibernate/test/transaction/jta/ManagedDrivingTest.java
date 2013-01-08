@@ -98,7 +98,7 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 		transactionCoordinator.addObserver( transactionObserver );
 
 		final LogicalConnectionImplementor logicalConnection = transactionCoordinator.getJdbcCoordinator().getLogicalConnection();
-		Connection connection = logicalConnection.getShareableConnectionProxy();
+		Connection connection = logicalConnection.getConnection();
 
 		// set up some tables to use
 		try {
@@ -126,7 +126,7 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 		txn.begin();
 		assertEquals( 1, transactionObserver.getBegins() );
 		assertFalse( txn.isInitiator() );
-		connection = logicalConnection.getShareableConnectionProxy();
+		connection = logicalConnection.getConnection();
 		try {
 			PreparedStatement ps = connection.prepareStatement( "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
 			ps.setLong( 1, 1 );

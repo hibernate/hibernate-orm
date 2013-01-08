@@ -29,8 +29,6 @@ import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
@@ -48,6 +46,7 @@ import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.jboss.logging.Logger;
 
 /**
  * Standard Hibernate implementation of {@link JdbcCoordinator}
@@ -206,7 +205,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public <T> T coordinateWork(WorkExecutorVisitable<T> work) {
-		Connection connection = getLogicalConnection().getDistinctConnectionProxy();
+		Connection connection = getLogicalConnection().getConnection();
 		try {
 			T result = work.accept( new WorkExecutor<T>(), connection );
 			getLogicalConnection().afterStatementExecution();

@@ -66,6 +66,7 @@ public interface LogicalConnection extends Serializable {
 	 *
 	 * @return The shareable connection proxy.
 	 */
+	@Deprecated
 	public Connection getShareableConnectionProxy();
 
 	/**
@@ -74,6 +75,7 @@ public interface LogicalConnection extends Serializable {
 	 *
 	 * @return The distinct connection proxy.
 	 */
+	@Deprecated
 	public Connection getDistinctConnectionProxy();
 
 	/**

@@ -89,7 +89,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 		transactionCoordinator.addObserver( observer );
 
 		LogicalConnectionImplementor logicalConnection = transactionCoordinator.getJdbcCoordinator().getLogicalConnection();
-		Connection connection = logicalConnection.getShareableConnectionProxy();
+		Connection connection = logicalConnection.getConnection();
 
 		// set up some tables to use
 		try {

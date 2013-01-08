@@ -403,11 +403,11 @@ public class Binder {
 		if(StringHelper.isEmpty( condition )){
 			FilterDefinition filterDefinition = metadata.getFilterDefinitions().get( filterSource.getName() );
 			if(filterDefinition == null){
-				throw bindingContext().makeMappingException( String.format( "Filter[$s] doesn't have a condition", filterSource.getName() ) );
+				throw bindingContext().makeMappingException( String.format( "Filter[%s] doesn't have a condition", filterSource.getName() ) );
 			}
 			condition = filterDefinition.getDefaultFilterCondition();
 		}
-		FilterConfiguration filterConfiguration = new FilterConfiguration(
+		return new FilterConfiguration(
 				filterSource.getName(),
 				condition,
 				filterSource.shouldAutoInjectAliases(),
@@ -415,7 +415,6 @@ public class Binder {
 				filterSource.getAliasToEntityMap(),
 				entityBinding
 		);
-		return filterConfiguration;
 	}
 
 	private void resolveEntityLaziness(
@@ -1667,7 +1666,7 @@ public class Binder {
 			final String defaultIndexJavaTypeName) {
 		final BasicPluralAttributeIndexBinding indexBinding =
 				(BasicPluralAttributeIndexBinding) attributeBinding.getPluralAttributeIndexBinding();
-		indexBinding.setIndexRelationalValue(
+		indexBinding.setRelationalValueBindings(
 				bindValues(
 						attributeBinding.getContainer(),
 						attributeSource,
@@ -1676,13 +1675,15 @@ public class Binder {
 						attributeBinding.getPluralAttributeElementBinding()
 								.getNature() != PluralAttributeElementBinding.Nature.ONE_TO_MANY
 				)
-						.get( 0 ).getValue()
 		);
 		if ( attributeBinding.getPluralAttributeElementBinding()
 				.getNature() == PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
-			if ( Column.class.isInstance( indexBinding.getIndexRelationalValue() ) ) {
-				// TODO: fix this when column nullability is refactored
-				( (Column) indexBinding.getIndexRelationalValue() ).setNullable( true );
+			for ( RelationalValueBinding relationalValueBinding : indexBinding.getRelationalValueBindings() ) {
+				if ( Column.class.isInstance( relationalValueBinding.getValue() ) ) {
+					// TODO: fix this when column nullability is refactored
+					Column column = (Column) relationalValueBinding.getValue();
+					column.setNullable( true );
+				}
 			}
 		}
 		// TODO: create a foreign key if non-inverse and the index is an association
@@ -1692,9 +1693,11 @@ public class Binder {
 				attributeSource.explicitHibernateTypeSource(),
 				defaultIndexJavaTypeName
 		);
-		typeHelper.bindJdbcDataType( indexBinding.getHibernateTypeDescriptor().getResolvedTypeMapping(), indexBinding.getIndexRelationalValue() );
+		typeHelper.bindJdbcDataType(
+				indexBinding.getHibernateTypeDescriptor().getResolvedTypeMapping(),
+				indexBinding.getRelationalValueBindings()
+		);
 	}
-
 
 	private SingularAttributeBinding determineReferencedAttributeBinding(
 			final ForeignKeyContributingSource foreignKeyContributingSource,
@@ -2937,12 +2940,12 @@ public class Binder {
 		for ( final Column foreignKeyColumn : foreignKey.getSourceColumns() ) {
 			primaryKey.addColumn( foreignKeyColumn );
 		}
-		final Value value = indexBinding.getIndexRelationalValue();
-		if ( value instanceof Column ) {
-			primaryKey.addColumn( (Column) value );
+		for ( RelationalValueBinding relationalValueBinding : indexBinding.getRelationalValueBindings() ) {
+			if ( relationalValueBinding.getValue() instanceof Column ) {
+				primaryKey.addColumn( (Column) relationalValueBinding.getValue() );
+			}
 		}
 	}
-
 
 	private static void markSuperEntityTableAbstractIfNecessary(
 			final EntityBinding superEntityBinding) {

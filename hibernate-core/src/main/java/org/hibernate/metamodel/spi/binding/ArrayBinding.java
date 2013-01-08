@@ -44,7 +44,8 @@ public class ArrayBinding extends AbstractPluralAttributeBinding implements Inde
 				referencedAttributeBinding, propertyAccessorName,
 				includedInOptimisticLocking, metaAttributeContext );
 		pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding(
-				this, PluralAttributeIndexBinding.Nature.BASIC );
+				this
+		);
 		this.base = base;
 	}
 

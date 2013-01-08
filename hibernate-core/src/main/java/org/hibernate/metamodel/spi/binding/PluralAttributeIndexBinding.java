@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.List;
+
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Value;
 
@@ -34,7 +36,13 @@ public interface PluralAttributeIndexBinding {
 
 	Nature getNature();
 
-	Value getIndexRelationalValue();
+	/**
+	 * Retrieve the relational aspect of the index binding. Essentially describes the
+	 * column(s)/derived value(s) to which the binding maps the indexes.
+	 *
+	 * @return The relational values.
+	 */
+	public List<RelationalValueBinding> getRelationalValueBindings();
 
 	HibernateTypeDescriptor getHibernateTypeDescriptor();
 

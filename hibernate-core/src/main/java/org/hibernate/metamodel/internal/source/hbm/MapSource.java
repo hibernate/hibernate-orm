@@ -23,8 +23,8 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMapElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
@@ -39,7 +39,7 @@ public class MapSource extends AbstractPluralAttributeSourceImpl implements Inde
 
 	/**
 	 * @param sourceMappingDocument
-	 * @param pluralAttributeElement
+	 * @param mapElement
 	 * @param container
 	 */
 	public MapSource(
@@ -47,17 +47,29 @@ public class MapSource extends AbstractPluralAttributeSourceImpl implements Inde
 			JaxbMapElement mapElement,
 			AttributeSourceContainer container) {
 		super( sourceMappingDocument, mapElement, container );
-		JaxbMapKeyElement mapKey = mapElement.getMapKey();
-		if ( mapKey != null ) {
-			this.indexSource = new MapKeySourceImpl( sourceMappingDocument, mapKey );
+		if (  mapElement.getMapKey() != null ) {
+			this.indexSource = new MapKeySourceImpl( sourceMappingDocument,  mapElement.getMapKey() );
+		}
+		else if ( mapElement.getIndex() != null ) {
+			this.indexSource = new MapKeySourceImpl( sourceMappingDocument, mapElement.getIndex() );
+		}
+		else if ( mapElement.getCompositeMapKey() != null ) {
+			throw new NotYetImplementedException( "<composite-map-key> is not supported yet" );
+		}
+		else if ( mapElement.getCompositeIndex() != null ) {
+			throw new NotYetImplementedException( "<composite-index> is not supported yet" );
+		}
+		else if ( mapElement.getMapKeyManyToMany() != null ) {
+			throw new NotYetImplementedException( "<map-key-many-to-many> is not supported yet" );
+		}
+		else if ( mapElement.getIndexManyToMany() != null ) {
+			throw new NotYetImplementedException( "<index-many-to-many> is not supported yet" );
+		}
+		else if ( mapElement.getIndexManyToAny() != null ) {
+			throw new NotYetImplementedException( "<index-many-to-any> is not supported yet" );
 		}
 		else {
-			JaxbIndexElement indexElement = mapElement.getIndex();
-			if ( indexElement != null ) {
-				this.indexSource = new MapKeySourceImpl( sourceMappingDocument, indexElement );
-			}
-			throw new NotYetImplementedException(
-					"<map-key-many-to-many>, <composite-map-key>, <index>, <composite-index>, <index-many-to-many>, and <index-many-to-any>" );
+			throw new AssertionFailure( "No map key found" );
 		}
 	}
 

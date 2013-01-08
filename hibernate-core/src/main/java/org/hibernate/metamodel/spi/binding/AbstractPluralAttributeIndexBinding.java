@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,34 +23,34 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.List;
-
 import org.hibernate.metamodel.spi.domain.IndexedPluralAttribute;
 import org.hibernate.metamodel.spi.domain.Type;
 
 /**
- *
+ * @author Gail Badner
  */
-public class BasicPluralAttributeIndexBinding extends AbstractPluralAttributeIndexBinding {
+public abstract class AbstractPluralAttributeIndexBinding implements PluralAttributeIndexBinding {
 
-	private List<RelationalValueBinding> relationalValueBindings;
+	private final IndexedPluralAttributeBinding pluralAttributeBinding;
+	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 
-	public BasicPluralAttributeIndexBinding(
+	public AbstractPluralAttributeIndexBinding(
 			IndexedPluralAttributeBinding pluralAttributeBinding) {
-		super( pluralAttributeBinding );
+		this.pluralAttributeBinding = pluralAttributeBinding;
 	}
 
 	@Override
-	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return relationalValueBindings;
-	}
-
-	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
-		this.relationalValueBindings = relationalValueBindings;
+	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
+		return hibernateTypeDescriptor;
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.BASIC;
+	public IndexedPluralAttributeBinding getIndexedPluralAttributeBinding() {
+		return pluralAttributeBinding;
+	}
+
+	@Override
+	public Type getPluralAttributeIndexType() {
+		return ( (IndexedPluralAttribute) getIndexedPluralAttributeBinding().getAttribute() ).getIndexType();
 	}
 }

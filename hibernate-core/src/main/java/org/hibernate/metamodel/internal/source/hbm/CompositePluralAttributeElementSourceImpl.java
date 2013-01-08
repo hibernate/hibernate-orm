@@ -175,7 +175,7 @@ public class CompositePluralAttributeElementSourceImpl
 			MappingDocument sourceMappingDocument,
 			JaxbNestedCompositeElementElement attributeElement) {
 		// todo : implement
-		throw new NotYetImplementedException();
+		throw new NotYetImplementedException( "Nested composite element is not supported yet.");
 	}
 
 	@Override

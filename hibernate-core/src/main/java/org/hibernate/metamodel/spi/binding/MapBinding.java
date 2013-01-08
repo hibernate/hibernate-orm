@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
@@ -51,7 +53,7 @@ public class MapBinding extends AbstractPluralAttributeBinding implements Indexe
 				includedInOptimisticLocking,
 				metaAttributeContext
 		);
-		pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding( this, pluralAttributeIndexNature );
+		pluralAttributeIndexBinding = createPluralAttributeIndexBinding( pluralAttributeIndexNature );
 	}
 
 	/**
@@ -64,4 +66,27 @@ public class MapBinding extends AbstractPluralAttributeBinding implements Indexe
 		return pluralAttributeIndexBinding;
 	}
 
+	private PluralAttributeIndexBinding createPluralAttributeIndexBinding(PluralAttributeIndexBinding.Nature nature) {
+		switch ( nature ) {
+			case BASIC: {
+				return new BasicPluralAttributeIndexBinding( this );
+			}
+			case AGGREGATE: {
+				return new CompositePluralAttributeIndexBinding( this );
+			}
+			case MANY_TO_MANY: {
+				throw new NotYetImplementedException(
+						String.format( "%s index nature is not supported yet.", nature )
+				);
+			}
+			case MANY_TO_ANY: {
+				throw new NotYetImplementedException(
+						String.format( "%s index nature is not supported yet.", nature )
+				);
+			}
+			default: {
+				throw new AssertionFailure( "Unknown collection index nature : " + nature );
+			}
+		}
+	}
 }

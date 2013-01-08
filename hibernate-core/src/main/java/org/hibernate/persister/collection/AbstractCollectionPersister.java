@@ -832,22 +832,25 @@ public abstract class AbstractCollectionPersister
 			PluralAttributeIndexBinding indexBinding = indexedBinding.getPluralAttributeIndexBinding();
 			indexType = indexBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 			baseIndex = indexBinding instanceof ListBinding ? ( ( ListBinding ) indexBinding ).base() : 0;
-			// TODO: Deal with multiple columns/formulas
-			indexColumnAliases = new String[ 1 ];
-			indexColumnNames = new String[ 1 ];
-			indexColumnIsSettable = new boolean[ 1 ];
-			indexFormulaTemplates = new String[ 1 ];
-			indexFormulas = new String[ 1 ];
-			Value value = indexBinding.getIndexRelationalValue();
-			indexColumnAliases[ 0 ] = value.getAlias( dialect, null );
-			if ( value instanceof Column ) {
-				indexColumnIsSettable[ 0 ] = true;
-				Column column = ( Column ) value;
-				indexColumnNames[ 0 ] = column.getColumnName().getText( dialect );
-			} else {
-				DerivedValue derivedValue = ( DerivedValue ) value;
-				indexFormulaTemplates[ 0 ] = getTemplateFromString( derivedValue.getExpression(), factory);
-				indexFormulas[ 0 ] = derivedValue.getExpression();
+			final java.util.List<RelationalValueBinding> indexRelationalValueBindings = indexBinding.getRelationalValueBindings();
+			int indexSpan = indexRelationalValueBindings.size();
+			indexColumnNames = new String[indexSpan];
+			indexFormulaTemplates = new String[indexSpan];
+			indexFormulas = new String[indexSpan];
+			indexColumnIsSettable = new boolean[indexSpan];
+			indexColumnAliases = new String[indexSpan];
+			for ( int i = 0 ; i < indexSpan ; i++ ) {
+				final Value value = indexRelationalValueBindings.get( i ).getValue();
+				indexColumnAliases[ i ] = value.getAlias( dialect, null );
+				if ( value instanceof Column ) {
+					indexColumnIsSettable[ i ] = true;
+					Column column = ( Column ) value;
+					indexColumnNames[ i ] = column.getColumnName().getText( dialect );
+				} else {
+					DerivedValue derivedValue = ( DerivedValue ) value;
+					indexFormulaTemplates[ i ] = getTemplateFromString( derivedValue.getExpression(), factory);
+					indexFormulas[ i ] = derivedValue.getExpression();
+				}
 			}
 		} else {
 			indexColumnIsSettable = null;

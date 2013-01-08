@@ -62,18 +62,22 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 * @throws HibernateException
 	 */
 	public void onEvict(EvictEvent event) throws HibernateException {
-		EventSource source = event.getSession();
 		final Object object = event.getObject();
+		if ( object == null ) {
+			throw new NullPointerException( "null passed to Session.evict()" );
+		}
+
+		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContext();
 
 		if ( object instanceof HibernateProxy ) {
-			LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			Serializable id = li.getIdentifier();
-			EntityPersister persister = source.getFactory().getEntityPersister( li.getEntityName() );
+			final LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
+			final Serializable id = li.getIdentifier();
 			if ( id == null ) {
-				throw new IllegalArgumentException("null identifier");
+				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
 			}
 
+			final EntityPersister persister = source.getFactory().getEntityPersister( li.getEntityName() );
 			final EntityKey key = source.generateEntityKey( id, persister );
 			persistenceContext.removeProxy( key );
 
@@ -91,6 +95,23 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			if ( e != null ) {
 				persistenceContext.removeEntity( e.getEntityKey() );
 				doEvict( object, e.getEntityKey(), e.getPersister(), source );
+			}
+			else {
+				// see if the passed object is even an entity, and if not throw an exception
+				// 		this is different than legacy Hibernate behavior, but what JPA 2.1 is calling for
+				//		with EntityManager.detach
+				EntityPersister persister = null;
+				final String entityName = persistenceContext.getSession().guessEntityName( object );
+				if ( entityName != null ) {
+					try {
+						persister = persistenceContext.getSession().getFactory().getEntityPersister( entityName );
+					}
+					catch (Exception ignore) {
+					}
+				}
+				if ( persister == null ) {
+					throw new IllegalArgumentException( "Non-entity object instance passed to evict : " + object );
+				}
 			}
 		}
 	}

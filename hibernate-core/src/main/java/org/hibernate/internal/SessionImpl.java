@@ -1157,7 +1157,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	/**
 	 * remove any hard references to the entity that are held by the infrastructure
-	 * (references held by application or other persistant instances are okay)
+	 * (references held by application or other persistent instances are okay)
 	 */
 	public void evict(Object object) throws HibernateException {
 		fireEvict( new EvictEvent( object, this ) );

@@ -266,7 +266,10 @@ public interface Session extends SharedSessionContract {
 	 * not be synchronized with the database. This operation cascades to associated
 	 * instances if the association is mapped with <tt>cascade="evict"</tt>.
 	 *
-	 * @param object a persistent instance
+	 * @param object The entity to evict
+	 *
+	 * @throws NullPointerException if the passed object is {@code null}
+	 * @throws IllegalArgumentException if the passed object is not defined as an entity
 	 */
 	public void evict(Object object);
 

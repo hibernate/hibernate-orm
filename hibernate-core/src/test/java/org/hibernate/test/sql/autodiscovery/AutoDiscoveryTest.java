@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.sql.autodiscovery;
 
+import static org.junit.Assert.assertEquals;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -30,15 +32,13 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -121,13 +121,14 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDialectGetColumnAliasExtractor() throws Exception {
 		Session session = openSession();
+		final SessionImplementor sessionImplementor = (SessionImplementor) session;
 		session.beginTransaction();
 		session.doWork(
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
-						PreparedStatement ps = connection.prepareStatement( QUERY_STRING );
-						ResultSet rs = ps.executeQuery();
+						PreparedStatement ps = sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( QUERY_STRING );
+						ResultSet rs = sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( ps );
 						try {
 							ResultSetMetaData metadata = rs.getMetaData();
 							String column1Alias = getDialect().getColumnAliasExtractor().extractColumnAlias( metadata, 1 );
@@ -135,8 +136,8 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 							Assert.assertFalse( "bad dialect.getColumnAliasExtractor impl", column1Alias.equals( column2Alias ) );
 						}
 						finally {
-							rs.close();
-							ps.close();
+							sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+							sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 						}
 					}
 				}

@@ -235,7 +235,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 										.addToBatch();
 							}
 							else {
-								deleteExpectation.verifyOutcome( st.executeUpdate(), st, -1 );
+								deleteExpectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 							}
 							count++;
 						}
@@ -250,7 +250,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				finally {
 					if ( !useBatch ) {
-						st.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 					}
 				}
 			}
@@ -302,7 +302,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 								session.getTransactionCoordinator().getJdbcCoordinator().getBatch( insertRowBatchKey ).addToBatch();
 							}
 							else {
-								insertExpectation.verifyOutcome( st.executeUpdate(), st, -1 );
+								insertExpectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 							}
 							count++;
 						}
@@ -317,7 +317,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				finally {
 					if ( !useBatch ) {
-						st.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 					}
 				}
 			}

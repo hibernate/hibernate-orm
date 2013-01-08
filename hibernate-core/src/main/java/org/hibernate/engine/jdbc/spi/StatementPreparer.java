@@ -24,6 +24,7 @@
 package org.hibernate.engine.jdbc.spi;
 
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 
 import org.hibernate.ScrollMode;
 
@@ -31,8 +32,18 @@ import org.hibernate.ScrollMode;
  * Contracting for preparing SQL statements
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public interface StatementPreparer {
+	/**
+	 * Create a statement.
+	 *
+	 * @param sql The SQL the statement to be created
+	 *
+	 * @return the statement
+	 */
+	public Statement createStatement();
+	
 	/**
 	 * Prepare a statement.
 	 *

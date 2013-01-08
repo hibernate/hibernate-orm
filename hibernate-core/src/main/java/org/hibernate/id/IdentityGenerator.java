@@ -92,8 +92,8 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 					.prepareStatement( insertSQL, PreparedStatement.RETURN_GENERATED_KEYS );
 		}
 
-		public Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
-			insert.executeUpdate();
+		public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session) throws SQLException {
+			session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 			ResultSet rs = null;
 			try {
 				rs = insert.getGeneratedKeys();
@@ -105,7 +105,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			}
 			finally {
 				if ( rs != null ) {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 		}
@@ -140,13 +140,8 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 					.prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
 		}
 
-		public Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
-			if ( !insert.execute() ) {
-				while ( !insert.getMoreResults() && insert.getUpdateCount() != -1 ) {
-					// do nothing until we hit the rsult set containing the generated id
-				}
-			}
-			ResultSet rs = insert.getResultSet();
+		public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session) throws SQLException {
+			ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().execute( insert );
 			try {
 				return IdentifierGeneratorHelper.getGeneratedIdentity(
 						rs,
@@ -155,7 +150,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 				);
 			}
 			finally {
-				rs.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 			}
 		}
 

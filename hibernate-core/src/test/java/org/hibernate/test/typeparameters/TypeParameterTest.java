@@ -23,20 +23,20 @@
  */
 package org.hibernate.test.typeparameters;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Test for parameterizable types.
@@ -67,13 +67,22 @@ public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 
+		doWork(id, s);
+
+		s.getTransaction().commit();
+		s.close();
+
+		deleteData();
+	}
+	
+	private void doWork(final Integer id, final Session s) {
 		s.doWork(
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
-						PreparedStatement statement = connection.prepareStatement("SELECT * FROM STRANGE_TYPED_OBJECT WHERE ID=?");
+						PreparedStatement statement = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "SELECT * FROM STRANGE_TYPED_OBJECT WHERE ID=?" );
 						statement.setInt(1, id.intValue());
-						ResultSet resultSet = statement.executeQuery();
+						ResultSet resultSet = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( statement );
 
 						assertTrue("A row should have been returned", resultSet.next());
 						assertTrue("Default value should have been mapped to null", resultSet.getObject("VALUE_ONE") == null);
@@ -83,11 +92,6 @@ public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 					}
 				}
 		);
-
-		s.getTransaction().commit();
-		s.close();
-
-		deleteData();
 	}
 
 	@Test

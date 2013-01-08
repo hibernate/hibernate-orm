@@ -84,7 +84,7 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 						);
 					}
 
-					ResultSet rs = st.executeQuery();
+					ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 					try {
 						if ( !rs.next() ) {
 							if ( factory.getStatistics().isStatisticsEnabled() ) {
@@ -95,11 +95,11 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 						}
 					}
 					finally {
-						rs.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 					}
 				}
 				finally {
-					st.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 				}
 			}
 			catch ( SQLException e ) {

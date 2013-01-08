@@ -64,7 +64,6 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 	public <T> T delegateWork(WorkExecutorVisitable<T> work, boolean transacted) throws HibernateException {
 		boolean wasAutoCommit = false;
 		try {
-			// todo : should we use a connection proxy here?
 			Connection connection = jdbcConnectionAccess().obtainConnection();
 			try {
 				if ( transacted ) {

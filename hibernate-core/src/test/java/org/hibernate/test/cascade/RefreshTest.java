@@ -22,20 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cascade;
+import static org.junit.Assert.assertEquals;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * Implementation of RefreshTest.
@@ -62,7 +62,7 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 		session.flush();
 
 		// behind the session's back, let's modify the statuses
-		updateStatuses( session );
+		updateStatuses( (SessionImplementor)session );
 
 		// Now lets refresh the persistent batch, and see if the refresh cascaded to the jobs collection elements
 		session.refresh( batch );
@@ -77,20 +77,20 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-	private void updateStatuses(Session session) throws Throwable {
-		session.doWork(
+	private void updateStatuses(final SessionImplementor session) throws Throwable {
+		((Session)session).doWork(
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
 						PreparedStatement stmnt = null;
 						try {
-							stmnt = connection.prepareStatement( "UPDATE T_JOB SET JOB_STATUS = 1" );
-							stmnt.executeUpdate();
+							stmnt = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "UPDATE T_JOB SET JOB_STATUS = 1" );
+							session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( stmnt );
 						}
 						finally {
 							if ( stmnt != null ) {
 								try {
-									stmnt.close();
+									session.getTransactionCoordinator().getJdbcCoordinator().release( stmnt );
 								}
 								catch( Throwable ignore ) {
 								}

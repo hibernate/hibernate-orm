@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
@@ -71,9 +72,9 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession();
 
-		s.doWork( new ValidateSomeEntityColumns() );
-		s.doWork( new ValidateRowCount( SOME_ENTITY_TABLE_NAME, 0 ) );
-		s.doWork( new ValidateRowCount( SOME_OTHER_ENTITY_TABLE_NAME, 0 ) );
+		s.doWork( new ValidateSomeEntityColumns( (SessionImplementor) s ) );
+		s.doWork( new ValidateRowCount( (SessionImplementor) s, SOME_ENTITY_TABLE_NAME, 0 ) );
+		s.doWork( new ValidateRowCount( (SessionImplementor) s, SOME_OTHER_ENTITY_TABLE_NAME, 0 ) );
 
 		s.beginTransaction();
 		SomeEntity someEntity = new SomeEntity( now );
@@ -85,22 +86,28 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 
-		s.doWork( new ValidateRowCount( SOME_ENTITY_TABLE_NAME, 1 ) );
-		s.doWork( new ValidateRowCount( SOME_OTHER_ENTITY_TABLE_NAME, 1 ) );
+		s.doWork( new ValidateRowCount( (SessionImplementor) s, SOME_ENTITY_TABLE_NAME, 1 ) );
+		s.doWork( new ValidateRowCount( (SessionImplementor) s, SOME_OTHER_ENTITY_TABLE_NAME, 1 ) );
 
 		s.beginTransaction();
 		s.delete( someEntity );
 		s.delete( someOtherEntity );
 		s.getTransaction().commit();
 
-		s.doWork( new ValidateRowCount( SOME_ENTITY_TABLE_NAME, 0 ) );
-		s.doWork( new ValidateRowCount( SOME_OTHER_ENTITY_TABLE_NAME, 0 ) );
+		s.doWork( new ValidateRowCount( (SessionImplementor) s, SOME_ENTITY_TABLE_NAME, 0 ) );
+		s.doWork( new ValidateRowCount( (SessionImplementor) s, SOME_OTHER_ENTITY_TABLE_NAME, 0 ) );
 
 		s.close();
 	}
 
 	// verify all the expected columns are created
 	class ValidateSomeEntityColumns implements Work {
+		private SessionImplementor s;
+		
+		public ValidateSomeEntityColumns( SessionImplementor s ) {
+			this.s = s;
+		}
+		
 		public void execute(Connection connection) throws SQLException {
 			// id -> java.util.Date (DATE - becase of explicit TemporalType)
 			validateColumn( connection, "ID", java.sql.Types.DATE );
@@ -122,9 +129,10 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 			String columnNamePattern = generateFinalNamePattern( meta, columnName );
 
 			ResultSet columnInfo = meta.getColumns( null, null, tableNamePattern, columnNamePattern );
+			s.getTransactionCoordinator().getJdbcCoordinator().register(columnInfo);
 			assertTrue( columnInfo.next() );
 			int dataType = columnInfo.getInt( "DATA_TYPE" );
-			columnInfo.close();
+			s.getTransactionCoordinator().getJdbcCoordinator().release( columnInfo );
 			assertEquals(
 					columnName,
 					JdbcTypeNameMapper.getTypeName( expectedJdbcTypeCode ),
@@ -147,14 +155,18 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 		private final int expectedRowCount;
 		private final String table;
 
-		public ValidateRowCount(String table, int count) {
+		private SessionImplementor s;
+		
+		public ValidateRowCount(SessionImplementor s, String table, int count) {
+			this.s = s;
 			this.expectedRowCount = count;
 			this.table = table;
 		}
 
 		public void execute(Connection connection) throws SQLException {
-			Statement st = connection.createStatement();
-			ResultSet result = st.executeQuery( "SELECT COUNT(*) FROM " + table );
+			Statement st = s.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
+			s.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st, "SELECT COUNT(*) FROM " + table );
+			ResultSet result = s.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st, "SELECT COUNT(*) FROM " + table );
 			result.next();
 			int rowCount = result.getInt( 1 );
 			assertEquals( "Unexpected row count", expectedRowCount, rowCount );

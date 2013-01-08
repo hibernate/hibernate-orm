@@ -143,7 +143,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		return generateHolder( session ).makeValue();
 	}
 
-	protected IntegralDataTypeHolder generateHolder(SessionImplementor session) {
+	protected IntegralDataTypeHolder generateHolder(final SessionImplementor session) {
 		final SqlStatementLogger statementLogger = session
 				.getFactory()
 				.getServiceRegistry()
@@ -181,7 +181,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 							}
 
 							statementLogger.logStatement( update, FormatStyle.BASIC.getFormatter() );
-							PreparedStatement ups = connection.prepareStatement(update);
+							PreparedStatement ups = connection.prepareStatement( update );
 							try {
 								value.copy().increment().bind( ups, 1 );
 								value.bind( ups, 2 );

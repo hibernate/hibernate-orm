@@ -1,5 +1,8 @@
 package org.hibernate.envers.strategy;
 
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,8 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
@@ -32,15 +33,12 @@ import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.property.Getter;
 import org.hibernate.sql.Update;
 import org.hibernate.type.Type;
-
-import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
-import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
+import org.jboss.logging.Logger;
 
 /**
  *  Audit strategy which persists and retrieves audit information using a validity algorithm, based on the 
@@ -162,7 +160,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 					new ReturningWork<Integer>() {
 						@Override
 						public Integer execute(Connection connection) throws SQLException {
-							PreparedStatement preparedStatement = connection.prepareStatement( updateSql );
+							PreparedStatement preparedStatement = sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( updateSql );
 
 							try {
 								int index = 1;
@@ -197,15 +195,10 @@ public class ValidityAuditStrategy implements AuditStrategy {
 								// where REVEND is null
 								// 		nothing to bind....
 
-								return preparedStatement.executeUpdate();
+								return sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement );
 							}
 							finally {
-								try {
-									preparedStatement.close();
-								}
-								catch (SQLException e) {
-									log.debug( "Could not release prepared statement : " + e.getMessage() );
-								}
+								sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().release( preparedStatement );
 							}
 						}
 					}

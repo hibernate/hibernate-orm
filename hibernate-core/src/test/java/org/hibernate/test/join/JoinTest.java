@@ -23,23 +23,24 @@
  */
 package org.hibernate.test.join;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
-
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -140,14 +141,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 
 		// Remove the optional row from the join table and requery the User obj
-		s.doWork(
-				new AbstractWork() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						connection.prepareStatement("delete from t_user").execute();
-					}
-				}
-		);
+		doWork(s);
 		s.clear();
 
 		jesus = (User) s.get( Person.class, new Long( jesus.getId() ) );
@@ -159,6 +153,18 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		assertTrue( s.createQuery("from Person").list().isEmpty() );
 		t.commit();
 		s.close();
+	}
+	
+	private void doWork(final Session s) {
+		s.doWork(
+				new AbstractWork() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						PreparedStatement ps = connection.prepareStatement( "delete from t_user" );
+						ps.execute();
+					}
+				}
+		);
 	}
 	
 	@Test

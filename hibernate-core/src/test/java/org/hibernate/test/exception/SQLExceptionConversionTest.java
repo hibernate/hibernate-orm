@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQLMyISAMDialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.jdbc.Work;
@@ -55,7 +56,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 			comment = "MySQL (MyISAM) does not support FK violation checking"
 	)
 	public void testIntegrityViolation() throws Exception {
-		Session session = openSession();
+		final Session session = openSession();
 		session.beginTransaction();
 
 		session.doWork(
@@ -66,10 +67,10 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 						// result in a constraint violation
 						PreparedStatement ps = null;
 						try {
-							ps = connection.prepareStatement("INSERT INTO T_MEMBERSHIP (user_id, group_id) VALUES (?, ?)");
+							ps = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "INSERT INTO T_MEMBERSHIP (user_id, group_id) VALUES (?, ?)" );
 							ps.setLong(1, 52134241);    // Non-existent user_id
 							ps.setLong(2, 5342);        // Non-existent group_id
-							ps.executeUpdate();
+							((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 
 							fail("INSERT should have failed");
 						}
@@ -79,7 +80,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 						finally {
 							if ( ps != null ) {
 								try {
-									ps.close();
+									((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().release( ps );
 								}
 								catch( Throwable ignore ) {
 									// ignore...
@@ -96,7 +97,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testBadGrammar() throws Exception {
-		Session session = openSession();
+		final Session session = openSession();
 		session.beginTransaction();
 
 		session.doWork(
@@ -106,8 +107,8 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 						// prepare/execute a query against a non-existent table
 						PreparedStatement ps = null;
 						try {
-							ps = connection.prepareStatement("SELECT user_id, user_name FROM tbl_no_there");
-							ps.executeQuery();
+							ps = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "SELECT user_id, user_name FROM tbl_no_there" );
+							((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( ps );
 
 							fail("SQL compilation should have failed");
 						}
@@ -117,7 +118,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 						finally {
 							if ( ps != null ) {
 								try {
-									ps.close();
+									((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().release( ps );
 								}
 								catch( Throwable ignore ) {
 									// ignore...

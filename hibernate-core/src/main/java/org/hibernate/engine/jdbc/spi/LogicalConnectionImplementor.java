@@ -25,11 +25,13 @@ package org.hibernate.engine.jdbc.spi;
 import java.sql.Connection;
 
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.JDBCException;
 
 /**
  * The "internal" contract for LogicalConnection
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public interface LogicalConnectionImplementor extends LogicalConnection {
 	/**
@@ -38,13 +40,6 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 * @return JDBC services
 	 */
 	public JdbcServices getJdbcServices();
-
-	/**
-	 * Obtains the JDBC resource registry associated with this logical connection.
-	 *
-	 * @return The JDBC resource registry.
-	 */
-	public JdbcResourceRegistry getResourceRegistry();
 
 	/**
 	 * Add an observer interested in notification of connection events.
@@ -68,30 +63,6 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	public ConnectionReleaseMode getConnectionReleaseMode();
 
 	/**
-	 * Used to signify that a statement has completed execution which may
-	 * indicate that this logical connection need to perform an
-	 * aggressive release of its physical connection.
-	 */
-	public void afterStatementExecution();
-
-	/**
-	 * Used to signify that a transaction has completed which may indicate
-	 * that this logical connection need to perform an aggressive release
-	 * of its physical connection.
-	 */
-	public void afterTransaction();
-
-	/**
-	 * Manually (and temporarily) circumvent aggressive release processing.
-	 */
-	public void disableReleases();
-
-	/**
-	 * Re-enable aggressive release processing (after a prior {@link #disableReleases()} call.
-	 */
-	public void enableReleases();
-
-	/**
 	 * Manually disconnect the underlying JDBC Connection.  The assumption here
 	 * is that the manager will be reconnected at a later point in time.
 	 *
@@ -107,10 +78,14 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 * with which to reconnect.  It is an error to pass a connection in the other strategies.
 	 */
 	public void manualReconnect(Connection suppliedConnection);
+	
+	public void aggressiveRelease();
+	
+	public void releaseConnection() throws JDBCException;
 
 	public boolean isAutoCommit();
 
-	public boolean isReadyForSerialization();
-
 	public void notifyObserversStatementPrepared();
+	
+	public boolean isUserSuppliedConnection();
 }

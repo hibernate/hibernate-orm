@@ -55,7 +55,7 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 			PreparedStatement insert = prepare( insertSQL, session );
 			try {
 				binder.bindValues( insert );
-				return executeAndExtract( insert );
+				return executeAndExtract( insert, session );
 			}
 			finally {
 				releaseStatement( insert, session );
@@ -76,9 +76,9 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 
 	protected abstract PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException;
 
-	protected abstract Serializable executeAndExtract(PreparedStatement insert) throws SQLException;
+	protected abstract Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session) throws SQLException;
 
 	protected void releaseStatement(PreparedStatement insert, SessionImplementor session) throws SQLException {
-		insert.close();
+		session.getTransactionCoordinator().getJdbcCoordinator().release( insert );
 	}
 }

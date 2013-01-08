@@ -1164,7 +1164,7 @@ public abstract class AbstractCollectionPersister
 								.addToBatch();
 					}
 					else {
-						expectation.verifyOutcome( st.executeUpdate(), st, -1 );
+						expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 					}
 				}
 				catch ( SQLException sqle ) {
@@ -1175,7 +1175,7 @@ public abstract class AbstractCollectionPersister
 				}
 				finally {
 					if ( !useBatch ) {
-						st.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 					}
 				}
 
@@ -1263,7 +1263,7 @@ public abstract class AbstractCollectionPersister
 											.addToBatch();
 								}
 								else {
-									expectation.verifyOutcome( st.executeUpdate(), st, -1 );
+									expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 								}
 
 								collection.afterRowInsert( this, entry, i );
@@ -1277,7 +1277,7 @@ public abstract class AbstractCollectionPersister
 							}
 							finally {
 								if ( !useBatch ) {
-									st.close();
+									session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 								}
 							}
 
@@ -1377,7 +1377,7 @@ public abstract class AbstractCollectionPersister
 										.addToBatch();
 							}
 							else {
-								expectation.verifyOutcome( st.executeUpdate(), st, -1 );
+								expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 							}
 							count++;
 						}
@@ -1389,7 +1389,7 @@ public abstract class AbstractCollectionPersister
 						}
 						finally {
 							if ( !useBatch ) {
-								st.close();
+								session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 							}
 						}
 
@@ -1478,7 +1478,7 @@ public abstract class AbstractCollectionPersister
 								session.getTransactionCoordinator().getJdbcCoordinator().getBatch( insertBatchKey ).addToBatch();
 							}
 							else {
-								expectation.verifyOutcome( st.executeUpdate(), st, -1 );
+								expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 							}
 							collection.afterRowInsert( this, entry, i );
 							count++;
@@ -1491,7 +1491,7 @@ public abstract class AbstractCollectionPersister
 						}
 						finally {
 							if ( !useBatch ) {
-								st.close();
+								session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 							}
 						}
 					}
@@ -1795,16 +1795,16 @@ public abstract class AbstractCollectionPersister
 					.prepareStatement( sqlSelectSizeString );
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
-				ResultSet rs = st.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 				try {
 					return rs.next() ? rs.getInt( 1 ) - baseIndex : 0;
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
 		catch ( SQLException sqle ) {
@@ -1834,19 +1834,19 @@ public abstract class AbstractCollectionPersister
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
 				indexOrElementType.nullSafeSet( st, indexOrElement, keyColumnNames.length + 1, session );
-				ResultSet rs = st.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 				try {
 					return rs.next();
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			catch ( TransientObjectException e ) {
 				return false;
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
 		catch ( SQLException sqle ) {
@@ -1868,7 +1868,7 @@ public abstract class AbstractCollectionPersister
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
 				getIndexType().nullSafeSet( st, incrementIndexByBase( index ), keyColumnNames.length + 1, session );
-				ResultSet rs = st.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 				try {
 					if ( rs.next() ) {
 						return getElementType().nullSafeGet( rs, elementColumnAliases, session, owner );
@@ -1878,11 +1878,11 @@ public abstract class AbstractCollectionPersister
 					}
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
 		catch ( SQLException sqle ) {

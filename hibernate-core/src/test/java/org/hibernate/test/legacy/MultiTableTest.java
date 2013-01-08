@@ -1,17 +1,20 @@
 //$Id: MultiTableTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -20,11 +23,9 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 
 public class MultiTableTest extends LegacyTestCase {
@@ -127,48 +128,49 @@ public class MultiTableTest extends LegacyTestCase {
 
 		sessionFactory().evict(SubMulti.class);
 
-		s = openSession();
-		s.beginTransaction();
-		s.doWork(
+		final Session s2 = openSession();
+		s2.beginTransaction();
+		s2.doWork(
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
 						final String sql = "select * from leafsubsubclass sm, nonleafsubclass m, rootclass s " +
 								"where sm.sid=m.sid and sm.sid=s.id1_ and sm.sid=1";
-						connection.createStatement().executeQuery( sql ).next();
+						Statement st = ((SessionImplementor)s2).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
+						((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st, sql ).next();
 					}
 				}
 		);
 		assertTrue(
-				s.createQuery(
+				s2.createQuery(
 						"select s from SubMulti as sm join sm.children as s where s.amount>-1 and s.name is null"
 				).list().size()==2 );
-		s.createQuery( "select c from SubMulti sm join sm.children c" ).list();
-		assertTrue( s.createQuery( "select elements(sm.children) from SubMulti as sm" ).list().size()==2 );
+		s2.createQuery( "select c from SubMulti sm join sm.children c" ).list();
+		assertTrue( s2.createQuery( "select elements(sm.children) from SubMulti as sm" ).list().size()==2 );
 		assertTrue(
-				s.createQuery(
+				s2.createQuery(
 						"select distinct sm from SubMulti as sm join sm.children as s where s.amount>-1 and s.name is null"
 				).list().size()==1 );
-		sm = (SubMulti) s.load(SubMulti.class, id);
+		sm = (SubMulti) s2.load(SubMulti.class, id);
 		assertTrue( sm.getChildren().size()==2 );
 		assertEquals(
-			s.createFilter( sm.getMoreChildren(), "select count(*) where this.amount>-1 and this.name is null" ).list().get(0),
+			s2.createFilter( sm.getMoreChildren(), "select count(*) where this.amount>-1 and this.name is null" ).list().get(0),
 			new Long(2)
 		);
 		assertEquals( "FOO", sm.getDerived() );
 		assertSame(
-				s.createQuery( "select distinct s from SubMulti s where s.moreChildren[1].amount < 1.0" ).iterate().next(),
+				s2.createQuery( "select distinct s from SubMulti s where s.moreChildren[1].amount < 1.0" ).iterate().next(),
 			sm
 		);
 		assertTrue( sm.getMoreChildren().size()==2 );
-		s.delete(sm);
+		s2.delete(sm);
 		Iterator iter = sm.getChildren().iterator();
 		while ( iter.hasNext() ) {
-			s.delete( iter.next() );
+			s2.delete( iter.next() );
 		}
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		s2.flush();
+		s2.getTransaction().commit();
+		s2.close();
 
 	}
 

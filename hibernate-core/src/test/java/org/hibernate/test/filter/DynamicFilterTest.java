@@ -67,7 +67,6 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-3637")
-@FailureExpectedWithNewMetamodel
 public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( DynamicFilterTest.class );
 
@@ -106,6 +105,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSecondLevelCachedCollectionsFiltering() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -164,6 +164,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCombinedClassAndCollectionFiltersEnabled() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -615,6 +616,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOneToManyFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// one-to-many loading tests
@@ -721,6 +723,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyOnCollectionLoadAfterHQL() {
 		TestData testData = new TestData();
 		testData.prepare();

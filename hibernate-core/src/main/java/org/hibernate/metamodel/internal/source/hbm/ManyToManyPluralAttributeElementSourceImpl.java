@@ -29,9 +29,12 @@ import java.util.List;
 
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
+import org.hibernate.jaxb.spi.hbm.JaxbFilterElement;
 import org.hibernate.jaxb.spi.hbm.JaxbManyToManyElement;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
@@ -46,7 +49,7 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	private final Iterable<CascadeStyle> cascadeStyles;
 
 	private final List<RelationalValueSource> valueSources;
-
+	private final FilterSource[] filterSources;
 	public ManyToManyPluralAttributeElementSourceImpl(
 			MappingDocument mappingDocument,
 			final JaxbManyToManyElement manyToManyElement,
@@ -89,6 +92,21 @@ public class ManyToManyPluralAttributeElementSourceImpl
 					}
 				}
 		);
+		this.filterSources = buildFilterSources();
+	}
+
+	private FilterSource[] buildFilterSources() {
+			final int size = manyToManyElement.getFilter().size();
+			if ( size == 0 ) {
+				return null;
+			}
+
+			FilterSource[] results = new FilterSource[size];
+			for ( int i = 0; i < size; i++ ) {
+				JaxbFilterElement element = manyToManyElement.getFilter().get( i );
+				results[i] = new FilterSourceImpl( sourceMappingDocument(), element );
+			}
+			return results;
 	}
 
 	@Override
@@ -101,6 +119,11 @@ public class ManyToManyPluralAttributeElementSourceImpl
 		return StringHelper.isNotEmpty( manyToManyElement.getEntityName() )
 				? manyToManyElement.getEntityName()
 				: bindingContext().qualifyClassName( manyToManyElement.getClazz() );
+	}
+
+	@Override
+	public FilterSource[] getFilterSources() {
+		return filterSources;
 	}
 
 	@Override

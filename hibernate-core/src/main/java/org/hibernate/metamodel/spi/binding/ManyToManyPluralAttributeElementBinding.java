@@ -23,9 +23,11 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.metamodel.spi.relational.Value;
 
 /**
@@ -34,8 +36,8 @@ import org.hibernate.metamodel.spi.relational.Value;
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttributeAssociationElementBinding {
-	private final java.util.Map manyToManyFilters = new HashMap();
+public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttributeAssociationElementBinding implements Filterable{
+	private List<FilterConfiguration> filterConfigurations = new ArrayList<FilterConfiguration>();
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
 	// TODO: really should have value defined (which defines table), but may not know 
@@ -73,5 +75,15 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 
 	public void setManyToManyOrderBy(String manyToManyOrderBy) {
 		this.manyToManyOrderBy = manyToManyOrderBy;
+	}
+
+	@Override
+	public void addFilterConfiguration(FilterConfiguration filterConfiguration) {
+		filterConfigurations.add( filterConfiguration );
+	}
+
+	@Override
+	public List<FilterConfiguration> getFilterConfigurations() {
+		return filterConfigurations;
 	}
 }

@@ -35,6 +35,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHe
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -74,6 +75,11 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	@Override
 	public String getReferencedEntityName() {
 		return associationAttribute.getReferencedEntityType();
+	}
+
+	@Override
+	public FilterSource[] getFilterSources() {
+		return new FilterSource[0];  //todo
 	}
 
 	@Override

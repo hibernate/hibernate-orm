@@ -77,7 +77,7 @@ public class FilterSourceImpl
 		this.condition = Helper.coalesce( conditionContent, conditionAttribute );
 		this.autoAliasInjection = StringHelper.isNotEmpty( explicitAutoAliasInjectionSetting )
 				? Boolean.valueOf( explicitAutoAliasInjectionSetting )
-				: ! ( aliasTableMap.isEmpty() && aliasEntityMap.isEmpty() );
+				: true;
 	}
 
 	@Override

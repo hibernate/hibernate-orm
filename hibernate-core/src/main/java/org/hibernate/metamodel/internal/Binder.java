@@ -1369,7 +1369,7 @@ public class Binder {
 
 		if ( attributeSource.getFilterSources() != null ) {
 			for ( final FilterSource filterSource : attributeSource.getFilterSources() ) {
-				attributeBinding.addFilterConfiguration( createFilterConfiguration( filterSource, attributeBindingContainer.seekEntityBinding() ) );
+				attributeBinding.addFilterConfiguration( createFilterConfiguration( filterSource, null ) );
 			}
 		}
 
@@ -1930,9 +1930,22 @@ public class Binder {
 			);
 		}
 		EntityBinding referencedEntityBinding = findOrBindEntityBinding( referencedEntityName );
+		ManyToManyPluralAttributeElementBinding manyToManyPluralAttributeElementBinding = (ManyToManyPluralAttributeElementBinding) attributeBinding
+				.getPluralAttributeElementBinding();
+
+		if ( elementSource.getFilterSources() != null ) {
+			for ( FilterSource filterSource : elementSource.getFilterSources() ) {
+				manyToManyPluralAttributeElementBinding.addFilterConfiguration(
+						createFilterConfiguration(
+								filterSource,
+								null
+						)
+				);
+			}
+		}
 		bindManyToManyCollectionKey( attributeBinding, attributeSource, referencedEntityBinding );
 		bindManyToManyCollectionElement(
-				(ManyToManyPluralAttributeElementBinding) attributeBinding.getPluralAttributeElementBinding(),
+				manyToManyPluralAttributeElementBinding,
 				(ManyToManyPluralAttributeElementSource) attributeSource.getElementSource(),
 				referencedEntityBinding,
 				defaultElementJavaTypeName

@@ -84,8 +84,10 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.Cascadeable;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.binding.Filterable;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.ListBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
@@ -993,16 +995,22 @@ public abstract class AbstractCollectionPersister
 		// Handle any filters applied to this collection
 		filterHelper = new FilterHelper( collection.getFilterConfigurations(), factory );
 
-		// TODO: fix this when ManyToManyPluralAttributeElementBinding is working
-		//if ( elementBinding.getNature() == Nature.MANY_TO_MANY ) {
-		//}
-		//else {
+		if ( collection.getPluralAttributeElementBinding()
+				.getNature() == PluralAttributeElementBinding.Nature.MANY_TO_MANY ) {
+			manyToManyFilterHelper = new FilterHelper(
+					Filterable.class.cast( collection.getPluralAttributeElementBinding() )
+							.getFilterConfigurations(), factory
+			);
+		}
+		else {
 			manyToManyFilterHelper = new FilterHelper( Collections.<FilterConfiguration>emptyList(), factory );
-			manyToManyWhereString = null;
-			manyToManyWhereTemplate = null;
-			hasManyToManyOrder = false;
-			manyToManyOrderByTranslation = null;
-		//}
+		}
+		// TODO: fix this when ManyToManyPluralAttributeElementBinding is working
+
+		manyToManyWhereString = null;
+		manyToManyWhereTemplate = null;
+		hasManyToManyOrder = false;
+		manyToManyOrderByTranslation = null;
 
 		initCollectionPropertyMap();
 	}

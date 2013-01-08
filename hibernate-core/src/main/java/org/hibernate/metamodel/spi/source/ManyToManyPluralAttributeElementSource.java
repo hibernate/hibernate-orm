@@ -44,6 +44,8 @@ public interface ManyToManyPluralAttributeElementSource
 
 	public String getOrderBy();
 
+	public FilterSource[] getFilterSources();
+
 	public String getWhere();
 
 	public boolean fetchImmediately();

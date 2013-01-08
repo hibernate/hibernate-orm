@@ -26,6 +26,8 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.JAXBElement;
+
 import org.hibernate.jaxb.spi.hbm.JaxbFilterDefElement;
 import org.hibernate.jaxb.spi.hbm.JaxbFilterParamElement;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
@@ -54,6 +56,14 @@ public class FilterDefinitionSourceImpl
 		for ( Object content : filterDefElement.getContent() ) {
 			if ( String.class.isInstance( content ) ){
 				conditionContent = (String) content;
+			}
+			else if ( JAXBElement.class.isInstance( content ) ) {
+				JAXBElement jaxbElement = JAXBElement.class.cast( content );
+				if ( jaxbElement.getDeclaredType() == JaxbFilterParamElement.class ) {
+					parameterSources.add(
+							(JaxbFilterParamElement) jaxbElement.getValue()
+					);
+				}
 			}
 			else {
 				parameterSources.add(

@@ -1175,7 +1175,7 @@ public abstract class AbstractCollectionPersister
 				}
 				finally {
 					if ( !useBatch ) {
-						st.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 					}
 				}
 
@@ -1277,7 +1277,7 @@ public abstract class AbstractCollectionPersister
 							}
 							finally {
 								if ( !useBatch ) {
-									st.close();
+									session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 								}
 							}
 
@@ -1389,7 +1389,7 @@ public abstract class AbstractCollectionPersister
 						}
 						finally {
 							if ( !useBatch ) {
-								st.close();
+								session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 							}
 						}
 
@@ -1491,7 +1491,7 @@ public abstract class AbstractCollectionPersister
 						}
 						finally {
 							if ( !useBatch ) {
-								st.close();
+								session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 							}
 						}
 					}
@@ -1800,11 +1800,11 @@ public abstract class AbstractCollectionPersister
 					return rs.next() ? rs.getInt( 1 ) - baseIndex : 0;
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
 		catch ( SQLException sqle ) {
@@ -1839,14 +1839,14 @@ public abstract class AbstractCollectionPersister
 					return rs.next();
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			catch ( TransientObjectException e ) {
 				return false;
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
 		catch ( SQLException sqle ) {
@@ -1878,11 +1878,11 @@ public abstract class AbstractCollectionPersister
 					}
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
 		catch ( SQLException sqle ) {

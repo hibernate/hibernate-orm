@@ -100,7 +100,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 			statement.execute( "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
 			assertTrue( jdbcCoordinator.hasRegisteredResources() );
 			assertTrue( logicalConnection.isPhysicallyConnected() );
-			statement.close();
+			jdbcCoordinator.release( statement );
 			assertFalse( jdbcCoordinator.hasRegisteredResources() );
 			assertFalse( logicalConnection.isPhysicallyConnected() ); // after_statement specified
 		}
@@ -119,7 +119,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 			ps.setString( 2, "name" );
 			ps.execute();
 			assertTrue( jdbcCoordinator.hasRegisteredResources() );
-			ps.close();
+			jdbcCoordinator.release( ps );
 			assertFalse( jdbcCoordinator.hasRegisteredResources() );
 
 			ps = connection.prepareStatement( "select * from SANDBOX_JDBC_TST" );

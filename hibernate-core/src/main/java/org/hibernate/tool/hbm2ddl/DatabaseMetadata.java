@@ -122,7 +122,9 @@ public class DatabaseMetadata {
 
 				}
 				finally {
-					if (rs!=null) rs.close();
+					// TODO
+//					if (rs!=null) session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					rs.close();
 				}
 			}
 			catch (SQLException sqlException) {
@@ -153,8 +155,12 @@ public class DatabaseMetadata {
 					}
 				}
 				finally {
-					if (rs!=null) rs.close();
-					if (statement!=null) statement.close();
+					// TODO
+//					if (rs!=null) session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					rs.close();
+					// TODO
+//					if (rs!=null) session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
+					statement.close();
 				}
 
 			}

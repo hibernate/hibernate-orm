@@ -125,7 +125,7 @@ public class TableBasedDeleteHandlerImpl
 				}
 				finally {
 					if ( ps != null ) {
-						ps.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 					}
 				}
 			}
@@ -146,7 +146,7 @@ public class TableBasedDeleteHandlerImpl
 					}
 					finally {
 						if ( ps != null ) {
-							ps.close();
+							session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 						}
 					}
 				}

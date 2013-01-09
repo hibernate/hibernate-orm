@@ -64,13 +64,13 @@ public class GUIDGenerator implements IdentifierGenerator {
 					result = rs.getString(1);
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
                 LOG.guidGenerated(result);
 				return result;
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
 		catch (SQLException sqle) {

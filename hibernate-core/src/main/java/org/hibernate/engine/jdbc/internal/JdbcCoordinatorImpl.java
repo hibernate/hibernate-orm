@@ -354,6 +354,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 		xref.remove( statement );
 		close( statement );
+		
+		afterStatementExecution();
 	}
 
 	@Override

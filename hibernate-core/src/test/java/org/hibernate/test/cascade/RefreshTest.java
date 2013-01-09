@@ -90,7 +90,7 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 						finally {
 							if ( stmnt != null ) {
 								try {
-									stmnt.close();
+									session.getTransactionCoordinator().getJdbcCoordinator().release( stmnt );
 								}
 								catch( Throwable ignore ) {
 								}

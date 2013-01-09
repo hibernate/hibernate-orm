@@ -492,21 +492,21 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 													}
 													finally {
 														if ( insertPS != null ) {
-															insertPS.close();
+															session.getTransactionCoordinator().getJdbcCoordinator().release( insertPS );
 														}
 													}
 												}
 												else {
 													value.initialize( selectRS, 1 );
 												}
-												selectRS.close();
+												session.getTransactionCoordinator().getJdbcCoordinator().release( selectRS );
 											}
 											catch ( SQLException e ) {
 											    LOG.unableToReadOrInitHiValue(e);
 												throw e;
 											}
 											finally {
-												selectPS.close();
+												session.getTransactionCoordinator().getJdbcCoordinator().release( selectPS );
 											}
 
 											statementLogger.logStatement( updateQuery, FormatStyle.BASIC.getFormatter() );
@@ -529,7 +529,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 												throw e;
 											}
 											finally {
-												updatePS.close();
+												session.getTransactionCoordinator().getJdbcCoordinator().release( updatePS );
 											}
 										}
 										while ( rows == 0 );

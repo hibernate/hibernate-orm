@@ -143,7 +143,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		return generateHolder( session ).makeValue();
 	}
 
-	protected IntegralDataTypeHolder generateHolder(SessionImplementor session) {
+	protected IntegralDataTypeHolder generateHolder(final SessionImplementor session) {
 		final SqlStatementLogger statementLogger = session
 				.getFactory()
 				.getServiceRegistry()
@@ -170,14 +170,14 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 									throw new IdentifierGenerationException(err);
 								}
 								value.initialize( rs, 1 );
-								rs.close();
+								session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 							}
 							catch (SQLException e) {
 								LOG.error("Could not read a hi value", e);
 								throw e;
 							}
 							finally {
-								qps.close();
+								session.getTransactionCoordinator().getJdbcCoordinator().release( qps );
 							}
 
 							statementLogger.logStatement( update, FormatStyle.BASIC.getFormatter() );
@@ -192,7 +192,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 								throw sqle;
 							}
 							finally {
-								ups.close();
+								session.getTransactionCoordinator().getJdbcCoordinator().release( ups );
 							}
 						}
 						while (rows==0);

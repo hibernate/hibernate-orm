@@ -166,6 +166,8 @@ public class TableMetadata {
 		}
 		finally {
 			if (rs != null) {
+				// TODO
+//				session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				rs.close();
 			}
 		}
@@ -186,6 +188,8 @@ public class TableMetadata {
 		}
 		finally {
 			if (rs != null) {
+				// TODO
+//				session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				rs.close();
 			}
 		}
@@ -202,6 +206,8 @@ public class TableMetadata {
 		}
 		finally  {
 			if (rs != null) {
+				// TODO
+//				session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				rs.close();
 			}
 		}

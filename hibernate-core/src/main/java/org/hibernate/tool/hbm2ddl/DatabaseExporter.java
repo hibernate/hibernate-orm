@@ -76,6 +76,8 @@ class DatabaseExporter implements Exporter {
 	@Override
 	public void release() throws Exception {
 		try {
+			// TODO
+//			session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
 			statement.close();
 		}
 		finally {

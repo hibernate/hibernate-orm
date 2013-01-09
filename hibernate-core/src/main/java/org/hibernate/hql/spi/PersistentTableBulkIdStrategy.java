@@ -163,6 +163,8 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 					}
 				}
 				
+				// TODO
+//				session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
 				statement.close();
 			}
 			catch (SQLException e) {
@@ -203,6 +205,8 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 					}
 				}
 				
+				// TODO
+//				session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
 				statement.close();
 			}
 			catch (SQLException e) {
@@ -272,7 +276,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			finally {
 				if ( ps != null ) {
 					try {
-						ps.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 					}
 					catch( Throwable ignore ) {
 						// ignore

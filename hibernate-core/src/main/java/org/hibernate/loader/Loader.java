@@ -910,7 +910,7 @@ public abstract class Loader {
 			return processResultSet( rs, queryParameters, session, returnProxies, forcedResultTransformer, maxRows, afterLoadActions );
 		}
 		finally {
-			st.close();
+			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 		}
 
 	}
@@ -1903,11 +1903,11 @@ public abstract class Loader {
 			LOG.tracev( "Bound [{0}] parameters total", col );
 		}
 		catch ( SQLException sqle ) {
-			st.close();
+			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			throw sqle;
 		}
 		catch ( HibernateException he ) {
-			st.close();
+			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			throw he;
 		}
 
@@ -2041,7 +2041,7 @@ public abstract class Loader {
 			return rs;
 		}
 		catch ( SQLException sqle ) {
-			st.close();
+			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			throw sqle;
 		}
 	}

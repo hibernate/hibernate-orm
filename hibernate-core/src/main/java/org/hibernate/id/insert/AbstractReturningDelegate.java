@@ -79,6 +79,6 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 	protected abstract Serializable executeAndExtract(PreparedStatement insert) throws SQLException;
 
 	protected void releaseStatement(PreparedStatement insert, SessionImplementor session) throws SQLException {
-		insert.close();
+		session.getTransactionCoordinator().getJdbcCoordinator().release( insert );
 	}
 }

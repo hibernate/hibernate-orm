@@ -138,14 +138,14 @@ public class TableStructure implements DatabaseStructure {
 											throw new IdentifierGenerationException( err );
 										}
 										value.initialize( selectRS, 1 );
-										selectRS.close();
+										session.getTransactionCoordinator().getJdbcCoordinator().release( selectRS );
 									}
 									catch ( SQLException sqle ) {
 										LOG.error( "could not read a hi value", sqle );
 										throw sqle;
 									}
 									finally {
-										selectStatement.close();
+										session.getTransactionCoordinator().getJdbcCoordinator().release( selectStatement );
 									}
 
 									statementLogger.logStatement( updateQuery, FormatStyle.BASIC.getFormatter() );
@@ -162,7 +162,7 @@ public class TableStructure implements DatabaseStructure {
 										throw e;
 									}
 									finally {
-										updatePS.close();
+										session.getTransactionCoordinator().getJdbcCoordinator().release( updatePS );
 									}
 								} while ( rows == 0 );
 

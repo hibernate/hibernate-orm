@@ -259,7 +259,7 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 				processResultSet( rs, queryParameters, session, true, null, maxRows, afterLoadActions );
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
 

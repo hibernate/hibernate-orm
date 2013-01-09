@@ -248,6 +248,8 @@ public class SchemaUpdate {
 
 			try {
 				if ( stmt != null ) {
+					// TODO
+//					session.getTransactionCoordinator().getJdbcCoordinator().release( stmt );
 					stmt.close();
 				}
 				connectionHelper.release();

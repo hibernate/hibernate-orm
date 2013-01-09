@@ -135,8 +135,8 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 							Assert.assertFalse( "bad dialect.getColumnAliasExtractor impl", column1Alias.equals( column2Alias ) );
 						}
 						finally {
-							rs.close();
-							ps.close();
+							session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+							session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 						}
 					}
 				}

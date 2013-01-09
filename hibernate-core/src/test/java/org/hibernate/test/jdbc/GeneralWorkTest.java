@@ -169,7 +169,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 			return;
 		}
 		try {
-			statement.close();
+			session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
 		}
 		catch ( SQLException e ) {
 			// ignore
@@ -181,7 +181,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 			return;
 		}
 		try {
-			resultSet.close();
+			session.getTransactionCoordinator().getJdbcCoordinator().release( resultSet );
 		}
 		catch ( SQLException e ) {
 			// ignore

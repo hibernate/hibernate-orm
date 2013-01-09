@@ -99,7 +99,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 	protected void createTempTable(Queryable persister, SessionImplementor session) {
 		// Don't really know all the codes required to adequately decipher returned jdbc exceptions here.
 		// simply allow the failure to be eaten and the subsequent insert-selects/deletes should fail
-		TemporaryTableCreationWork work = new TemporaryTableCreationWork( persister );
+		TemporaryTableCreationWork work = new TemporaryTableCreationWork( persister, session );
 		if ( shouldIsolateTemporaryTableDDL( session ) ) {
 			session.getTransactionCoordinator()
 					.getTransaction()
@@ -152,7 +152,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			finally {
 				if ( ps != null ) {
 					try {
-						ps.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 					}
 					catch( Throwable ignore ) {
 						// ignore
@@ -180,9 +180,11 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 	private static class TemporaryTableCreationWork extends AbstractWork {
 		private final Queryable persister;
+		private final SessionImplementor session;
 
-		private TemporaryTableCreationWork(Queryable persister) {
+		private TemporaryTableCreationWork(Queryable persister, SessionImplementor session) {
 			this.persister = persister;
+			this.session = session;
 		}
 
 		@Override
@@ -199,7 +201,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 				}
 				finally {
 					try {
-						statement.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
 					}
 					catch( Throwable ignore ) {
 						// ignore
@@ -249,7 +251,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 				}
 				finally {
 					try {
-						statement.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
 					}
 					catch( Throwable ignore ) {
 						// ignore

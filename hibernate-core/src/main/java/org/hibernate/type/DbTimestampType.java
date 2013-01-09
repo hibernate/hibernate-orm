@@ -30,11 +30,10 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.jboss.logging.Logger;
 
 /**
  * <tt>dbtimestamp</tt>: An extension of {@link TimestampType} which
@@ -108,12 +107,7 @@ public class DbTimestampType extends TimestampType {
 		}
 		finally {
 			if ( ps != null ) {
-				try {
-					ps.close();
-				}
-				catch( SQLException sqle ) {
-					LOG.unableToCleanUpPreparedStatement( sqle );
-				}
+				session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 			}
 		}
 	}
@@ -142,12 +136,7 @@ public class DbTimestampType extends TimestampType {
 		}
 		finally {
 			if ( cs != null ) {
-				try {
-					cs.close();
-				}
-				catch( SQLException sqle ) {
-					LOG.unableToCleanUpCallableStatement( sqle );
-				}
+				session.getTransactionCoordinator().getJdbcCoordinator().release( cs );
 			}
 		}
 	}

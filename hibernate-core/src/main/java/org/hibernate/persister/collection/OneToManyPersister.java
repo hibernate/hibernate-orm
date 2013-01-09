@@ -250,7 +250,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				finally {
 					if ( !useBatch ) {
-						st.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 					}
 				}
 			}
@@ -317,7 +317,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				finally {
 					if ( !useBatch ) {
-						st.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 					}
 				}
 			}

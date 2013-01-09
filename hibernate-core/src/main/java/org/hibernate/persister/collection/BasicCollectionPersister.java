@@ -273,7 +273,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					}
 					finally {
 						if ( !useBatch ) {
-							st.close();
+							session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 						}
 					}
 					count++;

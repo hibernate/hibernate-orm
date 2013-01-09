@@ -145,7 +145,7 @@ public class TableBasedUpdateHandlerImpl
 				}
 				finally {
 					if ( ps != null ) {
-						ps.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 					}
 				}
 			}
@@ -172,7 +172,7 @@ public class TableBasedUpdateHandlerImpl
 					}
 					finally {
 						if ( ps != null ) {
-							ps.close();
+							session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 						}
 					}
 				}

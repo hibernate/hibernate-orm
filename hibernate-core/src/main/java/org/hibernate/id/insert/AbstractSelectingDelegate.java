@@ -61,7 +61,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 				insert.executeUpdate();
 			}
 			finally {
-				insert.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( insert );
 			}
 		}
 		catch ( SQLException sqle ) {
@@ -87,11 +87,11 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 					return getResult( session, rs, binder.getEntity() );
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				idSelect.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( idSelect );
 			}
 
 		}

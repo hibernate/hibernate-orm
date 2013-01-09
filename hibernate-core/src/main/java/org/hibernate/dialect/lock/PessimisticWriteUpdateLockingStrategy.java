@@ -113,7 +113,7 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 
 				}
 				finally {
-					st.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 				}
 			}
 			catch ( SQLException e ) {

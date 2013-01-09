@@ -68,7 +68,7 @@ public class RowIdTest extends BaseCoreFunctionalTestCase {
 						catch (Exception ignored) {
 						}
 						st.execute("create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
-						st.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 					}
 				}
 		);

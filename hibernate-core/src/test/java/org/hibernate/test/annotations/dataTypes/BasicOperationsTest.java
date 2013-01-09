@@ -124,7 +124,7 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 			ResultSet columnInfo = meta.getColumns( null, null, tableNamePattern, columnNamePattern );
 			assertTrue( columnInfo.next() );
 			int dataType = columnInfo.getInt( "DATA_TYPE" );
-			columnInfo.close();
+			session.getTransactionCoordinator().getJdbcCoordinator().release( columnInfo );
 			assertEquals(
 					columnName,
 					JdbcTypeNameMapper.getTypeName( expectedJdbcTypeCode ),

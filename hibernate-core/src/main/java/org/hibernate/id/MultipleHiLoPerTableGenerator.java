@@ -177,7 +177,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 						else {
 							value.initialize( rs, 0 );
 						}
-						rs.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 					}
 					catch (SQLException sqle) {
 						LOG.unableToReadOrInitHiValue( sqle );
@@ -185,9 +185,9 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					}
 					finally {
 						if (ips != null) {
-							ips.close();
+							session.getTransactionCoordinator().getJdbcCoordinator().release( ips );
 						}
-						qps.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( qps );
 					}
 
 					statementLogger.logStatement( update, FormatStyle.BASIC.getFormatter() );
@@ -202,7 +202,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 						throw sqle;
 					}
 					finally {
-						ups.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( ups );
 					}
 				} while ( rows==0 );
 

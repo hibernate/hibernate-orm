@@ -96,11 +96,11 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 						}
 					}
 					finally {
-						rs.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 					}
 				}
 				finally {
-					st.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 				}
 
 			}

@@ -107,7 +107,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 						finally {
 							try {
-								rs.close();
+								session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 							}
 							catch( Throwable ignore ) {
 								// intentionally empty
@@ -115,7 +115,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 					}
 					finally {
-						st.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 					}
 
 				}

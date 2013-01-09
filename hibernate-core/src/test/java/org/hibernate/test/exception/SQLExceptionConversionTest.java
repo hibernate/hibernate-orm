@@ -79,7 +79,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 						finally {
 							if ( ps != null ) {
 								try {
-									ps.close();
+									session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 								}
 								catch( Throwable ignore ) {
 									// ignore...
@@ -117,7 +117,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 						finally {
 							if ( ps != null ) {
 								try {
-									ps.close();
+									session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 								}
 								catch( Throwable ignore ) {
 									// ignore...

@@ -104,7 +104,7 @@ public class BasicExecutor implements StatementExecutor {
 			}
 			finally {
 				if ( st != null ) {
-					st.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 				}
 			}
 		}

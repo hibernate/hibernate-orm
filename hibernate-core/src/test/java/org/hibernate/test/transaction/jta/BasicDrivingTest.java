@@ -35,6 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory;
@@ -88,7 +89,8 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 		JournalingTransactionObserver observer = new JournalingTransactionObserver();
 		transactionCoordinator.addObserver( observer );
 
-		LogicalConnectionImplementor logicalConnection = transactionCoordinator.getJdbcCoordinator().getLogicalConnection();
+		JdbcCoordinator jdbcCoordinator = transactionCoordinator.getJdbcCoordinator();
+		LogicalConnectionImplementor logicalConnection = jdbcCoordinator.getLogicalConnection();
 		Connection connection = logicalConnection.getConnection();
 
 		// set up some tables to use
@@ -96,10 +98,10 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 			Statement statement = connection.createStatement();
 			statement.execute( "drop table SANDBOX_JDBC_TST if exists" );
 			statement.execute( "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
-			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			assertTrue( jdbcCoordinator.hasRegisteredResources() );
 			assertTrue( logicalConnection.isPhysicallyConnected() );
 			statement.close();
-			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			assertFalse( jdbcCoordinator.hasRegisteredResources() );
 			assertFalse( logicalConnection.isPhysicallyConnected() ); // after_statement specified
 		}
 		catch ( SQLException sqle ) {
@@ -116,15 +118,15 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 			ps.setLong( 1, 1 );
 			ps.setString( 2, "name" );
 			ps.execute();
-			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			assertTrue( jdbcCoordinator.hasRegisteredResources() );
 			ps.close();
-			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			assertFalse( jdbcCoordinator.hasRegisteredResources() );
 
 			ps = connection.prepareStatement( "select * from SANDBOX_JDBC_TST" );
 			ps.executeQuery();
 			connection.prepareStatement( "delete from SANDBOX_JDBC_TST" ).execute();
 			// lets forget to close these...
-			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			assertTrue( jdbcCoordinator.hasRegisteredResources() );
 			assertTrue( logicalConnection.isPhysicallyConnected() );
 
 			// and commit the transaction...
@@ -132,7 +134,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 
 			// we should now have:
 			//		1) no resources because of after_transaction release mode
-			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			assertFalse( jdbcCoordinator.hasRegisteredResources() );
 			//		2) non-physically connected logical connection, again because of after_transaction release mode
 			assertFalse( logicalConnection.isPhysicallyConnected() );
 			//		3) transaction observer callbacks

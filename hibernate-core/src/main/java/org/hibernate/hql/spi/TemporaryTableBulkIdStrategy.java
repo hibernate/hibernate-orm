@@ -114,7 +114,6 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			work.execute( connection );
 			session.getTransactionCoordinator()
 					.getJdbcCoordinator()
-					.getLogicalConnection()
 					.afterStatementExecution();
 		}
 	}
@@ -136,7 +135,6 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 				work.execute( connection );
 				session.getTransactionCoordinator()
 						.getJdbcCoordinator()
-						.getLogicalConnection()
 						.afterStatementExecution();
 			}
 		}

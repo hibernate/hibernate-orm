@@ -138,7 +138,7 @@ class StatementPreparerImpl implements StatementPreparer {
 						);
 				}
 			}.prepareStatement();
-			logicalConnection().getResourceRegistry().registerLastQuery( ps );
+			jdbcCoordinator.registerLastQuery( ps );
 			return ps;
 		}
 		else {
@@ -149,7 +149,7 @@ class StatementPreparerImpl implements StatementPreparer {
 								: connection().prepareStatement( sql );
 				}
 			}.prepareStatement();
-			logicalConnection().getResourceRegistry().registerLastQuery( ps );
+			jdbcCoordinator.registerLastQuery( ps );
 			return ps;
 		}
 	}
@@ -176,7 +176,7 @@ class StatementPreparerImpl implements StatementPreparer {
 		protected abstract PreparedStatement doPrepare() throws SQLException;
 
 		public void postProcess(PreparedStatement preparedStatement) throws SQLException {
-			logicalConnection().getResourceRegistry().register( preparedStatement );
+			jdbcCoordinator.register( preparedStatement );
 			logicalConnection().notifyObserversStatementPrepared();
 		}
 

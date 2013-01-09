@@ -560,6 +560,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public Connection disconnect() throws HibernateException {
 		errorIfClosed();
 		LOG.debug( "Disconnecting session" );
+		transactionCoordinator.getJdbcCoordinator().releaseResources();
 		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualDisconnect();
 	}
 
@@ -2111,7 +2112,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	 * @throws IOException Indicates a general IO stream exception
 	 */
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		if ( ! transactionCoordinator.getJdbcCoordinator().getLogicalConnection().isReadyForSerialization() ) {
+		if ( ! transactionCoordinator.getJdbcCoordinator().isReadyForSerialization() ) {
 			throw new IllegalStateException( "Cannot serialize a session while connected" );
 		}
 

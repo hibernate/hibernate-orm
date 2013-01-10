@@ -81,4 +81,12 @@ public class HibernateTypeDescriptor {
 			setToOne( resolvedTypeMapping.isEntityType()  );
 		}
 	}
+
+	public void copyFrom(HibernateTypeDescriptor hibernateTypeDescriptor) {
+		setJavaTypeName( hibernateTypeDescriptor.getJavaTypeName() );
+		setExplicitTypeName( hibernateTypeDescriptor.getExplicitTypeName() );
+		setToOne( hibernateTypeDescriptor.isToOne() );
+		getTypeParameters().putAll( hibernateTypeDescriptor.getTypeParameters() );
+		setResolvedTypeMapping( hibernateTypeDescriptor.getResolvedTypeMapping() );
+	}
 }

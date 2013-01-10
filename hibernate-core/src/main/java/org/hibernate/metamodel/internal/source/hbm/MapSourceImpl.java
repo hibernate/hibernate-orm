@@ -26,23 +26,23 @@ package org.hibernate.metamodel.internal.source.hbm;
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.jaxb.spi.hbm.JaxbMapElement;
-import org.hibernate.jaxb.spi.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 
 /**
  *
  */
-public class MapSource extends AbstractPluralAttributeSourceImpl implements IndexedPluralAttributeSource {
+public class MapSourceImpl extends AbstractPluralAttributeSourceImpl implements IndexedPluralAttributeSource {
 
-	private final MapKeySourceImpl indexSource;
+	private final PluralAttributeIndexSource indexSource;
 
 	/**
 	 * @param sourceMappingDocument
 	 * @param mapElement
 	 * @param container
 	 */
-	public MapSource(
+	public MapSourceImpl(
 			MappingDocument sourceMappingDocument,
 			JaxbMapElement mapElement,
 			AttributeSourceContainer container) {
@@ -54,10 +54,10 @@ public class MapSource extends AbstractPluralAttributeSourceImpl implements Inde
 			this.indexSource = new MapKeySourceImpl( sourceMappingDocument, mapElement.getIndex() );
 		}
 		else if ( mapElement.getCompositeMapKey() != null ) {
-			throw new NotYetImplementedException( "<composite-map-key> is not supported yet" );
+			this.indexSource = new CompositePluralAttributeIndexSourceImpl( sourceMappingDocument, mapElement.getCompositeMapKey() );
 		}
 		else if ( mapElement.getCompositeIndex() != null ) {
-			throw new NotYetImplementedException( "<composite-index> is not supported yet" );
+			this.indexSource = new CompositePluralAttributeIndexSourceImpl( sourceMappingDocument, mapElement.getCompositeIndex() );
 		}
 		else if ( mapElement.getMapKeyManyToMany() != null ) {
 			throw new NotYetImplementedException( "<map-key-many-to-many> is not supported yet" );
@@ -74,7 +74,7 @@ public class MapSource extends AbstractPluralAttributeSourceImpl implements Inde
 	}
 
 	@Override
-	public MapKeySourceImpl getIndexSource() {
+	public PluralAttributeIndexSource getIndexSource() {
 		return indexSource;
 	}
 

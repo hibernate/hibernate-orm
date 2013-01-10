@@ -126,16 +126,21 @@ public final class PropertyAccessorFactory {
 	 * <p/>	 *
 	 * @param entityName The name of the entity owning the backref property.
 	 * @param collectionRole The collection role.
+	 * @param isIndexBackRef Is this an index backref?
 	 * @param mode The entity mode.
 	 * @return An appropriate accessor.
 	 * @throws MappingException
 	 */
-	public static PropertyAccessor getBackRefPropertyAccessor(String entityName, String collectionRole, EntityMode mode) {
+	public static PropertyAccessor getBackRefPropertyAccessor(
+			String entityName,
+			String collectionRole,
+			boolean isIndexBackRef,
+			EntityMode mode) {
 		if ( null == mode || EntityMode.POJO.equals( mode ) ) {
 				//TODO: this is temporary in that the end result will probably not take a Property reference per-se.
-				return new BackrefPropertyAccessor(
-						collectionRole, entityName
-				);
+			return isIndexBackRef ?
+					new IndexPropertyAccessor( collectionRole, entityName ) :
+					new BackrefPropertyAccessor( collectionRole, entityName );
 		}
 		else if (EntityMode.MAP.equals( mode ) ) {
 				//TODO: this is temporary in that the end result will probably not take a Property reference per-se.

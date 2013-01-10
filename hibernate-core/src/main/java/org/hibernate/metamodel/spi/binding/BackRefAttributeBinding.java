@@ -35,16 +35,18 @@ import org.hibernate.metamodel.spi.relational.Column;
  */
 public class BackRefAttributeBinding extends BasicAttributeBinding {
 
-	PluralAttributeBinding pluralAttributeBinding;
+	private final PluralAttributeBinding pluralAttributeBinding;
+	private final boolean isIndexBackRef;
 
 	BackRefAttributeBinding(
 			EntityBinding entityBinding,
 			SingularAttribute attribute,
-			PluralAttributeBinding pluralAttributeBinding) {
+			PluralAttributeBinding pluralAttributeBinding,
+			boolean isIndexBackRef) {
 		super(
 				entityBinding,
 				attribute,
-				createRelationalValueBindings( pluralAttributeBinding ),
+				createRelationalValueBindings( pluralAttributeBinding, isIndexBackRef ),
 				null,
 				false,
 				false,
@@ -53,12 +55,24 @@ public class BackRefAttributeBinding extends BasicAttributeBinding {
 				PropertyGeneration.NEVER
 		);
 		this.pluralAttributeBinding = pluralAttributeBinding;
+		this.isIndexBackRef = isIndexBackRef;
 	}
 
-	private static List<RelationalValueBinding> createRelationalValueBindings(PluralAttributeBinding pluralAttributeBinding) {
-		List<RelationalValueBinding> relationalValueBindings = new ArrayList<RelationalValueBinding>( );
-		for ( Column column : pluralAttributeBinding.getPluralAttributeKeyBinding().getForeignKey().getSourceColumns() ) {
-			relationalValueBindings.add( new RelationalValueBinding( column, true, false ) );
+	private static List<RelationalValueBinding> createRelationalValueBindings(
+			PluralAttributeBinding pluralAttributeBinding,
+			boolean isIndexBackRef) {
+		List<RelationalValueBinding> relationalValueBindings;
+		if ( isIndexBackRef ) {
+			PluralAttributeIndexBinding indexBinding =
+					( (IndexedPluralAttributeBinding) pluralAttributeBinding).getPluralAttributeIndexBinding();
+			relationalValueBindings = indexBinding.getRelationalValueBindings();
+
+		}
+		else {
+			relationalValueBindings = new ArrayList<RelationalValueBinding>( );
+			for ( Column column : pluralAttributeBinding.getPluralAttributeKeyBinding().getForeignKey().getSourceColumns() ) {
+				relationalValueBindings.add( new RelationalValueBinding( column, true, false ) );
+			}
 		}
 		return relationalValueBindings;
 	}
@@ -81,6 +95,10 @@ public class BackRefAttributeBinding extends BasicAttributeBinding {
 		return true;
 	}
 
+	public boolean isIndexBackRef() {
+		return isIndexBackRef;
+	}
+
 	@Override
 	public boolean hasDerivedValue() {
 		return false;
@@ -88,6 +106,11 @@ public class BackRefAttributeBinding extends BasicAttributeBinding {
 
 	@Override
 	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isIncludedInUpdate() {
 		return false;
 	}
 }

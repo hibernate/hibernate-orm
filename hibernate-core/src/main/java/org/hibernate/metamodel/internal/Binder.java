@@ -72,6 +72,7 @@ import org.hibernate.metamodel.spi.binding.Cascadeable;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.CompositePluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.CompositePluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
@@ -99,6 +100,7 @@ import org.hibernate.metamodel.spi.binding.SingularNonAssociationAttributeBindin
 import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.domain.Entity;
+import org.hibernate.metamodel.spi.domain.IndexedPluralAttribute;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
@@ -119,6 +121,7 @@ import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
+import org.hibernate.metamodel.spi.source.CompositePluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
 import org.hibernate.metamodel.spi.source.DerivedValueSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
@@ -1555,8 +1558,10 @@ public class Binder {
 			final String defaultElementJavaTypeName) {
 		bindBasicPluralElementRelationalValues( elementSource, elementBinding );
 		typeHelper.bindBasicCollectionElementType( elementBinding, elementSource, defaultElementJavaTypeName );
+		elementBinding.getPluralAttributeBinding().getAttribute().setElementType(
+				bindingContext().makeJavaType( elementBinding.getHibernateTypeDescriptor().getJavaTypeName() )
+		);
 	}
-
 
 	private void bindNonAssociationCollectionKey(
 			final AbstractPluralAttributeBinding attributeBinding,
@@ -1633,6 +1638,7 @@ public class Binder {
 				);
 
 		bindAttributes( compositeAttributeBindingContainer, elementSource );
+		pluralAttributeBinding.getAttribute().setElementType( aggregate );
 		Type resolvedType = metadata.getTypeResolver().getTypeFactory().component(
 				new ComponentMetamodel( compositeAttributeBindingContainer, false, false )
 		);
@@ -1679,16 +1685,6 @@ public class Binder {
 								.getNature() != PluralAttributeElementBinding.Nature.ONE_TO_MANY
 				)
 		);
-		if ( attributeBinding.getPluralAttributeElementBinding()
-				.getNature() == PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
-			for ( RelationalValueBinding relationalValueBinding : indexBinding.getRelationalValueBindings() ) {
-				if ( Column.class.isInstance( relationalValueBinding.getValue() ) ) {
-					// TODO: fix this when column nullability is refactored
-					Column column = (Column) relationalValueBinding.getValue();
-					column.setNullable( true );
-				}
-			}
-		}
 		// TODO: create a foreign key if non-inverse and the index is an association
 
 		typeHelper.bindHibernateTypeDescriptor(
@@ -1700,6 +1696,65 @@ public class Binder {
 				indexBinding.getHibernateTypeDescriptor().getResolvedTypeMapping(),
 				indexBinding.getRelationalValueBindings()
 		);
+		IndexedPluralAttribute indexedPluralAttribute =
+				(IndexedPluralAttribute) indexBinding.getIndexedPluralAttributeBinding().getAttribute();
+		indexedPluralAttribute.setIndexType(
+				bindingContext().makeJavaType( indexBinding.getHibernateTypeDescriptor().getJavaTypeName() )
+		);
+	}
+
+	private void bindCompositeCollectionIndex(
+		final CompositePluralAttributeIndexBinding indexBinding,
+		final CompositePluralAttributeIndexSource indexSource,
+		final String defaultIndexJavaTypeName) {
+		final PluralAttributeBinding pluralAttributeBinding = indexBinding.getIndexedPluralAttributeBinding();
+		ValueHolder<Class<?>> defaultElementJavaClassReference = null;
+		// Create the aggregate type
+		// TODO: aggregateName should be set to elementSource.getPath() (which is currently not implemented)
+		//       or Binder should define AttributeBindingContainer paths instead.
+		String aggregateName = pluralAttributeBinding.getAttribute().getRole() + ".index";
+		final Aggregate aggregate;
+		if ( indexSource.getClassName() != null ) {
+			aggregate = new Aggregate(
+					aggregateName,
+					indexSource.getClassName(),
+					indexSource.getClassReference() != null ?
+							indexSource.getClassReference() :
+							bindingContext().makeClassReference( indexSource.getClassName() ),
+					null
+			);
+		}
+		else {
+			defaultElementJavaClassReference = bindingContext().makeClassReference( defaultIndexJavaTypeName );
+			aggregate = new Aggregate(
+					aggregateName,
+					defaultElementJavaClassReference.getValue().getName(),
+					defaultElementJavaClassReference,
+					null
+			);
+		}
+		final CompositeAttributeBindingContainer compositeAttributeBindingContainer =
+				indexBinding.createCompositeAttributeBindingContainer(
+						aggregate,
+						null,
+						null
+				);
+
+		bindAttributes( compositeAttributeBindingContainer, indexSource );
+		Type resolvedType = metadata.getTypeResolver().getTypeFactory().component(
+				new ComponentMetamodel( compositeAttributeBindingContainer, false, false )
+		);
+		// TODO: binding the HibernateTypeDescriptor should be simplified since we know the class name already
+		typeHelper.bindHibernateTypeDescriptor(
+				indexBinding.getHibernateTypeDescriptor(),
+				aggregate.getClassName(),
+				null,
+				defaultElementJavaClassReference == null ? null : defaultElementJavaClassReference.getValue().getName(),
+				resolvedType
+		);
+		IndexedPluralAttribute indexedPluralAttribute =
+				(IndexedPluralAttribute) indexBinding.getIndexedPluralAttributeBinding().getAttribute();
+		indexedPluralAttribute.setIndexType( aggregate );
 	}
 
 	private SingularAttributeBinding determineReferencedAttributeBinding(
@@ -1728,7 +1783,6 @@ public class Binder {
 				referencedEntityBinding.getHierarchyDetails().getEntityIdentifier()
 		);
 
-
 		Type resolvedElementType = metadata.getTypeResolver().getTypeFactory().manyToOne(
 				referencedEntityBinding.getEntity().getName(),
 				null,
@@ -1747,6 +1801,7 @@ public class Binder {
 		);
 		// no need to bind JDBC data types because element is referenced EntityBinding's ID
 		elementBinding.setCascadeStyle( determineCascadeStyle( elementSource.getCascadeStyles() ) );
+		elementBinding.getPluralAttributeBinding().getAttribute().setElementType( referencedEntityBinding.getEntity() );
 	}
 
 	private void bindManyToManyCollectionElement(
@@ -1774,13 +1829,13 @@ public class Binder {
 			);
 		}
 
-
 		typeHelper.bindManyToManyAttributeType(
 				elementBinding,
 				elementSource,
 				referencedEntityBinding,
 				defaultElementJavaTypeName
 		);
+		elementBinding.getPluralAttributeBinding().getAttribute().setElementType( referencedEntityBinding.getEntity() );
 		elementBinding.setCascadeStyle( determineCascadeStyle( elementSource.getCascadeStyles() ) );
 		elementBinding.setManyToManyWhere( elementSource.getWhere() );
 		elementBinding.setManyToManyOrderBy( elementSource.getOrderBy() );
@@ -1882,12 +1937,22 @@ public class Binder {
 			final IndexedPluralAttributeSource attributeSource,
 			final IndexedPluralAttributeBinding attributeBinding,
 			final ReflectedCollectionJavaTypes reflectedCollectionJavaTypes) {
+		final String defaultCollectionIndexJavaTypeName =
+				HibernateTypeHelper.defaultCollectionIndexJavaTypeName( reflectedCollectionJavaTypes );
 		switch ( attributeSource.getIndexSource().getNature() ) {
 			case BASIC: {
 				bindBasicCollectionIndex(
 						attributeBinding,
 						(BasicPluralAttributeIndexSource) attributeSource.getIndexSource(),
-						HibernateTypeHelper.defaultCollectionIndexJavaTypeName( reflectedCollectionJavaTypes )
+						defaultCollectionIndexJavaTypeName
+				);
+				break;
+			}
+			case AGGREGATE: {
+				bindCompositeCollectionIndex(
+						(CompositePluralAttributeIndexBinding) attributeBinding.getPluralAttributeIndexBinding(),
+						(CompositePluralAttributeIndexSource) attributeSource.getIndexSource(),
+						defaultCollectionIndexJavaTypeName
 				);
 				break;
 			}
@@ -1898,6 +1963,16 @@ public class Binder {
 								attributeSource.getIndexSource().getNature()
 						)
 				);
+			}
+		}
+		if ( attributeBinding.getPluralAttributeElementBinding()
+				.getNature() == PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
+			for ( RelationalValueBinding relationalValueBinding : attributeBinding.getPluralAttributeIndexBinding().getRelationalValueBindings() ) {
+				if ( Column.class.isInstance( relationalValueBinding.getValue() ) ) {
+					// TODO: fix this when column nullability is refactored
+					Column column = (Column) relationalValueBinding.getValue();
+					column.setNullable( true );
+				}
 			}
 		}
 	}
@@ -2258,15 +2333,12 @@ public class Binder {
 		foreignKey.setDeleteRule( keySource.getOnDeleteAction() );
 		keyBinding.setForeignKey( foreignKey );
 		final HibernateTypeDescriptor pluralAttributeKeyTypeDescriptor = keyBinding.getHibernateTypeDescriptor();
-		final HibernateTypeDescriptor referencedTypeDescriptor =
-				keyBinding.getReferencedAttributeBinding().getHibernateTypeDescriptor();
-		pluralAttributeKeyTypeDescriptor.setExplicitTypeName( referencedTypeDescriptor.getExplicitTypeName() );
-		pluralAttributeKeyTypeDescriptor.setJavaTypeName( referencedTypeDescriptor.getJavaTypeName() );
-		// TODO: not sure about the following...
-		pluralAttributeKeyTypeDescriptor.setToOne( referencedTypeDescriptor.isToOne() );
-		pluralAttributeKeyTypeDescriptor.getTypeParameters().putAll( referencedTypeDescriptor.getTypeParameters() );
-		final Type resolvedKeyType = referencedTypeDescriptor.getResolvedTypeMapping();
-		pluralAttributeKeyTypeDescriptor.setResolvedTypeMapping( resolvedKeyType );
+				;
+		pluralAttributeKeyTypeDescriptor.copyFrom(
+				keyBinding.getReferencedAttributeBinding()
+						.getHibernateTypeDescriptor()
+		);
+		final Type resolvedKeyType = pluralAttributeKeyTypeDescriptor.getResolvedTypeMapping();
 
 		Iterator<Column> fkColumnIterator = keyBinding.getForeignKey().getSourceColumns().iterator();
 		if ( resolvedKeyType.isComponentType() ) {

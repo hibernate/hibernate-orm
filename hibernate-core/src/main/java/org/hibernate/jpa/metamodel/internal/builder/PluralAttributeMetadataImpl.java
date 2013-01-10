@@ -31,6 +31,7 @@ import javax.persistence.metamodel.PluralAttribute;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.jpa.metamodel.internal.AbstractManagedType;
+import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 
 /**
@@ -111,7 +112,7 @@ public class PluralAttributeMetadataImpl<X,Y,E>
 			this.keyAttributeTypeDescriptor = new AttributeTypeDescriptor() {
 				@Override
 				public org.hibernate.type.Type getHibernateType() {
-					return getAttributeBinding().getPluralAttributeKeyBinding()
+					return ( (IndexedPluralAttributeBinding) getAttributeBinding() ).getPluralAttributeIndexBinding()
 							.getHibernateTypeDescriptor()
 							.getResolvedTypeMapping();
 				}

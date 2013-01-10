@@ -467,7 +467,10 @@ public class PropertyFactory {
 		if ( mappingProperty.isBackRef() ) {
 			BackRefAttributeBinding backRefAttributeBinding = (BackRefAttributeBinding) mappingProperty;
 			return PropertyAccessorFactory.getBackRefPropertyAccessor(
-					backRefAttributeBinding.getEntityName(), backRefAttributeBinding.getCollectionRole(), entityMode
+					backRefAttributeBinding.getEntityName(),
+					backRefAttributeBinding.getCollectionRole(),
+					backRefAttributeBinding.isIndexBackRef(),
+					entityMode
 			);
 		}
 		else {

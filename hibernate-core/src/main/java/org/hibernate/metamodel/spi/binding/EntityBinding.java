@@ -650,7 +650,9 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	}
 
 	public BackRefAttributeBinding makeBackRefAttributeBinding(
-			SingularAttribute syntheticAttribute, PluralAttributeBinding pluralAttributeBinding) {
+			SingularAttribute syntheticAttribute,
+			PluralAttributeBinding pluralAttributeBinding,
+			boolean isIndexBackRef) {
 		if ( ! syntheticAttribute.isSynthetic() ) {
 			throw new AssertionFailure(
 					"Illegal attempt to create synthetic attribute binding from non-synthetic attribute reference"
@@ -659,7 +661,8 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		final BackRefAttributeBinding  binding = new BackRefAttributeBinding(
 				this,
 				syntheticAttribute,
-				pluralAttributeBinding
+				pluralAttributeBinding,
+				isIndexBackRef
 		);
 
 		registerAttributeBinding( binding );

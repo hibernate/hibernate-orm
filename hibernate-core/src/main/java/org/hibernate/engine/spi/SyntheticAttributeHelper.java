@@ -25,19 +25,39 @@ package org.hibernate.engine.spi;
 
 /**
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class SyntheticAttributeHelper {
 	public static final String SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME = "_identifierMapper";
 
 	private static final String BACKREF_ATTRIBUTE_NAME_PREFIX = "_";
 	private static final String BACKREF_ATTRIBUTE_NAME_SUFFIX = "BackRef";
+	private static final String INDEX_BACKREF_ATTRIBUTE_NAME_SUFFIX = "IndexBackRef";
+
 
 	public static String createBackRefAttributeName(String pluralAttributeRole) {
+		return createSyntheticAttributeName(
+				pluralAttributeRole,
+				BACKREF_ATTRIBUTE_NAME_PREFIX,
+				BACKREF_ATTRIBUTE_NAME_SUFFIX
+		);
+	}
+
+	public static String createIndexBackRefAttributeName(String pluralAttributeRole) {
+		return createSyntheticAttributeName(
+				pluralAttributeRole,
+				BACKREF_ATTRIBUTE_NAME_PREFIX,
+				INDEX_BACKREF_ATTRIBUTE_NAME_SUFFIX
+		);
+	}
+
+	private static String createSyntheticAttributeName(String attributeRole, String prefix, String suffix) {
 		return new StringBuilder(
-				BACKREF_ATTRIBUTE_NAME_PREFIX.length() + pluralAttributeRole.length() + BACKREF_ATTRIBUTE_NAME_SUFFIX.length() )
-				.append( BACKREF_ATTRIBUTE_NAME_PREFIX )
-				.append( pluralAttributeRole )
-				.append( BACKREF_ATTRIBUTE_NAME_SUFFIX )
+				prefix.length() + attributeRole.length() + suffix.length() )
+				.append( prefix )
+				.append( attributeRole )
+				.append( suffix )
 				.toString();
 	}
+
 }

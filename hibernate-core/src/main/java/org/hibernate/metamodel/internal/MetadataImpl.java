@@ -66,9 +66,11 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
@@ -423,17 +425,28 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 					referencedEntityBinding.getEntity().createSyntheticSingularAttribute(
 							SyntheticAttributeHelper.createBackRefAttributeName( pluralAttributeBinding.getAttribute().getRole() ) );
 			// Create the back reference attribute binding.
-			BackRefAttributeBinding backRefAttributeBinding =
-					referencedEntityBinding.makeBackRefAttributeBinding( syntheticAttribute, pluralAttributeBinding );
-			final HibernateTypeDescriptor keyTypeDescriptor = keyBinding.getHibernateTypeDescriptor();
-			final HibernateTypeDescriptor hibernateTypeDescriptor = backRefAttributeBinding.getHibernateTypeDescriptor();
-			hibernateTypeDescriptor.setJavaTypeName( keyTypeDescriptor.getJavaTypeName() );
-			hibernateTypeDescriptor.setExplicitTypeName( keyTypeDescriptor.getExplicitTypeName() );
-			hibernateTypeDescriptor.setToOne( keyTypeDescriptor.isToOne() );
-			hibernateTypeDescriptor.getTypeParameters().putAll( keyTypeDescriptor.getTypeParameters() );
-			hibernateTypeDescriptor.setResolvedTypeMapping( keyTypeDescriptor.getResolvedTypeMapping() );
+			BackRefAttributeBinding backRefAttributeBinding = referencedEntityBinding.makeBackRefAttributeBinding(
+					syntheticAttribute, pluralAttributeBinding, false
+			);
+			backRefAttributeBinding.getHibernateTypeDescriptor().copyFrom( keyBinding.getHibernateTypeDescriptor() );
 			backRefAttributeBinding.getAttribute().resolveType(
 					keyBinding.getReferencedAttributeBinding().getAttribute().getSingularAttributeType() );
+			if ( pluralAttributeBinding.hasIndex() ) {
+				SingularAttribute syntheticIndexAttribute =
+						referencedEntityBinding.getEntity().createSyntheticSingularAttribute(
+								SyntheticAttributeHelper.createIndexBackRefAttributeName( pluralAttributeBinding.getAttribute().getRole() ) );
+				BackRefAttributeBinding indexBackRefAttributeBinding = referencedEntityBinding.makeBackRefAttributeBinding(
+						syntheticIndexAttribute, pluralAttributeBinding, true
+				);
+				final PluralAttributeIndexBinding indexBinding =
+						( (IndexedPluralAttributeBinding) pluralAttributeBinding ).getPluralAttributeIndexBinding();
+				indexBackRefAttributeBinding.getHibernateTypeDescriptor().copyFrom(
+						indexBinding.getHibernateTypeDescriptor()
+				);
+				indexBackRefAttributeBinding.getAttribute().resolveType(
+						indexBinding.getPluralAttributeIndexType()
+				);
+			}
 		}
 
 		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {

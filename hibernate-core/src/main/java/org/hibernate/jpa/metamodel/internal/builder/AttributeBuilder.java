@@ -51,6 +51,7 @@ import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.CompositePluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.CompositePluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.MapBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -337,15 +338,13 @@ public class AttributeBuilder {
 				return getEntityAttributeMetaModelType( attributeTypeDescriptor );
 			}
 			case EMBEDDABLE: {
-				// TODO: Need to implement CompositePluralAttributeIndexBinding
-				// final MapBinding mapBinding = (MapBinding) attributeBinding;
-				// final CompositePluralAttributeIndexBinding pluralAttributeIndexBinding =
-				//		(CompositePluralAttributeIndexBinding) mapBinding.getPluralAttributeIndexBinding();
-				// return getEmbeddableAttributeMetaModelType(
-				//		attributeTypeDescriptor,
-				//		pluralAttributeIndexBinding.getCompositeAttributeBindingContainer();
-				//);
-				throw new NotYetImplementedException( "Composite map indexes are not implemented yet." );
+				final MapBinding mapBinding = (MapBinding) attributeBinding;
+				final CompositePluralAttributeIndexBinding pluralAttributeIndexBinding =
+						(CompositePluralAttributeIndexBinding) mapBinding.getPluralAttributeIndexBinding();
+				return getEmbeddableAttributeMetaModelType(
+						attributeTypeDescriptor,
+						pluralAttributeIndexBinding.getCompositeAttributeBindingContainer()
+				);
 			}
 			default: {
 				throw new AssertionFailure( "Unknown type : " + attributeTypeDescriptor.getValueClassification() );

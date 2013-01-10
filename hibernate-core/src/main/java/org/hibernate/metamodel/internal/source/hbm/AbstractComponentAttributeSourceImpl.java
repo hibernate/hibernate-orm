@@ -142,7 +142,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	}
 	// todo duplicated with org.hibernate.metamodel.internal.source.hbm.AbstractEntitySourceImpl
 	protected AttributeSource buildAttributeSource(JaxbMapElement attributeElement){
-		return new MapSource(
+		return new MapSourceImpl(
 				sourceMappingDocument(),
 				attributeElement,
 				parentContainer

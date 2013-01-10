@@ -43,7 +43,6 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

@@ -129,7 +129,7 @@ public class TableStructure implements DatabaseStructure {
 								int rows;
 								do {
 									statementLogger.logStatement( selectQuery, FormatStyle.BASIC.getFormatter() );
-									PreparedStatement selectStatement = connection.prepareStatement( selectQuery );
+									PreparedStatement selectStatement = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( selectQuery );
 									try {
 										ResultSet selectRS = selectStatement.executeQuery();
 										if ( !selectRS.next() ) {
@@ -149,7 +149,7 @@ public class TableStructure implements DatabaseStructure {
 									}
 
 									statementLogger.logStatement( updateQuery, FormatStyle.BASIC.getFormatter() );
-									PreparedStatement updatePS = connection.prepareStatement( updateQuery );
+									PreparedStatement updatePS = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( updateQuery );
 									try {
 										final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
 										final IntegralDataTypeHolder updateValue = value.copy().add( increment );

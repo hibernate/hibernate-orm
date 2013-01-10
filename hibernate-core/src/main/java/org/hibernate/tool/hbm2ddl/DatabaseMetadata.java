@@ -147,6 +147,7 @@ public class DatabaseMetadata {
 				Statement statement = null;
 				ResultSet rs = null;
 				try {
+					// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 					statement = connection.createStatement();
 					rs = statement.executeQuery(sql);
 

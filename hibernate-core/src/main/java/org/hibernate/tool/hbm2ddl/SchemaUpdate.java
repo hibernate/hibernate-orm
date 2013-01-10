@@ -194,6 +194,7 @@ public class SchemaUpdate {
 				connectionHelper.prepare( true );
 				connection = connectionHelper.getConnection();
 				meta = new DatabaseMetadata( connection, dialect );
+				// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				stmt = connection.createStatement();
 			}
 			catch ( SQLException sqle ) {

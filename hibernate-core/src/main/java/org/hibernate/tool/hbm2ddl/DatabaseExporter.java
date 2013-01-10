@@ -51,6 +51,7 @@ class DatabaseExporter implements Exporter {
 
 		connectionHelper.prepare( true );
 		connection = connectionHelper.getConnection();
+		// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 		statement = connection.createStatement();
 	}
 

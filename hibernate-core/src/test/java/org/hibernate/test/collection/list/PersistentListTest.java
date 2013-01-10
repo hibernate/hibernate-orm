@@ -23,6 +23,10 @@
  */
 package org.hibernate.test.collection.list;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -31,10 +35,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.collection.internal.PersistentList;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -42,10 +45,7 @@ import org.hibernate.sql.SimpleSelect;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Tests related to operations on a PersistentList
@@ -85,6 +85,13 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 		// now, make sure the list-index column gotten written...
 		session = openSession();
 		session.beginTransaction();
+		doWork(collectionPersister, session);
+		session.delete( root );
+		session.getTransaction().commit();
+		session.close();
+	}
+	
+	private void doWork(final CollectionPersister collectionPersister, final Session session) {
 		session.doWork(
 				new Work() {
 					@Override
@@ -95,7 +102,7 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 								.addColumn( "NAME" )
 								.addColumn( "LIST_INDEX" )
 								.addCondition( "NAME", "<>", "?" );
-						PreparedStatement preparedStatement = connection.prepareStatement( select.toStatementString() );
+						PreparedStatement preparedStatement = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
 						preparedStatement.setString( 1, "root" );
 						ResultSet resultSet = preparedStatement.executeQuery();
 						Map<String, Integer> valueMap = new HashMap<String, Integer>();
@@ -115,9 +122,6 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 					}
 				}
 		);
-		session.delete( root );
-		session.getTransaction().commit();
-		session.close();
 	}
 
 	@Test

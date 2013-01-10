@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.ScrollMode;
@@ -64,6 +65,18 @@ class StatementPreparerImpl implements StatementPreparer {
 				.getTransactionEnvironment()
 				.getJdbcServices()
 				.getSqlExceptionHelper();
+	}
+	
+	@Override
+	public Statement createStatement() {
+		try {
+			Statement statement = connection().createStatement();
+			jdbcCoordinator.register( statement );
+			return statement;
+		}
+		catch ( SQLException e ) {
+			throw sqlExceptionHelper().convert( e, "could not create statement" );
+		}
 	}
 
 	@Override

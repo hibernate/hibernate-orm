@@ -26,13 +26,14 @@
   */
 package org.hibernate.test.dialect.functional;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,13 +42,12 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.LockTimeoutException;
-import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import org.junit.Test;
 
 /**
@@ -61,13 +61,14 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-7198")
 	public void testMaxResultsSqlServerWithCaseSensitiveCollation() throws Exception {
 
-		Session s = openSession();
+		final Session s = openSession();
 		s.beginTransaction();
 		String defaultCollationName = s.doReturningWork( new ReturningWork<String>() {
 			@Override
 			public String execute(Connection connection) throws SQLException {
 				String databaseName = connection.getCatalog();
-				ResultSet rs =  connection.createStatement().executeQuery( "SELECT collation_name FROM sys.databases WHERE name = '"+databaseName+ "';" );
+				Statement st = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
+				ResultSet rs =  st.executeQuery( "SELECT collation_name FROM sys.databases WHERE name = '"+databaseName+ "';" );
 				while(rs.next()){
 					return rs.getString( "collation_name" );
 				}
@@ -78,40 +79,44 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
-		String databaseName = s.doReturningWork( new ReturningWork<String>() {
+		Session s2 = openSession();
+		String databaseName = s2.doReturningWork( new ReturningWork<String>() {
 			@Override
 			public String execute(Connection connection) throws SQLException {
 				return connection.getCatalog();
 			}
 		} );
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
 				.executeUpdate();
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE Latin1_General_CS_AS" ).executeUpdate();
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE Latin1_General_CS_AS" ).executeUpdate();
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
 
-		Transaction tx = s.beginTransaction();
+		Transaction tx = s2.beginTransaction();
 
 		for ( int i = 1; i <= 20; i++ ) {
-			s.persist( new Product2( i, "Kit" + i ) );
+			s2.persist( new Product2( i, "Kit" + i ) );
 		}
-		s.flush();
-		s.clear();
+		s2.flush();
+		s2.clear();
 
-		List list = s.createQuery( "from Product2 where description like 'Kit%'" )
+		List list = s2.createQuery( "from Product2 where description like 'Kit%'" )
 				.setFirstResult( 2 )
 				.setMaxResults( 2 )
 				.list();
 		assertEquals( 2, list.size() );
 		tx.rollback();
-		s.close();
+		s2.close();
 
-		s = openSession();
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
+		s2 = openSession();
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
 				.executeUpdate();
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE " + defaultCollationName ).executeUpdate();
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
-		s.close();
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE " + defaultCollationName ).executeUpdate();
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
+		s2.close();
+	}
+	
+	private void doWork(Session s) {
+		
 	}
 
 	@Test

@@ -84,11 +84,10 @@ public class TestExpectedUsage extends BaseUnitTestCase {
 
 		JdbcCoordinator jdbcCoordinator = transactionCoordinator.getJdbcCoordinator();
 		LogicalConnectionImplementor logicalConnection = jdbcCoordinator.getLogicalConnection();
-		Connection connection = logicalConnection.getConnection();
 
 		// set up some tables to use
 		try {
-			Statement statement = connection.createStatement();
+			Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
 			statement.execute( "drop table SANDBOX_JDBC_TST if exists" );
 			statement.execute( "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
 			assertTrue( jdbcCoordinator.hasRegisteredResources() );
@@ -106,7 +105,7 @@ public class TestExpectedUsage extends BaseUnitTestCase {
 		txn.begin();
 		assertEquals( 1, observer.getBegins() );
 		try {
-			PreparedStatement ps = connection.prepareStatement( "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
+			PreparedStatement ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
 			ps.setLong( 1, 1 );
 			ps.setString( 2, "name" );
 			ps.execute();
@@ -114,9 +113,10 @@ public class TestExpectedUsage extends BaseUnitTestCase {
 			jdbcCoordinator.release( ps );
 			assertFalse( jdbcCoordinator.hasRegisteredResources() );
 
-			ps = connection.prepareStatement( "select * from SANDBOX_JDBC_TST" );
+			ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
 			ps.executeQuery();
-			connection.prepareStatement( "delete from SANDBOX_JDBC_TST" ).execute();
+			ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "delete from SANDBOX_JDBC_TST" );
+			ps.execute();
 			// lets forget to close these...
 			assertTrue( jdbcCoordinator.hasRegisteredResources() );
 

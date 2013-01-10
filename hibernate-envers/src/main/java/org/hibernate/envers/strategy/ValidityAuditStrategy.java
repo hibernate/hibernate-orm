@@ -160,7 +160,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 					new ReturningWork<Integer>() {
 						@Override
 						public Integer execute(Connection connection) throws SQLException {
-							PreparedStatement preparedStatement = connection.prepareStatement( updateSql );
+							PreparedStatement preparedStatement = sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( updateSql );
 
 							try {
 								int index = 1;

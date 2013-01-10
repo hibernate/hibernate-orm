@@ -476,7 +476,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 										int rows;
 										do {
 											statementLogger.logStatement( selectQuery, FormatStyle.BASIC.getFormatter() );
-											PreparedStatement selectPS = connection.prepareStatement( selectQuery );
+											PreparedStatement selectPS = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( selectQuery );
 											try {
 												selectPS.setString( 1, segmentValue );
 												ResultSet selectRS = selectPS.executeQuery();
@@ -485,7 +485,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 													PreparedStatement insertPS = null;
 													try {
 														statementLogger.logStatement( insertQuery, FormatStyle.BASIC.getFormatter() );
-														insertPS = connection.prepareStatement( insertQuery );
+														insertPS = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( insertQuery );
 														insertPS.setString( 1, segmentValue );
 														value.bind( insertPS, 2 );
 														insertPS.execute();
@@ -510,7 +510,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 											}
 
 											statementLogger.logStatement( updateQuery, FormatStyle.BASIC.getFormatter() );
-											PreparedStatement updatePS = connection.prepareStatement( updateQuery );
+											PreparedStatement updatePS = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( updateQuery );
 											try {
 												final IntegralDataTypeHolder updateValue = value.copy();
 												if ( optimizer.applyIncrementSizeToSourceValues() ) {

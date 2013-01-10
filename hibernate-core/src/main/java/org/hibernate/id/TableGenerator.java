@@ -161,7 +161,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 							// or read committed isolation level
 
 							statementLogger.logStatement( query, FormatStyle.BASIC.getFormatter() );
-							PreparedStatement qps = connection.prepareStatement( query );
+							PreparedStatement qps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( query );
 							try {
 								ResultSet rs = qps.executeQuery();
 								if ( !rs.next() ) {
@@ -181,7 +181,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 							}
 
 							statementLogger.logStatement( update, FormatStyle.BASIC.getFormatter() );
-							PreparedStatement ups = connection.prepareStatement(update);
+							PreparedStatement ups = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( update );
 							try {
 								value.copy().increment().bind( ups, 1 );
 								value.bind( ups, 2 );

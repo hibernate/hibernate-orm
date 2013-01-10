@@ -190,7 +190,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 		@Override
 		public void execute(Connection connection) {
 			try {
-				Statement statement = connection.createStatement();
+				Statement statement = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				try {
 					statement.executeUpdate( persister.getTemporaryIdTableDDL() );
 					persister.getFactory()
@@ -244,9 +244,8 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			final String command = session.getFactory().getDialect().getDropTemporaryTableString()
 					+ ' ' + persister.getTemporaryIdTableName();
 			try {
-				Statement statement = connection.createStatement();
+				Statement statement = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				try {
-					statement = connection.createStatement();
 					statement.executeUpdate( command );
 				}
 				finally {

@@ -144,8 +144,8 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			}
 
 			try {
+				// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				Statement statement = connection.createStatement();
-
 				for ( Table idTableDefinition : idTableDefinitions ) {
 					if ( cleanUpTables ) {
 						if ( tableCleanUpDdl == null ) {
@@ -193,6 +193,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			Connection connection = connectionAccess.obtainConnection();
 
 			try {
+				// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				Statement statement = connection.createStatement();
 
 				for ( String cleanupDdl : tableCleanUpDdl ) {

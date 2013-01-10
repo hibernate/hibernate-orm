@@ -46,8 +46,20 @@ public class AbstractSingularAssociationAttributeBinding extends AbstractSingula
 	private FetchTiming fetchTiming;
 	private FetchStyle fetchStyle;
 	private boolean isUnWrapProxy;
+	private final boolean isNotFoundAnException;
 
-	public AbstractSingularAssociationAttributeBinding(AttributeBindingContainer container, SingularAttribute attribute, String propertyAccessorName, boolean includedInOptimisticLocking, boolean isLazy, NaturalIdMutability naturalIdMutability, MetaAttributeContext metaAttributeContext, EntityBinding referencedEntityBinding, List<RelationalValueBinding> relationalValueBindings, SingularAttributeBinding referencedAttributeBinding) {
+	public AbstractSingularAssociationAttributeBinding(
+			AttributeBindingContainer container,
+			SingularAttribute attribute,
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			boolean isLazy,
+			boolean isNotFoundAnException,
+			NaturalIdMutability naturalIdMutability,
+			MetaAttributeContext metaAttributeContext,
+			EntityBinding referencedEntityBinding,
+			List<RelationalValueBinding> relationalValueBindings,
+			SingularAttributeBinding referencedAttributeBinding) {
 		super(
 				container,
 				attribute,
@@ -66,11 +78,17 @@ public class AbstractSingularAssociationAttributeBinding extends AbstractSingula
 		this.referencedEntityBinding = referencedEntityBinding;
 		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
 		this.referencedAttributeBinding = referencedAttributeBinding;
+		this.isNotFoundAnException = isNotFoundAnException;
 	}
 
 	@Override
 	public List<RelationalValueBinding> getRelationalValueBindings() {
 		return relationalValueBindings;
+	}
+
+	@Override
+	public boolean isNotFoundAnException() {
+		return isNotFoundAnException;
 	}
 
 	@Override

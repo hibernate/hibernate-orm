@@ -1099,6 +1099,7 @@ public class Binder {
 						propertyAccessorName( attributeSource ),
 						attributeSource.isIncludedInOptimisticLocking(),
 						attributeSource.isLazy(),
+						attributeSource.isNotFoundAnException(),
 						attributeSource.getNaturalIdMutability(),
 						createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 						referencedEntityBinding,
@@ -1117,12 +1118,14 @@ public class Binder {
 						idAttributeBinding == referencedAttributeBinding ?
 								null :
 								getRelativePathFromEntityName( referencedAttributeBinding );
+//				final boolean isNotFoundAnException = SingularAssociationAttributeBinding.class.isInstance(  )
+
 				return metadata.getTypeResolver().getTypeFactory().manyToOne(
 						referencedEntityBinding.getEntity().getName(),
 						uniqueKeyAttributeName,
 						attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
 						attributeSource.isUnWrapProxy(),
-						false, //TODO: should be attributeBinding.isIgnoreNotFound(),
+						!attributeSource.isNotFoundAnException(),
 						false //TODO: determine if isLogicalOneToOne
 				);
 			}
@@ -1731,7 +1734,7 @@ public class Binder {
 				null,
 				false,
 				false,
-				false, //TODO: should be attributeBinding.isIgnoreNotFound(),
+				!elementSource.isNotFoundAnException(), //TODO: should be attributeBinding.isIgnoreNotFound(),
 				false
 		);
 		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();

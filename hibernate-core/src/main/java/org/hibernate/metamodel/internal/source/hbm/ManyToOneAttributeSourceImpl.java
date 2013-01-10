@@ -103,6 +103,11 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
+	public boolean isNotFoundAnException() {
+		return manyToOneElement.getNotFound() == null || !"ignore".equals( manyToOneElement.getNotFound().value() );
+	}
+
+	@Override
 	public boolean isIncludedInOptimisticLocking() {
 		return manyToOneElement.isOptimisticLock();
 	}

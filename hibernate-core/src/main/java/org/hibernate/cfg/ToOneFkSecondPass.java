@@ -121,7 +121,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			if ( !manyToOne.isIgnoreNotFound() ) manyToOne.createPropertyRefConstraints( persistentClasses );
 		}
 		else if ( value instanceof OneToOne ) {
-			( (OneToOne) value ).createForeignKey();
+			value.createForeignKey();
 		}
 		else {
 			throw new AssertionFailure( "FkSecondPass for a wrong value type: " + value.getClass().getName() );

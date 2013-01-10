@@ -374,7 +374,7 @@ class HibernateTypeHelper {
 				elementSource.getReferencedEntityAttributeName(),
 				false,
 				false,
-				false, //TODO: should be attributeBinding.isIgnoreNotFound(),
+				!elementSource.isNotFoundAnException(),
 				false
 		);
 		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();

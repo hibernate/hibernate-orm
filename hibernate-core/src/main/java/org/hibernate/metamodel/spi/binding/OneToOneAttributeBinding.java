@@ -57,6 +57,7 @@ public class OneToOneAttributeBinding
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				true, //always true
 				naturalIdMutability,
 				metaAttributeContext,
 				referencedEntityBinding,
@@ -70,5 +71,4 @@ public class OneToOneAttributeBinding
 	public boolean isNullable() {
 		return !isConstrained;
 	}
-
 }

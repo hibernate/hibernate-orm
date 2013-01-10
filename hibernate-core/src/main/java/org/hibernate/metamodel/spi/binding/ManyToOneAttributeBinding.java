@@ -43,6 +43,7 @@ public class ManyToOneAttributeBinding
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			boolean isNotFoundAnException,
 			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
@@ -54,6 +55,7 @@ public class ManyToOneAttributeBinding
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
+				isNotFoundAnException,
 				naturalIdMutability,
 				metaAttributeContext,
 				referencedEntityBinding, relationalValueBindings, referencedAttributeBinding
@@ -64,5 +66,6 @@ public class ManyToOneAttributeBinding
 	public boolean isNullable() {
 		return hasNullableRelationalValueBinding( relationalValueBindings );
 	}
+
 
 }

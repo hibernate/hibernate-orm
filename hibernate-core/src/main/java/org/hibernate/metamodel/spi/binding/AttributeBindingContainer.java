@@ -209,6 +209,7 @@ public interface AttributeBindingContainer {
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
+			boolean isNotFoundAnException,
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,

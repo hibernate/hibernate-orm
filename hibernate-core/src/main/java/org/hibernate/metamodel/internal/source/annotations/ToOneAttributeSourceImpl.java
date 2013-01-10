@@ -87,6 +87,11 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	}
 
 	@Override
+	public boolean isNotFoundAnException() {
+		return !associationAttribute.isIgnoreNotFound();
+	}
+
+	@Override
 	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(
 			final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding) {
 		if ( CompositeAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {

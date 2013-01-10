@@ -81,6 +81,11 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 	}
 
 	@Override
+	public boolean isNotFoundAnException() {
+		return true;
+	}
+
+	@Override
 	public boolean isLazy() {
 		return getFetchTiming() != FetchTiming.IMMEDIATE;
 	}

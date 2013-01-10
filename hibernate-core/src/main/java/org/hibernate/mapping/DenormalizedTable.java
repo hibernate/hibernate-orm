@@ -51,7 +51,8 @@ public class DenormalizedTable extends Table {
 			createForeignKey( 
 					fk.getName() + Integer.toHexString( getName().hashCode() ), 
 					fk.getColumns(), 
-					fk.getReferencedEntityName() 
+					fk.getReferencedEntityName(),
+					fk.getReferencedColumns()
 				);
 		}
 	}

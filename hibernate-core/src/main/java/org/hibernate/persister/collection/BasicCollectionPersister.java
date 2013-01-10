@@ -262,7 +262,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 									.addToBatch();
 						}
 						else {
-							expectation.verifyOutcome( st.executeUpdate(), st, -1 );
+							expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( st ), st, -1 );
 						}
 					}
 					catch ( SQLException sqle ) {

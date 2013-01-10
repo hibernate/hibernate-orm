@@ -166,7 +166,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 			public void execute(Connection connection) throws SQLException {
 				
 				PreparedStatement query = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "select currval('" + TEST_SEQUENCE + "');" );
-				ResultSet resultSet = query.executeQuery();
+				ResultSet resultSet = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( query );
 				resultSet.next();
 				value = resultSet.getLong( 1 );
 			}

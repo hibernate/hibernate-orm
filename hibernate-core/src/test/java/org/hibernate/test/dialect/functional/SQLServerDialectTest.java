@@ -68,7 +68,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 			public String execute(Connection connection) throws SQLException {
 				String databaseName = connection.getCatalog();
 				Statement st = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-				ResultSet rs =  st.executeQuery( "SELECT collation_name FROM sys.databases WHERE name = '"+databaseName+ "';" );
+				ResultSet rs =  ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( st, "SELECT collation_name FROM sys.databases WHERE name = '"+databaseName+ "';" );
 				while(rs.next()){
 					return rs.getString( "collation_name" );
 				}

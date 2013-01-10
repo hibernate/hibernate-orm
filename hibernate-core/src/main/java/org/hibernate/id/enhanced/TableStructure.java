@@ -131,7 +131,7 @@ public class TableStructure implements DatabaseStructure {
 									statementLogger.logStatement( selectQuery, FormatStyle.BASIC.getFormatter() );
 									PreparedStatement selectStatement = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( selectQuery );
 									try {
-										ResultSet selectRS = selectStatement.executeQuery();
+										ResultSet selectRS = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( selectStatement );
 										if ( !selectRS.next() ) {
 											String err = "could not read a hi value - you need to populate the table: " + tableName;
 											LOG.error( err );
@@ -155,7 +155,7 @@ public class TableStructure implements DatabaseStructure {
 										final IntegralDataTypeHolder updateValue = value.copy().add( increment );
 										updateValue.bind( updatePS, 1 );
 										value.bind( updatePS, 2 );
-										rows = updatePS.executeUpdate();
+										rows = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( updatePS );
 									}
 									catch ( SQLException e ) {
 									    LOG.unableToUpdateQueryHiValue(tableName, e);

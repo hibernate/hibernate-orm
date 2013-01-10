@@ -85,7 +85,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 					);
 				}
 
-				ResultSet rs = st.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( st );
 				try {
 					if ( !rs.next() ) {
 						if ( factory.getStatistics().isStatisticsEnabled() ) {

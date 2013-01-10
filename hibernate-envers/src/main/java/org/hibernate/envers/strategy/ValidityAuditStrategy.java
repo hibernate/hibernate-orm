@@ -195,7 +195,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 								// where REVEND is null
 								// 		nothing to bind....
 
-								return preparedStatement.executeUpdate();
+								return sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( preparedStatement );
 							}
 							finally {
 								sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().release( preparedStatement );

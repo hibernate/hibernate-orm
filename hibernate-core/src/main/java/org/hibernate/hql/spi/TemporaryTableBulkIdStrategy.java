@@ -144,7 +144,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			try {
 				final String sql = "delete from " + persister.getTemporaryIdTableName();
 				ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
-				ps.executeUpdate();
+				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ps );
 			}
 			catch( Throwable t ) {
 				log.unableToCleanupTemporaryIdTable(t);
@@ -192,7 +192,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			try {
 				Statement statement = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				try {
-					statement.executeUpdate( persister.getTemporaryIdTableDDL() );
+					session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( statement, persister.getTemporaryIdTableDDL() );
 					persister.getFactory()
 							.getServiceRegistry()
 							.getService( JdbcServices.class )
@@ -246,7 +246,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			try {
 				Statement statement = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				try {
-					statement.executeUpdate( command );
+					session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( statement, command );
 				}
 				finally {
 					try {

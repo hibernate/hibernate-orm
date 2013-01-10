@@ -121,7 +121,7 @@ public class TableBasedDeleteHandlerImpl
 					for ( ParameterSpecification parameterSpecification : idSelectParameterSpecifications ) {
 						pos += parameterSpecification.bind( ps, queryParameters, session, pos );
 					}
-					resultCount = ps.executeUpdate();
+					resultCount = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ps );
 				}
 				finally {
 					if ( ps != null ) {
@@ -142,7 +142,7 @@ public class TableBasedDeleteHandlerImpl
 								.getStatementPreparer()
 								.prepareStatement( delete, false );
 						handleAddedParametersOnDelete( ps, session );
-						ps.executeUpdate();
+						session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ps );
 					}
 					finally {
 						if ( ps != null ) {

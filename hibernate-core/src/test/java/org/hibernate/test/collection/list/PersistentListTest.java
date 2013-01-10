@@ -83,16 +83,9 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 		session.close();
 
 		// now, make sure the list-index column gotten written...
-		session = openSession();
-		session.beginTransaction();
-		doWork(collectionPersister, session);
-		session.delete( root );
-		session.getTransaction().commit();
-		session.close();
-	}
-	
-	private void doWork(final CollectionPersister collectionPersister, final Session session) {
-		session.doWork(
+		final Session session2 = openSession();
+		session2.beginTransaction();
+		session2.doWork(
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
@@ -102,9 +95,9 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 								.addColumn( "NAME" )
 								.addColumn( "LIST_INDEX" )
 								.addCondition( "NAME", "<>", "?" );
-						PreparedStatement preparedStatement = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
+						PreparedStatement preparedStatement = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
 						preparedStatement.setString( 1, "root" );
-						ResultSet resultSet = preparedStatement.executeQuery();
+						ResultSet resultSet = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( preparedStatement );
 						Map<String, Integer> valueMap = new HashMap<String, Integer>();
 						while ( resultSet.next() ) {
 							final String name = resultSet.getString( 1 );
@@ -122,6 +115,9 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 					}
 				}
 		);
+		session2.delete( root );
+		session2.getTransaction().commit();
+		session2.close();
 	}
 
 	@Test

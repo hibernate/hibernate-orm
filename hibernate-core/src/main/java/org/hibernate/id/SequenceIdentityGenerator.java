@@ -108,6 +108,8 @@ public class SequenceIdentityGenerator
 
 		@Override
 		protected Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
+			// TODO
+//			session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( insert );
 			insert.executeUpdate();
 			return IdentifierGeneratorHelper.getGeneratedIdentity(
 					insert.getGeneratedKeys(),

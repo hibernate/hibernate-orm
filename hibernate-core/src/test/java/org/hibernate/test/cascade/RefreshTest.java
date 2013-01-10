@@ -85,7 +85,7 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 						PreparedStatement stmnt = null;
 						try {
 							stmnt = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "UPDATE T_JOB SET JOB_STATUS = 1" );
-							stmnt.executeUpdate();
+							session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( stmnt );
 						}
 						finally {
 							if ( stmnt != null ) {

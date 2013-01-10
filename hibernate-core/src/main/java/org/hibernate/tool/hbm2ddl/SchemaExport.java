@@ -487,6 +487,7 @@ public class SchemaExport {
 		}
 		if ( export ) {
 
+			// TODO: use ResultSetExtractor
 			statement.executeUpdate( sql );
 			try {
 				SQLWarning warnings = statement.getWarnings();

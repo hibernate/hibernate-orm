@@ -84,7 +84,7 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 						);
 					}
 
-					ResultSet rs = st.executeQuery();
+					ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( st );
 					try {
 						if ( !rs.next() ) {
 							if ( factory.getStatistics().isStatisticsEnabled() ) {

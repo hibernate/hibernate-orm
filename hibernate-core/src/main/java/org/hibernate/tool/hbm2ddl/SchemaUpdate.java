@@ -225,6 +225,7 @@ public class SchemaUpdate {
 					}
 					if ( target.doExport() ) {
                         LOG.debug( sql );
+                        // TODO: use ResultSetExtractor
 						stmt.executeUpdate( formatted );
 					}
 				}

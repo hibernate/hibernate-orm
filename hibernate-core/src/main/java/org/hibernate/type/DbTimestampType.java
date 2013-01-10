@@ -90,7 +90,7 @@ public class DbTimestampType extends TimestampType {
 					.getJdbcCoordinator()
 					.getStatementPreparer()
 					.prepareStatement( timestampSelectString, false );
-			ResultSet rs = ps.executeQuery();
+			ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( ps );
 			rs.next();
 			Timestamp ts = rs.getTimestamp( 1 );
 			if ( LOG.isTraceEnabled() ) {
@@ -120,7 +120,7 @@ public class DbTimestampType extends TimestampType {
 					.getStatementPreparer()
 					.prepareStatement( callString, true );
 			cs.registerOutParameter( 1, java.sql.Types.TIMESTAMP );
-			cs.execute();
+			session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().execute( cs );
 			Timestamp ts = cs.getTimestamp( 1 );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Current timestamp retreived from db : {0} (nanos={1}, time={2})", ts, ts.getNanos(), ts.getTime() );

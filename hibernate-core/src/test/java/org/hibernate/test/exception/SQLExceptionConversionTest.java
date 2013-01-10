@@ -70,7 +70,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 							ps = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "INSERT INTO T_MEMBERSHIP (user_id, group_id) VALUES (?, ?)" );
 							ps.setLong(1, 52134241);    // Non-existent user_id
 							ps.setLong(2, 5342);        // Non-existent group_id
-							ps.executeUpdate();
+							((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ps );
 
 							fail("INSERT should have failed");
 						}
@@ -108,7 +108,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 						PreparedStatement ps = null;
 						try {
 							ps = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "SELECT user_id, user_name FROM tbl_no_there" );
-							ps.executeQuery();
+							((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( ps );
 
 							fail("SQL compilation should have failed");
 						}

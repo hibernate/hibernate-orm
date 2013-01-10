@@ -479,7 +479,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 											PreparedStatement selectPS = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( selectQuery );
 											try {
 												selectPS.setString( 1, segmentValue );
-												ResultSet selectRS = selectPS.executeQuery();
+												ResultSet selectRS = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( selectPS );
 												if ( !selectRS.next() ) {
 													value.initialize( initialValue );
 													PreparedStatement insertPS = null;
@@ -488,7 +488,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 														insertPS = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( insertQuery );
 														insertPS.setString( 1, segmentValue );
 														value.bind( insertPS, 2 );
-														insertPS.execute();
+														session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().execute( insertPS );
 													}
 													finally {
 														if ( insertPS != null ) {
@@ -522,7 +522,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 												updateValue.bind( updatePS, 1 );
 												value.bind( updatePS, 2 );
 												updatePS.setString( 3, segmentValue );
-												rows = updatePS.executeUpdate();
+												rows = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( updatePS );
 											}
 											catch ( SQLException e ) {
 												LOG.unableToUpdateQueryHiValue(tableName, e);

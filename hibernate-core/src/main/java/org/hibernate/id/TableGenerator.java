@@ -163,7 +163,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 							statementLogger.logStatement( query, FormatStyle.BASIC.getFormatter() );
 							PreparedStatement qps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( query );
 							try {
-								ResultSet rs = qps.executeQuery();
+								ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( qps );
 								if ( !rs.next() ) {
 									String err = "could not read a hi value - you need to populate the table: " + tableName;
 									LOG.error(err);
@@ -185,7 +185,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 							try {
 								value.copy().increment().bind( ups, 1 );
 								value.bind( ups, 2 );
-								rows = ups.executeUpdate();
+								rows = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ups );
 							}
 							catch (SQLException sqle) {
 								LOG.error(LOG.unableToUpdateHiValue(tableName), sqle);

@@ -81,6 +81,13 @@ public interface JdbcCoordinator extends Serializable {
 	public StatementPreparer getStatementPreparer();
 
 	/**
+	 * Obtain the resultset extractor associated with this JDBC coordinator.
+	 *
+	 * @return This coordinator's resultset extractor
+	 */
+	public ResultSetExtractor getResultSetExtractor();
+
+	/**
 	 * Callback to let us know that a flush is beginning.  We use this fact
 	 * to temporarily circumvent aggressive connection releasing until after
 	 * the flush cycle is complete {@link #flushEnding()}

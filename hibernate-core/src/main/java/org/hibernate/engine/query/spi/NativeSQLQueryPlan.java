@@ -201,7 +201,7 @@ public class NativeSQLQueryPlan implements Serializable {
 						session );
 				col += bindNamedParameters( ps, queryParameters
 						.getNamedParameters(), col, session );
-				result = ps.executeUpdate();
+				result = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ps );
 			}
 			finally {
 				if ( ps != null ) {

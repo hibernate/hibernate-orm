@@ -62,6 +62,7 @@ class DatabaseExporter implements Exporter {
 
 	@Override
 	public void export(String string) throws Exception {
+		// TODO: use ResultSetExtractor
 		statement.executeUpdate( string );
 		try {
 			SQLWarning warnings = statement.getWarnings();

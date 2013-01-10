@@ -64,11 +64,11 @@ public class RowIdTest extends BaseCoreFunctionalTestCase {
 					public void execute(Connection connection) throws SQLException {
 						Statement st = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 						try {
-							st.execute( "drop table Point");
+							((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().execute( st, "drop table Point");
 						}
 						catch (Exception ignored) {
 						}
-						st.execute("create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
+						((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().execute( st, "create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
 						((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().release( st );
 					}
 				}

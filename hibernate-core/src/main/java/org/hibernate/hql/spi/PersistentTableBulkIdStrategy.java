@@ -156,6 +156,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 					try {
 						final String sql = idTableDefinition.sqlCreateString( jdbcServices.getDialect(), mapping, null, null );
 						jdbcServices.getSqlStatementLogger().logStatement( sql );
+						// TODO: ResultSetExtractor
 						statement.execute( sql );
 					}
 					catch (SQLException e) {
@@ -272,7 +273,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			try {
 				ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 				bindSessionIdentifier( ps, session, 1 );
-				ps.executeUpdate();
+				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ps );
 			}
 			finally {
 				if ( ps != null ) {

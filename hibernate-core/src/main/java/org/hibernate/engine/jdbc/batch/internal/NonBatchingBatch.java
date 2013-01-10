@@ -55,7 +55,7 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 		for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
 			try {
 				final PreparedStatement statement = entry.getValue();
-				final int rowCount = statement.executeUpdate();
+				final int rowCount = jdbcCoordinator.getResultSetExtractor().executeUpdate( statement );
 				getKey().getExpectation().verifyOutcome( rowCount, statement, 0 );
 				jdbcCoordinator.release( statement );
 			}

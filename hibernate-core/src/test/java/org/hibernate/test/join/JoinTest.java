@@ -161,7 +161,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 					@Override
 					public void execute(Connection connection) throws SQLException {
 						PreparedStatement ps = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "delete from t_user" );
-						ps.execute();
+						((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().execute( ps );
 					}
 				}
 		);

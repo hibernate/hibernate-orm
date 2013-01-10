@@ -165,14 +165,14 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					PreparedStatement qps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( query );
 					PreparedStatement ips = null;
 					try {
-						ResultSet rs = qps.executeQuery();
+						ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( qps );
 						boolean isInitialized = rs.next();
 						if ( !isInitialized ) {
 							value.initialize( 0 );
 							statementLogger.logStatement( insert, FormatStyle.BASIC.getFormatter() );
 							ips = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( insert );
 							value.bind( ips, 1 );
-							ips.execute();
+							session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().execute( ips );
 						}
 						else {
 							value.initialize( rs, 0 );
@@ -195,7 +195,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					try {
 						value.copy().increment().bind( ups, 1 );
 						value.bind( ups, 2 );
-						rows = ups.executeUpdate();
+						rows = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ups );
 					}
 					catch (SQLException sqle) {
 						LOG.error( LOG.unableToUpdateHiValue( tableName ), sqle );

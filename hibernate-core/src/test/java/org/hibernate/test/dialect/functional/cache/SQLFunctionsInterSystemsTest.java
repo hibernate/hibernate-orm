@@ -657,7 +657,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 						@Override
 						public void execute(Connection connection) throws SQLException {
 							Statement stmt = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-							stmt.executeUpdate( "DROP FUNCTION spLock FROM TestInterSystemsFunctionsClass" );
+							((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( stmt, "DROP FUNCTION spLock FROM TestInterSystemsFunctionsClass" );
 						}
 					}
 			);
@@ -685,7 +685,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 								"    {\n" +
 								"        q 0\n" +
 								"     }";
-						stmt.executeUpdate(create_function);
+						((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( stmt, create_function );
 					}
 				}
 		);

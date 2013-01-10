@@ -149,6 +149,7 @@ public class DatabaseMetadata {
 				try {
 					// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 					statement = connection.createStatement();
+					// TODO: use ResultSetExtractor
 					rs = statement.executeQuery(sql);
 
 					while ( rs.next() ) {

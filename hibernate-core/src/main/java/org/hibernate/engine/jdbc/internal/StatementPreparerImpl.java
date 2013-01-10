@@ -39,6 +39,7 @@ import org.hibernate.engine.jdbc.spi.StatementPreparer;
 /**
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Brett Meyer
 */
 class StatementPreparerImpl implements StatementPreparer {
 	private JdbcCoordinatorImpl jdbcCoordinator;
@@ -176,6 +177,8 @@ class StatementPreparerImpl implements StatementPreparer {
 
 		public PreparedStatement prepareStatement() {
 			try {
+				jdbcCoordinator.getLogicalConnection().getJdbcServices().getSqlStatementLogger().logStatement( sql );
+				
 				PreparedStatement preparedStatement = doPrepare();
 				setStatementTimeout( preparedStatement );
 				postProcess( preparedStatement );

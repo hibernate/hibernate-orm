@@ -45,6 +45,7 @@ import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.engine.jdbc.spi.ResultSetExtractor;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -204,6 +205,16 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			statementPreparer = new StatementPreparerImpl( this );
 		}
 		return statementPreparer;
+	}
+
+	private transient ResultSetExtractor resultSetExtractor;
+
+	@Override
+	public ResultSetExtractor getResultSetExtractor() {
+		if ( resultSetExtractor == null ) {
+			resultSetExtractor = new ResultSetExtractorImpl( this );
+		}
+		return resultSetExtractor;
 	}
 
 	@Override

@@ -95,7 +95,7 @@ public class SequenceStructure implements DatabaseStructure {
 				try {
 					PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 					try {
-						ResultSet rs = st.executeQuery();
+						ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( st );
 						try {
 							rs.next();
 							IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );

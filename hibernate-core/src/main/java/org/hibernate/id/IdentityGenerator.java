@@ -93,6 +93,8 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		public Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
+			// TODO
+//			session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( insert );
 			insert.executeUpdate();
 			ResultSet rs = null;
 			try {
@@ -143,6 +145,8 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		public Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
+			// TODO
+			// all of this is provided by ResultSetExtractor
 			if ( !insert.execute() ) {
 				while ( !insert.getMoreResults() && insert.getUpdateCount() != -1 ) {
 					// do nothing until we hit the rsult set containing the generated id

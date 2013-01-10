@@ -2028,7 +2028,7 @@ public abstract class Loader {
 	throws SQLException, HibernateException {
 
 		try {
-			ResultSet rs = st.executeQuery();
+			ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( st );
 			rs = wrapResultSetIfEnabled( rs , session );
 
 			if ( !limitHandler.supportsLimitOffset() || !LimitHelper.useLimit( limitHandler, selection ) ) {

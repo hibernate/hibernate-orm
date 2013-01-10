@@ -475,7 +475,9 @@ class HibernateTypeHelper {
 								pluralAttributeBinding.getComparator()
 						);
 					}
-					// TODO: else if ( pluralAttributeBinding.hasOrder() ) { orderedSet... }
+					else if ( pluralAttributeBinding.getOrderBy() != null ) {
+						return typeFactory().orderedSet( role, propertyRef );
+					}
 					else {
 						return typeFactory().set( role, propertyRef );
 					}

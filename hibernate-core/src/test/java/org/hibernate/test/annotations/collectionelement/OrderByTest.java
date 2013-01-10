@@ -34,7 +34,6 @@ import org.hibernate.Transaction;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-@FailureExpectedWithNewMetamodel
 public class OrderByTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOrderByName() throws Exception {
@@ -47,17 +46,14 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		Widgets widget = new Widgets();
 		widget.setName("hammer");
 		set.add(widget);
-		s.persist(widget);
 
 		widget = new Widgets();
 		widget.setName("axel");
 		set.add(widget);
-		s.persist(widget);
 
 		widget = new Widgets();
 		widget.setName("screwdriver");
 		set.add(widget);
-		s.persist(widget);
 
 		p.setWidgets(set);
 		s.persist(p);

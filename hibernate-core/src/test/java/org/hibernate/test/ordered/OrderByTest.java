@@ -49,7 +49,6 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	@FailureExpectedWithNewMetamodel
 	public void testOrderBy() {
 		Search s = new Search("Hibernate");
 		s.getSearchResults().add("jboss.com");

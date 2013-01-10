@@ -51,7 +51,8 @@ public class DenormalizedTable extends Table {
 			createForeignKey( 
 					Constraint.generateName( fk.generatedConstraintNamePrefix(), this, fk.getColumns() ),
 					fk.getColumns(), 
-					fk.getReferencedEntityName() 
+					fk.getReferencedEntityName(),
+					fk.getReferencedColumns()
 				);
 		}
 	}

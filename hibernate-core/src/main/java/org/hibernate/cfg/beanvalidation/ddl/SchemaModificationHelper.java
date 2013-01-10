@@ -29,6 +29,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Value;
 
@@ -55,12 +56,12 @@ public class SchemaModificationHelper {
 	}
 
 	public static Column getSingleColumn(AttributeBinding attributeBinding) {
-		if ( !( attributeBinding instanceof BasicAttributeBinding ) ) {
+		if ( !( attributeBinding instanceof SingularAttributeBinding ) ) {
 			// TODO verify that's correct (HF)
 			return null;
 		}
 
-		BasicAttributeBinding basicAttributeBinding = ( BasicAttributeBinding ) attributeBinding;
+		SingularAttributeBinding basicAttributeBinding = ( SingularAttributeBinding ) attributeBinding;
 		RelationalValueBinding valueBinding = basicAttributeBinding.getRelationalValueBindings().get( 0 );
 		Value value = valueBinding.getValue();
 

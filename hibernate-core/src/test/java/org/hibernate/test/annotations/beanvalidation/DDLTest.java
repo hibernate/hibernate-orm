@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -66,7 +65,6 @@ public class DDLTest extends BaseCoreFunctionalTestCase {
 		assertEquals( column.getSize().getLength(), 5 );
 	}
 
-	@FailureExpectedWithNewMetamodel
 	@Test
 	public void testApplyOnManyToOne() throws Exception {
 		Column column = SchemaUtil.getColumn( TvOwner.class, "tv_serial", metadata() );

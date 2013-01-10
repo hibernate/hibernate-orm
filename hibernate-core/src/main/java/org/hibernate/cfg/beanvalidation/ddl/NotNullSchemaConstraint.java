@@ -69,7 +69,7 @@ public class NotNullSchemaConstraint implements SchemaConstraint {
 			return false;
 		}
 
-		EntityBinding entityBinding = (EntityBinding) attributeBinding.getContainer();
+		EntityBinding entityBinding = attributeBinding.getContainer().seekEntityBinding();
 		InheritanceType inheritanceType = entityBinding.getHierarchyDetails().getInheritanceType();
 
 		// properties of a single table inheritance configuration should not be forced to null

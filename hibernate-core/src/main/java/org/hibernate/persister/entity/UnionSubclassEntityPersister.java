@@ -53,9 +53,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.sql.SelectFragment;
@@ -247,29 +245,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	}
 
-	private static class CustomSQLMetadata {
-		final boolean[] callable;
-		final String[] sqls;
-		final ExecuteUpdateResultCheckStyle[] checkStyles;
 
-		CustomSQLMetadata(String sql, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
-			this.callable = new boolean[] { callable };
-			this.sqls = new String[] { sql };
-			this.checkStyles = new ExecuteUpdateResultCheckStyle[] { checkStyle };
-		}
-	}
-
-	private CustomSQLMetadata parse(CustomSQL customSql) {
-
-		final boolean callable = customSql != null && customSql.isCallable();
-		final String sql = customSql == null ? null: customSql.getSql();
-		final ExecuteUpdateResultCheckStyle checkStyle = customSql == null
-				? ExecuteUpdateResultCheckStyle.COUNT
-				: customSql.getCheckStyle() == null
-				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-				: customSql.getCheckStyle();
-		return new CustomSQLMetadata( sql, callable, checkStyle );
-	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public UnionSubclassEntityPersister(
@@ -290,27 +266,20 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 
 		//Custom SQL
-		{
-			CustomSQLMetadata customSQLMetadata;
-			{
-				customSQLMetadata = parse( entityBinding.getCustomInsert() );
-				customSQLInsert = customSQLMetadata.sqls;
-				insertCallable = customSQLMetadata.callable;
-				insertResultCheckStyles = customSQLMetadata.checkStyles;
-			}
-			{
-				customSQLMetadata = parse( entityBinding.getCustomUpdate() );
-				customSQLUpdate = customSQLMetadata.sqls;
-				updateCallable = customSQLMetadata.callable;
-				updateResultCheckStyles = customSQLMetadata.checkStyles;
-			}
-			{
-				customSQLMetadata = parse( entityBinding.getCustomDelete() );
-				customSQLDelete = customSQLMetadata.sqls;
-				deleteCallable = customSQLMetadata.callable;
-				deleteResultCheckStyles = customSQLMetadata.checkStyles;
-			}
-		}
+		// Custom sql
+		customSQLInsert = new String[1];
+		customSQLUpdate = new String[1];
+		customSQLDelete = new String[1];
+		insertCallable = new boolean[1];
+		updateCallable = new boolean[1];
+		deleteCallable = new boolean[1];
+		insertResultCheckStyles = new ExecuteUpdateResultCheckStyle[1];
+		updateResultCheckStyles = new ExecuteUpdateResultCheckStyle[1];
+		deleteResultCheckStyles = new ExecuteUpdateResultCheckStyle[1];
+
+		initializeCustomSql( entityBinding.getCustomInsert(), 0, customSQLInsert, insertCallable, insertResultCheckStyles );
+		initializeCustomSql( entityBinding.getCustomUpdate(), 0, customSQLUpdate, updateCallable, updateResultCheckStyles );
+		initializeCustomSql( entityBinding.getCustomDelete(), 0, customSQLDelete, deleteCallable, deleteResultCheckStyles );
 		//discriminator
 		{
 			discriminatorValue = entityBinding.getSubEntityBindingId();
@@ -329,9 +298,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				entityBinding.getEntityName()
 		);
 		if ( entityBinding.isPolymorphic() ) {
-			Iterable<EntityBinding> iter = entityBinding.getPreOrderSubEntityBindingClosure();
 			int k=1;
-			for(EntityBinding subEntityBinding : iter){
+			for(EntityBinding subEntityBinding : entityBinding.getPreOrderSubEntityBindingClosure()){
 				subclassClosure[k++] = subEntityBinding.getEntityName();
 				subclassByDiscriminatorValue.put( subEntityBinding.getSubEntityBindingId(), subEntityBinding.getEntityName() );
 			}
@@ -351,8 +319,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		HashSet<String> subclassTables = new HashSet<String>();
-		Iterable<EntityBinding> iter = entityBinding.getPreOrderSubEntityBindingClosure();
-		for ( EntityBinding subEntityBinding : iter ) {
+		final EntityBinding[] subEntityBindings = entityBinding.getPreOrderSubEntityBindingClosure();
+		for ( EntityBinding subEntityBinding : entityBinding.getPreOrderSubEntityBindingClosure() ) {
 			subclassTables.add( subEntityBinding.getPrimaryTable().getQualifiedName( factory.getDialect() ) );
 		}
 		subclassSpaces = ArrayHelper.toStringArray( subclassTables );
@@ -367,12 +335,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				tableNames.add( tableName );
 				keyColumns.add( getIdentifierColumnNames() );
 			}
-			Iterator<EntityBinding> siter = new JoinedIterator<EntityBinding>(
-					new SingletonIterator<EntityBinding>( entityBinding ),
-					iter.iterator()
-			);
-			while ( siter.hasNext() ) {
-				EntityBinding eb = siter.next();
+			EntityBinding[] ebs = ArrayHelper.join( new EntityBinding[]{entityBinding}, subEntityBindings );
+			for(final EntityBinding eb : ebs){
 				TableSpecification tab = eb.getPrimaryTable();
 				if ( isNotAbstractUnionTable( eb ) ) {
 					String tableName = tab.getQualifiedName( factory.getDialect() );

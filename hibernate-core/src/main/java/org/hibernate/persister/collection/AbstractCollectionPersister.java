@@ -702,7 +702,7 @@ public abstract class AbstractCollectionPersister
 		// isSorted = collection.isSorted();
 		isArray = collectionType.isArrayType();
 		isPrimitiveArray =
-				collectionType.isArrayType() &&
+				isArray &&
 						PrimitiveType.class.isInstance(
 								collection.getPluralAttributeElementBinding()
 										.getHibernateTypeDescriptor()
@@ -840,9 +840,10 @@ public abstract class AbstractCollectionPersister
 			indexColumnIsSettable = new boolean[indexSpan];
 			indexColumnAliases = new String[indexSpan];
 			for ( int i = 0 ; i < indexSpan ; i++ ) {
-				final Value value = indexRelationalValueBindings.get( i ).getValue();
+				final RelationalValueBinding rb = indexRelationalValueBindings.get( i );
+				final Value value = rb.getValue();
 				indexColumnAliases[ i ] = value.getAlias( dialect, null );
-				if ( value instanceof Column ) {
+				if ( !rb.isDerived() ) {
 					indexColumnIsSettable[ i ] = true;
 					Column column = ( Column ) value;
 					indexColumnNames[ i ] = column.getColumnName().getText( dialect );

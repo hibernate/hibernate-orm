@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
@@ -62,29 +63,29 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 	@Override
 	public void processCallbacksForEntity(Object entityObject, CallbackRegistryImpl callbackRegistry) {
 		final EntityBinding entityBinding = (EntityBinding) entityObject;
-		final String entityClassName = entityBinding.getEntity().getClassName();
-		if ( entityClassName == null ) {
+		if ( entityBinding.getHierarchyDetails().getEntityMode() != EntityMode.POJO ) {
 			return;
 		}
-
-		try {
-			final Class entityClass = classLoaderService.classForName( entityClassName );
-			for ( Class annotationClass : CALLBACK_ANNOTATION_CLASSES ) {
-				callbackRegistry.addEntityCallbacks(
-						entityClass,
-						annotationClass,
-						collectCallbacks( entityBinding, entityClass, annotationClass )
-				);
-			}
-		}
-		catch (ClassLoadingException e) {
-			throw new MappingException( "entity class not found: " + entityClassName, e );
+		final Class entityClass = entityBinding.getEntity().getClassReference();
+		for ( Class annotationClass : CALLBACK_ANNOTATION_CLASSES ) {
+			callbackRegistry.addEntityCallbacks(
+					entityClass,
+					annotationClass,
+					collectCallbacks( entityBinding, entityClass, annotationClass )
+			);
 		}
 	}
 
+	private final static Callback[] EMPTY_CALLBACK = new Callback[0];
+
 	private Callback[] collectCallbacks(EntityBinding entityBinding, Class entityClass, Class annotationClass) {
-		final List<Callback> callbacks = new ArrayList<Callback>();
-		for ( JpaCallbackSource jpaCallbackClass : entityBinding.getJpaCallbackClasses() ) {
+		if ( entityBinding.getJpaCallbackClasses() == null || entityBinding.getJpaCallbackClasses().isEmpty() ) {
+			return EMPTY_CALLBACK;
+		}
+		final int size = entityBinding.getJpaCallbackClasses().size();
+		final Callback[] result = new Callback[size];
+		for ( int i = 0; i < size; i++ ) {
+			final JpaCallbackSource jpaCallbackClass = entityBinding.getJpaCallbackClasses().get( i );
 			final Class listenerClass = classLoaderService.classForName( jpaCallbackClass.getName() );
 			final String methodName = jpaCallbackClass.getCallbackMethod( annotationClass );
 
@@ -100,9 +101,9 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 					? createListenerCallback( listenerClass, entityClass, methodName )
 					: createBeanCallback( listenerClass, methodName );
 			assert callback != null;
-			callbacks.add(callback);
+			result[i] = callback;
 		}
-		return callbacks.toArray(new Callback[callbacks.size()]);
+		return result;
 	}
 
 	private Callback createListenerCallback(
@@ -141,24 +142,32 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 		return null;
 	}
 
-	private Callback createBeanCallback( Class<?> callbackClass,
-												String methodName ) {
+	private Callback createBeanCallback(Class<?> callbackClass,
+										String methodName) {
 		Class<?> callbackSuperclass = callbackClass.getSuperclass();
-		if (callbackSuperclass != null) {
-			Callback callback = createBeanCallback(callbackSuperclass, methodName);
-			if (callback != null) return callback;
+		if ( callbackSuperclass != null ) {
+			Callback callback = createBeanCallback( callbackSuperclass, methodName );
+			if ( callback != null ) {
+				return callback;
+			}
 		}
-		for (Method method : callbackClass.getDeclaredMethods()) {
-			if (!method.getName().equals(methodName)) continue;
-			if (method.getParameterTypes().length != 0) continue;
-			if (!method.isAccessible()) method.setAccessible(true);
-			return new EntityCallback(method);
+		for ( Method method : callbackClass.getDeclaredMethods() ) {
+			if ( !method.getName().equals( methodName ) ) {
+				continue;
+			}
+			if ( method.getParameterTypes().length != 0 ) {
+				continue;
+			}
+			if ( !method.isAccessible() ) {
+				method.setAccessible( true );
+			}
+			return new EntityCallback( method );
 		}
 		return null;
 	}
 
 	@Override
 	public void release() {
-		//To change body of implemented methods use File | Settings | File Templates.
+		// N/A
 	}
 }

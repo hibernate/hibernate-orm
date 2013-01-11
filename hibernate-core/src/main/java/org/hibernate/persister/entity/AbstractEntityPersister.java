@@ -73,7 +73,6 @@ import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
@@ -86,7 +85,6 @@ import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.Binder;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
@@ -94,7 +92,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
-import org.hibernate.loader.entity.BatchingEntityLoader;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.EntityLoader;
@@ -109,15 +106,15 @@ import org.hibernate.metamodel.spi.binding.Cascadeable;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.Fetchable;
-import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
-import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
+import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
@@ -169,6 +166,7 @@ public abstract class AbstractEntityPersister
 	private final String[] rootTableKeyColumnReaders;
 	private final String[] rootTableKeyColumnReaderTemplates;
 	private final String[] identifierAliases;
+	//how many columns are mapped by the identifier?
 	private final int identifierColumnSpan;
 	private final String versionColumnName;
 	private final boolean hasFormulaProperties;
@@ -237,8 +235,8 @@ public abstract class AbstractEntityPersister
 
 	private final Set affectingFetchProfileNames = new HashSet();
 
-	private final Map uniqueKeyLoaders = new HashMap();
-	private final Map lockers = new HashMap();
+	private final Map<String, EntityLoader> uniqueKeyLoaders = new HashMap<String, EntityLoader>();
+	private final Map<LockMode, LockingStrategy> lockers = new HashMap<LockMode, LockingStrategy>();
 	private final Map loaders = new HashMap();
 
 	// SQL strings
@@ -280,8 +278,8 @@ public abstract class AbstractEntityPersister
 	private final String temporaryIdTableName;
 	private final String temporaryIdTableDDL;
 
-	private final Map subclassPropertyAliases = new HashMap();
-	private final Map subclassPropertyColumnNames = new HashMap();
+	private final Map<String, String[]> subclassPropertyAliases = new HashMap<String, String[]>();
+	private final Map<String, String[]> subclassPropertyColumnNames = new HashMap<String, String[]>();
 
 	protected final BasicEntityPropertyMapping propertyMapping;
 
@@ -390,6 +388,19 @@ public abstract class AbstractEntityPersister
 		}
 		return result;
 	}
+	protected static void initializeCustomSql(
+			CustomSQL customSql,
+			int i,
+			String[] sqlStrings,
+			boolean[] callable,
+			ExecuteUpdateResultCheckStyle[] checkStyles) {
+		sqlStrings[i] = customSql != null ?  customSql.getSql(): null;
+		callable[i] = customSql != null && customSql.isCallable();
+		checkStyles[i] = customSql != null && customSql.getCheckStyle() != null ?
+				customSql.getCheckStyle() :
+				ExecuteUpdateResultCheckStyle.determineDefault( sqlStrings[i], callable[i] );
+	}
+
 
 	protected String getSQLSnapshotSelectString() {
 		return sqlSnapshotSelectString;
@@ -866,9 +877,11 @@ public abstract class AbstractEntityPersister
 		rootTableKeyColumnReaderTemplates = new String[identifierColumnSpan];
 		identifierAliases = new String[identifierColumnSpan];
 
-
-		int i = 0;
-		for ( org.hibernate.metamodel.spi.relational.Column col : entityBinding.getPrimaryTable().getPrimaryKey().getColumns() ) {
+		for ( int i = 0; i < identifierColumnSpan; i++ ) {
+			org.hibernate.metamodel.spi.relational.Column col = entityBinding.getPrimaryTable()
+					.getPrimaryKey()
+					.getColumns()
+					.get( i );
 			rootTableKeyColumnNames[i] = col.getColumnName().getText( factory.getDialect() );
 			if ( col.getReadFragment() == null ) {
 				rootTableKeyColumnReaders[i] = rootTableKeyColumnNames[i];
@@ -878,8 +891,7 @@ public abstract class AbstractEntityPersister
 				rootTableKeyColumnReaders[i] = col.getReadFragment();
 				rootTableKeyColumnReaderTemplates[i] = getTemplateFromString( col.getReadFragment(), factory );
 			}
-			identifierAliases[i] = col.getAlias( factory.getDialect(), entityBinding.getPrimaryTable() );
-			i++;
+			identifierAliases[i] = col.getAlias( factory.getDialect(), entityBinding.getHierarchyDetails().getRootEntityBinding().getPrimaryTable() );
 		}
 
 		// VERSION
@@ -937,7 +949,7 @@ public abstract class AbstractEntityPersister
 		List<String[]> lazyColAliases = new ArrayList<String[]>();
 
 
-		i = 0;
+		int i = 0;
 		boolean foundFormula = false;
 		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
 			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
@@ -1042,7 +1054,7 @@ public abstract class AbstractEntityPersister
 		List<Boolean> columnSelectables = new ArrayList<Boolean>();
 		List<Boolean> propNullables = new ArrayList<Boolean>();
 
-		for ( AttributeBinding attributeBinding : entityBinding.getSubEntityAttributeBindingClosure() ) {
+		for ( AttributeBinding attributeBinding : entityBinding.getEntitiesAttributeBindingClosure() ) {
 			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
 				// entity identifier is not considered a "normal" property
 				continue;
@@ -1835,7 +1847,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private LockingStrategy getLocker(LockMode lockMode) {
-		return ( LockingStrategy ) lockers.get( lockMode );
+		return lockers.get( lockMode );
 	}
 
 	public void lock(
@@ -2085,7 +2097,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
-		String rawAliases[] = ( String[] ) subclassPropertyAliases.get( propertyName );
+		String rawAliases[] = subclassPropertyAliases.get( propertyName );
 
 		if ( rawAliases == null ) {
 			return null;
@@ -2097,10 +2109,10 @@ public abstract class AbstractEntityPersister
 		}
 		return result;
 	}
-
+	@Override
 	public String[] getSubclassPropertyColumnNames(String propertyName) {
 		//TODO: should we allow suffixes on these ?
-		return ( String[] ) subclassPropertyColumnNames.get( propertyName );
+		return subclassPropertyColumnNames.get( propertyName );
 	}
 
 
@@ -2179,7 +2191,7 @@ public abstract class AbstractEntityPersister
 		// ALIASES
 
 		// TODO: Fix when subclasses are working (HHH-6337)
-		internalInitSubclassPropertyAliasesMap( null, entityBinding.getSubEntityAttributeBindingClosure() );
+		internalInitSubclassPropertyAliasesMap( null, entityBinding.getEntitiesAttributeBindingClosure() );
 
 		// aliases for identifier ( alias.id ); skip if the entity defines a non-id property named 'id'
 		if ( ! entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
@@ -2266,10 +2278,12 @@ public abstract class AbstractEntityPersister
 		}
 
 	}
-
-	private void internalInitSubclassPropertyAliasesMap(String path, Iterable<AttributeBinding> attributeBindings) {
+	protected static boolean isIdentifierAttributeBinding(final AttributeBinding prop){
+		return prop.getContainer().seekEntityBinding().getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( prop );
+	}
+	private void internalInitSubclassPropertyAliasesMap(String path, AttributeBinding[] attributeBindings) {
 		for ( AttributeBinding prop : attributeBindings ) {
-			if ( prop.getContainer().seekEntityBinding().getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( prop ) ) {
+			if ( isIdentifierAttributeBinding( prop ) ) {
 				// ID propertie aliases are dealt with elsewhere.
 				continue;
 			}
@@ -2281,7 +2295,12 @@ public abstract class AbstractEntityPersister
 			String propname = path == null ? prop.getAttribute().getName() : path + "." + prop.getAttribute().getName();
 			if ( prop instanceof CompositeAttributeBinding ) {
 				CompositeAttributeBinding component = (CompositeAttributeBinding) prop;
-				internalInitSubclassPropertyAliasesMap( propname, component.attributeBindings() );
+				AttributeBinding[] abs = new AttributeBinding[component.attributeBindingSpan()];
+				int i=0;
+				for(AttributeBinding ab : component.attributeBindings()){
+					abs[i++] = ab;
+				}
+				internalInitSubclassPropertyAliasesMap( propname, abs );
 			}
 			else {
 				int span = singularProp.getRelationalValueBindings().size();
@@ -2324,7 +2343,7 @@ public abstract class AbstractEntityPersister
 				&& propertyName.indexOf('.')<0; //ugly little workaround for fact that createUniqueKeyLoaders() does not handle component properties
 
 		if ( useStaticLoader ) {
-			return ( EntityLoader ) uniqueKeyLoaders.get( propertyName );
+			return uniqueKeyLoaders.get( propertyName );
 		}
 		else {
 			return createUniqueKeyLoader(
@@ -3898,10 +3917,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean isAffectedByEnabledFetchProfiles(SessionImplementor session) {
-		Iterator itr = session.getLoadQueryInfluencers().getEnabledFetchProfileNames().iterator();
-		while ( itr.hasNext() ) {
-			if ( affectingFetchProfileNames.contains( itr.next() ) ) {
-				return true;
+		if ( session.getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
+			for ( String name : session.getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
+				if ( affectingFetchProfileNames.contains( name ) ) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -3962,8 +3982,7 @@ public abstract class AbstractEntityPersister
 	protected final boolean[] getPropertiesToUpdate(final int[] dirtyProperties, final boolean hasDirtyCollection) {
 		final boolean[] propsToUpdate = new boolean[ entityMetamodel.getPropertySpan() ];
 		final boolean[] updateability = getPropertyUpdateability(); //no need to check laziness, dirty checking handles that
-		for ( int j = 0; j < dirtyProperties.length; j++ ) {
-			int property = dirtyProperties[j];
+		for ( int property : dirtyProperties ) {
 			if ( updateability[property] ) {
 				propsToUpdate[property] = true;
 			}
@@ -4058,8 +4077,8 @@ public abstract class AbstractEntityPersister
 
 	private void logDirtyProperties(int[] props) {
 		if ( LOG.isTraceEnabled() ) {
-			for ( int i = 0; i < props.length; i++ ) {
-				String propertyName = entityMetamodel.getProperties()[ props[i] ].getName();
+			for ( int prop : props ) {
+				String propertyName = entityMetamodel.getProperties()[prop].getName();
 				LOG.trace( StringHelper.qualify( getEntityName(), propertyName ) + " is dirty" );
 			}
 		}
@@ -4220,13 +4239,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Boolean isTransient(Object entity, SessionImplementor session) throws HibernateException {
-		final Serializable id;
-		if ( canExtractIdOutOfEntity() ) {
-			id = getIdentifier( entity, session );
-		}
-		else {
-			id = null;
-		}
+		final Serializable id = canExtractIdOutOfEntity() ? getIdentifier( entity, session ) : null;
 		// we *always* assume an instance with a null
 		// identifier or no identifier property is unsaved!
 		if ( id == null ) {
@@ -4276,7 +4289,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean isModifiableEntity(EntityEntry entry) {
-
 		return ( entry == null ? isMutable() : entry.isModifiableEntity() );
 	}
 
@@ -4566,6 +4578,20 @@ public abstract class AbstractEntityPersister
 		return temporaryIdTableDDL;
 	}
 
+	/**
+	 * Here, we want to know how many properties of this persister know about.
+	 * <p/>
+	 * The properties including:
+	 * <ul>
+	 *     <li>properties belongs to the current entity</li>
+	 *     <li>properties belongs to the join entity</li>
+	 *     <li>parent's properties, recursively</li>
+	 * </ul>
+	 *
+	 * note: id property is not included here
+	 *
+	 * @return
+	 */
 	protected int getPropertySpan() {
 		return entityMetamodel.getPropertySpan();
 	}

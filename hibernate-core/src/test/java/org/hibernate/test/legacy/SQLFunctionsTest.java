@@ -59,7 +59,7 @@ import static org.junit.Assert.assertTrue;
 
 
 @SuppressWarnings( {"UnnecessaryUnboxing", "UnnecessaryBoxing"})
-@FailureExpectedWithNewMetamodel
+//@FailureExpectedWithNewMetamodel
 public class SQLFunctionsTest extends LegacyTestCase {
 	private static final Logger log = Logger.getLogger( SQLFunctionsTest.class );
 
@@ -217,6 +217,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testBroken() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

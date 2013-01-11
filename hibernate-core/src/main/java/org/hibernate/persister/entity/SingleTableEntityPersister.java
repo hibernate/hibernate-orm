@@ -35,7 +35,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
@@ -129,9 +128,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String[][] constraintOrderedKeyColumnNames;
 
 	//private final Map propertyTableNumbersByName = new HashMap();
-	private final Map propertyTableNumbersByNameAndSubclass = new HashMap();
+	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass = new HashMap<String, Integer>();
 	
-	private final Map sequentialSelectStringsByEntityName = new HashMap();
+	private final Map<String, String> sequentialSelectStringsByEntityName = new HashMap<String, String>();
 
 	private static final Object NULL_DISCRIMINATOR = new MarkerObject("<null discriminator>");
 	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject("<not null discriminator>");
@@ -546,7 +545,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		isNullables.add(Boolean.FALSE);
 		isLazies.add(Boolean.FALSE);
 
-		for ( SecondaryTable join : entityBinding.getSubclassSecondaryTableClosure() ) {
+		for ( SecondaryTable join : entityBinding.getEntitiesSecondaryTableClosure() ) {
 			final boolean isConcrete = entityBinding.isClassOrSuperclassSecondaryTable( join );
 			isConcretes.add( isConcrete );
 			boolean isDeferred = join.getFetchStyle() != FetchStyle.JOIN;
@@ -672,11 +671,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		//TODO: code duplication with JoinedSubclassEntityPersister
 
-		ArrayList columnJoinNumbers = new ArrayList();
-		ArrayList formulaJoinedNumbers = new ArrayList();
-		ArrayList propertyJoinNumbers = new ArrayList();
+		ArrayList<Integer> columnJoinNumbers = new ArrayList<Integer>();
+		ArrayList<Integer> formulaJoinedNumbers = new ArrayList<Integer>();
+		ArrayList<Integer> propertyJoinNumbers = new ArrayList<Integer>();
 
-		for ( AttributeBinding attributeBinding : entityBinding.getSubEntityAttributeBindingClosure() ) {
+		for ( AttributeBinding attributeBinding : entityBinding.getEntitiesAttributeBindingClosure() ) {
 			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
 				continue; // skip identifier binding
 			}
@@ -753,18 +752,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		postConstruct( mapping );
 	}
 
-	private static void initializeCustomSql(
-			CustomSQL customSql,
-			int i,
-			String[] sqlStrings,
-			boolean[] callable,
-			ExecuteUpdateResultCheckStyle[] checkStyles) {
-		sqlStrings[i] = customSql != null ?  customSql.getSql(): null;
-		callable[i] = sqlStrings[i] != null && customSql.isCallable();
-		checkStyles[i] = customSql != null && customSql.getCheckStyle() != null ?
-				customSql.getCheckStyle() :
-				ExecuteUpdateResultCheckStyle.determineDefault( sqlStrings[i], callable[i] );
-	}
 
 	protected boolean isInverseTable(int j) {
 		return isInverseTable[j];
@@ -889,9 +876,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 
 			String[] subclasses = getSubclassClosure();
-			for ( int i=0; i<subclasses.length; i++ ) {
-				final Queryable queryable = (Queryable) getFactory().getEntityPersister( subclasses[i] );
-				if ( !queryable.isAbstract() ) frag.addValue( queryable.getDiscriminatorSQLValue() );
+			for ( String subclass : subclasses ) {
+				final Queryable queryable = (Queryable) getFactory().getEntityPersister( subclass );
+				if ( !queryable.isAbstract() ) {
+					frag.addValue( queryable.getDiscriminatorSQLValue() );
+				}
 			}
 
 			StringBuilder buf = new StringBuilder(50)
@@ -966,12 +955,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private int getSubclassPropertyTableNumber(String propertyName, String entityName) {
 		Type type = propertyMapping.toType(propertyName);
 		if ( type.isAssociationType() && ( (AssociationType) type ).useLHSPrimaryKey() ) return 0;
-		final Integer tabnum = (Integer) propertyTableNumbersByNameAndSubclass.get(entityName + '.' + propertyName);
-		return tabnum==null ? 0 : tabnum.intValue();
+		final Integer tabnum = propertyTableNumbersByNameAndSubclass.get(entityName + '.' + propertyName);
+		return tabnum==null ? 0 : tabnum;
 	}
 	
 	protected String getSequentialSelect(String entityName) {
-		return (String) sequentialSelectStringsByEntityName.get(entityName);
+		return sequentialSelectStringsByEntityName.get(entityName);
 	}
 
 	private String generateSequentialSelect(Loadable persister) {
@@ -982,7 +971,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		
 		//figure out which tables need to be fetched
 		AbstractEntityPersister subclassPersister = (AbstractEntityPersister) persister;
-		HashSet tableNumbers = new HashSet();
+		HashSet<Integer> tableNumbers = new HashSet<Integer>();
 		String[] props = subclassPersister.getPropertyNames();
 		String[] classes = subclassPersister.getPropertySubclassNames();
 		for ( int i=0; i<props.length; i++ ) {
@@ -994,7 +983,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		if ( tableNumbers.isEmpty() ) return null;
 		
 		//figure out which columns are needed
-		ArrayList columnNumbers = new ArrayList();
+		ArrayList<Integer> columnNumbers = new ArrayList<Integer>();
 		final int[] columnTableNumbers = getSubclassColumnTableNumberClosure();
 		for ( int i=0; i<getSubclassColumnClosure().length; i++ ) {
 			if ( tableNumbers.contains( columnTableNumbers[i] ) ) {
@@ -1003,7 +992,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 		
 		//figure out which formulas are needed
-		ArrayList formulaNumbers = new ArrayList();
+		ArrayList<Integer> formulaNumbers = new ArrayList<Integer>();
 		final int[] formulaTableNumbers = getSubclassColumnTableNumberClosure();
 		for ( int i=0; i<getSubclassFormulaTemplateClosure().length; i++ ) {
 			if ( tableNumbers.contains( formulaTableNumbers[i] ) ) {
@@ -1051,7 +1040,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	public String getPropertyTableName(String propertyName) {
 		Integer index = getEntityMetamodel().getPropertyIndexOrNull(propertyName);
 		if (index==null) return null;
-		return qualifiedTableNames[ propertyTableNumbers[ index.intValue() ] ];
+		return qualifiedTableNames[ propertyTableNumbers[ index ] ];
 	}
 	
 	public void postInstantiate() {

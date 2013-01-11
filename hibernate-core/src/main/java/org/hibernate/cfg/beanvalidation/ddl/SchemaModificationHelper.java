@@ -56,7 +56,7 @@ public class SchemaModificationHelper {
 	}
 
 	public static Column getSingleColumn(AttributeBinding attributeBinding) {
-		if ( !( attributeBinding instanceof SingularAttributeBinding ) ) {
+		if ( !( attributeBinding.getAttribute().isSingular() ) ) {
 			// TODO verify that's correct (HF)
 			return null;
 		}
@@ -65,7 +65,7 @@ public class SchemaModificationHelper {
 		RelationalValueBinding valueBinding = basicAttributeBinding.getRelationalValueBindings().get( 0 );
 		Value value = valueBinding.getValue();
 
-		if ( !( value instanceof Column ) ) {
+		if ( valueBinding.isDerived() ) {
 			return null;
 		}
 

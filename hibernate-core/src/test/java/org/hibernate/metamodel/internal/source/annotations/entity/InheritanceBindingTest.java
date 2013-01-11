@@ -124,8 +124,8 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertFalse( noInheritanceEntityBinding.isPolymorphic() );
 		assertFalse( noInheritanceEntityBinding.hasSubEntityBindings() );
 		assertEquals( 0, noInheritanceEntityBinding.getSubEntityBindingClosureSpan() );
-		assertFalse( noInheritanceEntityBinding.getPostOrderSubEntityBindingClosure().iterator().hasNext() );
-		assertFalse( noInheritanceEntityBinding.getPreOrderSubEntityBindingClosure().iterator().hasNext() );
+		assertEquals( 0, noInheritanceEntityBinding.getPostOrderSubEntityBindingClosure().length );
+		assertEquals( 0, noInheritanceEntityBinding.getPreOrderSubEntityBindingClosure().length );
 		Set<AttributeBinding> directAttributeBindings = new HashSet<AttributeBinding>();
 		for ( AttributeBinding attributeBinding : noInheritanceEntityBinding.attributeBindings() ) {
 			assertTrue( directAttributeBindings.add( attributeBinding ) );
@@ -140,14 +140,17 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertTrue( iterator.hasNext() );
 		assertSame( noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(), iterator.next() );
 		assertFalse( iterator.hasNext() );
-		iterator = noInheritanceEntityBinding.getAttributeBindingClosure().iterator();
-		assertTrue( iterator.hasNext() );
-		assertSame( noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(), iterator.next() );
-		assertFalse( iterator.hasNext() );
-		iterator =  noInheritanceEntityBinding.getSubEntityAttributeBindingClosure().iterator();
-		assertTrue( iterator.hasNext() );
-		assertSame( noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(), iterator.next() );
-		assertFalse( iterator.hasNext() );
+
+		AttributeBinding[] attributeBindings = noInheritanceEntityBinding.getAttributeBindingClosure();
+		assertTrue( attributeBindings.length > 0 );
+		int index =0;
+		assertSame( noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(), attributeBindings[index++] );
+		assertFalse( index < attributeBindings.length );
+		attributeBindings =  noInheritanceEntityBinding.getEntitiesAttributeBindingClosure();
+		index = 0;
+		assertTrue( attributeBindings.length > 0 );
+		assertSame( noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(), attributeBindings[index++] );
+		assertFalse( index < attributeBindings.length );
 	}
 
 	@Test
@@ -198,7 +201,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertEquals( 1, attributeBindingClosure.size() );
 		assertTrue( attributeBindingClosure.contains( rootEntityBinding.locateAttributeBinding( "id" ) ) );
 		Set<AttributeBinding> subAttributeBindings = new HashSet<AttributeBinding>();
-		for ( AttributeBinding subAttributeBinding : rootEntityBinding.getSubEntityAttributeBindingClosure() ) {
+		for ( AttributeBinding subAttributeBinding : rootEntityBinding.getEntitiesAttributeBindingClosure() ) {
 			assertTrue( subAttributeBindings.add( subAttributeBinding ) );
 		}
 		assertEquals( 4, subAttributeBindings.size() );
@@ -225,23 +228,24 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		Iterator<EntityBinding> directEntityBindingIterator = rootEntityBinding.getDirectSubEntityBindings().iterator();
 		boolean isSubclassEntityBindingFirst = subclassEntityBinding == directEntityBindingIterator.next();
 		assertEquals( 3, rootEntityBinding.getSubEntityBindingClosureSpan() );
-		Iterator<EntityBinding> subEntityBindingIterator = rootEntityBinding.getPreOrderSubEntityBindingClosure().iterator();
-		assertTrue( subEntityBindingIterator.hasNext() );
+		EntityBinding[] subEntityBindingIterator = rootEntityBinding.getPreOrderSubEntityBindingClosure();
+		assertTrue( subEntityBindingIterator.length > 0 );
+		int i = 0;
 		if ( isSubclassEntityBindingFirst ) {
-			assertSame( subclassEntityBinding, subEntityBindingIterator.next() );
-			assertTrue( subEntityBindingIterator.hasNext() );
-			assertSame( subclassOfSubclassEntityBinding, subEntityBindingIterator.next() );
-			assertTrue( subEntityBindingIterator.hasNext() );
-			assertSame( otherSubclassEntityBinding, subEntityBindingIterator.next() );
+			assertSame( subclassEntityBinding, subEntityBindingIterator[i++] );
+			assertTrue( i<subEntityBindingIterator.length );
+			assertSame( subclassOfSubclassEntityBinding, subEntityBindingIterator[i++] );
+			assertTrue( i<subEntityBindingIterator.length );
+			assertSame( otherSubclassEntityBinding, subEntityBindingIterator[i++] );
 		}
 		else {
-			assertSame( otherSubclassEntityBinding, subEntityBindingIterator.next() );
-			assertTrue( subEntityBindingIterator.hasNext() );
-			assertSame( subclassEntityBinding, subEntityBindingIterator.next() );
-			assertTrue( subEntityBindingIterator.hasNext() );
-			assertSame( subclassOfSubclassEntityBinding, subEntityBindingIterator.next() );
+			assertSame( otherSubclassEntityBinding, subEntityBindingIterator[i++] );
+			assertTrue( i<subEntityBindingIterator.length );
+			assertSame( subclassEntityBinding, subEntityBindingIterator[i++] );
+			assertTrue( i<subEntityBindingIterator.length );
+			assertSame( subclassOfSubclassEntityBinding, subEntityBindingIterator[i++] );
 		}
-		assertFalse( subEntityBindingIterator.hasNext() );
+		assertFalse( i<subEntityBindingIterator.length );
 	}
 
 	@Test
@@ -261,19 +265,20 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		Iterator<EntityBinding> directEntityBindingIterator = rootEntityBinding.getDirectSubEntityBindings().iterator();
 		boolean isSubclassEntityBindingFirst = subclassEntityBinding == directEntityBindingIterator.next();
 		assertEquals( 3, rootEntityBinding.getSubEntityBindingClosureSpan() );
-		Iterator<EntityBinding> subEntityBindingIterator = rootEntityBinding.getPostOrderSubEntityBindingClosure().iterator();
-		assertTrue( subEntityBindingIterator.hasNext() );
+		EntityBinding[] subEntityBindingIterator = rootEntityBinding.getPostOrderSubEntityBindingClosure();
+		int i =0;
+		assertTrue( subEntityBindingIterator.length > 0 );
 		if ( isSubclassEntityBindingFirst ) {
-			assertSame( subclassOfSubclassEntityBinding, subEntityBindingIterator.next() );
-			assertSame( subclassEntityBinding, subEntityBindingIterator.next() );
-			assertSame( otherSubclassEntityBinding, subEntityBindingIterator.next() );
+			assertSame( subclassOfSubclassEntityBinding, subEntityBindingIterator[i++] );
+			assertSame( subclassEntityBinding, subEntityBindingIterator[i++] );
+			assertSame( otherSubclassEntityBinding, subEntityBindingIterator[i++] );
 		}
 		else {
-			assertSame( subclassOfSubclassEntityBinding, subEntityBindingIterator.next() );
-			assertSame( otherSubclassEntityBinding, subEntityBindingIterator.next() );
-			assertSame( subclassEntityBinding, subEntityBindingIterator.next() );
+			assertSame( subclassOfSubclassEntityBinding, subEntityBindingIterator[i++] );
+			assertSame( otherSubclassEntityBinding, subEntityBindingIterator[i++] );
+			assertSame( subclassEntityBinding, subEntityBindingIterator[i++] );
 		}
-		assertFalse( subEntityBindingIterator.hasNext() );
+		assertFalse( i < subEntityBindingIterator.length );
 	}
 
 	@Test
@@ -297,8 +302,8 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertTrue( otherSubclassEntityBinding.isPolymorphic() );
 		assertFalse( otherSubclassEntityBinding.hasSubEntityBindings() );
 		assertEquals( 0, otherSubclassEntityBinding.getSubEntityBindingClosureSpan() );
-		assertFalse( otherSubclassEntityBinding.getPostOrderSubEntityBindingClosure().iterator().hasNext() );
-		assertFalse( otherSubclassEntityBinding.getPreOrderSubEntityBindingClosure().iterator().hasNext() );
+		assertFalse( otherSubclassEntityBinding.getPostOrderSubEntityBindingClosure().length > 0 );
+		assertFalse( otherSubclassEntityBinding.getPreOrderSubEntityBindingClosure().length > 0 );
 		Set<AttributeBinding> directAttributeBindings = new HashSet<AttributeBinding>();
 		for ( AttributeBinding attributeBinding : otherSubclassEntityBinding.attributeBindings() ) {
 			assertTrue( directAttributeBindings.add( attributeBinding ) );
@@ -314,7 +319,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertTrue( attributeBindingClosure.contains( rootEntityBinding.locateAttributeBinding( "id" ) ) );
 		assertTrue( attributeBindingClosure.contains( otherSubclassEntityBinding.locateAttributeBinding( "otherName" ) ) );
 		Set<AttributeBinding> subAttributeBindings = new HashSet<AttributeBinding>();
-		for ( AttributeBinding subAttributeBinding : otherSubclassEntityBinding.getSubEntityAttributeBindingClosure() ) {
+		for ( AttributeBinding subAttributeBinding : otherSubclassEntityBinding.getEntitiesAttributeBindingClosure() ) {
 			assertTrue( subAttributeBindings.add( subAttributeBinding ) );
 		}
 		assertEquals( 2, subAttributeBindings.size() );
@@ -343,14 +348,16 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertTrue( subclassEntityBinding.isPolymorphic() );
 		assertTrue( subclassEntityBinding.hasSubEntityBindings() );
 		assertEquals( 1, subclassEntityBinding.getSubEntityBindingClosureSpan() );
-		Iterator<EntityBinding> itSubEntityBindings = subclassEntityBinding.getPostOrderSubEntityBindingClosure().iterator();
-		assertTrue( itSubEntityBindings.hasNext() );
-		assertSame( subclassOfSubclassEntityBinding, itSubEntityBindings.next() );
-		assertFalse( itSubEntityBindings.hasNext() );
-		itSubEntityBindings = subclassEntityBinding.getPreOrderSubEntityBindingClosure().iterator();
-		assertTrue( itSubEntityBindings.hasNext() );
-		assertSame( subclassOfSubclassEntityBinding, itSubEntityBindings.next() );
-		assertFalse( itSubEntityBindings.hasNext() );
+		EntityBinding[] itSubEntityBindings = subclassEntityBinding.getPostOrderSubEntityBindingClosure();
+		int i = 0;
+		assertTrue( i < itSubEntityBindings.length );
+		assertSame( subclassOfSubclassEntityBinding, itSubEntityBindings[i++] );
+		assertFalse( i < itSubEntityBindings.length );
+		itSubEntityBindings = subclassEntityBinding.getPreOrderSubEntityBindingClosure();
+		i = 0;
+		assertTrue( i < itSubEntityBindings.length );
+		assertSame( subclassOfSubclassEntityBinding, itSubEntityBindings[i++] );
+		assertFalse( i < itSubEntityBindings.length );
 		Set<AttributeBinding> directAttributeBindings = new HashSet<AttributeBinding>();
 		for ( AttributeBinding attributeBinding : subclassEntityBinding.attributeBindings() ) {
 			assertTrue( directAttributeBindings.add( attributeBinding ) );
@@ -366,7 +373,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertTrue( attributeBindingClosure.contains( rootEntityBinding.locateAttributeBinding( "id" ) ) );
 		assertTrue( attributeBindingClosure.contains( subclassEntityBinding.locateAttributeBinding( "name" ) ) );
 		Set<AttributeBinding> subAttributeBindings = new HashSet<AttributeBinding>();
-		for ( AttributeBinding subAttributeBinding : subclassEntityBinding.getSubEntityAttributeBindingClosure() ) {
+		for ( AttributeBinding subAttributeBinding : subclassEntityBinding.getEntitiesAttributeBindingClosure() ) {
 			assertTrue( subAttributeBindings.add( subAttributeBinding ) );
 		}
 		assertEquals( 3, subAttributeBindings.size() );
@@ -396,8 +403,8 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertTrue( subclassOfSubclassEntityBinding.isPolymorphic() );
 		assertFalse( subclassOfSubclassEntityBinding.hasSubEntityBindings() );
 		assertEquals( 0, subclassOfSubclassEntityBinding.getSubEntityBindingClosureSpan() );
-		assertFalse( subclassOfSubclassEntityBinding.getPostOrderSubEntityBindingClosure().iterator().hasNext() );
-		assertFalse( subclassOfSubclassEntityBinding.getPreOrderSubEntityBindingClosure().iterator().hasNext() );
+		assertFalse( subclassOfSubclassEntityBinding.getPostOrderSubEntityBindingClosure().length > 0 );
+		assertFalse( subclassOfSubclassEntityBinding.getPreOrderSubEntityBindingClosure().length > 0 );
 		Set<AttributeBinding> directAttributeBindings = new HashSet<AttributeBinding>();
 		for ( AttributeBinding attributeBinding : subclassOfSubclassEntityBinding.attributeBindings() ) {
 			assertTrue( directAttributeBindings.add( attributeBinding ) );
@@ -414,7 +421,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertTrue( attributeBindingClosure.contains( subclassEntityBinding.locateAttributeBinding( "name" ) ) );
 		assertTrue( attributeBindingClosure.contains( subclassOfSubclassEntityBinding.locateAttributeBinding( "otherOtherName" ) ) );
 		Set<AttributeBinding> subAttributeBindings = new HashSet<AttributeBinding>();
-		for ( AttributeBinding subAttributeBinding : subclassOfSubclassEntityBinding.getSubEntityAttributeBindingClosure() ) {
+		for ( AttributeBinding subAttributeBinding : subclassOfSubclassEntityBinding.getEntitiesAttributeBindingClosure() ) {
 			assertTrue( subAttributeBindings.add( subAttributeBinding ) );
 		}
 		assertEquals( 3, subAttributeBindings.size() );

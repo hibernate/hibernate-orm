@@ -23,14 +23,19 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.jaxb.spi.hbm.EntityElement;
+import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbJoinedSubclassElement;
+import org.hibernate.jaxb.spi.hbm.JaxbKeyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSubclassElement;
 import org.hibernate.jaxb.spi.hbm.TableInformationSource;
+import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
+import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
@@ -40,7 +45,9 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implements SubclassEntitySource {
     private final EntitySource container;
 	private final TableSpecificationSource primaryTable;
-
+	private final boolean isJoinedSubclass;
+	private final JaxbKeyElement key;
+	private final List<PrimaryKeyJoinColumnSource> primaryKeyJoinColumnSources;
 	protected SubclassEntitySourceImpl(
 			MappingDocument sourceMappingDocument,
 			EntityElement entityElement,
@@ -50,6 +57,45 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 		this.primaryTable = TableInformationSource.class.isInstance( entityElement )
 				? Helper.createTableSource( sourceMappingDocument(), (TableInformationSource) entityElement, this )
 				: null;
+		this.isJoinedSubclass = JaxbJoinedSubclassElement.class.isInstance( entityElement );
+		this.key = isJoinedSubclass? ( (JaxbJoinedSubclassElement) entityElement() ).getKey() : null;
+		if ( isJoinedSubclass ) {
+			List<RelationalValueSource> valueSources = Helper.buildValueSources(
+					sourceMappingDocument(),
+					new Helper.ValueSourcesAdapter() {
+						@Override
+						public boolean isIncludedInInsertByDefault() {
+							return true;
+						}
+
+						@Override
+						public boolean isIncludedInUpdateByDefault() {
+							return Helper.getValue( key.isUpdate(), true );
+						}
+
+						@Override
+						public String getColumnAttribute() {
+							return key.getColumnAttribute();
+						}
+
+						@Override
+						public List<JaxbColumnElement> getColumn() {
+							return key.getColumn();
+						}
+
+						@Override
+						public boolean isForceNotNull() {
+							return Helper.getValue( key.isNotNull(), false );
+						}
+					}
+			);
+			this.primaryKeyJoinColumnSources = new ArrayList<PrimaryKeyJoinColumnSource>( valueSources.size() );
+			for(final RelationalValueSource valueSource : valueSources){
+				 primaryKeyJoinColumnSources.add( new PrimaryKeyJoinColumnSourceImpl( ColumnSource.class.cast( valueSource ) ) );
+			}
+		} else {
+			this.primaryKeyJoinColumnSources = null;
+		}
 
 		afterInstantiation();
 	}
@@ -73,14 +119,14 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 
 	@Override
 	public String getJoinedForeignKeyName() {
-		if ( JaxbJoinedSubclassElement.class.isInstance( entityElement() ) ) {
-			return ( (JaxbJoinedSubclassElement) entityElement() ).getKey().getForeignKey();
+		if ( isJoinedSubclass ) {
+			return key.getForeignKey();
 		}
 		return null;
 	}
 
 	@Override
 	public List<PrimaryKeyJoinColumnSource> getPrimaryKeyJoinColumnSources() {
-		return null;
+		return primaryKeyJoinColumnSources;
 	}
 }

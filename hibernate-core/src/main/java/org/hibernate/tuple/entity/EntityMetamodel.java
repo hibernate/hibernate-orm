@@ -412,7 +412,9 @@ public class EntityMetamodel implements Serializable {
 		else {
 			identifierAttributeBindingSpan = 1;
 		}
-		propertySpan = entityBinding.getAttributeBindingClosureSpan() - identifierAttributeBindingSpan;
+
+		final AttributeBinding [] attributeBindings = entityBinding.getAttributeBindingClosure();
+		propertySpan = attributeBindings.length;
 
 		properties = new StandardProperty[propertySpan];
 		List naturalIdNumbers = new ArrayList();
@@ -442,7 +444,7 @@ public class EntityMetamodel implements Serializable {
 		boolean foundUpdateGeneratedValue = false;
 		boolean foundUpdateableNaturalIdProperty = false;
 
-		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+		for ( AttributeBinding attributeBinding : attributeBindings ) {
 			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
 				// skip the identifier attribute binding
 				continue;

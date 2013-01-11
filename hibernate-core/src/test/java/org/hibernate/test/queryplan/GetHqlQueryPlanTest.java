@@ -43,7 +43,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
+
 public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -82,7 +82,7 @@ public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
 
 		s.close();
 	}
-
+	@FailureExpectedWithNewMetamodel
 	@Test
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testHqlQueryPlanWithEnabledFilter() {

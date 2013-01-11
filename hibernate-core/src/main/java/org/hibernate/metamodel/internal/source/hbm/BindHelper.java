@@ -367,16 +367,16 @@ public class BindHelper {
 
 	private static AttributeBinding getRecursiveAttributeBinding(
 			EntityBinding entityBinding, String propertyPath) {
-		Iterable<AttributeBinding> attributeBindings
-				= entityBinding.getAttributeBindingClosure();
-		StringTokenizer st = new StringTokenizer( propertyPath, "." );
+//		Iterable<AttributeBinding> attributeBindings
+//				= entityBinding.getAttributeBindingClosure();
+//		StringTokenizer st = new StringTokenizer( propertyPath, "." );
 		AttributeBinding attributeBinding = null;
-		while ( st.hasMoreElements() ) {
-			String element = st.nextToken();
-			for ( AttributeBinding binding : attributeBindings ) {
-
-			}
-		}
+//		while ( st.hasMoreElements() ) {
+//			String element = st.nextToken();
+//			for ( AttributeBinding binding : attributeBindings ) {
+//
+//			}
+//		}
 		return attributeBinding;
 
 	}

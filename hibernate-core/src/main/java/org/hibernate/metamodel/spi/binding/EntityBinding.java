@@ -24,18 +24,16 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
@@ -158,7 +156,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	}
 
 	public boolean isPolymorphic() {
-		return superEntityBinding != null ||
+		return !isRoot() ||
 				hierarchyDetails.getEntityDiscriminator() != null ||
 				!subEntityBindings.isEmpty();
 	}
@@ -167,71 +165,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		return !subEntityBindings.isEmpty();
 	}
 
-	public int getSubEntityBindingClosureSpan() {
-		int n = subEntityBindings.size();
-		for ( EntityBinding subEntityBinding : subEntityBindings ) {
-			n += subEntityBinding.getSubEntityBindingClosureSpan();
-		}
-		return n;
-	}
 
-	/* used for testing */
-	public Iterable<EntityBinding> getDirectSubEntityBindings() {
-		return subEntityBindings;
-	}
-
-	/**
-	 * Returns sub-EntityBinding objects in a special 'order', most derived subclasses
-	 * first. Specifically, the sub-entity bindings follow a depth-first,
-	 * post-order traversal
-	 *
-	 * Note that the returned value excludes this entity binding.
-	 *
-	 * @return sub-entity bindings ordered by those entity bindings that are most derived.
-	 */
-	public Iterable<EntityBinding> getPostOrderSubEntityBindingClosure() {
-		// TODO: why this order?
-		List<Iterable<EntityBinding>> subclassIterables = new ArrayList<Iterable<EntityBinding>>( subEntityBindings.size() + 1 );
-		for ( EntityBinding subEntityBinding : subEntityBindings ) {
-			Iterable<EntityBinding> subSubEntityBindings = subEntityBinding.getPostOrderSubEntityBindingClosure();
-			if ( subSubEntityBindings.iterator().hasNext() ) {
-				subclassIterables.add( subSubEntityBindings );
-			}
-		}
-		if ( !subEntityBindings.isEmpty() ) {
-			subclassIterables.add( subEntityBindings );
-		}
-		return new JoinedIterable<EntityBinding>( subclassIterables );
-	}
-
-	/**
-	 * Returns sub-EntityBinding ordered as a depth-first,
-	 * pre-order traversal (a subclass precedes its own subclasses).
-	 *
-	 * Note that the returned value specifically excludes this entity binding.
-	 *
-	 * @return sub-entity bindings ordered as a depth-first,
-	 *         pre-order traversal
-	 */
-	public Iterable<EntityBinding> getPreOrderSubEntityBindingClosure() {
-		return getPreOrderSubEntityBindingClosure( false );
-	}
-
-	private Iterable<EntityBinding> getPreOrderSubEntityBindingClosure(boolean includeThis) {
-		List<Iterable<EntityBinding>> iterables = new ArrayList<Iterable<EntityBinding>>();
-		if ( includeThis ) {
-			iterables.add( java.util.Collections.singletonList( this ) );
-		}
-		for ( EntityBinding subEntityBinding : subEntityBindings ) {
-			Iterable<EntityBinding> subSubEntityBindingClosure = subEntityBinding.getPreOrderSubEntityBindingClosure(
-					true
-			);
-			if ( subSubEntityBindingClosure.iterator().hasNext() ) {
-				iterables.add( subSubEntityBindingClosure );
-			}
-		}
-		return new JoinedIterable<EntityBinding>( iterables );
-	}
 
 	public Entity getEntity() {
 		return entity;
@@ -317,79 +251,8 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	public void addSecondaryTable(SecondaryTable secondaryTable) {
 		secondaryTables.put( secondaryTable.getSecondaryTableReference().getLogicalName().getText(), secondaryTable );
 	}
-
-	public int getSecondaryTableClosureSpan() {
-		return superEntityBinding != null ?
-				superEntityBinding.getSecondaryTableClosureSpan() + secondaryTables.size() :
-				secondaryTables.size();
-	}
-
-	/**
-	 * Gets the attribute bindings defined on this class, including the
-	 * identifier attribute binding and attribute bindings defined
-	 * as part of a join.
-	 *
-	 * @return The attribute bindings.
-	 */
-	public Iterable<SecondaryTable> getSecondaryTableClosure() {
-		Iterable<SecondaryTable> iterable;
-		if ( superEntityBinding != null ) {
-			List<Iterable<SecondaryTable>> iterables = new ArrayList<Iterable<SecondaryTable>>( 2 );
-			iterables.add( superEntityBinding.getSecondaryTableClosure() );
-			iterables.add( secondaryTables.values() );
-			iterable = new JoinedIterable<SecondaryTable>( iterables );
-		}
-		else {
-			iterable = secondaryTables.values();
-		}
-		return iterable;
-	}
-
-	private Iterable<SecondaryTable> getSubclassSecondaryTables() {
-		List<Iterable<SecondaryTable>> iterables = new ArrayList<Iterable<SecondaryTable>>( subEntityBindings.size() );
-		for ( EntityBinding subEntityBinding : subEntityBindings ) {
-			iterables.add( subEntityBinding.secondaryTables.values() );
-			if ( ! subEntityBinding.subEntityBindings.isEmpty() ) {
-				iterables.add( subEntityBinding.getSubclassSecondaryTables() );
-			}
-		}
-		return new JoinedIterable<SecondaryTable>( iterables );
-	}
-
-	public Iterable<SecondaryTable> getSubclassSecondaryTableClosure() {
-		Iterable<SecondaryTable> iterable;
-		if ( ! subEntityBindings.isEmpty() ) {
-			List<Iterable<SecondaryTable>> iterables = new ArrayList<Iterable<SecondaryTable>>( 2 );
-			iterables.add( getSecondaryTableClosure() );
-			iterables.add( getSubclassSecondaryTables() );
-			iterable = new JoinedIterable<SecondaryTable>( iterables );
-		}
-		else {
-			iterable = getSecondaryTableClosure();
-		}
-		return iterable;
-	}
-
-	public boolean isClassOrSuperclassSecondaryTable(SecondaryTable secondaryTable) {
-		String secondaryTableName = secondaryTable.getSecondaryTableReference().getLogicalName().getText();
-		return secondaryTables.containsKey( secondaryTableName ) ||
-				( superEntityBinding != null && superEntityBinding.isClassOrSuperclassSecondaryTable( secondaryTable ) );
-	}
-
-	public int getSecondaryTableNumber(SingularAttributeBinding attributeBinding) {
-		if ( attributeBinding.getRelationalValueBindings().isEmpty() ) {
-			return 0;
-		}
-		int result=1;
-		Value value = attributeBinding.getRelationalValueBindings().get( 0 ).getValue();
-		TableSpecification table = value.getTable();
-		for ( SecondaryTable secondaryTable : getSubclassSecondaryTableClosure() ) {
-			if ( secondaryTable.getSecondaryTableReference() == table ) {
-				return result;
-			}
-			result++;
-		}
-		return 0;
+	public Map<String, SecondaryTable> getSecondaryTables() {
+		return secondaryTables;
 	}
 
 
@@ -669,27 +532,56 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		return binding;
 	}
 
-	public AttributeBinding locateAttributeBindingByPath(String path) {
-		if ( path == null ) {
-			throw new IllegalArgumentException( "path must be non-null." );
-		}
-		final String pathDelimiter = "\\.";
-		String[] tokens = path.split( pathDelimiter );
-		AttributeBinding attributeBinding = locateAttributeBinding( tokens[ 0 ] );
-		if ( attributeBinding == null ) {
-			return superEntityBinding == null ? null : superEntityBinding.locateAttributeBindingByPath( path );
-		}
-		for ( int i = 1 ; i < tokens.length && attributeBinding != null ; i++ )  {
-			if ( ! attributeBinding.getAttribute().isSingular() ||
-					! ( (SingularAttribute) attributeBinding.getAttribute() ).getSingularAttributeType().isAggregate() ) {
-				// TODO: improve this message!!!
-				throw new MappingException( "improve this!!!" );
-			}
-			AttributeBindingContainer attributeBindingContainer = (AttributeBindingContainer) attributeBinding;
-			attributeBinding = attributeBindingContainer.locateAttributeBinding( tokens[ i ] );
-		}
-		return attributeBinding;
+
+	public void setJpaCallbackClasses(List<JpaCallbackSource> jpaCallbackClasses) {
+		this.jpaCallbackClasses = jpaCallbackClasses;
 	}
+
+	public Iterable<JpaCallbackSource> getJpaCallbackClasses() {
+		return jpaCallbackClasses;
+	}
+	//--------------------------
+	//meta methods for persister , to improve performance, these methods below should really be replaced as ValueHolder
+	//and only be called in persister -- after build MetadataImpl
+
+
+	public TableSpecification[] getTableClosure() {
+		if ( isRoot() ) {
+			return new TableSpecification[] { getPrimaryTable() };
+		}
+		return ArrayHelper.join( superEntityBinding.getTableClosure(), getPrimaryTable() );
+	}
+
+	public EntityBinding[] getEntityBindingClosure() {
+		if ( isRoot() ) {
+			return new EntityBinding[] { this };
+		}
+		return ArrayHelper.join( superEntityBinding.getEntityBindingClosure(), this );
+	}
+
+	public int getSecondaryTableClosureSpan() {
+		return isRoot() ? secondaryTables.size() : superEntityBinding.getSecondaryTableClosureSpan() + secondaryTables.size();
+	}
+
+	public SecondaryTable[] getSecondaryTableClosure() {
+		if ( isRoot() ) {
+			return secondaryTables.values().toArray( new SecondaryTable[secondaryTables.size()] );
+		}
+		else {
+			return ArrayHelper.join(
+					superEntityBinding.getSecondaryTableClosure(),
+					secondaryTables.values().toArray( new SecondaryTable[secondaryTables.size()] )
+			);
+		}
+	}
+
+	public String[] getSynchronizedTableNameClosure() {
+		if ( isRoot() ) {
+			return getSynchronizedTableNames();
+		}
+		return ArrayHelper.join( superEntityBinding.getSynchronizedTableNameClosure(), getSynchronizedTableNames() );
+	}
+
 
 	/**
 	 * Gets the number of attribute bindings defined on this class, including the
@@ -700,9 +592,8 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	 */
 	public int getAttributeBindingClosureSpan() {
 		// TODO: update account for join attribute bindings
-		return superEntityBinding != null ?
-				superEntityBinding.getAttributeBindingClosureSpan() + attributeBindingMap.size() :
-				attributeBindingMap.size();
+		return isRoot() ? getNonIdAttributeBindingClosure().length :
+				superEntityBinding.getAttributeBindingClosureSpan() + getNonIdAttributeBindingClosure().length;
 	}
 
 	/**
@@ -712,19 +603,127 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	 *
 	 * @return The attribute bindings.
 	 */
-	public Iterable<AttributeBinding> getAttributeBindingClosure() {
+	public AttributeBinding[] getAttributeBindingClosure() {
 		// TODO: update size to account for joins
-		Iterable<AttributeBinding> iterable;
-		if ( superEntityBinding != null ) {
-			List<Iterable<AttributeBinding>> iterables = new ArrayList<Iterable<AttributeBinding>>( 2 );
-			iterables.add( superEntityBinding.getAttributeBindingClosure() );
-			iterables.add( attributeBindings() );
-			iterable = new JoinedIterable<AttributeBinding>( iterables );
+		if ( isRoot() ) {
+			return getNonIdAttributeBindingClosure();
 		}
 		else {
-			iterable = attributeBindings();
+			return ArrayHelper.join(
+					superEntityBinding.getAttributeBindingClosure(),
+					getNonIdAttributeBindingClosure()
+			);
 		}
-		return iterable;
+	}
+
+	private AttributeBinding[] getNonIdAttributeBindingClosure() {
+		List<AttributeBinding> list = new ArrayList<AttributeBinding>();
+		attributeBindings();
+		for ( final AttributeBinding ab : attributeBindings() ) {
+			if(ab instanceof CompositeAttributeBinding){
+
+			}
+			boolean isId = getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( ab );
+			if ( !isId ) {
+				list.add( ab );
+			}
+		}
+		return list.toArray( new AttributeBinding[list.size()] );
+
+	}
+
+	/* used for testing */
+	public List<EntityBinding> getDirectSubEntityBindings() {
+		return subEntityBindings;
+	}
+
+	/**
+	 * Returns sub-EntityBinding objects in a special 'order', most derived subclasses
+	 * first. Specifically, the sub-entity bindings follow a depth-first,
+	 * post-order traversal
+	 *
+	 * Note that the returned value excludes this entity binding.
+	 *
+	 * @return sub-entity bindings ordered by those entity bindings that are most derived.
+	 */
+	public EntityBinding[] getPostOrderSubEntityBindingClosure() {
+		EntityBinding[] results = new EntityBinding[0];
+		if ( subEntityBindings.isEmpty() ) {
+			return results;
+		}
+		for ( EntityBinding subEntityBinding : subEntityBindings ) {
+			EntityBinding[] subSubEntityBindings = subEntityBinding.getPostOrderSubEntityBindingClosure();
+			results  = ArrayHelper.join( results, subSubEntityBindings );
+		}
+		if ( !subEntityBindings.isEmpty() ) {
+			results  = ArrayHelper.join( results, subEntityBindings.toArray( new EntityBinding[subEntityBindings.size()] ) );
+		}
+		return results;
+	}
+
+	/**
+	 * Returns sub-EntityBinding ordered as a depth-first,
+	 * pre-order traversal (a subclass precedes its own subclasses).
+	 *
+	 * Note that the returned value specifically excludes this entity binding.
+	 *
+	 * @return sub-entity bindings ordered as a depth-first,
+	 *         pre-order traversal
+	 */
+	public EntityBinding[] getPreOrderSubEntityBindingClosure() {
+		return getPreOrderSubEntityBindingClosure( false, new EntityBinding[0] );
+	}
+
+	private EntityBinding[] getPreOrderSubEntityBindingClosure(boolean includeThis, EntityBinding[] results) {
+		if ( includeThis ) {
+			results = ArrayHelper.join( results, this );
+		}
+		for ( EntityBinding subEntityBinding : subEntityBindings ) {
+			results = subEntityBinding.getPreOrderSubEntityBindingClosure(
+					true, results
+			);
+		}
+		return results;
+	}
+
+	public TableSpecification[] getPreOrderSubTableClosure(){
+		EntityBinding[] subEntityBindings = getPreOrderSubEntityBindingClosure();
+		TableSpecification [] tables = new TableSpecification[subEntityBindings.length];
+		for(int i=0;i<subEntityBindings.length;i++){
+			tables[i] = subEntityBindings[i].getPrimaryTable();
+		}
+		return tables;
+	}
+
+	public SecondaryTable[] getSubEntitySecondaryTables() {
+		SecondaryTable[] results = new SecondaryTable[0];
+		for ( EntityBinding eb : getPreOrderSubEntityBindingClosure() ) {
+			Collection<SecondaryTable> sts = eb.getSecondaryTables().values();
+			int size = sts.size();
+			if ( size == 0 ) {
+				continue;
+			}
+			results = ArrayHelper.join( results, sts.toArray( new SecondaryTable[size] ) );
+		}
+		return results;
+	}
+
+
+	public SecondaryTable[] getEntitiesSecondaryTableClosure() {
+		if ( ! subEntityBindings.isEmpty() ) {
+			return ArrayHelper.join( getSecondaryTableClosure(), getSubEntitySecondaryTables() );
+		}
+		else {
+			return getSecondaryTableClosure();
+		}
+	}
+
+	public int getSubEntityBindingClosureSpan() {
+		int n = subEntityBindings.size();
+		for ( final EntityBinding seb : subEntityBindings ) {
+			n += seb.getSubEntityBindingClosureSpan();
+		}
+		return n;
 	}
 
 	/**
@@ -732,37 +731,42 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	 *         sub-EntityBinding, starting from the root of the hierarchy; includes
 	 *         the identifier and attribute bindings defined as part of a join.
 	 */
-	public Iterable<AttributeBinding> getSubEntityAttributeBindingClosure() {
-		List<Iterable<AttributeBinding>> iterables = new ArrayList<Iterable<AttributeBinding>>();
-		iterables.add( getAttributeBindingClosure() );
+	public AttributeBinding[] getEntitiesAttributeBindingClosure() {
+		AttributeBinding[] results = getAttributeBindingClosure();
+
 		for ( EntityBinding subEntityBinding : getPreOrderSubEntityBindingClosure() ) {
 			// only add attribute bindings declared for the subEntityBinding
-			iterables.add( subEntityBinding.attributeBindings() );
+
+			results = ArrayHelper.join(
+					results,
+					subEntityBinding.getNonIdAttributeBindingClosure()
+			);
 			// TODO: if EntityBinding.attributeBindings() excludes joined attributes, then they need to be added here
 		}
-		return new JoinedIterable<AttributeBinding>( iterables );
+		return results;
 	}
 
-	public Iterator<TableSpecification> getTableClosureIterator() {
-		if ( superEntityBinding == null ) {
-			return new SingletonIterator<TableSpecification>( getPrimaryTable() );
+
+	public boolean isClassOrSuperclassSecondaryTable(SecondaryTable secondaryTable) {
+		String secondaryTableName = secondaryTable.getSecondaryTableReference().getLogicalName().getText();
+		return secondaryTables.containsKey( secondaryTableName ) ||
+				( superEntityBinding != null && superEntityBinding.isClassOrSuperclassSecondaryTable( secondaryTable ) );
+	}
+
+	public int getSecondaryTableNumber(SingularAttributeBinding attributeBinding) {
+		if ( attributeBinding.getRelationalValueBindings().isEmpty() ) {
+			return 0;
 		}
-		else {
-			return new JoinedIterator<TableSpecification>(
-					superEntityBinding.getTableClosureIterator(),
-					new SingletonIterator<TableSpecification>( getPrimaryTable() )
-			);
+		int result=1;
+		Value value = attributeBinding.getRelationalValueBindings().get( 0 ).getValue();
+		TableSpecification table = value.getTable();
+		for ( SecondaryTable secondaryTable : getEntitiesSecondaryTableClosure() ) {
+			if ( secondaryTable.getSecondaryTableReference() == table ) {
+				return result;
+			}
+			result++;
 		}
-	}
-	public  Iterator getKeyClosureIterator(){
-		 return null;
+		return 0;
 	}
 
-	public void setJpaCallbackClasses(List<JpaCallbackSource> jpaCallbackClasses) {
-		this.jpaCallbackClasses = jpaCallbackClasses;
-	}
-
-	public Iterable<JpaCallbackSource> getJpaCallbackClasses() {
-		return jpaCallbackClasses;
-	}
 }

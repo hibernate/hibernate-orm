@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -35,7 +34,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * @author Emmanuel Bernard
  */
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-@FailureExpectedWithNewMetamodel
 public class HbmWithIdentityTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOneAndInterface() throws Exception {

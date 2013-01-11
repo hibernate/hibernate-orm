@@ -163,6 +163,21 @@ public final class ArrayHelper {
 		return list;
 	}
 
+	public static <T> T[] reverse(T[] objects) {
+		return reverse( objects, objects.length );
+	}
+
+	public static <T> T[] reverse(T[] objects, int n) {
+		final int size = objects.length;
+		final T[] temp = (T[]) Array.newInstance( objects.getClass().getComponentType(), size );
+
+		for ( int i = 0; i < n; i++ ) {
+			temp[i] = objects[n - i - 1];
+		}
+		System.arraycopy( objects, n, temp, n, size - n );
+		return temp;
+	}
+
 	public static String[] join(String[] x, String[] y) {
 		String[] result = new String[ x.length + y.length ];
 		System.arraycopy( x, 0, result, 0, x.length );
@@ -181,7 +196,12 @@ public final class ArrayHelper {
 		}
 		return result;
 	}
-
+	public static boolean[] join(boolean[] x, boolean[] y) {
+		boolean[] result = new boolean[ x.length + y.length ];
+		System.arraycopy( x, 0, result, 0, x.length );
+		System.arraycopy( y, 0, result, x.length, y.length );
+		return result;
+	}
 	public static int[] join(int[] x, int[] y) {
 		int[] result = new int[ x.length + y.length ];
 		System.arraycopy( x, 0, result, 0, x.length );

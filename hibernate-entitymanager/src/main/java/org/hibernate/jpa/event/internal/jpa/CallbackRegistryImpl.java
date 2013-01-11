@@ -33,6 +33,7 @@ import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 import java.util.HashMap;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 
@@ -59,11 +60,7 @@ public class CallbackRegistryImpl implements CallbackRegistry {
 
 	@Override
 	public boolean hasPostCreateCallbacks(Class entityClass) {
-		return notEmpty( preCreates.get( entityClass ) );
-	}
-
-	private boolean notEmpty(Callback[] callbacks) {
-		return callbacks != null && callbacks.length > 0;
+		return CollectionHelper.isNotEmpty( preCreates.get( entityClass ) );
 	}
 
 	@Override
@@ -78,7 +75,7 @@ public class CallbackRegistryImpl implements CallbackRegistry {
 
 	@Override
 	public boolean hasPostUpdateCallbacks(Class entityClass) {
-		return notEmpty( postUpdates.get( entityClass ) );
+		return CollectionHelper.isNotEmpty( postUpdates.get( entityClass ) );
 	}
 
 	@Override
@@ -93,7 +90,7 @@ public class CallbackRegistryImpl implements CallbackRegistry {
 
 	@Override
 	public boolean hasPostRemoveCallbacks(Class entityClass) {
-		return notEmpty( postRemoves.get( entityClass ) );
+		return CollectionHelper.isNotEmpty( postRemoves.get( entityClass ) );
 	}
 
 	@Override
@@ -107,7 +104,7 @@ public class CallbackRegistryImpl implements CallbackRegistry {
 	}
 
 	private boolean callback(Callback[] callbacks, Object bean) {
-		if ( callbacks != null && callbacks.length != 0 ) {
+		if ( CollectionHelper.isNotEmpty( callbacks ) ) {
 			for ( Callback callback : callbacks ) {
 				callback.performCallback( bean );
 			}

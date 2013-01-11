@@ -119,6 +119,14 @@ public class EntityIdentifier {
 		return entityIdentifierBinding.isIdentifierAttributeBinding( attributeBinding );
 	}
 
+	public boolean isCascadeDeleteEnabled() {
+		if ( getAttributeBinding() instanceof Cascadeable ) {
+			Cascadeable cascadeable = Cascadeable.class.cast( getAttributeBinding() );
+			cascadeable.getCascadeStyle();//todo
+		}
+		return false;
+	}
+
 	public String getUnsavedValue() {
 		ensureBound();
 		return entityIdentifierBinding.getUnsavedValue();

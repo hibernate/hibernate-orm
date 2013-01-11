@@ -49,7 +49,7 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 	@Override
 	public AttributeBinding locateAttributeBinding(List<Value> values) {
 		for ( AttributeBinding attributeBinding : attributeBindingMapInternal().values() ) {
-			if ( !SingularAttributeBinding.class.isInstance( attributeBinding ) ) {
+			if ( !attributeBinding.getAttribute().isSingular() ) {
 				continue;
 			}
 			SingularAttributeBinding basicAttributeBinding = (SingularAttributeBinding) attributeBinding;

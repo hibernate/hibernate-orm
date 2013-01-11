@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,28 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.collection.ordered.joinedInheritence;
+package org.hibernate.metamodel.internal.source.hbm;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.metamodel.spi.source.ColumnSource;
+import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 
 /**
- * @author Steve Ebersole
+ * @author Strong Liu <stliu@hibernate.org>
  */
-public class OrderCollectionOfJoinedHierarchyTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Animal.class, Lion.class, Tiger.class, Zoo.class };
+public class PrimaryKeyJoinColumnSourceImpl implements PrimaryKeyJoinColumnSource {
+	private final ColumnSource columnSource;
+
+	public PrimaryKeyJoinColumnSourceImpl(ColumnSource relationalValueSource) {
+		this.columnSource = relationalValueSource;
 	}
 
-	@Test
-	public void testQuerySyntaxCheck() {
-		Session session = openSession();
-		session.beginTransaction();
-		session.get( Zoo.class, 1L );
-		session.getTransaction().commit();
-		session.close();
+	@Override
+	public String getColumnName() {
+		return columnSource.getName();
+	}
+
+	@Override
+	public String getReferencedColumnName() {
+		return null;
+	}
+
+	@Override
+	public String getColumnDefinition() {
+		return columnSource.getSqlType();
 	}
 }

@@ -457,7 +457,7 @@ public class AttributeBuilder {
 			return null;
 		}
 
-		if ( SingularAttributeBinding.class.isInstance( attributeBinding ) ) {
+		if ( attributeBinding.getAttribute().isSingular() ) {
 			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
 
 			final PersistentAttributeType jpaAttributeType;

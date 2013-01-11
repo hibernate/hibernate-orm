@@ -531,7 +531,7 @@ public class Binder {
 		// ensure version is non-nullable
 		for ( RelationalValueBinding valueBinding : version.getVersioningAttributeBinding()
 				.getRelationalValueBindings() ) {
-			if ( valueBinding.getValue() instanceof Column ) {
+			if ( !valueBinding.isDerived() ) {
 				( (Column) valueBinding.getValue() ).setNullable( false );
 			}
 		}
@@ -2283,7 +2283,7 @@ public class Binder {
 			primaryKey.addColumn( foreignKeyColumn );
 		}
 		for ( final RelationalValueBinding elementValueBinding : elementBinding.getRelationalValueBindings() ) {
-			if ( elementValueBinding.getValue() instanceof Column && !elementValueBinding.isNullable() ) {
+			if ( !elementValueBinding.isDerived() && !elementValueBinding.isNullable() ) {
 				primaryKey.addColumn( (Column) elementValueBinding.getValue() );
 			}
 		}
@@ -3023,7 +3023,7 @@ public class Binder {
 			primaryKey.addColumn( foreignKeyColumn );
 		}
 		for ( RelationalValueBinding relationalValueBinding : indexBinding.getRelationalValueBindings() ) {
-			if ( relationalValueBinding.getValue() instanceof Column ) {
+			if ( !relationalValueBinding.isDerived() ) {
 				primaryKey.addColumn( (Column) relationalValueBinding.getValue() );
 			}
 		}

@@ -130,7 +130,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		return sessionFactory().getServiceRegistry().getService( BatchBuilder.class );
 	}
 
-	private SqlExceptionHelper sqlExceptionHelper() {
+	public SqlExceptionHelper sqlExceptionHelper() {
 		return transactionEnvironment().getJdbcServices().getSqlExceptionHelper();
 	}
 
@@ -277,16 +277,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 		catch ( SQLException e ) {
 			throw sqlExceptionHelper().convert( e, "error executing work" );
-		}
-		finally {
-			try {
-				if ( ! connection.isClosed() ) {
-					connection.close();
-				}
-			}
-			catch (SQLException e) {
-				LOG.debug( "Error closing connection proxy", e );
-			}
 		}
 	}
 

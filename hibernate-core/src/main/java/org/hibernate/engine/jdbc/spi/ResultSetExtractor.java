@@ -26,7 +26,6 @@ package org.hibernate.engine.jdbc.spi;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
@@ -43,7 +42,7 @@ public interface ResultSetExtractor {
 	 *
 	 * @return the ResultSet
 	 */
-	public ResultSet extract( PreparedStatement statement ) throws SQLException;
+	public ResultSet extract( PreparedStatement statement );
 	
 	/**
 	 * Extract the ResultSet from the statement.
@@ -52,7 +51,7 @@ public interface ResultSetExtractor {
 	 *
 	 * @return the ResultSet
 	 */
-	public ResultSet extract( CallableStatement statement ) throws SQLException;
+	public ResultSet extract( CallableStatement statement );
 	
 	/**
 	 * Extract the ResultSet from the statement.
@@ -62,7 +61,7 @@ public interface ResultSetExtractor {
 	 *
 	 * @return the ResultSet
 	 */
-	public ResultSet extract( Statement statement, String sql ) throws SQLException;
+	public ResultSet extract( Statement statement, String sql );
 	
 	/**
 	 * Execute the Statement query and, if results in a ResultSet, extract it.
@@ -71,7 +70,7 @@ public interface ResultSetExtractor {
 	 *
 	 * @return the ResultSet
 	 */
-	public ResultSet execute( PreparedStatement statement ) throws SQLException;
+	public ResultSet execute( PreparedStatement statement );
 	
 	/**
 	 * Execute the Statement query and, if results in a ResultSet, extract it.
@@ -81,7 +80,7 @@ public interface ResultSetExtractor {
 	 *
 	 * @return the ResultSet
 	 */
-	public ResultSet execute( Statement statement, String sql ) throws SQLException;
+	public ResultSet execute( Statement statement, String sql );
 	
 	/**
 	 * Execute the Statement queryUpdate.
@@ -90,7 +89,7 @@ public interface ResultSetExtractor {
 	 *
 	 * @return int
 	 */
-	public int executeUpdate( PreparedStatement statement ) throws SQLException;
+	public int executeUpdate( PreparedStatement statement );
 	
 	/**
 	 * Execute the Statement query and, if results in a ResultSet, extract it.
@@ -100,5 +99,5 @@ public interface ResultSetExtractor {
 	 *
 	 * @return the ResultSet
 	 */
-	public int executeUpdate( Statement statement, String sql ) throws SQLException;
+	public int executeUpdate( Statement statement, String sql );
 }

@@ -158,6 +158,7 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 		private SessionImplementor s;
 		
 		public ValidateRowCount(SessionImplementor s, String table, int count) {
+			this.s = s;
 			this.expectedRowCount = count;
 			this.table = table;
 		}

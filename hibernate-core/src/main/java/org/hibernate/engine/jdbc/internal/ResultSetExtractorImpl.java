@@ -28,6 +28,7 @@ import java.sql.Statement;
 
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.ResultSetExtractor;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 
 /**
  * @author Brett Meyer
@@ -41,70 +42,115 @@ public class ResultSetExtractorImpl implements ResultSetExtractor {
 	}
 
 	@Override
-	public ResultSet extract(PreparedStatement statement) throws SQLException {
+	public ResultSet extract(PreparedStatement statement) {
 		// sql logged by StatementPreparerImpl
-		ResultSet rs = statement.executeQuery();
-		postExtract( rs );
-		return rs;
-	}
-
-	@Override
-	public ResultSet extract(CallableStatement statement) throws SQLException {
-		// sql logged by StatementPreparerImpl
-		ResultSet rs = jdbcCoordinator.getLogicalConnection().getJdbcServices()
-				.getDialect().getResultSet( statement );
-		postExtract( rs );
-		return rs;
-	}
-
-	@Override
-	public ResultSet extract(Statement statement, String sql) throws SQLException {
-		jdbcCoordinator.getLogicalConnection().getJdbcServices()
-				.getSqlStatementLogger().logStatement( sql );
-		ResultSet rs = statement.executeQuery( sql );
-		postExtract( rs );
-		return rs;
-	}
-
-	@Override
-	public ResultSet execute(PreparedStatement statement) throws SQLException {
-		// sql logged by StatementPreparerImpl
-		if ( !statement.execute() ) {
-			while ( !statement.getMoreResults() && statement.getUpdateCount() != -1 ) {
-				// do nothing until we hit the resultset
-			}
-		}
-		ResultSet rs = statement.getResultSet();
-		postExtract( rs );
-		return rs;
-	}
-
-	@Override
-	public ResultSet execute(Statement statement, String sql) throws SQLException {
-		jdbcCoordinator.getLogicalConnection().getJdbcServices()
-				.getSqlStatementLogger().logStatement( sql );
-		// true if statement has results
-		if ( statement.execute( sql ) ) {
-			ResultSet rs = statement.getResultSet();
+		try {
+			ResultSet rs = statement.executeQuery();
 			postExtract( rs );
 			return rs;
 		}
-		// If didn't result in ResultSet, the caller shouldn't care anyway.
-		return null;
+		catch ( SQLException e ) {
+			throw sqlExceptionHelper().convert( e, "could not extract ResultSet" );
+		}
 	}
-	
+
 	@Override
-	public int executeUpdate( PreparedStatement statement ) throws SQLException {
-		// Technically, this method isn't needed at the moment.  But keep and use
-		// it for consistency and future usage.
-		return statement.executeUpdate();
+	public ResultSet extract(CallableStatement statement) {
+		try {
+			// sql logged by StatementPreparerImpl
+			ResultSet rs = jdbcCoordinator.getLogicalConnection().getJdbcServices()
+					.getDialect().getResultSet( statement );
+			postExtract( rs );
+			return rs;
+		}
+		catch ( SQLException e ) {
+			throw sqlExceptionHelper().convert( e, "could not extract ResultSet" );
+		}
 	}
-	
+
 	@Override
-	public int executeUpdate( Statement statement, String sql ) throws SQLException {
+	public ResultSet extract(Statement statement, String sql) {
 		jdbcCoordinator.getLogicalConnection().getJdbcServices()
 				.getSqlStatementLogger().logStatement( sql );
-		return statement.executeUpdate( sql );
+		try {
+			ResultSet rs = statement.executeQuery( sql );
+			postExtract( rs );
+			return rs;
+		}
+		catch ( SQLException e ) {
+			throw sqlExceptionHelper().convert( e, "could not extract ResultSet" );
+		}
+	}
+
+	@Override
+	public ResultSet execute(PreparedStatement statement) {
+		// sql logged by StatementPreparerImpl
+		try {
+			if ( !statement.execute() ) {
+				while ( !statement.getMoreResults() && statement.getUpdateCount() != -1 ) {
+					// do nothing until we hit the resultset
+				}
+			}
+			ResultSet rs = statement.getResultSet();
+			if ( rs != null ) {
+				postExtract( rs );
+			}
+			return rs;
+		}
+		catch ( SQLException e ) {
+			throw sqlExceptionHelper().convert( e, "could not execute statement" );
+		}
+	}
+
+	@Override
+	public ResultSet execute(Statement statement, String sql) {
+		jdbcCoordinator.getLogicalConnection().getJdbcServices()
+				.getSqlStatementLogger().logStatement( sql );
+		try {
+			if ( !statement.execute( sql ) ) {
+				while ( !statement.getMoreResults() && statement.getUpdateCount() != -1 ) {
+					// do nothing until we hit the resultset
+				}
+			}
+			ResultSet rs = statement.getResultSet();
+			if ( rs != null ) {
+				postExtract( rs );
+			}
+			return rs;
+		}
+		catch ( SQLException e ) {
+			throw sqlExceptionHelper().convert( e, "could not execute statement" );
+		}
+	}
+	
+	@Override
+	public int executeUpdate( PreparedStatement statement ) {
+		try {
+			return statement.executeUpdate();
+		}
+		catch ( SQLException e ) {
+			throw sqlExceptionHelper().convert( e, "could not execute statement" );
+		}
+	}
+	
+	@Override
+	public int executeUpdate( Statement statement, String sql ) {
+		jdbcCoordinator.getLogicalConnection().getJdbcServices()
+				.getSqlStatementLogger().logStatement( sql );
+		try {
+			return statement.executeUpdate( sql );
+		}
+		catch ( SQLException e ) {
+			throw sqlExceptionHelper().convert( e, "could not execute statement" );
+		}
+	}
+
+	private final SqlExceptionHelper sqlExceptionHelper() {
+		return jdbcCoordinator.getTransactionCoordinator()
+				.getTransactionContext()
+				.getTransactionEnvironment()
+				.getJdbcServices()
+				.getSqlExceptionHelper();
 	}
 
 	private void postExtract(ResultSet rs) {

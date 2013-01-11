@@ -170,13 +170,23 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 		if ( statement == null ) {
 			return;
 		}
-		s.getTransactionCoordinator().getJdbcCoordinator().release( statement );
+		try {
+			s.getTransactionCoordinator().getJdbcCoordinator().release( statement );
+		}
+		catch (Exception e) {
+			// ignore
+		}
 	}
 
 	private void releaseQuietly(SessionImplementor s, ResultSet resultSet) {
 		if ( resultSet == null ) {
 			return;
 		}
-		s.getTransactionCoordinator().getJdbcCoordinator().release( resultSet );
+		try {
+			s.getTransactionCoordinator().getJdbcCoordinator().release( resultSet );
+		}
+		catch (Exception e) {
+			// ignore
+		}
 	}
 }

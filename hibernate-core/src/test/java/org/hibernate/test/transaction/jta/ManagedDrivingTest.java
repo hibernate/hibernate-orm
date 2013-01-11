@@ -23,17 +23,18 @@
  */
 package org.hibernate.test.transaction.jta;
 
-import java.sql.Connection;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
-import javax.transaction.TransactionManager;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import javax.transaction.TransactionManager;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.cfg.Environment;
@@ -53,11 +54,9 @@ import org.hibernate.test.common.TransactionEnvironmentImpl;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Testing transaction facade handling when the transaction is being driven by something other than the facade.
@@ -102,19 +101,14 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 		LogicalConnectionImplementor logicalConnection = jdbcCoordinator.getLogicalConnection();
 
 		// set up some tables to use
-		try {
-			Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
-			jdbcCoordinator.getResultSetExtractor().execute( statement, "drop table SANDBOX_JDBC_TST if exists" );
-			jdbcCoordinator.getResultSetExtractor().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
-			assertTrue( jdbcCoordinator.hasRegisteredResources() );
-			assertTrue( logicalConnection.isPhysicallyConnected() );
-			jdbcCoordinator.release( statement );
-			assertFalse( jdbcCoordinator.hasRegisteredResources() );
-			assertFalse( logicalConnection.isPhysicallyConnected() ); // after_statement specified
-		}
-		catch ( SQLException sqle ) {
-			fail( "incorrect exception type : SQLException" );
-		}
+		Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
+		jdbcCoordinator.getResultSetExtractor().execute( statement, "drop table SANDBOX_JDBC_TST if exists" );
+		jdbcCoordinator.getResultSetExtractor().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
+		assertTrue( jdbcCoordinator.hasRegisteredResources() );
+		assertTrue( logicalConnection.isPhysicallyConnected() );
+		jdbcCoordinator.release( statement );
+		assertFalse( jdbcCoordinator.hasRegisteredResources() );
+		assertFalse( logicalConnection.isPhysicallyConnected() ); // after_statement specified
 
 		JtaPlatform instance = serviceRegistry.getService( JtaPlatform.class );
 		TransactionManager transactionManager = instance.retrieveTransactionManager();

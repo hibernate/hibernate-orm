@@ -23,19 +23,18 @@
  */
 package org.hibernate.test.transaction.jdbc;
 
-import java.sql.Connection;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
@@ -46,11 +45,9 @@ import org.hibernate.test.common.TransactionContextImpl;
 import org.hibernate.test.common.TransactionEnvironmentImpl;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -87,19 +84,14 @@ public class TestExpectedUsage extends BaseUnitTestCase {
 		LogicalConnectionImplementor logicalConnection = jdbcCoordinator.getLogicalConnection();
 
 		// set up some tables to use
-		try {
-			Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
-			jdbcCoordinator.getResultSetExtractor().execute( statement, "drop table SANDBOX_JDBC_TST if exists" );
-			jdbcCoordinator.getResultSetExtractor().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
-			assertTrue( jdbcCoordinator.hasRegisteredResources() );
-			assertTrue( logicalConnection.isPhysicallyConnected() );
-			jdbcCoordinator.release( statement );
-			assertFalse( jdbcCoordinator.hasRegisteredResources() );
-			assertTrue( logicalConnection.isPhysicallyConnected() ); // after_transaction specified
-		}
-		catch ( SQLException sqle ) {
-			fail( "incorrect exception type : SQLException" );
-		}
+		Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
+		jdbcCoordinator.getResultSetExtractor().execute( statement, "drop table SANDBOX_JDBC_TST if exists" );
+		jdbcCoordinator.getResultSetExtractor().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
+		assertTrue( jdbcCoordinator.hasRegisteredResources() );
+		assertTrue( logicalConnection.isPhysicallyConnected() );
+		jdbcCoordinator.release( statement );
+		assertFalse( jdbcCoordinator.hasRegisteredResources() );
+		assertTrue( logicalConnection.isPhysicallyConnected() ); // after_transaction specified
 
 		// ok, now we can get down to it...
 		TransactionImplementor txn = transactionCoordinator.getTransaction();  // same as Session#getTransaction

@@ -476,41 +476,41 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 										int rows;
 										do {
 											statementLogger.logStatement( selectQuery, FormatStyle.BASIC.getFormatter() );
-											PreparedStatement selectPS = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( selectQuery );
+											PreparedStatement selectPS = connection.prepareStatement( selectQuery );
 											try {
 												selectPS.setString( 1, segmentValue );
-												ResultSet selectRS = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( selectPS );
+												ResultSet selectRS = selectPS.executeQuery();
 												if ( !selectRS.next() ) {
 													value.initialize( initialValue );
 													PreparedStatement insertPS = null;
 													try {
 														statementLogger.logStatement( insertQuery, FormatStyle.BASIC.getFormatter() );
-														insertPS = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( insertQuery );
+														insertPS = connection.prepareStatement( insertQuery );
 														insertPS.setString( 1, segmentValue );
 														value.bind( insertPS, 2 );
-														session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().execute( insertPS );
+														insertPS.execute();
 													}
 													finally {
 														if ( insertPS != null ) {
-															session.getTransactionCoordinator().getJdbcCoordinator().release( insertPS );
+															insertPS.close();
 														}
 													}
 												}
 												else {
 													value.initialize( selectRS, 1 );
 												}
-												session.getTransactionCoordinator().getJdbcCoordinator().release( selectRS );
+												selectRS.close();
 											}
 											catch ( SQLException e ) {
 											    LOG.unableToReadOrInitHiValue(e);
 												throw e;
 											}
 											finally {
-												session.getTransactionCoordinator().getJdbcCoordinator().release( selectPS );
+												selectPS.close();
 											}
 
 											statementLogger.logStatement( updateQuery, FormatStyle.BASIC.getFormatter() );
-											PreparedStatement updatePS = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( updateQuery );
+											PreparedStatement updatePS = connection.prepareStatement( updateQuery );
 											try {
 												final IntegralDataTypeHolder updateValue = value.copy();
 												if ( optimizer.applyIncrementSizeToSourceValues() ) {
@@ -522,14 +522,14 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 												updateValue.bind( updatePS, 1 );
 												value.bind( updatePS, 2 );
 												updatePS.setString( 3, segmentValue );
-												rows = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( updatePS );
+												rows = updatePS.executeUpdate();
 											}
 											catch ( SQLException e ) {
 												LOG.unableToUpdateQueryHiValue(tableName, e);
 												throw e;
 											}
 											finally {
-												session.getTransactionCoordinator().getJdbcCoordinator().release( updatePS );
+												updatePS.close();
 											}
 										}
 										while ( rows == 0 );

@@ -129,40 +129,40 @@ public class TableStructure implements DatabaseStructure {
 								int rows;
 								do {
 									statementLogger.logStatement( selectQuery, FormatStyle.BASIC.getFormatter() );
-									PreparedStatement selectStatement = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( selectQuery );
+									PreparedStatement selectStatement = connection.prepareStatement( selectQuery );
 									try {
-										ResultSet selectRS = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( selectStatement );
+										ResultSet selectRS = selectStatement.executeQuery();
 										if ( !selectRS.next() ) {
 											String err = "could not read a hi value - you need to populate the table: " + tableName;
 											LOG.error( err );
 											throw new IdentifierGenerationException( err );
 										}
 										value.initialize( selectRS, 1 );
-										session.getTransactionCoordinator().getJdbcCoordinator().release( selectRS );
+										selectRS.close();
 									}
 									catch ( SQLException sqle ) {
 										LOG.error( "could not read a hi value", sqle );
 										throw sqle;
 									}
 									finally {
-										session.getTransactionCoordinator().getJdbcCoordinator().release( selectStatement );
+										selectStatement.close();
 									}
 
 									statementLogger.logStatement( updateQuery, FormatStyle.BASIC.getFormatter() );
-									PreparedStatement updatePS = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( updateQuery );
+									PreparedStatement updatePS = connection.prepareStatement( updateQuery );
 									try {
 										final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
 										final IntegralDataTypeHolder updateValue = value.copy().add( increment );
 										updateValue.bind( updatePS, 1 );
 										value.bind( updatePS, 2 );
-										rows = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( updatePS );
+										rows = updatePS.executeUpdate();
 									}
 									catch ( SQLException e ) {
 									    LOG.unableToUpdateQueryHiValue(tableName, e);
 										throw e;
 									}
 									finally {
-										session.getTransactionCoordinator().getJdbcCoordinator().release( updatePS );
+										updatePS.close();
 									}
 								} while ( rows == 0 );
 

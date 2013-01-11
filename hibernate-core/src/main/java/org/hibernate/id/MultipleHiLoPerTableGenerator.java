@@ -162,22 +162,22 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 				int rows;
 				do {
 					statementLogger.logStatement( query, FormatStyle.BASIC.getFormatter() );
-					PreparedStatement qps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( query );
+					PreparedStatement qps = connection.prepareStatement( query );
 					PreparedStatement ips = null;
 					try {
-						ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( qps );
+						ResultSet rs = qps.executeQuery();
 						boolean isInitialized = rs.next();
 						if ( !isInitialized ) {
 							value.initialize( 0 );
 							statementLogger.logStatement( insert, FormatStyle.BASIC.getFormatter() );
-							ips = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( insert );
+							ips = connection.prepareStatement( insert );
 							value.bind( ips, 1 );
-							session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().execute( ips );
+							ips.execute();
 						}
 						else {
 							value.initialize( rs, 0 );
 						}
-						session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+						rs.close();
 					}
 					catch (SQLException sqle) {
 						LOG.unableToReadOrInitHiValue( sqle );
@@ -185,24 +185,24 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					}
 					finally {
 						if (ips != null) {
-							session.getTransactionCoordinator().getJdbcCoordinator().release( ips );
+							ips.close();
 						}
-						session.getTransactionCoordinator().getJdbcCoordinator().release( qps );
+						qps.close();
 					}
 
 					statementLogger.logStatement( update, FormatStyle.BASIC.getFormatter() );
-					PreparedStatement ups = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( update );
+					PreparedStatement ups = connection.prepareStatement( update );
 					try {
 						value.copy().increment().bind( ups, 1 );
 						value.bind( ups, 2 );
-						rows = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ups );
+						rows = ups.executeUpdate();
 					}
 					catch (SQLException sqle) {
 						LOG.error( LOG.unableToUpdateHiValue( tableName ), sqle );
 						throw sqle;
 					}
 					finally {
-						session.getTransactionCoordinator().getJdbcCoordinator().release( ups );
+						ups.close();
 					}
 				} while ( rows==0 );
 

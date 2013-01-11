@@ -2107,8 +2107,8 @@ public class FooBarTest extends LegacyTestCase {
 				new AbstractReturningWork<Integer>() {
 					@Override
 					public Integer execute(Connection connection) throws SQLException {
-						Statement st = ((SessionImplementor)s2).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-						return ((SessionImplementor)s2).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( st, "delete from FOO_ARRAY where id_='" + bazid + "' and i>=8" );
+						Statement st = connection.createStatement();
+						return st.executeUpdate( "delete from FOO_ARRAY where id_='" + bazid + "' and i>=8" );
 					}
 				}
 		);
@@ -2670,8 +2670,8 @@ public class FooBarTest extends LegacyTestCase {
 					@Override
 					public Integer execute(Connection connection) throws SQLException {
 						final String sql = "update " + getDialect().openQuote() + "glarchez" + getDialect().closeQuote() + " set baz_map_id=null where baz_map_index='a'";
-						Statement st = ((SessionImplementor)s3).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-						return ((SessionImplementor)s3).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( st, sql );
+						Statement st = connection.createStatement();
+						return st.executeUpdate( sql );
 					}
 				}
 		);
@@ -4234,8 +4234,8 @@ public class FooBarTest extends LegacyTestCase {
 				new AbstractWork() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
-						Statement st = ((SessionImplementor)s2).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-						((SessionImplementor)s2).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( st, "delete from immut" );
+						Statement st = connection.createStatement();
+						st.executeUpdate( "delete from immut" );
 					}
 				}
 		);
@@ -4282,8 +4282,8 @@ public class FooBarTest extends LegacyTestCase {
 					@Override
 					public void execute(Connection connection) throws SQLException {
 						final String sql = "update " + getDialect().openQuote() + "foos" + getDialect().closeQuote() + " set long_ = -3";
-						Statement st = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-						((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( st, sql );
+						Statement st = connection.createStatement();
+						st.executeUpdate( sql );
 					}
 				}
 		);

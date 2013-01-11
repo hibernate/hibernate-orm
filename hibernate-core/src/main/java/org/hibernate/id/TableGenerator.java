@@ -161,38 +161,38 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 							// or read committed isolation level
 
 							statementLogger.logStatement( query, FormatStyle.BASIC.getFormatter() );
-							PreparedStatement qps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( query );
+							PreparedStatement qps = connection.prepareStatement( query );
 							try {
-								ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( qps );
+								ResultSet rs = qps.executeQuery();
 								if ( !rs.next() ) {
 									String err = "could not read a hi value - you need to populate the table: " + tableName;
 									LOG.error(err);
 									throw new IdentifierGenerationException(err);
 								}
 								value.initialize( rs, 1 );
-								session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+								rs.close();
 							}
 							catch (SQLException e) {
 								LOG.error("Could not read a hi value", e);
 								throw e;
 							}
 							finally {
-								session.getTransactionCoordinator().getJdbcCoordinator().release( qps );
+								qps.close();
 							}
 
 							statementLogger.logStatement( update, FormatStyle.BASIC.getFormatter() );
-							PreparedStatement ups = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( update );
+							PreparedStatement ups = connection.prepareStatement( update );
 							try {
 								value.copy().increment().bind( ups, 1 );
 								value.bind( ups, 2 );
-								rows = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ups );
+								rows = ups.executeUpdate();
 							}
 							catch (SQLException sqle) {
 								LOG.error(LOG.unableToUpdateHiValue(tableName), sqle);
 								throw sqle;
 							}
 							finally {
-								session.getTransactionCoordinator().getJdbcCoordinator().release( ups );
+								ups.close();
 							}
 						}
 						while (rows==0);

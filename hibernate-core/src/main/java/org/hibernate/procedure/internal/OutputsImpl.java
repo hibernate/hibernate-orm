@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal;
+package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -32,27 +32,24 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.JDBCException;
-import org.hibernate.StoredProcedureOutputs;
-import org.hibernate.StoredProcedureResultSetReturn;
-import org.hibernate.StoredProcedureReturn;
-import org.hibernate.StoredProcedureUpdateCountReturn;
+import org.hibernate.procedure.Outputs;
+import org.hibernate.procedure.ParameterRegistration;
+import org.hibernate.procedure.Return;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.StoredProcedureCallImpl.StoredProcedureParameterImplementor;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.loader.custom.Return;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 
 /**
  * @author Steve Ebersole
  */
-public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
-	private final StoredProcedureCallImpl procedureCall;
+public class OutputsImpl implements Outputs {
+	private final CallImpl procedureCall;
 	private final CallableStatement callableStatement;
 
-	private final StoredProcedureParameterImplementor[] refCursorParameters;
+	private final ParameterRegistrationImplementor[] refCursorParameters;
 	private final CustomLoaderExtension loader;
 
 	private CurrentReturnDescriptor currentReturnDescriptor;
@@ -60,7 +57,7 @@ public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
 	private boolean executed = false;
 	private int refCursorParamIndex = 0;
 
-	StoredProcedureOutputsImpl(StoredProcedureCallImpl procedureCall, CallableStatement callableStatement) {
+	OutputsImpl(CallImpl procedureCall, CallableStatement callableStatement) {
 		this.procedureCall = procedureCall;
 		this.callableStatement = callableStatement;
 
@@ -70,13 +67,18 @@ public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
 	}
 
 	@Override
+	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration) {
+		return ( (ParameterRegistrationImplementor<T>) parameterRegistration ).extract( callableStatement );
+	}
+
+	@Override
 	public Object getOutputParameterValue(String name) {
-		return procedureCall.getRegisteredParameter( name ).extract( callableStatement );
+		return procedureCall.getParameterRegistration( name ).extract( callableStatement );
 	}
 
 	@Override
 	public Object getOutputParameterValue(int position) {
-		return procedureCall.getRegisteredParameter( position ).extract( callableStatement );
+		return procedureCall.getParameterRegistration( position ).extract( callableStatement );
 	}
 
 	@Override
@@ -125,7 +127,7 @@ public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
 	}
 
 	@Override
-	public StoredProcedureReturn getNextReturn() {
+	public Return getNextReturn() {
 		if ( currentReturnDescriptor == null ) {
 			if ( executed ) {
 				throw new IllegalStateException( "Unexpected condition" );
@@ -157,7 +159,7 @@ public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
 			this.refCursorParamIndex++;
 			ResultSet resultSet;
 			int refCursorParamIndex = copyReturnDescriptor.refCursorParamIndex;
-			StoredProcedureParameterImplementor refCursorParam = refCursorParameters[refCursorParamIndex];
+			ParameterRegistrationImplementor refCursorParam = refCursorParameters[refCursorParamIndex];
 			if ( refCursorParam.getName() != null ) {
 				resultSet = procedureCall.session().getFactory().getServiceRegistry()
 						.getService( RefCursorSupport.class )
@@ -192,11 +194,11 @@ public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
 		}
 	}
 
-	private static class ResultSetReturn implements StoredProcedureResultSetReturn {
-		private final StoredProcedureOutputsImpl storedProcedureOutputs;
+	private static class ResultSetReturn implements org.hibernate.procedure.ResultSetReturn {
+		private final OutputsImpl storedProcedureOutputs;
 		private final ResultSet resultSet;
 
-		public ResultSetReturn(StoredProcedureOutputsImpl storedProcedureOutputs, ResultSet resultSet) {
+		public ResultSetReturn(OutputsImpl storedProcedureOutputs, ResultSet resultSet) {
 			this.storedProcedureOutputs = storedProcedureOutputs;
 			this.resultSet = resultSet;
 		}
@@ -229,12 +231,12 @@ public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
 		}
 	}
 
-	private class UpdateCountReturn implements StoredProcedureUpdateCountReturn {
-		private final StoredProcedureOutputsImpl storedProcedureOutputs;
+	private class UpdateCountReturn implements org.hibernate.procedure.UpdateCountReturn {
+		private final OutputsImpl procedureOutputs;
 		private final int updateCount;
 
-		public UpdateCountReturn(StoredProcedureOutputsImpl storedProcedureOutputs, int updateCount) {
-			this.storedProcedureOutputs = storedProcedureOutputs;
+		public UpdateCountReturn(OutputsImpl procedureOutputs, int updateCount) {
+			this.procedureOutputs = procedureOutputs;
 			this.updateCount = updateCount;
 		}
 
@@ -249,13 +251,13 @@ public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
 		}
 	}
 
-	private static CustomLoaderExtension buildSpecializedCustomLoader(final StoredProcedureCallImpl procedureCall) {
+	private static CustomLoaderExtension buildSpecializedCustomLoader(final CallImpl procedureCall) {
 		final SQLQueryReturnProcessor processor = new SQLQueryReturnProcessor(
 				procedureCall.getQueryReturns(),
 				procedureCall.session().getFactory()
 		);
 		processor.process();
-		final List<Return> customReturns = processor.generateCustomReturns( false );
+		final List<org.hibernate.loader.custom.Return> customReturns = processor.generateCustomReturns( false );
 
 		CustomQuery customQuery = new CustomQuery() {
 			@Override
@@ -275,7 +277,7 @@ public class StoredProcedureOutputsImpl implements StoredProcedureOutputs {
 			}
 
 			@Override
-			public List<Return> getCustomQueryReturns() {
+			public List<org.hibernate.loader.custom.Return> getCustomQueryReturns() {
 				return customReturns;
 			}
 		};

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,11 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
+package org.hibernate.procedure;
+
+import org.hibernate.HibernateException;
 
 /**
+ * Thrown to indicate that an attempt was made to register a stored procedure named parameter, but the underlying
+ * database reports to not support named parameters.
+ *
  * @author Steve Ebersole
  */
-public interface StoredProcedureUpdateCountReturn extends StoredProcedureReturn {
-	public int getUpdateCount();
+public class NamedParametersNotSupportedException extends HibernateException {
+	public NamedParametersNotSupportedException(String message) {
+		super( message );
+	}
 }

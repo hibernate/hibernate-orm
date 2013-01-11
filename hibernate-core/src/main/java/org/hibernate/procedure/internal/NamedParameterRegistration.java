@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,11 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
+package org.hibernate.procedure.internal;
+
+import javax.persistence.ParameterMode;
 
 /**
  * @author Steve Ebersole
  */
-public interface StoredProcedureReturn {
-	public boolean isResultSet();
+public class NamedParameterRegistration<T> extends AbstractParameterRegistrationImpl<T> {
+	public NamedParameterRegistration(
+			CallImpl procedureCall,
+			String name,
+			Class<T> type,
+			ParameterMode mode) {
+		super( procedureCall, name, type, mode );
+	}
 }

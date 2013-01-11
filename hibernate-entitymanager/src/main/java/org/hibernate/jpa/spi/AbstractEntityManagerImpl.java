@@ -83,7 +83,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
-import org.hibernate.StoredProcedureCall;
+import org.hibernate.procedure.Call;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnresolvableObjectException;
@@ -813,7 +813,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	@Override
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
 		try {
-			StoredProcedureCall call = getSession().createStoredProcedureCall( procedureName );
+			Call call = getSession().createStoredProcedureCall( procedureName );
 			return new StoredProcedureQueryImpl( call, this );
 		}
 		catch ( HibernateException he ) {
@@ -824,7 +824,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	@Override
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
 		try {
-			StoredProcedureCall call = getSession().createStoredProcedureCall( procedureName, resultClasses );
+			Call call = getSession().createStoredProcedureCall( procedureName, resultClasses );
 			return new StoredProcedureQueryImpl( call, this );
 		}
 		catch ( HibernateException he ) {

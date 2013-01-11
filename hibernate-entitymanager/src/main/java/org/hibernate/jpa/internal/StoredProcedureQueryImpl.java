@@ -37,11 +37,11 @@ import java.util.List;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
-import org.hibernate.StoredProcedureCall;
-import org.hibernate.StoredProcedureOutputs;
-import org.hibernate.StoredProcedureResultSetReturn;
-import org.hibernate.StoredProcedureReturn;
-import org.hibernate.StoredProcedureUpdateCountReturn;
+import org.hibernate.procedure.Call;
+import org.hibernate.procedure.Outputs;
+import org.hibernate.procedure.ResultSetReturn;
+import org.hibernate.procedure.Return;
+import org.hibernate.procedure.UpdateCountReturn;
 import org.hibernate.jpa.spi.BaseQueryImpl;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 
@@ -49,60 +49,61 @@ import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
  * @author Steve Ebersole
  */
 public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredProcedureQuery {
-	private final StoredProcedureCall storedProcedureCall;
-	private StoredProcedureOutputs storedProcedureOutputs;
+	private final Call procedureCall;
+	private Outputs procedureOutputs;
 
-	public StoredProcedureQueryImpl(StoredProcedureCall storedProcedureCall, HibernateEntityManagerImplementor entityManager) {
+	public StoredProcedureQueryImpl(Call procedureCall, HibernateEntityManagerImplementor entityManager) {
 		super( entityManager );
-		this.storedProcedureCall = storedProcedureCall;
+		this.procedureCall = procedureCall;
 	}
 
 	@Override
 	protected boolean applyTimeoutHint(int timeout) {
-		storedProcedureCall.setTimeout( timeout );
+		procedureCall.setTimeout( timeout );
 		return true;
 	}
 
 	@Override
 	protected boolean applyCacheableHint(boolean isCacheable) {
-		storedProcedureCall.setCacheable( isCacheable );
+		procedureCall.setCacheable( isCacheable );
 		return true;
 	}
 
 	@Override
 	protected boolean applyCacheRegionHint(String regionName) {
-		storedProcedureCall.setCacheRegion( regionName );
+		procedureCall.setCacheRegion( regionName );
 		return true;
 	}
 
 	@Override
 	protected boolean applyReadOnlyHint(boolean isReadOnly) {
-		storedProcedureCall.setReadOnly( isReadOnly );
+		procedureCall.setReadOnly( isReadOnly );
 		return true;
 	}
 
 	@Override
 	protected boolean applyCacheModeHint(CacheMode cacheMode) {
-		storedProcedureCall.setCacheMode( cacheMode );
+		procedureCall.setCacheMode( cacheMode );
 		return true;
 	}
 
 	@Override
 	protected boolean applyFlushModeHint(FlushMode flushMode) {
-		storedProcedureCall.setFlushMode( flushMode );
+		procedureCall.setFlushMode( flushMode );
 		return true;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public StoredProcedureQuery registerStoredProcedureParameter(int position, Class type, ParameterMode mode) {
-		storedProcedureCall.registerStoredProcedureParameter( position, type, mode );
+		procedureCall.registerParameter( position, type, mode );
 		return this;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public StoredProcedureQuery registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode) {
-		storedProcedureCall.registerStoredProcedureParameter( parameterName, type, mode );
+		procedureCall.registerParameter( parameterName, type, mode );
 		return this;
 	}
 
@@ -171,11 +172,11 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	// outputs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private StoredProcedureOutputs outputs() {
-		if ( storedProcedureOutputs == null ) {
-			storedProcedureOutputs = storedProcedureCall.getOutputs();
+	private Outputs outputs() {
+		if ( procedureOutputs == null ) {
+			procedureOutputs = procedureCall.getOutputs();
 		}
-		return storedProcedureOutputs;
+		return procedureOutputs;
 	}
 
 	@Override
@@ -205,29 +206,29 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	@Override
 	public int getUpdateCount() {
-		final StoredProcedureReturn nextReturn = outputs().getNextReturn();
+		final Return nextReturn = outputs().getNextReturn();
 		if ( nextReturn.isResultSet() ) {
 			return -1;
 		}
-		return ( (StoredProcedureUpdateCountReturn) nextReturn ).getUpdateCount();
+		return ( (UpdateCountReturn) nextReturn ).getUpdateCount();
 	}
 
 	@Override
 	public List getResultList() {
-		final StoredProcedureReturn nextReturn = outputs().getNextReturn();
+		final Return nextReturn = outputs().getNextReturn();
 		if ( ! nextReturn.isResultSet() ) {
 			return null; // todo : what should be thrown/returned here?
 		}
-		return ( (StoredProcedureResultSetReturn) nextReturn ).getResultList();
+		return ( (ResultSetReturn) nextReturn ).getResultList();
 	}
 
 	@Override
 	public Object getSingleResult() {
-		final StoredProcedureReturn nextReturn = outputs().getNextReturn();
+		final Return nextReturn = outputs().getNextReturn();
 		if ( ! nextReturn.isResultSet() ) {
 			return null; // todo : what should be thrown/returned here?
 		}
-		return ( (StoredProcedureResultSetReturn) nextReturn ).getSingleResult();
+		return ( (ResultSetReturn) nextReturn ).getSingleResult();
 	}
 
 	@Override

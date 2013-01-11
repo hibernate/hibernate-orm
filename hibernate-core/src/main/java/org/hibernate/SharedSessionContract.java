@@ -25,6 +25,8 @@ package org.hibernate;
 
 import java.io.Serializable;
 
+import org.hibernate.procedure.Call;
+
 /**
  * Contract methods shared between {@link Session} and {@link StatelessSession}
  * 
@@ -91,17 +93,18 @@ public interface SharedSessionContract extends Serializable {
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	public StoredProcedureCall createStoredProcedureCall(String procedureName);
+	public Call createStoredProcedureCall(String procedureName);
 
 	/**
-	 * Creates a call to a stored procedure with specific result set entity mappings
+	 * Creates a call to a stored procedure with specific result set entity mappings.  Each class named
+	 * is considered a "root return".
 	 *
 	 * @param procedureName The name of the procedure.
 	 * @param resultClasses The entity(s) to map the result on to.
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	public StoredProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses);
+	public Call createStoredProcedureCall(String procedureName, Class... resultClasses);
 
 	/**
 	 * Creates a call to a stored procedure with specific result set entity mappings
@@ -111,7 +114,7 @@ public interface SharedSessionContract extends Serializable {
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	public StoredProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings);
+	public Call createStoredProcedureCall(String procedureName, String... resultSetMappings);
 
 	/**
 	 * Create {@link Criteria} instance for the given class (entity or subclasses/implementors)

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
+package org.hibernate.procedure;
 
 /**
  * Represents all the outputs of a call to a database stored procedure (or function) through the JDBC
@@ -29,7 +29,22 @@ package org.hibernate;
  *
  * @author Steve Ebersole
  */
-public interface StoredProcedureOutputs {
+public interface Outputs {
+
+	/**
+	 * Retrieve the value of an OUTPUT parameter by the parameter's registration memento.
+	 * <p/>
+	 * Should NOT be called for parameters registered as REF_CURSOR.  REF_CURSOR parameters should be
+	 * accessed via the returns (see {@link #getNextReturn}
+	 *
+	 * @param parameterRegistration The parameter's registration memento.
+	 *
+	 * @return The output value.
+	 *
+	 * @see Call#registerParameter(String, Class, javax.persistence.ParameterMode)
+	 */
+	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration);
+
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the name under which the parameter was registered.
 	 *
@@ -37,7 +52,7 @@ public interface StoredProcedureOutputs {
 	 *
 	 * @return The output value.
 	 *
-	 * @see StoredProcedureCall#registerStoredProcedureParameter(String, Class, javax.persistence.ParameterMode)
+	 * @see Call#registerParameter(String, Class, javax.persistence.ParameterMode)
 	 */
 	public Object getOutputParameterValue(String name);
 
@@ -48,7 +63,7 @@ public interface StoredProcedureOutputs {
 	 *
 	 * @return The output value.
 	 *
-	 * @see StoredProcedureCall#registerStoredProcedureParameter(int, Class, javax.persistence.ParameterMode)
+	 * @see Call#registerParameter(int, Class, javax.persistence.ParameterMode)
 	 */
 	public Object getOutputParameterValue(int position);
 
@@ -65,5 +80,5 @@ public interface StoredProcedureOutputs {
 	 *
 	 * @return The next return.
 	 */
-	public StoredProcedureReturn getNextReturn();
+	public Return getNextReturn();
 }

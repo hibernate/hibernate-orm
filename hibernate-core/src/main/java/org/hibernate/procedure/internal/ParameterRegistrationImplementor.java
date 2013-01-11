@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,28 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
+package org.hibernate.procedure.internal;
 
-import java.util.List;
+import java.sql.CallableStatement;
+import java.sql.SQLException;
+
+import org.hibernate.procedure.ParameterRegistration;
 
 /**
- * Models a stored procedure result that is a result set.
- *
  * @author Steve Ebersole
  */
-public interface StoredProcedureResultSetReturn extends StoredProcedureReturn {
-	/**
-	 * Consume the underlying {@link java.sql.ResultSet} and return the resulting List.
-	 *
-	 * @return The consumed ResultSet values.
-	 */
-	public List getResultList();
+public interface ParameterRegistrationImplementor<T> extends ParameterRegistration<T> {
+	public void prepare(CallableStatement statement, int i) throws SQLException;
 
-	/**
-	 * Consume the underlying {@link java.sql.ResultSet} with the expectation that there is just a single level of
-	 * root returns.
-	 *
-	 * @return The single result.
-	 */
-	public Object getSingleResult();
+	public int[] getSqlTypes();
+
+	public T extract(CallableStatement statement);
+
 }

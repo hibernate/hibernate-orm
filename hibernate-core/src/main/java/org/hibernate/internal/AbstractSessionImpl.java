@@ -37,7 +37,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.StoredProcedureCall;
+import org.hibernate.procedure.Call;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
@@ -59,6 +59,7 @@ import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.procedure.internal.CallImpl;
 import org.hibernate.type.Type;
 
 /**
@@ -240,27 +241,27 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")
-	public StoredProcedureCall createStoredProcedureCall(String procedureName) {
+	public Call createStoredProcedureCall(String procedureName) {
 		errorIfClosed();
-		final StoredProcedureCall call = new StoredProcedureCallImpl( this, procedureName );
+		final Call call = new CallImpl( this, procedureName );
 //		call.setComment( "Dynamic stored procedure call" );
 		return call;
 	}
 
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")
-	public StoredProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses) {
+	public Call createStoredProcedureCall(String procedureName, Class... resultClasses) {
 		errorIfClosed();
-		final StoredProcedureCall call = new StoredProcedureCallImpl( this, procedureName, resultClasses );
+		final Call call = new CallImpl( this, procedureName, resultClasses );
 //		call.setComment( "Dynamic stored procedure call" );
 		return call;
 	}
 
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")
-	public StoredProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
+	public Call createStoredProcedureCall(String procedureName, String... resultSetMappings) {
 		errorIfClosed();
-		final StoredProcedureCall call = new StoredProcedureCallImpl( this, procedureName, resultSetMappings );
+		final Call call = new CallImpl( this, procedureName, resultSetMappings );
 //		call.setComment( "Dynamic stored procedure call" );
 		return call;
 	}

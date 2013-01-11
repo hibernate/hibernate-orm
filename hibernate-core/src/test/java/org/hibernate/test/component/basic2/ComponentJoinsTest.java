@@ -34,7 +34,6 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class ComponentJoinsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {

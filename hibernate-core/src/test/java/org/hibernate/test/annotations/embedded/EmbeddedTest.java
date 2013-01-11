@@ -46,7 +46,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testSimple() throws Exception {
@@ -154,6 +153,7 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEmbeddedSuperclass() {
 		Session s;
 		Transaction tx;
@@ -191,6 +191,7 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDottedProperty() {
 		Session s;
 		Transaction tx;
@@ -406,6 +407,7 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDefaultCollectionTable() throws Exception {
 		//are the tables correct?
 		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", metadata() ) );
@@ -457,6 +459,7 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 
 	// make sure we support collection of embeddable objects inside embeddable objects
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEmbeddableInsideEmbeddable() throws Exception {
 		Session s;
 		Transaction tx;

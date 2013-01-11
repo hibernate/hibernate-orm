@@ -146,7 +146,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 							embeddable,
 							getPath(),
 							createAggregatedOverrideMap( embeddableClass, entityClass.getAttributeOverrideMap() ),
-							embeddable.getClassAccessType()
+							embeddableClass.getClassAccessType()
 					)
 			);
 		}

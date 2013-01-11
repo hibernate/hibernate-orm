@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.embedded;
 import java.io.Serializable;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -15,7 +16,7 @@ public class RegionalArticle implements Serializable {
 	private RegionalArticlePk pk;
 	private String name;
 
-	@Id
+	@EmbeddedId
 	public RegionalArticlePk getPk() {
 		return pk;
 	}

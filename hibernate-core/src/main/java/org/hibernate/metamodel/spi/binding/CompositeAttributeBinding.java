@@ -236,7 +236,14 @@ public class CompositeAttributeBinding
 	public CascadeStyle getCascadeStyle() {
 		for ( AttributeBinding attributeBinding : attributeBindings() ) {
 			if ( attributeBinding.isCascadeable() ) {
-				CascadeStyle cascadeStyle = Cascadeable.class.cast( attributeBinding ).getCascadeStyle();
+				final Cascadeable cascadeable;
+				if ( attributeBinding.getAttribute().isSingular() ) {
+					cascadeable = Cascadeable.class.cast( attributeBinding );
+				}
+				else {
+					cascadeable = Cascadeable.class.cast( ( (PluralAttributeBinding) attributeBinding ).getPluralAttributeElementBinding() );
+				}
+				CascadeStyle cascadeStyle = cascadeable.getCascadeStyle();
 				if ( cascadeStyle != CascadeStyles.NONE ) {
 					return CascadeStyles.ALL;
 				}

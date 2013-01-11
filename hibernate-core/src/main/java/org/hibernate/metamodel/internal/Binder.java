@@ -1658,7 +1658,14 @@ public class Binder {
 		 */
 		for ( AttributeBinding ab : compositeAttributeBindingContainer.attributeBindings() ) {
 			if ( ab.isCascadeable() ) {
-				CascadeStyle cascadeStyle = Cascadeable.class.cast( ab ).getCascadeStyle();
+				final Cascadeable cascadeable;
+				if ( ab.getAttribute().isSingular() ) {
+					cascadeable = Cascadeable.class.cast( ab );
+				}
+				else {
+					cascadeable = Cascadeable.class.cast( ( (PluralAttributeBinding) ab ).getPluralAttributeElementBinding() );
+				}
+				CascadeStyle cascadeStyle = cascadeable.getCascadeStyle();
 				if ( cascadeStyle != CascadeStyles.NONE ) {
 					elementBinding.setCascadeStyle( CascadeStyles.ALL );
 				}

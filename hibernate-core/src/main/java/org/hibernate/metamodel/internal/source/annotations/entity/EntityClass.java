@@ -334,13 +334,7 @@ public class EntityClass extends ConfiguredClass {
 				HibernateDotNames.IMMUTABLE,
 				ClassInfo.class
 		);
-		if ( hibernateImmutableAnnotation != null ) {
-			isImmutable = true;
-		}
-		else {
-			isImmutable = false;
-		}
-
+		isImmutable = hibernateImmutableAnnotation != null ;
 		final AnnotationInstance whereAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), HibernateDotNames.WHERE
 		);

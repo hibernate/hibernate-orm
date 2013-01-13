@@ -26,7 +26,6 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +37,6 @@ import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.JoinedIterable;
-import org.hibernate.internal.util.collections.JoinedIterator;
-import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
@@ -58,6 +54,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  * @author Gail Badner
+ * @author Strong Liu
  */
 public class EntityBinding extends AbstractAttributeBindingContainer implements Filterable {
 	private static final String NULL_DISCRIMINATOR_MATCH_VALUE = "null";
@@ -592,8 +589,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	 */
 	public int getAttributeBindingClosureSpan() {
 		// TODO: update account for join attribute bindings
-		return isRoot() ? getNonIdAttributeBindingClosure().length :
-				superEntityBinding.getAttributeBindingClosureSpan() + getNonIdAttributeBindingClosure().length;
+		return getAttributeBindingClosure().length;
 	}
 
 	/**
@@ -606,23 +602,35 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	public AttributeBinding[] getAttributeBindingClosure() {
 		// TODO: update size to account for joins
 		if ( isRoot() ) {
-			return getNonIdAttributeBindingClosure();
+			return attributeBindingMapInternal().values()
+					.toArray( new AttributeBinding[attributeBindingMapInternal().size()] );
 		}
 		else {
 			return ArrayHelper.join(
 					superEntityBinding.getAttributeBindingClosure(),
-					getNonIdAttributeBindingClosure()
+					attributeBindingMapInternal().values()
+							.toArray( new AttributeBinding[attributeBindingMapInternal().size()] )
+
 			);
 		}
 	}
 
-	private AttributeBinding[] getNonIdAttributeBindingClosure() {
-		List<AttributeBinding> list = new ArrayList<AttributeBinding>();
-		attributeBindings();
-		for ( final AttributeBinding ab : attributeBindings() ) {
-			if(ab instanceof CompositeAttributeBinding){
+	public AttributeBinding[] getNonIdAttributeBindingClosure(){
+		// TODO: update size to account for joins
+		if ( isRoot() ) {
+			return internalGetNonIdAttributeBindingClosure();
+		}
+		else {
+			return ArrayHelper.join(
+					superEntityBinding.getNonIdAttributeBindingClosure(),
+					internalGetNonIdAttributeBindingClosure()
+			);
+		}
+	}
 
-			}
+	private AttributeBinding[] internalGetNonIdAttributeBindingClosure() {
+		List<AttributeBinding> list = new ArrayList<AttributeBinding>();
+		for ( final AttributeBinding ab : attributeBindings() ) {
 			boolean isId = getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( ab );
 			if ( !isId ) {
 				list.add( ab );
@@ -739,13 +747,26 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 
 			results = ArrayHelper.join(
 					results,
-					subEntityBinding.getNonIdAttributeBindingClosure()
+					subEntityBinding.attributeBindingMapInternal().values().toArray( new AttributeBinding[subEntityBinding.attributeBindingMapInternal().size()] )
 			);
 			// TODO: if EntityBinding.attributeBindings() excludes joined attributes, then they need to be added here
 		}
 		return results;
 	}
+	public AttributeBinding[] getNonIdEntitiesAttributeBindingClosure() {
+		AttributeBinding[] results = getNonIdAttributeBindingClosure();
 
+		for ( EntityBinding subEntityBinding : getPreOrderSubEntityBindingClosure() ) {
+			// only add attribute bindings declared for the subEntityBinding
+
+			results = ArrayHelper.join(
+					results,
+					subEntityBinding.internalGetNonIdAttributeBindingClosure()
+			);
+			// TODO: if EntityBinding.attributeBindings() excludes joined attributes, then they need to be added here
+		}
+		return results;
+	}
 
 	public boolean isClassOrSuperclassSecondaryTable(SecondaryTable secondaryTable) {
 		String secondaryTableName = secondaryTable.getSecondaryTableReference().getLogicalName().getText();

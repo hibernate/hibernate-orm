@@ -182,6 +182,7 @@ import org.jboss.logging.Logger;
  * @author Hardy Ferentschik
  * @author Gail Badner
  * @author Brett Meyer
+ * @author Strong Liu
  */
 public class Binder {
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
@@ -1410,7 +1411,7 @@ public class Binder {
 		attributeBinding.setCustomSqlDelete( attributeSource.getCustomSqlDelete() );
 		attributeBinding.setCustomSqlDeleteAll( attributeSource.getCustomSqlDeleteAll() );
 		attributeBinding.setWhere( attributeSource.getWhere() );
-
+		attributeBinding.setMutable( attributeSource.isMutable() );
 		switch ( attributeSource.getElementSource().getNature() ) {
 			case BASIC:
 				bindBasicPluralAttribute( attributeSource, attributeBinding, reflectedCollectionJavaTypes );

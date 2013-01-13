@@ -34,7 +34,7 @@ import org.hibernate.dialect.Dialect;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class PrimaryKey extends AbstractConstraint implements Constraint, Exportable {
+public class PrimaryKey extends AbstractConstraint {
 
 	private static final String GENERATED_NAME_PREFIX = "PK";
 

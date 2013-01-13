@@ -42,7 +42,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
+//@FailureExpectedWithNewMetamodel
 public class WithClauseTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -50,6 +50,7 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWithClauseFailsWithFetch() {
 		TestData data = new TestData();
 		data.prepare();
@@ -113,6 +114,7 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWithClause() {
 		TestData data = new TestData();
 		data.prepare();

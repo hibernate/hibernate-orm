@@ -47,7 +47,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel
+//@FailureExpectedWithNewMetamodel
 public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	StateProvince stateProvince;
 	private Zoo zoo1;
@@ -205,6 +205,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOrderByNoSelectAliasRef() {
 		createData();
 
@@ -346,6 +347,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOrderBySelectAliasRef() {
 		createData();
 
@@ -523,6 +525,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOrderByEntityWithFetchJoinedCollection() {
 		createData();
 
@@ -544,6 +547,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOrderBySelectNewArgAliasRef() {
 		createData();
 
@@ -588,6 +592,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test(timeout = 5 * 60 * 1000)
+	@FailureExpectedWithNewMetamodel
 	public void testOrderBySelectNewMapArgAliasRef() {
 		createData();
 
@@ -638,6 +643,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOrderByAggregatedArgAliasRef() {
 		createData();
 

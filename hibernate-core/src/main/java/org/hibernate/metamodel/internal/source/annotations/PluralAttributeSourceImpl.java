@@ -258,6 +258,11 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	}
 
 	@Override
+	public boolean isMutable() {
+		return associationAttribute.isMutable();
+	}
+
+	@Override
 	public boolean isOrdered() {
 		return StringHelper.isNotEmpty( getOrder() );
 	}

@@ -192,6 +192,11 @@ public abstract class AbstractPluralAttributeSourceImpl
 	}
 
 	@Override
+	public boolean isMutable() {
+		return pluralAttributeElement.isMutable();
+	}
+
+	@Override
 	public String getMappedBy() {
 		return null;
 	}

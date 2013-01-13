@@ -31,7 +31,7 @@ import org.hibernate.dialect.Dialect;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Index extends AbstractConstraint implements Constraint {
+public class Index extends AbstractConstraint{
 	protected Index(Table table, String name) {
 		super( table, name );
 	}

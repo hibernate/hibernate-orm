@@ -23,8 +23,10 @@
  *
  */
 package org.hibernate.persister.entity;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -53,9 +55,9 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -648,16 +650,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 
 		// PROPERTIES
-
 		propertyTableNumbers = new int[ getPropertySpan() ];
 		int i=0;
-		for( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+		for( AttributeBinding attributeBinding : entityBinding.getNonIdAttributeBindingClosure() ) {
 			// TODO: fix when joins are working (HHH-6391)
 			//propertyTableNumbers[i++] = entityBinding.getJoinNumber( attributeBinding);
-			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
-				continue; // skip identifier binding
-			}
-
 			final int tableNumber;
 			if ( attributeBinding.getAttribute().isSingular() ) {
 				SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
@@ -675,11 +672,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		ArrayList<Integer> formulaJoinedNumbers = new ArrayList<Integer>();
 		ArrayList<Integer> propertyJoinNumbers = new ArrayList<Integer>();
 
-		for ( AttributeBinding attributeBinding : entityBinding.getEntitiesAttributeBindingClosure() ) {
-			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
-				continue; // skip identifier binding
-			}
-
+		for ( AttributeBinding attributeBinding : entityBinding.getNonIdEntitiesAttributeBindingClosure() ) {
 			if ( attributeBinding.getAttribute().isSingular() ) {
 				SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
 				int join = entityBinding.getSecondaryTableNumber( singularAttributeBinding );
@@ -751,7 +744,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		postConstruct( mapping );
 	}
-
 
 	protected boolean isInverseTable(int j) {
 		return isInverseTable[j];

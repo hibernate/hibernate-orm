@@ -35,7 +35,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.TextType;
@@ -852,7 +851,6 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testImmutableCollectionWithUpdate() {
 		clearCounts();
 
@@ -1074,7 +1072,6 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testImmutableCollectionWithMerge() {
 		clearCounts();
 

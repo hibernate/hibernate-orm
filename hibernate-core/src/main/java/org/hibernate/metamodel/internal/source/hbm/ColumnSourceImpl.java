@@ -98,9 +98,9 @@ class ColumnSourceImpl
 	@Override
 	public Size getSize() {
 		return new Size(
-				Helper.getValue( columnElement.getPrecision(), -1 ),
-				Helper.getValue( columnElement.getScale(), -1 ),
-				Helper.getValue( columnElement.getLength(), -1 ),
+				Helper.getValue( columnElement.getPrecision(), Size.DEFAULT_PRECISION ),
+				Helper.getValue( columnElement.getScale(), Size.DEFAULT_SCALE ),
+				Helper.getValue( columnElement.getLength(), Size.DEFAULT_LENGTH ),
 				Size.LobMultiplier.NONE
 		);
 	}

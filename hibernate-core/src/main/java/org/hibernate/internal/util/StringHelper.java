@@ -513,7 +513,7 @@ public final class StringHelper {
 	 */
 	public static String generateAlias(String description, int unique) {
 		return generateAliasRoot(description) +
-			Integer.toString(unique) +
+			unique +
 			'_';
 	}
 

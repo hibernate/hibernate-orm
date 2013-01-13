@@ -61,6 +61,8 @@ public interface PluralAttributeSource
 
 	public boolean isInverse();
 
+	public boolean isMutable();
+
 	public String getCustomLoaderName();
 
 	public CustomSQL getCustomSqlInsert();

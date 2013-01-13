@@ -56,7 +56,7 @@ import static org.junit.Assert.fail;
  *
  * @author Max Rydahl Andersen
  */
-@FailureExpectedWithNewMetamodel
+//@FailureExpectedWithNewMetamodel
 public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 	private boolean initialVersion2SqlFlagValue;
 
@@ -161,6 +161,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-1724" )
+	@FailureExpectedWithNewMetamodel
 	public void testCriteriaAggregationReturnType() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -222,6 +223,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCountReturnValues() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

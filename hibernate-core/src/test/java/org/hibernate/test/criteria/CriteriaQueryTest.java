@@ -82,7 +82,6 @@ import static org.junit.Assert.fail;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-@FailureExpectedWithNewMetamodel
 public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -1733,6 +1732,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
     @Test
+	@FailureExpectedWithNewMetamodel
 	public void testCriteriaCollectionOfValue() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

@@ -27,7 +27,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.LiteralType;
 
 /**
@@ -39,7 +42,9 @@ public class Insert {
 	private Dialect dialect;
 	private String tableName;
 	private String comment;
-	private Map columns = new LinkedHashMap();
+	private Map<String, String> columns = new LinkedHashMap<String, String>();
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
+			Insert.class.getName());
 
 	public Insert(Dialect dialect) {
 		this.dialect = dialect;
@@ -59,8 +64,8 @@ public class Insert {
 	}
 
 	public Insert addColumns(String[] columnNames) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addColumn( columnNames[i] );
+		for ( String columnName : columnNames ) {
+			addColumn( columnName );
 		}
 		return this;
 	}
@@ -84,7 +89,10 @@ public class Insert {
 	}
 
 	public Insert addColumn(String columnName, String valueExpression) {
-		columns.put(columnName, valueExpression);
+		String old = columns.put( columnName, valueExpression );
+		if ( old != null ) {
+			LOG.warn( "Duplicated column name " + columnName + " is being added into Insert, this is more likely a hibernate internal issue" );
+		}
 		return this;
 	}
 
@@ -112,12 +120,12 @@ public class Insert {
 		}
 		buf.append("insert into ")
 			.append(tableName);
-		if ( columns.size()==0 ) {
+		if ( columns.isEmpty() ) {
 			buf.append(' ').append( dialect.getNoColumnsInsertString() );
 		}
 		else {
 			buf.append(" (");
-			Iterator iter = columns.keySet().iterator();
+			Iterator<String> iter = columns.keySet().iterator();
 			while ( iter.hasNext() ) {
 				buf.append( iter.next() );
 				if ( iter.hasNext() ) {

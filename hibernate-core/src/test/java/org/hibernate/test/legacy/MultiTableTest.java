@@ -28,7 +28,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 
-@FailureExpectedWithNewMetamodel
 public class MultiTableTest extends LegacyTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {
@@ -59,6 +58,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFetchOneToMany() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -69,6 +69,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNarrow() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -80,6 +81,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoins() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -103,6 +105,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSubclassCollection() throws Exception {
 		//if ( getDialect() instanceof HSQLDialect ) return; //TODO: figure out why!?
 		Session s = openSession();
@@ -194,6 +197,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testQueries() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -220,6 +224,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testConstraints() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -239,6 +244,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMultiTable() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -377,6 +383,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMultiTableGeneratedId() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -495,6 +502,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMultiTableCollections() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -543,6 +551,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMultiTableManyToOne() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -576,6 +585,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMultiTableNativeId() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -589,6 +599,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollection() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

@@ -85,6 +85,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 
 	private LazyCollectionOption lazyOption;
 	private final boolean isCollectionIdPresent;
+	private final boolean mutable;
 
 
 	public static PluralAssociationAttribute createPluralAssociationAttribute(
@@ -206,6 +207,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 			explicitForeignKeyName = null;
 			inverseForeignKeyName = null;
 		}
+
+		this.mutable = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.IMMUTABLE ) == null;
 
 		this.caching = determineCachingSettings();
 		this.isExtraLazy = lazyOption == LazyCollectionOption.EXTRA;
@@ -487,6 +490,9 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	}
 
 
+	public boolean isMutable() {
+		return mutable;
+	}
 }
 
 

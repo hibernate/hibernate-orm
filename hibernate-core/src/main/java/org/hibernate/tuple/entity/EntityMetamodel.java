@@ -398,22 +398,7 @@ public class EntityMetamodel implements Serializable {
 		boolean hasLazy = false;
 
 		// TODO: Fix after HHH-6337 is fixed; for now assume entityBinding is the root binding
-		final EntityIdentifier rootEntityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
-		// entityBinding.getAttributeClosureSpan() includes the identifier binding;
-		// "properties" here excludes the ID, so subtract 1 if the identifier binding is non-null
-		int identifierAttributeBindingSpan;
-		if ( rootEntityIdentifier.getAttributeBinding() == null ) {
-			identifierAttributeBindingSpan = 0;
-		}
-		else if ( rootEntityIdentifier.isNonAggregatedComposite() ) {
-			identifierAttributeBindingSpan =
-			( (CompositeAttributeBinding) rootEntityIdentifier.getAttributeBinding() ).attributeBindingSpan();
-		}
-		else {
-			identifierAttributeBindingSpan = 1;
-		}
-
-		final AttributeBinding [] attributeBindings = entityBinding.getAttributeBindingClosure();
+		final AttributeBinding [] attributeBindings = entityBinding.getNonIdAttributeBindingClosure();
 		propertySpan = attributeBindings.length;
 
 		properties = new StandardProperty[propertySpan];
@@ -445,11 +430,6 @@ public class EntityMetamodel implements Serializable {
 		boolean foundUpdateableNaturalIdProperty = false;
 
 		for ( AttributeBinding attributeBinding : attributeBindings ) {
-			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
-				// skip the identifier attribute binding
-				continue;
-			}
-
 			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() ) {
 				tempVersionProperty = i;
 				properties[i] = PropertyFactory.buildVersionProperty(

@@ -241,11 +241,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 		boolean foundCustomAccessor = false;
 		int i = 0;
-		for ( AttributeBinding property : mappingInfo.getAttributeBindingClosure() ) {
-			if ( mappingInfo.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( property ) ) {
-				continue; // ID binding processed above
-			}
-
+		for ( AttributeBinding property : mappingInfo.getNonIdAttributeBindingClosure() ) {
 			//TODO: redesign how PropertyAccessors are acquired...
 			getters[ i ] = buildPropertyGetter( property );
 			setters[ i ] = buildPropertySetter( property );

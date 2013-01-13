@@ -140,19 +140,17 @@ public class EntityIdentifier {
 
 	public Class getIdClassClass() {
 		ensureBound();
-		if ( ! isNonAggregatedComposite() ) {
-			throw new UnsupportedOperationException(
-					String.format(
-							"Entity identifiers of nature %s does not support idClasses.",
-							entityIdentifierBinding.getNature()
-					)
-			);
-		}
+		ensureNonAggregatedComposite();
 		return ( (NonAggregatedCompositeIdentifierBindingImpl) entityIdentifierBinding ).getIdClassClass();
 	}
 
 	public String getIdClassPropertyAccessorName() {
 		ensureBound();
+		ensureNonAggregatedComposite();
+		return ( (NonAggregatedCompositeIdentifierBindingImpl) entityIdentifierBinding ).getIdClassPropertyAccessorName();
+	}
+
+	private void ensureNonAggregatedComposite() {
 		if ( ! isNonAggregatedComposite() ) {
 			throw new UnsupportedOperationException(
 					String.format(
@@ -161,7 +159,6 @@ public class EntityIdentifier {
 					)
 			);
 		}
-		return ( (NonAggregatedCompositeIdentifierBindingImpl) entityIdentifierBinding ).getIdClassPropertyAccessorName();
 	}
 
 	public boolean isIdentifierMapper() {
@@ -409,6 +406,10 @@ public class EntityIdentifier {
 			return (CompositeAttributeBinding) getAttributeBinding();
 		}
 		public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
+			if ( !isIdentifierMapper() && getNonAggregatedCompositeAttributeBinding().equals( attributeBinding ) ) {
+				return true;
+
+			}
 			for ( AttributeBinding idAttributeBindings : getNonAggregatedCompositeAttributeBinding().attributeBindings() ) {
 				if ( idAttributeBindings.equals( attributeBinding ) ) {
 					return true;

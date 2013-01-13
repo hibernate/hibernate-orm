@@ -851,10 +851,10 @@ public abstract class AbstractEntityPersister
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
-		this.isLazyPropertiesCacheable =
-				entityBinding.getHierarchyDetails().getCaching() == null ?
-						false :
-						entityBinding.getHierarchyDetails().getCaching().isCacheLazyProperties();
+		this.isLazyPropertiesCacheable = entityBinding.getHierarchyDetails()
+				.getCaching() == null || entityBinding.getHierarchyDetails()
+				.getCaching()
+				.isCacheLazyProperties();
 		this.entityMetamodel = new EntityMetamodel( entityBinding, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
 		int batch = entityBinding.getBatchSize();
@@ -951,12 +951,7 @@ public abstract class AbstractEntityPersister
 
 		int i = 0;
 		boolean foundFormula = false;
-		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
-			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
-				// entity identifier is not considered a "normal" property
-				continue;
-			}
-
+		for ( AttributeBinding attributeBinding : entityBinding.getNonIdAttributeBindingClosure() ) {
 			thisClassProperties.add( attributeBinding );
 
 			propertySubclassNames[i] = ( (EntityBinding) attributeBinding.getContainer() ).getEntity().getName();
@@ -1054,12 +1049,7 @@ public abstract class AbstractEntityPersister
 		List<Boolean> columnSelectables = new ArrayList<Boolean>();
 		List<Boolean> propNullables = new ArrayList<Boolean>();
 
-		for ( AttributeBinding attributeBinding : entityBinding.getEntitiesAttributeBindingClosure() ) {
-			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
-				// entity identifier is not considered a "normal" property
-				continue;
-			}
-
+		for ( AttributeBinding attributeBinding : entityBinding.getNonIdEntitiesAttributeBindingClosure() ) {
 			names.add( attributeBinding.getAttribute().getName() );
 			classes.add( ( (EntityBinding) attributeBinding.getContainer() ).getEntity().getName() );
 			boolean isDefinedBySubclass = ! thisClassProperties.contains( attributeBinding );
@@ -1198,6 +1188,9 @@ public abstract class AbstractEntityPersister
 
 		this.cacheEntryHelper = buildCacheEntryHelper();
 	}
+
+
+
 
 	protected static String getTemplateFromString(String string, SessionFactoryImplementor factory) {
 		return string == null ?
@@ -4384,10 +4377,6 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getTuplizer().createProxy( id, session );
 	}
 
-	public String toString() {
-		return StringHelper.unqualify( getClass().getName() ) +
-				'(' + entityMetamodel.getName() + ')';
-	}
 
 	public final String selectFragment(
 			Joinable rhs,
@@ -4987,6 +4976,11 @@ public abstract class AbstractEntityPersister
 
 	String[][] getLazyPropertyColumnAliases() {
 		return lazyPropertyColumnAliases;
+	}
+
+	public String toString() {
+		return StringHelper.unqualify( getClass().getName() ) +
+				'(' + entityMetamodel.getName() + ')';
 	}
 
 	/**

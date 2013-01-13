@@ -43,7 +43,7 @@ import org.hibernate.dialect.Dialect;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class ForeignKey extends AbstractConstraint implements Constraint, Exportable {
+public class ForeignKey extends AbstractConstraint {
     private static final Logger LOG = Logger.getLogger( ForeignKey.class );
 
 	private static final String ON_DELETE = " on delete ";

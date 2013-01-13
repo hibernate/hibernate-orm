@@ -25,6 +25,8 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -54,7 +56,6 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -62,13 +63,15 @@ import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.type.*;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 
 /**
  * An <tt>EntityPersister</tt> implementing the normalized "table-per-subclass"
  * mapping strategy
  *
  * @author Gavin King
+ * @author Strong Liu
  */
 public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
@@ -689,13 +692,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final TableSpecification[] tables = entityBinding.getTableClosure();
 		final SecondaryTable[] secondaryTables = entityBinding.getSecondaryTableClosure();
 		final String[] synchronizedTableNames = entityBinding.getSynchronizedTableNameClosure();
-		final AttributeBinding[] attributeBindings = entityBinding.getAttributeBindingClosure();
+		final AttributeBinding[] attributeBindings = entityBinding.getNonIdAttributeBindingClosure();
 		                                                       //todo the count of these two are not equal, which they should be
 		final EntityBinding[] preOrderSubEntityBindings = entityBinding.getPreOrderSubEntityBindingClosure();
 		final EntityBinding[] postOrderSubEntityBindings = entityBinding.getPostOrderSubEntityBindingClosure();
 		final TableSpecification[] subTables = entityBinding.getPreOrderSubTableClosure();
 		final SecondaryTable[] subSecondaryTables = entityBinding.getSubEntitySecondaryTables();
-		final AttributeBinding[] allAttributeBindings = entityBinding.getEntitiesAttributeBindingClosure();
+		final AttributeBinding[] allAttributeBindings = entityBinding.getNonIdEntitiesAttributeBindingClosure();
 
 		final int idColumnSpan = getIdentifierColumnSpan();
 		coreTableSpan = tables.length;
@@ -924,11 +927,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				valueBindings = singularAttributeBinding.getRelationalValueBindings();
 			}
 			else  {
-				PluralAttributeBinding pluralAttributeBinding = PluralAttributeBinding.class.cast( attributeBinding );
-				valueBindings = pluralAttributeBinding.getPluralAttributeElementBinding().getRelationalValueBindings();
+				valueBindings = Collections.EMPTY_LIST;
 			}
-			RelationalValueBinding valueBinding = valueBindings.get( 0 );
-			TableSpecification table = valueBinding.getValue().getTable();
+			TableSpecification table = attributeBinding.getContainer().seekEntityBinding().getPrimaryTable();// valueBinding.getValue().getTable();
 			final String tableName = table.getQualifiedName( factory.getDialect() );
 			if ( i < hydrateSpan ) {
 				propertyTableNumbers[i] = getTableId( tableName, tableNames );

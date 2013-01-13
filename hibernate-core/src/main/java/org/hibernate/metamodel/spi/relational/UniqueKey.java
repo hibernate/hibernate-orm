@@ -31,7 +31,7 @@ import org.hibernate.dialect.Dialect;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class UniqueKey extends AbstractConstraint implements Constraint {
+public class UniqueKey extends AbstractConstraint {
 	private static final String GENERATED_NAME_PREFIX = "UK";
 
 	protected UniqueKey(Table table, String name) {

@@ -51,7 +51,6 @@ import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -59,7 +58,6 @@ import static org.junit.Assert.assertTrue;
 
 
 @SuppressWarnings( {"UnnecessaryUnboxing", "UnnecessaryBoxing"})
-//@FailureExpectedWithNewMetamodel
 public class SQLFunctionsTest extends LegacyTestCase {
 	private static final Logger log = Logger.getLogger( SQLFunctionsTest.class );
 
@@ -217,7 +215,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testBroken() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

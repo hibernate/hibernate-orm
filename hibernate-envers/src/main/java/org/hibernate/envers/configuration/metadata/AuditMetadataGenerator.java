@@ -427,7 +427,7 @@ public final class AuditMetadataGenerator {
 			ExtendedPropertyMapper propertyMapper = null;
 			String parentEntityName = null;
 			EntityConfiguration entityCfg = new EntityConfiguration(entityName, pc.getClassName(), idMapper, propertyMapper,
-					parentEntityName);
+					parentEntityName, auditingData.isUsingModifiedFlag());
 			notAuditedEntitiesConfigurations.put(entityName, entityCfg);
 			return;
 		}
@@ -501,7 +501,7 @@ public final class AuditMetadataGenerator {
 
         // Storing the generated configuration
         EntityConfiguration entityCfg = new EntityConfiguration(auditEntityName, pc.getClassName(), idMapper,
-                propertyMapper, parentEntityName);
+                propertyMapper, parentEntityName, auditingData.isUsingModifiedFlag());
         entitiesConfigurations.put(pc.getEntityName(), entityCfg);
     }
 

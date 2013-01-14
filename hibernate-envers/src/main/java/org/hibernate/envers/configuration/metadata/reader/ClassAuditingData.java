@@ -85,6 +85,18 @@ public class ClassAuditingData implements AuditedPropertiesHolder {
 	public boolean isAudited() {
         return defaultAudited || properties.size() > 0;
     }
+
+	/**
+	 * @return {@code true} if any of the properties has modification flag enabled, {@code false} otherwise.
+	 */
+	public boolean isUsingModifiedFlag() {
+		for ( PropertyAuditingData prop : properties.values() ) {
+			if ( prop.isUsingModifiedFlag() ) {
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	public boolean contains(String propertyName) {
 		return properties.containsKey(propertyName);

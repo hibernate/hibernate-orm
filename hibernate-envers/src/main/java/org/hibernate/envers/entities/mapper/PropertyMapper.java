@@ -72,5 +72,4 @@ public interface PropertyMapper {
 
 	void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj);
 	void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data);
-
 }

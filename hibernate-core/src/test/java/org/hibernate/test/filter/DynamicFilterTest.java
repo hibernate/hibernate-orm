@@ -51,7 +51,6 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
@@ -105,7 +104,6 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSecondLevelCachedCollectionsFiltering() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -164,7 +162,6 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testCombinedClassAndCollectionFiltersEnabled() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -616,7 +613,6 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOneToManyFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// one-to-many loading tests
@@ -723,7 +719,6 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testManyToManyOnCollectionLoadAfterHQL() {
 		TestData testData = new TestData();
 		testData.prepare();

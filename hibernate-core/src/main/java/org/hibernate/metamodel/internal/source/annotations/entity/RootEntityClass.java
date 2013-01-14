@@ -42,11 +42,11 @@ import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingCont
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
-import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 
 /**
  * Represents an root entity configured via annotations/orm-xml.
@@ -140,8 +140,8 @@ public class RootEntityClass extends EntityClass {
 		return isDiscriminatorIncludedInSql;
 	}
 
-	protected List<PrimaryKeyJoinColumnSource> determinPrimaryKeyJoinColumns() {
-		List<PrimaryKeyJoinColumnSource> results = super.determinPrimaryKeyJoinColumns();
+	protected List<PrimaryKeyJoinColumn> determinPrimaryKeyJoinColumns() {
+		List<PrimaryKeyJoinColumn> results = super.determinPrimaryKeyJoinColumns();
 		if ( CollectionHelper.isNotEmpty( results ) ) {
 			LOG.invalidPrimaryKeyJoinColumnAnnotation();
 		}

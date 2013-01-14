@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -36,7 +35,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature( DialectChecks.SupportsIdentityColumns.class )
-@FailureExpectedWithNewMetamodel // NPE @ JoinedSubclassEntityPersister.getIdentifierColumnNames(JoinedSubclassEntityPersister.java:730)
 public class JoinedSubclassHierarchyWithIdentityGenerationTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

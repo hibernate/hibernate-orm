@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,13 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.source;
+package org.hibernate.metamodel.internal.source.annotations.attribute;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
 
 /**
- * @author Steve Ebersole
+ * @author Strong Liu <stliu@hibernate.org>
  */
-public interface PrimaryKeyJoinColumnSource {
-	public String getColumnName();
-	public String getReferencedColumnName();
-	public String getColumnDefinition();
+public class PrimaryKeyJoinColumn extends Column {
+	private String referencedColumnName;
+
+	public PrimaryKeyJoinColumn(AnnotationInstance columnAnnotation) {
+		super( columnAnnotation );
+	}
+
+	@Override
+	protected void applyColumnValues(AnnotationInstance columnAnnotation) {
+		super.applyColumnValues( columnAnnotation );
+		if ( columnAnnotation != null ) {
+			AnnotationValue nameValue = columnAnnotation.value( "referencedColumnName" );
+			if ( nameValue != null ) {
+				this.referencedColumnName = nameValue.asString();
+			}
+		}
+	}
+
+	public String getReferencedColumnName() {
+		return referencedColumnName;
+	}
 }

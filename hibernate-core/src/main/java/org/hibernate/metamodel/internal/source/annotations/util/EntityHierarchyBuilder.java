@@ -46,6 +46,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.EntityHierarchyImpl;
+import org.hibernate.metamodel.internal.source.annotations.JoinedSubclassEntitySourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.RootEntitySourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.SubclassEntitySourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
@@ -158,7 +159,9 @@ public class EntityHierarchyBuilder {
 					hierarchyInheritanceType,
 					bindingContext
 			);
-			SubclassEntitySource subclassEntitySource = new SubclassEntitySourceImpl( subclassEntityClass, entitySource );
+			SubclassEntitySource subclassEntitySource = hierarchyInheritanceType == InheritanceType.JOINED ?
+					new JoinedSubclassEntitySourceImpl( subclassEntityClass, entitySource )
+					: new SubclassEntitySourceImpl( subclassEntityClass, entitySource );
 			entitySource.add( subclassEntitySource );
 			addSubclassEntitySources(
 					bindingContext,

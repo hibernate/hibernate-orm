@@ -134,6 +134,7 @@ import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource.JoinColum
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
+import org.hibernate.metamodel.spi.source.JoinedSubclassEntitySource;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
@@ -147,7 +148,6 @@ import org.hibernate.metamodel.spi.source.Orderable;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
-import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSourceContainer;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
@@ -2423,25 +2423,24 @@ public class Binder {
 
 		}
 		if ( inheritanceType == InheritanceType.JOINED ) {
-			SubclassEntitySource subclassEntitySource = (SubclassEntitySource) entitySource;
-			ForeignKey fk = entityBinding.getPrimaryTable().createForeignKey(
-					superEntityBinding.getPrimaryTable(),
-					subclassEntitySource.getJoinedForeignKeyName()
-			);
-			final List<PrimaryKeyJoinColumnSource> primaryKeyJoinColumnSources = subclassEntitySource.getPrimaryKeyJoinColumnSources();
-			final boolean hasPrimaryKeyJoinColumns = CollectionHelper.isNotEmpty( primaryKeyJoinColumnSources );
+			JoinedSubclassEntitySource subclassEntitySource = (JoinedSubclassEntitySource) entitySource;
+
+
+
+			final List<ColumnSource> columnSources = subclassEntitySource.getPrimaryKeyColumnSources();
+			final boolean hasPrimaryKeyJoinColumns = CollectionHelper.isNotEmpty( columnSources );
 			final List<Column> superEntityBindingPrimaryKeyColumns = superEntityBinding.getPrimaryTable()
 					.getPrimaryKey()
 					.getColumns();
-
+			final List<Column> sourceColumns = new ArrayList<Column>( superEntityBindingPrimaryKeyColumns.size() );
 			for ( int i = 0, size = superEntityBindingPrimaryKeyColumns.size(); i < size; i++ ) {
-				Column superEntityBindingPrimaryKeyColumn = superEntityBindingPrimaryKeyColumns.get( i );
-				PrimaryKeyJoinColumnSource primaryKeyJoinColumnSource = hasPrimaryKeyJoinColumns && i < primaryKeyJoinColumnSources
-						.size() ? primaryKeyJoinColumnSources.get( i ) : null;
+				final Column superEntityBindingPrimaryKeyColumn = superEntityBindingPrimaryKeyColumns.get( i );
+				ColumnSource primaryKeyJoinColumnSource = hasPrimaryKeyJoinColumns && i < columnSources
+						.size() ? columnSources.get( i ) : null;
 				final String columnName;
-				if ( primaryKeyJoinColumnSource != null && StringHelper.isNotEmpty( primaryKeyJoinColumnSource.getColumnName() ) ) {
+				if ( primaryKeyJoinColumnSource != null && StringHelper.isNotEmpty( primaryKeyJoinColumnSource.getName() ) ) {
 					columnName = bindingContext().getNamingStrategy()
-							.columnName( primaryKeyJoinColumnSource.getColumnName() );
+							.columnName( primaryKeyJoinColumnSource.getName() );
 				}
 				else {
 					columnName = superEntityBindingPrimaryKeyColumn.getColumnName().getText();
@@ -2455,17 +2454,32 @@ public class Binder {
 				column.setReadFragment( superEntityBindingPrimaryKeyColumn.getReadFragment() );
 				column.setWriteFragment( superEntityBindingPrimaryKeyColumn.getWriteFragment() );
 				column.setUnique( superEntityBindingPrimaryKeyColumn.isUnique() );
-				final String sqlType = getSqlTypeFromPrimaryKeyJoinColumnSourceIfExist(
-						superEntityBindingPrimaryKeyColumn,
-						primaryKeyJoinColumnSource
-				);
+				final String sqlType = primaryKeyJoinColumnSource != null && primaryKeyJoinColumnSource.getSqlType() != null ? primaryKeyJoinColumnSource
+						.getSqlType() : superEntityBindingPrimaryKeyColumn.getSqlType();
 				column.setSqlType( sqlType );
 				column.setSize( superEntityBindingPrimaryKeyColumn.getSize() );
 				column.setJdbcDataType( superEntityBindingPrimaryKeyColumn.getJdbcDataType() );
 				entityBinding.getPrimaryTable().getPrimaryKey().addColumn( column );
-				//todo still need to figure out how to handle the referencedColumnName property
-				fk.addColumnMapping( column, superEntityBindingPrimaryKeyColumn );
+				sourceColumns.add( column );
 			}
+			List<Column> targetColumns =
+					determineForeignKeyTargetColumns(
+							superEntityBinding,
+							subclassEntitySource
+					);
+
+			ForeignKey foreignKey = bindForeignKey(
+					quotedIdentifier( subclassEntitySource.getExplicitForeignKeyName() ),
+					sourceColumns,
+					targetColumns
+			);
+
+
+			if ( subclassEntitySource.isCascadeDeleteEnabled() ) {
+				foreignKey.setDeleteRule( ForeignKey.ReferentialAction.CASCADE );
+				entityBinding.setCascadeDeleteEnabled( true );
+			}
+
 		}
 	}
 
@@ -3161,17 +3175,6 @@ public class Binder {
 			final String attributeName) {
 		return entityName + "." + attributeName;
 	}
-
-	private static String getSqlTypeFromPrimaryKeyJoinColumnSourceIfExist(
-			final Column superEntityBindingPrimaryKeyColumn,
-			final PrimaryKeyJoinColumnSource primaryKeyJoinColumnSource) {
-		final boolean isColumnDefOverrided = primaryKeyJoinColumnSource != null && StringHelper.isNotEmpty(
-				primaryKeyJoinColumnSource.getColumnDefinition()
-		);
-		return isColumnDefOverrided ? primaryKeyJoinColumnSource.getColumnDefinition() : superEntityBindingPrimaryKeyColumn
-				.getSqlType();
-	}
-
 
 	// TODO: try to get rid of this...
 	private static List<Column> extractColumnsFromRelationalValueBindings(

@@ -28,14 +28,12 @@ import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 @SkipForDialect(
         value = CUBRIDDialect.class,
         comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +

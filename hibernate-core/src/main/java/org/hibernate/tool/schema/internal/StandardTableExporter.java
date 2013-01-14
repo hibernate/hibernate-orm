@@ -39,7 +39,7 @@ import org.hibernate.tool.schema.spi.Exporter;
  * @author Steve Ebersole
  */
 public class StandardTableExporter implements Exporter<Table> {
-	private final Dialect dialect;
+	protected final Dialect dialect;
 
 	public StandardTableExporter(Dialect dialect) {
 		this.dialect = dialect;
@@ -49,8 +49,7 @@ public class StandardTableExporter implements Exporter<Table> {
 	public String[] getSqlCreateStrings(Table table, JdbcEnvironment jdbcEnvironment) {
 		boolean hasPrimaryKey = table.getPrimaryKey().getColumns().iterator().hasNext();
 		StringBuilder buf =
-				new StringBuilder(
-						hasPrimaryKey ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
+				new StringBuilder(tableCreateString( hasPrimaryKey ))
 						.append( ' ' )
 						.append( jdbcEnvironment.getQualifiedObjectNameSupport().formatName( table.getTableName() ) )
 						.append( " (" );
@@ -131,6 +130,30 @@ public class StandardTableExporter implements Exporter<Table> {
 
 		buf.append( dialect.getUniqueDelegate().applyUniquesToTable( table ) );
 
+		applyTableCheck( table, buf );
+
+		buf.append( ')' );
+		applyTableTypeString( buf );
+
+		List<String> sqlStrings = new ArrayList<String>();
+		sqlStrings.add( buf.toString() );
+
+		applyComments( table, sqlStrings );
+
+		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
+	}
+
+	protected void applyComments(Table table, List<String> sqlStrings) {
+		for ( String comment : table.getComments() ) {
+			sqlStrings.add( dialect.getTableComment( comment ) );
+		}
+	}
+
+	protected void applyTableTypeString(StringBuilder buf) {
+		buf.append( dialect.getTableTypeString() );
+	}
+
+	protected void applyTableCheck(Table table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
 			for ( CheckConstraint checkConstraint : table.getCheckConstraints() ) {
 				buf.append( ", check (" )
@@ -138,18 +161,11 @@ public class StandardTableExporter implements Exporter<Table> {
 						.append( ')' );
 			}
 		}
+	}
 
-		buf.append( ')' );
-		buf.append( dialect.getTableTypeString() );
+	protected String tableCreateString(boolean hasPrimaryKey) {
+		return hasPrimaryKey ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString();
 
-		List<String> sqlStrings = new ArrayList<String>();
-		sqlStrings.add( buf.toString() );
-
-		for ( String comment : table.getComments() ) {
-			sqlStrings.add( dialect.getTableComment( comment ) );
-		}
-
-		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
 	}
 
 	private static String getTypeString(Column col, Dialect dialect) {

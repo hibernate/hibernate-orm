@@ -33,7 +33,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -147,7 +146,6 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
             comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
                     "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
     )
-	@FailureExpectedWithNewMetamodel
 	public void testScrollingJoinFetchesSingleRowResultSet() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -274,7 +272,6 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 			value = DialectChecks.SupportsResultSetPositioningOnForwardOnlyCursorCheck.class,
 			comment = "Driver does not support result set positioning  methods on forward-only cursors"
 	)
-	@FailureExpectedWithNewMetamodel
 	public void testScrollingJoinFetchesForward() {
 		TestData data = new TestData();
 		data.prepare();
@@ -307,7 +304,6 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
             comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
                     "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
     )
-	@FailureExpectedWithNewMetamodel
 	public void testScrollingJoinFetchesReverse() {
 		TestData data = new TestData();
 		data.prepare();
@@ -342,7 +338,6 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
             comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
                     "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
     )
-	@FailureExpectedWithNewMetamodel
 	public void testScrollingJoinFetchesPositioning() {
 		TestData data = new TestData();
 		data.prepare();

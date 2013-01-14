@@ -32,6 +32,7 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
+import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
 import org.hibernate.jaxb.spi.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbQueryElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSqlQueryElement;
@@ -73,26 +74,23 @@ public class HierarchyBuilder {
 	}
 
 	private void processCurrentMappingDocument() {
-		for(final JaxbClassElement jaxbClass : currentMappingDocument.getMappingRoot().getClazz()){
+		final JaxbHibernateMapping root = currentMappingDocument.getMappingRoot();
+		for ( final JaxbClassElement jaxbClass : root.getClazz() ) {
 			// we can immediately handle <class/> elements in terms of creating the hierarchy entry
-			final RootEntitySourceImpl rootEntitySource = new RootEntitySourceImpl( currentMappingDocument,
+			final RootEntitySourceImpl rootEntitySource = new RootEntitySourceImpl(
+					currentMappingDocument,
 					jaxbClass
 			);
 			final EntityHierarchyImpl hierarchy = new EntityHierarchyImpl( rootEntitySource );
-
 			entityHierarchies.add( hierarchy );
 			subEntityContainerMap.put( rootEntitySource.getEntityName(), rootEntitySource );
-
 			processSubElements( jaxbClass, rootEntitySource );
 		}
-		for(final JaxbJoinedSubclassElement element : currentMappingDocument.getMappingRoot().getJoinedSubclass()){
-			processSubclassElement( element );
+		List<SubEntityElement> subEntityElements = new ArrayList<SubEntityElement>( root.getJoinedSubclass() );
+		subEntityElements.addAll( root.getUnionSubclass() );
+		subEntityElements.addAll( root.getSubclass() );
 
-		}
-		for(final JaxbUnionSubclassElement element : currentMappingDocument.getMappingRoot().getUnionSubclass()){
-			processSubclassElement( element );
-		}
-		for(final JaxbSubclassElement element : currentMappingDocument.getMappingRoot().getSubclass()){
+		for ( final SubEntityElement element : subEntityElements ) {
 			processSubclassElement( element );
 		}
 
@@ -104,7 +102,7 @@ public class HierarchyBuilder {
 		final String entityItExtends = currentMappingDocument.getMappingLocalBindingContext()
 				.qualifyClassName( element.getExtends() );
 		final SubclassEntityContainer container = subEntityContainerMap.get( entityItExtends );
-		final SubclassEntitySourceImpl subClassEntitySource = new SubclassEntitySourceImpl( currentMappingDocument, element, (EntitySource) container );
+		final SubclassEntitySourceImpl subClassEntitySource = createSubClassEntitySource( element, (EntitySource) container );
 		final String entityName = subClassEntitySource.getEntityName();
 		subEntityContainerMap.put( entityName, subClassEntitySource );
 		processSubElements( element, subClassEntitySource );
@@ -165,17 +163,29 @@ public class HierarchyBuilder {
 		processNamedQueries( entityElement );
 	}
 
-	private void processElements(List subElements, SubclassEntityContainer container) {
-		for ( Object subElementO : subElements ) {
-			final SubEntityElement subElement = (SubEntityElement) subElementO;
-			final SubclassEntitySourceImpl subclassEntitySource = new SubclassEntitySourceImpl( currentMappingDocument, subElement, ( EntitySource ) container );
+	private void processElements(List<? extends SubEntityElement> subElements, SubclassEntityContainer container) {
+		for ( final SubEntityElement subElement : subElements ) {
+			final SubclassEntitySourceImpl subclassEntitySource = createSubClassEntitySource( subElement, ( EntitySource ) container );
 			container.add( subclassEntitySource );
 			final String subEntityName = subclassEntitySource.getEntityName();
 			subEntityContainerMap.put( subEntityName, subclassEntitySource );
 			
 			// Re-run the sub element to handle, as an example, subclasses
 			// within a subclass.
-			processSubElements(subElement, container);
+			processSubElements(subElement, subclassEntitySource);
+		}
+	}
+
+	private SubclassEntitySourceImpl createSubClassEntitySource(SubEntityElement subEntityElement, EntitySource entitySource) {
+		if ( JaxbJoinedSubclassElement.class.isInstance( subEntityElement ) ) {
+			return new JoinedSubclassEntitySourceImpl(
+					currentMappingDocument,
+					JaxbJoinedSubclassElement.class.cast( subEntityElement ),
+					entitySource
+			);
+		}
+		else {
+			return new SubclassEntitySourceImpl( currentMappingDocument, subEntityElement, entitySource );
 		}
 	}
 

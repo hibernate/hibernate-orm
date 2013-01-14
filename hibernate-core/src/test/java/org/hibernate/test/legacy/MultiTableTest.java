@@ -69,7 +69,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNarrow() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -81,7 +80,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testJoins() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -197,7 +195,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testQueries() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -224,7 +221,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testConstraints() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -502,7 +498,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testMultiTableCollections() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -551,7 +546,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testMultiTableManyToOne() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -585,7 +579,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testMultiTableNativeId() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

@@ -81,6 +81,7 @@ class FailureExpectedHandler extends Statement {
 						Helper.extractTestName( extendedFrameworkMethod ),
 						Helper.extractMessage( failureExpected )
 				);
+				log.error( "Ignored exception: ", e );
 				testClassMetadata.performOnExpectedFailureCallback( testInstance );
 				// most importantly, do not propagate exception...
 			}

@@ -54,21 +54,26 @@ public class Column {
 	private String referencedColumnName; // from @JoinColumn
 
 	public Column(AnnotationInstance columnAnnotation) {
-		if(columnAnnotation!=null){
+		applyCheck( columnAnnotation );
+		applyColumnValues( columnAnnotation );
+	}
+
+	protected void applyCheck(AnnotationInstance columnAnnotation) {
+		if ( columnAnnotation != null ) {
 			DotName name = columnAnnotation.name();
-			if(!(JPADotNames.COLUMN.equals( name )
-				|| JPADotNames.JOIN_COLUMN.equals( name )
-				|| JPADotNames.ORDER_COLUMN.equals( name )
-				|| HibernateDotNames.INDEX_COLUMN.equals( name )
-			)){
+			if ( !( JPADotNames.COLUMN.equals( name )
+					|| JPADotNames.JOIN_COLUMN.equals( name )
+					|| JPADotNames.ORDER_COLUMN.equals( name )
+					|| HibernateDotNames.INDEX_COLUMN.equals( name )
+					|| JPADotNames.PRIMARY_KEY_JOIN_COLUMN.equals( name )
+			) ) {
 				throw new AssertionFailure( "A @Column or @JoinColumn annotation needs to be passed to the constructor" );
 
 			}
 		}
-		applyColumnValues( columnAnnotation );
 	}
 
-	private void applyColumnValues(AnnotationInstance columnAnnotation) {
+	protected void applyColumnValues(AnnotationInstance columnAnnotation) {
 		// if the column annotation is null we don't have to do anything. Everything is already defaulted.
 		if ( columnAnnotation == null ) {
 			return;

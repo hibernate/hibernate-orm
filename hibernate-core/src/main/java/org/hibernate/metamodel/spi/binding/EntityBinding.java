@@ -108,6 +108,8 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	private List<JpaCallbackSource> jpaCallbackClasses = new ArrayList<JpaCallbackSource>();
 	private final int subEntityBindingId;
 	private int nextSubEntityBindingId = 0;
+	//for joined sub entitybinding only
+	private boolean isCascadeDeleteEnabled = false;
 	/**
 	 * Used to instantiate the EntityBinding for an entity that is the root of an inheritance hierarchy
 	 *
@@ -133,7 +135,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	}
 
 	private int nextSubEntityBindingId(){
-		return ++nextSubEntityBindingId;
+		return isRoot()? ++nextSubEntityBindingId : superEntityBinding.nextSubEntityBindingId();
 	}
 
 	public HierarchyDetails getHierarchyDetails() {
@@ -325,6 +327,14 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		this.mutable = mutable;
 	}
 
+	public boolean isCascadeDeleteEnabled() {
+		return isCascadeDeleteEnabled;
+	}
+
+	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
+		isCascadeDeleteEnabled = cascadeDeleteEnabled;
+	}
+
 	public boolean isLazy() {
 		return lazy;
 	}
@@ -342,7 +352,15 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	}
 
 	public String getWhereFilter() {
-		return whereFilter;
+		if ( StringHelper.isNotEmpty( whereFilter ) ) {
+			return whereFilter;
+		}
+		else if ( superEntityBinding != null ) {
+			return superEntityBinding.getWhereFilter();
+		}
+		else {
+			return null;
+		}
 	}
 
 	public void setWhereFilter(String whereFilter) {
@@ -398,7 +416,13 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	}
 
 	public Class<? extends EntityPersister> getCustomEntityPersisterClass() {
-		return customEntityPersisterClass;
+		if ( customEntityPersisterClass != null ) {
+			return customEntityPersisterClass;
+		}
+		else if ( superEntityBinding != null ) {
+			return superEntityBinding.getCustomEntityPersisterClass();
+		}
+		return null;
 	}
 
 	public void setCustomEntityPersisterClass(Class<? extends EntityPersister> customEntityPersisterClass) {
@@ -406,7 +430,13 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	}
 
 	public Class<? extends EntityTuplizer> getCustomEntityTuplizerClass() {
-		return customEntityTuplizerClass;
+		if ( customEntityTuplizerClass != null ) {
+			return customEntityTuplizerClass;
+		}
+		else if ( superEntityBinding != null ) {
+			return superEntityBinding.getCustomEntityTuplizerClass();
+		}
+		return null;
 	}
 
 	public void setCustomEntityTuplizerClass(Class<? extends EntityTuplizer> customEntityTuplizerClass) {

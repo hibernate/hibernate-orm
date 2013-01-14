@@ -66,6 +66,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -114,7 +115,10 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
+import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
@@ -128,6 +132,7 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.tool.schema.internal.TemporaryTableExporter;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
@@ -878,7 +883,7 @@ public abstract class AbstractEntityPersister
 		identifierAliases = new String[identifierColumnSpan];
 
 		for ( int i = 0; i < identifierColumnSpan; i++ ) {
-			org.hibernate.metamodel.spi.relational.Column col = entityBinding.getPrimaryTable()
+			org.hibernate.metamodel.spi.relational.Column col = entityBinding.getHierarchyDetails().getRootEntityBinding().getPrimaryTable()
 					.getPrimaryKey()
 					.getColumns()
 					.get( i );
@@ -954,7 +959,7 @@ public abstract class AbstractEntityPersister
 		for ( AttributeBinding attributeBinding : entityBinding.getNonIdAttributeBindingClosure() ) {
 			thisClassProperties.add( attributeBinding );
 
-			propertySubclassNames[i] = ( (EntityBinding) attributeBinding.getContainer() ).getEntity().getName();
+			propertySubclassNames[i] = attributeBinding.getContainer().seekEntityBinding().getEntity().getName();
 
 			int span = attributeBinding.getAttribute().isSingular() ?
 					( (SingularAttributeBinding) attributeBinding).getRelationalValueBindings().size() :
@@ -1183,13 +1188,24 @@ public abstract class AbstractEntityPersister
 //		}
 		filterHelper = new FilterHelper( entityBinding.getFilterConfigurations(), factory);
 
-		temporaryIdTableName = null;
-		temporaryIdTableDDL = null;
+		temporaryIdTableName = TemporaryTableExporter.generateTableName( factory.getDialect(), entityBinding.getPrimaryTable() );
+		TableSpecification primaryTable = entityBinding.getPrimaryTable();
+		if ( factory.getDialect().supportsTemporaryTables() && primaryTable instanceof Table ) {
+			temporaryIdTableDDL = factory
+					.getDialect()
+					.getTemporaryTableExporter()
+					.getSqlCreateStrings(
+							Table.class.cast( primaryTable ),
+							factory.getServiceRegistry().getService( JdbcEnvironment.class )
+					)[0];
+		}
+		else {
+			temporaryIdTableDDL = null;
+		}
+
 
 		this.cacheEntryHelper = buildCacheEntryHelper();
 	}
-
-
 
 
 	protected static String getTemplateFromString(String string, SessionFactoryImplementor factory) {
@@ -3925,6 +3941,11 @@ public abstract class AbstractEntityPersister
 				&& filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilterNames() );
 	}
 
+	public String toString() {
+		return StringHelper.unqualify( getClass().getName() ) +
+				'(' + entityMetamodel.getName() + ')';
+	}
+
 	private UniqueEntityLoader getAppropriateLoader(LockOptions lockOptions, SessionImplementor session) {
 		if ( queryLoader != null ) {
 			// if the user specified a custom query loader we need to that
@@ -4978,10 +4999,6 @@ public abstract class AbstractEntityPersister
 		return lazyPropertyColumnAliases;
 	}
 
-	public String toString() {
-		return StringHelper.unqualify( getClass().getName() ) +
-				'(' + entityMetamodel.getName() + ')';
-	}
 
 	/**
 	 * Consolidated these onto a single helper because the 2 pieces work in tandem.

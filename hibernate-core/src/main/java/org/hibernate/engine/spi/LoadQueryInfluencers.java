@@ -33,6 +33,7 @@ import java.util.Set;
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.internal.FilterImpl;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.type.Type;
 
 /**
@@ -96,7 +97,7 @@ public class LoadQueryInfluencers implements Serializable {
 	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public boolean hasEnabledFilters() {
-		return enabledFilters != null && !enabledFilters.isEmpty();
+		return CollectionHelper.isNotEmpty( enabledFilters );
 	}
 
 	public Map<String,Filter> getEnabledFilters() {

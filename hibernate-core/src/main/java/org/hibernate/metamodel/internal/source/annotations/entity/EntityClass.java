@@ -43,6 +43,7 @@ import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -50,7 +51,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.JpaCallbackSourceImpl;
-import org.hibernate.metamodel.internal.source.annotations.PrimaryKeyJoinColumnSourceImpl;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -60,7 +61,6 @@ import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
-import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
@@ -100,13 +100,19 @@ public class EntityClass extends ConfiguredClass {
 	private final CustomSQL customUpdate;
 	private final CustomSQL customDelete;
 
+
+	private final String inverseForeignKeyName;
+	private final String explicitForeignKeyName;
+
+	private final OnDeleteAction onDeleteAction;
+
 	private boolean isLazy;
 	private String proxy;
 
 	private String discriminatorMatchValue;
 
 	private final List<JpaCallbackSource> jpaCallbacks;
-	private final List<PrimaryKeyJoinColumnSource> joinedSubclassPrimaryKeyJoinColumnSources;
+	private final List<PrimaryKeyJoinColumn> joinedSubclassPrimaryKeyJoinColumnSources;
 
 	/**
 	 * Constructor used for entities within a hierarchy (non entity roots)
@@ -145,10 +151,51 @@ public class EntityClass extends ConfiguredClass {
 				getClassInfo().annotations()
 		);
 
-		this.joinedSubclassPrimaryKeyJoinColumnSources = determinPrimaryKeyJoinColumns();
+
 		processHibernateEntitySpecificAnnotations();
 		processProxyGeneration();
 		processDiscriminatorValue();
+
+		AnnotationInstance foreignKey = JandexHelper.getSingleAnnotation(
+				classInfo,
+				HibernateDotNames.FOREIGN_KEY,
+				ClassInfo.class
+		);
+		this.joinedSubclassPrimaryKeyJoinColumnSources = determinPrimaryKeyJoinColumns();
+		if ( foreignKey != null ) {
+			ensureJoinedSubEntity();
+			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class );
+			String temp = JandexHelper.getValue( foreignKey, "inverseName", String.class );
+			inverseForeignKeyName = StringHelper.isNotEmpty( temp ) ? temp : null;
+		}
+		else {
+			explicitForeignKeyName = null;
+			inverseForeignKeyName = null;
+		}
+		this.onDeleteAction = determineOnDeleteAction();
+
+	}
+
+	private OnDeleteAction determineOnDeleteAction() {
+		final AnnotationInstance onDeleteAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(),
+				HibernateDotNames.ON_DELETE,
+				ClassInfo.class
+		);
+		if ( onDeleteAnnotation != null ) {
+			ensureJoinedSubEntity();
+			return JandexHelper.getEnumValue( onDeleteAnnotation, "action", OnDeleteAction.class );
+		}
+		return null;
+	}
+
+	private void ensureJoinedSubEntity() {
+		if ( getParent() != null && inheritanceType == InheritanceType.JOINED ) {
+			//this is a joined sub entity
+		}
+		else {
+			getLocalBindingContext().makeMappingException( explicitEntityName + "is not a joined sub entity" );
+		}
 	}
 
 	public boolean isExplicitPolymorphism() {
@@ -219,7 +266,7 @@ public class EntityClass extends ConfiguredClass {
 		return synchronizedTableNames;
 	}
 
-	public List<PrimaryKeyJoinColumnSource> getJoinedSubclassPrimaryKeyJoinColumnSources() {
+	public List<PrimaryKeyJoinColumn> getJoinedSubclassPrimaryKeyJoinColumnSources() {
 		return joinedSubclassPrimaryKeyJoinColumnSources;
 	}
 
@@ -251,6 +298,17 @@ public class EntityClass extends ConfiguredClass {
 		return jpaCallbacks;
 	}
 
+	public String getInverseForeignKeyName() {
+		return inverseForeignKeyName;
+	}
+	public String getExplicitForeignKeyName(){
+		return explicitForeignKeyName;
+	}
+
+	public OnDeleteAction getOnDeleteAction() {
+		return onDeleteAction;
+	}
+
 	public boolean definesItsOwnTable() {
 		return !InheritanceType.SINGLE_TABLE.equals( inheritanceType ) || isEntityRoot();
 	}
@@ -262,10 +320,7 @@ public class EntityClass extends ConfiguredClass {
 		return JandexHelper.getValue( jpaEntityAnnotation, "name", String.class );
 	}
 
-	protected List<PrimaryKeyJoinColumnSource> determinPrimaryKeyJoinColumns() {
-		if ( inheritanceType != InheritanceType.JOINED ) {
-			return null;
-		}
+	protected List<PrimaryKeyJoinColumn> determinPrimaryKeyJoinColumns() {
 		final AnnotationInstance primaryKeyJoinColumns = JandexHelper.getSingleAnnotation(
 				getClassInfo(),
 				JPADotNames.PRIMARY_KEY_JOIN_COLUMNS,
@@ -276,17 +331,22 @@ public class EntityClass extends ConfiguredClass {
 				JPADotNames.PRIMARY_KEY_JOIN_COLUMN,
 				ClassInfo.class
 		);
-		final List<PrimaryKeyJoinColumnSource> results;
+
+		if(primaryKeyJoinColumn!=null || primaryKeyJoinColumns!=null){
+			ensureJoinedSubEntity();
+		}
+
+		final List<PrimaryKeyJoinColumn> results;
 		if ( primaryKeyJoinColumns != null ) {
 			AnnotationInstance[] values = primaryKeyJoinColumns.value().asNestedArray();
-			results = new ArrayList<PrimaryKeyJoinColumnSource>( values.length );
+			results = new ArrayList<PrimaryKeyJoinColumn>( values.length );
 			for ( final AnnotationInstance annotationInstance : values ) {
-				results.add( new PrimaryKeyJoinColumnSourceImpl( annotationInstance ) );
+				results.add( new PrimaryKeyJoinColumn( annotationInstance ) );
 			}
 		}
 		else if ( primaryKeyJoinColumn != null ) {
-			results = new ArrayList<PrimaryKeyJoinColumnSource>( 1 );
-			results.add( new PrimaryKeyJoinColumnSourceImpl( primaryKeyJoinColumn ) );
+			results = new ArrayList<PrimaryKeyJoinColumn>( 1 );
+			results.add( new PrimaryKeyJoinColumn( primaryKeyJoinColumn ) );
 		}
 		else {
 			results = null;

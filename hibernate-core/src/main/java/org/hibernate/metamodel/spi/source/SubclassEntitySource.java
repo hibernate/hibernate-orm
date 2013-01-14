@@ -34,21 +34,4 @@ public interface SubclassEntitySource extends EntitySource {
      * @return the entity source for the entity that is a superclass of the entity for which this is a source
      */
     EntitySource superclassEntitySource();
-
-	/**
-	 * Not sure the best way to model this.  We need access to the underlying <key/> mapping for the joined-subclass
-	 * mapping.  Not sure what capabilities jpa/annotations exposes for this.
-	 *
-	 * @return The configured FK name.
-	 */
-	String getJoinedForeignKeyName();
-
-	/**
-	 * The {@code PrimaryKeyJoinColumns} mapping for the joined-subclass.
-	 *
-	 * @return The {@code PrimaryKeyJoinColumnSource} lists defined on the joined subclass or <code>null</code> otherwise.
-	 */
-	List<PrimaryKeyJoinColumnSource> getPrimaryKeyJoinColumnSources();
-
-
 }

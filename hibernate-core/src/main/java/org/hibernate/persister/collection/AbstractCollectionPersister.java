@@ -1067,7 +1067,7 @@ public abstract class AbstractCollectionPersister
 		if ( subselectInitializer != null ) {
 			return subselectInitializer;
 		}
-		else if ( session.getLoadQueryInfluencers().hasEnabledFilters() ) {
+		else if ( !session.getLoadQueryInfluencers().hasEnabledFilters() ) {
 			return initializer;
 		}
 		else {

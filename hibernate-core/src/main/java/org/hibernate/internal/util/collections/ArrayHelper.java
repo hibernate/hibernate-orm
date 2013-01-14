@@ -52,6 +52,85 @@ public final class ArrayHelper {
 		}
 		return -1;
 	}
+
+	public static String asList(String[] [] strings ){
+		if(strings == null) return "null";
+		StringBuilder sb = new StringBuilder(  );
+		sb.append( "[ " );
+		for(int i=0;i<strings.length;i++){
+			sb.append( "[" );
+			for(int j=0;j<strings[i].length;j++){
+				sb.append( strings[i][j] );
+				if(j!=strings[i].length-1)
+					sb.append( ", " );
+			}
+			sb.append( "]" );
+			if(i!=strings.length-1)
+				sb.append( ", " );
+		}
+		sb.append( " ]" );
+		return sb.toString();
+	}
+
+	public static String asList(boolean[][] arrays) {
+		if ( arrays == null ) {
+			return "null";
+		}
+		StringBuilder sb = new StringBuilder();
+		sb.append( "[ " );
+		for ( int i = 0; i < arrays.length; i++ ) {
+			sb.append( asList( arrays[i] ) );
+			if ( i != arrays.length - 1 ) {
+				sb.append( ", " );
+			}
+		}
+		sb.append( " ]" );
+		return sb.toString();
+	}
+
+	public static String asList(boolean [] arrays) {
+		if(arrays == null) return "null";
+		StringBuilder sb = new StringBuilder();
+		sb.append( "[ " );
+		for ( int i = 0; i < arrays.length; i++ ) {
+			sb.append( arrays[i] );
+			if ( i != arrays.length - 1 ) {
+				sb.append( ", " );
+			}
+
+		}
+		sb.append( " ]" );
+		return sb.toString();
+	}
+	public static String asList(int[][] arrays) {
+		if ( arrays == null ) {
+			return "null";
+		}
+		StringBuilder sb = new StringBuilder();
+		sb.append( "[ " );
+		for ( int i = 0; i < arrays.length; i++ ) {
+			sb.append( asList( arrays[i] ) );
+			if ( i != arrays.length - 1 ) {
+				sb.append( ", " );
+			}
+		}
+		sb.append( " ]" );
+		return sb.toString();
+	}
+	public static String asList(int[] arrays) {
+		if(arrays == null) return "null";
+		StringBuilder sb = new StringBuilder();
+		sb.append( "[ " );
+		for ( int i = 0; i < arrays.length; i++ ) {
+			sb.append( arrays[i] );
+			if ( i != arrays.length - 1 ) {
+				sb.append( ", " );
+			}
+
+		}
+		sb.append( " ]" );
+		return sb.toString();
+	}
 	
 	/*public static Object[] clone(Class elementClass, Object[] array) {
 		Object[] result = (Object[]) Array.newInstance( elementClass, array.length );

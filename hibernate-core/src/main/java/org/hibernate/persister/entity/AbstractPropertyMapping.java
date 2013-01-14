@@ -51,11 +51,11 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractPropertyMapping.class.getName());
 
-	private final Map typesByPropertyPath = new HashMap();
-	private final Map columnsByPropertyPath = new HashMap();
-	private final Map columnReadersByPropertyPath = new HashMap();
-	private final Map columnReaderTemplatesByPropertyPath = new HashMap();
-	private final Map formulaTemplatesByPropertyPath = new HashMap();
+	private final Map<String, Type> typesByPropertyPath = new HashMap<String, Type>();
+	private final Map<String, String[]> columnsByPropertyPath = new HashMap<String, String[]>();
+	private final Map<String, String[]> columnReadersByPropertyPath = new HashMap<String, String[]>();
+	private final Map<String, String[]> columnReaderTemplatesByPropertyPath = new HashMap<String, String[]>();
+	private final Map<String, String[]> formulaTemplatesByPropertyPath = new HashMap<String, String[]>();
 
 	public String[] getIdentifierColumnNames() {
 		throw new UnsupportedOperationException("one-to-one is not supported here");
@@ -72,7 +72,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 	protected abstract String getEntityName();
 
 	public Type toType(String propertyName) throws QueryException {
-		Type type = (Type) typesByPropertyPath.get(propertyName);
+		Type type = typesByPropertyPath.get(propertyName);
 		if ( type == null ) {
 			throw propertyException( propertyName );
 		}
@@ -84,7 +84,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 	}
 
 	public String[] getColumnNames(String propertyName) {
-		String[] cols = (String[]) columnsByPropertyPath.get(propertyName);
+		String[] cols = columnsByPropertyPath.get(propertyName);
 		if (cols==null) {
 			throw new MappingException("unknown property: " + propertyName);
 		}
@@ -93,12 +93,12 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 
 	public String[] toColumns(String alias, String propertyName) throws QueryException {
 		//TODO: *two* hashmap lookups here is one too many...
-		String[] columns = (String[]) columnsByPropertyPath.get(propertyName);
+		String[] columns = columnsByPropertyPath.get(propertyName);
 		if ( columns == null ) {
 			throw propertyException( propertyName );
 		}
-		String[] formulaTemplates = (String[]) formulaTemplatesByPropertyPath.get(propertyName);
-		String[] columnReaderTemplates = (String[]) columnReaderTemplatesByPropertyPath.get(propertyName);
+		String[] formulaTemplates = formulaTemplatesByPropertyPath.get(propertyName);
+		String[] columnReaderTemplates = columnReaderTemplatesByPropertyPath.get(propertyName);
 		String[] result = new String[columns.length];
 		for ( int i=0; i<columns.length; i++ ) {
 			if ( columnReaderTemplates[i]==null ) {
@@ -112,12 +112,12 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 	}
 
 	public String[] toColumns(String propertyName) throws QueryException {
-		String[] columns = (String[]) columnsByPropertyPath.get(propertyName);
+		String[] columns = columnsByPropertyPath.get(propertyName);
 		if ( columns == null ) {
 			throw propertyException( propertyName );
 		}
-		String[] formulaTemplates = (String[]) formulaTemplatesByPropertyPath.get(propertyName);
-		String[] columnReaders = (String[]) columnReadersByPropertyPath.get(propertyName);
+		String[] formulaTemplates = formulaTemplatesByPropertyPath.get(propertyName);
+		String[] columnReaders = columnReadersByPropertyPath.get(propertyName);
 		String[] result = new String[columns.length];
 		for ( int i=0; i<columns.length; i++ ) {
 			if ( columnReaders[i]==null ) {
@@ -193,10 +193,10 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 				if ( foreignKeyProperty!=null && !path.equals(foreignKeyProperty) ) {
 					//TODO: this requires that the collection is defined after the
 					//      referenced property in the mapping file (ok?)
-					columns = (String[]) columnsByPropertyPath.get(foreignKeyProperty);
+					columns = columnsByPropertyPath.get(foreignKeyProperty);
 					if (columns==null) return; //get em on the second pass!
-					columnReaders = (String[]) columnReadersByPropertyPath.get(foreignKeyProperty);
-					columnReaderTemplates = (String[]) columnReaderTemplatesByPropertyPath.get(foreignKeyProperty);
+					columnReaders = columnReadersByPropertyPath.get(foreignKeyProperty);
+					columnReaderTemplates = columnReaderTemplatesByPropertyPath.get(foreignKeyProperty);
 				}
 			}
 		}

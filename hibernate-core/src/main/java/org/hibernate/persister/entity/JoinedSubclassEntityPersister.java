@@ -750,8 +750,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		//first, process tables / entitybindings mapped directly by the current entitybinding and its super entitybindings
 		for ( int i = 0; i < coreTableSpan; i++, tableIndex++, allTableIndex++ ) {
 			final TableSpecification table = tables[i];
+			final EntityBinding currentEntityBinding = entityBindings[i];
 			naturalOrderTableNames[tableIndex] = table.getQualifiedName( factory.getDialect() );
-			naturalOrderCascadeDeleteEnabled[tableIndex] = false; //todo fix me @OnDelete
+			naturalOrderCascadeDeleteEnabled[tableIndex] = currentEntityBinding.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete();
 			naturalOrderTableKeyColumns[tableIndex] = new String[idColumnSpan];
 			naturalOrderTableKeyColumnReaders[tableIndex] = new String[idColumnSpan];
 			naturalOrderTableKeyColumnReaderTemplates[tableIndex] = new String[idColumnSpan];
@@ -816,7 +817,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			naturalOrderTableNames[tableIndex] = secondaryTable.getSecondaryTableReference()
 					.getQualifiedName( factory.getDialect() );
 			isNullableTable[i] = secondaryTable.isOptional();
-			naturalOrderCascadeDeleteEnabled[tableIndex] = secondaryTable.isCascadeDeleteEnabled();
+			naturalOrderCascadeDeleteEnabled[tableIndex] = secondaryTable.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete();
 
 			final int secondaryTablePKColumnSpan = secondaryTable.getSecondaryTableReference()
 					.getPrimaryKey()
@@ -988,7 +989,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final EntityBinding eb = postOrderSubEntityBindings[k];
 			subclassClosure[k] = eb.getEntityName();
 			try {
-				if ( eb.isPolymorphic() ) {
+				if ( entityBinding.isPolymorphic() ) {
 					// we now use subclass ids that are consistent across all
 					// persisters for a class hierarchy, so that the use of
 					// "foo.class = Bar" works in HQL

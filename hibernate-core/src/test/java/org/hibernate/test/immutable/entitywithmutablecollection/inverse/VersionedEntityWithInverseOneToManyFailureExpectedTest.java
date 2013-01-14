@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
@@ -92,8 +91,10 @@ public class VersionedEntityWithInverseOneToManyFailureExpectedTest extends Abst
 
 	@Test
 	@Override
-	@FailureExpectedWithNewMetamodel
-	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
+	@FailureExpected(
+			jiraKey = "HHH-4992",
+			message = "known to fail with versioned entity with inverse collection"
+	)	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
 		super.testOneToManyCollectionOptimisticLockingWithUpdate();
 	}
 }

@@ -36,6 +36,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
@@ -50,7 +51,6 @@ import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
-import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
@@ -416,11 +416,11 @@ public class EntitySourceImpl implements EntitySource {
 	}
 
 	private SecondaryTableSource createSecondaryTableSource(AnnotationInstance tableAnnotation) {
-		final List<PrimaryKeyJoinColumnSource> keys = collectionSecondaryTableKeys( tableAnnotation );
+		final List<PrimaryKeyJoinColumn> keys = collectionSecondaryTableKeys( tableAnnotation );
 		return new SecondaryTableSourceImpl( new TableSourceImpl( tableAnnotation ), keys );
 	}
 
-	private List<PrimaryKeyJoinColumnSource> collectionSecondaryTableKeys(final AnnotationInstance tableAnnotation) {
+	private List<PrimaryKeyJoinColumn> collectionSecondaryTableKeys(final AnnotationInstance tableAnnotation) {
 		final AnnotationInstance[] joinColumnAnnotations = JandexHelper.getValue(
 				tableAnnotation,
 				"pkJoinColumns",
@@ -430,9 +430,9 @@ public class EntitySourceImpl implements EntitySource {
 		if ( joinColumnAnnotations == null ) {
 			return Collections.emptyList();
 		}
-		final List<PrimaryKeyJoinColumnSource> keys = new ArrayList<PrimaryKeyJoinColumnSource>();
+		final List<PrimaryKeyJoinColumn> keys = new ArrayList<PrimaryKeyJoinColumn>();
 		for ( final AnnotationInstance joinColumnAnnotation : joinColumnAnnotations ) {
-			keys.add( new PrimaryKeyJoinColumnSourceImpl( joinColumnAnnotation ) );
+			keys.add( new PrimaryKeyJoinColumn( joinColumnAnnotation ) );
 		}
 		return keys;
 	}

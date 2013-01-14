@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -26,91 +26,63 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.engine.FetchStyle;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ColumnSource;
-import org.hibernate.metamodel.spi.source.SecondaryTableSource;
-import org.hibernate.metamodel.spi.source.TableSpecificationSource;
+import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.JoinedSubclassEntitySource;
 
 /**
- * @author Steve Ebersole
+ * @author Strong Liu <stliu@hibernate.org>
  */
-public class SecondaryTableSourceImpl implements SecondaryTableSource {
-	private final TableSpecificationSource joinTable;
+public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl implements JoinedSubclassEntitySource {
 	private final List<ColumnSource> columnSources;
 	private final JoinColumnResolutionDelegate fkColumnResolutionDelegate;
 
-	public SecondaryTableSourceImpl(
-			TableSpecificationSource joinTable,
-			List<PrimaryKeyJoinColumn> joinColumns) {
-		this.joinTable = joinTable;
-
+	public JoinedSubclassEntitySourceImpl(EntityClass entityClass, EntitySource container) {
+		super( entityClass, container );
 		// todo : following normal annotation idiom for source, we probably want to move this stuff up to EntityClass...
 		columnSources = new ArrayList<ColumnSource>();
 		final List<String> targetColumnNames = new ArrayList<String>();
 		boolean hadNamedTargetColumnReferences = false;
-		for ( PrimaryKeyJoinColumn primaryKeyJoinColumnSource : joinColumns ) {
-			columnSources.add(
-					new ColumnValuesSourceImpl(
-							primaryKeyJoinColumnSource
-					)
-			);
-			targetColumnNames.add( primaryKeyJoinColumnSource.getReferencedColumnName() );
-			if ( primaryKeyJoinColumnSource.getReferencedColumnName() != null ) {
-				hadNamedTargetColumnReferences = true;
+		if ( CollectionHelper.isNotEmpty( entityClass.getJoinedSubclassPrimaryKeyJoinColumnSources() ) ) {
+			for ( PrimaryKeyJoinColumn primaryKeyJoinColumnSource : entityClass.getJoinedSubclassPrimaryKeyJoinColumnSources() ) {
+				columnSources.add(
+						new ColumnValuesSourceImpl( primaryKeyJoinColumnSource )
+				);
+				targetColumnNames.add( primaryKeyJoinColumnSource.getReferencedColumnName() );
+				if ( primaryKeyJoinColumnSource.getReferencedColumnName() != null ) {
+					hadNamedTargetColumnReferences = true;
+				}
 			}
 		}
 
-		this.fkColumnResolutionDelegate = ! hadNamedTargetColumnReferences
+		this.fkColumnResolutionDelegate = !hadNamedTargetColumnReferences
 				? null
 				: new JoinColumnResolutionDelegateImpl( targetColumnNames );
 	}
 
 	@Override
-	public TableSpecificationSource getTableSource() {
-		return joinTable;
-	}
-
-	@Override
-	public List<ColumnSource> getPrimaryKeyColumnSources() {
-		return columnSources;
-	}
-
-	@Override
-	public String getComment() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public FetchStyle getFetchStyle() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public boolean isInverse() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public boolean isOptional() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
 	public boolean isCascadeDeleteEnabled() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return getEntityClass().getOnDeleteAction() != null && getEntityClass().getOnDeleteAction() == OnDeleteAction.CASCADE;
 	}
 
 	@Override
 	public String getExplicitForeignKeyName() {
-		// not supported from annotations, unless docs for @ForeignKey are wrong...
-		return null;
+		return getEntityClass().getExplicitForeignKeyName();
 	}
 
 	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
 		return fkColumnResolutionDelegate;
+	}
+
+	@Override
+	public List<ColumnSource> getPrimaryKeyColumnSources() {
+		return columnSources;
 	}
 
 	private static class JoinColumnResolutionDelegateImpl implements JoinColumnResolutionDelegate {
@@ -136,4 +108,7 @@ public class SecondaryTableSourceImpl implements SecondaryTableSource {
 		}
 
 	}
+
+
+
 }

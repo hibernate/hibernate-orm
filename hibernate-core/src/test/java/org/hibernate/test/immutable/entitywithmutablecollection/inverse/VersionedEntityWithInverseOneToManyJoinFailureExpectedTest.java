@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 
 /**
@@ -93,12 +92,5 @@ public class VersionedEntityWithInverseOneToManyJoinFailureExpectedTest extends 
 	)
 	public void testRemoveOneToManyElementUsingMerge() {
 		super.testRemoveOneToManyElementUsingMerge();
-	}
-
-	@Test
-	@Override
-	@FailureExpectedWithNewMetamodel
-	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
-		super.testOneToManyCollectionOptimisticLockingWithUpdate();
 	}
 }

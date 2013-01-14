@@ -21,33 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.hbm;
+package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.metamodel.spi.source.ColumnSource;
-import org.hibernate.metamodel.spi.source.PrimaryKeyJoinColumnSource;
+import java.util.List;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-public class PrimaryKeyJoinColumnSourceImpl implements PrimaryKeyJoinColumnSource {
-	private final ColumnSource columnSource;
+public interface JoinedSubclassEntitySource extends SubclassEntitySource, ForeignKeyContributingSource {
 
-	public PrimaryKeyJoinColumnSourceImpl(ColumnSource relationalValueSource) {
-		this.columnSource = relationalValueSource;
-	}
 
-	@Override
-	public String getColumnName() {
-		return columnSource.getName();
-	}
-
-	@Override
-	public String getReferencedColumnName() {
-		return null;
-	}
-
-	@Override
-	public String getColumnDefinition() {
-		return columnSource.getSqlType();
-	}
+	/**
+	 * The {@code PrimaryKeyJoinColumns} mapping for the joined-subclass.
+	 *
+	 * @return The {@code PrimaryKeyJoinColumnSource} lists defined on the joined subclass or <code>null</code> otherwise.
+	 */
+//	List<PrimaryKeyJoinColumnSource> getPrimaryKeyJoinColumnSources();
+	public List<ColumnSource> getPrimaryKeyColumnSources();
+	boolean isCascadeDeleteEnabled();
 }

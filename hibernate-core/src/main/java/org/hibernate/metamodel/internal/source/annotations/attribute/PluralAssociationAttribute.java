@@ -331,7 +331,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 	}
 
-
+	//todo duplicated with the one in EntityClass
 	private OnDeleteAction determineOnDeleteAction() {
 		final AnnotationInstance onDeleteAnnotation = JandexHelper.getSingleAnnotation(
 				annotations(),

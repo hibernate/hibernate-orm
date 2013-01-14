@@ -194,7 +194,6 @@ public class SchemaUpdate {
 				connectionHelper.prepare( true );
 				connection = connectionHelper.getConnection();
 				meta = new DatabaseMetadata( connection, dialect );
-				// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				stmt = connection.createStatement();
 			}
 			catch ( SQLException sqle ) {
@@ -225,7 +224,6 @@ public class SchemaUpdate {
 					}
 					if ( target.doExport() ) {
                         LOG.debug( sql );
-                        // TODO: use ResultSetExtractor
 						stmt.executeUpdate( formatted );
 					}
 				}
@@ -250,8 +248,6 @@ public class SchemaUpdate {
 
 			try {
 				if ( stmt != null ) {
-					// TODO
-//					session.getTransactionCoordinator().getJdbcCoordinator().release( stmt );
 					stmt.close();
 				}
 				connectionHelper.release();

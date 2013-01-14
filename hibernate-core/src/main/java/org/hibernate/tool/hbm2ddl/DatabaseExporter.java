@@ -51,7 +51,6 @@ class DatabaseExporter implements Exporter {
 
 		connectionHelper.prepare( true );
 		connection = connectionHelper.getConnection();
-		// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 		statement = connection.createStatement();
 	}
 
@@ -62,7 +61,6 @@ class DatabaseExporter implements Exporter {
 
 	@Override
 	public void export(String string) throws Exception {
-		// TODO: use ResultSetExtractor
 		statement.executeUpdate( string );
 		try {
 			SQLWarning warnings = statement.getWarnings();
@@ -78,8 +76,6 @@ class DatabaseExporter implements Exporter {
 	@Override
 	public void release() throws Exception {
 		try {
-			// TODO
-//			session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
 			statement.close();
 		}
 		finally {

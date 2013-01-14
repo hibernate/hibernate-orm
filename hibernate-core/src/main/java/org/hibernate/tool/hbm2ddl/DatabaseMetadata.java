@@ -122,8 +122,6 @@ public class DatabaseMetadata {
 
 				}
 				finally {
-					// TODO
-//					if (rs!=null) session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 					rs.close();
 				}
 			}
@@ -147,9 +145,7 @@ public class DatabaseMetadata {
 				Statement statement = null;
 				ResultSet rs = null;
 				try {
-					// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 					statement = connection.createStatement();
-					// TODO: use ResultSetExtractor
 					rs = statement.executeQuery(sql);
 
 					while ( rs.next() ) {
@@ -157,11 +153,7 @@ public class DatabaseMetadata {
 					}
 				}
 				finally {
-					// TODO
-//					if (rs!=null) session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 					rs.close();
-					// TODO
-//					if (rs!=null) session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
 					statement.close();
 				}
 

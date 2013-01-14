@@ -82,8 +82,6 @@ public class TypeInfoExtracter {
 			}
 			finally {
 				try {
-					// TODO
-//					session.getTransactionCoordinator().getJdbcCoordinator().release( resultSet );
 					resultSet.close();
 				}
 				catch ( SQLException e ) {

@@ -92,9 +92,7 @@ public class ResultSetExtractorImpl implements ResultSetExtractor {
 				}
 			}
 			ResultSet rs = statement.getResultSet();
-			if ( rs != null ) {
-				postExtract( rs );
-			}
+			postExtract( rs );
 			return rs;
 		}
 		catch ( SQLException e ) {
@@ -113,9 +111,7 @@ public class ResultSetExtractorImpl implements ResultSetExtractor {
 				}
 			}
 			ResultSet rs = statement.getResultSet();
-			if ( rs != null ) {
-				postExtract( rs );
-			}
+			postExtract( rs );
 			return rs;
 		}
 		catch ( SQLException e ) {
@@ -154,7 +150,7 @@ public class ResultSetExtractorImpl implements ResultSetExtractor {
 	}
 
 	private void postExtract(ResultSet rs) {
-		jdbcCoordinator.register( rs );
+		if ( rs != null ) jdbcCoordinator.register( rs );
 	}
 
 }

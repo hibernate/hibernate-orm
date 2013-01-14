@@ -154,6 +154,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		if ( flushDepth == 0 ) {
 			releasesEnabled = true;
 		}
+		
+		afterStatementExecution();
 	}
 
 	@Override

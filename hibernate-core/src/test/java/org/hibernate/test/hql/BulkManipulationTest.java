@@ -23,32 +23,35 @@
  */
 package org.hibernate.test.hql;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import junit.framework.AssertionFailedError;
-import org.hibernate.dialect.CUBRIDDialect;
-import org.hibernate.testing.SkipForDialect;
-import org.junit.Test;
 
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * Tests execution of bulk UPDATE/DELETE statements through the new AST parser.
@@ -1221,6 +1224,37 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 		t.commit();
 		s.close();
+	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-1917" )
+	@FailureExpected( jiraKey = "HHH-1917" )
+	public void testManyToManyBulkDelete() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Human friend = new Human();
+		friend.setName( new Name( "Bob", 'B', "Bobbert" ) );
+		s.save( friend );
+		
+		Human brett = new Human();
+		brett.setName( new Name( "Brett", 'E', "Meyer" ) );
+		brett.setFriends( new ArrayList() );
+		brett.getFriends().add( friend );
+		s.save( brett );
+		
+		s.flush();
+		
+		try {
+			s.createQuery( "delete from Human" ).executeUpdate();
+		}
+		catch (ConstraintViolationException cve) {
+			fail("The join table was not cleared prior to the bulk delete.");
+		}
+		finally {
+			t.rollback();
+			s.close();
+		}
 	}
 
 	private class TestData {

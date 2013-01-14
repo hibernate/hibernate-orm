@@ -42,14 +42,16 @@ public class EntityConfiguration {
     // Maps from property name
     private Map<String, RelationDescription> relations;
     private String parentEntityName;
+    private boolean usingModifiedFlag;
 
     public EntityConfiguration(String versionsEntityName, String entityClassName, IdMappingData idMappingData,
-                               ExtendedPropertyMapper propertyMapper, String parentEntityName) {
+                               ExtendedPropertyMapper propertyMapper, String parentEntityName, boolean usingModifiedFlag) {
         this.versionsEntityName = versionsEntityName;
         this.entityClassName = entityClassName;
         this.idMappingData = idMappingData;
         this.propertyMapper = propertyMapper;
         this.parentEntityName = parentEntityName;
+        this.usingModifiedFlag = usingModifiedFlag;
 
         this.relations = new HashMap<String, RelationDescription>();
     }
@@ -122,5 +124,12 @@ public class EntityConfiguration {
      */
     public String getEntityClassName() {
 		return entityClassName;
-	}    
+	}
+
+	/**
+	 * @return {@code true} if the entity or any of its properties use modification flag, {@code false} otherwise.
+	 */
+	public boolean isUsingModifiedFlag() {
+		return usingModifiedFlag;
+	}
 }

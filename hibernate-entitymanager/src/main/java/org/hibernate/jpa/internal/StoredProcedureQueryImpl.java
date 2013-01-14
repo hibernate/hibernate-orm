@@ -37,11 +37,11 @@ import java.util.List;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
-import org.hibernate.procedure.Call;
-import org.hibernate.procedure.Outputs;
-import org.hibernate.procedure.ResultSetReturn;
-import org.hibernate.procedure.Return;
-import org.hibernate.procedure.UpdateCountReturn;
+import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.procedure.ProcedureResult;
+import org.hibernate.result.ResultSetReturn;
+import org.hibernate.result.Return;
+import org.hibernate.result.UpdateCountReturn;
 import org.hibernate.jpa.spi.BaseQueryImpl;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 
@@ -49,10 +49,10 @@ import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
  * @author Steve Ebersole
  */
 public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredProcedureQuery {
-	private final Call procedureCall;
-	private Outputs procedureOutputs;
+	private final ProcedureCall procedureCall;
+	private ProcedureResult procedureResult;
 
-	public StoredProcedureQueryImpl(Call procedureCall, HibernateEntityManagerImplementor entityManager) {
+	public StoredProcedureQueryImpl(ProcedureCall procedureCall, HibernateEntityManagerImplementor entityManager) {
 		super( entityManager );
 		this.procedureCall = procedureCall;
 	}
@@ -172,11 +172,11 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	// outputs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private Outputs outputs() {
-		if ( procedureOutputs == null ) {
-			procedureOutputs = procedureCall.getOutputs();
+	private ProcedureResult outputs() {
+		if ( procedureResult == null ) {
+			procedureResult = procedureCall.getResult();
 		}
-		return procedureOutputs;
+		return procedureResult;
 	}
 
 	@Override

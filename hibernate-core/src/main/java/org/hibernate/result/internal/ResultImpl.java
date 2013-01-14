@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,9 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.procedure.internal;
+package org.hibernate.result.internal;
 
-import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -32,53 +32,34 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.JDBCException;
-import org.hibernate.procedure.Outputs;
-import org.hibernate.procedure.ParameterRegistration;
-import org.hibernate.procedure.Return;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
-import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
+import org.hibernate.result.NoMoreReturnsException;
+import org.hibernate.result.Result;
+import org.hibernate.result.Return;
+import org.hibernate.result.spi.ResultContext;
 
 /**
  * @author Steve Ebersole
  */
-public class OutputsImpl implements Outputs {
-	private final CallImpl procedureCall;
-	private final CallableStatement callableStatement;
-
-	private final ParameterRegistrationImplementor[] refCursorParameters;
+public class ResultImpl implements Result {
+	private final ResultContext context;
+	private final PreparedStatement jdbcStatement;
 	private final CustomLoaderExtension loader;
 
 	private CurrentReturnDescriptor currentReturnDescriptor;
 
 	private boolean executed = false;
-	private int refCursorParamIndex = 0;
 
-	OutputsImpl(CallImpl procedureCall, CallableStatement callableStatement) {
-		this.procedureCall = procedureCall;
-		this.callableStatement = callableStatement;
+	public ResultImpl(ResultContext context, PreparedStatement jdbcStatement) {
+		this.context = context;
+		this.jdbcStatement = jdbcStatement;
 
-		this.refCursorParameters = procedureCall.collectRefCursorParameters();
 		// For now...
-		this.loader = buildSpecializedCustomLoader( procedureCall );
-	}
-
-	@Override
-	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration) {
-		return ( (ParameterRegistrationImplementor<T>) parameterRegistration ).extract( callableStatement );
-	}
-
-	@Override
-	public Object getOutputParameterValue(String name) {
-		return procedureCall.getParameterRegistration( name ).extract( callableStatement );
-	}
-
-	@Override
-	public Object getOutputParameterValue(int position) {
-		return procedureCall.getParameterRegistration( position ).extract( callableStatement );
+		this.loader = buildSpecializedCustomLoader( context );
 	}
 
 	@Override
@@ -88,7 +69,7 @@ public class OutputsImpl implements Outputs {
 
 			if ( executed ) {
 				try {
-					isResultSet = callableStatement.getMoreResults();
+					isResultSet = jdbcStatement.getMoreResults();
 				}
 				catch (SQLException e) {
 					throw convert( e, "Error calling CallableStatement.getMoreResults" );
@@ -96,7 +77,7 @@ public class OutputsImpl implements Outputs {
 			}
 			else {
 				try {
-					isResultSet = callableStatement.execute();
+					isResultSet = jdbcStatement.execute();
 				}
 				catch (SQLException e) {
 					throw convert( e, "Error calling CallableStatement.execute" );
@@ -107,23 +88,26 @@ public class OutputsImpl implements Outputs {
 			int updateCount = -1;
 			if ( ! isResultSet ) {
 				try {
-					updateCount = callableStatement.getUpdateCount();
+					updateCount = jdbcStatement.getUpdateCount();
 				}
 				catch (SQLException e) {
 					throw convert( e, "Error calling CallableStatement.getUpdateCount" );
 				}
 			}
 
-			currentReturnDescriptor = new CurrentReturnDescriptor( isResultSet, updateCount, refCursorParamIndex );
+			currentReturnDescriptor = buildCurrentReturnDescriptor( isResultSet, updateCount );
 		}
 
-		return hasMoreResults( currentReturnDescriptor );
+		return hasMoreReturns( currentReturnDescriptor );
 	}
 
-	private boolean hasMoreResults(CurrentReturnDescriptor descriptor) {
+	protected CurrentReturnDescriptor buildCurrentReturnDescriptor(boolean isResultSet, int updateCount) {
+		return new CurrentReturnDescriptor( isResultSet, updateCount );
+	}
+
+	protected boolean hasMoreReturns(CurrentReturnDescriptor descriptor) {
 		return descriptor.isResultSet
-				|| descriptor.updateCount >= 0
-				|| descriptor.refCursorParamIndex < refCursorParameters.length;
+				|| descriptor.updateCount >= 0;
 	}
 
 	@Override
@@ -137,8 +121,8 @@ public class OutputsImpl implements Outputs {
 			}
 		}
 
-		if ( ! hasMoreResults( currentReturnDescriptor ) ) {
-			throw new IllegalStateException( "Results have been exhausted" );
+		if ( ! hasMoreReturns( currentReturnDescriptor ) ) {
+			throw new NoMoreReturnsException( "Results have been exhausted" );
 		}
 
 		CurrentReturnDescriptor copyReturnDescriptor = currentReturnDescriptor;
@@ -146,7 +130,7 @@ public class OutputsImpl implements Outputs {
 
 		if ( copyReturnDescriptor.isResultSet ) {
 			try {
-				return new ResultSetReturn( this, callableStatement.getResultSet() );
+				return new ResultSetReturn( this, jdbcStatement.getResultSet() );
 			}
 			catch (SQLException e) {
 				throw convert( e, "Error calling CallableStatement.getResultSet" );
@@ -156,49 +140,37 @@ public class OutputsImpl implements Outputs {
 			return new UpdateCountReturn( this, copyReturnDescriptor.updateCount );
 		}
 		else {
-			this.refCursorParamIndex++;
-			ResultSet resultSet;
-			int refCursorParamIndex = copyReturnDescriptor.refCursorParamIndex;
-			ParameterRegistrationImplementor refCursorParam = refCursorParameters[refCursorParamIndex];
-			if ( refCursorParam.getName() != null ) {
-				resultSet = procedureCall.session().getFactory().getServiceRegistry()
-						.getService( RefCursorSupport.class )
-						.getResultSet( callableStatement, refCursorParam.getName() );
-			}
-			else {
-				resultSet = procedureCall.session().getFactory().getServiceRegistry()
-						.getService( RefCursorSupport.class )
-						.getResultSet( callableStatement, refCursorParam.getPosition() );
-			}
-			return new ResultSetReturn( this, resultSet );
+			return buildExtendedReturn( copyReturnDescriptor );
 		}
+	}
+
+	protected Return buildExtendedReturn(CurrentReturnDescriptor copyReturnDescriptor) {
+		throw new NoMoreReturnsException( "Results have been exhausted" );
 	}
 
 	protected JDBCException convert(SQLException e, String message) {
-		return procedureCall.session().getFactory().getSQLExceptionHelper().convert(
+		return context.getSession().getFactory().getSQLExceptionHelper().convert(
 				e,
 				message,
-				procedureCall.getProcedureName()
+				context.getSql()
 		);
 	}
 
-	private static class CurrentReturnDescriptor {
+	protected static class CurrentReturnDescriptor {
 		private final boolean isResultSet;
 		private final int updateCount;
-		private final int refCursorParamIndex;
 
-		private CurrentReturnDescriptor(boolean isResultSet, int updateCount, int refCursorParamIndex) {
+		protected CurrentReturnDescriptor(boolean isResultSet, int updateCount) {
 			this.isResultSet = isResultSet;
 			this.updateCount = updateCount;
-			this.refCursorParamIndex = refCursorParamIndex;
 		}
 	}
 
-	private static class ResultSetReturn implements org.hibernate.procedure.ResultSetReturn {
-		private final OutputsImpl storedProcedureOutputs;
+	protected static class ResultSetReturn implements org.hibernate.result.ResultSetReturn {
+		private final ResultImpl storedProcedureOutputs;
 		private final ResultSet resultSet;
 
-		public ResultSetReturn(OutputsImpl storedProcedureOutputs, ResultSet resultSet) {
+		public ResultSetReturn(ResultImpl storedProcedureOutputs, ResultSet resultSet) {
 			this.storedProcedureOutputs = storedProcedureOutputs;
 			this.resultSet = resultSet;
 		}
@@ -231,12 +203,12 @@ public class OutputsImpl implements Outputs {
 		}
 	}
 
-	private class UpdateCountReturn implements org.hibernate.procedure.UpdateCountReturn {
-		private final OutputsImpl procedureOutputs;
+	protected static class UpdateCountReturn implements org.hibernate.result.UpdateCountReturn {
+		private final ResultImpl result;
 		private final int updateCount;
 
-		public UpdateCountReturn(OutputsImpl procedureOutputs, int updateCount) {
-			this.procedureOutputs = procedureOutputs;
+		public UpdateCountReturn(ResultImpl result, int updateCount) {
+			this.result = result;
 			this.updateCount = updateCount;
 		}
 
@@ -251,10 +223,10 @@ public class OutputsImpl implements Outputs {
 		}
 	}
 
-	private static CustomLoaderExtension buildSpecializedCustomLoader(final CallImpl procedureCall) {
+	private static CustomLoaderExtension buildSpecializedCustomLoader(final ResultContext context) {
 		final SQLQueryReturnProcessor processor = new SQLQueryReturnProcessor(
-				procedureCall.getQueryReturns(),
-				procedureCall.session().getFactory()
+				context.getQueryReturns(),
+				context.getSession().getFactory()
 		);
 		processor.process();
 		final List<org.hibernate.loader.custom.Return> customReturns = processor.generateCustomReturns( false );
@@ -262,12 +234,12 @@ public class OutputsImpl implements Outputs {
 		CustomQuery customQuery = new CustomQuery() {
 			@Override
 			public String getSQL() {
-				return procedureCall.getProcedureName();
+				return context.getSql();
 			}
 
 			@Override
 			public Set<String> getQuerySpaces() {
-				return procedureCall.getSynchronizedQuerySpacesSet();
+				return context.getSynchronizedQuerySpaces();
 			}
 
 			@Override
@@ -284,8 +256,8 @@ public class OutputsImpl implements Outputs {
 
 		return new CustomLoaderExtension(
 				customQuery,
-				procedureCall.buildQueryParametersObject(),
-				procedureCall.session()
+				context.getQueryParameters(),
+				context.getSession()
 		);
 	}
 

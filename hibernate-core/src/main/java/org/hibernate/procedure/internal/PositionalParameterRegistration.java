@@ -30,7 +30,7 @@ import javax.persistence.ParameterMode;
  */
 public class PositionalParameterRegistration<T> extends AbstractParameterRegistrationImpl<T> {
 	public  PositionalParameterRegistration(
-			CallImpl procedureCall,
+			ProcedureCallImpl procedureCall,
 			Integer position,
 			Class<T> type,
 			ParameterMode mode) {

@@ -21,28 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.procedure;
-
-import java.util.List;
+package org.hibernate.result;
 
 /**
- * Models a stored procedure result that is a result set.
+ * Models a return that is an update count (count of rows affected)
  *
  * @author Steve Ebersole
  */
-public interface ResultSetReturn extends Return {
+public interface UpdateCountReturn extends Return {
 	/**
-	 * Consume the underlying {@link java.sql.ResultSet} and return the resulting List.
+	 * Retrieve the associated update count
 	 *
-	 * @return The consumed ResultSet values.
+	 * @return The update count
 	 */
-	public List getResultList();
-
-	/**
-	 * Consume the underlying {@link java.sql.ResultSet} with the expectation that there is just a single level of
-	 * root returns.
-	 *
-	 * @return The single result.
-	 */
-	public Object getSingleResult();
+	public int getUpdateCount();
 }

@@ -21,10 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.procedure;
+package org.hibernate.result;
+
+import org.hibernate.HibernateException;
 
 /**
  * @author Steve Ebersole
  */
-public interface InOutParameterRegistration<T> extends InParameterRegistration<T>, OutParameterRegistration<T> {
+public class NoMoreReturnsException extends HibernateException {
+	public NoMoreReturnsException(String message) {
+		super( message );
+	}
 }

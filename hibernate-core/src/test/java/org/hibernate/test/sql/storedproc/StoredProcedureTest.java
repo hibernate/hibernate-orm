@@ -32,10 +32,10 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
-import org.hibernate.procedure.Call;
-import org.hibernate.procedure.Outputs;
-import org.hibernate.procedure.ResultSetReturn;
-import org.hibernate.procedure.Return;
+import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.procedure.ProcedureResult;
+import org.hibernate.result.ResultSetReturn;
+import org.hibernate.result.Return;
 import org.hibernate.dialect.H2Dialect;
 
 import org.junit.Test;
@@ -169,10 +169,10 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 
-		Call query = session.createStoredProcedureCall( "user");
-		Outputs outputs = query.getOutputs();
-		assertTrue( "Checking Outputs has more returns", outputs.hasMoreReturns() );
-		Return nextReturn = outputs.getNextReturn();
+		ProcedureCall query = session.createStoredProcedureCall( "user");
+		ProcedureResult procedureResult = query.getResult();
+		assertTrue( "Checking ProcedureResult has more returns", procedureResult.hasMoreReturns() );
+		Return nextReturn = procedureResult.getNextReturn();
 		assertNotNull( nextReturn );
 		ExtraAssertions.assertClassAssignability( ResultSetReturn.class, nextReturn.getClass() );
 		ResultSetReturn resultSetReturn = (ResultSetReturn) nextReturn;
@@ -188,10 +188,10 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 
-		Call query = session.createStoredProcedureCall( "findOneUser" );
-		Outputs outputs = query.getOutputs();
-		assertTrue( "Checking Outputs has more returns", outputs.hasMoreReturns() );
-		Return nextReturn = outputs.getNextReturn();
+		ProcedureCall query = session.createStoredProcedureCall( "findOneUser" );
+		ProcedureResult procedureResult = query.getResult();
+		assertTrue( "Checking ProcedureResult has more returns", procedureResult.hasMoreReturns() );
+		Return nextReturn = procedureResult.getNextReturn();
 		assertNotNull( nextReturn );
 		ExtraAssertions.assertClassAssignability( ResultSetReturn.class, nextReturn.getClass() );
 		ResultSetReturn resultSetReturn = (ResultSetReturn) nextReturn;
@@ -209,10 +209,10 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 
-		Call query = session.createStoredProcedureCall( "findUsers" );
-		Outputs outputs = query.getOutputs();
-		assertTrue( "Checking Outputs has more returns", outputs.hasMoreReturns() );
-		Return nextReturn = outputs.getNextReturn();
+		ProcedureCall query = session.createStoredProcedureCall( "findUsers" );
+		ProcedureResult procedureResult = query.getResult();
+		assertTrue( "Checking ProcedureResult has more returns", procedureResult.hasMoreReturns() );
+		Return nextReturn = procedureResult.getNextReturn();
 		assertNotNull( nextReturn );
 		ExtraAssertions.assertClassAssignability( ResultSetReturn.class, nextReturn.getClass() );
 		ResultSetReturn resultSetReturn = (ResultSetReturn) nextReturn;
@@ -246,12 +246,12 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 
-		Call query = session.createStoredProcedureCall( "findUserRange" );
+		ProcedureCall query = session.createStoredProcedureCall( "findUserRange" );
 		query.registerParameter( "start", Integer.class, ParameterMode.IN ).bindValue( 1 );
 		query.registerParameter( "end", Integer.class, ParameterMode.IN ).bindValue( 2 );
-		Outputs outputs = query.getOutputs();
-		assertTrue( "Checking Outputs has more returns", outputs.hasMoreReturns() );
-		Return nextReturn = outputs.getNextReturn();
+		ProcedureResult procedureResult = query.getResult();
+		assertTrue( "Checking ProcedureResult has more returns", procedureResult.hasMoreReturns() );
+		Return nextReturn = procedureResult.getNextReturn();
 		assertNotNull( nextReturn );
 		ExtraAssertions.assertClassAssignability( ResultSetReturn.class, nextReturn.getClass() );
 		ResultSetReturn resultSetReturn = (ResultSetReturn) nextReturn;
@@ -273,12 +273,12 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 
-		Call query = session.createStoredProcedureCall( "findUserRange" );
+		ProcedureCall query = session.createStoredProcedureCall( "findUserRange" );
 		query.registerParameter( 1, Integer.class, ParameterMode.IN ).bindValue( 1 );
 		query.registerParameter( 2, Integer.class, ParameterMode.IN ).bindValue( 2 );
-		Outputs outputs = query.getOutputs();
-		assertTrue( "Checking Outputs has more returns", outputs.hasMoreReturns() );
-		Return nextReturn = outputs.getNextReturn();
+		ProcedureResult procedureResult = query.getResult();
+		assertTrue( "Checking ProcedureResult has more returns", procedureResult.hasMoreReturns() );
+		Return nextReturn = procedureResult.getNextReturn();
 		assertNotNull( nextReturn );
 		ExtraAssertions.assertClassAssignability( ResultSetReturn.class, nextReturn.getClass() );
 		ResultSetReturn resultSetReturn = (ResultSetReturn) nextReturn;
@@ -304,12 +304,12 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		// execution
 
 		{
-			Call query = session.createStoredProcedureCall( "findUserRange" );
+			ProcedureCall query = session.createStoredProcedureCall( "findUserRange" );
 			query.registerParameter( 1, Integer.class, ParameterMode.IN );
 			query.registerParameter( 2, Integer.class, ParameterMode.IN ).bindValue( 2 );
-			Outputs outputs = query.getOutputs();
+			ProcedureResult procedureResult = query.getResult();
 			try {
-				outputs.hasMoreReturns();
+				procedureResult.hasMoreReturns();
 				fail( "Expecting failure due to missing parameter bind" );
 			}
 			catch (JDBCException expected) {
@@ -317,12 +317,12 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		}
 
 		{
-			Call query = session.createStoredProcedureCall( "findUserRange" );
+			ProcedureCall query = session.createStoredProcedureCall( "findUserRange" );
 			query.registerParameter( "start", Integer.class, ParameterMode.IN );
 			query.registerParameter( "end", Integer.class, ParameterMode.IN ).bindValue( 2 );
-			Outputs outputs = query.getOutputs();
+			ProcedureResult procedureResult = query.getResult();
 			try {
-				outputs.hasMoreReturns();
+				procedureResult.hasMoreReturns();
 				fail( "Expecting failure due to missing parameter bind" );
 			}
 			catch (JDBCException expected) {

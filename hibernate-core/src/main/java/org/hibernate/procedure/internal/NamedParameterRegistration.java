@@ -30,7 +30,7 @@ import javax.persistence.ParameterMode;
  */
 public class NamedParameterRegistration<T> extends AbstractParameterRegistrationImpl<T> {
 	public NamedParameterRegistration(
-			CallImpl procedureCall,
+			ProcedureCallImpl procedureCall,
 			String name,
 			Class<T> type,
 			ParameterMode mode) {

@@ -21,18 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.procedure;
+package org.hibernate.result;
 
 /**
- * Models a stored procedure result that is a result set.
+ * Common contract for individual return objects which can be either results ({@link ResultSetReturn}) or update
+ * counts ({@link UpdateCountReturn}).
  *
  * @author Steve Ebersole
  */
-public interface UpdateCountReturn extends Return {
+public interface Return {
 	/**
-	 * Retrieve the associated update count
+	 * Determine if this return is a result (castable to {@link ResultSetReturn}).  The alternative is that it is
+	 * an update count (castable to {@link UpdateCountReturn}).
 	 *
-	 * @return The update count
+	 * @return {@code true} indicates that {@code this} can be safely cast to {@link ResultSetReturn}), other wise
+	 * it can be cast to {@link UpdateCountReturn}.
 	 */
-	public int getUpdateCount();
+	public boolean isResultSet();
 }

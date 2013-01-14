@@ -37,7 +37,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.procedure.Call;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
@@ -59,7 +59,7 @@ import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
-import org.hibernate.procedure.internal.CallImpl;
+import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.type.Type;
 
 /**
@@ -241,29 +241,29 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")
-	public Call createStoredProcedureCall(String procedureName) {
+	public ProcedureCall createStoredProcedureCall(String procedureName) {
 		errorIfClosed();
-		final Call call = new CallImpl( this, procedureName );
+		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName );
 //		call.setComment( "Dynamic stored procedure call" );
-		return call;
+		return procedureCall;
 	}
 
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")
-	public Call createStoredProcedureCall(String procedureName, Class... resultClasses) {
+	public ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses) {
 		errorIfClosed();
-		final Call call = new CallImpl( this, procedureName, resultClasses );
+		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName, resultClasses );
 //		call.setComment( "Dynamic stored procedure call" );
-		return call;
+		return procedureCall;
 	}
 
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")
-	public Call createStoredProcedureCall(String procedureName, String... resultSetMappings) {
+	public ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
 		errorIfClosed();
-		final Call call = new CallImpl( this, procedureName, resultSetMappings );
+		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName, resultSetMappings );
 //		call.setComment( "Dynamic stored procedure call" );
-		return call;
+		return procedureCall;
 	}
 
 	protected HQLQueryPlan getHQLQueryPlan(String query, boolean shallow) throws HibernateException {

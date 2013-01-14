@@ -28,7 +28,6 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -48,18 +47,19 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.AbstractBasicQueryContractImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.procedure.Call;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.NamedParametersNotSupportedException;
 import org.hibernate.procedure.ParameterRegistration;
-import org.hibernate.procedure.Outputs;
+import org.hibernate.procedure.ProcedureResult;
+import org.hibernate.result.spi.ResultContext;
 import org.hibernate.type.Type;
 
 /**
- * Standard implementation of {@link Call}
+ * Standard implementation of {@link org.hibernate.procedure.ProcedureCall}
  *
  * @author Steve Ebersole
  */
-public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
+public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements ProcedureCall, ResultContext {
 	private final String procedureName;
 	private final NativeSQLQueryReturn[] queryReturns;
 
@@ -68,15 +68,15 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 
 	private Set<String> synchronizedQuerySpaces;
 
-	private OutputsImpl outputs;
+	private ProcedureResultImpl outputs;
 
 
 	@SuppressWarnings("unchecked")
-	public CallImpl(SessionImplementor session, String procedureName) {
+	public ProcedureCallImpl(SessionImplementor session, String procedureName) {
 		this( session, procedureName, (List) null );
 	}
 
-	public CallImpl(SessionImplementor session, String procedureName, List<NativeSQLQueryReturn> queryReturns) {
+	public ProcedureCallImpl(SessionImplementor session, String procedureName, List<NativeSQLQueryReturn> queryReturns) {
 		super( session );
 		this.procedureName = procedureName;
 
@@ -88,7 +88,7 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 		}
 	}
 
-	public CallImpl(SessionImplementor session, String procedureName, Class... resultClasses) {
+	public ProcedureCallImpl(SessionImplementor session, String procedureName, Class... resultClasses) {
 		this( session, procedureName, collectQueryReturns( resultClasses ) );
 	}
 
@@ -106,7 +106,7 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 		return queryReturns;
 	}
 
-	public CallImpl(SessionImplementor session, String procedureName, String... resultSetMappings) {
+	public ProcedureCallImpl(SessionImplementor session, String procedureName, String... resultSetMappings) {
 		this( session, procedureName, collectQueryReturns( session, resultSetMappings ) );
 	}
 
@@ -126,7 +126,7 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 		return queryReturns;
 	}
 
-//	public CallImpl(
+//	public ProcedureCallImpl(
 //			SessionImplementor session,
 //			String procedureName,
 //			List<StoredProcedureParameter> parameters) {
@@ -139,8 +139,7 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 //	}
 
 	@Override
-	public SessionImplementor session() {
-		// provide access to delegates
+	public SessionImplementor getSession() {
 		return super.session();
 	}
 
@@ -153,7 +152,13 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 		return procedureName;
 	}
 
-	NativeSQLQueryReturn[] getQueryReturns() {
+	@Override
+	public String getSql() {
+		return getProcedureName();
+	}
+
+	@Override
+	public NativeSQLQueryReturn[] getQueryReturns() {
 		return queryReturns;
 	}
 
@@ -167,7 +172,7 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Call registerParameter0(int position, Class type, ParameterMode mode) {
+	public ProcedureCall registerParameter0(int position, Class type, ParameterMode mode) {
 		registerParameter( position, type, mode );
 		return this;
 	}
@@ -198,7 +203,7 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 		}
 		if ( parameterStrategy == null ) {
 			// protect to only do this check once
-			final ExtractedDatabaseMetaData databaseMetaData = session().getTransactionCoordinator()
+			final ExtractedDatabaseMetaData databaseMetaData = getSession().getTransactionCoordinator()
 					.getJdbcCoordinator()
 					.getLogicalConnection()
 					.getJdbcServices()
@@ -235,7 +240,7 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Call registerParameter0(String name, Class type, ParameterMode mode) {
+	public ProcedureCall registerParameter0(String name, Class type, ParameterMode mode) {
 		registerParameter( name, type, mode );
 		return this;
 	}
@@ -260,7 +265,7 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 	}
 
 	@Override
-	public Outputs getOutputs() {
+	public ProcedureResult getResult() {
 		if ( outputs == null ) {
 			outputs = buildOutputs();
 		}
@@ -268,7 +273,7 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 		return outputs;
 	}
 
-	private OutputsImpl buildOutputs() {
+	private ProcedureResultImpl buildOutputs() {
 		// todo : going to need a very specialized Loader for this.
 		// or, might be a good time to look at splitting Loader up into:
 		//		1) building statement objects
@@ -291,7 +296,7 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 		buffer.append( ")}" );
 
 		try {
-			final CallableStatement statement = (CallableStatement) session().getTransactionCoordinator()
+			final CallableStatement statement = (CallableStatement) getSession().getTransactionCoordinator()
 					.getJdbcCoordinator()
 					.getStatementPreparer()
 					.prepareStatement( buffer.toString(), true );
@@ -307,10 +312,10 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 				i += parameter.getSqlTypes().length;
 			}
 
-			return new OutputsImpl( this, statement );
+			return new ProcedureResultImpl( this, statement );
 		}
 		catch (SQLException e) {
-			throw session().getFactory().getSQLExceptionHelper().convert(
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					e,
 					"Error preparing CallableStatement",
 					getProcedureName()
@@ -333,7 +338,7 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Collection<String> getSynchronizedQuerySpaces() {
+	public Set<String> getSynchronizedQuerySpaces() {
 		if ( synchronizedQuerySpaces == null ) {
 			return Collections.emptySet();
 		}
@@ -342,19 +347,15 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 		}
 	}
 
-	public Set<String> getSynchronizedQuerySpacesSet() {
-		return (Set<String>) getSynchronizedQuerySpaces();
-	}
-
 	@Override
-	public CallImpl addSynchronizedQuerySpace(String querySpace) {
+	public ProcedureCallImpl addSynchronizedQuerySpace(String querySpace) {
 		synchronizedQuerySpaces().add( querySpace );
 		return this;
 	}
 
 	@Override
-	public CallImpl addSynchronizedEntityName(String entityName) {
-		addSynchronizedQuerySpaces( session().getFactory().getEntityPersister( entityName ) );
+	public ProcedureCallImpl addSynchronizedEntityName(String entityName) {
+		addSynchronizedQuerySpaces( getSession().getFactory().getEntityPersister( entityName ) );
 		return this;
 	}
 
@@ -363,9 +364,14 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 	}
 
 	@Override
-	public CallImpl addSynchronizedEntityClass(Class entityClass) {
-		addSynchronizedQuerySpaces( session().getFactory().getEntityPersister( entityClass.getName() ) );
+	public ProcedureCallImpl addSynchronizedEntityClass(Class entityClass) {
+		addSynchronizedQuerySpaces( getSession().getFactory().getEntityPersister( entityClass.getName() ) );
 		return this;
+	}
+
+	@Override
+	public QueryParameters getQueryParameters() {
+		return buildQueryParametersObject();
 	}
 
 	public QueryParameters buildQueryParametersObject() {

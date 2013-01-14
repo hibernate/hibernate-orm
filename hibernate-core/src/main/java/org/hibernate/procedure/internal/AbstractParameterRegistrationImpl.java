@@ -48,7 +48,7 @@ import org.hibernate.type.Type;
 public abstract class AbstractParameterRegistrationImpl<T> implements ParameterRegistrationImplementor<T> {
 	private static final Logger log = Logger.getLogger( AbstractParameterRegistrationImpl.class );
 
-	private final CallImpl procedureCall;
+	private final ProcedureCallImpl procedureCall;
 
 	private final Integer position;
 	private final String name;
@@ -63,7 +63,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 	private int[] sqlTypes;
 
 	protected AbstractParameterRegistrationImpl(
-			CallImpl procedureCall,
+			ProcedureCallImpl procedureCall,
 			Integer position,
 			Class<T> type,
 			ParameterMode mode) {
@@ -71,7 +71,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 	}
 
 	protected AbstractParameterRegistrationImpl(
-			CallImpl procedureCall,
+			ProcedureCallImpl procedureCall,
 			String name,
 			Class<T> type,
 			ParameterMode mode) {
@@ -79,7 +79,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 	}
 
 	private AbstractParameterRegistrationImpl(
-			CallImpl procedureCall,
+			ProcedureCallImpl procedureCall,
 			Integer position,
 			String name,
 			Class<T> type,
@@ -96,7 +96,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 	}
 
 	protected SessionImplementor session() {
-		return procedureCall.session();
+		return procedureCall.getSession();
 	}
 
 	@Override
@@ -258,7 +258,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 			}
 		}
 		catch (SQLException e) {
-			throw procedureCall.session().getFactory().getSQLExceptionHelper().convert(
+			throw procedureCall.getSession().getFactory().getSQLExceptionHelper().convert(
 					e,
 					"Unable to extract OUT/INOUT parameter value"
 			);

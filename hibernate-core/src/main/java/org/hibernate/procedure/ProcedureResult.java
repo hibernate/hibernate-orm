@@ -23,14 +23,15 @@
  */
 package org.hibernate.procedure;
 
+import org.hibernate.result.Result;
+
 /**
- * Represents all the outputs of a call to a database stored procedure (or function) through the JDBC
- * {@link java.sql.CallableStatement} interface.
+ * Specialization of the {@link Result} contract providing access to the stored procedure's registered
+ * output parameters.
  *
  * @author Steve Ebersole
  */
-public interface Outputs {
-
+public interface ProcedureResult extends Result {
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the parameter's registration memento.
 	 * <p/>
@@ -41,7 +42,7 @@ public interface Outputs {
 	 *
 	 * @return The output value.
 	 *
-	 * @see Call#registerParameter(String, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
 	 */
 	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration);
 
@@ -52,7 +53,7 @@ public interface Outputs {
 	 *
 	 * @return The output value.
 	 *
-	 * @see Call#registerParameter(String, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
 	 */
 	public Object getOutputParameterValue(String name);
 
@@ -63,22 +64,7 @@ public interface Outputs {
 	 *
 	 * @return The output value.
 	 *
-	 * @see Call#registerParameter(int, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(int, Class, javax.persistence.ParameterMode)
 	 */
 	public Object getOutputParameterValue(int position);
-
-	/**
-	 * Are there any more returns associated with this set of outputs?
-	 *
-	 * @return {@code true} means there are more results available via {@link #getNextReturn()}; {@code false}
-	 * indicates that calling {@link #getNextReturn()} will certainly result in an exception.
-	 */
-	public boolean hasMoreReturns();
-
-	/**
-	 * Retrieve the next return.
-	 *
-	 * @return The next return.
-	 */
-	public Return getNextReturn();
 }

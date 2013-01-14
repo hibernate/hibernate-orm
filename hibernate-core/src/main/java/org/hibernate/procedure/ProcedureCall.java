@@ -35,15 +35,15 @@ import org.hibernate.SynchronizeableQuery;
  *
  * @author Steve Ebersole
  */
-public interface Call extends BasicQueryContract, SynchronizeableQuery {
+public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery {
 	@Override
-	public Call addSynchronizedQuerySpace(String querySpace);
+	public ProcedureCall addSynchronizedQuerySpace(String querySpace);
 
 	@Override
-	public Call addSynchronizedEntityName(String entityName) throws MappingException;
+	public ProcedureCall addSynchronizedEntityName(String entityName) throws MappingException;
 
 	@Override
-	public Call addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	public ProcedureCall addSynchronizedEntityClass(Class entityClass) throws MappingException;
 
 	/**
 	 * Get the name of the stored procedure to be called.
@@ -72,7 +72,7 @@ public interface Call extends BasicQueryContract, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public Call registerParameter0(int position, Class type, ParameterMode mode);
+	public ProcedureCall registerParameter0(int position, Class type, ParameterMode mode);
 
 	/**
 	 * Retrieve a previously registered parameter memento by the position under which it was registered.
@@ -104,7 +104,7 @@ public interface Call extends BasicQueryContract, SynchronizeableQuery {
 	 *
 	 * @return The parameter registration memento
 	 */
-	public Call registerParameter0(String parameterName, Class type, ParameterMode mode)
+	public ProcedureCall registerParameter0(String parameterName, Class type, ParameterMode mode)
 			throws NamedParametersNotSupportedException;
 
 	/**
@@ -131,6 +131,6 @@ public interface Call extends BasicQueryContract, SynchronizeableQuery {
 	 *
 	 * @return The outputs representation
 	 */
-	public Outputs getOutputs();
+	public ProcedureResult getResult();
 
 }

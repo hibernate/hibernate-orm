@@ -21,10 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.procedure;
+package org.hibernate.result;
 
 /**
+ * Represents the result of executing a JDBC statement accounting for mixing of result sets and update counts hiding the
+ * complexity (IMO) of how this is exposed in the JDBC API.
+ *
+ * A result is made up of group of {@link Return} objects, each representing a single result set or update count.
+ * Conceptually, Result presents those Returns as an iterator.
+ *
  * @author Steve Ebersole
  */
-public interface OutParameterRegistration<T> extends ParameterRegistration<T> {
+public interface Result {
+	/**
+	 * Are there any more returns associated with this result?
+	 *
+	 * @return {@code true} means there are more returns available via {@link #getNextReturn()}; {@code false}
+	 * indicates that calling {@link #getNextReturn()} will certainly result in an exception.
+	 */
+	public boolean hasMoreReturns();
+
+	/**
+	 * Retrieve the next return.
+	 *
+	 * @return The next return.
+	 */
+	public Return getNextReturn() throws NoMoreReturnsException;
 }

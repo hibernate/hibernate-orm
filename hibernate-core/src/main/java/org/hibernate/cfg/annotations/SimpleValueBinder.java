@@ -43,6 +43,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -62,10 +63,14 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.CharacterArrayClobType;
+import org.hibernate.type.CharacterArrayNClobType;
+import org.hibernate.type.CharacterNCharType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.PrimitiveCharacterArrayClobType;
+import org.hibernate.type.PrimitiveCharacterArrayNClobType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.StringNVarcharType;
 import org.hibernate.type.WrappedMaterializedBlobType;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.jboss.logging.Logger;
@@ -155,6 +160,9 @@ public class SimpleValueBinder {
 		typeParameters.clear();
 		String type = BinderHelper.ANNOTATION_STRING_DEFAULT;
 
+		final boolean isNationalized = property.isAnnotationPresent( Nationalized.class )
+				|| mappings.useNationalizedCharacterData();
+
 		Type annType = property.getAnnotation( Type.class );
 		if ( annType != null ) {
 			setExplicitType( annType );
@@ -200,19 +208,30 @@ public class SimpleValueBinder {
 		}
 		else if ( property.isAnnotationPresent( Lob.class ) ) {
 			if ( mappings.getReflectionManager().equals( returnedClassOrElement, java.sql.Clob.class ) ) {
-				type = "clob";
+				type = isNationalized
+						? StandardBasicTypes.NCLOB.getName()
+						: StandardBasicTypes.CLOB.getName();
+			}
+			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, java.sql.NClob.class ) ) {
+				type = StandardBasicTypes.NCLOB.getName();
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, java.sql.Blob.class ) ) {
 				type = "blob";
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, String.class ) ) {
-				type = StandardBasicTypes.MATERIALIZED_CLOB.getName();
+				type = isNationalized
+						? StandardBasicTypes.MATERIALIZED_NCLOB.getName()
+						: StandardBasicTypes.MATERIALIZED_CLOB.getName();
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, Character.class ) && isArray ) {
-				type = CharacterArrayClobType.class.getName();
+				type = isNationalized
+						? CharacterArrayNClobType.class.getName()
+						: CharacterArrayClobType.class.getName();
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, char.class ) && isArray ) {
-				type = PrimitiveCharacterArrayClobType.class.getName();
+				type = isNationalized
+						? PrimitiveCharacterArrayNClobType.class.getName()
+						: PrimitiveCharacterArrayClobType.class.getName();
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, Byte.class ) && isArray ) {
 				type = WrappedMaterializedBlobType.class.getName();
@@ -249,6 +268,24 @@ public class SimpleValueBinder {
 			}
 			type = EnumType.class.getName();
 			explicitType = type;
+		}
+		else if ( isNationalized ) {
+			if ( mappings.getReflectionManager().equals( returnedClassOrElement, String.class ) ) {
+				// nvarchar
+				type = StringNVarcharType.INSTANCE.getName();
+				explicitType = type;
+			}
+			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, Character.class ) ) {
+				if ( isArray ) {
+					// nvarchar
+					type = StringNVarcharType.INSTANCE.getName();
+				}
+				else {
+					// nchar
+					type = CharacterNCharType.INSTANCE.getName();
+				}
+				explicitType = type;
+			}
 		}
 
 		// implicit type will check basic types and Serializable classes

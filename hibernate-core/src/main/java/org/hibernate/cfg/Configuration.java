@@ -3144,6 +3144,19 @@ public class Configuration implements Serializable {
 			return useNewGeneratorMappings.booleanValue();
 		}
 
+		private Boolean useNationalizedCharacterData;
+
+		@Override
+		@SuppressWarnings( {"UnnecessaryUnboxing"})
+		public boolean useNationalizedCharacterData() {
+			if ( useNationalizedCharacterData == null ) {
+				final String booleanName = getConfigurationProperties()
+						.getProperty( AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA );
+				useNationalizedCharacterData = Boolean.valueOf( booleanName );
+			}
+			return useNationalizedCharacterData.booleanValue();
+		}
+
 		private Boolean forceDiscriminatorInSelectsByDefault;
 
 		@Override

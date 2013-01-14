@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,34 +21,38 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc;
-import java.sql.Blob;
-import java.sql.Clob;
+package org.hibernate.type;
+
 import java.sql.NClob;
 
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.type.descriptor.java.NClobTypeDescriptor;
+
 /**
- * Convenient base class for proxy-based LobCreator for handling wrapping.
+ * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link java.sql.Clob}
  *
+ * @author Gavin King
  * @author Steve Ebersole
  */
-public abstract class AbstractLobCreator implements LobCreator {
-	@Override
-	public Blob wrap(Blob blob) {
-		return SerializableBlobProxy.generateProxy( blob );
+public class NClobType extends AbstractSingleColumnStandardBasicType<NClob> {
+	public static final NClobType INSTANCE = new NClobType();
+
+	public NClobType() {
+		super( org.hibernate.type.descriptor.sql.NClobTypeDescriptor.DEFAULT, NClobTypeDescriptor.INSTANCE );
+	}
+
+	public String getName() {
+		return "nclob";
 	}
 
 	@Override
-	public Clob wrap(Clob clob) {
-		if ( NClob.class.isInstance( clob ) ) {
-			return wrap( (NClob) clob );
-		}
-		else {
-			return SerializableClobProxy.generateProxy( clob );
-		}
+	protected boolean registerUnderJavaType() {
+		return true;
 	}
 
 	@Override
-	public NClob wrap(NClob nclob) {
-		return SerializableNClobProxy.generateProxy( nclob );
+	protected NClob getReplacement(NClob original, NClob target, SessionImplementor session) {
+		return session.getFactory().getDialect().getLobMergeStrategy().mergeNClob( original, target, session );
 	}
+
 }

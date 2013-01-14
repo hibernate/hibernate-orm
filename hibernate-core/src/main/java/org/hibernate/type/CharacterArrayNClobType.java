@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,34 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.NClob;
+package org.hibernate.type;
+
+import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
+import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
 
 /**
- * Convenient base class for proxy-based LobCreator for handling wrapping.
+ * A type that maps between {@link java.sql.Types#NCLOB NCLOB} and {@link Character Character[]}
+ * <p/>
+ * Essentially a {@link org.hibernate.type.MaterializedNClobType} but represented as a Character[] in Java rather than String.
  *
+ * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public abstract class AbstractLobCreator implements LobCreator {
-	@Override
-	public Blob wrap(Blob blob) {
-		return SerializableBlobProxy.generateProxy( blob );
+public class CharacterArrayNClobType extends AbstractSingleColumnStandardBasicType<Character[]> {
+	public static final CharacterArrayNClobType INSTANCE = new CharacterArrayNClobType();
+
+	public CharacterArrayNClobType() {
+		super( NClobTypeDescriptor.DEFAULT, CharacterArrayTypeDescriptor.INSTANCE );
 	}
 
-	@Override
-	public Clob wrap(Clob clob) {
-		if ( NClob.class.isInstance( clob ) ) {
-			return wrap( (NClob) clob );
-		}
-		else {
-			return SerializableClobProxy.generateProxy( clob );
-		}
+	public String getName() {
+		// todo name these annotation types for addition to the registry
+		return null;
 	}
 
-	@Override
-	public NClob wrap(NClob nclob) {
-		return SerializableNClobProxy.generateProxy( nclob );
-	}
 }

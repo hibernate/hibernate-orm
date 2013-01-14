@@ -238,7 +238,9 @@ public class MetamodelBuilder {
 		final AbstractIdentifiableType jpaDescriptor = Entity.class.isInstance( descriptor )
 				? entityTypeByNameMap.get( descriptor.getName() )
 				: mappedSuperclassTypeMap.get(  descriptor.getClassReference() );
-
+		if ( jpaDescriptor == null && entityBinding.getHierarchyDetails().getEntityMode() != EntityMode.POJO ) {
+			return;
+		}
 		applyIdMetadata( descriptor, entityBinding.getHierarchyDetails(), jpaDescriptor );
 		applyVersionAttribute( descriptor, entityBinding.getHierarchyDetails(), jpaDescriptor );
 

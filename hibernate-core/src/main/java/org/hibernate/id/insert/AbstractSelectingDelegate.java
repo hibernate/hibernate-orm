@@ -58,7 +58,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 					.prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
 			try {
 				binder.bindValues( insert );
-				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( insert );
+				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 			}
 			finally {
 				session.getTransactionCoordinator().getJdbcCoordinator().release( insert );
@@ -82,7 +82,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 					.prepareStatement( selectSQL, false );
 			try {
 				bindParameters( session, idSelect, binder.getEntity() );
-				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( idSelect );
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( idSelect );
 				try {
 					return getResult( session, rs, binder.getEntity() );
 				}

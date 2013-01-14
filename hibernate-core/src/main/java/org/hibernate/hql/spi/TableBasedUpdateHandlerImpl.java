@@ -141,7 +141,7 @@ public class TableBasedUpdateHandlerImpl
 					for ( ParameterSpecification parameterSpecification : idSelectParameterSpecifications ) {
 						sum += parameterSpecification.bind( ps, queryParameters, session, sum );
 					}
-					resultCount = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ps );
+					resultCount = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 				}
 				finally {
 					if ( ps != null ) {
@@ -168,7 +168,7 @@ public class TableBasedUpdateHandlerImpl
 							}
 							handleAddedParametersOnUpdate( ps, session, position );
 						}
-						session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ps );
+						session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 					}
 					finally {
 						if ( ps != null ) {

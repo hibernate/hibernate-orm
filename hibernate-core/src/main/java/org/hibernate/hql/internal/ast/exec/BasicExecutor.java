@@ -100,7 +100,7 @@ public class BasicExecutor implements StatementExecutor {
 					}
 				}
 
-				return session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( st );
+				return session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
 			}
 			finally {
 				if ( st != null ) {

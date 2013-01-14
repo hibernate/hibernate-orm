@@ -144,7 +144,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			try {
 				final String sql = "delete from " + persister.getTemporaryIdTableName();
 				ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
-				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ps );
+				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 			}
 			catch( Throwable t ) {
 				log.unableToCleanupTemporaryIdTable(t);

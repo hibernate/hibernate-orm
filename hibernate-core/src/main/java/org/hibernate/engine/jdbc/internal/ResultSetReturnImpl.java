@@ -27,17 +27,17 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.ResultSetExtractor;
+import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 
 /**
  * @author Brett Meyer
  */
-public class ResultSetExtractorImpl implements ResultSetExtractor {
+public class ResultSetReturnImpl implements ResultSetReturn {
 
 	private final JdbcCoordinator jdbcCoordinator;
 
-	public ResultSetExtractorImpl(JdbcCoordinator jdbcCoordinator) {
+	public ResultSetReturnImpl(JdbcCoordinator jdbcCoordinator) {
 		this.jdbcCoordinator = jdbcCoordinator;
 	}
 

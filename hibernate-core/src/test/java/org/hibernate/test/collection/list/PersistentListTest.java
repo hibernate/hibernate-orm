@@ -97,7 +97,7 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 								.addCondition( "NAME", "<>", "?" );
 						PreparedStatement preparedStatement = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
 						preparedStatement.setString( 1, "root" );
-						ResultSet resultSet = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( preparedStatement );
+						ResultSet resultSet = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
 						Map<String, Integer> valueMap = new HashMap<String, Integer>();
 						while ( resultSet.next() ) {
 							final String name = resultSet.getString( 1 );

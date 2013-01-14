@@ -85,7 +85,7 @@ public interface JdbcCoordinator extends Serializable {
 	 *
 	 * @return This coordinator's resultset extractor
 	 */
-	public ResultSetExtractor getResultSetExtractor();
+	public ResultSetReturn getResultSetReturn();
 
 	/**
 	 * Callback to let us know that a flush is beginning.  We use this fact
@@ -193,6 +193,10 @@ public interface JdbcCoordinator extends Serializable {
 	 * Release all registered resources.
 	 */
 	public void releaseResources();
+	
+	public void enableReleases();
+	
+	public void disableReleases();
 
 	/**
 	 * Register a query statement as being able to be cancelled.

@@ -273,7 +273,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			try {
 				ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 				bindSessionIdentifier( ps, session, 1 );
-				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( ps );
+				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 			}
 			finally {
 				if ( ps != null ) {

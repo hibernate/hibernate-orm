@@ -29,11 +29,15 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 /**
- * Contracting for extracting ResultSets from Statements
+ * Contract for extracting ResultSets from Statements, executing Statements,
+ * managing Statement/ResultSet resources, and logging statement calls.
+ * 
+ * TODO: This could eventually utilize the new Return interface.  It would be
+ * great to have a common API shared.
  * 
  * @author Brett Meyer
  */
-public interface ResultSetExtractor {
+public interface ResultSetReturn {
 	
 	/**
 	 * Extract the ResultSet from the statement.

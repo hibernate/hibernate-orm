@@ -85,8 +85,8 @@ public class TestExpectedUsage extends BaseUnitTestCase {
 
 		// set up some tables to use
 		Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
-		jdbcCoordinator.getResultSetExtractor().execute( statement, "drop table SANDBOX_JDBC_TST if exists" );
-		jdbcCoordinator.getResultSetExtractor().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
+		jdbcCoordinator.getResultSetReturn().execute( statement, "drop table SANDBOX_JDBC_TST if exists" );
+		jdbcCoordinator.getResultSetReturn().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
 		assertTrue( jdbcCoordinator.hasRegisteredResources() );
 		assertTrue( logicalConnection.isPhysicallyConnected() );
 		jdbcCoordinator.release( statement );
@@ -101,15 +101,15 @@ public class TestExpectedUsage extends BaseUnitTestCase {
 			PreparedStatement ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
 			ps.setLong( 1, 1 );
 			ps.setString( 2, "name" );
-			jdbcCoordinator.getResultSetExtractor().execute( ps );
+			jdbcCoordinator.getResultSetReturn().execute( ps );
 			assertTrue( jdbcCoordinator.hasRegisteredResources() );
 			jdbcCoordinator.release( ps );
 			assertFalse( jdbcCoordinator.hasRegisteredResources() );
 
 			ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
-			jdbcCoordinator.getResultSetExtractor().extract( ps );
+			jdbcCoordinator.getResultSetReturn().extract( ps );
 			ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "delete from SANDBOX_JDBC_TST" );
-			jdbcCoordinator.getResultSetExtractor().execute( ps );
+			jdbcCoordinator.getResultSetReturn().execute( ps );
 			// lets forget to close these...
 			assertTrue( jdbcCoordinator.hasRegisteredResources() );
 

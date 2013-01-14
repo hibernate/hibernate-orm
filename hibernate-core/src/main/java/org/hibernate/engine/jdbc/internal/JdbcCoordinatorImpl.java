@@ -45,7 +45,7 @@ import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.engine.jdbc.spi.ResultSetExtractor;
+import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -72,7 +72,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			CoreMessageLogger.class, JdbcCoordinatorImpl.class.getName()
 	);
 
-	private transient TransactionCoordinatorImpl transactionCoordinator;
+	private transient TransactionCoordinator transactionCoordinator;
 	private final transient LogicalConnectionImpl logicalConnection;
 
 	private transient Batch currentBatch;
@@ -92,7 +92,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	public JdbcCoordinatorImpl(
 			Connection userSuppliedConnection,
-			TransactionCoordinatorImpl transactionCoordinator) {
+			TransactionCoordinator transactionCoordinator) {
 		this.transactionCoordinator = transactionCoordinator;
 		this.logicalConnection = new LogicalConnectionImpl(
 				userSuppliedConnection,
@@ -100,6 +100,14 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				transactionCoordinator.getTransactionContext().getTransactionEnvironment().getJdbcServices(),
 				transactionCoordinator.getTransactionContext().getJdbcConnectionAccess()
 		);
+		this.exceptionHelper = logicalConnection.getJdbcServices().getSqlExceptionHelper();
+	}
+
+	public JdbcCoordinatorImpl(
+			LogicalConnectionImpl logicalConnection,
+			TransactionCoordinator transactionCoordinator) {
+		this.transactionCoordinator = transactionCoordinator;
+		this.logicalConnection = logicalConnection;
 		this.exceptionHelper = logicalConnection.getJdbcServices().getSqlExceptionHelper();
 	}
 
@@ -209,12 +217,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		return statementPreparer;
 	}
 
-	private transient ResultSetExtractor resultSetExtractor;
+	private transient ResultSetReturn resultSetExtractor;
 
 	@Override
-	public ResultSetExtractor getResultSetExtractor() {
+	public ResultSetReturn getResultSetReturn() {
 		if ( resultSetExtractor == null ) {
-			resultSetExtractor = new ResultSetExtractorImpl( this );
+			resultSetExtractor = new ResultSetReturnImpl( this );
 		}
 		return resultSetExtractor;
 	}
@@ -427,6 +435,16 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void releaseResources() {
 		LOG.tracev( "Releasing JDBC container resources [{0}]", this );
 		cleanup();
+	}
+	
+	@Override
+	public void enableReleases() {
+		releasesEnabled = true;
+	}
+	
+	@Override
+	public void disableReleases() {
+		releasesEnabled = false;
 	}
 
 	private void cleanup() {

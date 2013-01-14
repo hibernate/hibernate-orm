@@ -165,8 +165,8 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 
 		public void execute(Connection connection) throws SQLException {
 			Statement st = s.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-			s.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( st, "SELECT COUNT(*) FROM " + table );
-			ResultSet result = s.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( st, "SELECT COUNT(*) FROM " + table );
+			s.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st, "SELECT COUNT(*) FROM " + table );
+			ResultSet result = s.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st, "SELECT COUNT(*) FROM " + table );
 			result.next();
 			int rowCount = result.getInt( 1 );
 			assertEquals( "Unexpected row count", expectedRowCount, rowCount );

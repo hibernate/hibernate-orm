@@ -93,7 +93,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session) throws SQLException {
-			session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().executeUpdate( insert );
+			session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 			ResultSet rs = null;
 			try {
 				rs = insert.getGeneratedKeys();
@@ -141,7 +141,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session) throws SQLException {
-			ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().execute( insert );
+			ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().execute( insert );
 			try {
 				return IdentifierGeneratorHelper.getGeneratedIdentity(
 						rs,

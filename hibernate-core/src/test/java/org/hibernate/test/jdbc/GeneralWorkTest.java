@@ -69,13 +69,13 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 							ResultSet resultSet = null;
 							try {
 								
-								resultSet = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( statement, "select * from T_JDBC_PERSON" );
+								resultSet = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_PERSON" );
 							}
 							finally {
 								releaseQuietly( ((SessionImplementor)session), resultSet );
 							}
 							try {
-								((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( statement, "select * from T_JDBC_BOAT" );
+								((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_BOAT" );
 							}
 							finally {
 								releaseQuietly( ((SessionImplementor)session), resultSet );
@@ -102,7 +102,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 							Statement statement = null;
 							try {
 								statement = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-								((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( statement, "select * from non_existent" );
+								((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from non_existent" );
 							}
 							finally {
 								releaseQuietly( ((SessionImplementor)session), statement );
@@ -139,7 +139,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 							statement = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 							ResultSet resultSet = null;
 							try {
-								resultSet = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getResultSetExtractor().extract( statement, "select count(*) from T_JDBC_PERSON" );
+								resultSet = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( statement, "select count(*) from T_JDBC_PERSON" );
 								resultSet.next();
 								personCount = resultSet.getLong( 1 );
 								assertEquals( 1L, personCount );

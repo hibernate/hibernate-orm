@@ -119,7 +119,7 @@ public class SequenceGenerator
 		try {
 			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
-				ResultSet rs = st.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 				try {
 					rs.next();
 					IntegralDataTypeHolder result = buildHolder();
@@ -128,11 +128,11 @@ public class SequenceGenerator
 					return result;
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 
 		}

@@ -122,7 +122,7 @@ public class DatabaseMetadata {
 
 				}
 				finally {
-					if (rs!=null) rs.close();
+					rs.close();
 				}
 			}
 			catch (SQLException sqlException) {
@@ -153,8 +153,8 @@ public class DatabaseMetadata {
 					}
 				}
 				finally {
-					if (rs!=null) rs.close();
-					if (statement!=null) statement.close();
+					rs.close();
+					statement.close();
 				}
 
 			}

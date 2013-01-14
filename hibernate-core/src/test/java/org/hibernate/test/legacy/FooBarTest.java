@@ -23,9 +23,17 @@
  */
 package org.hibernate.test.legacy;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,13 +50,6 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.spi.EventSource;
-import org.hibernate.testing.*;
-import org.jboss.logging.Logger;
-import org.junit.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
@@ -62,6 +63,7 @@ import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
@@ -83,6 +85,8 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.jdbc.AbstractReturningWork;
@@ -92,15 +96,11 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.type.StandardBasicTypes;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.jboss.logging.Logger;
+import org.junit.Test;
 
 public class FooBarTest extends LegacyTestCase {
 	private static final Logger log = Logger.getLogger( FooBarTest.class );
@@ -2092,29 +2092,29 @@ public class FooBarTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
-		s.beginTransaction();
-		baz = (Baz) s.load( Baz.class, baz.getCode() );
+		final Session s2 = openSession();
+		s2.beginTransaction();
+		baz = (Baz) s2.load( Baz.class, baz.getCode() );
 		assertTrue( baz.getFooArray().length == 1 );
-		assertTrue( s.createQuery( "from Baz baz join baz.fooArray foo" ).list().size()==1 );
-		assertTrue( s.createQuery( "from Foo foo" ).list().size()==2 );
-		assertTrue( s.createFilter( baz.getFooArray(), "" ).list().size() == 1 );
+		assertTrue( s2.createQuery( "from Baz baz join baz.fooArray foo" ).list().size()==1 );
+		assertTrue( s2.createQuery( "from Foo foo" ).list().size()==2 );
+		assertTrue( s2.createFilter( baz.getFooArray(), "" ).list().size() == 1 );
 		//assertTrue( s.delete("from java.lang.Object o")==9 );
-		doDelete( s, "from Foo foo" );
+		doDelete( s2, "from Foo foo" );
 		final String bazid = baz.getCode();
-		s.delete( baz );
-		int rows = s.doReturningWork(
+		s2.delete( baz );
+		int rows = s2.doReturningWork(
 				new AbstractReturningWork<Integer>() {
 					@Override
 					public Integer execute(Connection connection) throws SQLException {
-						return connection.createStatement()
-								.executeUpdate( "delete from FOO_ARRAY where id_='" + bazid + "' and i>=8" );
+						Statement st = connection.createStatement();
+						return st.executeUpdate( "delete from FOO_ARRAY where id_='" + bazid + "' and i>=8" );
 					}
 				}
 		);
 		assertTrue( rows == 1 );
-		s.getTransaction().commit();
-		s.close();
+		s2.getTransaction().commit();
+		s2.close();
 	}
 
 	@Test
@@ -2656,45 +2656,46 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( baz.getCascadingBars().size()==1 );
 		txn.commit();
 
-		s2 = (Session) SerializationHelper.deserialize( SerializationHelper.serialize(s) );
+		final Session s3 = (Session) SerializationHelper.deserialize( SerializationHelper.serialize(s) );
 		s.close();
 
-		txn2 = s2.beginTransaction();
-		baz = (Baz) s2.load(Baz.class, baz.getCode());
-		assertEquals( 3, ((Long) s2.createQuery( "select count(*) from Bar" ).iterate().next()).longValue() );
-		s2.delete(baz);
-		s2.delete( baz.getTopGlarchez().get( Character.valueOf('G') ) );
-		s2.delete( baz.getTopGlarchez().get( Character.valueOf('H') ) );
-		int rows = s2.doReturningWork(
+		txn2 = s3.beginTransaction();
+		baz = (Baz) s3.load(Baz.class, baz.getCode());
+		assertEquals( 3, ((Long) s3.createQuery( "select count(*) from Bar" ).iterate().next()).longValue() );
+		s3.delete(baz);
+		s3.delete( baz.getTopGlarchez().get( Character.valueOf('G') ) );
+		s3.delete( baz.getTopGlarchez().get( Character.valueOf('H') ) );
+		int rows = s3.doReturningWork(
 				new AbstractReturningWork<Integer>() {
 					@Override
 					public Integer execute(Connection connection) throws SQLException {
 						final String sql = "update " + getDialect().openQuote() + "glarchez" + getDialect().closeQuote() + " set baz_map_id=null where baz_map_index='a'";
-						return connection.createStatement().executeUpdate( sql );
+						Statement st = connection.createStatement();
+						return st.executeUpdate( sql );
 					}
 				}
 		);
 		assertTrue(rows==1);
-		assertEquals( 2, doDelete( s2, "from Bar bar" ) );
+		assertEquals( 2, doDelete( s3, "from Bar bar" ) );
 		FooProxy[] arr = baz.getFooArray();
 		assertTrue( "new array of objects", arr.length==4 && arr[1].getKey().equals( foo.getKey() ) );
 		for ( int i=1; i<arr.length; i++ ) {
-			if ( arr[i]!=null) s2.delete(arr[i]);
+			if ( arr[i]!=null) s3.delete(arr[i]);
 		}
 
-		s2.load( Qux.class, new Long(666) ); //nonexistent
+		s3.load( Qux.class, new Long(666) ); //nonexistent
 
-		assertEquals( 1, doDelete( s2, "from Glarch g" ) );
+		assertEquals( 1, doDelete( s3, "from Glarch g" ) );
 		txn2.commit();
 
-		s2.disconnect();
+		s3.disconnect();
 
-		Session s3 = (Session) SerializationHelper.deserialize( SerializationHelper.serialize( s2 ) );
-		s2.close();
-		//s3.reconnect();
-		assertTrue( s3.load( Qux.class, new Long(666) )!=null ); //nonexistent
-		//s3.disconnect();
+		Session s4 = (Session) SerializationHelper.deserialize( SerializationHelper.serialize( s3 ) );
 		s3.close();
+		//s3.reconnect();
+		assertTrue( s4.load( Qux.class, new Long(666) )!=null ); //nonexistent
+		//s3.disconnect();
+		s4.close();
 	}
 
 	@Test
@@ -4219,26 +4220,27 @@ public class FooBarTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
-		s.beginTransaction();
-		s.load( im, im.getId() );
+		final Session s2 = openSession();
+		s2.beginTransaction();
+		s2.load( im, im.getId() );
 		assertEquals(
 				"cached object identity",
 				im,
-				s.createQuery( "from Immutable im where im = ?" ).setParameter(
-						0, im, s.getTypeHelper().entity( Immutable.class )
+				s2.createQuery( "from Immutable im where im = ?" ).setParameter(
+						0, im, s2.getTypeHelper().entity( Immutable.class )
 				).uniqueResult()
 		);
-		s.doWork(
+		s2.doWork(
 				new AbstractWork() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
-						connection.createStatement().executeUpdate("delete from immut");
+						Statement st = connection.createStatement();
+						st.executeUpdate( "delete from immut" );
 					}
 				}
 		);
-		s.getTransaction().commit();
-		s.close();
+		s2.getTransaction().commit();
+		s2.close();
 	}
 
 	@Test
@@ -4270,7 +4272,7 @@ public class FooBarTest extends LegacyTestCase {
 
 	@Test
 	public void testRefresh() throws Exception {
-		Session s = openSession();
+		final Session s = openSession();
 		s.beginTransaction();
 		Foo foo = new Foo();
 		s.save( foo );
@@ -4280,7 +4282,8 @@ public class FooBarTest extends LegacyTestCase {
 					@Override
 					public void execute(Connection connection) throws SQLException {
 						final String sql = "update " + getDialect().openQuote() + "foos" + getDialect().closeQuote() + " set long_ = -3";
-						connection.createStatement().executeUpdate( sql );
+						Statement st = connection.createStatement();
+						st.executeUpdate( sql );
 					}
 				}
 		);

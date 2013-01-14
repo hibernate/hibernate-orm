@@ -405,7 +405,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public Connection connection() {
 		errorIfClosed();
-		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getDistinctConnectionProxy();
+		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getConnection();
 	}
 
 	@Override

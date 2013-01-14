@@ -28,7 +28,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -42,6 +41,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
@@ -97,23 +97,18 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 		final JournalingTransactionObserver transactionObserver = new JournalingTransactionObserver();
 		transactionCoordinator.addObserver( transactionObserver );
 
-		final LogicalConnectionImplementor logicalConnection = transactionCoordinator.getJdbcCoordinator().getLogicalConnection();
-		Connection connection = logicalConnection.getShareableConnectionProxy();
+		JdbcCoordinator jdbcCoordinator = transactionCoordinator.getJdbcCoordinator();
+		LogicalConnectionImplementor logicalConnection = jdbcCoordinator.getLogicalConnection();
 
 		// set up some tables to use
-		try {
-			Statement statement = connection.createStatement();
-			statement.execute( "drop table SANDBOX_JDBC_TST if exists" );
-			statement.execute( "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
-			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertTrue( logicalConnection.isPhysicallyConnected() );
-			statement.close();
-			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertFalse( logicalConnection.isPhysicallyConnected() ); // after_statement specified
-		}
-		catch ( SQLException sqle ) {
-			fail( "incorrect exception type : SQLException" );
-		}
+		Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
+		jdbcCoordinator.getResultSetReturn().execute( statement, "drop table SANDBOX_JDBC_TST if exists" );
+		jdbcCoordinator.getResultSetReturn().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
+		assertTrue( jdbcCoordinator.hasRegisteredResources() );
+		assertTrue( logicalConnection.isPhysicallyConnected() );
+		jdbcCoordinator.release( statement );
+		assertFalse( jdbcCoordinator.hasRegisteredResources() );
+		assertFalse( logicalConnection.isPhysicallyConnected() ); // after_statement specified
 
 		JtaPlatform instance = serviceRegistry.getService( JtaPlatform.class );
 		TransactionManager transactionManager = instance.retrieveTransactionManager();
@@ -126,34 +121,34 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 		txn.begin();
 		assertEquals( 1, transactionObserver.getBegins() );
 		assertFalse( txn.isInitiator() );
-		connection = logicalConnection.getShareableConnectionProxy();
 		try {
-			PreparedStatement ps = connection.prepareStatement( "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
+			PreparedStatement ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
 			ps.setLong( 1, 1 );
 			ps.setString( 2, "name" );
-			ps.execute();
-			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			ps.close();
-			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			jdbcCoordinator.getResultSetReturn().execute( ps );
+			assertTrue( jdbcCoordinator.hasRegisteredResources() );
+			jdbcCoordinator.release( ps );
+			assertFalse( jdbcCoordinator.hasRegisteredResources() );
 
-			ps = connection.prepareStatement( "select * from SANDBOX_JDBC_TST" );
-			ps.executeQuery();
-			connection.prepareStatement( "delete from SANDBOX_JDBC_TST" ).execute();
+			ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
+			jdbcCoordinator.getResultSetReturn().extract( ps );
+			ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "delete from SANDBOX_JDBC_TST" );
+			jdbcCoordinator.getResultSetReturn().execute( ps );
 			// lets forget to close these...
-			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			assertTrue( jdbcCoordinator.hasRegisteredResources() );
 			assertTrue( logicalConnection.isPhysicallyConnected() );
 
 			// and commit the transaction...
 			txn.commit();
 
 			// since txn is not a driver, nothing should have changed...
-			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			assertTrue( jdbcCoordinator.hasRegisteredResources() );
 			assertTrue( logicalConnection.isPhysicallyConnected() );
 			assertEquals( 0, transactionObserver.getBeforeCompletions() );
 			assertEquals( 0, transactionObserver.getAfterCompletions() );
 
 			transactionManager.commit();
-			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			assertFalse( jdbcCoordinator.hasRegisteredResources() );
 			assertFalse( logicalConnection.isPhysicallyConnected() );
 			assertEquals( 1, transactionObserver.getBeforeCompletions() );
 			assertEquals( 1, transactionObserver.getAfterCompletions() );

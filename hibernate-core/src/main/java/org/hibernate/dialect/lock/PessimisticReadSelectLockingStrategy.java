@@ -85,7 +85,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 						);
 					}
 
-					ResultSet rs = st.executeQuery();
+					ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 					try {
 						if ( !rs.next() ) {
 							if ( factory.getStatistics().isStatisticsEnabled() ) {
@@ -96,11 +96,11 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 						}
 					}
 					finally {
-						rs.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 					}
 				}
 				finally {
-					st.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 				}
 
 			}

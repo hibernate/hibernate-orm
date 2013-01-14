@@ -291,11 +291,10 @@ public class CallImpl extends AbstractBasicQueryContractImpl implements Call {
 		buffer.append( ")}" );
 
 		try {
-			final CallableStatement statement = session().getTransactionCoordinator()
+			final CallableStatement statement = (CallableStatement) session().getTransactionCoordinator()
 					.getJdbcCoordinator()
-					.getLogicalConnection()
-					.getShareableConnectionProxy()
-					.prepareCall( buffer.toString() );
+					.getStatementPreparer()
+					.prepareStatement( buffer.toString(), true );
 
 			// prepare parameters
 			int i = 1;

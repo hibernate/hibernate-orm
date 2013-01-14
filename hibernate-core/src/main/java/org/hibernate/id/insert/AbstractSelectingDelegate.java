@@ -58,10 +58,10 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 					.prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
 			try {
 				binder.bindValues( insert );
-				insert.executeUpdate();
+				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 			}
 			finally {
-				insert.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( insert );
 			}
 		}
 		catch ( SQLException sqle ) {
@@ -82,16 +82,16 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 					.prepareStatement( selectSQL, false );
 			try {
 				bindParameters( session, idSelect, binder.getEntity() );
-				ResultSet rs = idSelect.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( idSelect );
 				try {
 					return getResult( session, rs, binder.getEntity() );
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				idSelect.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( idSelect );
 			}
 
 		}

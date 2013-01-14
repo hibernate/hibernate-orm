@@ -23,32 +23,31 @@
  */
 package org.hibernate.test.transaction.jdbc;
 
-import java.sql.Connection;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.test.common.JournalingTransactionObserver;
 import org.hibernate.test.common.TransactionContextImpl;
 import org.hibernate.test.common.TransactionEnvironmentImpl;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -81,49 +80,45 @@ public class TestExpectedUsage extends BaseUnitTestCase {
 		JournalingTransactionObserver observer = new JournalingTransactionObserver();
 		transactionCoordinator.addObserver( observer );
 
-		LogicalConnectionImplementor logicalConnection = transactionCoordinator.getJdbcCoordinator().getLogicalConnection();
-		Connection connection = logicalConnection.getShareableConnectionProxy();
+		JdbcCoordinator jdbcCoordinator = transactionCoordinator.getJdbcCoordinator();
+		LogicalConnectionImplementor logicalConnection = jdbcCoordinator.getLogicalConnection();
 
 		// set up some tables to use
-		try {
-			Statement statement = connection.createStatement();
-			statement.execute( "drop table SANDBOX_JDBC_TST if exists" );
-			statement.execute( "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
-			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertTrue( logicalConnection.isPhysicallyConnected() );
-			statement.close();
-			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertTrue( logicalConnection.isPhysicallyConnected() ); // after_transaction specified
-		}
-		catch ( SQLException sqle ) {
-			fail( "incorrect exception type : SQLException" );
-		}
+		Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
+		jdbcCoordinator.getResultSetReturn().execute( statement, "drop table SANDBOX_JDBC_TST if exists" );
+		jdbcCoordinator.getResultSetReturn().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
+		assertTrue( jdbcCoordinator.hasRegisteredResources() );
+		assertTrue( logicalConnection.isPhysicallyConnected() );
+		jdbcCoordinator.release( statement );
+		assertFalse( jdbcCoordinator.hasRegisteredResources() );
+		assertTrue( logicalConnection.isPhysicallyConnected() ); // after_transaction specified
 
 		// ok, now we can get down to it...
 		TransactionImplementor txn = transactionCoordinator.getTransaction();  // same as Session#getTransaction
 		txn.begin();
 		assertEquals( 1, observer.getBegins() );
 		try {
-			PreparedStatement ps = connection.prepareStatement( "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
+			PreparedStatement ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
 			ps.setLong( 1, 1 );
 			ps.setString( 2, "name" );
-			ps.execute();
-			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			ps.close();
-			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			jdbcCoordinator.getResultSetReturn().execute( ps );
+			assertTrue( jdbcCoordinator.hasRegisteredResources() );
+			jdbcCoordinator.release( ps );
+			assertFalse( jdbcCoordinator.hasRegisteredResources() );
 
-			ps = connection.prepareStatement( "select * from SANDBOX_JDBC_TST" );
-			ps.executeQuery();
-			connection.prepareStatement( "delete from SANDBOX_JDBC_TST" ).execute();
+			ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
+			jdbcCoordinator.getResultSetReturn().extract( ps );
+			ps = jdbcCoordinator.getStatementPreparer().prepareStatement( "delete from SANDBOX_JDBC_TST" );
+			jdbcCoordinator.getResultSetReturn().execute( ps );
 			// lets forget to close these...
-			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			assertTrue( jdbcCoordinator.hasRegisteredResources() );
 
 			// and commit the transaction...
 			txn.commit();
 
 			// we should now have:
 			//		1) no resources because of after_transaction release mode
-			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+			assertFalse( jdbcCoordinator.hasRegisteredResources() );
 			//		2) non-physically connected logical connection, again because of after_transaction release mode
 			assertFalse( logicalConnection.isPhysicallyConnected() );
 			//		3) transaction observer callbacks

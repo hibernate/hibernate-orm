@@ -29,8 +29,6 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -42,6 +40,7 @@ import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.persister.entity.Queryable;
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -111,11 +110,10 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			final Connection connection = session.getTransactionCoordinator()
 					.getJdbcCoordinator()
 					.getLogicalConnection()
-					.getShareableConnectionProxy();
+					.getConnection();
 			work.execute( connection );
 			session.getTransactionCoordinator()
 					.getJdbcCoordinator()
-					.getLogicalConnection()
 					.afterStatementExecution();
 		}
 	}
@@ -133,11 +131,10 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 				final Connection connection = session.getTransactionCoordinator()
 						.getJdbcCoordinator()
 						.getLogicalConnection()
-						.getShareableConnectionProxy();
+						.getConnection();
 				work.execute( connection );
 				session.getTransactionCoordinator()
 						.getJdbcCoordinator()
-						.getLogicalConnection()
 						.afterStatementExecution();
 			}
 		}
@@ -147,7 +144,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			try {
 				final String sql = "delete from " + persister.getTemporaryIdTableName();
 				ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
-				ps.executeUpdate();
+				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 			}
 			catch( Throwable t ) {
 				log.unableToCleanupTemporaryIdTable(t);
@@ -155,7 +152,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			finally {
 				if ( ps != null ) {
 					try {
-						ps.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 					}
 					catch( Throwable ignore ) {
 						// ignore
@@ -247,7 +244,6 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			try {
 				Statement statement = connection.createStatement();
 				try {
-					statement = connection.createStatement();
 					statement.executeUpdate( command );
 				}
 				finally {

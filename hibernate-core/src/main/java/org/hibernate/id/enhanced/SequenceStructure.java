@@ -95,7 +95,7 @@ public class SequenceStructure implements DatabaseStructure {
 				try {
 					PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 					try {
-						ResultSet rs = st.executeQuery();
+						ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 						try {
 							rs.next();
 							IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
@@ -107,7 +107,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 						finally {
 							try {
-								rs.close();
+								session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 							}
 							catch( Throwable ignore ) {
 								// intentionally empty
@@ -115,7 +115,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 					}
 					finally {
-						st.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 					}
 
 				}

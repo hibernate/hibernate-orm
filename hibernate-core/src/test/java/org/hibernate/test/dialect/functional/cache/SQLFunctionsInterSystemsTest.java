@@ -45,6 +45,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Cache71Dialect;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.test.legacy.Blobber;
 import org.hibernate.test.legacy.Broken;
@@ -648,15 +649,15 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
         java.sql.Timestamp testvalue3 = new java.sql.Timestamp(cal3.getTimeInMillis());
         testvalue3.setNanos(0);
 
-        Session s = openSession();
+        final Session s = openSession();
         s.beginTransaction();
         try {
 			s.doWork(
 					new Work() {
 						@Override
 						public void execute(Connection connection) throws SQLException {
-							Statement stmt = connection.createStatement();
-							stmt.executeUpdate( "DROP FUNCTION spLock FROM TestInterSystemsFunctionsClass" );
+							Statement stmt = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
+							((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( stmt, "DROP FUNCTION spLock FROM TestInterSystemsFunctionsClass" );
 						}
 					}
 			);
@@ -672,7 +673,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
-						Statement stmt = connection.createStatement();
+						Statement stmt = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 						String create_function = "CREATE FUNCTION SQLUser.TestInterSystemsFunctionsClass_spLock\n" +
 								"     ( INOUT pHandle %SQLProcContext, \n" +
 								"       ROWID INTEGER \n" +
@@ -684,7 +685,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 								"    {\n" +
 								"        q 0\n" +
 								"     }";
-						stmt.executeUpdate(create_function);
+						((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( stmt, create_function );
 					}
 				}
 		);
@@ -700,70 +701,70 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
         s.getTransaction().commit();
         s.close();
 
-        s = openSession();
-        s.beginTransaction();
-        TestInterSystemsFunctionsClass test = (TestInterSystemsFunctionsClass) s.get(TestInterSystemsFunctionsClass.class, Long.valueOf(10));
+        Session s2 = openSession();
+        s2.beginTransaction();
+        TestInterSystemsFunctionsClass test = (TestInterSystemsFunctionsClass) s2.get(TestInterSystemsFunctionsClass.class, Long.valueOf(10));
         assertTrue( test.getDate1().equals(testvalue));
-        test = (TestInterSystemsFunctionsClass) s.get(TestInterSystemsFunctionsClass.class, Long.valueOf(10), LockMode.UPGRADE);
+        test = (TestInterSystemsFunctionsClass) s2.get(TestInterSystemsFunctionsClass.class, Long.valueOf(10), LockMode.UPGRADE);
         assertTrue( test.getDate1().equals(testvalue));
-        Date value = (Date) s.createQuery( "select nvl(o.date,o.dateText) from TestInterSystemsFunctionsClass as o" )
+        Date value = (Date) s2.createQuery( "select nvl(o.date,o.dateText) from TestInterSystemsFunctionsClass as o" )
 				.list()
 				.get(0);
         assertTrue( value.equals(testvalue));
-        Object nv = s.createQuery( "select nullif(o.dateText,o.dateText) from TestInterSystemsFunctionsClass as o" )
+        Object nv = s2.createQuery( "select nullif(o.dateText,o.dateText) from TestInterSystemsFunctionsClass as o" )
 				.list()
 				.get(0);
         assertTrue( nv == null);
-        String dateText = (String) s.createQuery(
+        String dateText = (String) s2.createQuery(
 				"select nvl(o.dateText,o.date) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
         assertTrue( dateText.equals("1977-07-03"));
-        value = (Date) s.createQuery( "select ifnull(o.date,o.date1) from TestInterSystemsFunctionsClass as o" )
+        value = (Date) s2.createQuery( "select ifnull(o.date,o.date1) from TestInterSystemsFunctionsClass as o" )
 				.list()
 				.get(0);
         assertTrue( value.equals(testvalue));
-        value = (Date) s.createQuery( "select ifnull(o.date3,o.date,o.date1) from TestInterSystemsFunctionsClass as o" )
+        value = (Date) s2.createQuery( "select ifnull(o.date3,o.date,o.date1) from TestInterSystemsFunctionsClass as o" )
 				.list()
 				.get(0);
         assertTrue( value.equals(testvalue));
-        Integer pos = (Integer) s.createQuery(
+        Integer pos = (Integer) s2.createQuery(
 				"select position('07', o.dateText) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
         assertTrue(pos.intValue() == 6);
-        String st = (String) s.createQuery( "select convert(o.date1, SQL_TIME) from TestInterSystemsFunctionsClass as o" )
+        String st = (String) s2.createQuery( "select convert(o.date1, SQL_TIME) from TestInterSystemsFunctionsClass as o" )
 				.list()
 				.get(0);
         assertTrue( st.equals("00:00:00"));
-        java.sql.Time tm = (java.sql.Time) s.createQuery(
+        java.sql.Time tm = (java.sql.Time) s2.createQuery(
 				"select cast(o.date1, time) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
         assertTrue( tm.toString().equals("00:00:00"));
-        Double diff = (Double) s.createQuery(
+        Double diff = (Double) s2.createQuery(
 				"select timestampdiff(SQL_TSI_FRAC_SECOND, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
         assertTrue(diff.doubleValue() != 0.0);
-        diff = (Double) s.createQuery(
+        diff = (Double) s2.createQuery(
 				"select timestampdiff(SQL_TSI_MONTH, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
         assertTrue(diff.doubleValue() == 16.0);
-        diff = (Double) s.createQuery(
+        diff = (Double) s2.createQuery(
 				"select timestampdiff(SQL_TSI_WEEK, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
         assertTrue(diff.doubleValue() >= 16*4);
-        diff = (Double) s.createQuery(
+        diff = (Double) s2.createQuery(
 				"select timestampdiff(SQL_TSI_YEAR, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
         assertTrue(diff.doubleValue() == 1.0);
 
-        s.getTransaction().commit();
-        s.close();
+        s2.getTransaction().commit();
+        s2.close();
     }
 
 }

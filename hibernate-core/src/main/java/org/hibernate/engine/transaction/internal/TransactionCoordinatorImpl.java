@@ -193,7 +193,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 		// check to see if the connection is in auto-commit mode (no connection means aggressive connection
 		// release outside a JTA transaction context, so MUST be autocommit mode)
 		boolean isAutocommit = getJdbcCoordinator().getLogicalConnection().isAutoCommit();
-		getJdbcCoordinator().getLogicalConnection().afterTransaction();
+		getJdbcCoordinator().afterTransaction();
 
 		if ( isAutocommit ) {
 			for ( TransactionObserver observer : observers ) {

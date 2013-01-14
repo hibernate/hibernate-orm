@@ -64,6 +64,8 @@ public class BasicTypeRegistry implements Serializable {
 		register( BigIntegerType.INSTANCE );
 
 		register( StringType.INSTANCE );
+		register( StringNVarcharType.INSTANCE );
+		register( CharacterNCharType.INSTANCE );
 		register( UrlType.INSTANCE );
 
 		register( DateType.INSTANCE );
@@ -87,10 +89,13 @@ public class BasicTypeRegistry implements Serializable {
 		register( CharArrayType.INSTANCE );
 		register( CharacterArrayType.INSTANCE );
 		register( TextType.INSTANCE );
+		register( NTextType.INSTANCE );
 		register( BlobType.INSTANCE );
 		register( MaterializedBlobType.INSTANCE );
 		register( ClobType.INSTANCE );
+		register( NClobType.INSTANCE );
 		register( MaterializedClobType.INSTANCE );
+		register( MaterializedNClobType.INSTANCE );
 		register( SerializableType.INSTANCE );
 
 		register( ObjectType.INSTANCE );

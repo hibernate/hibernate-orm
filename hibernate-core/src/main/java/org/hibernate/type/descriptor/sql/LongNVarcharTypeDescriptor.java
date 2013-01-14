@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,34 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.NClob;
+package org.hibernate.type.descriptor.sql;
+
+import java.sql.Types;
 
 /**
- * Convenient base class for proxy-based LobCreator for handling wrapping.
+ * Descriptor for {@link Types#LONGNVARCHAR LONGNVARCHAR} handling.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractLobCreator implements LobCreator {
-	@Override
-	public Blob wrap(Blob blob) {
-		return SerializableBlobProxy.generateProxy( blob );
-	}
+public class LongNVarcharTypeDescriptor extends NVarcharTypeDescriptor {
+	public static final LongVarcharTypeDescriptor INSTANCE = new LongVarcharTypeDescriptor();
 
 	@Override
-	public Clob wrap(Clob clob) {
-		if ( NClob.class.isInstance( clob ) ) {
-			return wrap( (NClob) clob );
-		}
-		else {
-			return SerializableClobProxy.generateProxy( clob );
-		}
-	}
-
-	@Override
-	public NClob wrap(NClob nclob) {
-		return SerializableNClobProxy.generateProxy( nclob );
+	public int getSqlType() {
+		return Types.LONGNVARCHAR;
 	}
 }

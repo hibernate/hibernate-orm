@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,34 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.NClob;
+package org.hibernate.annotations;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Convenient base class for proxy-based LobCreator for handling wrapping.
+ * Marks a character data type (String, Character, character, Clob) as being a nationalized variant
+ * (NVARCHAR, NCHAR, NCLOB, etc).
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractLobCreator implements LobCreator {
-	@Override
-	public Blob wrap(Blob blob) {
-		return SerializableBlobProxy.generateProxy( blob );
-	}
-
-	@Override
-	public Clob wrap(Clob clob) {
-		if ( NClob.class.isInstance( clob ) ) {
-			return wrap( (NClob) clob );
-		}
-		else {
-			return SerializableClobProxy.generateProxy( clob );
-		}
-	}
-
-	@Override
-	public NClob wrap(NClob nclob) {
-		return SerializableNClobProxy.generateProxy( nclob );
-	}
+@Target( { METHOD, FIELD } )
+@Retention( RUNTIME )
+public @interface Nationalized {
 }

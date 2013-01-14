@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -22,33 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc;
-import java.sql.Blob;
-import java.sql.Clob;
+
 import java.sql.NClob;
 
 /**
- * Convenient base class for proxy-based LobCreator for handling wrapping.
- *
  * @author Steve Ebersole
  */
-public abstract class AbstractLobCreator implements LobCreator {
+public interface WrappedNClob extends WrappedClob {
 	@Override
-	public Blob wrap(Blob blob) {
-		return SerializableBlobProxy.generateProxy( blob );
-	}
+	@Deprecated
+	public NClob getWrappedClob();
 
-	@Override
-	public Clob wrap(Clob clob) {
-		if ( NClob.class.isInstance( clob ) ) {
-			return wrap( (NClob) clob );
-		}
-		else {
-			return SerializableClobProxy.generateProxy( clob );
-		}
-	}
-
-	@Override
-	public NClob wrap(NClob nclob) {
-		return SerializableNClobProxy.generateProxy( nclob );
-	}
+	public NClob getWrappedNClob();
 }

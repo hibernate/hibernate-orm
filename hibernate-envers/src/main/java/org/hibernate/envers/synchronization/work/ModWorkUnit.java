@@ -74,15 +74,12 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     }
 
     public AuditWorkUnit merge(ModWorkUnit second) {
-        if ( verCfg.getEntCfg().get( getEntityName() ).isUsingModifiedFlag() ) {
-            // In case of multiple subsequent flushes within single transaction, modification flags need to be
-            // recalculated against initial and final state of the given entity.
-            return new ModWorkUnit(
-                    second.sessionImplementor, second.getEntityName(), second.verCfg, second.id,
-                    second.entityPersister, second.newState, this.oldState
-            );
-        }
-        return second;
+        // In case of multiple subsequent flushes within single transaction, modification flags need to be
+        // recalculated against initial and final state of the given entity.
+        return new ModWorkUnit(
+                second.sessionImplementor, second.getEntityName(), second.verCfg, second.id,
+                second.entityPersister, second.newState, this.oldState
+        );
     }
 
     public AuditWorkUnit merge(DelWorkUnit second) {

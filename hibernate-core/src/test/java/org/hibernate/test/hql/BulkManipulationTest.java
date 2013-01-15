@@ -45,7 +45,6 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
@@ -1228,7 +1227,6 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-1917" )
-	@FailureExpected( jiraKey = "HHH-1917" )
 	public void testManyToManyBulkDelete() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

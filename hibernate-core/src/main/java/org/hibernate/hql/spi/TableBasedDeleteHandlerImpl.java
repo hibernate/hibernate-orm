@@ -89,7 +89,7 @@ public class TableBasedDeleteHandlerImpl
 				AbstractCollectionPersister cPersister = (AbstractCollectionPersister)factory.getCollectionPersister( cType.getRole() );
 				if ( cPersister.isManyToMany() ) {
 					deletes.add( generateDelete( cPersister.getTableName(),
-							cPersister.getKeyColumnNames(), idSubselect));
+							cPersister.getKeyColumnNames(), idSubselect, "bulk delete - m2m join table cleanup"));
 				}
 			}
 		}
@@ -97,20 +97,20 @@ public class TableBasedDeleteHandlerImpl
 		String[] tableNames = targetedPersister.getConstraintOrderedTableNameClosure();
 		String[][] columnNames = targetedPersister.getContraintOrderedTableKeyColumnClosure();
 		for ( int i = 0; i < tableNames.length; i++ ) {
-			deletes.add( generateDelete( tableNames[i], columnNames[i], idSubselect));
+			// TODO : an optimization here would be to consider cascade deletes and not gen those delete statements;
+			//      the difficulty is the ordering of the tables here vs the cascade attributes on the persisters ->
+			//          the table info gotten here should really be self-contained (i.e., a class representation
+			//          defining all the needed attributes), then we could then get an array of those
+			deletes.add( generateDelete( tableNames[i], columnNames[i], idSubselect, "bulk delete"));
 		}
 	}
 	
-	private String generateDelete(String tableName, String[] columnNames, String idSubselect) {
-		// TODO : an optimization here would be to consider cascade deletes and not gen those delete statements;
-		//      the difficulty is the ordering of the tables here vs the cascade attributes on the persisters ->
-		//          the table info gotten here should really be self-contained (i.e., a class representation
-		//          defining all the needed attributes), then we could then get an array of those
+	private String generateDelete(String tableName, String[] columnNames, String idSubselect, String comment) {
 		final Delete delete = new Delete()
 				.setTableName( tableName )
 				.setWhere( "(" + StringHelper.join( ", ", columnNames ) + ") IN (" + idSubselect + ")" );
 		if ( factory().getSettings().isCommentsEnabled() ) {
-			delete.setComment( "bulk delete" );
+			delete.setComment( comment );
 		}
 		return delete.toStatementString();
 	}

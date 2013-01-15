@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -64,7 +65,6 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
-import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
@@ -79,6 +79,8 @@ import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.FilterParameterSource;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
@@ -216,6 +218,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		final HbmMetadataSourceProcessorImpl processor = new HbmMetadataSourceProcessorImpl( this, jaxbRoots );
 		final Binder binder = new Binder( this, identifierGeneratorFactory );
 		binder.bindEntityHierarchies( processor.extractEntityHierarchies() );
+		
+		secondPass();
 	}
 
 
@@ -233,6 +237,20 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 								typeDescriptorSource.getParameters()
 						)
 				);
+			}
+		}
+	}
+	
+	private void secondPass() {
+		// This must be done outside of Table, rather than statically, to ensure
+		// deterministic alias names.  See HHH-2448.
+		int uniqueInteger = 0;
+		Iterator<Schema> schemaIter = database.getSchemas().iterator();
+		while ( schemaIter.hasNext() ) {
+			Schema schema = schemaIter.next();
+			Iterator<Table> tableIter = schema.getTables().iterator();
+			while (tableIter.hasNext()) {
+				tableIter.next().setTableNumber( uniqueInteger++ );
 			}
 		}
 	}

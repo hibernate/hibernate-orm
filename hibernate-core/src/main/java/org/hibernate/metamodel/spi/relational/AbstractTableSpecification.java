@@ -27,17 +27,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Convenience base class for implementing the {@link ValueContainer} contract centralizing commonality
  * between modeling tables, views and inline views.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public abstract class AbstractTableSpecification implements TableSpecification {
-	private final static AtomicInteger tableCounter = new AtomicInteger( 0 );
-	private final int tableNumber;
+	private int tableNumber;
 
 	private final List<Value> valueList = new ArrayList<Value>();
 	private final LinkedHashMap<Identifier, Value> valueMap = new LinkedHashMap<Identifier, Value>();
@@ -45,13 +44,15 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	private final PrimaryKey primaryKey = new PrimaryKey( this );
 	private final List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
 
-	public AbstractTableSpecification() {
-		this.tableNumber = tableCounter.getAndIncrement();
-	}
-
 	@Override
 	public int getTableNumber() {
 		return tableNumber;
+	}
+	
+	public void setTableNumber( int tableNumber ) {
+		// This must be done outside of Table, rather than statically, to ensure
+		// deterministic alias names.  See HHH-2448.
+		this.tableNumber = tableNumber;
 	}
 
 	@Override

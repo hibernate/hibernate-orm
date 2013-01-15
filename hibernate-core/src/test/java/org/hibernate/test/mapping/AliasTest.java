@@ -22,9 +22,9 @@ package org.hibernate.test.mapping;
 
 import static org.junit.Assert.assertTrue;
 
-import java.util.Iterator;
-
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -45,20 +45,9 @@ public class AliasTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	public void testAliasOrdering() {
-		Iterator<Table> tables = configuration().getTableMappings();
-		Table table1 = null;
-		Table table2 = null;
-		while ( tables.hasNext() ) {
-			Table table = tables.next();
-			if ( table.getName().equals( "Table1" ) ) {
-				table1 = table;
-			}
-			else if ( table.getName().equals( "Table2" ) ) {
-				table2 = table;
-			}
-		}
-		
-		assertTrue( table1.getUniqueInteger() < table2.getUniqueInteger() );
+		TableSpecification table1 = SchemaUtil.getTable( "Table1", metadata() );
+		TableSpecification table2 = SchemaUtil.getTable( "Table2", metadata() );
+		assertTrue( table1.getTableNumber() < table2.getTableNumber() );
 	}
 
 	@Override

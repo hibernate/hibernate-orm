@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
@@ -41,7 +40,7 @@ public class AbstractSingularAssociationAttributeBinding extends AbstractSingula
 		implements SingularAssociationAttributeBinding {
 	protected final EntityBinding referencedEntityBinding;
 	protected final SingularAttributeBinding referencedAttributeBinding;
-	protected final List<RelationalValueBinding> relationalValueBindings;
+	protected final RelationalValueBindingContainer relationalValueBindingContainer;
 	private CascadeStyle cascadeStyle;
 	private FetchTiming fetchTiming;
 	private FetchStyle fetchStyle;
@@ -76,14 +75,9 @@ public class AbstractSingularAssociationAttributeBinding extends AbstractSingula
 			throw new IllegalArgumentException( "referencedAttributeBinding must be non-null." );
 		}
 		this.referencedEntityBinding = referencedEntityBinding;
-		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
+		this.relationalValueBindingContainer = new RelationalValueBindingContainer( relationalValueBindings );
 		this.referencedAttributeBinding = referencedAttributeBinding;
 		this.isNotFoundAnException = isNotFoundAnException;
-	}
-
-	@Override
-	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return relationalValueBindings;
 	}
 
 	@Override
@@ -166,7 +160,12 @@ public class AbstractSingularAssociationAttributeBinding extends AbstractSingula
 	}
 
 	@Override
-	protected void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings) {
-		valueBindings.addAll( relationalValueBindings );
+	protected RelationalValueBindingContainer getRelationalValueBindingContainer() {
+		return relationalValueBindingContainer;
+	}
+
+	@Override
+	protected void collectRelationalValueBindings(RelationalValueBindingContainer relationalValueBindingContainer) {
+		relationalValueBindingContainer.addRelationalValueBindings( this.relationalValueBindingContainer);
 	}
 }

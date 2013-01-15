@@ -61,11 +61,4 @@ public class ManyToOneAttributeBinding
 				referencedEntityBinding, relationalValueBindings, referencedAttributeBinding
 		);
 	}
-
-	@Override
-	public boolean isNullable() {
-		return hasNullableRelationalValueBinding( relationalValueBindings );
-	}
-
-
 }

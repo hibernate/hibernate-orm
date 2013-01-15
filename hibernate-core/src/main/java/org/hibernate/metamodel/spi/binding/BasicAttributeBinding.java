@@ -39,7 +39,7 @@ public class BasicAttributeBinding
 		extends AbstractSingularAttributeBinding
 		implements SingularNonAssociationAttributeBinding {
 
-	private final List<RelationalValueBinding> relationalValueBindings;
+	private final RelationalValueBindingContainer relationalValueBindingContainer;
 	private boolean hasDerivedValue;
 	private final PropertyGeneration generation;
 
@@ -62,7 +62,8 @@ public class BasicAttributeBinding
 				naturalIdMutability,
 				metaAttributeContext
 		);
-		this.relationalValueBindings = Collections.unmodifiableList( relationalValueBindings );
+		this.relationalValueBindingContainer =
+				new RelationalValueBindingContainer( relationalValueBindings );
 		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
 			this.hasDerivedValue = this.hasDerivedValue || relationalValueBinding.isDerived();
 		}
@@ -75,7 +76,7 @@ public class BasicAttributeBinding
 	}
 
 	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return relationalValueBindings;
+		return relationalValueBindingContainer.relationalValueBindings();
 	}
 
 	@Override
@@ -83,17 +84,17 @@ public class BasicAttributeBinding
 		return hasDerivedValue;
 	}
 
-	@Override
-	public boolean isNullable() {
-		return hasNullableRelationalValueBinding( relationalValueBindings );
-	}
-
 	public PropertyGeneration getGeneration() {
 		return generation;
 	}
 
 	@Override
-	protected void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings) {
-		valueBindings.addAll( relationalValueBindings );
+	protected RelationalValueBindingContainer getRelationalValueBindingContainer() {
+		return relationalValueBindingContainer;
+	}
+
+	@Override
+	protected void collectRelationalValueBindings(RelationalValueBindingContainer relationalValueBindingContainer) {
+		relationalValueBindingContainer.addRelationalValueBindings( this.relationalValueBindingContainer );
 	}
 }

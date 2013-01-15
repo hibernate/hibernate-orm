@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -215,10 +214,10 @@ public class CompositeAttributeBinding
 	}
 
 	@Override
-	public List<RelationalValueBinding> getRelationalValueBindings() {
-		final List<RelationalValueBinding> bindings = new ArrayList<RelationalValueBinding>();
-		collectRelationalValueBindings( bindings );
-		return bindings;
+	protected RelationalValueBindingContainer getRelationalValueBindingContainer() {
+		final RelationalValueBindingContainer relationalValueBindingContainer = new RelationalValueBindingContainer();
+		collectRelationalValueBindings( relationalValueBindingContainer );
+		return relationalValueBindingContainer;
 	}
 
 	@Override
@@ -316,10 +315,10 @@ public class CompositeAttributeBinding
 	}
 
 		@Override
-	protected void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings) {
+	protected void collectRelationalValueBindings(RelationalValueBindingContainer relationalValueBindingContainer) {
 		for ( AttributeBinding subAttributeBinding : attributeBindings() ) {
 			if ( AbstractSingularAttributeBinding.class.isInstance( subAttributeBinding ) ) {
-				( (AbstractSingularAttributeBinding) subAttributeBinding ).collectRelationalValueBindings( valueBindings );
+				( (AbstractSingularAttributeBinding) subAttributeBinding ).collectRelationalValueBindings( relationalValueBindingContainer );
 			}
 		}
 	}

@@ -51,46 +51,26 @@ public abstract class AbstractSingularAttributeBinding
 		this.naturalIdMutability = naturalIdMutability;
 	}
 
+	protected abstract RelationalValueBindingContainer getRelationalValueBindingContainer();
+
+	@Override
+	public List<RelationalValueBinding> getRelationalValueBindings() {
+		return getRelationalValueBindingContainer().relationalValueBindings();
+	}
+
 	@Override
 	public boolean isNullable() {
-		return hasNullableRelationalValueBinding( getRelationalValueBindings() );
+		return getRelationalValueBindingContainer().hasNullableRelationalValueBinding();
 	}
 
 	@Override
 	public boolean isIncludedInInsert() {
-		return hasInsertableRelationalValueBinding( getRelationalValueBindings() );
+		return getRelationalValueBindingContainer().hasInsertableRelationalValueBinding();
 	}
 
 	@Override
 	public boolean isIncludedInUpdate() {
-		return hasUpdateableRelationalValueBinding( getRelationalValueBindings() );
-	}
-
-	protected static boolean hasNullableRelationalValueBinding(List<RelationalValueBinding> relationalValueBindings) {
-		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-			if ( relationalValueBinding.isNullable() ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	protected static boolean hasInsertableRelationalValueBinding(List<RelationalValueBinding> relationalValueBindings) {
-		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-			if ( relationalValueBinding.isIncludeInInsert() ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	protected static boolean hasUpdateableRelationalValueBinding(List<RelationalValueBinding> relationalValueBindings) {
-		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-			if ( relationalValueBinding.isIncludeInUpdate() ) {
-				return true;
-			}
-		}
-		return false;
+		return getRelationalValueBindingContainer().hasUpdateableRelationalValueBinding();
 	}
 
 	@Override
@@ -117,5 +97,5 @@ public abstract class AbstractSingularAttributeBinding
 		super.setAlternateUniqueKey( isAlternateUniqueKey );
 	}
 
-	protected abstract void collectRelationalValueBindings(List<RelationalValueBinding> valueBindings);
+	protected abstract void collectRelationalValueBindings(RelationalValueBindingContainer relationalValueBindingContainer);
 }

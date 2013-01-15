@@ -96,9 +96,9 @@ public class CompositePluralAttributeElementBinding
 
 	@Override
 	public List<RelationalValueBinding> getRelationalValueBindings() {
-		final List<RelationalValueBinding> bindings = new ArrayList<RelationalValueBinding>();
-		compositeAttributeBindingContainer.collectRelationalValueBindings( bindings );
-		return bindings;
+		final RelationalValueBindingContainer bindingContainer = new RelationalValueBindingContainer();
+		compositeAttributeBindingContainer.collectRelationalValueBindings( bindingContainer );
+		return bindingContainer.relationalValueBindings();
 	}
 
 	@Override

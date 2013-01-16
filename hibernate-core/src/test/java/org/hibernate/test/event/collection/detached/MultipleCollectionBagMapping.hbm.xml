@@ -33,7 +33,7 @@
             <generator class="native"/>
         </id>
         <property name="text" column="TEXT" type="string"/>
-        <many-to-one name="multipleCollectionEntity" column="MCE_ID" class="MultipleCollectionEntity" cascade="none"/>
+        <many-to-one name="multipleCollectionEntity" column="parent_id" class="MultipleCollectionEntity" cascade="none"/>
     </class>
 
     <class name="MultipleCollectionRefEntity2" table="CHILD2">
@@ -41,7 +41,7 @@
             <generator class="native"/>
         </id>
         <property name="text" column="TEXT" type="string"/>
-        <many-to-one name="multipleCollectionEntity" column="MCE_ID" class="MultipleCollectionEntity" cascade="none"/>
+        <many-to-one name="multipleCollectionEntity" column="parent_id" class="MultipleCollectionEntity" cascade="none"/>
     </class>
 
 </hibernate-mapping>

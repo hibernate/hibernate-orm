@@ -23,19 +23,18 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
-import java.sql.Types;
-
-import org.junit.Test;
-
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+
+import java.sql.Types;
+
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -86,21 +85,6 @@ public class TableManipulationTests extends BaseUnitTestCase {
 				assertNull( column.getSize().getLobMultiplier() );
 			}
 		}
-	}
-
-	@Test
-	public void testTableSpecificationCounter() {
-		Schema schema = new Schema( null, null );
-		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ), Identifier.toIdentifier( "my_table" ) );
-		InLineView inLineView = schema.createInLineView( Identifier.toIdentifier( "my_inlineview" ), "subselect" );
-		InLineView otherInLineView = schema.createInLineView( Identifier.toIdentifier( "my_other_inlineview" ), "other subselect" );
-		Table otherTable = schema.createTable( Identifier.toIdentifier( "my_other_table" ), Identifier.toIdentifier( "my_other_table" ) );
-
-		int firstTableNumber = table.getTableNumber();
-		assertEquals( firstTableNumber, table.getTableNumber() );
-		assertEquals( firstTableNumber + 1, inLineView.getTableNumber() );
-		assertEquals( firstTableNumber + 2, otherInLineView.getTableNumber() );
-		assertEquals( firstTableNumber + 3, otherTable.getTableNumber() );
 	}
 
 	@Test

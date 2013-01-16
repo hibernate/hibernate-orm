@@ -33,7 +33,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Property;
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.TextType;
@@ -76,7 +75,6 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOneToOneFormula() {
 		Person p = new Person();
 		p.setName("Gavin King");

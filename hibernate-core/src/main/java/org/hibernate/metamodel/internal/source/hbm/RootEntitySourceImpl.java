@@ -449,11 +449,17 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		@Override
 		protected List<AttributeSource> buildAttributeSources() {
 			List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
-			for ( JaxbKeyPropertyElement keyProperty : compositeIdElement().getKeyProperty()){
-				attributeSources.add( new IdentifierKeyAttributeSourceImpl( sourceMappingDocument(), keyProperty ) );
-			}
-			for (JaxbKeyManyToOneElement keyManyToOne : compositeIdElement().getKeyManyToOne()){
-				attributeSources.add( new IdentifierKeyManyToOneSourceImpl( sourceMappingDocument(), keyManyToOne ) );
+			final JaxbCompositeIdElement compositeId = entityElement().getCompositeId();
+			final List list = compositeId.getKeyPropertyOrKeyManyToOne();
+			for ( final Object obj : list ) {
+				if ( JaxbKeyPropertyElement.class.isInstance( obj ) ) {
+					JaxbKeyPropertyElement key = JaxbKeyPropertyElement.class.cast( obj );
+					attributeSources.add( new IdentifierKeyAttributeSourceImpl( sourceMappingDocument(), key ) );
+				}
+				if ( JaxbKeyManyToOneElement.class.isInstance( obj ) ) {
+					JaxbKeyManyToOneElement key = JaxbKeyManyToOneElement.class.cast( obj );
+					attributeSources.add( new IdentifierKeyManyToOneSourceImpl( sourceMappingDocument(), key ) );
+				}
 			}
 			return attributeSources;
 		}
@@ -527,11 +533,16 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
 			final List<SingularAttributeSource> attributeSources = new ArrayList<SingularAttributeSource>();
 			final JaxbCompositeIdElement compositeId = entityElement().getCompositeId();
-			for ( final JaxbKeyPropertyElement keyProperty: compositeId.getKeyProperty() ) {
-				attributeSources.add( new IdentifierKeyAttributeSourceImpl( sourceMappingDocument(), keyProperty ) );
-			}
-			for ( final JaxbKeyManyToOneElement keyManyToOne : compositeId.getKeyManyToOne() ){
-				attributeSources.add( new IdentifierKeyManyToOneSourceImpl( sourceMappingDocument(), keyManyToOne ) );
+			final List list = compositeId.getKeyPropertyOrKeyManyToOne();
+			for ( final Object obj : list ) {
+				if ( JaxbKeyPropertyElement.class.isInstance( obj ) ) {
+					JaxbKeyPropertyElement key = JaxbKeyPropertyElement.class.cast( obj );
+					attributeSources.add( new IdentifierKeyAttributeSourceImpl( sourceMappingDocument(), key ) );
+				}
+				if ( JaxbKeyManyToOneElement.class.isInstance( obj ) ) {
+					JaxbKeyManyToOneElement key = JaxbKeyManyToOneElement.class.cast( obj );
+					attributeSources.add( new IdentifierKeyManyToOneSourceImpl( sourceMappingDocument(), key ) );
+				}
 			}
 
 			return attributeSources;

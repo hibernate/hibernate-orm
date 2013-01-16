@@ -332,11 +332,11 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:sequence>
             <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
             <xs:choice maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:appinfo>
-                        <simplify:as-element-property/>
-                    </xs:appinfo>
-                </xs:annotation>
+                <!--<xs:annotation>-->
+                    <!--<xs:appinfo>-->
+                        <!--<simplify:as-element-property/>-->
+                    <!--</xs:appinfo>-->
+                <!--</xs:annotation>-->
                 <xs:element name="key-property" type="key-property-element"/>
                 <xs:element name="key-many-to-one" type="key-many-to-one-element"/>
             </xs:choice>

@@ -75,6 +75,8 @@ public interface PluralAttributeSource
 
 	public String getMappedBy();
 
+	public int getBatchSize();
+
 	/**
 	 * Describes the nature of the collection itself as declared by the metadata.
 	 *

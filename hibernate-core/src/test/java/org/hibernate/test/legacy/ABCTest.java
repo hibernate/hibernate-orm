@@ -37,7 +37,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings( {"UnnecessaryBoxing"})
-@FailureExpectedWithNewMetamodel
 public class ABCTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {
@@ -78,6 +77,7 @@ public class ABCTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testHigherLevelIndexDefinition() throws Throwable {
 		String[] commands = configuration().generateSchemaCreationScript( getDialect() );
 		int max = commands.length;
@@ -92,6 +92,7 @@ public class ABCTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSubclassing() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

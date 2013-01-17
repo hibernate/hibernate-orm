@@ -634,13 +634,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( isPOJO && StringHelper.isEmpty( className ) ) {
 			throw new MappingException( "Entity[" + entityName + "] is mapped as pojo but don't have a class name" );
 		}
-		if ( StringHelper.isEmpty( className ) || entityName.equals( className ) ) {
-			//ignore
-		}
-		else if ( entityBindingMap.containsKey( className ) ) {
-			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, entityName );
-		}
-		else {
+		if ( StringHelper.isNotEmpty( className ) && !entityBindingMap.containsKey( className ) ) {
 			entityBindingMap.put( className, entityBinding );
 		}
 	}

@@ -32,7 +32,6 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 
 import static org.junit.Assert.assertEquals;
@@ -43,7 +42,6 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class QueryByExampleTest extends LegacyTestCase {
 	@Override
     public String[] getMappings() {

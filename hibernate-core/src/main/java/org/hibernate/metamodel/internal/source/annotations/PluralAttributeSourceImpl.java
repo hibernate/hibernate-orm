@@ -117,6 +117,11 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	}
 
 	@Override
+	public int getBatchSize() {
+		return associationAttribute.getBatchSize();
+	}
+
+	@Override
 	public ValueHolder<Class<?>> getElementClassReference() {
 		// needed for arrays
 		Class<?> attributeType = associationAttribute.getAttributeType();

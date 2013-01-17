@@ -86,6 +86,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private LazyCollectionOption lazyOption;
 	private final boolean isCollectionIdPresent;
 	private final boolean mutable;
+	private final int batchSize;
 
 
 	public static PluralAssociationAttribute createPluralAssociationAttribute(
@@ -265,6 +266,13 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		this.isSequentiallyIndexed = orderColumnAnnotation != null || indexColumnAnnotation != null;
 		this.pluralAttributeNature = resolvePluralAttributeNature();
 
+		AnnotationInstance batchAnnotation = JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.BATCH_SIZE );
+		if ( batchAnnotation != null ) {
+			this.batchSize = batchAnnotation.value( "size" ).asInt();
+		}
+		else {
+			this.batchSize = -1;
+		}
 		validateMapping();
 	}
 
@@ -346,6 +354,10 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	@Override
 	public boolean isOptimisticLockable() {
 		return hasOptimisticLockAnnotation() ? super.isOptimisticLockable() : StringHelper.isEmpty( getMappedBy() );
+	}
+
+	public int getBatchSize() {
+		return batchSize;
 	}
 
 	private String determineCustomLoaderName() {

@@ -197,6 +197,11 @@ public abstract class AbstractPluralAttributeSourceImpl
 	}
 
 	@Override
+	public int getBatchSize() {
+		return pluralAttributeElement.getBatchSize();
+	}
+
+	@Override
 	public String getMappedBy() {
 		return null;
 	}
@@ -353,7 +358,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 		final String outerJoinSelection = pluralAttributeElement.getOuterJoin() != null
 				? pluralAttributeElement.getOuterJoin().value()
 				: null;
-		final int batchSize = pluralAttributeElement.getBatchSize();
+		final int batchSize = getBatchSize();
 
 		if ( fetchSelection == null ) {
 			if ( outerJoinSelection == null ) {

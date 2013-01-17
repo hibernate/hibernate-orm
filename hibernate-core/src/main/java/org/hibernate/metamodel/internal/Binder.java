@@ -1412,6 +1412,7 @@ public class Binder {
 		attributeBinding.setCustomSqlDeleteAll( attributeSource.getCustomSqlDeleteAll() );
 		attributeBinding.setWhere( attributeSource.getWhere() );
 		attributeBinding.setMutable( attributeSource.isMutable() );
+		attributeBinding.setBatchSize( attributeSource.getBatchSize() );
 		switch ( attributeSource.getElementSource().getNature() ) {
 			case BASIC:
 				bindBasicPluralAttribute( attributeSource, attributeBinding, reflectedCollectionJavaTypes );

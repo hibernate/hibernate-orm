@@ -90,6 +90,7 @@ public class AssociationAttribute extends MappedAttribute {
 	private final AnnotationInstance joinTableAnnotation;
 	private AttributeTypeResolver resolver;
 
+
 	public static AssociationAttribute createAssociationAttribute(
 			ClassInfo classInfo,
 			String name,

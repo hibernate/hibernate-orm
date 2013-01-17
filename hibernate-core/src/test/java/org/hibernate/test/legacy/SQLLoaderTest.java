@@ -27,7 +27,6 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-@FailureExpectedWithNewMetamodel
 public class SQLLoaderTest extends LegacyTestCase {
 	static int nextInt = 1;
 	static long nextLong = 1;
@@ -624,6 +623,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFindBySQLDiscriminatedSameSession() throws Exception {
 		Session session = openSession();
 		session.beginTransaction();

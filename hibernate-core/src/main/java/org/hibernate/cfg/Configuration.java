@@ -1536,15 +1536,19 @@ public class Configuration implements Serializable {
 		keyName = normalizer.normalizeIdentifierQuoting( keyName );
 
 		int size = columnNames.length;
-		Column[] columns = new Column[size];
+		List<Column> columns = new ArrayList<Column>(size);
 		Set<Column> unbound = new HashSet<Column>();
 		Set<Column> unboundNoLogical = new HashSet<Column>();
 		for ( int index = 0; index < size; index++ ) {
 			final String logicalColumnName = normalizer.normalizeIdentifierQuoting( columnNames[index] );
+			if ( null == logicalColumnName ) {
+				continue;
+			}
 			try {
 				final String columnName = createMappings().getPhysicalColumnName( logicalColumnName, table );
-				columns[index] = new Column( columnName );
-				unbound.add( columns[index] );
+				Column column = new Column( columnName );
+				columns.add( column );
+				unbound.add( column );
 				//column equals and hashcode is based on column name
 			}
 			catch ( MappingException e ) {

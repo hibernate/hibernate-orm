@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -564,8 +565,8 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		this.jpaCallbackClasses = jpaCallbackClasses;
 	}
 
-	public Iterable<JpaCallbackSource> getJpaCallbackClasses() {
-		return jpaCallbackClasses;
+	public List<JpaCallbackSource> getJpaCallbackClasses() {
+		return Collections.unmodifiableList( jpaCallbackClasses );
 	}
 	//--------------------------
 	//meta methods for persister , to improve performance, these methods below should really be replaced as ValueHolder

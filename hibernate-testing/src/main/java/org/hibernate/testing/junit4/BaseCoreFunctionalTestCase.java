@@ -180,6 +180,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		afterSessionFactoryBuilt();
 	}
 
+	protected boolean isMetadataUsed() {
+		return isMetadataUsed;
+	}
+
 	protected void configMetadataBuilder(MetadataBuilder metadataBuilder, Configuration configuration) {
 		//see if the naming strategy is the default one
 		if ( configuration.getNamingStrategy() != EJB3NamingStrategy.INSTANCE ) {

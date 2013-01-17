@@ -185,11 +185,16 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 				new EmptyInterceptor() {
 					@Override
 					public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
-						if ( state[0] == null ) {
+						// Using the new metamodel, basic attributes are bound before component attributes;
+						// In the old mappings, attributes mapped from hbm.xml files are processed in the order
+						// they appear in the mappping. This is why the index of the component attribute
+						// depends on which metamodel is used.
+						int detailsIndex = isMetadataUsed() ? 1: 0;
+						if ( state[detailsIndex] == null ) {
 							Image.Details detail = new Image.Details();
 							detail.setPerm1( checkPerm );
 							detail.setComment( checkComment );
-							state[0] = detail;
+							state[detailsIndex] = detail;
 						}
 						return true;
 					}

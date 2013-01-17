@@ -26,7 +26,6 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +40,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
@@ -68,7 +68,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	private Entity entity;
 	private TableSpecification primaryTable;
 	private String primaryTableName;
-	private Map<String, SecondaryTable> secondaryTables = new LinkedHashMap<String, SecondaryTable>();
+	private Map<Identifier, SecondaryTable> secondaryTables = new LinkedHashMap<Identifier, SecondaryTable>();
 
 	private ValueHolder<Class<?>> proxyInterfaceType;
 
@@ -104,7 +104,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	private CustomSQL customDelete;
 
 	private String[] synchronizedTableNames = StringHelper.EMPTY_STRINGS;
-	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
+	private Map<String, AttributeBinding> attributeBindingMap = new LinkedHashMap<String, AttributeBinding>();
 
 	private List<JpaCallbackSource> jpaCallbackClasses = new ArrayList<JpaCallbackSource>();
 	private final int subEntityBindingId;
@@ -188,7 +188,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		if ( tableName == null || tableName.equals( getPrimaryTableName() ) ) {
 			return primaryTable;
 		}
-		SecondaryTable secondaryTable = secondaryTables.get( tableName );
+		SecondaryTable secondaryTable = secondaryTables.get( Identifier.toIdentifier( tableName ) );
 		if ( secondaryTable == null ) {
 			throw new AssertionFailure(
 					String.format(
@@ -249,12 +249,11 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	}
 
 	public void addSecondaryTable(SecondaryTable secondaryTable) {
-		secondaryTables.put( secondaryTable.getSecondaryTableReference().getLogicalName().getText(), secondaryTable );
+		secondaryTables.put( secondaryTable.getSecondaryTableReference().getLogicalName(), secondaryTable );
 	}
-	public Map<String, SecondaryTable> getSecondaryTables() {
-		return secondaryTables;
+	public Map<Identifier, SecondaryTable> getSecondaryTables() {
+		return Collections.unmodifiableMap( secondaryTables );
 	}
-
 
 	public boolean isVersioned() {
 		return getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() != null;
@@ -801,7 +800,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 
 	public boolean isClassOrSuperclassSecondaryTable(SecondaryTable secondaryTable) {
 		String secondaryTableName = secondaryTable.getSecondaryTableReference().getLogicalName().getText();
-		return secondaryTables.containsKey( secondaryTableName ) ||
+		return secondaryTables.containsKey( Identifier.toIdentifier( secondaryTableName ) ) ||
 				( superEntityBinding != null && superEntityBinding.isClassOrSuperclassSecondaryTable( secondaryTable ) );
 	}
 

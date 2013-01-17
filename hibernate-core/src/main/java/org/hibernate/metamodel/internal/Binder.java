@@ -2849,7 +2849,7 @@ public class Binder {
 							// ignore table, schema, catalog name
 							Column column = entityBinding.getPrimaryTable().locateColumn( logicalColumnName );
 							if ( column == null ) {
-								entityBinding.getPrimaryTable().createColumn( logicalColumnName );
+								column = entityBinding.getPrimaryTable().createColumn( logicalColumnName );
 							}
 							return column;
 						}

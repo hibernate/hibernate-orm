@@ -62,6 +62,7 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.BindingContext;
+import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.type.Type;
 
@@ -82,7 +83,7 @@ public class BindHelper {
 	}
 
 	public static void bindNamedSQLQuery(final JaxbSqlQueryElement queryElement,
-			Origin origin, BindingContext bindingContext,
+			Origin origin, LocalBindingContext bindingContext,
 			MetadataImplementor metadata) {
 		final NamedSQLQueryDefinitionBuilder builder
 				= new NamedSQLQueryDefinitionBuilder();
@@ -107,32 +108,36 @@ public class BindHelper {
 
 	public static NativeSQLQueryRootReturn bindReturn(
 			JaxbReturnElement returnElement, int elementCount,
-			Origin origin, MetadataImplementor metadata ) {
+			Origin origin, MetadataImplementor metadata, LocalBindingContext bindingContext) {
 		final String alias = getAlias( returnElement, elementCount );
 		final String clazz = returnElement.getClazz();
 		final String entityName = returnElement.getEntityName();
 		if ( StringHelper.isEmpty( clazz )
 				&& StringHelper.isEmpty( entityName ) ) {
-			throw new org.hibernate.MappingException( "<return alias='" + alias
-					+ "'> must specify either a class or entity-name" );
+			throw bindingContext.makeMappingException(
+					"<return alias='" + alias
+							+ "'> must specify either a class or entity-name"
+			);
 		}
 		final LockMode lockMode = Helper.interpretLockMode(
-				returnElement.getLockMode(), origin );
-		EntityBinding entityBinding = null;
-		if ( StringHelper.isNotEmpty( entityName ) ) {
-			entityBinding = metadata.getEntityBinding( entityName );
+				returnElement.getLockMode(), origin
+		);
+		final EntityBinding entityBinding = metadata.getEntityBinding(
+				StringHelper.isNotEmpty( entityName ) ? entityName : bindingContext.qualifyClassName( clazz )
+		);
+		if ( entityBinding == null ) {
+			throw bindingContext.makeMappingException( "Can't locate entitybinding" );
 		}
-		if ( StringHelper.isNotEmpty( clazz ) ) {
-			// todo look up entitybinding by class name
-		}
-		return new NativeSQLQueryRootReturn( alias, entityName,
+		return new NativeSQLQueryRootReturn(
+				alias, entityBinding.getEntityName(),
 				bindPropertyResults( alias, returnElement, entityBinding ),
-				lockMode );
+				lockMode
+		);
 	}
 
 	public static void bindResultSetMappingDefinitions(
 			JaxbResultsetElement element, Origin origin,
-			BindingContext bindingContext, MetadataImplementor metadata) {
+			LocalBindingContext bindingContext, MetadataImplementor metadata) {
 		final ResultSetMappingDefinition definition
 				= new ResultSetMappingDefinition( element.getName() );
 		int cnt = 0;
@@ -157,7 +162,7 @@ public class BindHelper {
 		}
 		for ( final JaxbReturnElement r : element.getReturn() ) {
 			definition.addQueryReturn( bindReturn(
-					r, cnt++, origin, metadata ) );
+					r, cnt++, origin, metadata, bindingContext ) );
 
 		}
 		metadata.addResultSetMapping( definition );

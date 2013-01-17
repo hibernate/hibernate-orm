@@ -32,6 +32,7 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
+import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.common.util.StringHelper;
@@ -628,6 +629,20 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, entityName );
 		}
 		entityBindingMap.put( entityName, entityBinding );
+		final boolean isPOJO = entityBinding.getHierarchyDetails().getEntityMode() == EntityMode.POJO;
+		final String className = isPOJO ? entityBinding.getEntity().getClassName() : null;
+		if ( isPOJO && StringHelper.isEmpty( className ) ) {
+			throw new MappingException( "Entity[" + entityName + "] is mapped as pojo but don't have a class name" );
+		}
+		if ( StringHelper.isEmpty( className ) || entityName.equals( className ) ) {
+			//ignore
+		}
+		else if ( entityBindingMap.containsKey( className ) ) {
+			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, entityName );
+		}
+		else {
+			entityBindingMap.put( className, entityBinding );
+		}
 	}
 
 	public PluralAttributeBinding getCollection(String collectionRole) {

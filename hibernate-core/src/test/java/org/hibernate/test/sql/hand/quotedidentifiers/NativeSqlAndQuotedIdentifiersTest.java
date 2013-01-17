@@ -29,7 +29,6 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.DialectCheck;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -93,7 +92,6 @@ public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testBasicEntityMapping() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -105,7 +103,6 @@ public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testExpandedEntityMapping() {
 		Session session = openSession();
 		session.beginTransaction();

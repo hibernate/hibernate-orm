@@ -41,7 +41,6 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -67,7 +66,6 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
-//	@FailureExpectedWithNewMetamodel
 	public void testCollectionFetchVsLoad() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();

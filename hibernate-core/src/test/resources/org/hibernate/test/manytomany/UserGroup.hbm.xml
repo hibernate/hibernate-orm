@@ -30,7 +30,7 @@
 			</many-to-many>
 		</set>
 	</class>
-	
+
 	<class name="Group" table="`Group`">
 		<composite-id>
 			<key-property name="name" length="32"/>
@@ -48,5 +48,5 @@
 			</many-to-many>
 		</set>
 	</class>
-	
+
 </hibernate-mapping>

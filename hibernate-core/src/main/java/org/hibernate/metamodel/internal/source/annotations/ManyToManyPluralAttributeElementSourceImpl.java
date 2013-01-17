@@ -173,7 +173,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 		@Override
 		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
 			final List<Value> values = new ArrayList<Value>();
-			for ( Column column : associationAttribute.getJoinColumnValues() ) {
+			for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
 				if ( column.getReferencedColumnName() == null ) {
 					return context.resolveRelationalValuesForAttribute( null );
 				}

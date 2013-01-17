@@ -35,6 +35,10 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.mapping.Join;
+import org.hibernate.metamodel.spi.binding.SecondaryTable;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.PrimaryKey;
+import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -46,11 +50,12 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDefaultValue() throws Exception {
 		// TODO: How to get Joins with EntityBindings?
+		// See testCompositePK()
 		Join join = (Join) configuration().getClassMapping( Life.class.getName() ).getJoinClosureIterator().next();
 		assertEquals( "ExtendedLife", join.getTable().getName() );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
@@ -75,12 +80,29 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCompositePK() throws Exception {
-		Join join = (Join) configuration().getClassMapping( Dog.class.getName() ).getJoinClosureIterator().next();
-		assertEquals( "DogThoroughbred", join.getTable().getName() );
-		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
-		owner.setName( "OWNER_NAME" );
-		assertTrue( join.getTable().getPrimaryKey().containsColumn( owner ) );
+		if ( isMetadataUsed() ) {
+			SecondaryTable secondaryTable =
+					metadata().getEntityBinding( Dog.class.getName() ).getSecondaryTables().values().iterator().next();
+			Table table = (Table) secondaryTable.getSecondaryTableReference();
+			assertEquals( "DogThoroughbred", table.getPhysicalName().getText() );
+			PrimaryKey pk = table.getPrimaryKey();
+			assertEquals( 2, pk.getColumnSpan() );
+			Column c0 = pk.getColumns().get( 0 );
+			Column c1 = pk.getColumns().get( 1 );
+			assertTrue(
+					"OWNER_NAME".equals( c0.getColumnName().getText() ) ||
+							"OWNER_NAME".equals( c1.getColumnName().getText() )
+			);
+		}
+		else {
+			Join join = (Join) configuration().getClassMapping( Dog.class.getName() ).getJoinClosureIterator().next();
+			assertEquals( "DogThoroughbred", join.getTable().getName() );
+			org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
+			owner.setName( "OWNER_NAME" );
+			assertTrue( join.getTable().getPrimaryKey().containsColumn( owner ) );
+		}
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Dog dog = new Dog();
@@ -125,6 +147,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToOne() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -189,6 +212,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFetchModeOnSecondaryTable() throws Exception {
 		Cat cat = new Cat();
 		cat.setStoryPart2( "My long story" );
@@ -207,6 +231,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCustomSQL() throws Exception {
 		Cat cat = new Cat();
 		String storyPart2 = "My long story";

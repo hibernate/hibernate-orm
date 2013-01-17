@@ -1732,7 +1732,6 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
     @Test
-	@FailureExpectedWithNewMetamodel
 	public void testCriteriaCollectionOfValue() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

@@ -1819,12 +1819,32 @@ public class Binder {
 			final EntityBinding referencedEntityBinding,
 			final String defaultElementJavaTypeName) {
 
+		final List<Column> targetColumns =
+				determineForeignKeyTargetColumns( referencedEntityBinding, elementSource );
+		final List<DefaultNamingStrategy> namingStrategies = new ArrayList<DefaultNamingStrategy>( targetColumns.size() );
+		for ( final Column targetColumn : targetColumns ) {
+			namingStrategies.add(
+					new DefaultNamingStrategy() {
+						@Override
+						public String defaultName() {
+							return bindingContext().getNamingStrategy().foreignKeyColumnName(
+									elementBinding.getPluralAttributeBinding().getAttribute().getName(),
+									referencedEntityBinding.getEntityName(),
+									referencedEntityBinding.getPrimaryTableName(),
+									targetColumn.getColumnName().getText()
+							);
+						}
+					}
+			);
+		}
+
 		elementBinding.setRelationalValueBindings(
 				bindValues(
 						elementBinding.getPluralAttributeBinding().getContainer(),
 						elementSource,
 						elementBinding.getPluralAttributeBinding().getAttribute(),
 						elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().getCollectionTable(),
+						namingStrategies,
 						true
 				)
 		);
@@ -1834,7 +1854,7 @@ public class Binder {
 			bindForeignKey(
 					quotedIdentifier( elementSource.getExplicitForeignKeyName() ),
 					extractColumnsFromRelationalValueBindings( elementBinding.getRelationalValueBindings() ),
-					determineForeignKeyTargetColumns( referencedEntityBinding, elementSource )
+					targetColumns
 			);
 		}
 
@@ -2299,12 +2319,36 @@ public class Binder {
 		final AttributeBindingContainer attributeBindingContainer = attributeBinding.getContainer();
 		final PluralAttributeKeyBinding keyBinding = attributeBinding.getPluralAttributeKeyBinding();
 
+		final List<Column> targetColumns =
+				determineForeignKeyTargetColumns(
+						attributeBindingContainer.seekEntityBinding(),
+						keySource
+				);
+		final List<DefaultNamingStrategy> namingStrategies = new ArrayList<DefaultNamingStrategy>( targetColumns.size() );
+		for ( final Column targetColumn : targetColumns ) {
+			namingStrategies.add(
+					new DefaultNamingStrategy() {
+						@Override
+						public String defaultName() {
+							final EntityBinding entityBinding = attributeBinding.getContainer().seekEntityBinding();
+							return bindingContext().getNamingStrategy().foreignKeyColumnName(
+									null,
+									entityBinding.getEntityName(),
+									entityBinding.getPrimaryTableName(),
+									targetColumn.getColumnName().getText()
+							);
+						}
+					}
+			);
+		}
+
 		List<RelationalValueBinding> sourceColumnBindings =
 				bindValues(
 						attributeBindingContainer,
 						keySource,
 						attributeBinding.getAttribute(),
 						collectionTable,
+						namingStrategies,
 						attributeBinding.getPluralAttributeElementBinding()
 								.getNature() != PluralAttributeElementBinding.Nature.ONE_TO_MANY
 				);
@@ -2328,12 +2372,6 @@ public class Binder {
 		keyBinding.setInsertable( isInsertable );
 		keyBinding.setUpdatable( isUpdatable );
 
-		List<Column> targetColumns =
-				determineForeignKeyTargetColumns(
-						attributeBindingContainer.seekEntityBinding(),
-						keySource
-				);
-
 		ForeignKey foreignKey = bindForeignKey(
 				quotedIdentifier( keySource.getExplicitForeignKeyName() ),
 				sourceColumns,
@@ -2342,7 +2380,7 @@ public class Binder {
 		foreignKey.setDeleteRule( keySource.getOnDeleteAction() );
 		keyBinding.setForeignKey( foreignKey );
 		final HibernateTypeDescriptor pluralAttributeKeyTypeDescriptor = keyBinding.getHibernateTypeDescriptor();
-				;
+
 		pluralAttributeKeyTypeDescriptor.copyFrom(
 				keyBinding.getReferencedAttributeBinding()
 						.getHibernateTypeDescriptor()

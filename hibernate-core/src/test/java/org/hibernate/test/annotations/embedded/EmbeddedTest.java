@@ -459,7 +459,6 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 
 	// make sure we support collection of embeddable objects inside embeddable objects
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testEmbeddableInsideEmbeddable() throws Exception {
 		Session s;
 		Transaction tx;

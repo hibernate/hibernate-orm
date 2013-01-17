@@ -36,6 +36,7 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
@@ -66,7 +67,7 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
-	@FailureExpectedWithNewMetamodel
+//	@FailureExpectedWithNewMetamodel
 	public void testCollectionFetchVsLoad() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -109,9 +110,8 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 		// open second SessionFactory
 		PluralAttributeBinding coll = SchemaUtil.getCollection( Continent.class, "countries", metadata() );
 		coll.setFetchStyle( FetchStyle.JOIN );
-		// TODO: Is there a way to set this on the metamodel?
-//		coll.setLazy(false);
-		SessionFactory sf = sessionFactory();
+		coll.setFetchTiming( FetchTiming.IMMEDIATE );
+		SessionFactory sf = metadata().getSessionFactoryBuilder().build();
 		stats = sf.getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled(true);
@@ -132,10 +132,9 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 
 		// open third SessionFactory
 		coll = SchemaUtil.getCollection( Continent.class, "countries", metadata() );
-		coll.setFetchStyle( FetchStyle.SELECT	 );
-		// TODO: Is there a way to set this on the metamodel?
-//		coll.setLazy(false);
-		sf = sessionFactory();
+		coll.setFetchStyle( FetchStyle.SELECT );
+		coll.setFetchTiming( FetchTiming.IMMEDIATE );
+		sf = metadata().getSessionFactoryBuilder().build();
 		stats = sf.getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled(true);

@@ -195,12 +195,12 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	/**
 	 * Handle sending notifications needed for natural-id after saving
 	 */
-	public void handleNaturalIdPostSaveNotifications(Serializable id) {
+	public void handleNaturalIdPostSaveNotifications(Serializable generatedId) {
 		if (isEarlyInsert()) {
 			// with early insert, we still need to add a local (transactional) natural id cross-reference
 			getSession().getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
 					getPersister(),
-					id,
+					generatedId,
 					state,
 					null,
 					CachedNaturalIdValueSource.INSERT

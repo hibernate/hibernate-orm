@@ -90,8 +90,8 @@ public class BlobProxy implements InvocationHandler {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws UnsupportedOperationException if any methods other than {@link Blob#length()}
-	 * or {@link Blob#getBinaryStream} are invoked.
+	 * @throws UnsupportedOperationException if any methods other than {@link Blob#length}
+	 * , {@link Blob#getBinaryStream}, {@link Blob#getBytes} or {@link Blob#free} are invoked.
 	 */
 	@Override
 	@SuppressWarnings({ "UnnecessaryBoxing" })

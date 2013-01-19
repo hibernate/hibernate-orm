@@ -1542,8 +1542,7 @@ public class Configuration implements Serializable {
 		Set<Column> unboundNoLogical = new HashSet<Column>();
 		for ( int index = 0; index < size; index++ ) {
 			String column = columnNames[index];
-			boolean columnNameValid = !StringHelper.isEmpty(column);
-			final String logicalColumnName = columnNameValid ? normalizer.normalizeIdentifierQuoting( column ) : "";
+			final String logicalColumnName = StringHelper.isNotEmpty( column ) ? normalizer.normalizeIdentifierQuoting( column ) : "";
 			try {
 				final String columnName = createMappings().getPhysicalColumnName( logicalColumnName, table );
 				columns[index] = new Column( columnName );

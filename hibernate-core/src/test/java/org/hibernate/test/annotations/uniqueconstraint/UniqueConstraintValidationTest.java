@@ -15,6 +15,10 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
+/**
+ * @author Nikolay Shestakov
+ *
+ */
 public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 
 	@Test(expected = AnnotationException.class)

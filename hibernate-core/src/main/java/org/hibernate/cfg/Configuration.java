@@ -1541,7 +1541,9 @@ public class Configuration implements Serializable {
 		Set<Column> unbound = new HashSet<Column>();
 		Set<Column> unboundNoLogical = new HashSet<Column>();
 		for ( int index = 0; index < size; index++ ) {
-			final String logicalColumnName = normalizer.normalizeIdentifierQuoting( columnNames[index] );
+			String column = columnNames[index];
+			boolean columnNameValid = !StringHelper.isEmpty(column);
+			final String logicalColumnName = columnNameValid ? normalizer.normalizeIdentifierQuoting( column ) : "";
 			try {
 				final String columnName = createMappings().getPhysicalColumnName( logicalColumnName, table );
 				columns[index] = new Column( columnName );
@@ -1567,10 +1569,10 @@ public class Configuration implements Serializable {
 			sb.setLength( sb.length() - 2 );
 			sb.append( ") on table " ).append( table.getName() ).append( ": database column " );
 			for ( Column column : unbound ) {
-				sb.append( column.getName() ).append( ", " );
+				sb.append("'").append( column.getName() ).append( "', " );
 			}
 			for ( Column column : unboundNoLogical ) {
-				sb.append( column.getName() ).append( ", " );
+				sb.append("'").append( column.getName() ).append( "', " );
 			}
 			sb.setLength( sb.length() - 2 );
 			sb.append( " not found. Make sure that you use the correct column name which depends on the naming strategy in use (it may not be the same as the property name in the entity, especially for relational types)" );

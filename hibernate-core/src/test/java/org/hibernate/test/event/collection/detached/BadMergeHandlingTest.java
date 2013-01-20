@@ -63,6 +63,8 @@ public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		Customer paul = new Customer( 1, "Paul Atreides" );
 		s.persist( paul );
+        Customer duke = new Customer( 2, "Duke Leto" );
+        s.persist( duke );
 
 		Alias alias1 = new Alias( 1, "Paul Muad'Dib" );
 		s.persist( alias1 );
@@ -86,12 +88,24 @@ public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 
+        // customer 1
 		alias1.customers.add( paul );
 		s.merge( alias1 );
 		alias2.customers.add( paul );
 		s.merge( alias2 );
 		alias3.customers.add( paul );
 		s.merge( alias3 );
+
+        s.flush();
+
+        // customer 2
+        alias1.customers.add( duke );
+        s.merge( alias1 );
+        alias2.customers.add( duke );
+        s.merge( alias2 );
+        alias3.customers.add( duke );
+        s.merge( alias3 );
+        s.flush();
 
 		cc1.customer = paul;
 		s.merge( cc1 );
@@ -107,7 +121,7 @@ public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 		List results = s.createQuery( "select c from Customer c join c.aliases a where a.alias = :aParam" )
 				.setParameter( "aParam", "Usul" )
 				.list();
-		assertEquals( 1, results.size() );
+		assertEquals( 2, results.size() );
 		s.getTransaction().commit();
 		s.close();
 	}

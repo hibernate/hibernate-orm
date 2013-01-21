@@ -23,13 +23,13 @@
  */
 package org.hibernate.test.annotations.enumerated.ormXml;
 
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
@@ -39,7 +39,6 @@ import static org.junit.Assert.assertFalse;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 @TestForIssue( jiraKey = "HHH-7645" )
 public class OrmXmlEnumTypeTest extends BaseCoreFunctionalTestCase {
 	@Override
@@ -49,9 +48,11 @@ public class OrmXmlEnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testOrmXmlDefinedEnumType() {
-		Type bindingPropertyType = configuration().getClassMapping( BookWithOrmEnum.class.getName() )
-				.getProperty( "bindingStringEnum" )
-				.getType();
+		AttributeBinding attributeBinding = metadata().getEntityBinding( BookWithOrmEnum.class.getName() )
+				.locateAttributeBinding( "bindingStringEnum" );
+		Type bindingPropertyType =
+				attributeBinding.getHibernateTypeDescriptor()
+						.getResolvedTypeMapping();
 		CustomType customType = ExtraAssertions.assertTyping( CustomType.class, bindingPropertyType );
 		EnumType enumType = ExtraAssertions.assertTyping( EnumType.class, customType.getUserType() );
 		assertFalse( enumType.isOrdinal() );

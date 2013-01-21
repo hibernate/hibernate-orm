@@ -24,8 +24,10 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.MetadataSources;
@@ -44,18 +46,15 @@ import static java.util.Collections.emptyList;
  * @author Steve Ebersole
  */
 public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
-	private final MetadataImplementor metadata;
 
-	private List<HibernateMappingProcessor> processors = new ArrayList<HibernateMappingProcessor>();
-	private List<EntityHierarchyImpl> entityHierarchies;
+	private final List<HibernateMappingProcessor> processors = new ArrayList<HibernateMappingProcessor>();
+	private final List<EntityHierarchyImpl> entityHierarchies;
 
 	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata, MetadataSources metadataSources) {
 		this( metadata, metadataSources.getJaxbRootList() );
 	}
 
 	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata, List<JaxbRoot> jaxbRoots) {
-		this.metadata = metadata;
-
 		final HierarchyBuilder hierarchyBuilder = new HierarchyBuilder( metadata );
 
 		for ( JaxbRoot jaxbRoot : jaxbRoots ) {
@@ -76,6 +75,9 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 
 	@Override
 	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources() {
+		if( CollectionHelper.isEmpty( processors )){
+			return emptyList();
+		}
 		final List<TypeDescriptorSource> typeDescriptorSources = new ArrayList<TypeDescriptorSource>();
 		for ( HibernateMappingProcessor processor : processors ) {
 			processor.collectTypeDescriptorSources( typeDescriptorSources );
@@ -85,6 +87,9 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 
 	@Override
 	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources() {
+		if( CollectionHelper.isEmpty( processors )){
+			return emptyList();
+		}
 		final List<FilterDefinitionSource> filterDefinitionSources = new ArrayList<FilterDefinitionSource>();
 		for ( HibernateMappingProcessor processor : processors ) {
 			processor.collectFilterDefSources( filterDefinitionSources );

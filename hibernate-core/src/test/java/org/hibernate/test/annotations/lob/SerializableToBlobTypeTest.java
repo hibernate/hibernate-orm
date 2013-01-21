@@ -16,9 +16,9 @@ import static org.junit.Assert.assertEquals;
  * 
  * @author Janario Oliveira
  */
+@FailureExpectedWithNewMetamodel(jiraKey = "HHH-7936")
 public class SerializableToBlobTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testTypeDefinition() {
 		EntityBinding binding = getEntityBinding( EntitySerialize.class );
 		

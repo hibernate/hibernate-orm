@@ -536,6 +536,9 @@ class HibernateTypeHelper {
 			try {
 				return metadata.getTypeResolver().heuristicType( typeName, typeParameters );
 			}
+			catch ( NotYetImplementedException e ){
+				throw e;
+			}
 			catch ( Exception ignore ) {
 			}
 		}

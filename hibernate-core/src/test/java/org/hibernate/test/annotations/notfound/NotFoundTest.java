@@ -35,10 +35,10 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel(jiraKey = "HHH-7916")
 public class NotFoundTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testManyToOne() throws Exception {
 		Currency euro = new Currency();
 		euro.setName( "Euro" );

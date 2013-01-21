@@ -133,9 +133,6 @@ public class TypeResolver implements Serializable {
 		try {
 			Class typeClass = ReflectHelper.classForName( typeName );
 			if ( typeClass != null ) {
-				if( DynamicParameterizedType.class.isAssignableFrom( typeClass )){
-					throw new NotYetImplementedException( "Custom dynamicParameterizedType is not supported yet" );
-				}
 				return typeFactory.byClass( typeClass, parameters );
 			}
 		}

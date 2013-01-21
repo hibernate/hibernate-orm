@@ -25,10 +25,13 @@
 package org.hibernate.metamodel.internal.source.annotations.attribute.type;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
+import org.hibernate.usertype.DynamicParameterizedType;
+
 import org.jboss.jandex.AnnotationInstance;
 
 /**
@@ -63,13 +66,17 @@ public abstract class AbstractAttributeTypeResolver implements AttributeTypeReso
 
 	@Override
 	final public Map<String, String> getExplicitHibernateTypeParameters() {
+		Map<String, String> result = new HashMap<String, String>(  );
+		//this is only use by enum type and serializable blob type, but we put there anyway
+		result.put(
+				DynamicParameterizedType.RETURNED_CLASS,
+				mappedAttribute.getAttributeType().getName()
+		);
 		if ( StringHelper.isNotEmpty( getExplicitHibernateTypeName() ) ) {
-			return resolveHibernateTypeParameters( 
-					getTypeDeterminingAnnotationInstance() );
+			result.putAll( resolveHibernateTypeParameters(
+					getTypeDeterminingAnnotationInstance() ) );
 		}
-		else {
-			return Collections.emptyMap();
-		}
+		return result;
 	}
 	
 	final protected boolean hasEntityTypeDef() {

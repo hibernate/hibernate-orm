@@ -27,9 +27,12 @@ package org.hibernate.metamodel.internal.source.annotations.attribute.type;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
@@ -38,6 +41,8 @@ import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrappedMaterializedBlobType;
+import org.hibernate.usertype.DynamicParameterizedType;
+
 import org.jboss.jandex.AnnotationInstance;
 
 /**
@@ -58,9 +63,10 @@ public class LobTypeResolver extends AbstractAttributeTypeResolver {
 	@Override
 	public String resolveAnnotatedHibernateTypeName(AnnotationInstance annotationInstance) {
 		if ( annotationInstance == null ) {
+			//only check attributes annotated with @Lob
 			return null;
 		}
-		String type = null;
+		String type = "blob";
 		if ( Clob.class.isAssignableFrom( mappedAttribute.getAttributeType() ) ) {
 			type = StandardBasicTypes.CLOB.getName();
 		}
@@ -85,22 +91,11 @@ public class LobTypeResolver extends AbstractAttributeTypeResolver {
 		else if ( Serializable.class.isAssignableFrom( mappedAttribute.getAttributeType() ) ) {
 			type = SerializableToBlobType.class.getName();
 		}
-		else {
-			type = "blob";
-		}
 		return type;
 	}
 
 	@Override
 	protected Map<String, String> resolveHibernateTypeParameters(AnnotationInstance annotationInstance) {
-		if ( getExplicitHibernateTypeName().equals( SerializableToBlobType.class.getName() ) ) {
-			HashMap<String, String> typeParameters = new HashMap<String, String>();
-			typeParameters.put(
-					SerializableToBlobType.CLASS_NAME,
-					mappedAttribute.getAttributeType().getName()
-			);
-			return typeParameters;
-		}
-		return null;
+		return Collections.emptyMap();
 	}
 }

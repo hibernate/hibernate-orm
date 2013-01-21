@@ -36,17 +36,23 @@ import java.lang.annotation.Annotation;
  * @author Janario Oliveira
  */
 public interface DynamicParameterizedType extends ParameterizedType {
+	@Deprecated
 	public static final String PARAMETER_TYPE = "org.hibernate.type.ParameterType";
-
+	@Deprecated
 	public static final String IS_DYNAMIC = "org.hibernate.type.ParameterType.dynamic";
 
 	public static final String RETURNED_CLASS = "org.hibernate.type.ParameterType.returnedClass";
-	public static final String IS_PRIMARY_KEY = "org.hibernate.type.ParameterType.primaryKey";
-	public static final String ENTITY = "org.hibernate.type.ParameterType.entityClass";
-	public static final String PROPERTY = "org.hibernate.type.ParameterType.propertyName";
-	public static final String ACCESS_TYPE = "org.hibernate.type.ParameterType.accessType";
-	public static final String XPROPERTY = "org.hibernate.type.ParameterType.xproperty";
 
+	public static final String IS_PRIMARY_KEY = "org.hibernate.type.ParameterType.primaryKey";
+	@Deprecated
+	public static final String ENTITY = "org.hibernate.type.ParameterType.entityClass";
+	@Deprecated
+	public static final String PROPERTY = "org.hibernate.type.ParameterType.propertyName";
+	@Deprecated
+	public static final String ACCESS_TYPE = "org.hibernate.type.ParameterType.accessType";
+	@Deprecated
+	public static final String XPROPERTY = "org.hibernate.type.ParameterType.xproperty";
+	@Deprecated
 	public static interface ParameterType {
 
 		public Class getReturnedClass();

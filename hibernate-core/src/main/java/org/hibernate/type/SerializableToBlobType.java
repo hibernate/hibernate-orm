@@ -28,6 +28,7 @@ import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.usertype.DynamicParameterizedType;
@@ -36,15 +37,14 @@ import org.hibernate.usertype.DynamicParameterizedType;
  * @author Brett Meyer
  */
 public class SerializableToBlobType<T extends Serializable> extends AbstractSingleColumnStandardBasicType<T> implements DynamicParameterizedType {
-	
+	/**
+	 * @deprecated use {@link DynamicParameterizedType#RETURNED_CLASS} instead.
+	 */
+	@Deprecated
 	public static final String CLASS_NAME = "classname";
 	
 	private static final long serialVersionUID = 1L;
 
-	/**
-	 * @param sqlTypeDescriptor
-	 * @param javaTypeDescriptor
-	 */
 	public SerializableToBlobType() {
 		super( BlobTypeDescriptor.DEFAULT, new SerializableTypeDescriptor( Serializable.class ) );
 	}
@@ -67,7 +67,10 @@ public class SerializableToBlobType<T extends Serializable> extends AbstractSing
 		} else {
 			String className = parameters.getProperty( CLASS_NAME );
 			if ( className == null ) {
-				throw new MappingException( "No class name defined for type: " + SerializableToBlobType.class.getName() );
+				className = parameters.getProperty( DynamicParameterizedType.RETURNED_CLASS );
+				if ( StringHelper.isEmpty( className ) ) {
+					throw new MappingException( "No class name defined for type: " + SerializableToBlobType.class.getName() );
+				}
 			}
 			try {
 				setJavaTypeDescriptor( new SerializableTypeDescriptor<T>( ReflectHelper.classForName( className ) ) );

@@ -33,6 +33,8 @@ import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.ValueHolder;
@@ -535,9 +537,6 @@ class HibernateTypeHelper {
 		if ( typeName != null ) {
 			try {
 				return metadata.getTypeResolver().heuristicType( typeName, typeParameters );
-			}
-			catch ( NotYetImplementedException e ){
-				throw e;
 			}
 			catch ( Exception ignore ) {
 			}

@@ -4,7 +4,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.Type;
@@ -16,7 +15,6 @@ import static org.junit.Assert.assertEquals;
  * 
  * @author Janario Oliveira
  */
-@FailureExpectedWithNewMetamodel(jiraKey = "HHH-7936")
 public class SerializableToBlobTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testTypeDefinition() {

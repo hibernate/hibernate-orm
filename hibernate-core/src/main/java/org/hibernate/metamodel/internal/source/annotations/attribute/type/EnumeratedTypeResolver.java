@@ -76,7 +76,6 @@ public class EnumeratedTypeResolver extends AbstractAttributeTypeResolver {
 	@Override
 	protected Map<String, String> resolveHibernateTypeParameters(AnnotationInstance annotationInstance) {
 		HashMap<String, String> typeParameters = new HashMap<String, String>();
-		typeParameters.put( EnumType.ENUM, mappedAttribute.getAttributeType().getName() );
 		if ( annotationInstance != null ) {
 			javax.persistence.EnumType enumType = JandexHelper.getEnumValue(
 					annotationInstance,
@@ -85,9 +84,11 @@ public class EnumeratedTypeResolver extends AbstractAttributeTypeResolver {
 			);
 			if ( javax.persistence.EnumType.ORDINAL.equals( enumType ) ) {
 				typeParameters.put( EnumType.TYPE, String.valueOf( Types.INTEGER ) );
+				typeParameters.put( EnumType.NAMED, String.valueOf( false ) );
 			}
 			else if ( javax.persistence.EnumType.STRING.equals( enumType ) ) {
 				typeParameters.put( EnumType.TYPE, String.valueOf( Types.VARCHAR ) );
+				typeParameters.put( EnumType.NAMED, String.valueOf( true ) );
 			}
 			else {
 				throw new AssertionFailure( "Unknown EnumType: " + enumType );

@@ -25,27 +25,45 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.Map;
 
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 
 /**
  * @author Hardy Ferentschik
+ * @author Strong Liu
  */
 public class ExplicitHibernateTypeSourceImpl implements ExplicitHibernateTypeSource {
-	private final MappedAttribute attribute;
+	private final ValueHolder<String> nameHolder;
+	private final ValueHolder<Map<String, String>> parameterHolder;
 
-	public ExplicitHibernateTypeSourceImpl(MappedAttribute attribute) {
-		this.attribute = attribute;
+	public ExplicitHibernateTypeSourceImpl(final MappedAttribute attribute) {
+		this.nameHolder = new ValueHolder<String>(
+				new ValueHolder.DeferredInitializer<String>() {
+					@Override
+					public String initialize() {
+						return attribute.getHibernateTypeResolver().getExplicitHibernateTypeName();
+					}
+				}
+		);
+		this.parameterHolder = new ValueHolder<Map<String, String>>(
+				new ValueHolder.DeferredInitializer<Map<String, String>>() {
+					@Override
+					public Map<String, String> initialize() {
+						return attribute.getHibernateTypeResolver().getExplicitHibernateTypeParameters();
+					}
+				}
+		);
 	}
 
 	@Override
 	public String getName() {
-		return attribute.getHibernateTypeResolver().getExplicitHibernateTypeName();
+		return nameHolder.getValue();
 	}
 
 	@Override
 	public Map<String, String> getParameters() {
-		return attribute.getHibernateTypeResolver().getExplicitHibernateTypeParameters();
+		return parameterHolder.getValue();
 	}
 }
 

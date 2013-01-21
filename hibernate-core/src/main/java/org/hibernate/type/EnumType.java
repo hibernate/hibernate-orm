@@ -39,6 +39,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
@@ -68,7 +69,10 @@ import org.hibernate.usertype.EnhancedUserType;
 @SuppressWarnings("unchecked")
 public class EnumType implements EnhancedUserType, DynamicParameterizedType, Serializable, StringRepresentableType {
     private static final Logger LOG = Logger.getLogger( EnumType.class.getName() );
-
+	/**
+	 * @deprecated use {@link DynamicParameterizedType#RETURNED_CLASS} instead.
+	 */
+	@Deprecated
 	public static final String ENUM = "enumClass";
 	public static final String NAMED = "useNamed";
 	public static final String TYPE = "type";
@@ -232,6 +236,9 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 		}
 		else {
 			String enumClassName = (String) parameters.get( ENUM );
+			if( StringHelper.isEmpty(enumClassName)){
+				enumClassName = (String)parameters.get( DynamicParameterizedType.RETURNED_CLASS );
+			}
 			try {
 				enumClass = ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
 			}

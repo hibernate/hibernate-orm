@@ -40,6 +40,7 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+import org.hibernate.usertype.DynamicParameterizedType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -82,7 +83,7 @@ public class EnumeratedBindingTest extends BaseAnnotationBindingTestCase {
 		assertFalse( descriptor.getTypeParameters().isEmpty() );
 		assertEquals(
 				CustomerType.class.getName(),
-				descriptor.getTypeParameters().get( org.hibernate.type.EnumType.ENUM )
+				descriptor.getTypeParameters().get( DynamicParameterizedType.RETURNED_CLASS )
 		);
 		assertEquals(
 				String.valueOf( Types.INTEGER ),
@@ -98,7 +99,7 @@ public class EnumeratedBindingTest extends BaseAnnotationBindingTestCase {
 		assertFalse( descriptor.getTypeParameters().isEmpty() );
 		assertEquals(
 				OrderType.class.getName(),
-				descriptor.getTypeParameters().get( org.hibernate.type.EnumType.ENUM )
+				descriptor.getTypeParameters().get( DynamicParameterizedType.RETURNED_CLASS )
 		);
 		assertEquals(
 				String.valueOf( Types.VARCHAR ),

@@ -42,7 +42,7 @@ public class CharacterArrayClobType extends AbstractSingleColumnStandardBasicTyp
 
 	public String getName() {
 		// todo name these annotation types for addition to the registry
-		return null;
+		return CharacterArrayClobType.class.getName();
 	}
 
 }

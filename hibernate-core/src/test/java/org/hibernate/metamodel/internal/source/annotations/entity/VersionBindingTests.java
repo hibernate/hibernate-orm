@@ -135,6 +135,6 @@ public class VersionBindingTests extends BaseAnnotationBindingTestCase {
 		assertNotNull( descriptor.getResolvedTypeMapping() );
 		assertEquals( DbTimestampType.class, descriptor.getResolvedTypeMapping().getClass() );
 		assertNotNull( descriptor.getTypeParameters() );
-		assertTrue( descriptor.getTypeParameters().isEmpty() );
+		assertEquals(1, descriptor.getTypeParameters().size() );
 	}
 }

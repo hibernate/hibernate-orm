@@ -92,7 +92,9 @@ public class BasicTypeRegistry implements Serializable {
 		register( ClobType.INSTANCE );
 		register( MaterializedClobType.INSTANCE );
 		register( SerializableType.INSTANCE );
-
+		register( PrimitiveCharacterArrayClobType.INSTANCE );
+		register( WrappedMaterializedBlobType.INSTANCE );
+		register( CharacterArrayClobType.INSTANCE );
 		register( ObjectType.INSTANCE );
 
 		//noinspection unchecked

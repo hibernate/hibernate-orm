@@ -66,7 +66,7 @@ public class TemporalBindingTest extends BaseAnnotationBindingTestCase {
         assertNotNull( descriptor.getResolvedTypeMapping() );
         assertEquals( TimestampType.class, descriptor.getResolvedTypeMapping().getClass() );
         assertNotNull( descriptor.getTypeParameters() );
-        assertTrue( descriptor.getTypeParameters().isEmpty() );
+        assertEquals(1,  descriptor.getTypeParameters().size() );
     }
 
     @Entity
@@ -87,6 +87,6 @@ public class TemporalBindingTest extends BaseAnnotationBindingTestCase {
         assertNotNull( descriptor.getResolvedTypeMapping() );
         assertEquals( TimestampType.class, descriptor.getResolvedTypeMapping().getClass() );
         assertNotNull( descriptor.getTypeParameters() );
-        assertTrue( descriptor.getTypeParameters().isEmpty() );
+        assertEquals(1,  descriptor.getTypeParameters().size() );
     }
 }

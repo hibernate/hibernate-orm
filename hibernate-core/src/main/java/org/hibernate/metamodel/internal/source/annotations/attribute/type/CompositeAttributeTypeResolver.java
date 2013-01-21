@@ -42,13 +42,14 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttri
 public class CompositeAttributeTypeResolver implements AttributeTypeResolver {
 	private final MappedAttribute mappedAttribute;
 	private List<AttributeTypeResolver> resolvers = new ArrayList<AttributeTypeResolver>();
+	private AttributeTypeResolver theResolver;
 
-	public CompositeAttributeTypeResolver (  MappedAttribute mappedAttribute,
-			AttributeTypeResolver... resolvers) {
+	public CompositeAttributeTypeResolver(MappedAttribute mappedAttribute,
+										  AttributeTypeResolver... resolvers) {
 		this.mappedAttribute = mappedAttribute;
 		this.resolvers.addAll( Arrays.asList( resolvers ) );
 	}
-	
+
 	public void addHibernateTypeResolver(AttributeTypeResolver resolver) {
 		if ( resolver == null ) {
 			throw new AssertionFailure( "The Given AttributeTypeResolver is null." );
@@ -63,8 +64,9 @@ public class CompositeAttributeTypeResolver implements AttributeTypeResolver {
 			return type;
 		}
 		else if ( mappedAttribute.getContext()
-				.getMetadataImplementor().hasTypeDefinition( 
-						mappedAttribute.getAttributeType().getName() ) ) {
+				.getMetadataImplementor().hasTypeDefinition(
+						mappedAttribute.getAttributeType().getName()
+				) ) {
 			return mappedAttribute.getAttributeType().getName();
 		}
 		else {
@@ -74,9 +76,13 @@ public class CompositeAttributeTypeResolver implements AttributeTypeResolver {
 
 	@Override
 	public String getExplicitAnnotatedHibernateTypeName() {
+		if ( theResolver != null ) {
+			return theResolver.getExplicitAnnotatedHibernateTypeName();
+		}
 		for ( AttributeTypeResolver resolver : resolvers ) {
 			String type = resolver.getExplicitAnnotatedHibernateTypeName();
 			if ( StringHelper.isNotEmpty( type ) ) {
+				theResolver = resolver;
 				return type;
 			}
 		}
@@ -85,6 +91,9 @@ public class CompositeAttributeTypeResolver implements AttributeTypeResolver {
 
 	@Override
 	public Map<String, String> getExplicitHibernateTypeParameters() {
+		if ( theResolver != null ) {
+			return theResolver.getExplicitHibernateTypeParameters();
+		}
 		for ( AttributeTypeResolver resolver : resolvers ) {
 			Map<String, String> parameters = resolver.getExplicitHibernateTypeParameters();
 			if ( CollectionHelper.isNotEmpty( parameters ) ) {

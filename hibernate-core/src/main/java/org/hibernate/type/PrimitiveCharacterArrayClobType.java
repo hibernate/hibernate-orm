@@ -31,7 +31,7 @@ import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
  * @author Emmanuel Bernard
  */
 public class PrimitiveCharacterArrayClobType extends AbstractSingleColumnStandardBasicType<char[]> {
-	public static final CharacterArrayClobType INSTANCE = new CharacterArrayClobType();
+	public static final PrimitiveCharacterArrayClobType INSTANCE = new PrimitiveCharacterArrayClobType();
 
 	public PrimitiveCharacterArrayClobType() {
 		super( ClobTypeDescriptor.DEFAULT, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
@@ -39,6 +39,6 @@ public class PrimitiveCharacterArrayClobType extends AbstractSingleColumnStandar
 
 	public String getName() {
 		// todo name these annotation types for addition to the registry
-		return null;
+		return PrimitiveCharacterArrayClobType.class.getName();
 	}
 }

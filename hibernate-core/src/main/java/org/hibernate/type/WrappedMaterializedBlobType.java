@@ -40,6 +40,6 @@ public class WrappedMaterializedBlobType extends AbstractSingleColumnStandardBas
 
 	public String getName() {
 		// todo name these annotation types for addition to the registry
-		return null;
+		return WrappedMaterializedBlobType.class.getName();
 	}
 }

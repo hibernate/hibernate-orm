@@ -47,6 +47,7 @@ import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrappedMaterializedBlobType;
+import org.hibernate.usertype.DynamicParameterizedType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -132,7 +133,7 @@ public class LobBindingTests extends BaseAnnotationBindingTestCase {
                 false,
                 ClobType.class,
                 false,
-                true
+                false
         );
         checkHibernateTypeDescriptor( expectedValue, "clob" );
     }
@@ -146,7 +147,7 @@ public class LobBindingTests extends BaseAnnotationBindingTestCase {
                 false,
                 BlobType.class,
                 false,
-                true
+                false
         );
         checkHibernateTypeDescriptor( expectedValue, "blob" );
     }
@@ -160,7 +161,7 @@ public class LobBindingTests extends BaseAnnotationBindingTestCase {
                 false,
                 MaterializedClobType.class,
                 false,
-                true
+                false
         );
         checkHibernateTypeDescriptor( expectedValue, "str" );
     }
@@ -174,7 +175,7 @@ public class LobBindingTests extends BaseAnnotationBindingTestCase {
                 false,
                 CharacterArrayClobType.class,
                 false,
-                true
+                false
         );
         checkHibernateTypeDescriptor( expectedValue, "characters" );
     }
@@ -188,7 +189,7 @@ public class LobBindingTests extends BaseAnnotationBindingTestCase {
                 false,
                 PrimitiveCharacterArrayClobType.class,
                 false,
-                true
+                false
         );
         checkHibernateTypeDescriptor( expectedValue, "chars" );
     }
@@ -202,7 +203,7 @@ public class LobBindingTests extends BaseAnnotationBindingTestCase {
                 false,
                 WrappedMaterializedBlobType.class,
                 false,
-                true
+                false
         );
         checkHibernateTypeDescriptor( expectedValue, "bytes" );
     }
@@ -216,7 +217,7 @@ public class LobBindingTests extends BaseAnnotationBindingTestCase {
                 false,
                 MaterializedBlobType.class,
                 false,
-                true
+                false
         );
         checkHibernateTypeDescriptor( expectedValue, "bytes2" );
     }
@@ -236,7 +237,7 @@ public class LobBindingTests extends BaseAnnotationBindingTestCase {
 
         assertTrue(
                 getTypeDescriptor( "serializable" ).getTypeParameters()
-                        .get( SerializableToBlobType.CLASS_NAME )
+                        .get( DynamicParameterizedType.RETURNED_CLASS )
                         .equals( Thing.class.getName() )
         );
     }

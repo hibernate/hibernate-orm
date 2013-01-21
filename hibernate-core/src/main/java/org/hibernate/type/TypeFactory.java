@@ -130,9 +130,9 @@ public final class TypeFactory implements Serializable {
 		if ( ParameterizedType.class.isInstance( type ) ) {
 			( (ParameterizedType) type ).setParameterValues(parameters);
 		}
-		else if ( parameters!=null && !parameters.isEmpty() ) {
-			throw new MappingException( "type is not parameterized: " + type.getClass().getName() );
-		}
+//		else if ( parameters!=null && !parameters.isEmpty() ) {
+//			throw new MappingException( "type is not parameterized: " + type.getClass().getName() );
+//		}
 	}
 
 	public CompositeCustomType customComponent(Class<CompositeUserType> typeClass, Properties parameters) {

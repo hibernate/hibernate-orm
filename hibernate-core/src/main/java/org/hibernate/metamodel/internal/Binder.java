@@ -1056,8 +1056,15 @@ public class Binder {
 		return attributeBinding;
 	}
 
-
-
+	/**
+	 * todo: if the not found exception is ignored, here we should create an unique key instead of FK
+	 * this guard method should be removed after we implement this.
+	 */
+	private void throwExceptionIfNotFoundIgnored(boolean isNotFoundAnException) {
+		if ( !isNotFoundAnException ) {
+			throw new NotYetImplementedException( "association of ignored not found exception is not yet implemented" );
+		}
+	}
 
 	private ManyToOneAttributeBinding bindManyToOneAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
@@ -1067,6 +1074,7 @@ public class Binder {
 				attribute != null ?
 						attribute :
 						createSingularAttribute( attributeBindingContainer, attributeSource );
+		throwExceptionIfNotFoundIgnored( attributeSource.isNotFoundAnException() );
 
 		ToOneAttributeBindingContext toOneAttributeBindingContext = new ToOneAttributeBindingContext() {
 			@Override
@@ -1787,7 +1795,7 @@ public class Binder {
 			final OneToManyPluralAttributeElementSource elementSource,
 			final EntityBinding referencedEntityBinding,
 			final String defaultElementJavaTypeName) {
-
+		throwExceptionIfNotFoundIgnored( elementSource.isNotFoundAnException() );
 		elementBinding.setElementEntityIdentifier(
 				referencedEntityBinding.getHierarchyDetails().getEntityIdentifier()
 		);
@@ -1818,7 +1826,7 @@ public class Binder {
 			final ManyToManyPluralAttributeElementSource elementSource,
 			final EntityBinding referencedEntityBinding,
 			final String defaultElementJavaTypeName) {
-
+		throwExceptionIfNotFoundIgnored( elementSource.isNotFoundAnException() );
 		final List<Column> targetColumns =
 				determineForeignKeyTargetColumns( referencedEntityBinding, elementSource );
 		final List<DefaultNamingStrategy> namingStrategies = new ArrayList<DefaultNamingStrategy>( targetColumns.size() );

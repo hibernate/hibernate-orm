@@ -130,11 +130,16 @@ public class SchemaExport {
 		this.createSQL = configuration.generateSchemaCreationScript( dialect );
 	}
 
-	public SchemaExport(MetadataImplementor metadata) {
+	public SchemaExport(MetadataImplementor metadata, Connection connection){
 		ServiceRegistry serviceRegistry = metadata.getServiceRegistry();
-		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
-				serviceRegistry.getService( ConnectionProvider.class )
-		);
+		if ( connection != null ) {
+			this.connectionHelper = new SuppliedConnectionHelper( connection );
+		}
+		else {
+			this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
+					serviceRegistry.getService( ConnectionProvider.class )
+			);
+		}
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
@@ -179,6 +184,9 @@ public class SchemaExport {
 
 		schemaManagementTool.getSchemaCreator( settings ).doCreation( metadata.getDatabase(), false, target );
 		this.createSQL = commands.toArray( new String[commands.size()] );
+	}
+	public SchemaExport(MetadataImplementor metadata) {
+		this(metadata, null);
 	}
 
 	/**

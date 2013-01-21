@@ -39,7 +39,6 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -78,7 +77,6 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	 */
 	@Override
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testConnectedSerialization() throws Throwable {
 		super.testConnectedSerialization();
 	}
@@ -90,7 +88,6 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	 */
 	@Override
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testManualDisconnectWithOpenResources() throws Throwable {
 		super.testManualDisconnectWithOpenResources();
 	}
@@ -152,7 +149,7 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 		super.prepareTest();
 		Connection conn = cp.getConnection();
 		try {
-			new SchemaExport( configuration(), conn ).create( false, true );
+			new SchemaExport( metadata(), conn ).create( false, true );
 		}
 		finally {
 			if ( conn != null ) {
@@ -169,7 +166,7 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	protected void cleanupTest() throws Exception {
 		Connection conn = cp.getConnection();
 		try {
-			new SchemaExport( configuration(), conn ).drop( false, true );
+			new SchemaExport( metadata(), conn ).drop( false, true );
 		}
 		finally {
 			if ( conn != null ) {

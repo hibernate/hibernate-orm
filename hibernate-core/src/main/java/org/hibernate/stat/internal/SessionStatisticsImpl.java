@@ -60,7 +60,7 @@ public class SessionStatisticsImpl implements SessionStatistics {
 		return new StringBuilder()
 			.append("SessionStatistics[")
 			.append("entity count=").append( getEntityCount() )
-			.append("collection count=").append( getCollectionCount() )
+			.append(",collection count=").append( getCollectionCount() )
 			.append(']')
 			.toString();
 	}

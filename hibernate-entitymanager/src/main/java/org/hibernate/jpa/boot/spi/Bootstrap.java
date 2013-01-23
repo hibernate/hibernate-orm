@@ -23,8 +23,9 @@
  */
 package org.hibernate.jpa.boot.spi;
 
-import javax.persistence.spi.PersistenceUnitInfo;
 import java.util.Map;
+
+import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
@@ -33,6 +34,7 @@ import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
  * Entry into the bootstrap process.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public final class Bootstrap {
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
@@ -40,10 +42,23 @@ public final class Bootstrap {
 			Map integration) {
 		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration );
 	}
+	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			Map integration,
+			ClassLoader providedClassLoader) {
+		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, providedClassLoader );
+	}
 
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitInfo persistenceUnitInfo,
 			Map integration) {
 		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration );
+	}
+
+	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitInfo persistenceUnitInfo,
+			Map integration,
+			ClassLoader providedClassLoader) {
+		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, providedClassLoader );
 	}
 }

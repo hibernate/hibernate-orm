@@ -9,6 +9,7 @@ dependencies {
     compile( libraries.jpa )
     compile( libraries.jta )
     compile( libraries.javassist )
+    compile( libraries.osgi )
     provided( "javax.enterprise:cdi-api:1.0-SP4" )
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.shrinkwrap_api )
@@ -19,6 +20,26 @@ dependencies {
     testCompile( "org.jboss.weld:weld-core:1.1.9.Final" )
     testRuntime( "org.glassfish.web:el-impl:2.1.2-b04" )
     testRuntime( "org.jboss.ejb3:jboss-ejb3-api:3.1.0" )
+}
+
+jar {
+    manifest {
+        instruction 'Bundle-Activator', 'org.hibernate.jpa.osgi.HibernateBundleActivator'
+        instruction 'Bundle-Description', 'Hibernate ORM JPA Entity Manager'
+        instruction 'Bundle-SymbolicName', 'org.hibernate.entitymanager'
+        
+        // A cdi-api OSGi bundle does not currently exist.  For now, explicitly
+        // ignore its packages.  This will only cause issues if an app tries
+        // to use the BeanManagerListenerFactory functionality.
+        // NOTE: The "!" negates the package, keeping it out of Import-Package
+        // and including it in Ignore-Package.  Also note that '*' does not mean
+        // <Import-Package>*</ImportPackage> will occur.  This is simply a
+        // BND instruction -- the auto-discovery of imported packages still
+        // occurs.
+        instruction 'Import-Package',
+            '!javax.enterprise*',
+            '*'
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

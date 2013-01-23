@@ -68,6 +68,8 @@ subprojects { subProject ->
         apply plugin: 'java'
         apply plugin: 'maven' // for install task as well as deploy dependencies
         apply plugin: 'uploadAuth'
+        apply plugin: 'osgi'
+        apply from: "../utilities.gradle"
 
         configurations {
             provided {
@@ -169,13 +171,54 @@ subprojects { subProject ->
         compileJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
         compileTestJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 
-        manifest.mainAttributes(
-                provider: 'gradle',
-                'Implementation-Url': 'http://hibernate.org',
-                'Implementation-Version': version,
-                'Implementation-Vendor': 'Hibernate.org',
-                'Implementation-Vendor-Id': 'org.hibernate'
-        )
+        jar {
+            Set<String> exportPackages = new HashSet<String>()
+            Set<String> privatePackages = new HashSet<String>()
+            
+            // TODO: Could more of this be pulled into utilities.gradle?
+            sourceSets.each { SourceSet sourceSet ->
+                        // skip certain source sets
+                        if ( ! ['test','matrix'].contains( sourceSet.name ) ) {
+                            sourceSet.java.each { javaFile ->
+                                // - org.hibernate.boot.registry.classloading.internal
+                                // until EntityManagerFactoryBuilderImpl no longer imports ClassLoaderServiceImpl
+                                // - .util for external module use (especially envers)
+                                final String[] temporaryExports = [
+                                    'org.hibernate.boot.registry.classloading.internal',
+                                    'org.hibernate.internal.util' ]
+                            
+                                final String packageName = determinePackageName( sourceSet.java, javaFile );
+                                if ( ! temporaryExports.contains( packageName )
+                                        && ( packageName.endsWith( ".internal" )
+                                        || packageName.contains( ".internal." )
+                                        || packageName.endsWith( ".test" )
+                                        || packageName.contains( ".test." ) ) ) {
+                                    privatePackages.add( packageName );
+                                }
+                                else {
+                                    exportPackages.add( packageName );
+                                }
+                            }
+                        }
+                    }
+
+            manifest = osgiManifest {
+                // GRADLE-1411: Even if we override Imports and Exports
+                // auto-generation with instructions, classesDir and classpath
+                // need to be here (temporarily).
+                classesDir = sourceSets.main.output.classesDir
+                classpath = configurations.runtime
+                
+                instruction 'Export-Package', exportPackages.toArray(new String[0])
+                instruction 'Private-Package', privatePackages.toArray(new String[0])
+                instruction 'Bundle-Vendor', 'Hibernate.org'
+                
+                instruction 'Implementation-Url', 'http://hibernate.org'
+                instruction 'Implementation-Version', version
+                instruction 'Implementation-Vendor', 'Hibernate.org'
+                instruction 'Implementation-Vendor-Id', 'org.hibernate'
+            }
+        }
 
         test {
             systemProperties['hibernate.test.validatefailureexpected'] = true

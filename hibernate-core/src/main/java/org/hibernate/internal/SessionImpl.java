@@ -74,8 +74,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionException;
-import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
@@ -100,6 +98,7 @@ import org.hibernate.engine.spi.NonFlushedChanges;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
@@ -150,6 +149,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.SessionStatistics;
@@ -1562,14 +1562,17 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return new CriteriaImpl(entityName, this);
 	}
 
-	public ScrollableResults scroll(CriteriaImpl criteria, ScrollMode scrollMode) {
+	public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode) {
+		// TODO: Is this guaranteed to always be CriteriaImpl?
+		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
+		
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		String entityName = criteria.getEntityOrClassName();
+		String entityName = criteriaImpl.getEntityOrClassName();
 		CriteriaLoader loader = new CriteriaLoader(
 				getOuterJoinLoadable(entityName),
 				factory,
-				criteria,
+				criteriaImpl,
 				entityName,
 				getLoadQueryInfluencers()
 		);
@@ -1583,8 +1586,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
-	public List list(CriteriaImpl criteria) throws HibernateException {
-		final NaturalIdLoadAccess naturalIdLoadAccess = this.tryNaturalIdLoadAccess( criteria );
+	public List list(Criteria criteria) throws HibernateException {
+		// TODO: Is this guaranteed to always be CriteriaImpl?
+		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
+				
+		final NaturalIdLoadAccess naturalIdLoadAccess = this.tryNaturalIdLoadAccess( criteriaImpl );
 		if ( naturalIdLoadAccess != null ) {
 			// EARLY EXIT!
 			return Arrays.asList( naturalIdLoadAccess.load() );
@@ -1592,7 +1598,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		String[] implementors = factory.getImplementors( criteria.getEntityOrClassName() );
+		String[] implementors = factory.getImplementors( criteriaImpl.getEntityOrClassName() );
 		int size = implementors.length;
 
 		CriteriaLoader[] loaders = new CriteriaLoader[size];
@@ -1602,7 +1608,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			loaders[i] = new CriteriaLoader(
 					getOuterJoinLoadable( implementors[i] ),
 					factory,
-					criteria,
+					criteriaImpl,
 					implementors[i],
 					getLoadQueryInfluencers()
 				);

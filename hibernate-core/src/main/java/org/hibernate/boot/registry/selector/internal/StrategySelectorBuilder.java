@@ -26,9 +26,7 @@ package org.hibernate.boot.registry.selector.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.Availability;
 import org.hibernate.boot.registry.selector.AvailabilityAnnouncer;
 import org.hibernate.boot.registry.selector.SimpleAvailabilityImpl;
@@ -97,6 +95,7 @@ import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.PersistentTableBulkIdStrategy;
 import org.hibernate.hql.spi.TemporaryTableBulkIdStrategy;
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -127,7 +126,7 @@ public class StrategySelectorBuilder {
 		explicitAvailabilities.add( availability );
 	}
 
-	public StrategySelector buildSelector(ClassLoaderServiceImpl classLoaderService) {
+	public StrategySelector buildSelector(ClassLoaderService classLoaderService) {
 		StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
 
 		// build the baseline...

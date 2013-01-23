@@ -34,8 +34,10 @@ import org.hibernate.type.Type;
 
 /**
  * Represents an order imposed upon a <tt>Criteria</tt> result set
+ * 
  * @author Gavin King
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Brett Meyer
  */
 public class Order implements Serializable {
 	private boolean ascending;
@@ -95,6 +97,18 @@ public class Order implements Serializable {
 			if ( i<columns.length-1 ) fragment.append(", ");
 		}
 		return fragment.toString();
+	}
+	
+	public String getPropertyName() {
+		return propertyName;
+	}
+
+	public boolean isAscending() {
+		return ascending;
+	}
+
+	public boolean isIgnoreCase() {
+		return ignoreCase;
 	}
 
 	/**

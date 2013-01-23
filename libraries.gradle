@@ -57,7 +57,7 @@ ext {
             jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Draft-10',
             jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.1_spec:1.0.0.Final',
             validation:     'javax.validation:validation-api:1.0.0.GA',
-            jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.0.Final',
+            jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.2.Final',
 
             // logging
             logging:        'org.jboss.logging:jboss-logging:3.1.0.GA',
@@ -102,7 +102,7 @@ ext {
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~ c3p0
             c3p0:            "c3p0:c3p0:0.9.1",
             ehcache:         "net.sf.ehcache:ehcache-core:2.4.3",
-            proxool:         "proxool:proxool:0.8.3",
+            proxool:         "proxool:proxool:0.8.3"
 
         ]
 }

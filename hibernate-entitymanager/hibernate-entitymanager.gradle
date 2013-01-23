@@ -21,6 +21,25 @@ dependencies {
     testRuntime( "org.jboss.ejb3:jboss-ejb3-api:3.1.0" )
 }
 
+jar {
+    manifest {
+        instruction 'Bundle-Description', 'Hibernate ORM JPA Entity Manager'
+        instruction 'Bundle-SymbolicName', 'org.hibernate.entitymanager'
+        
+        // A cdi-api OSGi bundle does not currently exist.  For now, explicitly
+        // ignore its packages.  This will only cause issues if an app tries
+        // to use the BeanManagerListenerFactory functionality.
+        // NOTE: The "!" negates the package, keeping it out of Import-Package
+        // and including it in Ignore-Package.  Also note that '*' does not mean
+        // <Import-Package>*</ImportPackage> will occur.  This is simply a
+        // BND instruction -- the auto-discovery of imported packages still
+        // occurs.
+        instruction 'Import-Package',
+            '!javax.enterprise*',
+            '*'
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JPA model-gen set up
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

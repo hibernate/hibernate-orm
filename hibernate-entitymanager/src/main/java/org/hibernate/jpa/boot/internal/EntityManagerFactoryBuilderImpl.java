@@ -156,6 +156,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private Configuration hibernateConfiguration;
 
 	private static EntityNotFoundDelegate jpaEntityNotFoundDelegate = new JpaEntityNotFoundDelegate();
+	
+	private ClassLoader providedClassLoader;
 
 	private static class JpaEntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
 		public void handleEntityNotFound(String entityName, Serializable id) {
@@ -164,6 +166,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	public EntityManagerFactoryBuilderImpl(PersistenceUnitDescriptor persistenceUnit, Map integrationSettings) {
+		this( persistenceUnit, integrationSettings, null );
+	}
+
+	public EntityManagerFactoryBuilderImpl(
+			PersistenceUnitDescriptor persistenceUnit,
+			Map integrationSettings,
+			ClassLoader providedClassLoader ) {
+		
 		LogHelper.logPersistenceUnitInformation( persistenceUnit );
 
 		this.persistenceUnit = persistenceUnit;
@@ -171,6 +181,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( integrationSettings == null ) {
 			integrationSettings = Collections.emptyMap();
 		}
+		
+		this.providedClassLoader = providedClassLoader;
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// First we build the boot-strap service registry, which mainly handles class loader interactions
@@ -346,14 +358,22 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		ClassLoader classLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
-		if ( classLoader != null ) {
+		// TODO: If providedClassLoader is present (OSGi, etc.) *and*
+		// an APP_CLASSLOADER is provided, should throw an exception or
+		// warn?
+		ClassLoader classLoader;
+		ClassLoader appClassLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
+		if ( providedClassLoader != null ) {
+			classLoader = providedClassLoader;
+		}
+		else if ( appClassLoader != null ) {
+			classLoader = appClassLoader;
 			integrationSettings.remove( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
 		}
 		else {
 			classLoader = persistenceUnit.getClassLoader();
 		}
-		bootstrapServiceRegistryBuilder.withApplicationClassLoader( classLoader );
+		bootstrapServiceRegistryBuilder.with( classLoader );
 
 		return bootstrapServiceRegistryBuilder.build();
 	}
@@ -662,6 +682,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( scanningContext.getUrl() == null ) {
 			// not sure i like just ignoring this being null, but this is exactly what the old code does...
 			LOG.containerProvidingNullPersistenceUnitRootUrl();
+			return;
+		}
+		if ( scanningContext.getUrl().getProtocol().equalsIgnoreCase( "bundle" ) ) {
+			// TODO: Is there a way to scan the root bundle URL in OSGi containers?
+			// Although the URL provides a stream handler that works for finding
+			// resources in a specific Bundle, the root one does not work.
 			return;
 		}
 

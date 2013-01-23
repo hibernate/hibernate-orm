@@ -23,15 +23,16 @@
  */
 package org.hibernate.jpa;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.ProviderUtil;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
@@ -45,6 +46,7 @@ import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class HibernatePersistenceProvider implements PersistenceProvider {
 

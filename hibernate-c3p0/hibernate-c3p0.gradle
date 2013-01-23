@@ -9,3 +9,10 @@ dependencies {
     }
     testCompile project( ':hibernate-testing' )
 }
+
+jar {
+    manifest {
+        instruction 'Bundle-Description', 'Hibernate ORM C3P0'
+        instruction 'Bundle-SymbolicName', 'org.hibernate.c3p0'
+    }
+}

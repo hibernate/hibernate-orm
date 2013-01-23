@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.CacheMode;
+import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -170,11 +171,11 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	/**
 	 * Execute a criteria query
 	 */
-	public ScrollableResults scroll(CriteriaImpl criteria, ScrollMode scrollMode);
+	public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode);
 	/**
 	 * Execute a criteria query
 	 */
-	public List list(CriteriaImpl criteria);
+	public List list(Criteria criteria);
 
 	/**
 	 * Execute a filter

@@ -71,7 +71,14 @@ public class Order implements Serializable {
 		StringBuilder fragment = new StringBuilder();
 		for ( int i=0; i<columns.length; i++ ) {
 			SessionFactoryImplementor factory = criteriaQuery.getFactory();
-			boolean lower = ignoreCase && type.sqlTypes( factory )[i]==Types.VARCHAR;
+			boolean lower = false;
+			if ( ignoreCase ) {
+				int sqlType = type.sqlTypes( factory )[i];
+				lower = sqlType == Types.VARCHAR
+						|| sqlType == Types.CHAR
+						|| sqlType == Types.LONGVARCHAR;
+			}
+			
 			if (lower) {
 				fragment.append( factory.getDialect().getLowercaseFunction() )
 					.append('(');

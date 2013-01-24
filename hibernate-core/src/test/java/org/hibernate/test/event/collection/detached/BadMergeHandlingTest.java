@@ -23,17 +23,6 @@
  */
 package org.hibernate.test.event.collection.detached;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.Session;
@@ -53,7 +42,7 @@ public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Customer.class, Alias.class, CreditCard.class };
+		return new Class[] { Character.class, Alias.class };
 	}
 
 	@Test
@@ -61,10 +50,11 @@ public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 	public void testMergeAndHold() {
 		Session s = openSession();
 		s.beginTransaction();
-		Customer paul = new Customer( 1, "Paul Atreides" );
+
+		Character paul = new Character( 1, "Paul Atreides" );
 		s.persist( paul );
-        Customer duke = new Customer( 2, "Duke Leto" );
-        s.persist( duke );
+		Character paulo = new Character( 2, "Paulo Atreides" );
+		s.persist( paulo );
 
 		Alias alias1 = new Alias( 1, "Paul Muad'Dib" );
 		s.persist( alias1 );
@@ -75,12 +65,6 @@ public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 		Alias alias3 = new Alias( 3, "The Preacher" );
 		s.persist( alias3 );
 
-		CreditCard cc1 = new CreditCard( 1 );
-		s.persist( cc1 );
-
-		CreditCard cc2 = new CreditCard( 2 );
-		s.persist( cc2 );
-
 		s.getTransaction().commit();
 		s.close();
 
@@ -88,29 +72,24 @@ public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 
-        // customer 1
-		alias1.customers.add( paul );
+		// customer 1
+		alias1.getCharacters().add( paul );
 		s.merge( alias1 );
-		alias2.customers.add( paul );
+		alias2.getCharacters().add( paul );
 		s.merge( alias2 );
-		alias3.customers.add( paul );
+		alias3.getCharacters().add( paul );
 		s.merge( alias3 );
 
-        s.flush();
+		s.flush();
 
-        // customer 2
-        alias1.customers.add( duke );
-        s.merge( alias1 );
-        alias2.customers.add( duke );
-        s.merge( alias2 );
-        alias3.customers.add( duke );
-        s.merge( alias3 );
-        s.flush();
-
-		cc1.customer = paul;
-		s.merge( cc1 );
-		cc2.customer = paul;
-		s.merge( cc2 );
+		// customer 2
+		alias1.getCharacters().add( paulo );
+		s.merge( alias1 );
+		alias2.getCharacters().add( paulo );
+		s.merge( alias2 );
+		alias3.getCharacters().add( paulo );
+		s.merge( alias3 );
+		s.flush();
 
 		s.getTransaction().commit();
 		s.close();
@@ -118,7 +97,7 @@ public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 		// now try to read them back (I guess)
 		s = openSession();
 		s.beginTransaction();
-		List results = s.createQuery( "select c from Customer c join c.aliases a where a.alias = :aParam" )
+		List results = s.createQuery( "select c from Character c join c.aliases a where a.alias = :aParam" )
 				.setParameter( "aParam", "Usul" )
 				.list();
 		assertEquals( 2, results.size() );
@@ -126,63 +105,4 @@ public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@Entity( name="Customer" )
-	public static class Customer {
-		@Id
-		private Integer id;
-		private String name;
-		@ManyToMany( cascade= CascadeType.ALL, mappedBy="customers" )
-		private Collection<Alias> aliases = new ArrayList<Alias>();
-		@OneToMany(cascade=CascadeType.ALL, mappedBy="customer")
-		private Collection<CreditCard> creditCards = new ArrayList<CreditCard>();
-
-		public Customer() {
-		}
-
-		public Customer(Integer id, String name) {
-			this.id = id;
-			this.name = name;
-		}
-	}
-
-	@Entity( name="Alias" )
-	public static class Alias {
-		@Id
-		private Integer id;
-		private String alias;
-		@ManyToMany(cascade=CascadeType.ALL)
-		@JoinTable(name="FKS_ALIAS_CUSTOMER",
-				   joinColumns=
-				   @JoinColumn(
-						   name="FK_FOR_ALIAS_TABLE", referencedColumnName="ID"),
-				   inverseJoinColumns=
-				   @JoinColumn(
-						   name="FK_FOR_CUSTOMER_TABLE", referencedColumnName="ID")
-		)
-		private Collection<Customer> customers = new ArrayList<Customer>();
-
-		public Alias() {
-		}
-
-		public Alias(Integer id, String alias) {
-			this.id = id;
-			this.alias = alias;
-		}
-	}
-
-	@Entity( name="CreditCard" )
-	public static class CreditCard {
-		@Id
-		private Integer id;
-		@ManyToOne(cascade=CascadeType.ALL)
-		@JoinColumn (name="FK3_FOR_CUSTOMER_TABLE")
-		private Customer customer;
-
-		public CreditCard() {
-		}
-
-		public CreditCard(Integer id) {
-			this.id = id;
-		}
-	}
 }

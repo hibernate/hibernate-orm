@@ -267,6 +267,8 @@ public final class CollectionEntry implements Serializable {
 		return snapshot;
 	}
 
+	private boolean fromMerge = false;
+
 	/**
 	 * Reset the stored snapshot for both the persistent collection and this collection entry. 
 	 * Used during the merge of detached collections.
@@ -276,9 +278,14 @@ public final class CollectionEntry implements Serializable {
 	 */
 	public void resetStoredSnapshot(PersistentCollection collection, Serializable storedSnapshot) {
 		LOG.debugf("Reset storedSnapshot to %s for %s", storedSnapshot, this);
-		
+
+		if ( fromMerge ) {
+			return; // EARLY EXIT!
+		}
+
 		snapshot = storedSnapshot;
-		collection.setSnapshot(loadedKey, role, snapshot);
+		collection.setSnapshot( loadedKey, role, snapshot );
+		fromMerge = true;
 	}
 
 	private void setLoadedPersister(CollectionPersister persister) {

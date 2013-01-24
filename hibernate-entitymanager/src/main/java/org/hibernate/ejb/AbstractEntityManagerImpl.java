@@ -810,9 +810,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch ( EntityNotFoundException ignored ) {
 			// DefaultLoadEventListener.returnNarrowedProxy may throw ENFE (see HHH-7861 for details),
 			// which find() should not throw.  Find() should return null if the entity was not found.
-            if ( LOG.isDebugEnabled() ) {
-                LOG.ignoringEntityNotFound( entityClass != null ? entityClass.getName(): null, ignored );
-            }
+			if ( LOG.isDebugEnabled() ) {
+				String entityName = entityClass != null ? entityClass.getName(): null;
+				String identifierValue = primaryKey != null ? primaryKey.toString() : null ;
+				LOG.ignoringEntityNotFound( entityName, identifierValue );
+			}
 			return null;
 		}
 		catch ( ObjectDeletedException e ) {

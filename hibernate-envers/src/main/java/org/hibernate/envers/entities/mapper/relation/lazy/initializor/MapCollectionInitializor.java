@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * Initializes a map.
@@ -57,10 +59,12 @@ public class MapCollectionInitializor<T extends Map> extends AbstractCollectionI
 
     protected T initializeCollection(int size) {
         try {
-            return collectionClass.newInstance();
+            return (T) ReflectHelper.getDefaultConstructor(collectionClass).newInstance();
         } catch (InstantiationException e) {
             throw new AuditException(e);
         } catch (IllegalAccessException e) {
+            throw new AuditException(e);
+        } catch (InvocationTargetException e) {
             throw new AuditException(e);
         }
     }

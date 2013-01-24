@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.event.collection.detached;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,7 +35,6 @@ import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
-import org.hibernate.internal.util.SerializationHelper;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +44,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 
 /**
  * @author Steve Ebersole
@@ -197,7 +194,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		checkListener( 1, PostCollectionUpdateEvent.class, alias1, alias1CharactersSnapshot );
 //		checkListener( 2, PreCollectionUpdateEvent.class, paul, Collections.EMPTY_LIST );
 //		checkListener( 3, PostCollectionUpdateEvent.class, paul, paul.getAliases() );
-		checkListener( 4, PreCollectionUpdateEvent.class, alias2, Collections.EMPTY_LIST );
+		checkListener( 4, PreCollectionUpdateEvent.class, alias2, alias2CharactersSnapshot );
 		checkListener( 5, PostCollectionUpdateEvent.class, alias2, alias2.getCharacters() );
 //		checkListener( 6, PreCollectionUpdateEvent.class, paulo, Collections.EMPTY_LIST );
 //		checkListener( 7, PostCollectionUpdateEvent.class, paulo, paul.getAliases() );
@@ -236,9 +233,12 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 				|| event instanceof PreCollectionRemoveEvent
 				|| event instanceof PostCollectionRecreateEvent ) {
 			List<Identifiable> snapshot = (List) eventEntry.getSnapshotAtTimeOfEventHandling();
-			for ( Identifiable element : snapshot ) {
-				assertEquals( expectedOwner.getClass().getName(), event.getAffectedOwnerEntityName() );
-				assertEquals( expectedOwner.getId(), event.getAffectedOwnerIdOrNull() );
+			assertEquals( expectedCollectionEntrySnapshot.size(), snapshot.size() );
+			for ( int i = 0; i < expectedCollectionEntrySnapshot.size(); i++ ) {
+				Identifiable expected = expectedCollectionEntrySnapshot.get( i );
+				Identifiable found = snapshot.get( i );
+				assertEquals( expected.getClass().getName(), found.getClass().getName() );
+				assertEquals( expected.getId(), found.getId() );
 			}
 		}
 	}

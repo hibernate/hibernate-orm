@@ -51,7 +51,7 @@
             <para>
                 The first thing we need to do is to set up the development environment.  We
                 will be using the "standard layout" advocated by alot of build tools such
-                as <link xlink:href="http://maven.org" xmlns:xlink="http://www.w3.org/1999/xlink">Maven</link>.
+                as <link xlink:href="http://maven.apache.org" xmlns:xlink="http://www.w3.org/1999/xlink">Maven</link>.
                 Maven, in particular, has a
                 good resource describing this
                 <link xlink:href="http://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html" xmlns:xlink="http://www.w3.org/1999/xlink">layout</link>.

@@ -1,7 +1,9 @@
 package org.hibernate.envers.test.integration.ids.protectedmodifier;
 
 import java.io.Serializable;
+import javax.persistence.Embeddable;
 
+@Embeddable
 public class WrappedStringId implements Serializable {
 	String id;
 

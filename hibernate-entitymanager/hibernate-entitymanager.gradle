@@ -22,6 +22,14 @@ dependencies {
     testRuntime( "org.jboss.ejb3:jboss-ejb3-api:3.1.0" )
 }
 
+jar {
+    manifest {
+        instruction 'Bundle-Activator', 'org.hibernate.osgi.internal.HibernateBundleActivator'
+        instruction 'Bundle-Description', 'Hibernate ORM JPA Entity Manager'
+        instruction 'Bundle-SymbolicName', 'org.hibernate.entitymanager'
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JPA model-gen set up
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

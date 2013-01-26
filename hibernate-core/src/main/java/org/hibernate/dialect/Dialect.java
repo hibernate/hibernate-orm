@@ -23,41 +23,13 @@
  */
 package org.hibernate.dialect;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.NClob;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CastFunction;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.dialect.function.*;
+import org.hibernate.dialect.lock.*;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.spi.ConversionContext;
@@ -74,15 +46,17 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.mapping.Column;
 import org.hibernate.persister.entity.Lockable;
-import org.hibernate.sql.ANSICaseFragment;
-import org.hibernate.sql.ANSIJoinFragment;
-import org.hibernate.sql.CaseFragment;
-import org.hibernate.sql.ForUpdateFragment;
-import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.*;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.jboss.logging.Logger;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.*;
+import java.util.*;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.
@@ -1144,7 +1118,7 @@ public abstract class Dialect implements ConversionContext {
             case PESSIMISTIC_FORCE_INCREMENT:
                 return getForUpdateNowaitString();
             case UPGRADE_SKIPLOCKED:
-                return getForUpdateNowaitString();
+                return getForUpdateSkipLockedString();
             default:
                 return "";
         }

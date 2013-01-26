@@ -31,7 +31,6 @@ import org.hibernate.Session;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotSame;
@@ -82,7 +81,6 @@ public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
 
 		s.close();
 	}
-	@FailureExpectedWithNewMetamodel
 	@Test
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testHqlQueryPlanWithEnabledFilter() {

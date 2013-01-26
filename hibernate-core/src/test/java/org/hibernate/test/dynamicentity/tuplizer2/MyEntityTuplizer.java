@@ -56,6 +56,9 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
 	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
 		return new MyEntityInstantiator( persistentClass.getEntityName() );
 	}
+	protected Instantiator buildInstantiator(EntityBinding persistentClass) {
+		return new MyEntityInstantiator( persistentClass.getEntityName() );
+	}
 
 	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {
 		String entityName = ProxyHelper.extractEntityName( entityInstance );

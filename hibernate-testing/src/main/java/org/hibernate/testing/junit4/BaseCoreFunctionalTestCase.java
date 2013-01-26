@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -197,6 +198,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 		if ( configuration.getSessionFactoryObserver() != null ){
 			sessionFactoryBuilder.add( configuration.getSessionFactoryObserver() );
+		}
+		if ( configuration.getInterceptor() != EmptyInterceptor.INSTANCE ) {
+			sessionFactoryBuilder.with( configuration.getInterceptor() );
 		}
 	}
 

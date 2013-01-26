@@ -35,7 +35,6 @@ import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
 import org.hibernate.test.dynamicentity.Person;
 import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -54,7 +53,6 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class TuplizerDynamicEntityTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

@@ -29,6 +29,7 @@ import java.util.Map;
 import antlr.collections.AST;
 import org.jboss.logging.Logger;
 
+import org.hibernate.Filter;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.FromElement;
@@ -164,7 +165,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 	public void addDiscriminatorWhereFragment(
 			RestrictableStatement statement,
 			Queryable persister,
-			Map enabledFilters,
+			Map<String,Filter> enabledFilters,
 			String alias) {
 		String whereFragment = persister.filterFragment( alias, enabledFilters ).trim();
 		if ( "".equals( whereFragment ) ) {

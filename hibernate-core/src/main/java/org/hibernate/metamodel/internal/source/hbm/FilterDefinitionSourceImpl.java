@@ -28,6 +28,7 @@ import java.util.List;
 
 import javax.xml.bind.JAXBElement;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbFilterDefElement;
 import org.hibernate.jaxb.spi.hbm.JaxbFilterParamElement;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
@@ -55,7 +56,10 @@ public class FilterDefinitionSourceImpl
 		final List<FilterParameterSource> parameterSources = new ArrayList<FilterParameterSource>();
 		for ( Object content : filterDefElement.getContent() ) {
 			if ( String.class.isInstance( content ) ){
-				conditionContent = (String) content;
+				final String str = content.toString();
+				if ( !StringHelper.isEmptyOrWhiteSpace( str ) ) {
+					conditionContent = str.trim();
+				}
 			}
 			else if ( JAXBElement.class.isInstance( content ) ) {
 				JAXBElement jaxbElement = JAXBElement.class.cast( content );

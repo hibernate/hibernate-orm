@@ -57,7 +57,10 @@ public class FilterSourceImpl
 
 		for ( Serializable content : filterElement.getContent() ) {
 			if ( String.class.isInstance( content ) ) {
-				conditionContent = String.class.cast( content );
+				final String str = content.toString();
+				if ( !StringHelper.isEmptyOrWhiteSpace( str ) ) {
+					conditionContent = str.trim();
+				}
 			}
 			else {
 				final JaxbFilterAliasMappingType aliasMapping = JaxbFilterAliasMappingType.class.cast( content );

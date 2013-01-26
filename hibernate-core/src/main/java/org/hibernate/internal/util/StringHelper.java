@@ -452,6 +452,10 @@ public final class StringHelper {
 		return string == null || string.length() == 0;
 	}
 
+	public static boolean isEmptyOrWhiteSpace(String string){
+		return isEmpty( string ) || isEmpty( string.trim() );
+	}
+
 	public static String qualify(String prefix, String name) {
 		if ( name == null || prefix == null ) {
 			throw new NullPointerException();

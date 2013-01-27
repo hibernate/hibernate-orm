@@ -134,6 +134,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				return tableName + " with (updlock, rowlock)";
 			case PESSIMISTIC_READ:
 				return tableName + " with (holdlock, rowlock)";
+            case UPGRADE_SKIPLOCKED:
+                return tableName + " with (updlock, rowlock, readpast)";
 			default:
 				return tableName;
 		}

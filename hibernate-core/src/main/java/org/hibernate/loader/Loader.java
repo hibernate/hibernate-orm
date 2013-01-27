@@ -254,22 +254,24 @@ public abstract class Loader {
 			Dialect dialect,
 			List<AfterLoadAction> afterLoadActions) {
 		if ( dialect.useFollowOnLocking() ) {
-			LOG.usingFollowOnLocking();
 			// currently only one lock mode is allowed in follow-on locking
 			final LockMode lockMode = determineFollowOnLockMode( parameters.getLockOptions() );
 			final LockOptions lockOptions = new LockOptions( lockMode );
-			lockOptions.setTimeOut( parameters.getLockOptions().getTimeOut() );
-			lockOptions.setScope( parameters.getLockOptions().getScope() );
-			afterLoadActions.add(
-					new AfterLoadAction() {
-						@Override
-						public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
-							( (Session) session ).buildLockRequest( lockOptions ).lock( persister.getEntityName(), entity );
+			if ( lockOptions.getLockMode() != LockMode.UPGRADE_SKIPLOCKED ) {
+				LOG.usingFollowOnLocking();
+				lockOptions.setTimeOut( parameters.getLockOptions().getTimeOut() );
+				lockOptions.setScope( parameters.getLockOptions().getScope() );
+				afterLoadActions.add(
+						new AfterLoadAction() {
+							@Override
+							public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
+								( (Session) session ).buildLockRequest( lockOptions ).lock( persister.getEntityName(), entity );
+							}
 						}
-					}
-			);
-			parameters.setLockOptions( new LockOptions() );
-			return true;
+				);
+				parameters.setLockOptions( new LockOptions() );
+				return true;
+			}
 		}
 		return false;
 	}

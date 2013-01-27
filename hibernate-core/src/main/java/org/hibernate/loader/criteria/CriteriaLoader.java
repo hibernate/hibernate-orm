@@ -205,27 +205,28 @@ public class CriteriaLoader extends OuterJoinLoader {
 		}
 
 		if ( dialect.useFollowOnLocking() ) {
-			// Dialect prefers to perform locking in a separate step
-			LOG.usingFollowOnLocking();
+            final LockMode lockMode = determineFollowOnLockMode( lockOptions );
+            if( lockMode != LockMode.UPGRADE_SKIPLOCKED ) {
+				// Dialect prefers to perform locking in a separate step
+				LOG.usingFollowOnLocking();
 
-			final LockMode lockMode = determineFollowOnLockMode( lockOptions );
-			final LockOptions lockOptionsToUse = new LockOptions( lockMode );
-			lockOptionsToUse.setTimeOut( lockOptions.getTimeOut() );
-			lockOptionsToUse.setScope( lockOptions.getScope() );
+				final LockOptions lockOptionsToUse = new LockOptions( lockMode );
+				lockOptionsToUse.setTimeOut( lockOptions.getTimeOut() );
+				lockOptionsToUse.setScope( lockOptions.getScope() );
 
-			afterLoadActions.add(
-					new AfterLoadAction() {
-						@Override
-						public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
-							( (Session) session ).buildLockRequest( lockOptionsToUse )
-									.lock( persister.getEntityName(), entity );
-						}
-					}
-			);
-			parameters.setLockOptions( new LockOptions() );
-			return sql;
+				afterLoadActions.add(
+						new AfterLoadAction() {
+								@Override
+								public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
+									( (Session) session ).buildLockRequest( lockOptionsToUse )
+										.lock( persister.getEntityName(), entity );
+								}
+				        }
+				);
+				parameters.setLockOptions( new LockOptions() );
+				return sql;
+			}
 		}
-
 		final LockOptions locks = new LockOptions(lockOptions.getLockMode());
 		locks.setScope( lockOptions.getScope());
 		locks.setTimeOut( lockOptions.getTimeOut());

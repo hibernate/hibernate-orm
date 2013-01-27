@@ -375,6 +375,9 @@ public abstract class ResultSetMappingBinder {
 		else if ( "upgrade-nowait".equals( lockMode ) ) {
 			return LockMode.UPGRADE_NOWAIT;
 		}
+		else if ( "upgrade-skiplocked".equals( lockMode )) {
+			return LockMode.UPGRADE_SKIPLOCKED;
+		}
 		else if ( "write".equals( lockMode ) ) {
 			return LockMode.WRITE;
 		}

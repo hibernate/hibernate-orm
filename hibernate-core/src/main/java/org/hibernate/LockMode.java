@@ -66,6 +66,15 @@ public enum LockMode {
 	 * <tt>UPGRADE</tt>.
 	 */
 	UPGRADE_NOWAIT( 10 ),
+
+	/**
+	 * Attempt to obtain an upgrade lock, using an Oracle-style
+	 * <tt>select for update skip locked</tt>. The semantics of
+	 * this lock mode, once obtained, are the same as
+	 * <tt>UPGRADE</tt>.
+	 */
+	UPGRADE_SKIPLOCKED( 10 ),
+
 	/**
 	 * A <tt>WRITE</tt> lock is obtained when an object is updated
 	 * or inserted.   This lock mode is for internal use only and is

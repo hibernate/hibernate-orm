@@ -64,6 +64,12 @@ public class LockOptions implements Serializable {
 	 */
 	public static final int WAIT_FOREVER = -1;
 
+	/**
+	 * Indicates that rows that are already locked should be skipped.
+	 * @see #getTimeOut()
+	 */
+	public static final int SKIP_LOCKED = -2;
+
 	private LockMode lockMode = LockMode.NONE;
 	private int timeout = WAIT_FOREVER;
 
@@ -221,9 +227,9 @@ public class LockOptions implements Serializable {
 	 * The timeout is the amount of time, in milliseconds, we should instruct the database
 	 * to wait for any requested pessimistic lock acquisition.
 	 * <p/>
-	 * {@link #NO_WAIT} and {@link #WAIT_FOREVER} represent 2 "magic" values.
+	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER} or {@link #SKIP_LOCKED} represent 3 "magic" values.
 	 *
-	 * @return timeout in milliseconds, or {@link #NO_WAIT} or {@link #WAIT_FOREVER}
+	 * @return timeout in milliseconds, {@link #NO_WAIT}, {@link #WAIT_FOREVER} or {@link #SKIP_LOCKED}
 	 */
 	public int getTimeOut() {
 		return timeout;

@@ -8,6 +8,7 @@ import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+
 import org.infinispan.AdvancedCache;
 
 /**
@@ -17,22 +18,25 @@ import org.infinispan.AdvancedCache;
  */
 public class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegion {
 
-   public EntityRegionImpl(AdvancedCache cache, String name,
-         CacheDataDescription metadata, RegionFactory factory) {
-      super(cache, name, metadata, factory);
-   }
+	public EntityRegionImpl(AdvancedCache cache, String name,
+							CacheDataDescription metadata, RegionFactory factory) {
+		super( cache, name, metadata, factory );
+	}
 
-   public EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
-      if (AccessType.READ_ONLY.equals(accessType)) {
-         return new ReadOnlyAccess(this);
-      } else if (AccessType.TRANSACTIONAL.equals(accessType)) {
-         return new TransactionalAccess(this);
-      }
-      throw new CacheException("Unsupported access type [" + accessType.getExternalName() + "]");
-   }
+	@Override
+	public EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+		switch ( accessType ) {
+			case READ_ONLY:
+				return new ReadOnlyAccess( this );
+			case TRANSACTIONAL:
+				return new TransactionalAccess( this );
+			default:
+				throw new CacheException( "Unsupported access type [" + accessType.getExternalName() + "]" );
+		}
+	}
 
-   public PutFromLoadValidator getPutFromLoadValidator() {
-      return new PutFromLoadValidator(cache);
-   }
+	public PutFromLoadValidator getPutFromLoadValidator() {
+		return new PutFromLoadValidator( cache );
+	}
 
 }

@@ -23,6 +23,7 @@ public abstract class BaseTransactionalDataRegion
       this.metadata = metadata;
    }
 
+	@Override
    public CacheDataDescription getCacheDataDescription() {
       return metadata;
    }

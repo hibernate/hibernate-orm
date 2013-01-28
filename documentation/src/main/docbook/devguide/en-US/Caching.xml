@@ -383,42 +383,12 @@
                   <listitem><para>read-only</para></listitem>
                   <listitem><para>nontrict read-write</para></listitem>
                   <listitem><para>read-write</para></listitem>
-                </itemizedlist>
-              </entry>
-            </row>
-            <row>
-              <entry>OSCache</entry>
-              <entry></entry>
-              <entry>
-                <itemizedlist>
-                  <listitem><para>read-only</para></listitem>
-                  <listitem><para>nontrict read-write</para></listitem>
-                  <listitem><para>read-write</para></listitem>
-                </itemizedlist>
-              </entry>
-            </row>
-            <row>
-              <entry>SwarmCache</entry>
-              <entry></entry>
-              <entry>
-                <itemizedlist>
-                  <listitem><para>read-only</para></listitem>
-                  <listitem><para>nontrict read-write</para></listitem>
-                </itemizedlist>
-              </entry>
-            </row>
-            <row>
-              <entry>JBoss Cache 1.x</entry>
-              <entry></entry>
-              <entry>
-                <itemizedlist>
-                  <listitem><para>read-only</para></listitem>
                   <listitem><para>transactional</para></listitem>
                 </itemizedlist>
               </entry>
             </row>
             <row>
-              <entry>JBoss Cache 2.x</entry>
+              <entry>Infinispan</entry>
               <entry></entry>
               <entry>
                 <itemizedlist>

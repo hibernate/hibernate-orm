@@ -226,7 +226,7 @@ session.close();]]></programlisting>
 
         <para>
             In keeping with the EJB3 specification, HQL <literal>UPDATE</literal> statements, by default, do not effect the
-            <xref linkend="mapping-declaration-version">version</xref>
+            <xref linkend="entity-mapping-entity-version">version</xref>
             or the <xref linkend="mapping-declaration-timestamp">timestamp</xref> property values
             for the affected entities. However,
             you can force Hibernate to reset the <literal>version</literal> or

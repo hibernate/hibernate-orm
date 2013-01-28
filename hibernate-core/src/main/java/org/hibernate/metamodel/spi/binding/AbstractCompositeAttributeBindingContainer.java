@@ -31,6 +31,8 @@ import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
+import org.hibernate.tuple.Tuplizer;
+import org.hibernate.tuple.component.ComponentTuplizer;
 
 /**
  * A container for attribute bindings that make up composite grouping
@@ -89,6 +91,11 @@ public abstract class AbstractCompositeAttributeBindingContainer
 	@Override
 	public TableSpecification getPrimaryTable() {
 		return primaryTable;
+	}
+
+	@Override
+	public Class<? extends ComponentTuplizer> getCustomTuplizerClass() {
+		return null;
 	}
 
 	protected abstract boolean isModifiable();

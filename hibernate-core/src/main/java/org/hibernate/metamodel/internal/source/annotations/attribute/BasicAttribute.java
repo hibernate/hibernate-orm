@@ -99,12 +99,13 @@ public class BasicAttribute extends MappedAttribute {
 	private final String customReadFragment;
 	private AttributeTypeResolver resolver;
 
-	public static BasicAttribute createSimpleAttribute(String name,
-													   Class<?> attributeType,
-													   Nature attributeNature,
-													   Map<DotName, List<AnnotationInstance>> annotations,
-													   String accessType,
-													   EntityBindingContext context) {
+	public static BasicAttribute createSimpleAttribute(
+			String name,
+			Class<?> attributeType,
+			Nature attributeNature,
+			Map<DotName, List<AnnotationInstance>> annotations,
+			String accessType,
+			EntityBindingContext context) {
 		return new BasicAttribute( name, attributeType, attributeNature, accessType, annotations, context );
 	}
 
@@ -124,7 +125,8 @@ public class BasicAttribute extends MappedAttribute {
 					annotations,
 					HibernateDotNames.SOURCE
 			);
-			this.versionSourceType = sourceAnnotation !=null ? JandexHelper.getEnumValue( sourceAnnotation, "value", SourceType.class ) : null;
+			this.versionSourceType = sourceAnnotation !=null ?
+					JandexHelper.getEnumValue( sourceAnnotation, "value", SourceType.class ) : null;
 		}
 		else {
 			versionSourceType = null;
@@ -133,7 +135,7 @@ public class BasicAttribute extends MappedAttribute {
 		if ( isId() ) {
 
 			// an id must be unique and cannot be nullable
-			for(Column columnValue : getColumnValues()) {
+			for ( Column columnValue : getColumnValues() ) {
 				columnValue.setUnique( true );
 				columnValue.setNullable( false );
 			}

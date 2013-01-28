@@ -73,7 +73,7 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 		);
 		AnnotationBindingContext context = new AnnotationBindingContextImpl( meta, index );
 		return EmbeddableHierarchy.createEmbeddableHierarchy( configuredClasses[0], "", accessType,
-				naturalIdMutability, context );
+				naturalIdMutability,null, context );
 	}
 }
 

@@ -27,9 +27,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 
 /**
@@ -68,6 +71,45 @@ public class AnnotationParserHelper {
 				: ExecuteUpdateResultCheckStyle.valueOf( customSqlAnnotation.value( "check" ).asEnum() );
 
 		return new CustomSQL( sql, isCallable, checkStyle );
+	}
+
+	public static String determineCustomTuplizer(
+			final AnnotationInstance tuplizersAnnotation,
+			final AnnotationInstance tuplizerAnnotation) {
+		if ( tuplizersAnnotation != null ) {
+			AnnotationInstance[] annotations = JandexHelper.getValue(
+					tuplizersAnnotation,
+					"value",
+					AnnotationInstance[].class
+			);
+			for ( final AnnotationInstance annotationInstance : annotations ) {
+				final String impl = findTuplizerImpl( annotationInstance );
+				if ( StringHelper.isNotEmpty( impl ) ) {
+					return impl;
+				}
+			}
+		}
+		else if ( tuplizerAnnotation != null ) {
+			final String impl = findTuplizerImpl( tuplizerAnnotation );
+			if ( StringHelper.isNotEmpty( impl ) ) {
+				return impl;
+			}
+		}
+		return null;
+	}
+
+	private static String findTuplizerImpl(final AnnotationInstance tuplizerAnnotation) {
+		final EntityMode mode;
+		if ( tuplizerAnnotation.value( "entityModeType" ) != null ) {
+			mode = EntityMode.valueOf( tuplizerAnnotation.value( "entityModeType" ).asEnum() );
+		}
+		else if ( tuplizerAnnotation.value( "entityMode" ) != null ) {
+			mode = EntityMode.parse( tuplizerAnnotation.value( "entityMode" ).asString() );
+		}
+		else {
+			mode = EntityMode.POJO;
+		}
+		return mode == EntityMode.POJO ? tuplizerAnnotation.value( "impl" ).asString() : null;
 	}
 }
 

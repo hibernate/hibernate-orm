@@ -61,6 +61,9 @@ import org.hibernate.service.spi.Stoppable;
 public class DriverManagerConnectionProviderImpl
 		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DriverManagerConnectionProviderImpl.class.getName() );
+	private static final boolean traceEnabled = LOG.isTraceEnabled();
+	private static final boolean debugEnabled = LOG.isDebugEnabled();
+
 
 	private String url;
 	private Properties connectionProps;
@@ -92,7 +95,7 @@ public class DriverManagerConnectionProviderImpl
 			throw new UnknownUnwrapTypeException( unwrapType );
 		}
 	}
-
+	@Override
 	public void configure(Map configurationValues) {
 		LOG.usingHibernateBuiltInConnectionPool();
 
@@ -148,12 +151,12 @@ public class DriverManagerConnectionProviderImpl
 
 		LOG.usingDriver( driverClassName, url );
 		// if debug level is enabled, then log the password, otherwise mask it
-		if ( LOG.isDebugEnabled() )
+		if ( debugEnabled )
 			LOG.connectionProperties( connectionProps );
 		else
 			LOG.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 	}
-
+	@Override
 	public void stop() {
 		LOG.cleaningUpConnectionPool( url );
 
@@ -168,9 +171,8 @@ public class DriverManagerConnectionProviderImpl
 		pool.clear();
 		stopped = true;
 	}
-
+	@Override
 	public Connection getConnection() throws SQLException {
-		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( traceEnabled ) LOG.tracev( "Total checked-out connections: {0}", checkedOut.intValue() );
 
 		// essentially, if we have available connections in the pool, use one...
@@ -191,8 +193,6 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		// otherwise we open a new connection...
-
-		final boolean debugEnabled = LOG.isDebugEnabled();
 		if ( debugEnabled ) LOG.debug( "Opening new JDBC connection" );
 
 		Connection conn = DriverManager.getConnection( url, connectionProps );
@@ -210,11 +210,9 @@ public class DriverManagerConnectionProviderImpl
 		checkedOut.incrementAndGet();
 		return conn;
 	}
-
+	@Override
 	public void closeConnection(Connection conn) throws SQLException {
 		checkedOut.decrementAndGet();
-
-		final boolean traceEnabled = LOG.isTraceEnabled();
 		// add to the pool if the max size is not yet reached.
 		synchronized ( pool ) {
 			int currentSize = pool.size();
@@ -224,7 +222,6 @@ public class DriverManagerConnectionProviderImpl
 				return;
 			}
 		}
-
 		LOG.debug( "Closing JDBC connection" );
 		conn.close();
 	}
@@ -236,7 +233,7 @@ public class DriverManagerConnectionProviderImpl
 		}
 		super.finalize();
 	}
-
+	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
 	}

@@ -33,6 +33,7 @@ import org.dom4j.Node;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
@@ -416,7 +417,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return isEmbeddedInXML;
 	}
 
-	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters)
+	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map<String, Filter> enabledFilters)
 	throws MappingException {
 		if ( isReferenceToPrimaryKey() ) { //TODO: this is a bit arbitrary, expose a switch to the user?
 			return "";
@@ -430,10 +431,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * Resolve an identifier or unique key value
 	 */
 	public Object resolve(Object value, SessionImplementor session, Object owner) throws HibernateException {
-		if ( isNotEmbedded( session ) ) {
-			return value;
-		}
-
 		if ( value == null ) {
 			return null;
 		}
@@ -456,10 +453,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	protected final Object getIdentifier(Object value, SessionImplementor session) throws HibernateException {
-		if ( isNotEmbedded(session) ) {
-			return value;
-		}
-
 		if ( isReferenceToPrimaryKey() ) {
 			return ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session ); //tolerates nulls
 		}

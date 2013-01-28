@@ -26,7 +26,6 @@ package org.hibernate.test.annotations.tuplizer;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -35,7 +34,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class TuplizerTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEntityTuplizer() throws Exception {
@@ -46,7 +44,7 @@ public class TuplizerTest extends BaseCoreFunctionalTestCase {
 		cuisine.setCountry( country );
 		Session s = openSession( new EntityNameInterceptor() );
 		s.getTransaction().begin();
-		s.persist( cuisine );
+ 		s.persist( cuisine );
 		s.flush();
 		s.clear();
 		cuisine = (Cuisine) s.get(Cuisine.class, cuisine.getId() );
@@ -59,6 +57,6 @@ public class TuplizerTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Cuisine.class };
+		return new Class[] { Cuisine.class, Country.class };
 	}
 }

@@ -41,6 +41,8 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 public class EmbeddableClass extends ConfiguredClass {
 	private final String embeddedAttributeName;
 	private final String parentReferencingAttributeName;
+	//custom tuplizer defined on the embedded field
+	private final String customTuplizerClass;
 	private SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
 
 	public EmbeddableClass(
@@ -49,11 +51,13 @@ public class EmbeddableClass extends ConfiguredClass {
 			ConfiguredClass parent,
 			AccessType defaultAccessType,
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
+			String customTuplizerClass,
 			AnnotationBindingContext context) {
 		super( classInfo, defaultAccessType, parent, context );
 		this.embeddedAttributeName = embeddedAttributeName;
 		this.naturalIdMutability = naturalIdMutability;
 		this.parentReferencingAttributeName = checkParentAnnotation();
+		this.customTuplizerClass = customTuplizerClass;
 	}
 
 	private String checkParentAnnotation() {
@@ -78,6 +82,10 @@ public class EmbeddableClass extends ConfiguredClass {
 
 	public void setNaturalIdMutability(SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
 		this.naturalIdMutability = naturalIdMutability;
+	}
+
+	public String getCustomTuplizerClass() {
+		return customTuplizerClass;
 	}
 }
 

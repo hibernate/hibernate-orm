@@ -247,8 +247,8 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		if ( naturalIdAnnotation == null ) {
 			return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
 		}
-		final boolean mutable = naturalIdAnnotation.value( "mutable" ) == null ? false :
-				naturalIdAnnotation.value( "mutable" ).asBoolean();
+		final boolean mutable = naturalIdAnnotation.value( "mutable" ) != null && naturalIdAnnotation.value( "mutable" )
+				.asBoolean();
 		return mutable ? SingularAttributeBinding.NaturalIdMutability.MUTABLE : SingularAttributeBinding.NaturalIdMutability.IMMUTABLE;
 	}
 

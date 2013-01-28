@@ -38,6 +38,7 @@ import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
+import org.hibernate.tuple.component.ComponentTuplizer;
 
 /**
  * A specialized binding contract for a singular attribute binding that
@@ -50,7 +51,7 @@ public class CompositeAttributeBinding
 		implements SingularNonAssociationAttributeBinding, CompositeAttributeBindingContainer, Cascadeable {
 
 	private final AbstractCompositeAttributeBindingContainer compositeAttributeBindingContainer;
-
+	private Class<? extends ComponentTuplizer> customComponentTuplizerClass = null;
 	private CompositeAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
@@ -202,6 +203,15 @@ public class CompositeAttributeBinding
 
 	public SingularAttribute getParentReference() {
 		return compositeAttributeBindingContainer.getParentReference();
+	}
+
+	@Override
+	public Class<? extends ComponentTuplizer> getCustomTuplizerClass() {
+		return customComponentTuplizerClass;
+	}
+
+	public void setCustomComponentTuplizerClass(Class<? extends ComponentTuplizer> customComponentTuplizerClass) {
+		this.customComponentTuplizerClass = customComponentTuplizerClass;
 	}
 
 	@Override
@@ -358,6 +368,8 @@ public class CompositeAttributeBinding
 	public TableSpecification getPrimaryTable() {
 		return compositeAttributeBindingContainer.getPrimaryTable();
 	}
+
+
 
 	@Override
 	public BasicAttributeBinding makeBasicAttributeBinding(

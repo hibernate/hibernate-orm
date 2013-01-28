@@ -428,13 +428,13 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	public void setCustomEntityPersisterClass(Class<? extends EntityPersister> customEntityPersisterClass) {
 		this.customEntityPersisterClass = customEntityPersisterClass;
 	}
-
-	public Class<? extends EntityTuplizer> getCustomEntityTuplizerClass() {
+	@Override
+	public Class<? extends EntityTuplizer> getCustomTuplizerClass() {
 		if ( customEntityTuplizerClass != null ) {
 			return customEntityTuplizerClass;
 		}
 		else if ( superEntityBinding != null ) {
-			return superEntityBinding.getCustomEntityTuplizerClass();
+			return superEntityBinding.getCustomTuplizerClass();
 		}
 		return null;
 	}

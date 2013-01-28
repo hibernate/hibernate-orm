@@ -32,9 +32,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.dom4j.Element;
-import org.dom4j.Node;
-
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -158,7 +155,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
     public final boolean isComponentType() {
 		return true;
 	}
-
+	@Override
 	public Class getReturnedClass() {
 		return componentTuplizer.getMappedClass();
 	}
@@ -327,7 +324,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			return old != null;
 		}
 		if ( old == null ) {
-			return current != null;
+			return true;
 		}
 		Object[] currentValues = getPropertyValues( current, session );
 		Object[] oldValues = ( Object[] ) old;

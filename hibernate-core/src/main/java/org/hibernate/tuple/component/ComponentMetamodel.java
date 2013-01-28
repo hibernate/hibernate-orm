@@ -101,16 +101,15 @@ public class ComponentMetamodel implements Serializable {
 
 		// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
 		final ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory();
-		// TODO: provide support for custom tuplizer
-		final String tuplizerClassName = null;
-		if ( tuplizerClassName == null ) {
+		final Class<? extends ComponentTuplizer> tuplizerClass = component.getCustomTuplizerClass();
+		if ( tuplizerClass == null ) {
 			componentTuplizer = componentTuplizerFactory.constructDefaultTuplizer(
 					entityMode, component, isIdentifierMapper
 			);
 		}
 		else {
 			componentTuplizer = componentTuplizerFactory.constructTuplizer(
-					tuplizerClassName, component, isIdentifierMapper
+					tuplizerClass, component, isIdentifierMapper
 			);
 		}
 	}

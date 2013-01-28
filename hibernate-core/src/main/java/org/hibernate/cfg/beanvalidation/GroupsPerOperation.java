@@ -31,6 +31,7 @@ import java.util.Properties;
 import javax.validation.groups.Default;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.ReflectHelper;
 
 /**
@@ -44,12 +45,18 @@ public class GroupsPerOperation {
 	private static final Class<?>[] EMPTY_GROUPS = new Class<?>[] { };
 
 	private Map<Operation, Class<?>[]> groupsPerOperation = new HashMap<Operation, Class<?>[]>(4);
-
+	private ClassLoaderService classLoaderService;
 	public GroupsPerOperation(Properties properties) {
+		this(properties, null);
+	}
+
+	public GroupsPerOperation(Properties properties, ClassLoaderService classLoaderService){
 		setGroupsForOperation( Operation.INSERT, properties );
 		setGroupsForOperation( Operation.UPDATE, properties );
 		setGroupsForOperation( Operation.DELETE, properties );
 		setGroupsForOperation( Operation.DDL, properties );
+		this.classLoaderService = classLoaderService;
+
 	}
 
 	private void setGroupsForOperation(Operation operation, Properties properties) {
@@ -71,11 +78,16 @@ public class GroupsPerOperation {
 					for (String groupName : groupNames) {
 						String cleanedGroupName = groupName.trim();
 						if ( cleanedGroupName.length() > 0) {
-							try {
-								groupsList.add( ReflectHelper.classForName( cleanedGroupName ) );
+							if ( classLoaderService != null ) {
+								groupsList.add( classLoaderService.classForName( cleanedGroupName ) );
 							}
-							catch ( ClassNotFoundException e ) {
-								throw new HibernateException( "Unable to load class " + cleanedGroupName, e );
+							else {
+								try {
+									groupsList.add( ReflectHelper.classForName( cleanedGroupName ) );
+								}
+								catch ( ClassNotFoundException e ) {
+									throw new HibernateException( "Unable to load class " + cleanedGroupName, e );
+								}
 							}
 						}
 					}

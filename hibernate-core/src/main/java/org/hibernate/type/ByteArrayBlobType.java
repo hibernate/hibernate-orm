@@ -90,7 +90,7 @@ public class ByteArrayBlobType extends AbstractLobType {
 			int length = array.length;
 			Byte[] copy = new Byte[length];
 			for ( int index = 0; index < length ; index++ ) {
-				copy[index] = Byte.valueOf( array[index].byteValue() );
+				copy[index] = array[index];
 			}
 			return copy;
 		}
@@ -174,7 +174,7 @@ public class ByteArrayBlobType extends AbstractLobType {
 		int length = bytes.length;
 		byte[] result = new byte[length];
 		for ( int i = 0; i < length ; i++ ) {
-			result[i] = bytes[i].byteValue();
+			result[i] = bytes[i];
 		}
 		return result;
 	}
@@ -183,7 +183,7 @@ public class ByteArrayBlobType extends AbstractLobType {
 		int length = bytes.length;
 		Byte[] result = new Byte[length];
 		for ( int index = 0; index < length ; index++ ) {
-			result[index] = Byte.valueOf( bytes[index] );
+			result[index] = bytes[index];
 		}
 		return result;
 	}

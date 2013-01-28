@@ -143,7 +143,7 @@ class TypeSafeActivator {
 		for ( PersistentClass persistentClass : persistentClasses ) {
 			final String className = persistentClass.getClassName();
 
-			if ( className == null || className.length() == 0 ) {
+			if ( StringHelper.isEmpty( className ) ) {
 				continue;
 			}
 			Class<?> clazz;
@@ -251,7 +251,7 @@ class TypeSafeActivator {
 								ClassLoaderService classLoaderService,
 								Dialect dialect) {
 		final ValidatorFactory factory = getValidatorFactory( properties );
-		final Class<?>[] groupsArray = new GroupsPerOperation( properties ).get( GroupsPerOperation.Operation.DDL );
+		final Class<?>[] groupsArray = new GroupsPerOperation( properties, classLoaderService ).get( GroupsPerOperation.Operation.DDL );
 		final Set<Class<?>> groups = new HashSet<Class<?>>( Arrays.asList( groupsArray ) );
 
 		for ( EntityBinding binding : bindings ) {

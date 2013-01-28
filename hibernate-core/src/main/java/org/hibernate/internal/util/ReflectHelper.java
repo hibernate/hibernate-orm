@@ -92,7 +92,7 @@ public final class ReflectHelper {
 	 * @return The equals method reference
 	 * @throws NoSuchMethodException Should indicate an attempt to extract equals method from interface.
 	 */
-	public static Method extractEqualsMethod(Class clazz) throws NoSuchMethodException {
+	public static Method extractEqualsMethod(Class<?> clazz) throws NoSuchMethodException {
 		return clazz.getMethod( "equals", SINGLE_OBJECT_PARAM_SIGNATURE );
 	}
 
@@ -103,7 +103,7 @@ public final class ReflectHelper {
 	 * @return The hashCode method reference
 	 * @throws NoSuchMethodException Should indicate an attempt to extract hashCode method from interface.
 	 */
-	public static Method extractHashCodeMethod(Class clazz) throws NoSuchMethodException {
+	public static Method extractHashCodeMethod(Class<?> clazz) throws NoSuchMethodException {
 		return clazz.getMethod( "hashCode", NO_PARAM_SIGNATURE );
 	}
 
@@ -148,7 +148,7 @@ public final class ReflectHelper {
 	 * @param intf The interface to check it against.
 	 * @return True if the class does implement the interface, false otherwise.
 	 */
-	public static boolean implementsInterface(Class clazz, Class intf) {
+	public static boolean implementsInterface(Class clazz, Class<?> intf) {
 		assert intf.isInterface() : "Interface to check was not an interface";
 		return intf.isAssignableFrom( clazz );
 	}
@@ -173,7 +173,12 @@ public final class ReflectHelper {
 		}
 		catch ( Throwable ignore ) {
 		}
-		return Class.forName( name, true, caller.getClassLoader() );
+		if ( caller != null ) {
+			return Class.forName( name, true, caller.getClassLoader() );
+		}
+		else {
+			return Class.forName( name );
+		}
 	}
 
 	/**
@@ -187,15 +192,7 @@ public final class ReflectHelper {
 	 * @throws ClassNotFoundException From {@link Class#forName(String)}.
 	 */
 	public static Class classForName(String name) throws ClassNotFoundException {
-		try {
-			ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-			if ( contextClassLoader != null ) {
-				return contextClassLoader.loadClass(name);
-			}
-		}
-		catch ( Throwable ignore ) {
-		}
-		return Class.forName( name );
+		return classForName( name, null );
 	}
 
 	/**
@@ -231,7 +228,7 @@ public final class ReflectHelper {
 	 */
 	public static Class reflectedPropertyClass(String className, String name) throws MappingException {
 		try {
-			Class clazz = ReflectHelper.classForName( className );
+			Class clazz = classForName( className );
 			return getter( clazz, name ).getReturnType();
 		}
 		catch ( ClassNotFoundException cnfe ) {
@@ -301,7 +298,7 @@ public final class ReflectHelper {
 	 * @return The default constructor.
 	 * @throws PropertyNotFoundException Indicates there was not publicly accessible, no-arg constructor (todo : why PropertyNotFoundException???)
 	 */
-	public static Constructor getDefaultConstructor(Class clazz) throws PropertyNotFoundException {
+	public static Constructor getDefaultConstructor(Class<?> clazz) throws PropertyNotFoundException {
 		if ( isAbstractClass( clazz ) ) {
 			return null;
 		}
@@ -378,7 +375,7 @@ public final class ReflectHelper {
 		throw new PropertyNotFoundException( "no appropriate constructor in class: " + clazz.getName() );
 	}
 	
-	public static Method getMethod(Class clazz, Method method) {
+	public static Method getMethod(Class<?> clazz, Method method) {
 		try {
 			return clazz.getMethod( method.getName(), method.getParameterTypes() );
 		}

@@ -40,6 +40,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.TruthValue;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -1046,6 +1047,12 @@ public class Binder {
 						naturalIdMutability,
 						createMetaAttributeContext( attributeBindingContainer, attributeSource )
 				);
+		if ( attributeSource.getExplicitTuplizerClassName() != null ) {
+			Class tuplizerClass = bindingContext().getServiceRegistry()
+					.getService( ClassLoaderService.class )
+					.classForName( attributeSource.getExplicitTuplizerClassName() );
+			attributeBinding.setCustomComponentTuplizerClass( tuplizerClass );
+		}
 		bindAttributes( attributeBinding, attributeSource );
 		typeHelper.bindAggregatedCompositeAttributeType(
 				isAttributeIdentifier,

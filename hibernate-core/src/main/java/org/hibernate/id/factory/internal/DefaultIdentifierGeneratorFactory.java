@@ -30,6 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.jboss.logging.Logger;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.Assigned;
@@ -66,6 +68,7 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
                                                                        DefaultIdentifierGeneratorFactory.class.getName());
 
 	private transient Dialect dialect;
+	private transient ClassLoaderService classLoaderService;
 	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
 
 	/**
@@ -133,8 +136,17 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 		Class generatorClass = generatorStrategyToClassNameMap.get( strategy );
 		try {
 			if ( generatorClass == null ) {
-				generatorClass = ReflectHelper.classForName( strategy );
+				if ( classLoaderService != null ) {
+					generatorClass = classLoaderService.classForName( strategy );
+				}
+				else {
+					generatorClass = ReflectHelper.classForName( strategy );
+				}
+				register( strategy, generatorClass );
 			}
+		}
+		catch ( ClassLoadingException e ) {
+			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
 		}
 		catch ( ClassNotFoundException e ) {
 			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
@@ -145,5 +157,6 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 }

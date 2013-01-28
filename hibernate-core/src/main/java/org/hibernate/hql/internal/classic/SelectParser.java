@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.QueryException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.internal.QuerySplitter;
 import org.hibernate.internal.util.ReflectHelper;
@@ -44,7 +46,7 @@ public class SelectParser implements Parser {
 
 	//TODO: arithmetic expressions, multiple new Foo(...)
 
-	private static final Set COUNT_MODIFIERS = new HashSet();
+	private static final Set<String> COUNT_MODIFIERS = new HashSet<String>();
 
 	static {
 		COUNT_MODIFIERS.add( "distinct" );
@@ -52,7 +54,7 @@ public class SelectParser implements Parser {
 		COUNT_MODIFIERS.add( "*" );
 	}
 
-	private LinkedList aggregateFuncTokenList = new LinkedList();
+	private LinkedList<String> aggregateFuncTokenList = new LinkedList<String>();
 
 	private boolean ready;
 	private boolean aggregate;
@@ -72,7 +74,7 @@ public class SelectParser implements Parser {
 		pathExpressionParser.setUseThetaStyleJoin( true );
 		aggregatePathExpressionParser.setUseThetaStyleJoin( true );
 	}
-
+	@Override
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 
 		String lctoken = token.toLowerCase();
@@ -92,9 +94,12 @@ public class SelectParser implements Parser {
 		if ( afterNew ) {
 			afterNew = false;
 			try {
-				holderClass = ReflectHelper.classForName( QuerySplitter.getImportedClass( token, q.getFactory() ) );
+				final ClassLoaderService classLoaderService = q.getFactory()
+						.getServiceRegistry()
+						.getService( ClassLoaderService.class );
+				holderClass = classLoaderService.classForName( QuerySplitter.getImportedClass( token, q.getFactory() ) );
 			}
-			catch ( ClassNotFoundException cnfe ) {
+			catch ( ClassLoadingException cnfe ) {
 				throw new QueryException( cnfe );
 			}
 			if ( holderClass == null ) throw new QueryException( "class not found: " + token );
@@ -238,7 +243,7 @@ public class SelectParser implements Parser {
 	private SQLFunction getFunction(String name, QueryTranslatorImpl q) {
 		return q.getFactory().getSqlFunctionRegistry().findSQLFunction( name );
 	}
-
+	@Override
 	public void start(QueryTranslatorImpl q) {
 		ready = true;
 		first = true;
@@ -248,7 +253,7 @@ public class SelectParser implements Parser {
 		holderClass = null;
 		aggregateFuncTokenList.clear();
 	}
-
+	@Override
 	public void end(QueryTranslatorImpl q) {
 	}
 

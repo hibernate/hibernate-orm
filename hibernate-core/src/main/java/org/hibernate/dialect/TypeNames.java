@@ -28,6 +28,7 @@ import java.util.TreeMap;
 
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * This class maps a type to names. Associations
@@ -63,8 +64,8 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class TypeNames {
 
-	private Map<Integer, Map<Long, String>> weighted = new HashMap<Integer, Map<Long, String>>();
-	private Map<Integer, String> defaults = new HashMap<Integer, String>();
+	private final Map<Integer, Map<Long, String>> weighted = new HashMap<Integer, Map<Long, String>>();
+	private final Map<Integer, String> defaults = new HashMap<Integer, String>();
 
 	/**
 	 * get default type name for specified type
@@ -88,11 +89,11 @@ public class TypeNames {
 	 */
 	public String get(int typeCode, long size, int precision, int scale) throws MappingException {
 		Map<Long, String> map = weighted.get( typeCode );
-		if ( map!=null && map.size()>0 ) {
+		if ( CollectionHelper.isNotEmpty( map ) ) {
 			// iterate entries ordered by capacity to find first fit
-			for (Map.Entry<Long, String> entry: map.entrySet()) {
-				if ( size <= entry.getKey() ) {
-					return replace( entry.getValue(), size, precision, scale );
+			for ( final Long key : map.keySet() ) {
+				if ( size <= key ) {
+					return replace( map.get( key ), size, precision, scale );
 				}
 			}
 		}

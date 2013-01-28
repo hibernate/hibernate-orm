@@ -54,6 +54,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOv
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
@@ -574,11 +575,26 @@ public class ConfiguredClass {
 		else {
 			naturalIdMutability = SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
 		}
+
+		//tuplizer on field
+		final AnnotationInstance tuplizersAnnotation = JandexHelper.getSingleAnnotation(
+				annotations, HibernateDotNames.TUPLIZERS
+		);
+		final AnnotationInstance tuplizerAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				HibernateDotNames.TUPLIZER
+		);
+		final String customTuplizerClass = AnnotationParserHelper.determineCustomTuplizer(
+				tuplizersAnnotation,
+				tuplizerAnnotation
+		);
+
 		final EmbeddableHierarchy hierarchy = EmbeddableHierarchy.createEmbeddableHierarchy(
 				localBindingContext.<Object>locateClassByName( embeddableClassInfo.toString() ),
 				attributeName,
 				classAccessType,
 				naturalIdMutability,
+				customTuplizerClass,
 				localBindingContext
 		);
 		return hierarchy.getLeaf();
@@ -593,10 +609,10 @@ public class ConfiguredClass {
 	 *
 	 * @return an instance of the {@code AttributeType} enum
 	 */
-	private MappedAttribute.Nature determineAttributeNature( Map<DotName,
-			List<AnnotationInstance>> annotations,
-			Class<?> attributeType,
-			Class<?> referencedCollectionType ) {
+	private MappedAttribute.Nature determineAttributeNature(
+			final Map<DotName,List<AnnotationInstance>> annotations,
+			final Class<?> attributeType,
+			final Class<?> referencedCollectionType ) {
 		EnumSet<MappedAttribute.Nature>  discoveredAttributeTypes = EnumSet.noneOf( MappedAttribute.Nature.class );
 		AnnotationInstance oneToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_ONE );
 		if ( oneToOne != null ) {
@@ -633,12 +649,10 @@ public class ConfiguredClass {
 			// annotations.  (see HHH-7678)
 			// However, it's important to ignore this if the field is
 			// annotated with @EmbeddedId.
-			ClassInfo typeClassInfo = localBindingContext.getIndex()
-					.getClassByName( DotName.createSimple( attributeType.getName() ) );
-			if ( typeClassInfo != null
-					&& JandexHelper.getSingleAnnotation( 
-							typeClassInfo.annotations(),
-							JPADotNames.EMBEDDABLE ) != null ) {
+			if ( isEmbeddableType( attributeType ) ) {
+				LOG.warn( attributeType.getName() + " has @Embeddable on it, but the attribute of this type in entity["
+						+ getName()
+						+ "] doesn't have @Embedded, which may cause compatibility issue" );
 				discoveredAttributeTypes.add( MappedAttribute.Nature.EMBEDDED );
 			}
 		}
@@ -771,48 +785,15 @@ public class ConfiguredClass {
 		return prefix;
 	}
 
-	private String determineCustomTuplizer() {
+	protected String determineCustomTuplizer() {
 		final AnnotationInstance tuplizersAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, HibernateDotNames.TUPLIZERS
+				classInfo, HibernateDotNames.TUPLIZERS, ClassInfo.class
 		);
 		final AnnotationInstance tuplizerAnnotation = JandexHelper.getSingleAnnotation(
 				classInfo,
-				HibernateDotNames.TUPLIZER
+				HibernateDotNames.TUPLIZER,
+				ClassInfo.class
 		);
-		if ( tuplizersAnnotation != null ) {
-			AnnotationInstance[] annotations = JandexHelper.getValue(
-					tuplizersAnnotation,
-					"value",
-					AnnotationInstance[].class
-			);
-			for ( final AnnotationInstance annotationInstance : annotations ) {
-				final String impl = findTuplizerImpl( annotationInstance );
-				if ( StringHelper.isNotEmpty( impl ) ) {
-					return impl;
-				}
-			}
-		}
-		else if ( tuplizerAnnotation != null ) {
-			final String impl = findTuplizerImpl( tuplizerAnnotation );
-			if ( StringHelper.isNotEmpty( impl ) ) {
-				return impl;
-			}
-		}
-		return null;
-	}
-
-	private String findTuplizerImpl(final AnnotationInstance tuplizerAnnotation) {
-		EntityMode mode;
-		if ( tuplizerAnnotation.value( "entityModeType" ) != null ) {
-			mode = EntityMode.valueOf( tuplizerAnnotation.value( "entityModeType" ).asEnum() );
-		}
-		else if ( tuplizerAnnotation.value( "entityMode" ) != null ) {
-			mode = EntityMode.parse( tuplizerAnnotation.value( "entityMode" ).asString() );
-		}
-		else {
-			mode = EntityMode.POJO;
-		}
-		return mode == EntityMode.POJO ? tuplizerAnnotation.value( "impl" ).asString() : null;
-
+		return AnnotationParserHelper.determineCustomTuplizer( tuplizersAnnotation, tuplizerAnnotation );
 	}
 }

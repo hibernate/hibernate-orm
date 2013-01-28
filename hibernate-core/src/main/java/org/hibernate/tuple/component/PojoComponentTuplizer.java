@@ -143,11 +143,11 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 		instantiator = buildInstantiator( componentClass, !component.isAggregated(), optimizer );
 	}
-
+	@Override
 	public Class getMappedClass() {
 		return componentClass;
 	}
-
+	@Override
 	public Object[] getPropertyValues(Object component) throws HibernateException {
 		if ( component == BackrefPropertyAccessor.UNKNOWN ) {
 			return new Object[propertySpan];
@@ -159,7 +159,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			return super.getPropertyValues( component );
 		}
 	}
-
+	@Override
 	public void setPropertyValues(Object component, Object[] values) throws HibernateException {
 		if ( optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			optimizer.getAccessOptimizer().setPropertyValues( component, values );
@@ -168,15 +168,15 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			super.setPropertyValues( component, values );
 		}
 	}
-
+	@Override
 	public Object getParent(Object component) {
 		return parentGetter.get( component );
 	}
-
+	@Override
 	public boolean hasParentProperty() {
 		return parentGetter != null;
 	}
-
+	@Override
 	public boolean isMethodOf(Method method) {
 		for ( int i = 0; i < propertySpan; i++ ) {
 			final Method getterMethod = getters[i].getMethod();
@@ -186,15 +186,15 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 		return false;
 	}
-
+	@Override
 	public void setParent(Object component, Object parent, SessionFactoryImplementor factory) {
 		parentSetter.set( component, parent, factory );
 	}
-
+	@Override
 	protected Getter buildGetter(Component component, Property prop) {
 		return prop.getGetter( component.getComponentClass() );
 	}
-
+	@Override
 	protected Setter buildSetter(Component component, Property prop) {
 		return prop.getSetter( component.getComponentClass() );
 	}
@@ -205,43 +205,36 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 	}
 
 	private static Instantiator buildInstantiator(Class<?> mappedClass, boolean isVirtual, ReflectionOptimizer optimizer) {
-		if (isVirtual && ReflectHelper.isAbstractClass( mappedClass ) ) {
+		if ( isVirtual && ReflectHelper.isAbstractClass( mappedClass ) ) {
 			return new ProxiedInstantiator( mappedClass );
 		}
-		if ( optimizer == null ) {
-			return new PojoInstantiator( mappedClass, null );
-		}
-		else {
-			return new PojoInstantiator( mappedClass, optimizer.getInstantiationOptimizer() );
-		}
+		final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer =
+				optimizer == null ? null : optimizer.getInstantiationOptimizer();
+		return new PojoInstantiator( mappedClass, instantiationOptimizer );
 	}
 
 	private static class ProxiedInstantiator implements Instantiator {
 		private final Class proxiedClass;
 		private final BasicProxyFactory factory;
 
-		public ProxiedInstantiator(Class<?> proxyClass) {
+		public ProxiedInstantiator(final Class<?> proxyClass) {
 			this.proxiedClass = proxyClass;
-			if ( proxiedClass.isInterface() ) {
-				factory = Environment.getBytecodeProvider()
-						.getProxyFactoryFactory()
-						.buildBasicProxyFactory( null, new Class[] { proxiedClass } );
-			}
-			else {
-				factory = Environment.getBytecodeProvider()
-						.getProxyFactoryFactory()
-						.buildBasicProxyFactory( proxiedClass, null );
-			}
+			final boolean isInterface = proxiedClass.isInterface();
+			final Class superClass = isInterface ? null : proxiedClass;
+			final Class[] interfaces = isInterface ? new Class[] { proxiedClass } : null;
+			factory = Environment.getBytecodeProvider()
+					.getProxyFactoryFactory()
+					.buildBasicProxyFactory( superClass, interfaces );
 		}
-
+		@Override
 		public Object instantiate(Serializable id) {
 			throw new AssertionFailure( "ProxiedInstantiator can only be used to instantiate component" );
 		}
-
+		@Override
 		public Object instantiate() {
 			return factory.getProxy();
 		}
-
+		@Override
 		public boolean isInstance(Object object) {
 			return proxiedClass.isInstance( object );
 		}

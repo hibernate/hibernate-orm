@@ -89,7 +89,7 @@ public class BeanValidationEventListener
 			init( factory, properties );
 		}
 	}
-
+	@Override
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
 				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
@@ -97,7 +97,7 @@ public class BeanValidationEventListener
 		);
 		return false;
 	}
-
+	@Override
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
 				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
@@ -105,7 +105,7 @@ public class BeanValidationEventListener
 		);
 		return false;
 	}
-
+	@Override
 	public boolean onPreDelete(PreDeleteEvent event) {
 		validate(
 				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),

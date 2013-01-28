@@ -104,7 +104,8 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public String getExplicitTuplizerClassName() {
-		return embeddableClass.getCustomTuplizer();
+		return StringHelper.isEmpty( embeddableClass.getCustomTuplizerClass() ) ? embeddableClass.getCustomTuplizer() : embeddableClass
+				.getCustomTuplizerClass();
 	}
 
 	@Override

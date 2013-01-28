@@ -8,14 +8,14 @@
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
+ * Lesser General License, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General License
  * for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU Lesser General License
  * along with this distribution; if not, write to:
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
@@ -32,6 +32,7 @@ import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
+import org.hibernate.tuple.Tuplizer;
 
 /**
  * Common contract for {@link EntityBinding} and {@link CompositeAttributeBinding} in so far as they are both
@@ -45,21 +46,21 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The path base for this container.
 	 */
-	public String getPathBase();
+	String getPathBase();
 
 	/**
 	 * Obtain the underlying domain attribute container.
 	 *
 	 * @return The attribute container
 	 */
-	public AttributeContainer getAttributeContainer();
+	AttributeContainer getAttributeContainer();
 
 	/**
 	 * Obtain all attribute bindings
 	 *
 	 * @return All attribute bindings
 	 */
-	public Iterable<AttributeBinding> attributeBindings();
+	Iterable<AttributeBinding> attributeBindings();
 
 	/**
 	 * Return the number of attribute bindings returned by
@@ -68,7 +69,13 @@ public interface AttributeBindingContainer {
 	 * @return the number of attribute bindings returned by
 	 * {@link #attributeBindings()}.
 	 */
-	public int attributeBindingSpan();
+	int attributeBindingSpan();
+
+	/**
+	 * Return the custom tuplizer class.
+	 * @return
+	 */
+	Class<? extends Tuplizer> getCustomTuplizerClass();
 
 	/**
 	 * Locate a specific attribute binding, by its local name.
@@ -77,7 +84,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding or {@code null} if none could be found.
 	 */
-	public AttributeBinding locateAttributeBinding(String name);
+	AttributeBinding locateAttributeBinding(String name);
 
 	/**
 	 * Locate a specific attribute binding, by its values.
@@ -86,14 +93,14 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding or {@code null} if none could be found.
 	 */
-	public AttributeBinding locateAttributeBinding(List<Value> values);
+	AttributeBinding locateAttributeBinding(List<Value> values);
 
 	/**
 	 * Seeks out the entity binding that is the root of this component path.
 	 *
 	 * @return The entity binding
 	 */
-	public EntityBinding seekEntityBinding();
+	EntityBinding seekEntityBinding();
 
 	/**
 	 * Obtain the {@link Class} reference for this attribute container.  Generally this is used to perform reflection
@@ -101,14 +108,14 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The {@link Class} reference
 	 */
-	public Class<?> getClassReference();
+	Class<?> getClassReference();
 
 	/**
 	 * Obtain the meta-attribute context for this container.
 	 *
 	 * @return The meta-attribute context.
 	 */
-	public MetaAttributeContext getMetaAttributeContext();
+	MetaAttributeContext getMetaAttributeContext();
 
 
 	/**
@@ -117,7 +124,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return the table specification.
 	 */
-	public abstract TableSpecification getPrimaryTable();
+	TableSpecification getPrimaryTable();
 
 	/**
 	 * Factory method for basic attribute bindings.
@@ -132,7 +139,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public BasicAttributeBinding makeBasicAttributeBinding(
+	BasicAttributeBinding makeBasicAttributeBinding(
 			SingularAttribute attribute,
 			List<RelationalValueBinding> relationalValueBindings,
 			String propertyAccessorName,
@@ -154,7 +161,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public CompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
+	CompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
 			String propertyAccessorName,
@@ -176,7 +183,7 @@ public interface AttributeBindingContainer {
 	 * @param isConstrained
 	 * @return The attribute binding instance.
 	 */
-	public OneToOneAttributeBinding makeOneToOneAttributeBinding(
+	OneToOneAttributeBinding makeOneToOneAttributeBinding(
 			SingularAttribute attribute,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
@@ -204,7 +211,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(
+	ManyToOneAttributeBinding makeManyToOneAttributeBinding(
 			SingularAttribute attribute,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
@@ -229,7 +236,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public BagBinding makeBagAttributeBinding(
+	BagBinding makeBagAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementBinding.Nature nature,
 			SingularAttributeBinding referencedAttributeBinding,
@@ -251,7 +258,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public ListBinding makeListAttributeBinding(
+	ListBinding makeListAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementBinding.Nature nature,
 			SingularAttributeBinding referencedAttributeBinding,
@@ -274,7 +281,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public ArrayBinding makeArrayAttributeBinding(
+	ArrayBinding makeArrayAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementBinding.Nature nature,
 			SingularAttributeBinding referencedAttributeBinding,
@@ -297,7 +304,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public MapBinding makeMapAttributeBinding(
+	MapBinding makeMapAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementBinding.Nature elementNature,
 			PluralAttributeIndexBinding.Nature indexNature,
@@ -319,7 +326,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	public SetBinding makeSetAttributeBinding(
+	SetBinding makeSetAttributeBinding(
 			PluralAttribute attribute,
 			PluralAttributeElementBinding.Nature nature,
 			SingularAttributeBinding referencedAttributeBinding,

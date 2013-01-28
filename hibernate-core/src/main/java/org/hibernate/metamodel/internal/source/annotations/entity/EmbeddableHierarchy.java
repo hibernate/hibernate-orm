@@ -35,7 +35,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import static org.hibernate.metamodel.spi.binding.SingularAttributeBinding.NaturalIdMutability;
 
 /**
  * Contains information about the access and inheritance type for all classes within a class hierarchy.
@@ -45,7 +45,6 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 	private final AccessType defaultAccessType;
 	private final List<EmbeddableClass> embeddables;
-
 	/**
 	 * Builds the configured class hierarchy for a an embeddable class.
 	 *
@@ -56,11 +55,15 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 	 *
 	 * @return a set of {@code ConfiguredClassHierarchy}s. One for each "leaf" entity.
 	 */
-	public static EmbeddableHierarchy createEmbeddableHierarchy(Class<?> embeddableClass, String propertyName,
-																AccessType accessType,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability, AnnotationBindingContext context) {
+	public static EmbeddableHierarchy createEmbeddableHierarchy(
+			final Class<?> embeddableClass,
+			final String propertyName,
+			final AccessType accessType,
+			final NaturalIdMutability naturalIdMutability,
+			final String customTuplizerClass,
+			final AnnotationBindingContext context) {
 
-		ClassInfo embeddableClassInfo = context.getClassInfo( embeddableClass.getName() );
+		final ClassInfo embeddableClassInfo = context.getClassInfo( embeddableClass.getName() );
 		if ( embeddableClassInfo == null ) {
 			throw new AssertionFailure(
 					String.format(
@@ -85,11 +88,10 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 		Class<?> clazz = embeddableClass;
 		while ( clazz != null && !clazz.equals( Object.class ) ) {
 			ClassInfo tmpClassInfo = context.getIndex().getClassByName( DotName.createSimple( clazz.getName() ) );
-			clazz = clazz.getSuperclass();
 			if ( tmpClassInfo == null ) {
 				continue;
 			}
-
+			clazz = clazz.getSuperclass();
 			classInfoList.add( 0, tmpClassInfo );
 		}
 
@@ -97,6 +99,7 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 				classInfoList,
 				propertyName,
 				naturalIdMutability,
+				customTuplizerClass,
 				context,
 				accessType
 		);
@@ -104,13 +107,13 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 
 	@SuppressWarnings("unchecked")
 	private EmbeddableHierarchy(
-			List<ClassInfo> classInfoList,
-			String propertyName,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
-			AnnotationBindingContext context,
-			AccessType defaultAccessType) {
+			final List<ClassInfo> classInfoList,
+			final String propertyName,
+			final NaturalIdMutability naturalIdMutability,
+			final String customTuplizerClass,
+			final AnnotationBindingContext context,
+			final AccessType defaultAccessType) {
 		this.defaultAccessType = defaultAccessType;
-
 		// the resolved type for the top level class in the hierarchy
 		context.resolveAllTypes( classInfoList.get( classInfoList.size() - 1 ).name().toString() );
 
@@ -118,7 +121,7 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 		ConfiguredClass parent = null;
 		for ( ClassInfo info : classInfoList ) {
 			EmbeddableClass embeddable = new EmbeddableClass(
-					info, propertyName, parent, defaultAccessType,naturalIdMutability, context
+					info, propertyName, parent, defaultAccessType,naturalIdMutability,customTuplizerClass, context
 			);
 			embeddables.add( embeddable );
 			parent = embeddable;
@@ -133,6 +136,7 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 	/**
 	 * @return An iterator iterating in top down manner over the configured classes in this hierarchy.
 	 */
+	@Override
 	public Iterator<EmbeddableClass> iterator() {
 		return embeddables.iterator();
 	}

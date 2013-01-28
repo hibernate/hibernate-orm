@@ -26,12 +26,14 @@ public class NaturalIdRegionImpl extends BaseTransactionalDataRegion
 
 	@Override
 	public NaturalIdRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
-		if (AccessType.READ_ONLY.equals(accessType)) {
-			return new ReadOnlyAccess(this);
-		} else if (AccessType.TRANSACTIONAL.equals(accessType)) {
-			return new TransactionalAccess(this);
+		switch ( accessType ){
+			case READ_ONLY:
+				return new ReadOnlyAccess( this );
+			case TRANSACTIONAL:
+				return new TransactionalAccess( this );
+			default:
+				throw new CacheException( "Unsupported access type [" + accessType.getExternalName() + "]" );
 		}
-		throw new CacheException("Unsupported access type [" + accessType.getExternalName() + "]");
 	}
 
 	public PutFromLoadValidator getPutFromLoadValidator() {

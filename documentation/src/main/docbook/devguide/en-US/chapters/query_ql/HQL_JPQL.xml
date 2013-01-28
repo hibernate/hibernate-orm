@@ -1427,7 +1427,9 @@
         </para>
         <para>
             Individual expressions in the order-by can be qualified with either <literal>ASC</literal> (ascending) or
-            <literal>DESC</literal> (descending) to indicated the desired ordering direction.
+            <literal>DESC</literal> (descending) to indicated the desired ordering direction. Null values can be placed
+            in front or at the end of sorted set using <literal>NULLS FIRST</literal> or <literal>NULLS LAST</literal>
+            clause respectively.
         </para>
         <example>
             <title>Order-by examples</title>

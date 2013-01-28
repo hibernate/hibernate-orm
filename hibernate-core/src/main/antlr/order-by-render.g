@@ -30,6 +30,7 @@ package org.hibernate.sql.ordering.antlr;
  * Antlr grammar for rendering <tt>ORDER_BY</tt> trees as described by the {@link OrderByFragmentParser}
 
  * @author Steve Ebersole
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 class GeneratedOrderByFragmentRenderer extends TreeParser;
 
@@ -53,6 +54,13 @@ options {
     /*package*/ String getRenderedFragment() {
         return buffer.toString();
     }
+
+	/**
+	 * Implementation note: This is just a stub. OrderByFragmentRenderer contains the effective implementation.
+	 */
+	protected String renderOrderByElement(String expression, String collation, String order, String nulls) {
+		throw new UnsupportedOperationException("Concrete ORDER BY renderer should override this method.");
+	}
 }
 
 orderByFragment
@@ -61,32 +69,29 @@ orderByFragment
     )
     ;
 
-sortSpecification
+sortSpecification { String sortKeySpec = null; String collSpec = null; String ordSpec = null; String nullOrd = null; }
     : #(
-        SORT_SPEC sortKeySpecification (collationSpecification)? (orderingSpecification)?
+        SORT_SPEC sortKeySpec=sortKeySpecification (collSpec=collationSpecification)? (ordSpec=orderingSpecification)? (nullOrd=nullOrdering)?
+            { out( renderOrderByElement( sortKeySpec, collSpec, ordSpec, nullOrd ) ); }
     )
     ;
 
-sortKeySpecification
-    : #(SORT_KEY sortKey)
+sortKeySpecification returns [String sortKeyExp = null]
+    : #(SORT_KEY s:sortKey) { sortKeyExp = #s.getText(); }
     ;
 
 sortKey
-    : i:IDENT {
-        out( #i );
-    }
+    : IDENT
     ;
 
-collationSpecification
-    : c:COLLATE {
-        out( " collate " );
-        out( c );
-    }
+collationSpecification returns [String collSpecExp = null]
+    : c:COLLATE { collSpecExp = "collate " + #c.getText(); }
     ;
 
-orderingSpecification
-    : o:ORDER_SPEC {
-        out( " " );
-        out( #o );
-    }
+orderingSpecification returns [String ordSpecExp = null]
+    : o:ORDER_SPEC { ordSpecExp = #o.getText(); }
+    ;
+
+nullOrdering returns [String nullOrdExp = null]
+    : n:NULL_ORDER { nullOrdExp = #n.getText(); }
     ;

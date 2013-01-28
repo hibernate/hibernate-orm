@@ -33,6 +33,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.NullPrecedence;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
@@ -247,6 +248,14 @@ public class SettingsFactory implements Serializable {
 			LOG.debugf( "Order SQL inserts for batching: %s", enabledDisabled(orderInserts) );
 		}
 		settings.setOrderInsertsEnabled( orderInserts );
+
+		String defaultNullPrecedence = ConfigurationHelper.getString(
+				AvailableSettings.DEFAULT_NULL_ORDERING, properties, "none", "first", "last"
+		);
+		if ( debugEnabled ) {
+			LOG.debugf( "Default null ordering: %s", defaultNullPrecedence );
+		}
+		settings.setDefaultNullPrecedence( NullPrecedence.parse( defaultNullPrecedence ) );
 
 		//Query parser settings:
 

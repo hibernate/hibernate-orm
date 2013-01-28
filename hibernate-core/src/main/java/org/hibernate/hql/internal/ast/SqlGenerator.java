@@ -33,6 +33,7 @@ import antlr.RecognitionException;
 import antlr.collections.AST;
 import org.jboss.logging.Logger;
 
+import org.hibernate.NullPrecedence;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -365,5 +366,11 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			}
 			out( d );
 		}
+	}
+
+	@Override
+	protected String renderOrderByElement(String expression, String order, String nulls) {
+		final NullPrecedence nullPrecedence = NullPrecedence.parse( nulls, sessionFactory.getSettings().getDefaultNullPrecedence() );
+		return sessionFactory.getDialect().renderOrderByElement( expression, null, order, nullPrecedence );
 	}
 }

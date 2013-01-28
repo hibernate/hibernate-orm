@@ -46,6 +46,7 @@ tokens
     ORDER_BY;
     SORT_SPEC;
     ORDER_SPEC;
+    NULL_ORDER;
     SORT_KEY;
     EXPR_LIST;
     DOT;
@@ -55,6 +56,9 @@ tokens
     COLLATE="collate";
 	ASCENDING="asc";
 	DESCENDING="desc";
+	NULLS="nulls";
+	FIRST;
+	LAST;
 }
 
 
@@ -76,7 +80,7 @@ tokens
      * @return The text.
      */
     protected final String extractText(AST ast) {
-        // for some reason, within AST creation blocks "[]" I am somtimes unable to refer to the AST.getText() method
+        // for some reason, within AST creation blocks "[]" I am sometimes unable to refer to the AST.getText() method
         // using #var (the #var is not interpreted as the rule's output AST).
         return ast.getText();
     }
@@ -168,7 +172,7 @@ orderByFragment { trace("orderByFragment"); }
  * the results should be sorted.
  */
 sortSpecification { trace("sortSpecification"); }
-    : sortKey (collationSpecification)? (orderingSpecification)? {
+    : sortKey (collationSpecification)? (orderingSpecification)? (nullOrdering)? {
         #sortSpecification = #( [SORT_SPEC, "{sort specification}"], #sortSpecification );
         #sortSpecification = postProcessSortSpecification( #sortSpecification );
     }
@@ -287,6 +291,30 @@ orderingSpecification! { trace("orderingSpecification"); }
     }
     | ( "desc" | "descending") {
         #orderingSpecification = #( [ORDER_SPEC, "desc"] );
+    }
+    ;
+
+/**
+ * Recognition rule for what SQL-2003 terms the <tt>null ordering</tt>; <tt>NULLS FIRST</tt> or
+ * <tt>NULLS LAST</tt>.
+ */
+nullOrdering! { trace("nullOrdering"); }
+    : NULLS n:nullPrecedence {
+        #nullOrdering = #( [NULL_ORDER, extractText( #n )] );
+    }
+    ;
+
+nullPrecedence { trace("nullPrecedence"); }
+    : IDENT {
+            if ( "first".equalsIgnoreCase( #nullPrecedence.getText() ) ) {
+                #nullPrecedence.setType( FIRST );
+            }
+            else if ( "last".equalsIgnoreCase( #nullPrecedence.getText() ) ) {
+                #nullPrecedence.setType( LAST );
+            }
+            else {
+                throw new SemanticException( "Expecting 'first' or 'last', but found '" +  #nullPrecedence.getText() + "' as null ordering precedence." );
+            }
     }
     ;
 

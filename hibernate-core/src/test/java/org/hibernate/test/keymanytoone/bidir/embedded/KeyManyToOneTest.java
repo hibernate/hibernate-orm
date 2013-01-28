@@ -26,9 +26,12 @@ import java.util.List;
 
 import org.junit.Test;
 
+import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -46,6 +49,18 @@ public class KeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	}
+
+	@Test
+	public void testCriteriaRestrictionOnKeyManyToOne() {
+		Session s = openSession();
+		s.beginTransaction();
+		s.createQuery( "from Order o where o.customer.name = 'Acme'" ).list();
+		Criteria criteria = s.createCriteria( Order.class );
+		criteria.createCriteria( "customer" ).add( Restrictions.eq( "name", "Acme" ) );
+		criteria.list();
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test

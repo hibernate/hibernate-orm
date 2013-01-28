@@ -30,8 +30,6 @@ import java.sql.NClob;
 
 /**
  * Contract for creating various LOB references.
- *
- * @todo LobCreator really needs to be an api since we expose it to users.
  * 
  * @author Steve Ebersole
  * @author Gail Badner
@@ -52,6 +50,14 @@ public interface LobCreator {
 	 * @return The wrapped clob which will be castable to {@link Clob} as well as {@link WrappedClob}.
 	 */
 	public Clob wrap(Clob clob);
+
+	/**
+	 * Wrap the given nclob in a serializable wrapper.
+	 *
+	 * @param nclob The nclob to be wrapped.
+	 * @return The wrapped nclob which will be castable to {@link NClob} as well as {@link WrappedNClob}.
+	 */
+	public NClob wrap(NClob nclob);
 
 	/**
 	 * Create a BLOB reference encapsulating the given byte array.

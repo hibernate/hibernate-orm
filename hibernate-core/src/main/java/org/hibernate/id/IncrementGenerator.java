@@ -53,6 +53,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class IncrementGenerator implements IdentifierGenerator, Configurable {
 
@@ -103,7 +104,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		for ( int i=0; i < tables.length; i++ ) {
 			final String tableName = dialect.quote( normalizer.normalizeIdentifierQuoting( tables[i] ) );
 			if ( tables.length > 1 ) {
-				buf.append( "select " ).append( column ).append( " from " );
+				buf.append( "select max(" ).append( column ).append( ") as mx from " );
 			}
 			buf.append( Table.qualify( catalog, schema, tableName ) );
 			if ( i < tables.length-1 ) {
@@ -112,7 +113,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		}
 		if ( tables.length > 1 ) {
 			buf.insert( 0, "( " ).append( " ) ids_" );
-			column = "ids_." + column;
+			column = "ids_.mx";
 		}
 
 		sql = "select max(" + column + ") from " + buf.toString();

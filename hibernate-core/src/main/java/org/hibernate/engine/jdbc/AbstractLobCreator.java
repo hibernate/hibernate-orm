@@ -24,6 +24,7 @@
 package org.hibernate.engine.jdbc;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.NClob;
 
 /**
  * Convenient base class for proxy-based LobCreator for handling wrapping.
@@ -31,22 +32,23 @@ import java.sql.Clob;
  * @author Steve Ebersole
  */
 public abstract class AbstractLobCreator implements LobCreator {
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Blob wrap(Blob blob) {
 		return SerializableBlobProxy.generateProxy( blob );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Clob wrap(Clob clob) {
-		if ( SerializableNClobProxy.isNClob( clob ) ) {
-			return SerializableNClobProxy.generateProxy( clob );
+		if ( NClob.class.isInstance( clob ) ) {
+			return wrap( (NClob) clob );
 		}
 		else {
 			return SerializableClobProxy.generateProxy( clob );
 		}
+	}
+
+	@Override
+	public NClob wrap(NClob nclob) {
+		return SerializableNClobProxy.generateProxy( nclob );
 	}
 }

@@ -23,7 +23,6 @@
  */
 package org.hibernate.mapping;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -31,7 +30,7 @@ import java.util.Properties;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.AccessType;
+import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
@@ -41,7 +40,6 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -370,29 +368,26 @@ public class SimpleValue implements KeyValue {
 				columnsNames[i] = ( (Column) columns.get( i ) ).getName();
 			}
 
-			AccessType accessType = AccessType.getAccessStrategy( typeParameters
-					.getProperty( DynamicParameterizedType.ACCESS_TYPE ) );
-			final Class classEntity = ReflectHelper.classForName( typeParameters
-					.getProperty( DynamicParameterizedType.ENTITY ) );
-			final String propertyName = typeParameters.getProperty( DynamicParameterizedType.PROPERTY );
-
-			Annotation[] annotations;
-			if ( accessType == AccessType.FIELD ) {
-				annotations = ( (Field) new DirectPropertyAccessor().getGetter( classEntity, propertyName ).getMember() )
-						.getAnnotations();
-
-			}
-			else {
-				annotations = ReflectHelper.getGetter( classEntity, propertyName ).getMethod().getAnnotations();
-			}
+			final XProperty xProperty = (XProperty) typeParameters.get( DynamicParameterizedType.XPROPERTY );
+			// todo : not sure this works for handling @MapKeyEnumerated
+			final Annotation[] annotations = xProperty == null
+					? null
+					: xProperty.getAnnotations();
 
 			typeParameters.put(
 					DynamicParameterizedType.PARAMETER_TYPE,
-					new ParameterTypeImpl( ReflectHelper.classForName( typeParameters
-							.getProperty( DynamicParameterizedType.RETURNED_CLASS ) ), annotations, table.getCatalog(),
-							table.getSchema(), table.getName(), Boolean.valueOf( typeParameters
-									.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ), columnsNames ) );
-
+					new ParameterTypeImpl(
+							ReflectHelper.classForName(
+									typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS )
+							),
+							annotations,
+							table.getCatalog(),
+							table.getSchema(),
+							table.getName(),
+							Boolean.valueOf( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
+							columnsNames
+					)
+			);
 		}
 		catch ( ClassNotFoundException cnfe ) {
 			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, cnfe );

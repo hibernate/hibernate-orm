@@ -93,7 +93,7 @@ public class RevisionInfoConfiguration {
     private Document generateDefaultRevisionInfoXmlMapping() {
         Document document = XMLHelper.getDocumentFactory().createDocument();
 
-        Element class_mapping = MetadataTools.createEntity(document, new AuditTableData(null, null, globalCfg.getDefaultSchemaName(), globalCfg.getDefaultCatalogName()), null);
+        Element class_mapping = MetadataTools.createEntity(document, new AuditTableData(null, null, globalCfg.getDefaultSchemaName(), globalCfg.getDefaultCatalogName()), null, null);
 
         class_mapping.addAttribute("name", revisionInfoEntityName);
         class_mapping.addAttribute("table", "REVINFO");

@@ -307,13 +307,6 @@ public class IngresDialect extends Dialect {
 	}
 
 	/**
-	 * Ingres explicitly needs "unique not null", because "with null" is default
-	 */
-	public boolean supportsNotNullUnique() {
-		return false;
-	}
-
-	/**
 	 * Does this dialect support temporary tables?
 	 */
 	public boolean supportsTemporaryTables() {

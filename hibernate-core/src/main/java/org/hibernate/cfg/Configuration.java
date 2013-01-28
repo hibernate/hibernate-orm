@@ -50,6 +50,7 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MapsId;
@@ -58,10 +59,6 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.jboss.logging.Logger;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.EmptyInterceptor;
@@ -145,6 +142,9 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+import org.jboss.logging.Logger;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
 
 /**
  * An instance of <tt>Configuration</tt> allows the application
@@ -1045,17 +1045,15 @@ public class Configuration implements Serializable {
 			Table table = (Table) iter.next();
 			if ( table.isPhysicalTable() ) {
 
-				if ( !dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-					Iterator subIter = table.getUniqueKeyIterator();
-					while ( subIter.hasNext() ) {
-						UniqueKey uk = (UniqueKey) subIter.next();
-						String constraintString = uk.sqlCreateString( dialect, mapping, defaultCatalog, defaultSchema );
-						if (constraintString != null) script.add( constraintString );
-					}
+				Iterator subIter = table.getUniqueKeyIterator();
+				while ( subIter.hasNext() ) {
+					UniqueKey uk = (UniqueKey) subIter.next();
+					String constraintString = uk.sqlCreateString( dialect, mapping, defaultCatalog, defaultSchema );
+					if (constraintString != null) script.add( constraintString );
 				}
 
 
-				Iterator subIter = table.getIndexIterator();
+				subIter = table.getIndexIterator();
 				while ( subIter.hasNext() ) {
 					Index index = (Index) subIter.next();
 					script.add(
@@ -1226,15 +1224,6 @@ public class Configuration implements Serializable {
 							)
 					);
 				}
-
-//broken, 'cos we don't generate these with names in SchemaExport
-//				subIter = table.getUniqueKeyIterator();
-//				while ( subIter.hasNext() ) {
-//					UniqueKey uk = (UniqueKey) subIter.next();
-//					if ( tableInfo==null || tableInfo.getIndexMetadata( uk.getFilterName() ) == null ) {
-//						script.add( uk.sqlCreateString(dialect, mapping) );
-//					}
-//				}
 			}
 		}
 
@@ -1542,7 +1531,6 @@ public class Configuration implements Serializable {
 	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames) {
 		keyName = normalizer.normalizeIdentifierQuoting( keyName );
 
-		UniqueKey uc;
 		int size = columnNames.length;
 		Column[] columns = new Column[size];
 		Set<Column> unbound = new HashSet<Column>();
@@ -1559,10 +1547,10 @@ public class Configuration implements Serializable {
 				unboundNoLogical.add( new Column( logicalColumnName ) );
 			}
 		}
+		UniqueKey uk = table.getOrCreateUniqueKey( keyName );
 		for ( Column column : columns ) {
 			if ( table.containsColumn( column ) ) {
-				uc = table.getOrCreateUniqueKey( keyName );
-				uc.addColumn( table.getColumn( column ) );
+				uk.addColumn( column );
 				unbound.remove( column );
 			}
 		}
@@ -1626,15 +1614,19 @@ public class Configuration implements Serializable {
 				( (SimpleValue) prop.getValue() ).setAlternateUniqueKey( true );
 			}
 		}
-
+		
 		//TODO: Somehow add the newly created foreign keys to the internal collection
 
+		LOG.debug( "Creating tables' unique integer identifiers" );
 		LOG.debug( "Processing foreign key constraints" );
 
 		itr = getTableMappings();
+		int uniqueInteger = 0;
 		Set<ForeignKey> done = new HashSet<ForeignKey>();
 		while ( itr.hasNext() ) {
-			secondPassCompileForeignKeys( (Table) itr.next(), done );
+			Table table = (Table) itr.next();
+			table.setUniqueInteger( uniqueInteger++ );
+			secondPassCompileForeignKeys( table, done );
 		}
 
 	}
@@ -2414,7 +2406,9 @@ public class Configuration implements Serializable {
 	}
 
 	public void addSqlFunction(String functionName, SQLFunction function) {
-		sqlFunctions.put( functionName, function );
+		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
+		// just in case a user's customer dialect uses mixed cases.
+		sqlFunctions.put( functionName.toLowerCase(), function );
 	}
 
 	public TypeResolver getTypeResolver() {
@@ -3082,6 +3076,19 @@ public class Configuration implements Serializable {
 				useNewGeneratorMappings = Boolean.valueOf( booleanName );
 			}
 			return useNewGeneratorMappings.booleanValue();
+		}
+
+		private Boolean useNationalizedCharacterData;
+
+		@Override
+		@SuppressWarnings( {"UnnecessaryUnboxing"})
+		public boolean useNationalizedCharacterData() {
+			if ( useNationalizedCharacterData == null ) {
+				final String booleanName = getConfigurationProperties()
+						.getProperty( AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA );
+				useNationalizedCharacterData = Boolean.valueOf( booleanName );
+			}
+			return useNationalizedCharacterData.booleanValue();
 		}
 
 		private Boolean forceDiscriminatorInSelectsByDefault;

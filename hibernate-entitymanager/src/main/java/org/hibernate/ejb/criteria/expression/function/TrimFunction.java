@@ -24,6 +24,7 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import java.io.Serializable;
+
 import javax.persistence.criteria.CriteriaBuilder.Trimspec;
 import javax.persistence.criteria.Expression;
 
@@ -37,6 +38,7 @@ import org.hibernate.ejb.criteria.expression.LiteralExpression;
  * Models the ANSI SQL <tt>TRIM</tt> function.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class TrimFunction
 		extends BasicFunctionExpression<String>
@@ -118,11 +120,22 @@ public class TrimFunction
 
 	@Override
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		String renderedTrimChar;
+		if ( trimCharacter.getClass().isAssignableFrom( 
+				LiteralExpression.class ) ) {
+			// If the character is a literal, treat it as one.  A few dialects
+			// do not support parameters as trim() arguments.
+			renderedTrimChar = ( ( LiteralExpression<Character> ) 
+					trimCharacter ).getLiteral().toString();
+		} else {
+			renderedTrimChar = ( (Renderable) trimCharacter ).render( 
+					renderingContext );
+		}
 		return new StringBuilder()
 				.append( "trim(" )
 				.append( trimspec.name() )
 				.append( ' ' )
-				.append( ( (Renderable) trimCharacter ).render( renderingContext ) )
+				.append( renderedTrimChar )
 				.append( " from " )
 				.append( ( (Renderable) trimSource ).render( renderingContext ) )
 				.append( ')' )

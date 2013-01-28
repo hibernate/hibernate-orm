@@ -58,6 +58,8 @@ import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.unique.DefaultUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -115,6 +117,8 @@ public abstract class Dialect implements ConversionContext {
 	private final Properties properties = new Properties();
 	private final Map<String, SQLFunction> sqlFunctions = new HashMap<String, SQLFunction>();
 	private final Set<String> sqlKeywords = new HashSet<String>();
+	
+	private final UniqueDelegate uniqueDelegate;
 
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -203,6 +207,8 @@ public abstract class Dialect implements ConversionContext {
 		registerHibernateType( Types.BLOB, StandardBasicTypes.BLOB.getName() );
 		registerHibernateType( Types.CLOB, StandardBasicTypes.CLOB.getName() );
 		registerHibernateType( Types.REAL, StandardBasicTypes.FLOAT.getName() );
+		
+		uniqueDelegate = new DefaultUniqueDelegate( this );
 	}
 
 	/**
@@ -310,6 +316,23 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getCastTypeName(int code) {
 		return getTypeName( code, Column.DEFAULT_LENGTH, Column.DEFAULT_PRECISION, Column.DEFAULT_SCALE );
+	}
+
+	public String cast(String value, int jdbcTypeCode, int length, int precision, int scale) {
+		if ( jdbcTypeCode == Types.CHAR ) {
+			return "cast(" + value + " as char(" + length + "))";
+		}
+		else {
+			return "cast(" + value + "as " + getTypeName( jdbcTypeCode, length, precision, scale ) + ")";
+		}
+	}
+
+	public String cast(String value, int jdbcTypeCode, int length) {
+		return cast( value, jdbcTypeCode, length, Column.DEFAULT_PRECISION, Column.DEFAULT_SCALE );
+	}
+
+	public String cast(String value, int jdbcTypeCode, int precision, int scale) {
+		return cast( value, jdbcTypeCode, Column.DEFAULT_LENGTH, precision, scale );
 	}
 
 	/**
@@ -598,7 +621,9 @@ public abstract class Dialect implements ConversionContext {
 	// function support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	protected void registerFunction(String name, SQLFunction function) {
-		sqlFunctions.put( name, function );
+		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
+		// just in case a user's customer dialect uses mixed cases.
+		sqlFunctions.put( name.toLowerCase(), function );
 	}
 
 	/**
@@ -1810,23 +1835,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support the <tt>UNIQUE</tt> column syntax?
-	 *
-	 * @return boolean
-	 */
-	public boolean supportsUnique() {
-		return true;
-	}
-
-    /**
-     * Does this dialect support adding Unique constraints via create and alter table ?
-     * @return boolean
-     */
-	public boolean supportsUniqueConstraintInCreateAlterTable() {
-	    return true;
-	}
-
-	/**
 	 * The syntax used to add a column to a table (optional).
 	 *
 	 * @return The "add column" fragment.
@@ -1891,16 +1899,6 @@ public abstract class Dialect implements ConversionContext {
 		return " add constraint " + constraintName + " primary key ";
 	}
 
-    /**
-     * The syntax used to add a unique constraint to a table.
-     *
-     * @param constraintName The name of the unique constraint.
-     * @return The "add unique" fragment
-     */
-    public String getAddUniqueConstraintString(String constraintName) {
-        return " add constraint " + constraintName + " unique ";
-    }
-
 	public boolean hasSelfReferentialForeignKeyBug() {
 		return false;
 	}
@@ -1955,10 +1953,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	public boolean supportsCascadeDelete() {
-		return true;
-	}
-
-	public boolean supportsNotNullUnique() {
 		return true;
 	}
 
@@ -2300,5 +2294,70 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean forceLobAsLastValue() {
 		return false;
+	}
+
+	/**
+	 * Some dialects have trouble applying pessimistic locking depending upon what other query options are
+	 * specified (paging, ordering, etc).  This method allows these dialects to request that locking be applied
+	 * by subsequent selects.
+	 *
+	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
+	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
+	 */
+	public boolean useFollowOnLocking() {
+		return false;
+	}
+	
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+	
+	public String getNotExpression( String expression ) {
+		return "not " + expression;
+	}
+
+	/**
+	 * Does this dialect support the <tt>UNIQUE</tt> column syntax?
+	 *
+	 * @return boolean
+	 * 
+	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean supportsUnique() {
+		return true;
+	}
+
+    /**
+     * Does this dialect support adding Unique constraints via create and alter table ?
+     * 
+     * @return boolean
+     * 
+     * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+     */
+	@Deprecated
+	public boolean supportsUniqueConstraintInCreateAlterTable() {
+	    return true;
+	}
+
+    /**
+     * The syntax used to add a unique constraint to a table.
+     *
+     * @param constraintName The name of the unique constraint.
+     * @return The "add unique" fragment
+     * 
+     * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+     */
+	@Deprecated
+	public String getAddUniqueConstraintString(String constraintName) {
+        return " add constraint " + constraintName + " unique ";
+    }
+
+	/**
+	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean supportsNotNullUnique() {
+		return true;
 	}
 }

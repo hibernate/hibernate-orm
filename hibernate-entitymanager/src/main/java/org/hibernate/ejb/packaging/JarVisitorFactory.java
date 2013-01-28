@@ -27,14 +27,16 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-
-import org.jboss.logging.Logger;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
+ * @author Brett Meyer
  */
 public class JarVisitorFactory {
 
@@ -194,18 +196,37 @@ public class JarVisitorFactory {
 		}
 	}
 
+	// Optimized by HHH-7835
 	public static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
 		int size;
-		byte[] tmpByte = new byte[ 4096 ];
-		byte[] entryBytes = new byte[0];
-		for ( ; ; ) {
-			size = inputStream.read( tmpByte );
-			if ( size == -1 ) break;
-			byte[] current = new byte[ entryBytes.length + size ];
-			System.arraycopy( entryBytes, 0, current, 0, entryBytes.length );
-			System.arraycopy( tmpByte, 0, current, entryBytes.length, size );
-			entryBytes = current;
+		List<byte[]> data = new LinkedList<byte[]>();
+		int bufferSize = 4096;
+		byte[] tmpByte = new byte[bufferSize];
+		int offset = 0;
+		int total = 0;
+		for ( ;; ) {
+			size = inputStream.read( tmpByte, offset, bufferSize - offset );
+			if ( size == -1 )
+				break;
+
+			offset += size;
+
+			if ( offset == tmpByte.length ) {
+				data.add( tmpByte );
+				tmpByte = new byte[bufferSize];
+				offset = 0;
+				total += tmpByte.length;
+			}
 		}
-		return entryBytes;
+
+		byte[] result = new byte[total + offset];
+		int count = 0;
+		for ( byte[] arr : data ) {
+			System.arraycopy( arr, 0, result, count * arr.length, arr.length );
+			count++;
+		}
+		System.arraycopy( tmpByte, 0, result, count * tmpByte.length, offset );
+
+		return result;
 	}
 }

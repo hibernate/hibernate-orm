@@ -27,6 +27,7 @@ import java.util.Map;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.Tools;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -53,7 +54,8 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
 
         Object ret;
         try {
-            ret = Thread.currentThread().getContextClassLoader().loadClass(compositeIdClass).newInstance();
+            final Class clazz = Thread.currentThread().getContextClassLoader().loadClass(compositeIdClass);
+            ret = ReflectHelper.getDefaultConstructor(clazz).newInstance();
         } catch (Exception e) {
             throw new AuditException(e);
         }

@@ -61,6 +61,9 @@ public class StandardQueryCache implements QueryCache {
 			StandardQueryCache.class.getName()
 	);
 
+	private static final boolean DEBUGGING = LOG.isDebugEnabled();
+	private static final boolean TRACING = LOG.isTraceEnabled();
+
 	private QueryResultsRegion cacheRegion;
 	private UpdateTimestampsCache updateTimestampsCache;
 
@@ -86,19 +89,19 @@ public class StandardQueryCache implements QueryCache {
 		this.updateTimestampsCache = updateTimestampsCache;
 	}
 
-	@SuppressWarnings({ "UnnecessaryBoxing", "unchecked" })
+	@SuppressWarnings({ "unchecked" })
 	public boolean put(
-			QueryKey key,
-			Type[] returnTypes,
-			List result,
-			boolean isNaturalKeyLookup,
-			SessionImplementor session) throws HibernateException {
+			final QueryKey key,
+			final Type[] returnTypes,
+			final List result,
+			final boolean isNaturalKeyLookup,
+			final SessionImplementor session) throws HibernateException {
 		if ( isNaturalKeyLookup && result.isEmpty() ) {
 			return false;
 		}
 		long ts = cacheRegion.nextTimestamp();
 
-		LOG.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), ts );
+		if ( DEBUGGING ) LOG.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), ts );
 
 		List cacheable = new ArrayList( result.size() + 1 );
 		logCachedResultDetails( key, null, returnTypes, cacheable );
@@ -120,28 +123,28 @@ public class StandardQueryCache implements QueryCache {
 
 	@SuppressWarnings({ "unchecked" })
 	public List get(
-			QueryKey key,
-			Type[] returnTypes,
-			boolean isNaturalKeyLookup,
-			Set spaces,
-			SessionImplementor session) throws HibernateException {
-		LOG.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
+			final QueryKey key,
+			final Type[] returnTypes,
+			final boolean isNaturalKeyLookup,
+			final Set spaces,
+			final SessionImplementor session) throws HibernateException {
+		if ( DEBUGGING ) LOG.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
 
 		List cacheable = (List) cacheRegion.get( key );
 		logCachedResultDetails( key, spaces, returnTypes, cacheable );
 
 		if ( cacheable == null ) {
-			LOG.debug( "Query results were not found in cache" );
+			if ( DEBUGGING ) LOG.debug( "Query results were not found in cache" );
 			return null;
 		}
 
 		Long timestamp = (Long) cacheable.get( 0 );
 		if ( !isNaturalKeyLookup && !isUpToDate( spaces, timestamp ) ) {
-			LOG.debug( "Cached query results were not up-to-date" );
+			if ( DEBUGGING ) LOG.debug( "Cached query results were not up-to-date" );
 			return null;
 		}
 
-		LOG.debug( "Returning cached query results" );
+		if ( DEBUGGING ) LOG.debug( "Returning cached query results" );
 		final boolean singleResult = returnTypes.length == 1;
 		for ( int i = 1; i < cacheable.size(); i++ ) {
 			if ( singleResult ) {
@@ -172,7 +175,7 @@ public class StandardQueryCache implements QueryCache {
 					//      the uoe could occur while resolving
 					//      associations, leaving the PC in an
 					//      inconsistent state
-					LOG.debug( "Unable to reassemble cached result set" );
+					if ( DEBUGGING ) LOG.debug( "Unable to reassemble cached result set" );
 					cacheRegion.evict( key );
 					return null;
 				}
@@ -182,8 +185,8 @@ public class StandardQueryCache implements QueryCache {
 		return result;
 	}
 
-	protected boolean isUpToDate(Set spaces, Long timestamp) {
-		LOG.debugf( "Checking query spaces are up-to-date: %s", spaces );
+	protected boolean isUpToDate(final Set spaces, final Long timestamp) {
+		if ( DEBUGGING ) LOG.debugf( "Checking query spaces are up-to-date: %s", spaces );
 		return updateTimestampsCache.isUpToDate( spaces, timestamp );
 	}
 
@@ -206,7 +209,7 @@ public class StandardQueryCache implements QueryCache {
 	}
 
 	private static void logCachedResultDetails(QueryKey key, Set querySpaces, Type[] returnTypes, List result) {
-		if ( !LOG.isTraceEnabled() ) {
+		if ( !TRACING ) {
 			return;
 		}
 		LOG.trace( "key.hashCode=" + key.hashCode() );
@@ -231,7 +234,7 @@ public class StandardQueryCache implements QueryCache {
 	}
 
 	private static void logCachedResultRowDetails(Type[] returnTypes, Object result) {
-		if ( !LOG.isTraceEnabled() ) {
+		if ( !TRACING ) {
 			return;
 		}
 		logCachedResultRowDetails(
@@ -241,7 +244,7 @@ public class StandardQueryCache implements QueryCache {
 	}
 
 	private static void logCachedResultRowDetails(Type[] returnTypes, Object[] tuple) {
-		if ( !LOG.isTraceEnabled() ) {
+		if ( !TRACING ) {
 			return;
 		}
 		if ( tuple == null ) {

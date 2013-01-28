@@ -240,13 +240,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		return ""; // Original Dialect.java returns " for update";
 	}
 
-    /**
-     * RDMS does not support adding Unique constraints via create and alter table.
-     */
-	public boolean supportsUniqueConstraintInCreateAlterTable() {
-	    return true;
-	}
-
 	// Verify the state of this new method in Hibernate 3.0 Dialect.java
     /**
      * RDMS does not support Cascade Deletes.

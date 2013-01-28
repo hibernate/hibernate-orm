@@ -33,7 +33,9 @@ import org.hibernate.type.Type;
 
 /**
  * Represents an order imposed upon a <tt>Criteria</tt> result set
+ * 
  * @author Gavin King
+ * @author Brett Meyer
  */
 public class Order implements Serializable {
 
@@ -69,7 +71,14 @@ public class Order implements Serializable {
 		StringBuilder fragment = new StringBuilder();
 		for ( int i=0; i<columns.length; i++ ) {
 			SessionFactoryImplementor factory = criteriaQuery.getFactory();
-			boolean lower = ignoreCase && type.sqlTypes( factory )[i]==Types.VARCHAR;
+			boolean lower = false;
+			if ( ignoreCase ) {
+				int sqlType = type.sqlTypes( factory )[i];
+				lower = sqlType == Types.VARCHAR
+						|| sqlType == Types.CHAR
+						|| sqlType == Types.LONGVARCHAR;
+			}
+			
 			if (lower) {
 				fragment.append( factory.getDialect().getLowercaseFunction() )
 					.append('(');
@@ -80,6 +89,18 @@ public class Order implements Serializable {
 			if ( i<columns.length-1 ) fragment.append(", ");
 		}
 		return fragment.toString();
+	}
+	
+	public String getPropertyName() {
+		return propertyName;
+	}
+
+	public boolean isAscending() {
+		return ascending;
+	}
+
+	public boolean isIgnoreCase() {
+		return ignoreCase;
 	}
 
 	/**

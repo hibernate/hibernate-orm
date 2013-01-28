@@ -51,7 +51,7 @@ subprojects { subProject ->
     defaultTasks 'build'
 
     group = 'org.hibernate'
-    version = '4.1.8-SNAPSHOT'
+    version = '4.1.10-SNAPSHOT'
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
@@ -164,6 +164,12 @@ subprojects { subProject ->
         )
 
         test {
+            // pass along command line defined system props (-D) to the test
+            //      pretty sure I used to have this limited to just certain prefixes, but that is no longer here
+            //      and  I no longer remember that groovy-magic needed to accomplish that
+            // TODO: Temporarily removing -- was causing issues with
+            // entitymanager tests.
+            //systemProperties = System.properties
             systemProperties['hibernate.test.validatefailureexpected'] = true
             maxHeapSize = "1024m"
         }

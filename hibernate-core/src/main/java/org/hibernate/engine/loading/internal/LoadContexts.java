@@ -201,11 +201,6 @@ public class LoadContexts {
 			}
 			return lce.getCollection();
 		}
-		// TODO : should really move this log statement to CollectionType, where this is used from...
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Creating collection wrapper: %s",
-					MessageHelper.collectionInfoString( persister, ownerKey, getSession().getFactory() ) );
-		}
 		return null;
 	}
 

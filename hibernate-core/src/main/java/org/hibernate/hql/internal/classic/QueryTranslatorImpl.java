@@ -953,7 +953,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		if ( stats ) startTime = System.currentTimeMillis();
 
 		try {
-			final ResultSet rs = executeQueryStatement( queryParameters, false, session );
+			final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
+			final ResultSet rs = executeQueryStatement( queryParameters, false, afterLoadActions, session );
 			final PreparedStatement st = (PreparedStatement) rs.getStatement();
 			HolderInstantiator hi = HolderInstantiator.createClassicHolderInstantiator(holderConstructor, queryParameters.getResultTransformer());
 			Iterator result = new IteratorImpl( rs, st, session, queryParameters.isReadOnly( session ), returnTypes, getColumnNames(), hi );
@@ -1094,8 +1095,13 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	}
 
 	@Override
-    protected String applyLocks(String sql, LockOptions lockOptions, Dialect dialect) throws QueryException {
+    protected String applyLocks(
+			String sql,
+			QueryParameters parameters,
+			Dialect dialect,
+			List<AfterLoadAction> afterLoadActions) throws QueryException {
 		// can't cache this stuff either (per-invocation)
+		final LockOptions lockOptions = parameters.getLockOptions();
 		final String result;
 		if ( lockOptions == null ||
 			( lockOptions.getLockMode() == LockMode.NONE && lockOptions.getAliasLockCount() == 0 ) ) {

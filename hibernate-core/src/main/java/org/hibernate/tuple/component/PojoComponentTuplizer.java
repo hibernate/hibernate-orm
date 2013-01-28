@@ -100,7 +100,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		if ( component == BackrefPropertyAccessor.UNKNOWN ) {
 			return new Object[propertySpan];
 		}
-		if ( optimizer != null && optimizer.getAccessOptimizer() != null ) {
+		else if ( optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return optimizer.getAccessOptimizer().getPropertyValues( component );
 		}
 		else {

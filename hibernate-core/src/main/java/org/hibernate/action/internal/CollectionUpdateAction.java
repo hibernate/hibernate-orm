@@ -73,7 +73,8 @@ public final class CollectionUpdateAction extends CollectionAction {
 			if (affectedByFilters) {
 				throw new HibernateException(
 					"cannot recreate collection while filter is enabled: " + 
-					MessageHelper.collectionInfoString( persister, id, persister.getFactory() )
+					MessageHelper.collectionInfoString(persister, collection,
+							id, session )
 				);
 			}
 			if ( !emptySnapshot ) persister.remove( id, session );

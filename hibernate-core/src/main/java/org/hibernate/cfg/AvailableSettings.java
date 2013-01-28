@@ -594,4 +594,8 @@ public interface AvailableSettings {
 	public static final String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";
 
     public static final String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
+
+	public static final String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
+
+	public static final String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
 }

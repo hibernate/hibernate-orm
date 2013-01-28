@@ -25,7 +25,7 @@
         <id name="id">
             <generator class="increment"/>
         </id>
-        <property name="name" unique="true"/>
+        <property name="name" unique="true" not-null="true"/>
     </class>
 
     <class name="Info">

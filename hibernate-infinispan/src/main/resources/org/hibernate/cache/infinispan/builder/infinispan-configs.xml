@@ -16,6 +16,8 @@
          </properties>
          <!-- See the JGroupsTransport javadocs for more flags -->
       </transport>
+
+      <globalJmxStatistics allowDuplicateDomains="true" />
    </global>
 
    <default>

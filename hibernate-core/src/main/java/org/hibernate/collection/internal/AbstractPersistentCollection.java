@@ -23,7 +23,6 @@
  */
 package org.hibernate.collection.internal;
 
-import javax.naming.NamingException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,13 +32,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.jboss.logging.Logger;
+import javax.naming.NamingException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -56,6 +54,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Base class implementing {@link org.hibernate.collection.spi.PersistentCollection}
@@ -176,6 +175,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	private <T> T withTemporarySessionIfNeeded(LazyInitializationWork<T> lazyInitializationWork) {
 		SessionImplementor originalSession = null;
 		boolean isTempSession = false;
+		boolean isJTA = false;
 
 		if ( session == null ) {
 			if ( specjLazyLoad ) {
@@ -183,7 +183,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				isTempSession = true;
 			}
 			else {
-				throw new LazyInitializationException( "could not initialize proxy - no Session" );
+				throwLazyInitializationException( "could not initialize proxy - no Session" );
 			}
 		}
 		else if ( !session.isOpen() ) {
@@ -193,7 +193,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				isTempSession = true;
 			}
 			else {
-				throw new LazyInitializationException( "could not initialize proxy - the owning Session was closed" );
+				throwLazyInitializationException( "could not initialize proxy - the owning Session was closed" );
 			}
 		}
 		else if ( !session.isConnected() ) {
@@ -203,11 +203,27 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				isTempSession = true;
 			}
 			else {
-				throw new LazyInitializationException( "could not initialize proxy - the owning Session is disconnected" );
+				throwLazyInitializationException( "could not initialize proxy - the owning Session is disconnected" );
 			}
 		}
 
 		if ( isTempSession ) {
+			// TODO: On the next major release, add an
+			// 'isJTA' or 'getTransactionFactory' method to Session.
+			isJTA = session.getTransactionCoordinator()
+					.getTransactionContext().getTransactionEnvironment()
+					.getTransactionFactory()
+					.compatibleWithJtaSynchronization();
+			
+			if ( !isJTA ) {
+				// Explicitly handle the transactions only if we're not in
+				// a JTA environment.  A lazy loading temporary session can
+				// be created even if a current session and transaction are
+				// open (ex: session.clear() was used).  We must prevent
+				// multiple transactions.
+				( ( Session) session ).beginTransaction();
+			}
+			
 			session.getPersistenceContext().addUninitializedDetachedCollection(
 					session.getFactory().getCollectionPersister( getRole() ),
 					this
@@ -221,6 +237,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			if ( isTempSession ) {
 				// make sure the just opened temp session gets closed!
 				try {
+					if ( !isJTA ) {
+						( ( Session) session ).getTransaction().commit();
+					}
 					( (Session) session ).close();
 				}
 				catch (Exception e) {
@@ -586,11 +605,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	protected void prepareForPossibleSpecialSpecjInitialization() {
 		if ( session != null ) {
-			specjLazyLoad = Boolean.parseBoolean(
-					session.getFactory()
-							.getProperties()
-							.getProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS )
-			);
+			specjLazyLoad = session.getFactory().getSettings().isInitializeLazyStateOutsideTransactionsEnabled();
 
 			if ( specjLazyLoad && sessionFactoryUuid == null ) {
 				try {
@@ -628,9 +643,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 					throw new HibernateException(
 							"Illegal attempt to associate a collection with two open sessions: " +
 									MessageHelper.collectionInfoString(
-											ce.getLoadedPersister(),
-											ce.getLoadedKey(),
-											session.getFactory()
+											ce.getLoadedPersister(), this,
+											ce.getLoadedKey(), session
 									)
 					);
 				}

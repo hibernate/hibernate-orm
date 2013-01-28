@@ -39,6 +39,7 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -325,4 +326,21 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
         List result = getAuditReader().createQuery().forEntitiesModifiedAtRevision(StrIntTestEntity.class, 5).getResultList();
         Assert.assertTrue(result.isEmpty());
     }
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7800")
+	public void testBetweenInsideDisjunction() {
+		List result = getAuditReader().createQuery()
+				.forRevisionsOfEntity( StrIntTestEntity.class, true, true )
+				.add( AuditEntity.disjunction()
+								.add( AuditEntity.property( "number" ).between( 0, 5 ) )
+								.add( AuditEntity.property( "number" ).between( 20, 100 ) ) )
+				.getResultList();
+
+		for ( Object o : result ) {
+			StrIntTestEntity entity = (StrIntTestEntity) o;
+			int number = entity.getNumber();
+			Assert.assertTrue( ( number >= 0 && number <= 5 ) || ( number >= 20 && number <= 100 ) );
+		}
+	}
 }

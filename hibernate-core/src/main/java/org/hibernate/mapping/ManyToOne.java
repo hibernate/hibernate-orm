@@ -49,7 +49,6 @@ public class ManyToOne extends ToOne {
 				getReferencedPropertyName(),
 				isLazy(),
 				isUnwrapProxy(),
-				isEmbedded(),
 				isIgnoreNotFound(),
 				isLogicalOneToOne
 		);

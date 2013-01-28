@@ -327,7 +327,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not update collection rows: " + 
-					MessageHelper.collectionInfoString( this, id, getFactory() ),
+					MessageHelper.collectionInfoString( this, collection, id, session ),
 					getSQLInsertRowString()
 			);
 		}

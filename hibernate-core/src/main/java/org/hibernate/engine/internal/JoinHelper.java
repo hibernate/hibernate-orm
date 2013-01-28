@@ -71,31 +71,46 @@ public final class JoinHelper {
 	 * be used in the join
 	 */
 	public static String[] getAliasedLHSColumnNames(
-			AssociationType type, 
-			String alias, 
-			int property, 
+			AssociationType associationType,
+			String columnQualifier,
+			int propertyIndex,
 			int begin, 
 			OuterJoinLoadable lhsPersister,
-			Mapping mapping
-	) {
-		if ( type.useLHSPrimaryKey() ) {
-			return StringHelper.qualify( alias, lhsPersister.getIdentifierColumnNames() );
+			Mapping mapping) {
+		if ( associationType.useLHSPrimaryKey() ) {
+			return StringHelper.qualify( columnQualifier, lhsPersister.getIdentifierColumnNames() );
 		}
 		else {
-			String propertyName = type.getLHSPropertyName();
-			if (propertyName==null) {
-				return ArrayHelper.slice( 
-						lhsPersister.toColumns(alias, property), 
-						begin, 
-						type.getColumnSpan(mapping) 
-					);
+			String propertyName = associationType.getLHSPropertyName();
+			if ( propertyName == null ) {
+				return ArrayHelper.slice(
+						toColumns( lhsPersister, columnQualifier, propertyIndex ),
+						begin,
+						associationType.getColumnSpan( mapping )
+				);
 			}
 			else {
-				return ( (PropertyMapping) lhsPersister ).toColumns(alias, propertyName); //bad cast
+				return ( (PropertyMapping) lhsPersister ).toColumns(columnQualifier, propertyName); //bad cast
 			}
 		}
 	}
-	
+
+	private static String[] toColumns(OuterJoinLoadable persister, String columnQualifier, int propertyIndex) {
+		if ( propertyIndex >= 0 ) {
+			return persister.toColumns( columnQualifier, propertyIndex );
+		}
+		else {
+			final String[] cols = persister.getIdentifierColumnNames();
+			final String[] result = new String[cols.length];
+
+			for ( int j = 0; j < cols.length; j++ ) {
+				result[j] = StringHelper.qualify( columnQualifier, cols[j] );
+			}
+
+			return result;
+		}
+	}
+
 	/**
 	 * Get the columns of the owning entity which are to 
 	 * be used in the join
@@ -116,8 +131,10 @@ public final class JoinHelper {
 			if (propertyName==null) {
 				//slice, to get the columns for this component
 				//property
-				return ArrayHelper.slice( 
-						lhsPersister.getSubclassPropertyColumnNames(property),
+				return ArrayHelper.slice(
+						property < 0
+								? lhsPersister.getIdentifierColumnNames()
+								: lhsPersister.getSubclassPropertyColumnNames(property),
 						begin, 
 						type.getColumnSpan(mapping) 
 					);
@@ -131,11 +148,10 @@ public final class JoinHelper {
 	}
 	
 	public static String getLHSTableName(
-		AssociationType type, 
-		int property, 
-		OuterJoinLoadable lhsPersister
-	) {
-		if ( type.useLHSPrimaryKey() ) {
+			AssociationType type,
+			int propertyIndex,
+			OuterJoinLoadable lhsPersister) {
+		if ( type.useLHSPrimaryKey() || propertyIndex < 0 ) {
 			return lhsPersister.getTableName();
 		}
 		else {
@@ -144,7 +160,7 @@ public final class JoinHelper {
 				//if there is no property-ref, assume the join
 				//is to the subclass table (ie. the table of the
 				//subclass that the association belongs to)
-				return lhsPersister.getSubclassPropertyTableName(property);
+				return lhsPersister.getSubclassPropertyTableName(propertyIndex);
 			}
 			else {
 				//handle a property-ref
@@ -157,7 +173,7 @@ public final class JoinHelper {
 					//assumes that the property-ref refers to a property of the subclass
 					//table that the association belongs to (a reasonable guess)
 					//TODO: fix this, add: OuterJoinLoadable.getSubclassPropertyTableName(String propertyName)
-					propertyRefTable = lhsPersister.getSubclassPropertyTableName(property);
+					propertyRefTable = lhsPersister.getSubclassPropertyTableName(propertyIndex);
 				}
 				return propertyRefTable;
 			}

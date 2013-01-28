@@ -26,9 +26,9 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -55,14 +55,13 @@ public class Table implements RelationalModel, Serializable {
 	private Map columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
-	private Map indexes = new HashMap();
-	private Map foreignKeys = new HashMap();
-	private Map<String,UniqueKey> uniqueKeys = new HashMap<String,UniqueKey>();
-	private final int uniqueInteger;
+	private Map indexes = new LinkedHashMap();
+	private Map foreignKeys = new LinkedHashMap();
+	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
+	private int uniqueInteger;
 	private boolean quoted;
 	private boolean schemaQuoted;
 	private boolean catalogQuoted;
-	private static int tableCounter = 0;
 	private List checkConstraints = new ArrayList();
 	private String rowId;
 	private String subselect;
@@ -100,9 +99,7 @@ public class Table implements RelationalModel, Serializable {
 		}
 	}
 
-	public Table() {
-		uniqueInteger = tableCounter++;
-	}
+	public Table() { }
 
 	public Table(String name) {
 		this();
@@ -328,6 +325,36 @@ public class Table implements RelationalModel, Serializable {
 				&& uniqueKey.getColumns().containsAll( primaryKey.getColumns() );
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+			+ ((catalog == null) ? 0 : isCatalogQuoted() ? catalog.hashCode() : catalog.toLowerCase().hashCode());
+		result = prime * result + ((name == null) ? 0 : isQuoted() ? name.hashCode() : name.toLowerCase().hashCode());
+		result = prime * result
+			+ ((schema == null) ? 0 : isSchemaQuoted() ? schema.hashCode() : schema.toLowerCase().hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof Table && equals((Table) object);
+	}
+
+	public boolean equals(Table table) {
+		if (null == table) {
+			return false;
+		}
+		if (this == table) {
+			return true;
+		}
+
+		return isQuoted() ? name.equals(table.getName()) : name.equalsIgnoreCase(table.getName())
+			&& ((schema == null && table.getSchema() != null) ? false : (schema == null) ? true : isSchemaQuoted() ? schema.equals(table.getSchema()) : schema.equalsIgnoreCase(table.getSchema()))
+			&& ((catalog == null && table.getCatalog() != null) ? false : (catalog == null) ? true : isCatalogQuoted() ? catalog.equals(table.getCatalog()) : catalog.equalsIgnoreCase(table.getCatalog()));
+	}
+	
 	public void validateColumns(Dialect dialect, Mapping mapping, TableMetadata tableInfo) {
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
@@ -392,11 +419,12 @@ public class Table implements RelationalModel, Serializable {
 					alter.append( " not null" );
 				}
 
-				boolean useUniqueConstraint = column.isUnique() &&
-						dialect.supportsUnique() &&
-						( column.isNullable() || dialect.supportsNotNullUnique() );
-				if ( useUniqueConstraint ) {
-					alter.append( " unique" );
+				if ( column.isUnique() ) {
+					UniqueKey uk = getOrCreateUniqueKey( 
+							column.getQuotedName( dialect ) + '_' );
+					uk.addColumn( column );
+					alter.append( dialect.getUniqueDelegate()
+							.applyUniqueToColumn( column ) );
 				}
 
 				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
@@ -493,19 +521,15 @@ public class Table implements RelationalModel, Serializable {
 				}
 
 			}
-
-			boolean useUniqueConstraint = col.isUnique() &&
-					( col.isNullable() || dialect.supportsNotNullUnique() );
-			if ( useUniqueConstraint ) {
-				if ( dialect.supportsUnique() ) {
-					buf.append( " unique" );
-				}
-				else {
-					UniqueKey uk = getOrCreateUniqueKey( col.getQuotedName( dialect ) + '_' );
-					uk.addColumn( col );
-				}
+			
+			if ( col.isUnique() ) {
+				UniqueKey uk = getOrCreateUniqueKey( 
+						col.getQuotedName( dialect ) + '_' );
+				uk.addColumn( col );
+				buf.append( dialect.getUniqueDelegate()
+						.applyUniqueToColumn( col ) );
 			}
-
+				
 			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
 				buf.append( " check (" )
 						.append( col.getCheckConstraint() )
@@ -527,21 +551,7 @@ public class Table implements RelationalModel, Serializable {
 					.append( getPrimaryKey().sqlConstraintString( dialect ) );
 		}
 
-		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
-			Iterator ukiter = getUniqueKeyIterator();
-			while ( ukiter.hasNext() ) {
-				UniqueKey uk = (UniqueKey) ukiter.next();
-				String constraint = uk.sqlConstraintString( dialect );
-				if ( constraint != null ) {
-					buf.append( ", " ).append( constraint );
-				}
-			}
-		}
-		/*Iterator idxiter = getIndexIterator();
-		while ( idxiter.hasNext() ) {
-			Index idx = (Index) idxiter.next();
-			buf.append(',').append( idx.sqlConstraintString(dialect) );
-		}*/
+		buf.append( dialect.getUniqueDelegate().applyUniquesToTable( this ) );
 
 		if ( dialect.supportsTableCheck() ) {
 			Iterator chiter = checkConstraints.iterator();
@@ -722,6 +732,12 @@ public class Table implements RelationalModel, Serializable {
 		else {
 			this.catalog = catalog;
 		}
+	}
+
+	// This must be done outside of Table, rather than statically, to ensure
+	// deterministic alias names.  See HHH-2448.
+	public void setUniqueInteger( int uniqueInteger ) {
+		this.uniqueInteger = uniqueInteger;
 	}
 
 	public int getUniqueInteger() {

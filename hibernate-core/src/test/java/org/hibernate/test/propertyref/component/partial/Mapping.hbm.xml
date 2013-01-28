@@ -16,7 +16,7 @@
 		</id>
 		<component name="identity">
 			<property name="name"/>
-			<property name="ssn" unique="true"/>
+			<property name="ssn" unique="true" not-null="true"/>
 		</component>
 	</class>
 	

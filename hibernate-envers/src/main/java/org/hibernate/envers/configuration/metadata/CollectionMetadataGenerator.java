@@ -531,7 +531,7 @@ public final class CollectionMetadataGenerator {
         String catalog = mainGenerator.getCatalog(propertyAuditingData.getJoinTable().catalog(), propertyValue.getCollectionTable());
 
         Element middleEntityXml = MetadataTools.createEntity(xmlMappingData.newAdditionalMapping(),
-                new AuditTableData(auditMiddleEntityName, auditMiddleTableName, schema, catalog), null);
+                new AuditTableData(auditMiddleEntityName, auditMiddleTableName, schema, catalog), null, null);
         Element middleEntityXmlId = middleEntityXml.addElement("composite-id");
 
         // If there is a where clause on the relation, adding it to the middle entity.

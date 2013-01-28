@@ -1,18 +1,17 @@
 package org.hibernate.envers.test.integration.jta;
 
-import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntTestEntity;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.basic.Simple}, but in a JTA environment.
@@ -60,17 +59,23 @@ public class JtaTransaction extends BaseEnversJPAFunctionalTestCase  {
         em.close();
     }
 
-    @Test
-    public void testRevisionsCounts() throws Exception {
-        Assert.assertEquals(Arrays.asList(1, 2), getAuditReader().getRevisions(IntTestEntity.class, id1));
-    }
+	@Test
+	public void testRevisionsCounts() throws Exception {
+		Assert.assertEquals( 2, getAuditReader().getRevisions( 
+				IntTestEntity.class, id1 ).size() );
+	}
 
-    @Test
-    public void testHistoryOfId1() {
-        IntTestEntity ver1 = new IntTestEntity(10, id1);
-        IntTestEntity ver2 = new IntTestEntity(20, id1);
+	@Test
+	public void testHistoryOfId1() {
+		IntTestEntity ver1 = new IntTestEntity( 10, id1 );
+		IntTestEntity ver2 = new IntTestEntity( 20, id1 );
 
-        Assert.assertEquals(ver1, getAuditReader().find(IntTestEntity.class, id1, 1));
-        Assert.assertEquals(ver2, getAuditReader().find(IntTestEntity.class, id1, 2));
-    }
+		List<Number> revisions = getAuditReader().getRevisions( 
+				IntTestEntity.class, id1 );
+
+		Assert.assertEquals( ver1, getAuditReader().find( 
+				IntTestEntity.class, id1, revisions.get( 0 ) ) );
+		Assert.assertEquals( ver2, getAuditReader().find( 
+				IntTestEntity.class, id1, revisions.get( 1 ) ) );
+	}
 }

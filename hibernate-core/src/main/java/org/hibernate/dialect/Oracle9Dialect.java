@@ -379,7 +379,7 @@ public class Oracle9Dialect extends Dialect {
 	}
 	
 	@Override
-	public boolean supportsNotNullUnique() {
-		return false;
+	public String getNotExpression( String expression ) {
+		return "not (" + expression + ")";
 	}
 }

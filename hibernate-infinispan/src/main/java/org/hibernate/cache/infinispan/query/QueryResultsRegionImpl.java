@@ -1,15 +1,14 @@
 package org.hibernate.cache.infinispan.query;
 
-import java.util.Properties;
 import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.FlagAdapter;
+import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
+import org.infinispan.AdvancedCache;
+import org.infinispan.context.Flag;
 
 /**
  * @author Chris Bredesen
@@ -17,27 +16,35 @@ import org.hibernate.cache.spi.RegionFactory;
  * @since 3.5
  */
 public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implements QueryResultsRegion {
-   private boolean localOnly;
 
-   public QueryResultsRegionImpl(CacheAdapter cacheAdapter, String name, Properties properties, TransactionManager transactionManager, RegionFactory factory) {
-      super(cacheAdapter, name, null, transactionManager, factory);
+   private final AdvancedCache evictCache;
+   private final AdvancedCache putCache;
+   private final AdvancedCache getCache;
+
+   public QueryResultsRegionImpl(AdvancedCache cache, String name, RegionFactory factory) {
+      super(cache, name, null, factory);
       // If Infinispan is using INVALIDATION for query cache, we don't want to propagate changes.
       // We use the Timestamps cache to manage invalidation
-      localOnly = cacheAdapter.isClusteredInvalidation();
+      boolean localOnly = Caches.isInvalidationCache(cache);
+
+      this.evictCache = localOnly ? Caches.localCache(cache) : cache;
+
+      this.putCache = localOnly ?
+            Caches.failSilentWriteCache(cache, Flag.CACHE_MODE_LOCAL) :
+            Caches.failSilentWriteCache(cache);
+
+      this.getCache = Caches.failSilentReadCache(cache);
    }
 
    public void evict(Object key) throws CacheException {
-      if (localOnly)
-         cacheAdapter.withFlags(FlagAdapter.CACHE_MODE_LOCAL).remove(key);
-      else 
-         cacheAdapter.remove(key);
+      evictCache.remove(key);
    }
 
    public void evictAll() throws CacheException {
       Transaction tx = suspend();
       try {
          invalidateRegion(); // Invalidate the local region and then go remote
-         cacheAdapter.broadcastEvictAll();
+         Caches.broadcastEvictAll(cache);
       } finally {
          resume(tx);
       }
@@ -60,9 +67,9 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
       // Add a zero (or low) timeout option so we don't block
       // waiting for tx's that did a put to commit
       if (skipCacheStore)
-         return get(key, true, FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT, FlagAdapter.SKIP_CACHE_STORE);
+         return getCache.withFlags(Flag.SKIP_CACHE_STORE).get(key);
       else
-         return get(key, true, FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT);
+         return getCache.get(key);
    }   
 
    public void put(Object key, Object value) throws CacheException {
@@ -82,12 +89,8 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
          // any subsequent read will just see the old result with its
          // out-of-date timestamp; that result will be discarded and the
          // db query performed again.
-         if (localOnly)
-            cacheAdapter.withFlags(FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT, FlagAdapter.CACHE_MODE_LOCAL)
-               .putAllowingTimeout(key, value);
-         else 
-            cacheAdapter.withFlags(FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT)
-               .putAllowingTimeout(key, value);
+         putCache.put(key, value);
       }
    }
+
 }

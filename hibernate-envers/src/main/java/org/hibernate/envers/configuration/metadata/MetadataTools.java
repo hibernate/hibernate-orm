@@ -49,7 +49,7 @@ public class MetadataTools {
         if (useRevisionEntityWithNativeId) {
             generator_mapping.addAttribute("class", "native");
         } else {
-            generator_mapping.addAttribute("class", "org.hibernate.id.enhanced.SequenceStyleGenerator");
+            generator_mapping.addAttribute("class", "org.hibernate.envers.enhanced.OrderedSequenceGenerator");
             generator_mapping.addElement("param").addAttribute("name", "sequence_name").setText("REVISION_GENERATOR");
             generator_mapping.addElement("param").addAttribute("name", "table_name").setText("REVISION_GENERATOR");
             generator_mapping.addElement("param").addAttribute("name", "initial_value").setText("1");
@@ -157,7 +157,7 @@ public class MetadataTools {
     }
 
     private static Element createEntityCommon(Document document, String type, AuditTableData auditTableData,
-                                              String discriminatorValue) {
+                                              String discriminatorValue, Boolean isAbstract) {
         Element hibernate_mapping = document.addElement("hibernate-mapping");
         hibernate_mapping.addAttribute("auto-import", "false");
 
@@ -183,16 +183,21 @@ public class MetadataTools {
             class_mapping.addAttribute("catalog", auditTableData.getCatalog());
         }
 
+        if (isAbstract != null) {
+            class_mapping.addAttribute("abstract", isAbstract.toString());
+        }
+
         return class_mapping;
     }
 
-    public static Element createEntity(Document document, AuditTableData auditTableData, String discriminatorValue) {
-        return createEntityCommon(document, "class", auditTableData, discriminatorValue);
+    public static Element createEntity(Document document, AuditTableData auditTableData, String discriminatorValue,
+                                       Boolean isAbstract) {
+        return createEntityCommon(document, "class", auditTableData, discriminatorValue, isAbstract);
     }
 
     public static Element createSubclassEntity(Document document, String subclassType, AuditTableData auditTableData,
-                                               String extendsEntityName, String discriminatorValue) {
-        Element class_mapping = createEntityCommon(document, subclassType, auditTableData, discriminatorValue);
+                                               String extendsEntityName, String discriminatorValue, Boolean isAbstract) {
+        Element class_mapping = createEntityCommon(document, subclassType, auditTableData, discriminatorValue, isAbstract);
 
         class_mapping.addAttribute("extends", extendsEntityName);
 
@@ -256,7 +261,7 @@ public class MetadataTools {
         while (properties.hasNext()) {
             Element property = properties.next();
 
-            if ("property".equals(property.getName())) {
+            if ("property".equals(property.getName()) || "many-to-one".equals(property.getName())) {
                 Attribute nameAttr = property.attribute("name");
                 if (nameAttr != null) {
                     nameAttr.setText(prefix + nameAttr.getText());
@@ -265,11 +270,13 @@ public class MetadataTools {
                 changeNamesInColumnElement(property, columnNameIterator);
 
                 if (changeToKey) {
-                    property.setName("key-property");
+                    property.setName("key-" + property.getName());
                 }
 
-				Attribute insert = property.attribute("insert");
-				insert.setText(Boolean.toString(insertable));
+                if ("property".equals(property.getName())) {
+                    Attribute insert = property.attribute("insert");
+                    insert.setText(Boolean.toString(insertable));
+                }
             }
         }
     }

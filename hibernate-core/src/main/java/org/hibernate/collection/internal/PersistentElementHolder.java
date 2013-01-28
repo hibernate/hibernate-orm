@@ -45,7 +45,13 @@ import org.hibernate.type.Type;
  * A persistent wrapper for an XML element
  *
  * @author Gavin King
+ *
+ *
+ * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.  See Jira issues
+ * <a href="https://hibernate.onjira.com/browse/HHH-7782">HHH-7782</a> and
+ * <a href="https://hibernate.onjira.com/browse/HHH-7783">HHH-7783</a> for more information.
  */
+@Deprecated
 public class PersistentElementHolder extends AbstractPersistentCollection {
 	protected Element element;
 

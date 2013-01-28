@@ -573,13 +573,17 @@ public class Oracle8iDialect extends Dialect {
 	}
 	
 	@Override
-	public boolean supportsNotNullUnique() {
-		return false;
-	}
-	
-	@Override
 	public boolean forceLobAsLastValue() {
 		return true;
 	}
 
+	@Override
+	public boolean useFollowOnLocking() {
+		return true;
+	}
+	
+	@Override
+	public String getNotExpression( String expression ) {
+		return "not (" + expression + ")";
+	}
 }

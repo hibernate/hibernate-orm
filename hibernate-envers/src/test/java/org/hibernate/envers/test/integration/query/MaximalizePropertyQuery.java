@@ -24,16 +24,21 @@
 package org.hibernate.envers.test.integration.query;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 
-import org.junit.Test;
-
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.envers.query.criteria.AuditDisjunction;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
+import org.hibernate.testing.TestForIssue;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -42,9 +47,10 @@ import org.hibernate.envers.test.entities.StrIntTestEntity;
 public class MaximalizePropertyQuery extends BaseEnversJPAFunctionalTestCase {
     Integer id1;
     Integer id2;
+    Integer id3;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrIntTestEntity.class);
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class[] { StrIntTestEntity.class };
     }
 
     @Test
@@ -56,12 +62,15 @@ public class MaximalizePropertyQuery extends BaseEnversJPAFunctionalTestCase {
 
         StrIntTestEntity site1 = new StrIntTestEntity("a", 10);
         StrIntTestEntity site2 = new StrIntTestEntity("b", 15);
+        StrIntTestEntity site3 = new StrIntTestEntity("c", 42);
 
         em.persist(site1);
         em.persist(site2);
+        em.persist(site3);
 
         id1 = site1.getId();
         id2 = site2.getId();
+        id3 = site3.getId();
 
         em.getTransaction().commit();
 
@@ -132,7 +141,32 @@ public class MaximalizePropertyQuery extends BaseEnversJPAFunctionalTestCase {
                     .add(AuditEntity.property("number").eq(10)))
                 .getResultList();
 
-        System.out.println(result);
         assert Arrays.asList(2).equals(result);
     }
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7800")
+	public void testMaximizeInDisjunction() {
+		List<Integer> idsToQuery = Arrays.asList( id1, id3 );
+
+		AuditDisjunction disjunction = AuditEntity.disjunction();
+
+		for ( Integer id : idsToQuery ) {
+			disjunction.add( AuditEntity.revisionNumber().maximize().add( AuditEntity.id().eq( id ) ) );
+		}
+		List result = getAuditReader().createQuery()
+				.forRevisionsOfEntity( StrIntTestEntity.class, true, true )
+				.add( disjunction )
+				.getResultList();
+
+		Set<Integer> idsSeen = new HashSet<Integer>();
+		for ( Object o : result ) {
+			StrIntTestEntity entity = (StrIntTestEntity) o;
+			Integer id = entity.getId();
+			Assert.assertTrue( "Entity with ID " + id + " returned but not queried for.", idsToQuery.contains( id ) );
+			if ( !idsSeen.add( id ) ) {
+				Assert.fail( "Multiple revisions returned with ID " + id + "; expected only one." );
+			}
+		}
+	}
 }

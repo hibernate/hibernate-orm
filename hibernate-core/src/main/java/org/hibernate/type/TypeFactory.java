@@ -155,6 +155,12 @@ public final class TypeFactory implements Serializable {
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link #customCollection(String, java.util.Properties, String, String)}
+	 * instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType customCollection(
 			String typeName,
 			Properties typeParameters,
@@ -169,6 +175,25 @@ public final class TypeFactory implements Serializable {
 			throw new MappingException( "user collection type class not found: " + typeName, cnfe );
 		}
 		CustomCollectionType result = new CustomCollectionType( typeScope, typeClass, role, propertyRef, embedded );
+		if ( typeParameters != null ) {
+			injectParameters( result.getUserType(), typeParameters );
+		}
+		return result;
+	}
+
+	public CollectionType customCollection(
+			String typeName,
+			Properties typeParameters,
+			String role,
+			String propertyRef) {
+		Class typeClass;
+		try {
+			typeClass = ReflectHelper.classForName( typeName );
+		}
+		catch ( ClassNotFoundException cnfe ) {
+			throw new MappingException( "user collection type class not found: " + typeName, cnfe );
+		}
+		CustomCollectionType result = new CustomCollectionType( typeScope, typeClass, role, propertyRef );
 		if ( typeParameters != null ) {
 			injectParameters( result.getUserType(), typeParameters );
 		}
@@ -209,6 +234,12 @@ public final class TypeFactory implements Serializable {
 
 	// one-to-one type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * @deprecated Use {@link #oneToOne(String, ForeignKeyDirection, String, boolean, boolean, String, String)}
+	 * instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public EntityType oneToOne(
 			String persistentClass,
 			ForeignKeyDirection foreignKeyType,
@@ -220,6 +251,18 @@ public final class TypeFactory implements Serializable {
 			String propertyName) {
 		return new OneToOneType( typeScope, persistentClass, foreignKeyType, uniqueKeyPropertyName,
 				lazy, unwrapProxy, isEmbeddedInXML, entityName, propertyName );
+	}
+
+	public EntityType oneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName) {
+		return new OneToOneType( typeScope, persistentClass, foreignKeyType, uniqueKeyPropertyName,
+				lazy, unwrapProxy, entityName, propertyName );
 	}
 
 	public EntityType specialOneToOne(
@@ -245,6 +288,12 @@ public final class TypeFactory implements Serializable {
 		return new ManyToOneType( typeScope, persistentClass, lazy );
 	}
 
+	/**
+	 * @deprecated Use {@link #manyToOne(String, String, boolean, boolean, boolean, boolean)}
+	 * instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public EntityType manyToOne(
 			String persistentClass,
 			String uniqueKeyPropertyName,
@@ -265,49 +314,155 @@ public final class TypeFactory implements Serializable {
 		);
 	}
 
+	public EntityType manyToOne(
+			String persistentClass,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			boolean isLogicalOneToOne) {
+		return new ManyToOneType(
+				typeScope,
+				persistentClass,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				ignoreNotFound,
+				isLogicalOneToOne
+		);
+	}
 
 	// collection type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * @deprecated Use {@link #array(String, String, Class)} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType array(String role, String propertyRef, boolean embedded, Class elementClass) {
 		return new ArrayType( typeScope, role, propertyRef, elementClass, embedded );
 	}
 
+	public CollectionType array(String role, String propertyRef, Class elementClass) {
+		return new ArrayType( typeScope, role, propertyRef, elementClass );
+	}
+
+	/**
+	 * @deprecated Use {@link #list(String, String)} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType list(String role, String propertyRef, boolean embedded) {
 		return new ListType( typeScope, role, propertyRef, embedded );
 	}
 
+	public CollectionType list(String role, String propertyRef) {
+		return new ListType( typeScope, role, propertyRef );
+	}
+
+	/**
+	 * @deprecated Use {@link #bag(String, String)} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType bag(String role, String propertyRef, boolean embedded) {
 		return new BagType( typeScope, role, propertyRef, embedded );
 	}
 
+	public CollectionType bag(String role, String propertyRef) {
+		return new BagType( typeScope, role, propertyRef );
+	}
+
+	/**
+	 * @deprecated Use {@link #idbag(String, String)} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType idbag(String role, String propertyRef, boolean embedded) {
 		return new IdentifierBagType( typeScope, role, propertyRef, embedded );
 	}
 
+	public CollectionType idbag(String role, String propertyRef) {
+		return new IdentifierBagType( typeScope, role, propertyRef );
+	}
+
+	/**
+	 * @deprecated Use {@link #map(String, String)} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType map(String role, String propertyRef, boolean embedded) {
 		return new MapType( typeScope, role, propertyRef, embedded );
 	}
 
+	public CollectionType map(String role, String propertyRef) {
+		return new MapType( typeScope, role, propertyRef );
+	}
+
+	/**
+	 * @deprecated Use {@link #orderedMap(String, String)} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType orderedMap(String role, String propertyRef, boolean embedded) {
 		return new OrderedMapType( typeScope, role, propertyRef, embedded );
 	}
 
+	public CollectionType orderedMap(String role, String propertyRef) {
+		return new OrderedMapType( typeScope, role, propertyRef );
+	}
+
+	/**
+	 * @deprecated Use {@link #sortedMap(String, String, java.util.Comparator)} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType sortedMap(String role, String propertyRef, boolean embedded, Comparator comparator) {
 		return new SortedMapType( typeScope, role, propertyRef, comparator, embedded );
 	}
 
+	public CollectionType sortedMap(String role, String propertyRef, Comparator comparator) {
+		return new SortedMapType( typeScope, role, propertyRef, comparator );
+	}
+
+	/**
+	 * @deprecated Use {@link #set(String, String)} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType set(String role, String propertyRef, boolean embedded) {
 		return new SetType( typeScope, role, propertyRef, embedded );
 	}
 
+	public CollectionType set(String role, String propertyRef) {
+		return new SetType( typeScope, role, propertyRef );
+	}
+
+	/**
+	 * @deprecated Use {@link #orderedSet(String, String)} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType orderedSet(String role, String propertyRef, boolean embedded) {
 		return new OrderedSetType( typeScope, role, propertyRef, embedded );
 	}
 
+	public CollectionType orderedSet(String role, String propertyRef) {
+		return new OrderedSetType( typeScope, role, propertyRef );
+	}
+
+	/**
+	 * @deprecated Use {@link #sortedSet(String, String, java.util.Comparator)} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 */
+	@Deprecated
 	public CollectionType sortedSet(String role, String propertyRef, boolean embedded, Comparator comparator) {
 		return new SortedSetType( typeScope, role, propertyRef, comparator, embedded );
 	}
 
+	public CollectionType sortedSet(String role, String propertyRef, Comparator comparator) {
+		return new SortedSetType( typeScope, role, propertyRef, comparator );
+	}
 
 	// component type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -46,7 +46,7 @@ public class List extends IndexedCollection {
 	public CollectionType getDefaultCollectionType() throws MappingException {
 		return getMappings().getTypeResolver()
 				.getTypeFactory()
-				.list( getRole(), getReferencedPropertyName(), isEmbedded() );
+				.list( getRole(), getReferencedPropertyName() );
 	}
 	
 	public Object accept(ValueVisitor visitor) {

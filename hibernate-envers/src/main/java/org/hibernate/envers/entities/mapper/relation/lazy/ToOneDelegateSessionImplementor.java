@@ -27,6 +27,7 @@ import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntitiesConfigurations;
+import org.hibernate.envers.entities.mapper.relation.ToOneEntityLoader;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
 /**
@@ -41,7 +42,7 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
     private final Class<?> entityClass;
     private final Object entityId;
     private final Number revision;
-    private EntitiesConfigurations entCfg;
+    private final AuditConfiguration verCfg;
 
 	public ToOneDelegateSessionImplementor(AuditReaderImplementor versionsReader,
                                            Class<?> entityClass, Object entityId, Number revision,
@@ -51,16 +52,10 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
         this.entityClass = entityClass;
         this.entityId = entityId;
         this.revision = revision;
-        this.entCfg = verCfg.getEntCfg();
+        this.verCfg = verCfg;
     }
 
     public Object doImmediateLoad(String entityName) throws HibernateException {
-    	if(entCfg.getNotVersionEntityConfiguration(entityName) == null){
-    		// audited relation, look up entity with envers
-			return versionsReader.find(entityClass, entityName, entityId, revision);
-		} else {
-			// notAudited relation, look up entity with hibernate
-			return delegate.immediateLoad(entityName, (Serializable) entityId);
-		}
+        return ToOneEntityLoader.loadImmediate( versionsReader, entityClass, entityName, entityId, revision, verCfg );
     }
 }

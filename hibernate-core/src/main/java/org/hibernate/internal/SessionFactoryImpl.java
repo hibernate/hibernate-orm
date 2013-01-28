@@ -29,6 +29,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,7 +39,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
@@ -53,6 +53,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
@@ -91,6 +92,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.Association;
@@ -112,7 +114,6 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -132,6 +133,7 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.service.jndi.spi.JndiService;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -483,6 +485,15 @@ public final class SessionFactoryImpl
 
 		LOG.debug( "Instantiated session factory" );
 
+		settings.getMultiTableBulkIdStrategy().prepare(
+				jdbcServices,
+				buildLocalConnectionAccess(),
+				cfg.createMappings(),
+				cfg.buildMapping(),
+				properties
+		);
+
+
 		if ( settings.isAutoCreateSchema() ) {
 			new SchemaExport( serviceRegistry, cfg )
 					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
@@ -509,7 +520,7 @@ public final class SessionFactoryImpl
 				String sep = "";
 				for ( Map.Entry<String,HibernateException> entry : errors.entrySet() ) {
 					LOG.namedQueryError( entry.getKey(), entry.getValue() );
-					failingQueries.append( entry.getKey() ).append( sep );
+					failingQueries.append( sep ).append( entry.getKey() );
 					sep = ", ";
 				}
 				throw new HibernateException( failingQueries.toString() );
@@ -556,6 +567,32 @@ public final class SessionFactoryImpl
 		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver( cfg.getCurrentTenantIdentifierResolver() );
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+	}
+
+	private JdbcConnectionAccess buildLocalConnectionAccess() {
+		return new JdbcConnectionAccess() {
+			@Override
+			public Connection obtainConnection() throws SQLException {
+				return settings.getMultiTenancyStrategy() == MultiTenancyStrategy.NONE
+						? serviceRegistry.getService( ConnectionProvider.class ).getConnection()
+						: serviceRegistry.getService( MultiTenantConnectionProvider.class ).getAnyConnection();
+			}
+
+			@Override
+			public void releaseConnection(Connection connection) throws SQLException {
+				if ( settings.getMultiTenancyStrategy() == MultiTenancyStrategy.NONE ) {
+					serviceRegistry.getService( ConnectionProvider.class ).closeConnection( connection );
+				}
+				else {
+					serviceRegistry.getService( MultiTenantConnectionProvider.class ).releaseAnyConnection( connection );
+				}
+			}
+
+			@Override
+			public boolean supportsAggressiveRelease() {
+				return false;
+			}
+		};
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -1320,6 +1357,8 @@ public final class SessionFactoryImpl
 		LOG.closing();
 
 		isClosed = true;
+
+		settings.getMultiTableBulkIdStrategy().release( jdbcServices, buildLocalConnectionAccess() );
 
 		Iterator iter = entityPersisters.values().iterator();
 		while ( iter.hasNext() ) {

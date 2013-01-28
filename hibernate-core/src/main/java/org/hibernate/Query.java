@@ -239,6 +239,8 @@ public interface Query {
 	 */
 	public Query setFetchSize(int fetchSize);
 
+	public LockOptions getLockOptions();
+
 	/**
 	 * Set the lock options for the objects idententified by the
 	 * given alias that appears in the <tt>FROM</tt> clause.

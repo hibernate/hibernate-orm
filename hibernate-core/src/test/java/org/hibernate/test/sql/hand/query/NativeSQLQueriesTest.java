@@ -536,7 +536,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, list.size());
 		m = (Map) list.get(0);
 		assertTrue(m.containsKey("EMPID"));
-		assertTrue(m.containsKey("VALUE"));
+		assertTrue(m.containsKey("AMOUNT"));
 		assertTrue(m.containsKey("ENDDATE"));
 		assertEquals(8, m.size());
 
@@ -650,7 +650,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 				"       emp.STARTDATE 	as startDate," +
 				"       emp.ENDDATE 	as endDate," +
 				"       emp.REGIONCODE 	as regionCode," +
-				"       emp.VALUE 		as VALUE," +
+				"       emp.AMOUNT 		as AMOUNT," +
 				"       emp.CURRENCY 	as CURRENCY" +
 				" FROM 	ORGANIZATION org" +
 				"    LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER";
@@ -678,7 +678,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 				.addProperty( "element.endDate", "endDate" )
 				.addProperty( "element.regionCode", "regionCode" )
 				.addProperty( "element.employmentId", "empId" )
-				.addProperty( "element.salary" ).addColumnAlias( "VALUE" ).addColumnAlias( "CURRENCY" );
+				.addProperty( "element.salary" ).addColumnAlias( "AMOUNT" ).addColumnAlias( "CURRENCY" );
 		sqlQuery.list();
 
 		// lets try a totally different approach now and pull back scalars, first with explicit types
@@ -690,7 +690,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 				.addScalar( "endDate", TimestampType.INSTANCE )
 				.addScalar( "regionCode", StringType.INSTANCE )
 				.addScalar( "empId", LongType.INSTANCE )
-				.addScalar( "VALUE", FloatType.INSTANCE )
+				.addScalar( "AMOUNT", FloatType.INSTANCE )
 				.addScalar( "CURRENCY", StringType.INSTANCE );
 
 

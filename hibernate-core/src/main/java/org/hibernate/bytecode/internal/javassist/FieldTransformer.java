@@ -83,13 +83,20 @@ public class FieldTransformer {
 	                                                                + HANDLER_FIELD_DESCRIPTOR + ")V";
 
 	private FieldFilter filter;
+	
+	private ClassPool classPool;
 
 	public FieldTransformer() {
-		this(null);
+		this(null, null);
 	}
 
-	public FieldTransformer(FieldFilter f) {
+	public FieldTransformer(FieldFilter f, ClassPool c) {
 		filter = f;
+		classPool = c;
+	}
+	
+	public void setClassPool(ClassPool c) {
+		classPool = c;
 	}
 
 	public void setFieldFilter(FieldFilter f) {
@@ -152,8 +159,11 @@ public class FieldTransformer {
 		code.addOpcode(Opcode.ARETURN);
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
-		StackMapTable smt = MapMaker.make(ClassPool.getDefault(), minfo);
-		minfo.getCodeAttribute().setAttribute(smt);
+		CodeAttribute codeAttribute = minfo.getCodeAttribute();
+		if (codeAttribute != null) {
+			StackMapTable smt = MapMaker.make(classPool, minfo);
+			codeAttribute.setAttribute(smt);
+		}
 		classfile.addMethod(minfo);
 	}
 
@@ -178,8 +188,11 @@ public class FieldTransformer {
 		code.addOpcode(Opcode.RETURN);
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
-		StackMapTable smt = MapMaker.make(ClassPool.getDefault(), minfo);
-		minfo.getCodeAttribute().setAttribute(smt);
+		CodeAttribute codeAttribute = minfo.getCodeAttribute();
+		if (codeAttribute != null) {
+			StackMapTable smt = MapMaker.make(classPool, minfo);
+			codeAttribute.setAttribute(smt);
+		}
 		classfile.addMethod(minfo);
 	}
 
@@ -262,8 +275,11 @@ public class FieldTransformer {
 
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
-		StackMapTable smt = MapMaker.make(ClassPool.getDefault(), minfo);
-		minfo.getCodeAttribute().setAttribute(smt);
+		CodeAttribute codeAttribute = minfo.getCodeAttribute();
+		if (codeAttribute != null) {
+			StackMapTable smt = MapMaker.make(classPool, minfo);
+			codeAttribute.setAttribute(smt);
+		}
 		classfile.addMethod(minfo);
 	}
 
@@ -330,8 +346,11 @@ public class FieldTransformer {
 
 		minfo.setCodeAttribute(code.toCodeAttribute());
 		minfo.setAccessFlags(AccessFlag.PUBLIC);
-		StackMapTable smt = MapMaker.make(ClassPool.getDefault(), minfo);
-		minfo.getCodeAttribute().setAttribute(smt);
+		CodeAttribute codeAttribute = minfo.getCodeAttribute();
+		if (codeAttribute != null) {
+			StackMapTable smt = MapMaker.make(classPool, minfo);
+			codeAttribute.setAttribute(smt);
+		}
 		classfile.addMethod(minfo);
 	}
 
@@ -357,9 +376,8 @@ public class FieldTransformer {
 				pos = transformInvokevirtualsIntoGetfields(classfile, iter, pos);
 				pos = transformInvokevirtualsIntoPutfields(classfile, iter, pos);
 			}
-			
-			StackMapTable smt = MapMaker.make(ClassPool.getDefault(), minfo);
-			minfo.getCodeAttribute().setAttribute(smt);
+			StackMapTable smt = MapMaker.make(classPool, minfo);
+			codeAttr.setAttribute(smt);
 		}
 	}
 

@@ -23,13 +23,13 @@
  */
 package org.hibernate.test.jpa.naturalid;
 
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.hibernate.Session;
 import org.hibernate.test.jpa.AbstractJPATest;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 public class MutableNaturalIdTest extends AbstractJPATest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Group.class };
+		return new Class[] { Group.class, ClassWithIdentityColumn.class };
 	}
 
 	@Test
@@ -67,5 +67,20 @@ public class MutableNaturalIdTest extends AbstractJPATest {
 		s.createQuery( "delete Group" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
+	}
+	
+	@Test 
+	@TestForIssue( jiraKey = "HHH-7304")
+	public void testInLineSynchWithIdentityColumn() {
+		Session s = openSession();
+		s.beginTransaction();
+		ClassWithIdentityColumn e = new ClassWithIdentityColumn();
+		e.setName("Dampf");
+		s.save(e);
+		e.setName("Klein");
+		assertNotNull(session.bySimpleNaturalId(ClassWithIdentityColumn.class).load("Klein"));
+
+		session.getTransaction().rollback();
+		session.close();
 	}
 }

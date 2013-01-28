@@ -23,22 +23,21 @@
  */
 package org.hibernate.proxy;
 
-import javax.naming.NamingException;
 import java.io.Serializable;
 
-import org.jboss.logging.Logger;
+import javax.naming.NamingException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.persister.entity.EntityPersister;
+import org.jboss.logging.Logger;
 
 /**
  * Convenience base class for lazy initialization handlers.  Centralizes the basic plumbing of doing lazy
@@ -191,6 +190,22 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				SessionFactoryImplementor sf = (SessionFactoryImplementor)
 						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
 				SessionImplementor session = (SessionImplementor) sf.openSession();
+				
+				// TODO: On the next major release, add an
+				// 'isJTA' or 'getTransactionFactory' method to Session.
+				boolean isJTA = session.getTransactionCoordinator()
+						.getTransactionContext().getTransactionEnvironment()
+						.getTransactionFactory()
+						.compatibleWithJtaSynchronization();
+				
+				if ( !isJTA ) {
+					// Explicitly handle the transactions only if we're not in
+					// a JTA environment.  A lazy loading temporary session can
+					// be created even if a current session and transaction are
+					// open (ex: session.clear() was used).  We must prevent
+					// multiple transactions.
+					( ( Session) session ).beginTransaction();
+				}
 
 				try {
 					target = session.immediateLoad( entityName, id );
@@ -198,6 +213,9 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				finally {
 					// make sure the just opened temp session gets closed!
 					try {
+						if ( !isJTA ) {
+							( ( Session) session ).getTransaction().commit();
+						}
 						( (Session) session ).close();
 					}
 					catch (Exception e) {
@@ -224,12 +242,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	protected void prepareForPossibleSpecialSpecjInitialization() {
 		if ( session != null ) {
-			specjLazyLoad =
-					Boolean.parseBoolean(
-							session.getFactory()
-									.getProperties()
-									.getProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS )
-					);
+			specjLazyLoad = session.getFactory().getSettings().isInitializeLazyStateOutsideTransactionsEnabled();
 
 			if ( specjLazyLoad && sessionFactoryUuid == null ) {
 				try {

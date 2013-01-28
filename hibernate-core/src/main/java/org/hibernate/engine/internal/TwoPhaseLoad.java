@@ -126,6 +126,9 @@ public final class TwoPhaseLoad {
 			final PostLoadEvent postLoadEvent) throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final EntityEntry entityEntry = persistenceContext.getEntry(entity);
+		if ( entityEntry == null ) {
+			throw new AssertionFailure( "possible non-threadsafe access to the session" );
+		}
 		final EntityPersister persister = entityEntry.getPersister();
 		final Serializable id = entityEntry.getId();
 
@@ -145,10 +148,6 @@ public final class TwoPhaseLoad {
 			final SessionImplementor session,
 			final PreLoadEvent preLoadEvent,
 			final PostLoadEvent postLoadEvent) throws HibernateException {
-		if ( entityEntry == null ) {
-			throw new AssertionFailure( "possible non-threadsafe access to the session" );
-		}
-
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		EntityPersister persister = entityEntry.getPersister();
 		Serializable id = entityEntry.getId();

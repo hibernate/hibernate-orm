@@ -26,6 +26,7 @@ package org.hibernate.test.cache.infinispan.timestamp;
 import java.util.Properties;
 
 import org.infinispan.AdvancedCache;
+import org.infinispan.context.Flag;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryActivated;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
@@ -39,11 +40,8 @@ import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.Event;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.impl.ClassLoaderAwareCache;
+import org.hibernate.test.cache.infinispan.util.ClassLoaderAwareCache;
 import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
-import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
@@ -74,8 +72,8 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
    }
 
    @Override
-   protected CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory) {
-      return CacheAdapterImpl.newInstance(regionFactory.getCacheManager().getCache("timestamps").getAdvancedCache());
+   protected AdvancedCache getInfinispanCache(InfinispanRegionFactory regionFactory) {
+      return regionFactory.getCacheManager().getCache("timestamps").getAdvancedCache();
    }
 
    public void testClearTimestampsRegionInIsolated() throws Exception {
@@ -107,7 +105,7 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
 
       Account acct = new Account();
       acct.setAccountHolder(new AccountHolder());
-      region.getCacheAdapter().withFlags(FlagAdapter.FORCE_SYNCHRONOUS).put(acct, "boo");
+      region.getCache().withFlags(Flag.FORCE_SYNCHRONOUS).put(acct, "boo");
 
 //      region.put(acct, "boo");
 //
@@ -184,7 +182,7 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
             SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader(null, null, notFoundClasses, cl);
             Thread.currentThread().setContextClassLoader(visible);
             super.event(event);
-            Thread.currentThread().setContextClassLoader(cl);            
+            Thread.currentThread().setContextClassLoader(cl);
          }
       }
    }

@@ -55,6 +55,7 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 
 	@Override
 	public TruthValue isNullable() {
+		if(columnValues == null) return null;
 		return columnValues.isNullable() ? TruthValue.TRUE : TruthValue.FALSE;
 	}
 
@@ -65,6 +66,7 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 
 	@Override
 	public String getSqlType() {
+		if(columnValues == null) return null;
 		return columnValues.getColumnDefinition();
 	}
 
@@ -75,6 +77,7 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 
 	@Override
 	public Size getSize() {
+		if(columnValues == null) return null;
 		return new Size(
 				columnValues.getPrecision(),
 				columnValues.getScale(),
@@ -85,7 +88,7 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 
 	@Override
 	public boolean isUnique() {
-		return columnValues.isUnique();
+		return columnValues != null && columnValues.isUnique();
 	}
 
 	@Override
@@ -95,16 +98,19 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 
 	@Override
 	public TruthValue isIncludedInInsert() {
+		if(columnValues == null) return null;
 		return columnValues.isInsertable() ? TruthValue.TRUE : TruthValue.FALSE;
 	}
 
 	@Override
 	public TruthValue isIncludedInUpdate() {
+		if(columnValues == null) return null;
 		return columnValues.isUpdatable() ? TruthValue.TRUE : TruthValue.FALSE;
 	}
 
 	@Override
 	public String getContainingTableName() {
+		if(columnValues == null) return null;
 		return columnValues.getTable();
 	}
 

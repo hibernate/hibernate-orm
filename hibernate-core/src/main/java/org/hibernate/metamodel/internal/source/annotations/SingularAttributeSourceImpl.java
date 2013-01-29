@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -90,9 +91,12 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 
 	@Override
 	public String getContainingTableName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
+	/**
+	 * very ugly, can we just return the columnSourceImpl anyway?
+	 */
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
@@ -106,6 +110,14 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 		}
 		else if ( attribute.getFormulaValue() != null ){
 			valueSources.add( new DerivedValueSourceImpl( attribute.getFormulaValue() ) );
+		}
+		else if ( BasicAttribute.class.isInstance( attribute ) ) {
+			BasicAttribute basicAttribute = BasicAttribute.class.cast( attribute );
+			if ( basicAttribute.getCustomReadFragment() != null ||
+					basicAttribute.getCustomWriteFragment() != null ||
+					basicAttribute.getCheckCondition() != null ) {
+				valueSources.add( new ColumnSourceImpl( attribute, attributeOverride, null ) );
+			}
 		}
 		return valueSources;
 	}

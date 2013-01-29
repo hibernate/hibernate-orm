@@ -290,8 +290,7 @@ public class BasicAttribute extends MappedAttribute {
 		for ( AnnotationInstance annotationInstance : columnTransformerAnnotations ) {
 			String forColumn = annotationInstance.value( "forColumn" ) == null ?
 					null : annotationInstance.value( "forColumn" ).asString();
-
-			if ( forColumn != null && !forColumn.equals( getName() ) ) {
+			if ( forColumn != null && !isColumnPresentForTransformer( forColumn ) ) {
 				continue;
 			}
 
@@ -307,6 +306,17 @@ public class BasicAttribute extends MappedAttribute {
 			alreadyProcessedForColumn = true;
 		}
 		return readWrite;
+	}
+
+	private boolean isColumnPresentForTransformer(final String forColumn) {
+		assert forColumn != null;
+		List<Column> columns = getColumnValues();
+		for ( final Column column : columns ) {
+			if ( forColumn.equals( column.getName() ) ) {
+				return true;
+			}
+		}
+		return forColumn.equals( getName() );
 	}
 
 	private IdGenerator checkGeneratedValueAnnotation() {

@@ -41,12 +41,13 @@ public class ColumnSourceImpl extends ColumnValuesSourceImpl {
 		if ( attributeOverride != null ) {
 			setOverrideColumnValues( attributeOverride.getColumnValues() );
 		}
-		if(BasicAttribute.class.isInstance( attribute )){
+		if ( BasicAttribute.class.isInstance( attribute ) ) {
 			BasicAttribute basicAttribute = BasicAttribute.class.cast( attribute );
 			this.readFragement = basicAttribute.getCustomReadFragment();
 			this.writeFragement = basicAttribute.getCustomWriteFragment();
 			this.checkCondition = basicAttribute.getCheckCondition();
-		} else {
+		}
+		else {
 			this.readFragement = null;
 			this.writeFragement = null;
 			this.checkCondition = null;

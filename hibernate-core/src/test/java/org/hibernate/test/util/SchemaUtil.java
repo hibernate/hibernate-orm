@@ -49,7 +49,7 @@ public abstract class SchemaUtil {
 			String tableName, String columnName, MetadataImplementor metadata ) {
 		try {
 			TableSpecification table = getTable( tableName, metadata );
-			return ( table.locateColumn( columnName ) == null ) ? false : true;
+			return ( table.locateColumn( columnName ) != null );
 		} catch ( AssertionFailure e ) {
 			return false;
 		}
@@ -58,7 +58,7 @@ public abstract class SchemaUtil {
 	public static boolean isTablePresent( String tableName, MetadataImplementor metadata ) {
 		try {
 			TableSpecification table = getTable( tableName, metadata );
-			return ( table == null ) ? false : true;
+			return ( table != null );
 		} catch ( AssertionFailure e ) {
 			return false;
 		}

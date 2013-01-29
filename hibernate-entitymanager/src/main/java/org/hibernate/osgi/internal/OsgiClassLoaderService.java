@@ -24,6 +24,7 @@
 
 package org.hibernate.osgi.internal;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.osgi.framework.Bundle;
 
 /**
@@ -31,7 +32,7 @@ import org.osgi.framework.Bundle;
  * 
  * @author Martin Neimeier
  */
-public interface OsgiClassLoaderService {
+public interface OsgiClassLoaderService extends ClassLoaderService {
     /**
      * Register the bundle with the class loader to use it in the future for
      * class loading purposes

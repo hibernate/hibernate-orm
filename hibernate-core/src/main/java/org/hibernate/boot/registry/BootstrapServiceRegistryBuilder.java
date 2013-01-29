@@ -33,12 +33,14 @@ import org.hibernate.boot.registry.selector.AvailabilityAnnouncer;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
 
 /**
  * Builder for bootstrap {@link org.hibernate.service.ServiceRegistry} instances.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  *
  * @see BootstrapServiceRegistryImpl
  * @see StandardServiceRegistryBuilder#StandardServiceRegistryBuilder(org.hibernate.boot.registry.BootstrapServiceRegistry)
@@ -46,8 +48,10 @@ import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
 public class BootstrapServiceRegistryBuilder {
 	private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<Integrator>();
 	private List<ClassLoader> providedClassLoaders;
-
+	private ClassLoaderService providedClassLoaderService;
 	private StrategySelectorBuilder strategySelectorBuilder = new StrategySelectorBuilder();
+	
+	
 
 	/**
 	 * Add an {@link Integrator} to be applied to the bootstrap registry.
@@ -72,6 +76,18 @@ public class BootstrapServiceRegistryBuilder {
 			providedClassLoaders = new ArrayList<ClassLoader>();
 		}
 		providedClassLoaders.add( classLoader );
+		return this;
+	}
+
+	/**
+	 * Adds a provided {@link ClassLoaderService} for use in class-loading and resource-lookup
+	 *
+	 * @param classLoader The class loader to use
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public BootstrapServiceRegistryBuilder with(ClassLoaderService classLoaderService) {
+		providedClassLoaderService = classLoaderService;
 		return this;
 	}
 
@@ -171,7 +187,12 @@ public class BootstrapServiceRegistryBuilder {
 	 * @return The built bootstrap registry
 	 */
 	public BootstrapServiceRegistry build() {
-		final ClassLoaderServiceImpl classLoaderService = new ClassLoaderServiceImpl( providedClassLoaders );
+		final ClassLoaderService classLoaderService;
+		if ( providedClassLoaderService == null ) {
+			classLoaderService = new ClassLoaderServiceImpl( providedClassLoaders );
+		} else {
+			classLoaderService = providedClassLoaderService;
+		}
 
 		final IntegratorServiceImpl integratorService = new IntegratorServiceImpl(
 				providedIntegrators,

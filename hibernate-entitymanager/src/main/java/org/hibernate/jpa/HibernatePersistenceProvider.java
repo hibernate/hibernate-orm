@@ -23,30 +23,32 @@
  */
 package org.hibernate.jpa;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.ProviderUtil;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
-import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
+import org.hibernate.jpa.internal.EntityManagerMessageLogger;
+import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
+import org.jboss.logging.Logger;
 
 /**
  * The Hibernate {@link PersistenceProvider} implementation
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class HibernatePersistenceProvider implements PersistenceProvider {
     private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(
@@ -55,6 +57,14 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	);
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
+	
+	private ClassLoaderService providedClassLoaderService;
+	
+	public HibernatePersistenceProvider() { }
+	
+	public HibernatePersistenceProvider( ClassLoaderService providedClassLoaderService ) {
+		this.providedClassLoaderService = providedClassLoaderService;
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -82,7 +92,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				continue;
 			}
 
-			return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnit, integration ).build();
+			return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoaderService ).build();
 		}
 
 		return null;
@@ -100,7 +110,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	 */
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map integration) {
-		return Bootstrap.getEntityManagerFactoryBuilder( info, integration ).build();
+		return Bootstrap.getEntityManagerFactoryBuilder( info, integration, providedClassLoaderService ).build();
 	}
 
 	private final ProviderUtil providerUtil = new ProviderUtil() {

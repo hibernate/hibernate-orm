@@ -31,7 +31,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.osgi.framework.Bundle;
 
 /**
@@ -41,9 +40,7 @@ import org.osgi.framework.Bundle;
  * 
  * @author Martin Neimeier
  */
-public class OsgiClassLoaderServiceImpl implements
-        ClassLoaderService,
-        OsgiClassLoaderService {
+public class OsgiClassLoaderServiceImpl implements OsgiClassLoaderService {
 
     private static final long serialVersionUID = 1L;
 

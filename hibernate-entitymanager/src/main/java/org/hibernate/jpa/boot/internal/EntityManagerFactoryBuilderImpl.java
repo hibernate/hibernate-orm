@@ -155,6 +155,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private Configuration hibernateConfiguration;
 
 	private static EntityNotFoundDelegate jpaEntityNotFoundDelegate = new JpaEntityNotFoundDelegate();
+	
+	private ClassLoaderService providedClassLoaderService;
 
 	private static class JpaEntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
 		public void handleEntityNotFound(String entityName, Serializable id) {
@@ -202,6 +204,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( useClassTransformer ) {
 			persistenceUnit.pushClassTransformer( metadataSources.collectMappingClassNames() );
 		}
+	}
+
+	public EntityManagerFactoryBuilderImpl(
+			PersistenceUnitDescriptor persistenceUnit,
+			Map integrationSettings,
+			ClassLoaderService providedClassLoaderService ) {
+		this( persistenceUnit, integrationSettings );
+		this.providedClassLoaderService = providedClassLoaderService;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -345,14 +355,19 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		ClassLoader classLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
-		if ( classLoader != null ) {
-			integrationSettings.remove( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
+		if ( providedClassLoaderService == null ) {
+			ClassLoader classLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
+			if ( classLoader != null ) {
+				integrationSettings.remove( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
+			}
+			else {
+				classLoader = persistenceUnit.getClassLoader();
+			}
+			bootstrapServiceRegistryBuilder.with( classLoader );
 		}
 		else {
-			classLoader = persistenceUnit.getClassLoader();
+			bootstrapServiceRegistryBuilder.with( providedClassLoaderService );
 		}
-		bootstrapServiceRegistryBuilder.withApplicationClassLoader( classLoader );
 
 		return bootstrapServiceRegistryBuilder.build();
 	}

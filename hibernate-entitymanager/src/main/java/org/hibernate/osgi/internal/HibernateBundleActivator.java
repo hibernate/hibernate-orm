@@ -23,81 +23,96 @@
  */
 package org.hibernate.osgi.internal;
 
+import java.util.Properties;
+
+import javax.persistence.spi.PersistenceProvider;
+
+import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
-import org.osgi.framework.ServiceReference;
 
 /**
+ * @author Brett Meyer
  * @author Martin Neimeier
  */
 public class HibernateBundleActivator implements
         BundleActivator,
-        ServiceListener,
+//        ServiceListener,
         BundleListener {
+	
     private OsgiClassLoaderService osgiClassLoaderService;
-
-    public HibernateBundleActivator() {
-        // create the class loader service
-        osgiClassLoaderService = new OsgiClassLoaderServiceImpl();
-
-    }
 
     @Override
     public void start(BundleContext context) throws Exception {
-        // TODO: register this ClassLoaderService with Hibernate
+    	osgiClassLoaderService = new OsgiClassLoaderServiceImpl();
+    	
+    	Properties properties = new Properties();
+        properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
+        context.registerService(
+                PersistenceProvider.class.getName(),
+                new HibernatePersistenceProvider( osgiClassLoaderService ), 
+                properties
+        );
 
         // register this instance as a service listener - we are only interested
         // on services which implement the interface
         // org.hibernate.service.Service
-        context.addServiceListener(this, "(" + Constants.OBJECTCLASS
-                + "="
-                + org.hibernate.service.Service.class.getName()
-                + ")");
+    	// TODO: Is this needed?  Do we care more about scanning the bundles instead?
+//        context.addServiceListener(this, "(" + Constants.OBJECTCLASS
+//                + "=" + org.hibernate.service.Service.class.getName() + ")");
 
         // register this instance as a bundle listener to get informed about all
         // bundle live cycle events
         context.addBundleListener(this);
 
-        // TODO: do a initial scan for interesting services and bundles and
-        // register the bundles with the class loader
+        for ( Bundle bundle : context.getBundles() ) {
+        	scanBundle( bundle );
+        }
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         context.removeBundleListener(this);
-        context.removeServiceListener(this);
+//        context.removeServiceListener(this);
 
-        // and finally
-        // TODO: unregister this ClassLoaderService from Hibernate
+        // TODO: I'm assuming it'd be disastrous to blow away the 
+        // osgiClassLoaderService.  Instead, unregister the bundles in it?
     }
 
     @Override
     public void bundleChanged(BundleEvent event) {
-        // Analyze the bundle-event and react
-
-        // TODO: scan bundle for interesting resources - could be used to add
-        // all bundles which contain persistence units to the class loader
+    	scanBundle( event.getBundle() );
 
     }
 
-    @Override
-    public void serviceChanged(ServiceEvent event) {
-        // Analyze the service-event and react
-        ServiceReference reference = event.getServiceReference();
-        if ((event.getType() & ServiceEvent.REGISTERED) != 0) {
-            // new interesting service .. register bundle implementing the
-            // service
-            osgiClassLoaderService.registerBundle(reference.getBundle());
-        } else if ((event.getType() & ServiceEvent.UNREGISTERING) != 0) {
-            // interesting service is nearly gone .. unregister the bundle
-            // implementing the service
-            osgiClassLoaderService.unregisterBundle(reference.getBundle());
-        }
+//    @Override
+//    public void serviceChanged(ServiceEvent event) {
+//        // Analyze the service-event and react
+//        ServiceReference reference = event.getServiceReference();
+//        if ((event.getType() & ServiceEvent.REGISTERED) != 0) {
+//            // new interesting service .. register bundle implementing the
+//            // service
+//            osgiClassLoaderService.registerBundle(reference.getBundle());
+//        } else if ((event.getType() & ServiceEvent.UNREGISTERING) != 0) {
+//            // interesting service is nearly gone .. unregister the bundle
+//            // implementing the service
+//            osgiClassLoaderService.unregisterBundle(reference.getBundle());
+//        }
+//    }
+    
+    private void scanBundle( Bundle bundle ) {
+    	if ( bundle.getState() == Bundle.ACTIVE ) {
+    		// TODO: scan?
+    		// TODO: register only if the bundle has a persistence context?
+    		osgiClassLoaderService.registerBundle(bundle);
+    	} else {
+    		osgiClassLoaderService.unregisterBundle(bundle);
+    		// TODO: since the env. is dynamic, will we need to "cleanup"
+    		// any bundles that go down?
+    	}
     }
 
 }

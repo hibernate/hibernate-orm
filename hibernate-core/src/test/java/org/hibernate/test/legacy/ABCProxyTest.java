@@ -36,6 +36,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.SkipForDialect;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -49,8 +50,8 @@ public class ABCProxyTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect( HSQLDialect.class )
 	public void testDiscriminatorFiltering() throws Exception {
-		if ( ( getDialect() instanceof HSQLDialect ) ) return;
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		s.createQuery("from C1 c1 left join c1.c2s c2").list();

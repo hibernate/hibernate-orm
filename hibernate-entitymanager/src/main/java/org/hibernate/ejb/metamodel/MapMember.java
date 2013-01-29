@@ -13,7 +13,7 @@ public class MapMember implements Member {
     private String name;
     private final Class<?> type;
 
-    public MapMember(String name, Class<?> type) {
+    public MapMember( String name, Class<?> type ) {
         this.name = name;
         this.type = type;
     }

@@ -22,12 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-
-import javax.persistence.metamodel.Type;
 import java.io.Serializable;
+import javax.persistence.metamodel.Type;
 
 /**
- * Defines commonality for the JPA {@link javax.persistence.metamodel.Type} hierarchy of interfaces.
+ * Defines commonality for the JPA {@link Type} hierarchy of interfaces.
  *
  * This adds a type name so we don't rely on the class name. That allows
  * for non-class-based (metadata-driven) models. --koehn
@@ -35,7 +34,7 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public abstract class AbstractType<X> implements Type<X>, Serializable {
-    private final Class<X> javaType;
+	private final Class<X> javaType;
     private String typeName;
 
     public AbstractType(Class<X> javaType) {

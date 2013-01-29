@@ -51,6 +51,9 @@ public class HibernateBundleActivator implements
     	
     	Properties properties = new Properties();
         properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
+        // TODO: Will this work, or will the container new-up its own
+        // instance of HibernatePersistenceProvider?  If so, might need to work
+        // in the osgiClassLoaderService some other way.
         context.registerService(
                 PersistenceProvider.class.getName(),
                 new HibernatePersistenceProvider( osgiClassLoaderService ), 

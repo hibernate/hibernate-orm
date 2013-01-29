@@ -24,11 +24,6 @@ package org.hibernate.test.cache.infinispan.functional.cluster;
 import java.util.Hashtable;
 import java.util.Properties;
 
-import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
@@ -40,6 +35,10 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
+import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
+import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * ClusterAwareRegionFactory.

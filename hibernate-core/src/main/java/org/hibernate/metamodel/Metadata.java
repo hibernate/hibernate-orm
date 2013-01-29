@@ -28,6 +28,7 @@ import java.util.Map;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.ResultSetMappingDefinition;
@@ -48,6 +49,8 @@ public interface Metadata {
 	 * Exposes the options used to produce a {@link Metadata} instance.
 	 */
 	public static interface Options {
+		public StandardServiceRegistry getServiceRegistry();
+
 		public MetadataSourceProcessingOrder getMetadataSourceProcessingOrder();
 		public NamingStrategy getNamingStrategy();
 		public SharedCacheMode getSharedCacheMode();

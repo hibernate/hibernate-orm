@@ -23,7 +23,9 @@
  */
 package org.hibernate.boot.registry;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.selector.Availability;
@@ -43,10 +45,7 @@ import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
  */
 public class BootstrapServiceRegistryBuilder {
 	private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<Integrator>();
-	private ClassLoader applicationClassLoader;
-	private ClassLoader resourcesClassLoader;
-	private ClassLoader hibernateClassLoader;
-	private ClassLoader environmentClassLoader;
+	private List<ClassLoader> providedClassLoaders;
 
 	private StrategySelectorBuilder strategySelectorBuilder = new StrategySelectorBuilder();
 
@@ -62,15 +61,32 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
+	 * Adds a provided {@link ClassLoader} for use in class-loading and resource-lookup
+	 *
+	 * @param classLoader The class loader to use
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public BootstrapServiceRegistryBuilder with(ClassLoader classLoader) {
+		if ( providedClassLoaders == null ) {
+			providedClassLoaders = new ArrayList<ClassLoader>();
+		}
+		providedClassLoaders.add( classLoader );
+		return this;
+	}
+
+	/**
 	 * Applies the specified {@link ClassLoader} as the application class loader for the bootstrap registry
 	 *
 	 * @param classLoader The class loader to use
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@link #with(ClassLoader)} instead
 	 */
+	@Deprecated
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public BootstrapServiceRegistryBuilder withApplicationClassLoader(ClassLoader classLoader) {
-		this.applicationClassLoader = classLoader;
-		return this;
+		return with( classLoader );
 	}
 
 	/**
@@ -78,11 +94,13 @@ public class BootstrapServiceRegistryBuilder {
 	 *
 	 * @param classLoader The class loader to use
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@link #with(ClassLoader)} instead
 	 */
+	@Deprecated
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public BootstrapServiceRegistryBuilder withResourceClassLoader(ClassLoader classLoader) {
-		this.resourcesClassLoader = classLoader;
-		return this;
+		return with( classLoader );
 	}
 
 	/**
@@ -90,11 +108,13 @@ public class BootstrapServiceRegistryBuilder {
 	 *
 	 * @param classLoader The class loader to use
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@link #with(ClassLoader)} instead
 	 */
+	@Deprecated
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public BootstrapServiceRegistryBuilder withHibernateClassLoader(ClassLoader classLoader) {
-		this.hibernateClassLoader = classLoader;
-		return this;
+		return with( classLoader );
 	}
 
 	/**
@@ -102,11 +122,13 @@ public class BootstrapServiceRegistryBuilder {
 	 *
 	 * @param classLoader The class loader to use
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@link #with(ClassLoader)} instead
 	 */
+	@Deprecated
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public BootstrapServiceRegistryBuilder withEnvironmentClassLoader(ClassLoader classLoader) {
-		this.environmentClassLoader = classLoader;
-		return this;
+		return with( classLoader );
 	}
 
 	/**
@@ -149,12 +171,7 @@ public class BootstrapServiceRegistryBuilder {
 	 * @return The built bootstrap registry
 	 */
 	public BootstrapServiceRegistry build() {
-		final ClassLoaderServiceImpl classLoaderService = new ClassLoaderServiceImpl(
-				applicationClassLoader,
-				resourcesClassLoader,
-				hibernateClassLoader,
-				environmentClassLoader
-		);
+		final ClassLoaderServiceImpl classLoaderService = new ClassLoaderServiceImpl( providedClassLoaders );
 
 		final IntegratorServiceImpl integratorService = new IntegratorServiceImpl(
 				providedIntegrators,

@@ -56,7 +56,7 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 	public void testWithoutIntegrator() {
 		
 		ServiceRegistry reg = new StandardServiceRegistryBuilder(new BootstrapServiceRegistryImpl())
-		.buildServiceRegistry();
+		.build();
 		
 		SessionFactory sf = new Configuration()
 		.addAnnotatedClass( Investor.class )
@@ -81,7 +81,7 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 	public void testWithIntegrator() {
 		ServiceRegistry reg = new StandardServiceRegistryBuilder(
 				new BootstrapServiceRegistryBuilder().with( new InvestorIntegrator() ).build()
-		).buildServiceRegistry();
+		).build();
 		
 		SessionFactory sf = new Configuration()
 		.addAnnotatedClass( Investor.class )

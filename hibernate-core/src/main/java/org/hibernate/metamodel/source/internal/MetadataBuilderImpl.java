@@ -25,27 +25,66 @@ package org.hibernate.metamodel.source.internal;
 
 import javax.persistence.SharedCacheMode;
 
+import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.engine.config.spi.ConfigurationService;
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
 public class MetadataBuilderImpl implements MetadataBuilder {
+	private static final Logger log = Logger.getLogger( MetadataBuilderImpl.class );
+
 	private final MetadataSources sources;
 	private final OptionsImpl options;
 
 	public MetadataBuilderImpl(MetadataSources sources) {
+		this(
+				sources,
+				getStandardServiceRegistry( sources.getServiceRegistry() )
+		);
+	}
+
+	private static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {
+		if ( serviceRegistry == null ) {
+			throw new HibernateException( "ServiceRegistry passed to MetadataBuilder cannot be null" );
+		}
+
+		if ( StandardServiceRegistry.class.isInstance( serviceRegistry ) ) {
+			return ( StandardServiceRegistry ) serviceRegistry;
+		}
+		else if ( BootstrapServiceRegistry.class.isInstance( serviceRegistry ) ) {
+			log.debugf(
+					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely wont end well" +
+							"if attempt is made to build SessionFactory"
+			);
+			return new StandardServiceRegistryBuilder( (BootstrapServiceRegistry) serviceRegistry ).build();
+		}
+		else {
+			throw new HibernateException(
+					String.format(
+							"Unexpected type of ServiceRegistry [%s] encountered in attempt to build MetadataBuilder",
+							serviceRegistry.getClass().getName()
+					)
+			);
+		}
+	}
+
+	public MetadataBuilderImpl(MetadataSources sources, StandardServiceRegistry serviceRegistry) {
 		this.sources = sources;
-		this.options = new OptionsImpl( sources.getServiceRegistry() );
+		this.options = new OptionsImpl( serviceRegistry );
 	}
 
 	@Override
@@ -79,11 +118,13 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 	}
 
 	@Override
-	public Metadata buildMetadata() {
+	public Metadata build() {
 		return new MetadataImpl( sources, options );
 	}
 
-	private static class OptionsImpl implements Metadata.Options {
+	public static class OptionsImpl implements Metadata.Options {
+		private final StandardServiceRegistry serviceRegistry;
+
 		private MetadataSourceProcessingOrder metadataSourceProcessingOrder = MetadataSourceProcessingOrder.HBM_FIRST;
 		private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
 		private SharedCacheMode sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE;
@@ -93,7 +134,9 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		private String defaultSchemaName;
 		private String defaultCatalogName;
 
-		public OptionsImpl(ServiceRegistry serviceRegistry) {
+		public OptionsImpl(StandardServiceRegistry serviceRegistry) {
+			this.serviceRegistry = serviceRegistry;
+
 			ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
 			// cache access type
@@ -152,6 +195,10 @@ public class MetadataBuilderImpl implements MetadataBuilder {
             );
 		}
 
+		@Override
+		public StandardServiceRegistry getServiceRegistry() {
+			return serviceRegistry;
+		}
 
 		@Override
 		public MetadataSourceProcessingOrder getMetadataSourceProcessingOrder() {

@@ -26,6 +26,7 @@ package org.hibernate.service;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 
 /**
  * @deprecated Use {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder} instead
@@ -82,8 +83,7 @@ public class ServiceRegistryBuilder extends org.hibernate.boot.registry.Standard
 		return this;
 	}
 
-	@Override
-	public ServiceRegistry buildServiceRegistry() {
-		return super.buildServiceRegistry();
+	public StandardServiceRegistry build() {
+		return super.build();
 	}
 }

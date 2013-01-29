@@ -32,7 +32,6 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 
 import org.hibernate.Session;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
 import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;

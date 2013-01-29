@@ -50,7 +50,7 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 		meta = (MetadataImpl) sources.buildMetadata();
 	}
 

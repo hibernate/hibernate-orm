@@ -67,7 +67,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().buildServiceRegistry();
+		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().build();
 		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 

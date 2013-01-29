@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,27 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel;
+package org.hibernate.service.spi;
 
-import javax.persistence.SharedCacheMode;
-
-import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 /**
+ * Contract for contributing services.
+ *
  * @author Steve Ebersole
- * @author Hardy Ferentschik
  */
-public interface MetadataBuilder {
-	public MetadataBuilder with(NamingStrategy namingStrategy);
-
-	public MetadataBuilder with(MetadataSourceProcessingOrder metadataSourceProcessingOrder);
-
-	public MetadataBuilder with(SharedCacheMode cacheMode);
-
-	public MetadataBuilder with(AccessType accessType);
-
-	public MetadataBuilder withNewIdentifierGeneratorsEnabled(boolean enabled);
-
-	public Metadata build();
+public interface ServiceContributor {
+	/**
+	 * Contribute services to the indicated registry builder.
+	 *
+	 * @param serviceRegistryBuilder The builder to which services (or initiators) should be contributed.
+	 */
+	public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder);
 }

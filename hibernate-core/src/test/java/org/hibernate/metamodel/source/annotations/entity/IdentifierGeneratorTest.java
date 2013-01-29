@@ -149,7 +149,7 @@ public class IdentifierGeneratorTest extends BaseAnnotationBindingTestCase {
 	@Test
 	public void testUndefinedGenerator() {
 		try {
-			sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
+			sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 			sources.addAnnotatedClass( NamedGeneratorEntity.class );
 			sources.buildMetadata();
 			fail();

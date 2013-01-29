@@ -66,7 +66,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * Properties may be either be <tt>System</tt> properties, properties
  * defined in a resource named <tt>/hibernate.properties</tt> or an instance of
  * <tt>java.util.Properties</tt> passed to
- * <tt>Configuration.buildSessionFactory()</tt><br>
+ * <tt>Configuration.build()</tt><br>
  * <br>
  * <table>
  * <tr><td><b>property</b></td><td><b>meaning</b></td></tr>

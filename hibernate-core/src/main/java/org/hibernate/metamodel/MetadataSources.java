@@ -36,10 +36,9 @@ import java.util.List;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import org.jboss.logging.Logger;
-import org.w3c.dom.Document;
-import org.xml.sax.EntityResolver;
-
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
@@ -51,7 +50,9 @@ import org.hibernate.metamodel.source.MappingNotFoundException;
 import org.hibernate.metamodel.source.internal.JaxbHelper;
 import org.hibernate.metamodel.source.internal.MetadataBuilderImpl;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.jboss.logging.Logger;
+import org.w3c.dom.Document;
+import org.xml.sax.EntityResolver;
 
 /**
  * @author Steve Ebersole
@@ -59,13 +60,14 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 public class MetadataSources {
 	private static final Logger LOG = Logger.getLogger( MetadataSources.class );
 
+	private final ServiceRegistry serviceRegistry;
+	
 	private List<JaxbRoot> jaxbRootList = new ArrayList<JaxbRoot>();
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
 	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
 
 	private final JaxbHelper jaxbHelper;
 
-	private final ServiceRegistry serviceRegistry;
 	private final EntityResolver entityResolver;
 	private final NamingStrategy namingStrategy;
 
@@ -82,6 +84,20 @@ public class MetadataSources {
 
 		this.jaxbHelper = new JaxbHelper( this );
 		this.metadataBuilder = new MetadataBuilderImpl( this );
+		
+		// service registry really should be either BootstrapServiceRegistry or StandardServiceRegistry type...
+		if ( ! isExpectedServiceRegistryType( serviceRegistry ) ) {
+			LOG.debugf(
+					"Unexpected ServiceRegistry type [%s] encountered during building of MetadataSources; may cause " +
+							"problems later attempting to construct MetadataBuilder",
+					serviceRegistry.getClass().getName()
+			);
+		}
+	}
+
+	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
+		return BootstrapServiceRegistry.class.isInstance( serviceRegistry )
+				|| StandardServiceRegistry.class.isInstance( serviceRegistry );
 	}
 
 	public List<JaxbRoot> getJaxbRootList() {
@@ -104,12 +120,37 @@ public class MetadataSources {
 		return namingStrategy;
 	}
 
+	/**
+	 * Get a builder for metadata where non-default options can be specified.
+	 *
+	 * @return The built metadata.
+	 */
 	public MetadataBuilder getMetadataBuilder() {
-		return metadataBuilder;
+		return new MetadataBuilderImpl( this );
 	}
 
+	/**
+	 * Get a builder for metadata where non-default options can be specified.
+	 *
+	 * @return The built metadata.
+	 */
+	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry) {
+		return new MetadataBuilderImpl( this, serviceRegistry );
+	}
+
+	/**
+	 * Short-hand form of calling {@link #getMetadataBuilder()} and using its
+	 * {@link org.hibernate.metamodel.MetadataBuilder#build()} method in cases where the application wants
+	 * to accept the defaults.
+	 *
+	 * @return The built metadata.
+	 */
 	public Metadata buildMetadata() {
-		return getMetadataBuilder().buildMetadata();
+		return getMetadataBuilder().build();
+	}
+
+	public Metadata buildMetadata(StandardServiceRegistry serviceRegistry) {
+		return getMetadataBuilder( serviceRegistry ).build();
 	}
 
 	/**

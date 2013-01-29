@@ -1768,7 +1768,7 @@ public class Configuration implements Serializable {
 		ConfigurationHelper.resolvePlaceHolders( properties );
 		final ServiceRegistry serviceRegistry =  new StandardServiceRegistryBuilder()
 				.applySettings( properties )
-				.buildServiceRegistry();
+				.build();
 		setSessionFactoryObserver(
 				new SessionFactoryObserver() {
 					@Override

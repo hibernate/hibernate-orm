@@ -35,5 +35,10 @@ public interface SessionFactoryBuilder {
 
 	public SessionFactoryBuilder with(EntityNotFoundDelegate entityNotFoundDelegate);
 
-	public SessionFactory buildSessionFactory();
+	/**
+	 * After all options have been set, build the SessionFactory.
+	 *
+	 * @return The built SessionFactory.
+	 */
+	public SessionFactory build();
 }

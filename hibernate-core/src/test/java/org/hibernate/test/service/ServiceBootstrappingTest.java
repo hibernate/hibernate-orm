@@ -37,7 +37,6 @@ import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProv
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -51,7 +50,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 	public void testBasicBuild() {
 		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
-				.buildServiceRegistry();
+				.build();
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
@@ -68,7 +67,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 
 		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( props )
-				.buildServiceRegistry();
+				.build();
 
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
@@ -83,7 +82,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 	public void testBuildWithServiceOverride() {
 		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
-				.buildServiceRegistry();
+				.build();
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
@@ -95,7 +94,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( props )
 				.addService( ConnectionProvider.class, new UserSuppliedConnectionProviderImpl() )
-				.buildServiceRegistry();
+				.build();
 		jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );

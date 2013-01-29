@@ -29,6 +29,7 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.source.MetadataImplementor;
@@ -45,7 +46,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 	/* package-protected */
 	SessionFactoryBuilderImpl(MetadataImplementor metadata) {
 		this.metadata = metadata;
-		options = new SessionFactoryOptionsImpl();
+		options = new SessionFactoryOptionsImpl( metadata.getOptions().getServiceRegistry() );
 	}
 
 	@Override
@@ -61,12 +62,17 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 	}
 
 	@Override
-	public SessionFactory buildSessionFactory() {
+	public SessionFactory build() {
 		return new SessionFactoryImpl(metadata, options, null );
 	}
 
 	private static class SessionFactoryOptionsImpl implements SessionFactory.SessionFactoryOptions {
+		private final StandardServiceRegistry serviceRegistry;
 		private Interceptor interceptor = EmptyInterceptor.INSTANCE;
+		
+		public SessionFactoryOptionsImpl(StandardServiceRegistry serviceRegistry) {
+			this.serviceRegistry = serviceRegistry;
+		}
 
 		// TODO: should there be a DefaultEntityNotFoundDelegate.INSTANCE?
 		private EntityNotFoundDelegate entityNotFoundDelegate = new EntityNotFoundDelegate() {
@@ -74,6 +80,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 					throw new ObjectNotFoundException( id, entityName );
 				}
 		};
+
+		@Override
+		public StandardServiceRegistry getServiceRegistry() {
+			return serviceRegistry;
+		}
 
 		@Override
 		public Interceptor getInterceptor() {

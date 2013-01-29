@@ -29,12 +29,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
@@ -66,8 +65,8 @@ import org.hibernate.metamodel.source.annotations.AnnotationMetadataSourceProces
 import org.hibernate.metamodel.source.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.type.TypeResolver;
+import org.jboss.logging.Logger;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -117,7 +116,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
     private boolean globallyQuotedIdentifiers = false;
 
 	public MetadataImpl(MetadataSources metadataSources, Options options) {
-		this.serviceRegistry =  metadataSources.getServiceRegistry();
+		this.serviceRegistry =  options.getServiceRegistry();
 		this.options = options;
 		this.identifierGeneratorFactory = serviceRegistry.getService( MutableIdentifierGeneratorFactory.class );
 				//new DefaultIdentifierGeneratorFactory( dialect );
@@ -336,11 +335,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public SessionFactory buildSessionFactory() {
-		return sessionFactoryBuilder.buildSessionFactory();
-	}
-
-	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
 	}
@@ -459,6 +453,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
 		return sessionFactoryBuilder;
+	}
+
+	@Override
+	public SessionFactory buildSessionFactory() {
+		return getSessionFactoryBuilder().build();
 	}
 
 	@Override

@@ -81,7 +81,7 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
    public void testClearTimestampsRegionInIsolated() throws Exception {
       Configuration cfg = createConfiguration();
       InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-			  new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).buildServiceRegistry(),
+			  new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
 			  cfg,
 			  getCacheTestSupport()
 	  );
@@ -90,7 +90,7 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
 
       Configuration cfg2 = createConfiguration();
       InfinispanRegionFactory regionFactory2 = CacheTestUtil.startRegionFactory(
-			  new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).buildServiceRegistry(),
+			  new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
 			  cfg2,
 			  getCacheTestSupport()
 	  );

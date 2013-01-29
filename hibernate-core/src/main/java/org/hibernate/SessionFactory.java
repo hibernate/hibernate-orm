@@ -27,8 +27,10 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Map;
 import java.util.Set;
+
 import javax.naming.Referenceable;
 
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
@@ -54,8 +56,9 @@ import org.hibernate.stat.Statistics;
 public interface SessionFactory extends Referenceable, Serializable {
 
 	public interface SessionFactoryOptions {
-		Interceptor getInterceptor();
-		EntityNotFoundDelegate getEntityNotFoundDelegate();
+		public StandardServiceRegistry getServiceRegistry();
+		public Interceptor getInterceptor();
+		public EntityNotFoundDelegate getEntityNotFoundDelegate();
 	}
 
 	public SessionFactoryOptions getSessionFactoryOptions();

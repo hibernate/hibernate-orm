@@ -62,7 +62,7 @@ public class SessionFactoryBuilderImplTest extends BaseUnitTestCase {
 	@Test
 	public void testBuildSessionFactoryWithDefaultOptions() {
 		SessionFactoryBuilder sessionFactoryBuilder = getSessionFactoryBuilder();
-		SessionFactory sessionFactory = sessionFactoryBuilder.buildSessionFactory();
+		SessionFactory sessionFactory = sessionFactoryBuilder.build();
 		assertSame( EmptyInterceptor.INSTANCE, sessionFactory.getSessionFactoryOptions().getInterceptor() );
 		assertTrue( EntityNotFoundDelegate.class.isInstance(
 				sessionFactory.getSessionFactoryOptions().getEntityNotFoundDelegate()
@@ -82,14 +82,14 @@ public class SessionFactoryBuilderImplTest extends BaseUnitTestCase {
 		};
 		sessionFactoryBuilder.with( interceptor );
 		sessionFactoryBuilder.with( entityNotFoundDelegate );
-		SessionFactory sessionFactory = sessionFactoryBuilder.buildSessionFactory();
+		SessionFactory sessionFactory = sessionFactoryBuilder.build();
 		assertSame( interceptor, sessionFactory.getSessionFactoryOptions().getInterceptor() );
 		assertSame( entityNotFoundDelegate, sessionFactory.getSessionFactoryOptions().getEntityNotFoundDelegate() );
 		sessionFactory.close();
 	}
 
 	private SessionFactoryBuilder getSessionFactoryBuilder() {
-		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().buildServiceRegistry() );
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 		sources.addAnnotatedClass( SimpleEntity.class );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 		return  metadata.getSessionFactoryBuilder();

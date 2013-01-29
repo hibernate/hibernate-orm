@@ -90,8 +90,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private TypeResolver typeResolver = new TypeResolver();
 
-	private SessionFactoryBuilder sessionFactoryBuilder = new SessionFactoryBuilderImpl( this );
-
 	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Database database;
@@ -452,7 +450,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		return sessionFactoryBuilder;
+		return new SessionFactoryBuilderImpl( this );
 	}
 
 	@Override

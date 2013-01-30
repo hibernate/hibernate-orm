@@ -23,12 +23,10 @@
  */
 package org.hibernate.jpa.boot.spi;
 
-import javax.persistence.spi.PersistenceUnitInfo;
-
-import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import javax.persistence.spi.PersistenceUnitInfo;
+
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
@@ -47,8 +45,8 @@ public final class Bootstrap {
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			Map integration,
-			ClassLoaderService providedClassLoaderService) {
-		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, providedClassLoaderService );
+			ClassLoader providedClassLoader) {
+		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, providedClassLoader );
 	}
 
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
@@ -60,7 +58,7 @@ public final class Bootstrap {
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitInfo persistenceUnitInfo,
 			Map integration,
-			ClassLoaderService providedClassLoaderService) {
-		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, providedClassLoaderService );
+			ClassLoader providedClassLoader) {
+		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, providedClassLoader );
 	}
 }

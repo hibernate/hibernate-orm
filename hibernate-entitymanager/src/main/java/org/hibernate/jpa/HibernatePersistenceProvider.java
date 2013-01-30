@@ -34,7 +34,6 @@ import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.ProviderUtil;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -58,12 +57,12 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 	
-	private ClassLoaderService providedClassLoaderService;
+	private ClassLoader providedClassLoader;
 	
 	public HibernatePersistenceProvider() { }
 	
-	public HibernatePersistenceProvider( ClassLoaderService providedClassLoaderService ) {
-		this.providedClassLoaderService = providedClassLoaderService;
+	public HibernatePersistenceProvider( ClassLoader providedClassLoader ) {
+		this.providedClassLoader = providedClassLoader;
 	}
 
 	/**
@@ -92,7 +91,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				continue;
 			}
 
-			return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoaderService ).build();
+			return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoader ).build();
 		}
 
 		return null;
@@ -110,7 +109,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	 */
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map integration) {
-		return Bootstrap.getEntityManagerFactoryBuilder( info, integration, providedClassLoaderService ).build();
+		return Bootstrap.getEntityManagerFactoryBuilder( info, integration, providedClassLoader ).build();
 	}
 
 	private final ProviderUtil providerUtil = new ProviderUtil() {

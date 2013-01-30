@@ -43,11 +43,11 @@ public class HibernateBundleActivator implements
 //        ServiceListener,
         BundleListener {
 	
-    private OsgiClassLoaderService osgiClassLoaderService;
+    private OsgiClassLoader osgiClassLoader;
 
     @Override
     public void start(BundleContext context) throws Exception {
-    	osgiClassLoaderService = new OsgiClassLoaderServiceImpl();
+    	osgiClassLoader = new OsgiClassLoader();
     	
     	Properties properties = new Properties();
         properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
@@ -56,7 +56,7 @@ public class HibernateBundleActivator implements
         // in the osgiClassLoaderService some other way.
         context.registerService(
                 PersistenceProvider.class.getName(),
-                new HibernatePersistenceProvider( osgiClassLoaderService ), 
+                new HibernatePersistenceProvider( osgiClassLoader ), 
                 properties
         );
 
@@ -110,9 +110,9 @@ public class HibernateBundleActivator implements
     	if ( bundle.getState() == Bundle.ACTIVE ) {
     		// TODO: scan?
     		// TODO: register only if the bundle has a persistence context?
-    		osgiClassLoaderService.registerBundle(bundle);
+    		osgiClassLoader.registerBundle(bundle);
     	} else {
-    		osgiClassLoaderService.unregisterBundle(bundle);
+    		osgiClassLoader.unregisterBundle(bundle);
     		// TODO: since the env. is dynamic, will we need to "cleanup"
     		// any bundles that go down?
     	}

@@ -87,6 +87,7 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     }
 
     public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
+        second.mergeCollectionModifiedData(data);
         return this;
     }
 

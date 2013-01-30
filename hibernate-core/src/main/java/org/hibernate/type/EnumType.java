@@ -37,11 +37,13 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
+import org.hibernate.usertype.LoggableUserType;
 
 /**
  * Value type mapper for enumerations.
@@ -66,7 +68,7 @@ import org.hibernate.usertype.EnhancedUserType;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
-public class EnumType implements EnhancedUserType, DynamicParameterizedType, Serializable {
+public class EnumType implements EnhancedUserType, DynamicParameterizedType,LoggableUserType, Serializable {
     private static final Logger LOG = Logger.getLogger( EnumType.class.getName() );
 
 	public static final String ENUM = "enumClass";
@@ -311,6 +313,14 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 	@Override
 	public Object fromXMLString(String xmlValue) {
 		return enumValueMapper.fromXMLString( xmlValue );
+	}
+
+	@Override
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
+		if ( enumValueMapper != null ) {
+			return enumValueMapper.toXMLString( (Enum) value );
+		}
+		return value.toString();
 	}
 
 	private static interface EnumValueMapper extends Serializable {

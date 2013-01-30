@@ -27,7 +27,7 @@ buildscript {
     }
 }
 
-ext.hibernateTargetVersion = '4.2.0-SNAPSHOT'
+ext.hibernateTargetVersion = '4.3.0-SNAPSHOT'
 
 idea {
     project {

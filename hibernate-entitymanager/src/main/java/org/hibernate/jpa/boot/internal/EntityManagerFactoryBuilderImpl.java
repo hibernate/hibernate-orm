@@ -155,6 +155,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private Configuration hibernateConfiguration;
 
 	private static EntityNotFoundDelegate jpaEntityNotFoundDelegate = new JpaEntityNotFoundDelegate();
+	
+	private ClassLoader providedClassLoader;
 
 	private static class JpaEntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
 		public void handleEntityNotFound(String entityName, Serializable id) {
@@ -202,6 +204,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( useClassTransformer ) {
 			persistenceUnit.pushClassTransformer( metadataSources.collectMappingClassNames() );
 		}
+	}
+
+	public EntityManagerFactoryBuilderImpl(
+			PersistenceUnitDescriptor persistenceUnit,
+			Map integrationSettings,
+			ClassLoader providedClassLoader ) {
+		this( persistenceUnit, integrationSettings );
+		this.providedClassLoader = providedClassLoader;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -345,14 +355,22 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		ClassLoader classLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
-		if ( classLoader != null ) {
+		// TODO: If providedClassLoader is present (OSGi, etc.) *and*
+		// an APP_CLASSLOADER is provided, should throw an exception or
+		// warn?
+		ClassLoader classLoader;
+		ClassLoader appClassLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
+		if ( providedClassLoader != null ) {
+			classLoader = providedClassLoader;
+		}
+		else if ( appClassLoader != null ) {
+			classLoader = appClassLoader;
 			integrationSettings.remove( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
 		}
 		else {
 			classLoader = persistenceUnit.getClassLoader();
 		}
-		bootstrapServiceRegistryBuilder.withApplicationClassLoader( classLoader );
+		bootstrapServiceRegistryBuilder.with( classLoader );
 
 		return bootstrapServiceRegistryBuilder.build();
 	}

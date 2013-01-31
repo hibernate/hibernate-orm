@@ -103,6 +103,9 @@ ext {
             c3p0:            "c3p0:c3p0:0.9.1",
             ehcache:         "net.sf.ehcache:ehcache-core:2.4.3",
             proxool:         "proxool:proxool:0.8.3",
+            
+            // OSGI
+            osgi:            "org.osgi:org.osgi.core:4.2.0"
 
         ]
 }

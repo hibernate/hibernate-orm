@@ -23,10 +23,13 @@
  */
 package org.hibernate.jpa.internal;
 
+import javax.persistence.EntityGraph;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.SynchronizationType;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.spi.PersistenceUnitTransactionType;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -40,6 +43,7 @@ import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.internal.graph.EntityGraphImpl;
 
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.
@@ -157,6 +161,35 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 			throwPersistenceException( he );
 			return false;
 		}
+	}
+
+	@Override
+	public <T> EntityGraph<T> createEntityGraph(Class<T> rootType) {
+		return new EntityGraphImpl<T>( null, getMetamodel().entity( rootType ), getEntityManagerFactory() );
+	}
+
+	@Override
+	public EntityGraph<?> createEntityGraph(String graphName) {
+		final EntityGraphImpl named = getEntityManagerFactory().findEntityGraphByName( graphName );
+		if ( named == null ) {
+			return null;
+		}
+		return named.makeMutableCopy();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> EntityGraph<T> getEntityGraph(String graphName) {
+		final EntityGraphImpl named = getEntityManagerFactory().findEntityGraphByName( graphName );
+		if ( named == null ) {
+			throw new IllegalArgumentException( "Could not locate EntityGraph with given name : " + graphName );
+		}
+		return named;
+	}
+
+	@Override
+	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+		return getEntityManagerFactory().findEntityGraphsByType( entityClass );
 	}
 
 	@Override

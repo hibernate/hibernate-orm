@@ -33,14 +33,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
-import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
+import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 
 /**
  * The Hibernate {@link PersistenceProvider} implementation
@@ -49,10 +46,6 @@ import org.hibernate.jpa.boot.spi.ProviderChecker;
  * @author Steve Ebersole
  */
 public class HibernatePersistenceProvider implements PersistenceProvider {
-    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(
-			EntityManagerMessageLogger.class,
-			HibernatePersistenceProvider.class.getName()
-	);
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
@@ -101,6 +94,17 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map integration) {
 		return Bootstrap.getEntityManagerFactoryBuilder( info, integration ).build();
+	}
+
+	@Override
+	public void generateSchema(PersistenceUnitInfo info, Map map) {
+		// todo : implement
+	}
+
+	@Override
+	public boolean generateSchema(String persistenceUnitName, Map map) {
+		// todo : implement
+		return false;
 	}
 
 	private final ProviderUtil providerUtil = new ProviderUtil() {

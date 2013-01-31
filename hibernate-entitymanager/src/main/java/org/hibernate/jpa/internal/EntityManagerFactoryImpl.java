@@ -24,6 +24,7 @@
 package org.hibernate.jpa.internal;
 
 import javax.persistence.Cache;
+import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContextType;
@@ -32,6 +33,8 @@ import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceUnitTransactionType;
@@ -39,10 +42,13 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
 
@@ -64,6 +70,7 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateQuery;
 import org.hibernate.jpa.boot.internal.SettingsImpl;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
+import org.hibernate.jpa.internal.graph.EntityGraphImpl;
 import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.mapping.PersistentClass;
@@ -94,6 +101,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final String entityManagerFactoryName;
 
 	private final transient PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
+	private final transient Map<String,EntityGraphImpl> entityGraphs = new ConcurrentHashMap<String, EntityGraphImpl>();
 
 	@SuppressWarnings( "unchecked" )
 	public EntityManagerFactoryImpl(
@@ -319,6 +327,40 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			return ( T ) this;
 		}
 		throw new PersistenceException( "Hibernate cannot unwrap EntityManagerFactory as " + cls.getName() );
+	}
+
+	@Override
+	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
+		if ( ! EntityGraphImpl.class.isInstance( entityGraph ) ) {
+			throw new IllegalArgumentException(
+					"Unknown type of EntityGraph for making named : " + entityGraph.getClass().getName()
+			);
+		}
+		final EntityGraphImpl<T> copy = ( (EntityGraphImpl<T>) entityGraph ).makeImmutableCopy( graphName );
+		final EntityGraphImpl old = entityGraphs.put( graphName, copy );
+		if ( old != null ) {
+			log.debugf( "EntityGraph being replaced on EntityManagerFactory for name %s", graphName );
+		}
+	}
+
+	public EntityGraphImpl findEntityGraphByName(String name) {
+		return entityGraphs.get( name );
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
+		final EntityType<T> entityType = getMetamodel().entity( entityClass );
+		if ( entityType == null ) {
+			throw new IllegalArgumentException( "Given class is not an entity : " + entityClass.getName() );
+		}
+
+		final List<EntityGraph<? super T>> results = new ArrayList<EntityGraph<? super T>>();
+		for ( EntityGraphImpl entityGraph : this.entityGraphs.values() ) {
+			if ( entityGraph.appliesTo( entityType ) ) {
+				results.add( entityGraph );
+			}
+		}
+		return results;
 	}
 
 	public boolean isOpen() {

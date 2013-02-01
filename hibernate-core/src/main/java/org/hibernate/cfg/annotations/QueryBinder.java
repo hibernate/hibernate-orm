@@ -158,7 +158,17 @@ public abstract class QueryBinder {
 					.createNamedQueryDefinition();
 		}
 		else {
-			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
+			query = new NamedSQLQueryDefinitionBuilder( queryAnn.name() ).setQuery( queryName )
+					.setQueryReturns( new NativeSQLQueryReturn[0] ).setQuerySpaces( null )
+					.setCacheable( getBoolean( queryName, "org.hibernate.cacheable", hints ) )
+					.setCacheRegion( getString( queryName, "org.hibernate.cacheRegion", hints ) )
+					.setTimeout( getTimeout( queryName, hints ) )
+					.setFetchSize( getInteger( queryName, "org.hibernate.fetchSize", hints ) )
+					.setFlushMode( getFlushMode( queryName, hints ) ).setCacheMode( getCacheMode( queryName, hints ) )
+					.setReadOnly( getBoolean( queryName, "org.hibernate.readOnly", hints ) )
+					.setComment( getString( queryName, "org.hibernate.comment", hints ) ).setParameterTypes( null )
+					.setCallable( getBoolean( queryName, "org.hibernate.callable", hints ) )
+					.createNamedQueryDefinition();
 		}
 		if ( isDefault ) {
 			mappings.addDefaultSQLQuery( query.getName(), query );

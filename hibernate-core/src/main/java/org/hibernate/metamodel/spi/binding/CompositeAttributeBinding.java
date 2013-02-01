@@ -215,9 +215,7 @@ public class CompositeAttributeBinding
 
 	@Override
 	protected RelationalValueBindingContainer getRelationalValueBindingContainer() {
-		final RelationalValueBindingContainer relationalValueBindingContainer = new RelationalValueBindingContainer();
-		collectRelationalValueBindings( relationalValueBindingContainer );
-		return relationalValueBindingContainer;
+		return compositeAttributeBindingContainer.getRelationalValueBindingContainer();
 	}
 
 	@Override
@@ -279,7 +277,6 @@ public class CompositeAttributeBinding
 		return true;
 	}
 
-
 	@Override
 	public boolean isIncludedInInsert() {
 		// if the attribute is synthetic, this attribute binding (as a whole) is not insertable;
@@ -314,13 +311,9 @@ public class CompositeAttributeBinding
 		return false;
 	}
 
-		@Override
+	@Override
 	protected void collectRelationalValueBindings(RelationalValueBindingContainer relationalValueBindingContainer) {
-		for ( AttributeBinding subAttributeBinding : attributeBindings() ) {
-			if ( AbstractSingularAttributeBinding.class.isInstance( subAttributeBinding ) ) {
-				( (AbstractSingularAttributeBinding) subAttributeBinding ).collectRelationalValueBindings( relationalValueBindingContainer );
-			}
-		}
+		compositeAttributeBindingContainer.collectRelationalValueBindings( relationalValueBindingContainer );
 	}
 
 	@Override

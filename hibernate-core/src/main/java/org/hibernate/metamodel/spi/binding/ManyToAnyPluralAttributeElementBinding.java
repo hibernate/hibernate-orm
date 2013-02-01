@@ -37,12 +37,13 @@ public class ManyToAnyPluralAttributeElementBinding extends AbstractPluralAttrib
 	}
 
 	@Override
+	protected RelationalValueBindingContainer getRelationalValueContainer() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
 	public Nature getNature() {
 		return Nature.MANY_TO_ANY;
 	}
 
-	@Override
-	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
 }

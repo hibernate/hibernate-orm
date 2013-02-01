@@ -203,12 +203,14 @@ public class Binder {
 	private final LinkedList<InheritanceType> inheritanceTypes = new LinkedList<InheritanceType>();
 	private final LinkedList<EntityMode> entityModes = new LinkedList<EntityMode>();
 	private final HibernateTypeHelper typeHelper; // todo: refactor helper and remove redundant methods in this class
+	private final ForeignKeyHelper foreignKeyHelper;
 
 	public Binder(final MetadataImplementor metadata,
 				  final IdentifierGeneratorFactory identifierGeneratorFactory) {
 		this.metadata = metadata;
 		this.identifierGeneratorFactory = identifierGeneratorFactory;
 		this.typeHelper = new HibernateTypeHelper( this, metadata );
+		this.foreignKeyHelper = new ForeignKeyHelper( this );
 		this.nameNormalizer = metadata.getObjectNameNormalizer();
 	}
 
@@ -678,9 +680,9 @@ public class Binder {
 			);
 
 			// TODO: make the foreign key column the primary key???
-			final ForeignKey foreignKey = bindForeignKey(
+			final ForeignKey foreignKey = locateOrCreateForeignKey(
 					quotedIdentifier( secondaryTableSource.getExplicitForeignKeyName() ),
-					extractColumnsFromRelationalValueBindings( joinRelationalValueBindings ),
+					joinRelationalValueBindings,
 					determineForeignKeyTargetColumns( entityBinding, secondaryTableSource )
 			);
 			SecondaryTable secondaryTable = new SecondaryTable( table, foreignKey );
@@ -690,6 +692,34 @@ public class Binder {
 			secondaryTable.setCascadeDeleteEnabled( secondaryTableSource.isCascadeDeleteEnabled() );
 			entityBinding.addSecondaryTable( secondaryTable );
 		}
+	}
+
+	public ForeignKey locateOrCreateForeignKey(
+			final String foreignKeyName,
+			final List<RelationalValueBinding> sourceRelationalValueBindings,
+			final List<Column> targetColumns) {
+		return foreignKeyHelper.locateOrCreateForeignKey(
+				foreignKeyName,
+				extractColumnsFromRelationalValueBindings( sourceRelationalValueBindings ),
+				targetColumns
+		);
+	}
+
+	// TODO: try to get rid of this...
+	private static List<Column> extractColumnsFromRelationalValueBindings(
+			final List<RelationalValueBinding> valueBindings) {
+		List<Column> columns = new ArrayList<Column>( valueBindings.size() );
+		for ( RelationalValueBinding relationalValueBinding : valueBindings ) {
+			final Value value = relationalValueBinding.getValue();
+			// todo : currently formulas are not supported here... :(
+			if ( !Column.class.isInstance( value ) ) {
+				throw new NotYetImplementedException(
+						"Derived values are not supported when creating a foreign key that targets columns."
+				);
+			}
+			columns.add( (Column) value );
+		}
+		return columns;
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ identifier binding relates methods
@@ -1159,10 +1189,10 @@ public class Binder {
 				attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping(),
 				attributeBinding.getRelationalValueBindings()
 		);
-		if ( !hasDerivedValue( attributeBinding.getRelationalValueBindings() ) ) {
-			bindForeignKey(
+		if ( !attributeBinding.hasDerivedValue() ) {
+			locateOrCreateForeignKey(
 					quotedIdentifier( attributeSource.getExplicitForeignKeyName() ),
-					extractColumnsFromRelationalValueBindings( attributeBinding.getRelationalValueBindings() ),
+					attributeBinding.getRelationalValueBindings(),
 					determineForeignKeyTargetColumns(
 							attributeBinding.getReferencedEntityBinding(),
 							attributeSource
@@ -1271,19 +1301,18 @@ public class Binder {
 				toOneAttributeBindingContext
 		);
 		if ( attributeSource.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT ) {
-			List<Column> foreignKeyColumns = extractColumnsFromRelationalValueBindings(
+			List<RelationalValueBinding> foreignKeyRelationalValueBindings =
 					attributeBinding
 							.getContainer()
 							.seekEntityBinding()
 							.getHierarchyDetails()
 							.getEntityIdentifier()
 							.getAttributeBinding()
-							.getRelationalValueBindings()
-			);
+							.getRelationalValueBindings();
 
-			bindForeignKey(
+			locateOrCreateForeignKey(
 					quotedIdentifier( attributeSource.getExplicitForeignKeyName() ),
-					foreignKeyColumns,
+					foreignKeyRelationalValueBindings,
 					determineForeignKeyTargetColumns(
 							attributeBinding.getReferencedEntityBinding(),
 							attributeSource
@@ -1865,10 +1894,10 @@ public class Binder {
 		);
 
 		if ( !elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().isInverse() &&
-				!hasDerivedValue( elementBinding.getRelationalValueBindings() ) ) {
-			bindForeignKey(
+				!elementBinding.hasDerivedValue() ) {
+			locateOrCreateForeignKey(
 					quotedIdentifier( elementSource.getExplicitForeignKeyName() ),
-					extractColumnsFromRelationalValueBindings( elementBinding.getRelationalValueBindings() ),
+					elementBinding.getRelationalValueBindings(),
 					targetColumns
 			);
 		}
@@ -1927,7 +1956,6 @@ public class Binder {
 					referencedAttributeBinding.getReferencedAttributeBinding()
 							.getHibernateTypeDescriptor()
 			);
-			boolean isUpdatable = false;
 			List<RelationalValueBinding> sourceColumnBindings = referencedAttributeBinding.getRelationalValueBindings();
 			List<Column> sourceColumns = new ArrayList<Column>();
 			for ( RelationalValueBinding relationalValueBinding : sourceColumnBindings ) {
@@ -1935,14 +1963,13 @@ public class Binder {
 				if ( Column.class.isInstance( v ) ) {
 					sourceColumns.add( Column.class.cast( v ) );
 				}
-				isUpdatable = isUpdatable || relationalValueBinding.isIncludeInUpdate();
 			}
 			for ( ForeignKey fk : referencedEntityBinding.getPrimaryTable().getForeignKeys() ) {
 				if ( fk.getSourceColumns().equals( sourceColumns ) ) {
-					keyBinding.setForeignKey( fk );
+					keyBinding.setCascadeDeleteEnabled( fk.getDeleteRule() == ForeignKey.ReferentialAction.CASCADE );
 				}
 			}
-			keyBinding.setUpdatable( isUpdatable );
+			keyBinding.setRelationalValueBindings( sourceColumnBindings );
 		}
 		else {
 			bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable );
@@ -2300,7 +2327,7 @@ public class Binder {
 					)
 			);
 		}
-		if ( hasAnyNonNullableColumns( elementBinding.getRelationalValueBindings() ) ) {
+		if ( elementBinding.hasNonNullableValue() ) {
 			bindSetCollectionTablePrimaryKey( attributeBinding );
 		}
 		else {
@@ -2315,9 +2342,10 @@ public class Binder {
 		final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding()
 				.getCollectionTable()
 				.getPrimaryKey();
-		final ForeignKey foreignKey = attributeBinding.getPluralAttributeKeyBinding().getForeignKey();
-		for ( final Column foreignKeyColumn : foreignKey.getSourceColumns() ) {
-			primaryKey.addColumn( foreignKeyColumn );
+		final List<RelationalValueBinding> keyValueBindings =
+				attributeBinding.getPluralAttributeKeyBinding().getRelationalValueBindings();
+		for ( final RelationalValueBinding keyRelationalValueBinding : keyValueBindings ) {
+			primaryKey.addColumn( (Column) keyRelationalValueBinding.getValue() );
 		}
 		for ( final RelationalValueBinding elementValueBinding : elementBinding.getRelationalValueBindings() ) {
 			if ( !elementValueBinding.isDerived() && !elementValueBinding.isNullable() ) {
@@ -2357,7 +2385,7 @@ public class Binder {
 			);
 		}
 
-		List<RelationalValueBinding> sourceColumnBindings =
+		List<RelationalValueBinding> sourceRelationalBindings =
 				bindValues(
 						attributeBindingContainer,
 						keySource,
@@ -2367,33 +2395,14 @@ public class Binder {
 						attributeBinding.getPluralAttributeElementBinding()
 								.getNature() != PluralAttributeElementBinding.Nature.ONE_TO_MANY
 				);
-		// Determine if the foreign key (source) column is updatable and also extract the columns out
-		// of the RelationalValueBindings.
-		boolean isInsertable = false;
-		boolean isUpdatable = false;
-		List<Column> sourceColumns = new ArrayList<Column>( sourceColumnBindings.size() );
-		for ( RelationalValueBinding relationalValueBinding : sourceColumnBindings ) {
-			final Value value = relationalValueBinding.getValue();
-			// todo : currently formulas are not supported here... :(
-			if ( !Column.class.isInstance( value ) ) {
-				throw new NotYetImplementedException(
-						"Derived values are not supported when creating a foreign key that targets columns."
-				);
-			}
-			isInsertable = isInsertable || relationalValueBinding.isIncludeInInsert();
-			isUpdatable = isUpdatable || relationalValueBinding.isIncludeInUpdate();
-			sourceColumns.add( (Column) value );
-		}
-		keyBinding.setInsertable( isInsertable );
-		keyBinding.setUpdatable( isUpdatable );
-
-		ForeignKey foreignKey = bindForeignKey(
+		keyBinding.setRelationalValueBindings( sourceRelationalBindings );
+		ForeignKey foreignKey = locateOrCreateForeignKey(
 				quotedIdentifier( keySource.getExplicitForeignKeyName() ),
-				sourceColumns,
+				sourceRelationalBindings,
 				targetColumns
 		);
 		foreignKey.setDeleteRule( keySource.getOnDeleteAction() );
-		keyBinding.setForeignKey( foreignKey );
+		keyBinding.setCascadeDeleteEnabled( keySource.getOnDeleteAction() == ForeignKey.ReferentialAction.CASCADE );
 		final HibernateTypeDescriptor pluralAttributeKeyTypeDescriptor = keyBinding.getHibernateTypeDescriptor();
 
 		pluralAttributeKeyTypeDescriptor.copyFrom(
@@ -2402,15 +2411,15 @@ public class Binder {
 		);
 		final Type resolvedKeyType = pluralAttributeKeyTypeDescriptor.getResolvedTypeMapping();
 
-		Iterator<Column> fkColumnIterator = keyBinding.getForeignKey().getSourceColumns().iterator();
+		Iterator<RelationalValueBinding> fkColumnIterator = keyBinding.getRelationalValueBindings().iterator();
 		if ( resolvedKeyType.isComponentType() ) {
 			ComponentType componentType = (ComponentType) resolvedKeyType;
 			for ( Type subType : componentType.getSubtypes() ) {
-				typeHelper.bindJdbcDataType( subType, fkColumnIterator.next() );
+				typeHelper.bindJdbcDataType( subType, fkColumnIterator.next().getValue() );
 			}
 		}
 		else {
-			typeHelper.bindJdbcDataType( resolvedKeyType, fkColumnIterator.next() );
+			typeHelper.bindJdbcDataType( resolvedKeyType, fkColumnIterator.next().getValue() );
 		}
 	}
 
@@ -2522,7 +2531,7 @@ public class Binder {
 							subclassEntitySource
 					);
 
-			ForeignKey foreignKey = bindForeignKey(
+			ForeignKey foreignKey = foreignKeyHelper.locateOrCreateForeignKey(
 					quotedIdentifier( subclassEntitySource.getExplicitForeignKeyName() ),
 					sourceColumns,
 					targetColumns
@@ -2537,64 +2546,6 @@ public class Binder {
 		}
 	}
 
-
-	private ForeignKey bindForeignKey(
-			final String foreignKeyName,
-			final List<Column> sourceColumns,
-			final List<Column> targetColumns) {
-		ForeignKey foreignKey = null;
-		if ( foreignKeyName != null ) {
-			foreignKey = locateAndBindForeignKeyByName( foreignKeyName, sourceColumns, targetColumns );
-		}
-		if ( foreignKey == null ) {
-			foreignKey = locateForeignKeyByColumnMapping( sourceColumns, targetColumns );
-			if ( foreignKey != null && foreignKeyName != null ) {
-				if ( foreignKey.getName() == null ) {
-					// the foreign key name has not be initialized; set it to foreignKeyName
-					foreignKey.setName( foreignKeyName );
-				}
-				else {
-					// the foreign key name has already been initialized so cannot rename it
-					// TODO: should this just be INFO?
-					log.warn(
-							String.format(
-									"A foreign key mapped as %s will not be created because foreign key %s already exists with the same column mapping.",
-									foreignKeyName,
-									foreignKey.getName()
-							)
-					);
-				}
-			}
-		}
-		if ( foreignKey == null ) {
-			// no foreign key found; create one
-			final TableSpecification sourceTable = sourceColumns.get( 0 ).getTable();
-			final TableSpecification targetTable = targetColumns.get( 0 ).getTable();
-			foreignKey = sourceTable.createForeignKey( targetTable, foreignKeyName );
-			bindForeignKeyColumns( foreignKey, sourceColumns, targetColumns );
-		}
-		return foreignKey;
-	}
-
-	private void bindForeignKeyColumns(
-			final ForeignKey foreignKey,
-			final List<Column> sourceColumns,
-			final List<Column> targetColumns) {
-		if ( sourceColumns.size() != targetColumns.size() ) {
-			throw bindingContext().makeMappingException(
-					String.format(
-							"Non-matching number columns in foreign key source columns [%s : %s] and target columns [%s : %s]",
-							sourceColumns.get( 0 ).getTable().getLogicalName().getText(),
-							sourceColumns.size(),
-							targetColumns.get( 0 ).getTable().getLogicalName().getText(),
-							targetColumns.size()
-					)
-			);
-		}
-		for ( int i = 0; i < sourceColumns.size(); i++ ) {
-			foreignKey.addColumnMapping( sourceColumns.get( i ), targetColumns.get( i ) );
-		}
-	}
 
 	private TableSpecification locateDefaultTableSpecificationForAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
@@ -2771,7 +2722,7 @@ public class Binder {
 				new ColumnNamingStrategyHelper( defaultName, isDefaultAttributeName )
 		);
 		final Column column = table.locateOrCreateColumn( resolvedColumnName );
-		resolveColumnNullabl( columnSource, forceNotNull, isNullableByDefault, column );
+		resolveColumnNullable( columnSource, forceNotNull, isNullableByDefault, column );
 		column.setDefaultValue( columnSource.getDefaultValue() );
 		column.setSqlType( columnSource.getSqlType() );
 		column.setSize( columnSource.getSize() );
@@ -2784,7 +2735,7 @@ public class Binder {
 		return column;
 	}
 
-	private void resolveColumnNullabl(
+	private void resolveColumnNullable(
 			final ColumnSource columnSource,
 			final boolean forceNotNull,
 			final boolean isNullableByDefault,
@@ -2958,50 +2909,6 @@ public class Binder {
 		}
 	}
 
-
-	private ForeignKey locateAndBindForeignKeyByName(
-			final String foreignKeyName,
-			final List<Column> sourceColumns,
-			final List<Column> targetColumns) {
-		if ( foreignKeyName == null ) {
-			throw new AssertionFailure( "foreignKeyName must be non-null." );
-		}
-		final TableSpecification sourceTable = sourceColumns.get( 0 ).getTable();
-		final TableSpecification targetTable = targetColumns.get( 0 ).getTable();
-		ForeignKey foreignKey = sourceTable.locateForeignKey( foreignKeyName );
-		if ( foreignKey != null ) {
-			if ( !targetTable.equals( foreignKey.getTargetTable() ) ) {
-				throw bindingContext().makeMappingException(
-						String.format(
-								"Unexpected target table defined for foreign key \"%s\"; expected \"%s\"; found \"%s\"",
-								foreignKeyName,
-								targetTable.getLogicalName(),
-								foreignKey.getTargetTable().getLogicalName()
-						)
-				);
-			}
-			// check if source and target columns have been bound already
-			if ( foreignKey.getColumnSpan() == 0 ) {
-				// foreign key was found, but no columns bound to it yet
-				bindForeignKeyColumns( foreignKey, sourceColumns, targetColumns );
-			}
-			else {
-				// The located foreign key already has columns bound;
-				// Make sure they are the same columns.
-				if ( !foreignKey.getSourceColumns().equals( sourceColumns ) ||
-						foreignKey.getTargetColumns().equals( targetColumns ) ) {
-					throw bindingContext().makeMappingException(
-							String.format(
-									"Attempt to bind exisitng foreign key \"%s\" with different columns.",
-									foreignKeyName
-							)
-					);
-				}
-			}
-		}
-		return foreignKey;
-	}
-
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ simple instance helper methods
 	private void mapSourcesByName(final EntitySource rootEntitySource) {
 		String entityName = rootEntitySource.getEntityName();
@@ -3086,10 +2993,11 @@ public class Binder {
 		final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding()
 				.getCollectionTable()
 				.getPrimaryKey();
-		final ForeignKey foreignKey = attributeBinding.getPluralAttributeKeyBinding().getForeignKey();
+		final List<RelationalValueBinding> keyRelationalValueBindings =
+				attributeBinding.getPluralAttributeKeyBinding().getRelationalValueBindings();
 		final PluralAttributeIndexBinding indexBinding = attributeBinding.getPluralAttributeIndexBinding();
-		for ( final Column foreignKeyColumn : foreignKey.getSourceColumns() ) {
-			primaryKey.addColumn( foreignKeyColumn );
+		for ( final RelationalValueBinding keyRelationalValueBinding : keyRelationalValueBindings ) {
+			primaryKey.addColumn( (Column) keyRelationalValueBinding.getValue() );
 		}
 		for ( RelationalValueBinding relationalValueBinding : indexBinding.getRelationalValueBindings() ) {
 			if ( !relationalValueBinding.isDerived() ) {
@@ -3120,16 +3028,6 @@ public class Binder {
 		final String fullPath = attributeBinding.getContainer().getPathBase() + "." + attributeBinding.getAttribute()
 				.getName();
 		return fullPath.substring( attributeBinding.getContainer().seekEntityBinding().getEntityName().length() + 1 );
-	}
-
-	private static boolean hasDerivedValue(
-			final List<RelationalValueBinding> relationalValueBindings) {
-		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-			if ( DerivedValue.class.isInstance( relationalValueBinding.getValue() ) ) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	// TODO: should this be moved to CascadeStyles as a static method?
@@ -3203,58 +3101,10 @@ public class Binder {
 				.createSingularAttribute( attributeSource.getName() );
 	}
 
-	private static ForeignKey locateForeignKeyByColumnMapping(
-			final List<Column> sourceColumns,
-			final List<Column> targetColumns) {
-		final TableSpecification sourceTable = sourceColumns.get( 0 ).getTable();
-		final TableSpecification targetTable = targetColumns.get( 0 ).getTable();
-		// check for an existing foreign key with the same source/target columns
-		ForeignKey foreignKey = null;
-		Iterable<ForeignKey> possibleForeignKeys = sourceTable.locateForeignKey( targetTable );
-		if ( possibleForeignKeys != null ) {
-			for ( ForeignKey possibleFK : possibleForeignKeys ) {
-				if ( possibleFK.getSourceColumns().equals( sourceColumns ) &&
-						possibleFK.getTargetColumns().equals( targetColumns ) ) {
-					// this is the foreign key
-					foreignKey = possibleFK;
-					break;
-				}
-			}
-		}
-		return foreignKey;
-	}
-
 	private static String attributeSourcesByNameKey(
 			final String entityName,
 			final String attributeName) {
 		return entityName + "." + attributeName;
-	}
-
-	// TODO: try to get rid of this...
-	private static List<Column> extractColumnsFromRelationalValueBindings(
-			final List<RelationalValueBinding> valueBindings) {
-		List<Column> columns = new ArrayList<Column>( valueBindings.size() );
-		for ( RelationalValueBinding relationalValueBinding : valueBindings ) {
-			final Value value = relationalValueBinding.getValue();
-			// todo : currently formulas are not supported here... :(
-			if ( !Column.class.isInstance( value ) ) {
-				throw new NotYetImplementedException(
-						"Derived values are not supported when creating a foreign key that targets columns."
-				);
-			}
-			columns.add( (Column) value );
-		}
-		return columns;
-	}
-
-	private static boolean hasAnyNonNullableColumns(
-			final List<RelationalValueBinding> relationalValueBindings) {
-		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-			if ( Column.class.isInstance( relationalValueBinding.getValue() ) && !relationalValueBinding.isNullable() ) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	static String createAttributePath(

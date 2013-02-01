@@ -33,9 +33,15 @@ import java.util.List;
  */
 public class OneToManyPluralAttributeElementBinding extends AbstractPluralAttributeAssociationElementBinding {
 	private EntityIdentifier elementEntityIdentifier;
+	private RelationalValueBindingContainer relationalValueBindingContainer;
 
 	OneToManyPluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
+	}
+
+	@Override
+	protected RelationalValueBindingContainer getRelationalValueContainer() {
+		return relationalValueBindingContainer;
 	}
 
 	@Override
@@ -44,12 +50,8 @@ public class OneToManyPluralAttributeElementBinding extends AbstractPluralAttrib
 	}
 
 	public void setElementEntityIdentifier(EntityIdentifier elementEntityIdentifier) {
-		this.elementEntityIdentifier = elementEntityIdentifier;
-	}
-
-	@Override
-	public List<RelationalValueBinding> getRelationalValueBindings() {
-		// TODO: ugh, can't call this until after the EntityIdentifier is completely bound...
-		return elementEntityIdentifier.getAttributeBinding().getRelationalValueBindings();
+		this.relationalValueBindingContainer = new RelationalValueBindingContainer(
+				elementEntityIdentifier.getAttributeBinding().getRelationalValueBindings()
+		);
 	}
 }

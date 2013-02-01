@@ -70,8 +70,9 @@ public class BackRefAttributeBinding extends BasicAttributeBinding {
 		}
 		else {
 			relationalValueBindings = new ArrayList<RelationalValueBinding>( );
-			for ( Column column : pluralAttributeBinding.getPluralAttributeKeyBinding().getForeignKey().getSourceColumns() ) {
-				relationalValueBindings.add( new RelationalValueBinding( column, true, false ) );
+			for ( RelationalValueBinding keyRelationalValueBindings : pluralAttributeBinding.getPluralAttributeKeyBinding().getRelationalValueBindings() ) {
+				Column keyColumn = (Column) keyRelationalValueBindings.getValue();
+				relationalValueBindings.add( new RelationalValueBinding( keyColumn, true, false ) );
 			}
 		}
 		return relationalValueBindings;
@@ -100,17 +101,8 @@ public class BackRefAttributeBinding extends BasicAttributeBinding {
 	}
 
 	@Override
-	public boolean hasDerivedValue() {
-		return false;
-	}
-
-	@Override
-	public boolean isNullable() {
-		return false;
-	}
-
-	@Override
 	public boolean isIncludedInUpdate() {
+		//TODO: should be able to rely on super method, but that seems broken currently.
 		return false;
 	}
 }

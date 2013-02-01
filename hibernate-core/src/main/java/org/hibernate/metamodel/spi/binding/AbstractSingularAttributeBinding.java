@@ -59,8 +59,13 @@ public abstract class AbstractSingularAttributeBinding
 	}
 
 	@Override
+	public boolean hasDerivedValue() {
+		return getRelationalValueBindingContainer().hasDerivedValue();
+	}
+
+	@Override
 	public boolean isNullable() {
-		return getRelationalValueBindingContainer().hasNullableRelationalValueBinding();
+		return !getRelationalValueBindingContainer().hasNonNullableRelationalValueBinding();
 	}
 
 	@Override

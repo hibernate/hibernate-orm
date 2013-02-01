@@ -24,11 +24,9 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import org.hibernate.internal.FilterConfiguration;
-import org.hibernate.metamodel.spi.relational.Value;
 
 /**
  * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#MANY_TO_MANY} elements
@@ -41,10 +39,15 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
 	// TODO: really should have value defined (which defines table), but may not know 
-	List<RelationalValueBinding> relationalValueBindings;
+	private RelationalValueBindingContainer relationalValueBindingContainer;
 
 	ManyToManyPluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
+	}
+
+	@Override
+	protected RelationalValueBindingContainer getRelationalValueContainer() {
+		return relationalValueBindingContainer;
 	}
 
 	@Override
@@ -52,13 +55,8 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 		return Nature.MANY_TO_MANY;
 	}
 
-	@Override
-	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return relationalValueBindings;
-	}
-
 	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
-		this.relationalValueBindings = relationalValueBindings;
+		this.relationalValueBindingContainer = new RelationalValueBindingContainer( relationalValueBindings );
 	}
 
 	public String getManyToManyWhere() {

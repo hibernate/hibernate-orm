@@ -48,4 +48,26 @@ public abstract class AbstractPluralAttributeElementBinding implements PluralAtt
 	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
 		return hibernateTypeDescriptor;
 	}
+
+	protected abstract RelationalValueBindingContainer getRelationalValueContainer();
+
+	@Override
+	public List<RelationalValueBinding> getRelationalValueBindings() {
+		return getRelationalValueContainer().relationalValueBindings();
+	}
+
+	@Override
+	public boolean isNullable() {
+		return getRelationalValueContainer().hasNullableRelationalValueBinding();
+	}
+
+	@Override
+	public boolean hasDerivedValue() {
+		return getRelationalValueContainer().hasDerivedValue();
+	}
+
+	@Override
+	public boolean hasNonNullableValue() {
+		return getRelationalValueContainer().hasNonNullableRelationalValueBinding();
+	}
 }

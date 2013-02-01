@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.binding.basiccollections;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.After;
@@ -45,6 +46,7 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
+import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -174,24 +176,19 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 		assertEquals( expectedFetchTiming, collectionBinding.getFetchTiming() );
 		assertEquals( expectedFetchTiming != FetchTiming.IMMEDIATE, collectionBinding.isLazy() );
 
-		ForeignKey fk = keyBinding.getForeignKey();
-		assertNotNull( fk );
-		assertSame( collectionTable, fk.getSourceTable() );
-		assertEquals( 1, fk.getColumnSpan() );
+		List<RelationalValueBinding> keyRelationalValueBindings = keyBinding.getRelationalValueBindings();
+		assertNotNull( keyRelationalValueBindings );
+		for( RelationalValueBinding keyRelationalValueBinding : keyRelationalValueBindings ) {
+			assertSame( collectionTable, keyRelationalValueBinding.getValue().getTable() );
+		}
+		assertEquals( 1, keyRelationalValueBindings.size() );
 		assertEquals( 1, expectedKeyTargetAttributeBinding.getRelationalValueBindings().size() );
 		Value expectedFKTargetValue = expectedKeyTargetAttributeBinding.getRelationalValueBindings().get( 0 ).getValue();
-		assertEquals( fk.getColumns(), fk.getSourceColumns() );
-		assertEquals( 1, fk.getSourceColumns().size() );
-		assertEquals( 1, fk.getTargetColumns().size() );
-		assertEquals( expectedKeySourceColumnName, fk.getSourceColumns().get( 0 ).getColumnName() );
-		assertSame( expectedFKTargetValue, fk.getTargetColumns().get( 0 ) );
-		assertSame( collectionOwnerBinding.getPrimaryTable(), fk.getTargetTable() );
-		assertEquals( expectedFKTargetValue.getJdbcDataType(),  fk.getSourceColumns().get( 0 ).getJdbcDataType() );
+		assertFalse( keyRelationalValueBindings.get( 0 ).isDerived() );
+		assertEquals( expectedKeySourceColumnName, ( (Column) keyRelationalValueBindings.get( 0 ).getValue() ).getColumnName() );
+		assertEquals( expectedFKTargetValue.getJdbcDataType(),  keyRelationalValueBindings.get( 0 ).getValue().getJdbcDataType() );
 
-		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fk.getDeleteRule() );
-		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fk.getUpdateRule() );
-		// FK name is null because no default FK name is generated until HHH-7092 is fixed
-		assertNull( fk.getName() );
+		assertFalse( keyBinding.isCascadeDeleteEnabled() );
 		checkEquals(
 				expectedKeyTargetAttributeBinding.getHibernateTypeDescriptor(),
 				keyBinding.getHibernateTypeDescriptor()
@@ -222,7 +219,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 			}
 			else {
 				assertEquals( 2, collectionTable.getPrimaryKey().getColumnSpan() );
-				assertSame( fk.getSourceColumns().get( 0 ), collectionTable.getPrimaryKey().getColumns().get( 0 ) );
+				assertSame( keyRelationalValueBindings.get( 0 ).getValue(), collectionTable.getPrimaryKey().getColumns().get( 0 ) );
 				assertSame( elementRelationalValueBinding.getValue(),  collectionTable.getPrimaryKey().getColumns().get( 1 ) );
 			}
 		}

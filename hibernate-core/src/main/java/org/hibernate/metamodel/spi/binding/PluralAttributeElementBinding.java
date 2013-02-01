@@ -46,6 +46,12 @@ public interface PluralAttributeElementBinding {
 	 */
 	public List<RelationalValueBinding> getRelationalValueBindings();
 
+	public boolean isNullable();
+
+	public boolean hasDerivedValue();
+
+	public boolean hasNonNullableValue();
+
 	/**
 	 * Retrieves an enumeration describing the mapping nature of the collection's elements.
 	 * 

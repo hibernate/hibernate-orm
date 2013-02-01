@@ -36,7 +36,7 @@ import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 /**
  * @author Gail Badner
  */
-public class AbstractSingularAssociationAttributeBinding extends AbstractSingularAttributeBinding
+public abstract class AbstractSingularAssociationAttributeBinding extends AbstractSingularAttributeBinding
 		implements SingularAssociationAttributeBinding {
 	protected final EntityBinding referencedEntityBinding;
 	protected final SingularAttributeBinding referencedAttributeBinding;
@@ -83,12 +83,6 @@ public class AbstractSingularAssociationAttributeBinding extends AbstractSingula
 	@Override
 	public boolean isNotFoundAnException() {
 		return isNotFoundAnException;
-	}
-
-	@Override
-	public boolean hasDerivedValue() {
-		// TODO: support derived value
-		return false;
 	}
 
 	@Override
@@ -166,6 +160,6 @@ public class AbstractSingularAssociationAttributeBinding extends AbstractSingula
 
 	@Override
 	protected void collectRelationalValueBindings(RelationalValueBindingContainer relationalValueBindingContainer) {
-		relationalValueBindingContainer.addRelationalValueBindings( this.relationalValueBindingContainer);
+		relationalValueBindingContainer.addRelationalValueBindings( this.relationalValueBindingContainer );
 	}
 }

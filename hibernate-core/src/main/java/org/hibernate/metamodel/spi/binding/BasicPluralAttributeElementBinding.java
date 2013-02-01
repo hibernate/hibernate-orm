@@ -34,12 +34,15 @@ import java.util.List;
  */
 public class BasicPluralAttributeElementBinding extends AbstractPluralAttributeElementBinding {
 
-	private boolean hasDerivedValue;
-	private boolean isNullable = true;
-	private List<RelationalValueBinding> relationalValueBindings;
+	private RelationalValueBindingContainer relationalValueBindingContainer;
 
 	public BasicPluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
+	}
+
+	@Override
+	protected RelationalValueBindingContainer getRelationalValueContainer() {
+		return relationalValueBindingContainer;
 	}
 
 	@Override
@@ -47,16 +50,7 @@ public class BasicPluralAttributeElementBinding extends AbstractPluralAttributeE
 		return Nature.BASIC;
 	}
 
-	@Override
-	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return relationalValueBindings;
-	}
-
 	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
-		this.relationalValueBindings =  Collections.unmodifiableList( relationalValueBindings );
-		for ( RelationalValueBinding relationalValueBinding : getRelationalValueBindings() ) {
-			this.hasDerivedValue = this.hasDerivedValue || relationalValueBinding.isDerived();
-			this.isNullable = this.isNullable && relationalValueBinding.isNullable();
-		}
+		this.relationalValueBindingContainer =  new RelationalValueBindingContainer( relationalValueBindings );
 	}
 }

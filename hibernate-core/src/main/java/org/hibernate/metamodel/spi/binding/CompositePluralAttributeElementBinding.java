@@ -23,9 +23,7 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.spi.CascadeStyle;
@@ -49,6 +47,11 @@ public class CompositePluralAttributeElementBinding
 
 	public CompositePluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
+	}
+
+	@Override
+	protected RelationalValueBindingContainer getRelationalValueContainer() {
+		return compositeAttributeBindingContainer.getRelationalValueBindingContainer();
 	}
 
 	@Override
@@ -92,13 +95,6 @@ public class CompositePluralAttributeElementBinding
 
 	public CompositeAttributeBindingContainer getCompositeAttributeBindingContainer() {
 		return compositeAttributeBindingContainer;
-	}
-
-	@Override
-	public List<RelationalValueBinding> getRelationalValueBindings() {
-		final RelationalValueBindingContainer bindingContainer = new RelationalValueBindingContainer();
-		compositeAttributeBindingContainer.collectRelationalValueBindings( bindingContainer );
-		return bindingContainer.relationalValueBindings();
 	}
 
 	@Override

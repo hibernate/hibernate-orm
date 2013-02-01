@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
@@ -40,7 +39,6 @@ public class BasicAttributeBinding
 		implements SingularNonAssociationAttributeBinding {
 
 	private final RelationalValueBindingContainer relationalValueBindingContainer;
-	private boolean hasDerivedValue;
 	private final PropertyGeneration generation;
 
 	BasicAttributeBinding(
@@ -62,26 +60,13 @@ public class BasicAttributeBinding
 				naturalIdMutability,
 				metaAttributeContext
 		);
-		this.relationalValueBindingContainer =
-				new RelationalValueBindingContainer( relationalValueBindings );
-		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-			this.hasDerivedValue = this.hasDerivedValue || relationalValueBinding.isDerived();
-		}
+		this.relationalValueBindingContainer = new RelationalValueBindingContainer( relationalValueBindings );
 		this.generation = generation;
 	}
 
 	@Override
 	public boolean isAssociation() {
 		return false;
-	}
-
-	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return relationalValueBindingContainer.relationalValueBindings();
-	}
-
-	@Override
-	public boolean hasDerivedValue() {
-		return hasDerivedValue;
 	}
 
 	public PropertyGeneration getGeneration() {

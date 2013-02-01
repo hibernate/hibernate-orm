@@ -153,7 +153,7 @@ public class CompositePluralAttributeIndexSourceImpl
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		return true;
+		return false;
 	}
 
 	@Override

@@ -746,11 +746,12 @@ public abstract class AbstractCollectionPersister
 		PluralAttributeKeyBinding keyBinding = collection.getPluralAttributeKeyBinding();
 		keyType = keyBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 
-		int keySpan = keyBinding.getForeignKey().getColumnSpan();
+		int keySpan = keyBinding.getRelationalValueBindings().size();
 		keyColumnNames = new String[keySpan];
 		keyColumnAliases = new String[keySpan];
 		int k = 0;
-		for ( Column keyColumn : keyBinding.getForeignKey().getSourceColumns() ) {
+		for ( RelationalValueBinding keyRelationalValueBinding : keyBinding.getRelationalValueBindings() ) {
+			Column keyColumn = (Column) keyRelationalValueBinding.getValue();
 			// NativeSQL: collect key column and auto-aliases
 			keyColumnNames[k] = keyColumn.getColumnName().getText( dialect );
 			// TODO: does the owner root table need to be in alias?

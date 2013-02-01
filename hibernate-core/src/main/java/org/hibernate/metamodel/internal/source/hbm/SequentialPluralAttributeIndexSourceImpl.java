@@ -131,7 +131,7 @@ public class SequentialPluralAttributeIndexSourceImpl extends AbstractHbmSourceN
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		return true;
+		return false;
 	}
 
 	@Override

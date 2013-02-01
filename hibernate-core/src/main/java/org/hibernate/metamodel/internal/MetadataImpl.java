@@ -408,7 +408,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 					entityBindingMap.get(
 							pluralAttributeBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().
 									getResolvedTypeMapping().getName() );
-			List<Column> columns = keyBinding.getForeignKey().getColumns();
+			List<RelationalValueBinding> keyValueBindings = keyBinding.getRelationalValueBindings();
 			boolean bidirectional = false;
 			for ( AttributeBinding attributeBinding : referencedEntityBinding.attributeBindings() ) {
 				if ( !(attributeBinding instanceof ManyToOneAttributeBinding) ) {
@@ -423,12 +423,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				// Check if the many-to-one attribute binding's columns match the one-to-many attribute binding's FK columns
 				// (meaning this is a bidirectional association, and no back reference should be created)
 				List<RelationalValueBinding> valueBindings = manyToOneAttributeBinding.getRelationalValueBindings();
-				if ( columns.size() != valueBindings.size() ) {
+				if ( keyValueBindings.size() != valueBindings.size() ) {
 					continue;
 				}
 				bidirectional = true;
 				for ( int ndx = valueBindings.size(); --ndx >= 0; ) {
-					if ( columns.get(ndx) != valueBindings.get( ndx ).getValue() ) {
+					if ( keyValueBindings.get(ndx) != valueBindings.get( ndx ) ) {
 						bidirectional = false;
 						break;
 					}

@@ -43,6 +43,7 @@ import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
@@ -202,18 +203,12 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 				expectedCollectionTypeClass.cast( collectionHibernateTypeDescriptor.getResolvedTypeMapping() ).getRole()
 		);
 
-		ForeignKey fk = keyBinding.getForeignKey();
-		assertNotNull( fk );
-		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fk.getDeleteRule() );
-		assertSame( ForeignKey.ReferentialAction.NO_ACTION, fk.getUpdateRule() );
-		// FK name is null because no default FK name is generated until HHH-7092 is fixed
-		assertNull( fk.getName() );
+		List<RelationalValueBinding> keyRelationalValueBinding = keyBinding.getRelationalValueBindings();
+		assertNotNull( keyRelationalValueBinding );
+		assertFalse( keyBinding.isCascadeDeleteEnabled() );
 
-		assertSame( expectedElementEntityBinding.getPrimaryTable(), fk.getSourceTable() );
-		assertEquals( 1, fk.getColumnSpan() );
-		assertEquals( fk.getColumns(), fk.getSourceColumns() );
-		assertEquals( 1, fk.getSourceColumns().size() );
-		assertEquals( 1, fk.getTargetColumns().size() );
+		assertSame( expectedElementEntityBinding.getPrimaryTable(), keyBinding.getCollectionTable() );
+		assertEquals( 1, keyRelationalValueBinding.size() );
 
 		SingularAttributeBinding keySourceAttributeBinding =
 				( SingularAttributeBinding ) expectedElementEntityBinding.locateAttributeBinding(
@@ -229,19 +224,12 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 			assertTrue( keySourceValue instanceof Column );
 			Column keySourceColumn = ( Column ) keySourceValue;
 			assertEquals( expectedKeySourceColumnName, keySourceColumn.getColumnName() );
-			assertSame( keySourceColumn, fk.getColumns().get( 0 ) );
-			assertSame( keySourceColumn, fk.getSourceColumns().get( 0 ) );
 		}
 
-		assertSame( collectionOwnerBinding.getPrimaryTable(), fk.getTargetTable() );
 		assertEquals( 1, expectedKeyTargetAttributeBinding.getRelationalValueBindings().size() );
-		assertSame(
-				expectedKeyTargetAttributeBinding.getRelationalValueBindings().get( 0 ).getValue(),
-				fk.getTargetColumns().get( 0 )
-		);
 		assertEquals(
 				expectedKeyTargetAttributeBinding.getRelationalValueBindings().get( 0 ).getValue().getJdbcDataType(),
-				fk.getColumns().get( 0 ).getJdbcDataType()
+				keyRelationalValueBinding.get( 0 ).getValue().getJdbcDataType()
 		);
 
 		checkEquals(

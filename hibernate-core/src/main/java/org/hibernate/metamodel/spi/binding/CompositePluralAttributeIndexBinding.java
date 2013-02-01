@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,8 +90,6 @@ public class CompositePluralAttributeIndexBinding extends AbstractPluralAttribut
 
 	@Override
 	public List<RelationalValueBinding> getRelationalValueBindings() {
-		final RelationalValueBindingContainer bindingContainer = new RelationalValueBindingContainer();
-		compositeAttributeBindingContainer.collectRelationalValueBindings( bindingContainer );
-		return bindingContainer.relationalValueBindings();
+		return compositeAttributeBindingContainer.getRelationalValueBindingContainer().relationalValueBindings();
 	}
 }

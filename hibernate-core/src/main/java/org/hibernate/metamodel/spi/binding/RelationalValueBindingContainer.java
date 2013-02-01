@@ -43,7 +43,6 @@ public class RelationalValueBindingContainer {
 		this.isListModifiable = false;
 	}
 
-
 	public RelationalValueBindingContainer() {
 		this.relationalValueBindings = new ArrayList<RelationalValueBinding>();
 		this.isListModifiable = true;
@@ -81,11 +80,12 @@ public class RelationalValueBindingContainer {
 	}
 
 	public boolean hasDerivedValue() {
-		boolean hasDerivedValue = false;
 		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-			hasDerivedValue = hasDerivedValue || relationalValueBinding.isDerived();
+			if (relationalValueBinding.isDerived() ) {
+				return true;
+			}
 		}
-		return hasDerivedValue;
+		return false;
 	}
 
 	public boolean hasNullableRelationalValueBinding() {
@@ -123,35 +123,4 @@ public class RelationalValueBindingContainer {
 		}
 		return false;
 	}
-
-/*
-	protected static boolean hasNullableRelationalValueBinding(List<RelationalValueBinding> relationalValueBindings) {
-		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-			if ( relationalValueBinding.isNullable() ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	protected static boolean hasInsertableRelationalValueBinding(List<RelationalValueBinding> relationalValueBindings) {
-		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-			if ( relationalValueBinding.isIncludeInInsert() ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	protected static boolean hasUpdateableRelationalValueBinding(List<RelationalValueBinding> relationalValueBindings) {
-		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-			if ( relationalValueBinding.isIncludeInUpdate() ) {
-				return true;
-			}
-		}
-		return false;
-	}
- */
-
-
 }

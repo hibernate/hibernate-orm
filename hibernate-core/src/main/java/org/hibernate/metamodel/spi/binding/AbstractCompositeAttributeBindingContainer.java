@@ -100,6 +100,12 @@ public abstract class AbstractCompositeAttributeBindingContainer
 
 	protected abstract boolean isModifiable();
 
+	protected RelationalValueBindingContainer getRelationalValueBindingContainer() {
+		final RelationalValueBindingContainer bindingContainer = new RelationalValueBindingContainer();
+		collectRelationalValueBindings( bindingContainer );
+		return bindingContainer;
+	}
+
 	@Override
 	public BasicAttributeBinding makeBasicAttributeBinding(
 			SingularAttribute attribute,

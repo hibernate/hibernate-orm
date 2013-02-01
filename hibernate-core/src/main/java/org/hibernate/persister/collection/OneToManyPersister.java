@@ -110,8 +110,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			);
 		}
 		final PluralAttributeKeyBinding keyBinding = collection.getPluralAttributeKeyBinding();
-		cascadeDeleteEnabled = keyBinding.getForeignKey().getDeleteRule() == ForeignKey.ReferentialAction.CASCADE &&
-				factory.getDialect().supportsCascadeDelete();;
+		cascadeDeleteEnabled = keyBinding.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete();
 		keyIsNullable = keyBinding.isNullable();
 		keyIsUpdateable = keyBinding.isUpdatable();
 	}

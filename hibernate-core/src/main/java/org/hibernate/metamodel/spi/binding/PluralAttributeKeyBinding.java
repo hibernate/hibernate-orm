@@ -23,9 +23,10 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.List;
+
 import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 
 /**
@@ -36,10 +37,9 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 public class PluralAttributeKeyBinding {
 	private final AbstractPluralAttributeBinding pluralAttributeBinding;
 	private final SingularAttributeBinding referencedAttributeBinding;
-	private ForeignKey foreignKey;
+	private RelationalValueBindingContainer relationalValueBindingContainer;
+	private boolean isCascadeDeleteEnabled;
 	private boolean inverse;
-	private boolean insertable;
-	private boolean updatable;
 
 	// this knowledge can be implicitly resolved based on the typing information on the referenced owner attribute
 	private HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
@@ -69,17 +69,9 @@ public class PluralAttributeKeyBinding {
 		return referencedAttributeBinding;
 	}
 
-	/**
-	 * The foreign key that defines the scope of this relationship.
-	 *
-	 * @return The foreign key being bound to.
-	 */
-	public ForeignKey getForeignKey() {
-		return foreignKey;
-	}
-
 	public TableSpecification getCollectionTable() {
-		return foreignKey.getSourceTable();
+		// TODO: get table directly from relationalValueBindingContainer
+		return relationalValueBindingContainer.relationalValueBindings().get( 0 ).getValue().getTable();
 	}
 
 	/**
@@ -105,48 +97,47 @@ public class PluralAttributeKeyBinding {
 		this.hibernateTypeDescriptor = hibernateTypeDescriptor;
 	}
 
-	public void setForeignKey(ForeignKey foreignKey) {
-		if ( foreignKey == null ) {
-			throw new AssertionFailure( "foreignKey argument must be non-null." );
+	public List<RelationalValueBinding> getRelationalValueBindings() {
+		return relationalValueBindingContainer.relationalValueBindings();
+	}
+
+	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
+		if ( relationalValueBindings == null || relationalValueBindings.isEmpty() ) {
+			throw new AssertionFailure( "relationalValueBindings argument must be non-null and non-empty." );
 		}
-		if ( this.foreignKey != null ) {
-			throw new AssertionFailure( "Foreign key already initialized" );
+		if ( this.relationalValueBindingContainer != null ) {
+			throw new AssertionFailure( "Relational value bindings have already initialized" );
 		}
-		this.foreignKey = foreignKey;
+		this.relationalValueBindingContainer = new RelationalValueBindingContainer( relationalValueBindings );
+		if ( this.relationalValueBindingContainer.hasDerivedValue() ) {
+				throw new NotYetImplementedException(
+						"Derived values are not supported when creating a foreign key that targets columns."
+				);
+		}
+	}
+
+	public boolean isCascadeDeleteEnabled() {
+		return isCascadeDeleteEnabled;
+	}
+
+	public void setCascadeDeleteEnabled(boolean isCascadeDeleteEnabled) {
+		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
 	}
 
 	public boolean isNullable() {
-		if ( foreignKey == null || foreignKey.getSourceColumns().isEmpty() ) {
-			throw new IllegalStateException( "Foreign key has no columns." );
-		}
-		// cannot be nullable if the foreign key source columns are included in the primary key .
-		if ( foreignKey.getTable().getPrimaryKey().getColumns().containsAll( foreignKey.getSourceColumns() ) ) {
+		// cannot be nullable if the foreign key source columns are included in the primary key
+		// TODO: move this into RelationalValueBindingContainer.
+		if ( getCollectionTable().getPrimaryKey().getColumns().containsAll( relationalValueBindingContainer.columns() ) ) {
 			return false;
 		}
-		for ( Column column : foreignKey.getSourceColumns() ) {
-			if ( column.isNullable() ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public void setInsertable( boolean insertable ){
-		this.insertable = insertable;
+		return relationalValueBindingContainer.hasNullableRelationalValueBinding();
 	}
 
 	public boolean isInsertable() {
-		return insertable;
-	}
-
-	public void setUpdatable( boolean updatable ){
-		// The key is updatable if the foreign key *source* columns are updatable;
-		// We don't have the RelationalValueBindings for the FK source columns stored in ForeignKey
-		// so it needs to be set explicitly.
-		this.updatable = updatable;
+		return relationalValueBindingContainer.hasInsertableRelationalValueBinding();
 	}
 
 	public boolean isUpdatable() {
-		return updatable;
+		return relationalValueBindingContainer.hasUpdateableRelationalValueBinding();
 	}
 }

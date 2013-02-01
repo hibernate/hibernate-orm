@@ -500,7 +500,6 @@ public class SQLLoaderTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "unknown" )
 	public void testReturnPropertyComponentRename() throws HibernateException, SQLException {
 		// failure expected because this was a regression introduced previously which needs to get tracked down.
 		Componentizable componentizable = setupComponentData();

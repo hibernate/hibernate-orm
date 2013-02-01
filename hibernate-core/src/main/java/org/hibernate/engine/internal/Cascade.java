@@ -256,13 +256,17 @@ public final class Cascade {
 							final EntityEntry valueEntry = eventSource
 									.getPersistenceContext().getEntry( 
 											loadedValue );
-							final String entityName = valueEntry.getPersister().getEntityName();
-							if ( LOG.isTraceEnabled() ) {
-								final Serializable id = valueEntry.getPersister().getIdentifier( loadedValue, eventSource );
-								final String description = MessageHelper.infoString( entityName, id );
-								LOG.tracev( "Deleting orphaned entity instance: {0}", description );
+							// Need to check this in case the context has
+							// already been flushed.  See HHH-7829.
+							if ( valueEntry != null ) {
+								final String entityName = valueEntry.getPersister().getEntityName();
+								if ( LOG.isTraceEnabled() ) {
+									final Serializable id = valueEntry.getPersister().getIdentifier( loadedValue, eventSource );
+									final String description = MessageHelper.infoString( entityName, id );
+									LOG.tracev( "Deleting orphaned entity instance: {0}", description );
+								}
+								eventSource.delete( entityName, loadedValue, false, new HashSet() );
 							}
-							eventSource.delete( entityName, loadedValue, false, new HashSet() );
 						}
 					}
 				}

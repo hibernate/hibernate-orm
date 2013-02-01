@@ -245,7 +245,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "N/A" )
+	@TestForIssue( jiraKey = "HHH-2045" )
 	public void testEmptyInList() {
 		assertTranslation( "select a from Animal a where a.description in ()" );
 	}

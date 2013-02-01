@@ -79,7 +79,9 @@ public class InLogicOperatorNode extends BinaryLogicOperatorNode implements Bina
         if ( !isNodeAcceptable( rhsNode ) )
             return;
         int rhsColumnSpan = 0;
-        if ( rhsNode.getType() == HqlTokenTypes.VECTOR_EXPR ) {
+        if ( rhsNode == null ) {
+            return; // early exit for empty IN list
+        } else if ( rhsNode.getType() == HqlTokenTypes.VECTOR_EXPR ) {
             rhsColumnSpan = rhsNode.getNumberOfChildren();
         } else {
             Type rhsType = extractDataType( rhsNode );
@@ -96,7 +98,7 @@ public class InLogicOperatorNode extends BinaryLogicOperatorNode implements Bina
 	 * this is possible for parameter lists and explicit lists. It is completely unreasonable for sub-queries.
 	 */
     private boolean isNodeAcceptable( Node rhsNode ) {
-        return rhsNode instanceof LiteralNode
+        return rhsNode == null /* empty IN list */ || rhsNode instanceof LiteralNode
                 || rhsNode instanceof ParameterNode
                 || rhsNode.getType() == HqlTokenTypes.VECTOR_EXPR;
     }

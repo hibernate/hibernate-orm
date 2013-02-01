@@ -698,6 +698,7 @@ collectionExpr
 compoundExpr
 	: collectionExpr
 	| path
+	| { LA(1) == OPEN && LA(2) == CLOSE }? OPEN! CLOSE!
 	| (OPEN! ( (expression (COMMA! expression)*) | subQuery ) CLOSE!)
 	| parameter
 	;

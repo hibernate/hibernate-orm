@@ -40,11 +40,14 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.Query;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.Product_;
 import org.hibernate.internal.AbstractQueryImpl;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
 
@@ -93,6 +96,21 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		criteria.where( builder.and() );
 		List<Product> result = em.createQuery( criteria ).getResultList();
 		assertEquals( 1, result.size() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-6876" )
+	@RequiresDialect( H2Dialect.class )
+	public void testEmptyInList() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		Root<Product> from = criteria.from( Product.class );
+		criteria.where( from.get( Product_.partNumber ).in() ); // empty IN list
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals( 0, result.size() );
 		em.getTransaction().commit();
 		em.close();
 	}

@@ -24,6 +24,8 @@
 package org.hibernate.jpa;
 
 
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * Defines the available HEM settings, both JPA-defined as well as Hibernate-specific
  * <p/>
@@ -191,6 +193,171 @@ public interface AvailableSettings {
 	 * Used to pass along the CDI BeanManager, if any, to be used.
 	 */
 	public static final String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
+
+	/**
+	 * Specifies the action to be taken by the persistence provider.  The set of possible values are:<ul>
+	 *     <li>none</li>
+	 *     <li>create</li>
+	 *     <li>drop</li>
+	 *     <li>drop-and-create</li>
+	 * </ul>
+	 *
+	 * If no value is specified, the default is "none".
+	 *
+	 * @see SchemaGenAction
+	 */
+	public static final String SCHEMA_GEN_ACTION = "javax.persistence.schema-generation-action";
+
+	/**
+	 * Specifies whether the schema is to be created in the database, whether scripts are to be generated, or both.
+	 * The values for this property are:<ul>
+	 *     <li>database</li>
+	 *     <li>scripts</li>
+	 *     <li>database-and-scripts</li>
+	 * </ul>
+	 * If no value is specified, a default is assumed as follows:<ul>
+	 *     <li>
+	 *         if script targets are specified (per {@value #SCHEMA_GEN_CREATE_SCRIPT_TARGET} and
+	 *         {@value #SCHEMA_GEN_DROP_SCRIPT_TARGET}), then the default is assumed to be "scripts"
+	 *     </li>
+	 *     <li>
+	 *         Otherwise, "database" is assumed
+	 *     </li>
+	 * </ul>
+	 *
+	 * @see SchemaGenTarget
+	 */
+	public static final String SCHEMA_GEN_TARGET = "javax.persistence.schema-generation-target";
+
+	/**
+	 * If schema creations scripts are to be generated, the target/location for these scripts must be specified.  This
+	 * target may take the form of either a {@link java.io.Writer} or a string designating a
+	 * {@link java.net.URL}.
+	 * <p/>
+	 * Create and drop scripts are written separately (though the same Writer/URL could be passed).
+	 * {@value #SCHEMA_GEN_CREATE_SCRIPT_TARGET} specifies the target for the create script.
+	 *
+	 * @see #SCHEMA_GEN_DROP_SCRIPT_TARGET
+	 */
+	@SuppressWarnings("JavaDoc")
+	public static final String SCHEMA_GEN_CREATE_SCRIPT_TARGET = "javax.persistence.ddl-create-script-target";
+
+	/**
+	 * If schema creations scripts are to be generated, the target/location for these scripts must be specified.  This
+	 * target may take the form of either a {@link java.io.Writer} or a string designating a
+	 * {@link java.net.URL}.
+	 * <p/>
+	 * Create and drop scripts are written separately (though the same Writer/URL could be passed).
+	 * {@value #SCHEMA_GEN_DROP_SCRIPT_TARGET} specifies the target for the create script.
+	 *
+	 * @see #SCHEMA_GEN_CREATE_SCRIPT_TARGET
+	 */
+	@SuppressWarnings("JavaDoc")
+	public static final String SCHEMA_GEN_DROP_SCRIPT_TARGET = "javax.persistence.ddl-drop-script-target";
+
+	/**
+	 * Specifies whether schema generation is to occur on the basis of the object/relational mapping metadata, DDL
+	 * scripts, or a combination of the two.  The valid values for this property are: <ul>
+	 *     <li>metadata</li>
+	 *     <li>scripts</li>
+	 *     <li>metadata-then-scripts</li>
+	 *     <li>scripts-then-metadata</li>
+	 * </ul>
+	 * If no value is specified, a default is assumed as follows:<ul>
+	 *     <li>
+	 *         if source scripts are specified (per {@value #SCHEMA_GEN_CREATE_SCRIPT_SOURCE} and
+	 *         {@value #SCHEMA_GEN_DROP_SCRIPT_SOURCE}),then "scripts" is assumed
+	 *     </li>
+	 *     <li>
+	 *         otherwise, "metadata" is assumed
+	 *     </li>
+	 * </ul>
+	 *
+	 * @see SchemaGenSource
+	 */
+	public static final String SCHEMA_GEN_SOURCE = "javax.persistence.schema-generation-source";
+
+	/**
+	 * Specifies the CREATE script file as either a {@link java.io.Reader} configured for reading of the DDL script
+	 * file or a string designating a file {@link java.net.URL} for the DDL script.
+	 *
+	 * @see #SCHEMA_GEN_DROP_SCRIPT_SOURCE
+	 */
+	public static final String SCHEMA_GEN_CREATE_SCRIPT_SOURCE = "javax.persistence.ddl-create-script-source";
+
+	/**
+	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading of the DDL script
+	 * file or a string designating a file {@link java.net.URL} for the DDL script.
+	 *
+	 * @see #SCHEMA_GEN_CREATE_SCRIPT_SOURCE
+	 */
+	public static final String SCHEMA_GEN_DROP_SCRIPT_SOURCE = "javax.persistence.ddl-drop-script-source";
+
+	/**
+	 * Specifies whether the persistence provider is to create the database schema(s) in addition to creating
+	 * database objects (tables, sequences, constraints, etc).  The value of this boolean property should be set
+	 * to {@code true} if the persistence provider is to create schemas in the database or to generate DDL that
+	 * contains “CREATE SCHEMA” commands.  If this property is not supplied (or is explicitly {@code false}), the
+	 * provider should not attempt to create database schemas.
+	 */
+	public static final String SCHEMA_GEN_CREATE_SCHEMAS = "javax.persistence.create-database-schemas";
+
+	/**
+	 * Allows passing the specific {@link java.sql.Connection} instance to be used for performing schema generation
+	 * where the target is "database".
+	 * <p/>
+	 * May also be used to determine the values for {@value #SCHEMA_GEN_DB_NAME},
+	 * {@value #SCHEMA_GEN_DB_MAJOR_VERSION} and {@value #SCHEMA_GEN_DB_MINOR_VERSION}.
+	 */
+	public static final String SCHEMA_GEN_CONNECTION = "javax.persistence.schema-generation-connection";
+
+	/**
+	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
+	 * not available (aka, mainly in generating scripts).  In such cases, a value for
+	 * {@value #SCHEMA_GEN_DB_NAME} *must* be specified.
+	 * <p/>
+	 * The value of this setting is expected to match the value returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseProductName()} for the target database.
+	 * <p/>
+	 * Additionally specifying {@value #SCHEMA_GEN_DB_MAJOR_VERSION} and/or {@value #SCHEMA_GEN_DB_MINOR_VERSION}
+	 * may be required to understand exactly how to generate the required schema commands.
+	 *
+	 * @see #SCHEMA_GEN_DB_MAJOR_VERSION
+	 * @see #SCHEMA_GEN_DB_MINOR_VERSION
+	 */
+	@SuppressWarnings("JavaDoc")
+	public static final String SCHEMA_GEN_DB_NAME = "javax.persistence.database-product-name";
+
+	/**
+	 * Specifies the major version of the underlying database, as would be returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseMajorVersion} for the target database.  This value is used to
+	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases
+	 * where {@value #SCHEMA_GEN_DB_NAME} does not provide enough distinction.
+
+	 * @see #SCHEMA_GEN_DB_NAME
+	 * @see #SCHEMA_GEN_DB_MINOR_VERSION
+	 */
+	public static final String SCHEMA_GEN_DB_MAJOR_VERSION = "javax.persistence.database-major-version";
+
+	/**
+	 * Specifies the minor version of the underlying database, as would be returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseMinorVersion} for the target database.  This value is used to
+	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases
+	 * where te combination of {@value #SCHEMA_GEN_DB_NAME} and {@value #SCHEMA_GEN_DB_MAJOR_VERSION} does not provide
+	 * enough distinction.
+	 *
+	 * @see #SCHEMA_GEN_DB_NAME
+	 * @see #SCHEMA_GEN_DB_MAJOR_VERSION
+	 */
+	public static final String SCHEMA_GEN_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
+
+	/**
+	 * Specifies a {@link java.io.Reader} configured for reading of the SQL load script or a string designating the
+	 * file {@link java.net.URL} for the SQL load script.
+	 * <p/>
+	 * A "SQL load script" is a script that performs some database initialization (INSERT, etc).
+	 */
+	public static final String SCHEMA_GEN_LOAD_SCRIPT_SOURCE = "javax.persistence.sql-load-script-source";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -81,6 +81,7 @@ import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.event.spi.JpaIntegrator;
+import org.hibernate.jpa.internal.schemagen.JpaSchemaGenerator;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.LogHelper;
@@ -729,6 +730,32 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	public void cancel() {
 		// todo : close the bootstrap registry (not critical, but nice to do)
 
+	}
+
+	@Override
+	public void generateSchema() {
+		processProperties();
+
+		final ServiceRegistry serviceRegistry = buildServiceRegistry();
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
+		// IMPL NOTE : TCCL handling here is temporary.
+		//		It is needed because this code still uses Hibernate Configuration and Hibernate commons-annotations
+		// 		in turn which relies on TCCL being set.
+
+		( (ClassLoaderServiceImpl) classLoaderService ).withTccl(
+				new ClassLoaderServiceImpl.Work() {
+					@Override
+					public Object perform() {
+						final Configuration hibernateConfiguration = buildHibernateConfiguration( serviceRegistry );
+						JpaSchemaGenerator.performGeneration( hibernateConfiguration, serviceRegistry );
+						return null;
+					}
+				}
+		);
+
+		// release this builder
+		cancel();
 	}
 
 	@SuppressWarnings("unchecked")

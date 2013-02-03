@@ -36,6 +36,7 @@ import java.util.Map;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 
@@ -56,6 +57,11 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	 */
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
+		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
+		return builder == null ? null : builder.build();
+	}
+
+	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties) {
 		final Map integration = wrap( properties );
 		final List<ParsedPersistenceXmlDescriptor> units = PersistenceXmlParser.locatePersistenceUnits( integration );
 
@@ -75,7 +81,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				continue;
 			}
 
-			return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnit, integration ).build();
+			return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnit, integration );
 		}
 
 		return null;
@@ -98,13 +104,18 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	@Override
 	public void generateSchema(PersistenceUnitInfo info, Map map) {
-		// todo : implement
+		EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder( info, map );
+		builder.generateSchema();
 	}
 
 	@Override
 	public boolean generateSchema(String persistenceUnitName, Map map) {
-		// todo : implement
-		return false;
+		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, map );
+		if ( builder == null ) {
+			return false;
+		}
+		builder.generateSchema();
+		return true;
 	}
 
 	private final ProviderUtil providerUtil = new ProviderUtil() {

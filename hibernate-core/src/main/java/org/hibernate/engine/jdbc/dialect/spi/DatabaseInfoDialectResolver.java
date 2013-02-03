@@ -32,8 +32,6 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface DatabaseInfoDialectResolver extends Service {
-	public static final int NO_VERSION = -9999;
-
 	/**
 	 * Determine the {@link Dialect} to use based on the given information.  Implementations are
 	 * expected to return the {@link Dialect} instance to use, or {@code null} if the they did not locate a match.
@@ -45,6 +43,8 @@ public interface DatabaseInfoDialectResolver extends Service {
 	public Dialect resolve(DatabaseInfo databaseInfo);
 
 	public static interface DatabaseInfo {
+		public static final int NO_VERSION = -9999;
+
 		/**
 		 * Obtain access to the database name, as returned from {@link java.sql.DatabaseMetaData#getDatabaseProductName()}
 		 * for the target database

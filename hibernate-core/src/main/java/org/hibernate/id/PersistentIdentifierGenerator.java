@@ -96,6 +96,9 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator {
 	 */
 	public Object generatorKey();
 
+	public String getSchema();
+
+	public String getCatalog();
 }
 
 

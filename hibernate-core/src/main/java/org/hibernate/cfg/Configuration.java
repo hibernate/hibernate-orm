@@ -876,7 +876,7 @@ public class Configuration implements Serializable {
 
 
 	@SuppressWarnings({ "unchecked" })
-	private Iterator<IdentifierGenerator> iterateGenerators(Dialect dialect) throws MappingException {
+	public Iterator<IdentifierGenerator> iterateGenerators(Dialect dialect) throws MappingException {
 
 		TreeMap generators = new TreeMap();
 		String defaultCatalog = properties.getProperty( Environment.DEFAULT_CATALOG );

@@ -73,4 +73,9 @@ public interface EntityManagerFactoryBuilder {
 	 * something having gone wrong during the bootstrap process
 	 */
 	public void cancel();
+
+	/**
+	 * Perform an explicit schema generation (rather than an "auto" one) based on the
+	 */
+	public void generateSchema();
 }

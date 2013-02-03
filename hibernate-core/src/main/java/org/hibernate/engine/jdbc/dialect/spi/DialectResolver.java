@@ -23,30 +23,10 @@
  */
 package org.hibernate.engine.jdbc.dialect.spi;
 
-import java.sql.DatabaseMetaData;
-
-import org.hibernate.dialect.Dialect;
-import org.hibernate.exception.JDBCConnectionException;
-import org.hibernate.service.Service;
-
 /**
- * Contract for determining the {@link Dialect} to use based on a JDBC {@link java.sql.Connection}.
- *
- * @author Tomoto Shimizu Washio
- * @author Steve Ebersole
+ * @deprecated Deprecated in favor of {@link DatabaseMetaDataDialectResolver} to account for resolving by name versus
+ * by DatabaseMetaData
  */
-public interface DialectResolver extends Service {
-	/**
-	 * Determine the {@link Dialect} to use based on the given JDBC {@link DatabaseMetaData}.  Implementations are
-	 * expected to return the {@link Dialect} instance to use, or null if the {@link DatabaseMetaData} does not match
-	 * the criteria handled by this impl.
-	 * 
-	 * @param metaData The JDBC metadata.
-	 *
-	 * @return The dialect to use, or null.
-	 *
-	 * @throws JDBCConnectionException Indicates a 'non transient connection problem', which indicates that
-	 * we should stop resolution attempts.
-	 */
-	public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException;
+@Deprecated
+public interface DialectResolver extends DatabaseMetaDataDialectResolver {
 }

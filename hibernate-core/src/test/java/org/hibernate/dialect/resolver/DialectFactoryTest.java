@@ -31,7 +31,6 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.cfg.Environment;
@@ -58,7 +57,8 @@ import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.TestingDialects;
 import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverSet;
-import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
+import org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseInfoDialectResolver;
+import org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 
 import org.junit.Before;
@@ -82,7 +82,9 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		dialectFactory.setStrategySelector(
 				new StrategySelectorBuilder().buildSelector( new ClassLoaderServiceImpl( getClass().getClassLoader() ) )
 		);
-		dialectFactory.setDialectResolver( new StandardDialectResolver() );
+		dialectFactory.setDialectResolver(
+				new StandardDatabaseMetaDataDialectResolver( StandardDatabaseInfoDialectResolver.INSTANCE )
+		);
 	}
 
 	@Test
@@ -140,7 +142,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testPreregisteredDialects() {
-		DialectResolver resolver = new StandardDialectResolver();
+		DialectResolver resolver = new StandardDatabaseMetaDataDialectResolver( StandardDatabaseInfoDialectResolver.INSTANCE );
 		testDetermination( "HSQL Database Engine", HSQLDialect.class, resolver );
 		testDetermination( "H2", H2Dialect.class, resolver );
 		testDetermination( "MySQL", MySQLDialect.class, resolver );

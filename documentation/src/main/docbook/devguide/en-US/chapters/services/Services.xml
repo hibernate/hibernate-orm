@@ -261,7 +261,7 @@
                         <para>
                             The standard resolver implementation acts as a chain, delegating to a series of individual
                             resolvers.  The standard Hibernate resolution behavior is contained in
-                            <classname>org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver</classname>.
+                            <classname>org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolver</classname>.
                             <classname>org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator</classname>
                             also consults with the <property>hibernate.dialect_resolvers</property> setting for any
                             custom resolvers.

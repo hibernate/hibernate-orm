@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -30,40 +30,33 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Standard initiator for the standard {@link DialectResolver} service
- *
  * @author Steve Ebersole
  */
-public class DialectResolverInitiator implements StandardServiceInitiator<DialectResolver> {
-	public static final DialectResolverInitiator INSTANCE = new DialectResolverInitiator();
+public class DatabaseInfoDialectResolverInitiator implements StandardServiceInitiator<DatabaseInfoDialectResolver> {
+	public static final DatabaseInfoDialectResolverInitiator INSTANCE = new DatabaseInfoDialectResolverInitiator();
 
 	@Override
-	public Class<DialectResolver> getServiceInitiated() {
-		return DialectResolver.class;
+	public Class<DatabaseInfoDialectResolver> getServiceInitiated() {
+		return DatabaseInfoDialectResolver.class;
 	}
 
 	@Override
-	public DialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final DialectResolverSet resolver = new DialectResolverSet();
-		applyCustomerResolvers( resolver, registry, configurationValues );
-		resolver.addResolver(
-				new StandardDatabaseMetaDataDialectResolver(
-						registry.getService( DatabaseInfoDialectResolver.class )
-				)
-		);
+	public DatabaseInfoDialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+		final DatabaseInfoDialectResolverSet resolver = new DatabaseInfoDialectResolverSet();
+		applyCustomReslvers( resolver, configurationValues, registry );
+		resolver.addResolver( StandardDatabaseInfoDialectResolver.INSTANCE );
 		return resolver;
 	}
 
-	private void applyCustomerResolvers(
-			DialectResolverSet resolver,
-			ServiceRegistryImplementor registry,
-			Map configurationValues) {
+	private void applyCustomReslvers(
+			DatabaseInfoDialectResolverSet resolver,
+			Map configurationValues,
+			ServiceRegistryImplementor registry) {
 		final String resolverImplNames = (String) configurationValues.get( AvailableSettings.DIALECT_RESOLVERS );
 
 		if ( StringHelper.isNotEmpty( resolverImplNames ) ) {
@@ -71,7 +64,7 @@ public class DialectResolverInitiator implements StandardServiceInitiator<Dialec
 			for ( String resolverImplName : StringHelper.split( ", \n\r\f\t", resolverImplNames ) ) {
 				try {
 					resolver.addResolver(
-							(DialectResolver) classLoaderService.classForName( resolverImplName ).newInstance()
+							(DatabaseInfoDialectResolver) classLoaderService.classForName( resolverImplName ).newInstance()
 					);
 				}
 				catch (HibernateException e) {

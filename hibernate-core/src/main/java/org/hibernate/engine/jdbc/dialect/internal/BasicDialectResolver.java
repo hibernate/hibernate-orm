@@ -28,15 +28,18 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.dialect.spi.AbstractDatabaseMetaDataDialectResolver;
 
 /**
  * Intended as support for custom resolvers.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Purpose has shifted to new {@link org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver}
+ * contract.  See <a href="https://hibernate.onjira.com/browse/HHH-7965">HHH-7965</a> for details.
  */
-public class BasicDialectResolver extends AbstractDialectResolver {
-	// TODO: should this disappear???
-
+@Deprecated
+public class BasicDialectResolver extends AbstractDatabaseMetaDataDialectResolver {
 	public static final int VERSION_INSENSITIVE_VERSION = -9999;
 
 	private final String matchingName;

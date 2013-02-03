@@ -42,11 +42,11 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 /**
- * Unit test of the {@link StandardDialectResolver} class.
+ * Unit test of the {@link StandardDatabaseMetaDataDialectResolver} class.
  * 
  * @author Bryan Turner
  */
-public class StandardDialectResolverTest extends BaseUnitTestCase {
+public class StandardDatabaseMetaDataDialectResolverTest extends BaseUnitTestCase {
 
 	@Test
 	public void testResolveDialectInternalForSQLServer2000() 
@@ -137,8 +137,8 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
 		when( metaData.getDatabaseMajorVersion() ).thenReturn( majorVersion );
 		when( metaData.getDatabaseMinorVersion() ).thenReturn( minorVersion );
 
-		Dialect dialect = new StandardDialectResolver().resolveDialectInternal(
-				metaData );
+		Dialect dialect = new StandardDatabaseMetaDataDialectResolver( StandardDatabaseInfoDialectResolver.INSTANCE )
+				.resolveDialectInternal( metaData );
 
 		StringBuilder builder = new StringBuilder( productName ).append( " " )
 				.append( majorVersion );

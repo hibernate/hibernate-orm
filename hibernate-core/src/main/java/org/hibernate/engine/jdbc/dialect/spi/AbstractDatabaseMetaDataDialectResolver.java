@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.dialect.internal;
+package org.hibernate.engine.jdbc.dialect.spi;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -33,7 +33,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.resolver.BasicSQLExceptionConverter;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 
 /**
  * A templated resolver impl which delegates to the {@link #resolveDialectInternal} method
@@ -41,10 +40,12 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractDialectResolver implements DialectResolver {
+public abstract class AbstractDatabaseMetaDataDialectResolver implements DialectResolver {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       AbstractDialectResolver.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			AbstractDatabaseMetaDataDialectResolver.class.getName()
+	);
 
 	/**
 	 * {@inheritDoc}
@@ -58,12 +59,15 @@ public abstract class AbstractDialectResolver implements DialectResolver {
 		}
 		catch ( SQLException sqlException ) {
 			JDBCException jdbcException = BasicSQLExceptionConverter.INSTANCE.convert( sqlException );
-            if (jdbcException instanceof JDBCConnectionException) throw jdbcException;
-            LOG.warnf("%s : %s", BasicSQLExceptionConverter.MSG, sqlException.getMessage());
+            if (jdbcException instanceof JDBCConnectionException) {
+				throw jdbcException;
+			}
+
+            LOG.warnf( "%s : %s", BasicSQLExceptionConverter.MSG, sqlException.getMessage() );
             return null;
 		}
 		catch ( Throwable t ) {
-            LOG.unableToExecuteResolver(this, t.getMessage());
+            LOG.unableToExecuteResolver( this, t.getMessage() );
 			return null;
 		}
 	}

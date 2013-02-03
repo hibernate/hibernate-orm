@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -22,9 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.dialect.internal;
-
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 
 import org.jboss.logging.Logger;
 
@@ -53,22 +50,23 @@ import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
+import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * The standard Hibernate Dialect resolver.
- *
  * @author Steve Ebersole
  */
-public class StandardDialectResolver extends AbstractDialectResolver {
+public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectResolver {
+	public static final StandardDatabaseInfoDialectResolver INSTANCE = new StandardDatabaseInfoDialectResolver();
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                         StandardDialectResolver.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			StandardDatabaseInfoDialectResolver.class.getName()
+	);
 
 	@Override
-    protected Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
-		String databaseName = metaData.getDatabaseProductName();
-		int databaseMajorVersion = metaData.getDatabaseMajorVersion();
+	public Dialect resolve(DatabaseInfo databaseInfo) {
+		final String databaseName = databaseInfo.getDatabaseName();
 
 		if ( "CUBRID".equalsIgnoreCase( databaseName ) ) {
 			return new CUBRIDDialect();
@@ -87,22 +85,26 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 		}
 
 		if ( "PostgreSQL".equals( databaseName ) ) {
-			final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
-			if ( databaseMajorVersion > 8 || ( databaseMajorVersion == 8 && databaseMinorVersion >= 2 ) ) {
+			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
+			final int minorVersion = databaseInfo.getDatabaseMinorVersion();
+
+			if ( majorVersion > 8 || ( majorVersion == 8 && minorVersion >= 2 ) ) {
 				return new PostgreSQL82Dialect();
 			}
 			return new PostgreSQL81Dialect();
 		}
 
 		if ( "Apache Derby".equals( databaseName ) ) {
-			final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
-            if ( databaseMajorVersion > 10 || ( databaseMajorVersion == 10 && databaseMinorVersion >= 7 ) ) {
+			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
+			final int minorVersion = databaseInfo.getDatabaseMinorVersion();
+
+			if ( majorVersion > 10 || ( majorVersion == 10 && minorVersion >= 7 ) ) {
 				return new DerbyTenSevenDialect();
 			}
-			else if ( databaseMajorVersion == 10 && databaseMinorVersion == 6 ) {
+			else if ( majorVersion == 10 && minorVersion == 6 ) {
 				return new DerbyTenSixDialect();
 			}
-			else if ( databaseMajorVersion == 10 && databaseMinorVersion == 5 ) {
+			else if ( majorVersion == 10 && minorVersion == 5 ) {
 				return new DerbyTenFiveDialect();
 			}
 			else {
@@ -111,32 +113,36 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 		}
 
 		if ( "ingres".equalsIgnoreCase( databaseName ) ) {
-            switch ( databaseMajorVersion ) {
-                case 9:
-                    int databaseMinorVersion = metaData.getDatabaseMinorVersion();
-                    if (databaseMinorVersion > 2) {
-                        return new Ingres9Dialect();
-                    }
-                    return new IngresDialect();
-                case 10:
-                    return new Ingres10Dialect();
-                default:
-                    LOG.unknownIngresVersion(databaseMajorVersion);
-            }
+			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
+			final int minorVersion = databaseInfo.getDatabaseMinorVersion();
+
+			switch ( majorVersion ) {
+				case 9:
+					if (minorVersion > 2) {
+						return new Ingres9Dialect();
+					}
+					return new IngresDialect();
+				case 10:
+					return new Ingres10Dialect();
+				default:
+					LOG.unknownIngresVersion( majorVersion );
+			}
 			return new IngresDialect();
 		}
 
 		if ( databaseName.startsWith( "Microsoft SQL Server" ) ) {
-			switch ( databaseMajorVersion ) {
-                case 8:
-                    return new SQLServerDialect();
-                case 9:
-                    return new SQLServer2005Dialect();
-                case 10:
-                case 11:
-                    return new SQLServer2008Dialect();
-                default:
-                    LOG.unknownSqlServerVersion(databaseMajorVersion);
+			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
+
+			switch ( majorVersion ) {
+				case 8:
+					return new SQLServerDialect();
+				case 9:
+					return new SQLServer2005Dialect();
+				case 10:
+				case 11:
+					return new SQLServer2008Dialect();
+				default:
+					LOG.unknownSqlServerVersion( majorVersion );
 			}
 			return new SQLServerDialect();
 		}
@@ -152,7 +158,7 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 		if ( "Informix Dynamic Server".equals( databaseName ) ) {
 			return new InformixDialect();
 		}
-		
+
 		if ( databaseName.equals("DB2 UDB for AS/400" ) ) {
 			return new DB2400Dialect();
 		}
@@ -162,7 +168,9 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 		}
 
 		if ( "Oracle".equals( databaseName ) ) {
-			switch ( databaseMajorVersion ) {
+			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
+
+			switch ( majorVersion ) {
 				case 11:
 					return new Oracle10gDialect();
 				case 10:
@@ -172,7 +180,7 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 				case 8:
 					return new Oracle8iDialect();
 				default:
-                    LOG.unknownOracleVersion(databaseMajorVersion);
+					LOG.unknownOracleVersion( majorVersion );
 			}
 		}
 

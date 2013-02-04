@@ -345,6 +345,11 @@ public class JpaSchemaGenerator {
 		private final List<String> commands;
 
 		private CreateSchemaCommandSource(Configuration hibernateConfiguration, Dialect dialect) {
+			// NOTES:
+			//		1) catalogs are currently not handled here at all
+			//		2) schemas for sequences are not handled here at all
+			//	Both of these are handle-able on the metamodel codebase
+
 			final HashSet<String> schemas = new HashSet<String>();
 //			final HashSet<String> catalogs = new HashSet<String>();
 
@@ -355,14 +360,14 @@ public class JpaSchemaGenerator {
 				schemas.add( table.getSchema() );
 			}
 
-			final Iterator<IdentifierGenerator> generators = hibernateConfiguration.iterateGenerators( dialect );
-			while ( generators.hasNext() ) {
-				final IdentifierGenerator generator = generators.next();
-				if ( PersistentIdentifierGenerator.class.isInstance( generator ) ) {
-//					catalogs.add( ( (PersistentIdentifierGenerator) generator ).getCatalog() );
-					schemas.add( ( (PersistentIdentifierGenerator) generator ).getCatalog() );
-				}
-			}
+//			final Iterator<IdentifierGenerator> generators = hibernateConfiguration.iterateGenerators( dialect );
+//			while ( generators.hasNext() ) {
+//				final IdentifierGenerator generator = generators.next();
+//				if ( PersistentIdentifierGenerator.class.isInstance( generator ) ) {
+////					catalogs.add( ( (PersistentIdentifierGenerator) generator ).getCatalog() );
+//					schemas.add( ( (PersistentIdentifierGenerator) generator ).getSchema() );
+//				}
+//			}
 
 //			if ( schemas.isEmpty() && catalogs.isEmpty() ) {
 			if ( schemas.isEmpty() ) {

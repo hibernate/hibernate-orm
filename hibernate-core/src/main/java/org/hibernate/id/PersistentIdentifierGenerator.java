@@ -95,14 +95,4 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator {
 	 * @return Object an identifying key for this generator
 	 */
 	public Object generatorKey();
-
-	public String getSchema();
-
-	public String getCatalog();
 }
-
-
-
-
-
-

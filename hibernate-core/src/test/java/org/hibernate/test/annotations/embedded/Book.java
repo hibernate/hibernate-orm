@@ -6,13 +6,14 @@ import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.SecondaryTable;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@SecondaryTable(name = "BookSummary")
+@SecondaryTable(name = "BookSummary", indexes = @Index( columnList = "summ_size ASC, text DESC"))
 public class Book {
 	private String isbn;
 	private String name;

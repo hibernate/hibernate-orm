@@ -32,8 +32,11 @@ import static org.junit.Assert.*;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.test.annotations.embedded.Book;
+import org.hibernate.test.annotations.embedded.Summary;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -42,13 +45,13 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class IndexTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Car.class };
+		return new Class[] { Car.class, Book.class, Summary.class };
 	}
 
 	@Test
 	public void testBasicIndex() {
-		PersistentClass carClass = configuration().getClassMapping( Car.class.getName() );
-		Iterator itr = carClass.getTable().getUniqueKeyIterator();
+		PersistentClass entity = configuration().getClassMapping( Car.class.getName() );
+		Iterator itr = entity.getTable().getUniqueKeyIterator();
 		assertTrue( itr.hasNext() );
 		UniqueKey uk = (UniqueKey) itr.next();
 		assertFalse( itr.hasNext() );
@@ -58,10 +61,10 @@ public class IndexTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "brand", column.getName() );
 		column = (Column) uk.getColumns().get( 1 );
 		assertEquals( "producer", column.getName() );
-		assertSame( carClass.getTable(), uk.getTable() );
+		assertSame( entity.getTable(), uk.getTable() );
 
 
-		itr = carClass.getTable().getIndexIterator();
+		itr = entity.getTable().getIndexIterator();
 		assertTrue( itr.hasNext() );
 		Index index = (Index)itr.next();
 		assertFalse( itr.hasNext() );
@@ -69,6 +72,26 @@ public class IndexTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, index.getColumnSpan() );
 		column = index.getColumnIterator().next();
 		assertEquals( "since", column.getName() );
-		assertSame( carClass.getTable(), index.getTable() );
+		assertSame( entity.getTable(), index.getTable() );
+	}
+
+	@Test
+	public void testSecondaryTableIndex(){
+		PersistentClass entity = configuration().getClassMapping( Book.class.getName() );
+
+		Join join = (Join)entity.getJoinIterator().next();
+		Iterator<Index> itr = join.getTable().getIndexIterator();
+		assertTrue( itr.hasNext() );
+		Index index = itr.next();
+		assertFalse( itr.hasNext() );
+		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
+		assertEquals( 2, index.getColumnSpan() );
+		Iterator<Column> columnIterator = index.getColumnIterator();
+		Column column = columnIterator.next();
+		assertEquals( "summ_size", column.getName() );
+		column = columnIterator.next();
+		assertEquals( "text", column.getName() );
+		assertSame( join.getTable(), index.getTable() );
+
 	}
 }

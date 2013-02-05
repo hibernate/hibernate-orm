@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,25 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.annotations;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+package org.hibernate.test.annotations.index.jpa;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import javax.persistence.Entity;
 
 /**
- * Define a DB index
- *
- * @author Emmanuel Bernard
- * @deprecated Using {@link javax.persistence.Index} instead.
+ * @author Strong Liu <stliu@hibernate.org>
  */
-@Target({FIELD, METHOD})
-@Retention(RUNTIME)
-@Deprecated
-public @interface Index {
-	String name();
-
-	String[] columnNames() default {};
+@Entity
+public class Dealer {
 }

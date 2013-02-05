@@ -115,11 +115,14 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	public String uniqueConstraintSql( org.hibernate.mapping.UniqueKey uniqueKey ) {
 		StringBuilder sb = new StringBuilder();
 		sb.append( " unique (" );
-		Iterator columnIterator = uniqueKey.getColumnIterator();
+		Iterator<org.hibernate.mapping.Column> columnIterator = uniqueKey.columnIterator();
 		while ( columnIterator.hasNext() ) {
 			org.hibernate.mapping.Column column
-					= (org.hibernate.mapping.Column) columnIterator.next();
+					= columnIterator.next();
 			sb.append( column.getQuotedName( dialect ) );
+			if ( uniqueKey.getColumnOrderMap().containsKey( column ) ) {
+				sb.append( " " ).append( uniqueKey.getColumnOrderMap().get( column ) );
+			}
 			if ( columnIterator.hasNext() ) {
 				sb.append( ", " );
 			}

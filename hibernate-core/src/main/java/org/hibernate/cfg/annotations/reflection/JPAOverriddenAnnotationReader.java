@@ -2262,6 +2262,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 						annotation.setValue( "schema", table.schema() );
 						annotation.setValue( "catalog", table.catalog() );
 						annotation.setValue( "uniqueConstraints", table.uniqueConstraints() );
+						annotation.setValue( "indexes", table.indexes() );
 					}
 				}
 				if ( StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) )

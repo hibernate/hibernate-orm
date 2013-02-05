@@ -45,7 +45,7 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 		if ( hasNullable( uniqueKey ) ) {
 			return org.hibernate.mapping.Index.buildSqlCreateIndexString(
 					dialect, uniqueKey.getName(), uniqueKey.getTable(),
-					uniqueKey.columnIterator(), true, defaultCatalog,
+					uniqueKey.columnIterator(), uniqueKey.getColumnOrderMap(), true, defaultCatalog,
 					defaultSchema );
 		} else {
 			return super.applyUniquesOnAlter(
@@ -88,9 +88,9 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	}
 	
 	private boolean hasNullable( org.hibernate.mapping.UniqueKey uniqueKey ) {
-		Iterator iter = uniqueKey.getColumnIterator();
+		Iterator<org.hibernate.mapping.Column> iter = uniqueKey.columnIterator();
 		while ( iter.hasNext() ) {
-			if ( ( ( org.hibernate.mapping.Column ) iter.next() ).isNullable() ) {
+			if ( iter.next().isNullable() ) {
 				return true;
 			}
 		}
@@ -98,9 +98,8 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	}
 	
 	private boolean hasNullable( UniqueKey uniqueKey ) {
-		Iterator iter = uniqueKey.getColumns().iterator();
-		while ( iter.hasNext() ) {
-			if ( ( ( Column ) iter.next() ).isNullable() ) {
+		for ( Column column : uniqueKey.getColumns() ) {
+			if ( column.isNullable() ) {
 				return true;
 			}
 		}

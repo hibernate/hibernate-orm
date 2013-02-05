@@ -514,6 +514,21 @@ public class TableBinder {
 		}
 	}
 
+	public static void addIndexes(Table hibTable, javax.persistence.Index[] indexes, Mappings mappings) {
+		for ( javax.persistence.Index index : indexes ) {
+			//no need to handle inSecondPass here since it is only called from EntityBinder
+			mappings.addSecondPass(
+					new IndexOrUniqueKeySecondPass(
+							hibTable,
+							index.name(),
+							index.columnList(),
+							mappings,
+							index.unique()
+					)
+			);
+		}
+	}
+
 	/**
 	 * @deprecated Use {@link #buildUniqueConstraintHolders} instead
 	 */

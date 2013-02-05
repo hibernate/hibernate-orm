@@ -24,6 +24,8 @@
 package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -40,7 +42,8 @@ import org.hibernate.internal.util.StringHelper;
 public class Index implements RelationalModel, Serializable {
 
 	private Table table;
-	private List columns = new ArrayList();
+	private List<Column> columns = new ArrayList<Column>();
+	private java.util.Map<Column, String> columnOrderMap = new HashMap<Column, String>(  );
 	private String name;
 
 	public String sqlCreateString(Dialect dialect, Mapping mapping, String defaultCatalog, String defaultSchema)
@@ -50,6 +53,7 @@ public class Index implements RelationalModel, Serializable {
 				getName(),
 				getTable(),
 				getColumnIterator(),
+				columnOrderMap,
 				false,
 				defaultCatalog,
 				defaultSchema
@@ -74,7 +78,8 @@ public class Index implements RelationalModel, Serializable {
 			Dialect dialect,
 			String name,
 			Table table,
-			Iterator columns,
+			Iterator<Column> columns,
+			java.util.Map<Column, String> columnOrderMap,
 			boolean unique,
 			String defaultCatalog,
 			String defaultSchema
@@ -90,13 +95,28 @@ public class Index implements RelationalModel, Serializable {
 				.append( " on " )
 				.append( table.getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
 				.append( " (" );
-		Iterator iter = columns;
-		while ( iter.hasNext() ) {
-			buf.append( ( (Column) iter.next() ).getQuotedName( dialect ) );
-			if ( iter.hasNext() ) buf.append( ", " );
+		while ( columns.hasNext() ) {
+			Column column = columns.next();
+			buf.append( column.getQuotedName( dialect ) );
+			if ( columnOrderMap.containsKey( column ) ) {
+				buf.append( " " ).append( columnOrderMap.get( column ) );
+			}
+			if ( columns.hasNext() ) buf.append( ", " );
 		}
 		buf.append( ")" );
 		return buf.toString();
+	}
+
+	public static String buildSqlCreateIndexString(
+			Dialect dialect,
+			String name,
+			Table table,
+			Iterator<Column> columns,
+			boolean unique,
+			String defaultCatalog,
+			String defaultSchema
+	) {
+		return buildSqlCreateIndexString( dialect, name, table, columns, Collections.EMPTY_MAP, unique, defaultCatalog, defaultSchema );
 	}
 
 
@@ -131,12 +151,19 @@ public class Index implements RelationalModel, Serializable {
 		return columns.size();
 	}
 
-	public Iterator getColumnIterator() {
+	public Iterator<Column> getColumnIterator() {
 		return columns.iterator();
 	}
 
 	public void addColumn(Column column) {
 		if ( !columns.contains( column ) ) columns.add( column );
+	}
+
+	public void addColumn(Column column, String order) {
+		addColumn( column );
+		if ( StringHelper.isNotEmpty( order ) ) {
+			columnOrderMap.put( column, order );
+		}
 	}
 
 	public void addColumns(Iterator extraColumns) {

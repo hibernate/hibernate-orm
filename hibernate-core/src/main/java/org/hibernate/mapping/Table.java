@@ -54,7 +54,7 @@ public class Table implements RelationalModel, Serializable {
 	private Map columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
-	private Map indexes = new LinkedHashMap();
+	private Map<String, Index> indexes = new LinkedHashMap<String, Index>();
 	private Map foreignKeys = new LinkedHashMap();
 	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
 	private int uniqueInteger;
@@ -231,7 +231,7 @@ public class Table implements RelationalModel, Serializable {
 		return columns.values().iterator();
 	}
 
-	public Iterator getIndexIterator() {
+	public Iterator<Index> getIndexIterator() {
 		return indexes.values().iterator();
 	}
 
@@ -239,11 +239,11 @@ public class Table implements RelationalModel, Serializable {
 		return foreignKeys.values().iterator();
 	}
 
-	public Iterator getUniqueKeyIterator() {
+	public Iterator<UniqueKey> getUniqueKeyIterator() {
 		return getUniqueKeys().values().iterator();
 	}
 
-	Map getUniqueKeys() {
+	Map<String, UniqueKey> getUniqueKeys() {
 		cleanseUniqueKeyMapIfNeeded();
 		return uniqueKeys;
 	}
@@ -593,7 +593,7 @@ public class Table implements RelationalModel, Serializable {
 
 	public Index getOrCreateIndex(String indexName) {
 
-		Index index = (Index) indexes.get( indexName );
+		Index index =  indexes.get( indexName );
 
 		if ( index == null ) {
 			index = new Index();
@@ -606,11 +606,11 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public Index getIndex(String indexName) {
-		return (Index) indexes.get( indexName );
+		return  indexes.get( indexName );
 	}
 
 	public Index addIndex(Index index) {
-		Index current = (Index) indexes.get( index.getName() );
+		Index current =  indexes.get( index.getName() );
 		if ( current != null ) {
 			throw new MappingException( "Index " + index.getName() + " already exists!" );
 		}
@@ -703,6 +703,7 @@ public class Table implements RelationalModel, Serializable {
 		}
 		return ( Integer.toHexString( name.hashCode() ) + Integer.toHexString( result ) ).toUpperCase();
 	}
+
 
 
 	public String getSchema() {

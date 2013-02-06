@@ -26,9 +26,11 @@ package org.hibernate.jpa;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * Describes the allowable values of the {@value AvailableSettings#SCHEMA_GEN_SOURCE} setting.
+ * Describes the allowable values of the {@value AvailableSettings#SCHEMA_GEN_CREATE_SOURCE} and
+ * {@value AvailableSettings#SCHEMA_GEN_DROP_SOURCE} settings.
  *
- * @see AvailableSettings#SCHEMA_GEN_SOURCE
+ * @see AvailableSettings#SCHEMA_GEN_CREATE_SOURCE
+ * @see AvailableSettings#SCHEMA_GEN_DROP_SOURCE
  *
  * @author Steve Ebersole
  */
@@ -71,9 +73,9 @@ public enum SchemaGenSource {
 	}
 
 	/**
-	 * Used when processing JPA configuration to interpret the {@value AvailableSettings#SCHEMA_GEN_SOURCE} setting.
+	 * Used when processing JPA configuration to interpret the user config value
 	 *
-	 * @param value The encountered value of {@value AvailableSettings#SCHEMA_GEN_SOURCE}
+	 * @param value The encountered user config value
 	 *
 	 * @return The matching enum value.  An empty value will return {@code null}.
 	 *

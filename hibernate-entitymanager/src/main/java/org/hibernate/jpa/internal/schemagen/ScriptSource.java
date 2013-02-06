@@ -23,14 +23,7 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import javax.persistence.PersistenceException;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.Reader;
-import java.io.Writer;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 
@@ -38,47 +31,28 @@ import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
  * @author Steve Ebersole
  */
 public class ScriptSource implements GenerationSource {
-	private static final Logger log = Logger.getLogger( ScriptSource.class );
-
-	private final SqlScriptReader createSource;
-	private final SqlScriptReader dropSource;
+	private final SqlScriptReader reader;
 	private final ImportSqlCommandExtractor scriptCommandExtractor;
 
-	public ScriptSource(
-			Object createScriptSourceSetting,
-			Object dropScriptSourceSetting,
-			ImportSqlCommandExtractor scriptCommandExtractor) {
+	public ScriptSource(Object scriptSourceSetting, ImportSqlCommandExtractor scriptCommandExtractor) {
 		this.scriptCommandExtractor = scriptCommandExtractor;
 
-		if ( Reader.class.isInstance( createScriptSourceSetting ) ) {
-			createSource = new ReaderScriptSource( (Reader) createScriptSourceSetting );
+		if ( Reader.class.isInstance( scriptSourceSetting ) ) {
+			reader = new ReaderScriptSource( (Reader) scriptSourceSetting );
 		}
 		else {
-			createSource = new FileScriptSource( createScriptSourceSetting.toString() );
-		}
-
-		if ( Writer.class.isInstance( dropScriptSourceSetting ) ) {
-			dropSource = new ReaderScriptSource( (Reader) dropScriptSourceSetting );
-		}
-		else {
-			dropSource = new FileScriptSource( dropScriptSourceSetting.toString() );
+			reader = new FileScriptSource( scriptSourceSetting.toString() );
 		}
 	}
 
 	@Override
-	public Iterable<String> getCreateCommands() {
-		return createSource.read( scriptCommandExtractor );
-	}
-
-	@Override
-	public Iterable<String> getDropCommands() {
-		return dropSource.read( scriptCommandExtractor );
+	public Iterable<String> getCommands() {
+		return reader.read( scriptCommandExtractor );
 	}
 
 	@Override
 	public void release() {
-		createSource.release();
-		dropSource.release();
+		reader.release();
 	}
 
 }

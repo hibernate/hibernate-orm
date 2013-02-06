@@ -31,11 +31,11 @@ import java.io.Writer;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.SchemaGenAction;
+
 /**
  * GenerationTarget implementation for handling generation to scripts
- *
- * @see org.hibernate.jpa.SchemaGenTarget#SCRIPTS
- * @see org.hibernate.jpa.SchemaGenTarget#BOTH
  *
  * @author Steve Ebersole
  */
@@ -44,25 +44,63 @@ class ScriptsTarget implements GenerationTarget {
 
 	private final ScriptTargetTarget createScriptTarget;
 	private final ScriptTargetTarget dropScriptTarget;
+	private final SchemaGenAction scriptsAction;
 
-	public ScriptsTarget(Object createScriptTargetSetting, Object dropScriptTargetSetting) {
-		if ( Writer.class.isInstance( createScriptTargetSetting ) ) {
-			createScriptTarget = new WriterScriptTarget( (Writer) createScriptTargetSetting );
+	public ScriptsTarget(
+			Object createScriptTargetSetting,
+			Object dropScriptTargetSetting,
+			SchemaGenAction scriptsAction) {
+		this.scriptsAction = scriptsAction;
+
+		if ( scriptsAction.includesCreate() ) {
+			if ( Writer.class.isInstance( createScriptTargetSetting ) ) {
+				createScriptTarget = new WriterScriptTarget( (Writer) createScriptTargetSetting );
+			}
+			else {
+				createScriptTarget = new FileScriptTarget( createScriptTargetSetting.toString() );
+			}
 		}
 		else {
-			createScriptTarget = new FileScriptTarget( createScriptTargetSetting.toString() );
+			if ( createScriptTargetSetting != null ) {
+				// the wording in the spec hints that this maybe should be an error, but does not explicitly
+				// call out an exception to use.
+				log.debugf(
+						"Value was specified for '%s' [%s], but create scripting was not requested",
+						AvailableSettings.SCHEMA_GEN_SCRIPTS_CREATE_TARGET,
+						createScriptTargetSetting
+				);
+			}
+			createScriptTarget = null;
 		}
 
-		if ( Writer.class.isInstance( dropScriptTargetSetting ) ) {
-			dropScriptTarget = new WriterScriptTarget( (Writer) dropScriptTargetSetting );
+		if ( scriptsAction.includesDrop() ) {
+			if ( Writer.class.isInstance( dropScriptTargetSetting ) ) {
+				dropScriptTarget = new WriterScriptTarget( (Writer) dropScriptTargetSetting );
+			}
+			else {
+				dropScriptTarget = new FileScriptTarget( dropScriptTargetSetting.toString() );
+			}
 		}
 		else {
-			dropScriptTarget = new FileScriptTarget( dropScriptTargetSetting.toString() );
+			if ( dropScriptTargetSetting != null ) {
+				// the wording in the spec hints that this maybe should be an error, but does not explicitly
+				// call out an exception to use.
+				log.debugf(
+						"Value was specified for '%s' [%s], but drop scripting was not requested",
+						AvailableSettings.SCHEMA_GEN_SCRIPTS_DROP_TARGET,
+						dropScriptTargetSetting
+				);
+			}
+			dropScriptTarget = null;
 		}
 	}
 
 	@Override
 	public void acceptCreateCommands(Iterable<String> commands) {
+		if ( ! scriptsAction.includesCreate() ) {
+			return;
+		}
+
 		for ( String command : commands ) {
 			createScriptTarget.accept( command );
 		}
@@ -70,6 +108,10 @@ class ScriptsTarget implements GenerationTarget {
 
 	@Override
 	public void acceptDropCommands(Iterable<String> commands) {
+		if ( ! scriptsAction.includesDrop() ) {
+			return;
+		}
+
 		for ( String command : commands ) {
 			dropScriptTarget.accept( command );
 		}

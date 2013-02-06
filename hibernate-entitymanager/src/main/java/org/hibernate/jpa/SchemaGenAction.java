@@ -26,9 +26,11 @@ package org.hibernate.jpa;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * Describes the allowable values of the {@value AvailableSettings#SCHEMA_GEN_ACTION} setting.
+ * Describes the allowable values of the {@value AvailableSettings#SCHEMA_GEN_DATABASE_ACTION} and
+ * {@link AvailableSettings#SCHEMA_GEN_SCRIPTS_ACTION} settings.
  *
- * @see AvailableSettings#SCHEMA_GEN_ACTION
+ * @see AvailableSettings#SCHEMA_GEN_DATABASE_ACTION
+ * @see AvailableSettings#SCHEMA_GEN_SCRIPTS_ACTION
  *
  * @author Steve Ebersole
  */
@@ -57,9 +59,9 @@ public enum SchemaGenAction {
 	}
 
 	/**
-	 * Used when processing JPA configuration to interpret the {@value AvailableSettings#SCHEMA_GEN_ACTION} setting.
+	 * Used when processing JPA configuration to interpret the user config values.
 	 *
-	 * @param value The encountered value of {@value AvailableSettings#SCHEMA_GEN_ACTION}
+	 * @param value The encountered config value
 	 *
 	 * @return The matching enum value.  An empty value will return {@link #NONE}.
 	 *
@@ -82,7 +84,12 @@ public enum SchemaGenAction {
 		}
 
 		throw new IllegalArgumentException(
-				String.format( "Unrecognized '%s' value : %s", AvailableSettings.SCHEMA_GEN_ACTION, value )
+				String.format(
+						"Unrecognized '%s' or '%s' value : %s",
+						AvailableSettings.SCHEMA_GEN_DATABASE_ACTION,
+						AvailableSettings.SCHEMA_GEN_SCRIPTS_ACTION,
+						value
+				)
 		);
 	}
 

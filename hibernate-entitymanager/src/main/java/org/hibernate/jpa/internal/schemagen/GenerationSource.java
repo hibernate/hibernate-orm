@@ -24,10 +24,11 @@
 package org.hibernate.jpa.internal.schemagen;
 
 /**
- * Contract describing a generation source for create commands
+ * Contract describing a source for create/drop commands.
  *
  * @see org.hibernate.jpa.SchemaGenSource
- * @see org.hibernate.jpa.AvailableSettings#SCHEMA_GEN_SOURCE
+ * @see org.hibernate.jpa.AvailableSettings#SCHEMA_GEN_CREATE_SOURCE
+ * @see org.hibernate.jpa.AvailableSettings#SCHEMA_GEN_DROP_SOURCE
  *
  * @author Steve Ebersole
  */
@@ -37,14 +38,7 @@ interface GenerationSource {
 	 *
 	 * @return The generation commands
 	 */
-	public Iterable<String> getCreateCommands();
-
-	/**
-	 * Retrieve the drop generation commands from this source
-	 *
-	 * @return The generation commands
-	 */
-	public Iterable<String> getDropCommands();
+	public Iterable<String> getCommands();
 
 	/**
 	 * Release this source.  Give it a change to release its resources, if any.

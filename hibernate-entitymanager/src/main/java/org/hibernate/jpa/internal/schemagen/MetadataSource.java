@@ -34,20 +34,19 @@ import org.hibernate.dialect.Dialect;
 public class MetadataSource implements GenerationSource {
 	private final Configuration hibernateConfiguration;
 	private final Dialect dialect;
+	private final boolean creation;
 
-	public MetadataSource(Configuration hibernateConfiguration, Dialect dialect) {
+	public MetadataSource(Configuration hibernateConfiguration, Dialect dialect, boolean creation) {
 		this.hibernateConfiguration = hibernateConfiguration;
 		this.dialect = dialect;
+		this.creation = creation;
 	}
 
 	@Override
-	public Iterable<String> getCreateCommands() {
-		return Arrays.asList( hibernateConfiguration.generateSchemaCreationScript( dialect ) );
-	}
-
-	@Override
-	public Iterable<String> getDropCommands() {
-		return Arrays.asList( hibernateConfiguration.generateDropSchemaScript( dialect ) );
+	public Iterable<String> getCommands() {
+		return creation
+				? Arrays.asList( hibernateConfiguration.generateSchemaCreationScript( dialect ) )
+				: Arrays.asList( hibernateConfiguration.generateDropSchemaScript( dialect ) );
 	}
 
 	@Override

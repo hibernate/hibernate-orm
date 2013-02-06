@@ -29,11 +29,10 @@ import java.sql.Statement;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.jpa.SchemaGenAction;
+
 /**
  * GenerationTarget implementation for handling generation directly to the database
- *
- * @see org.hibernate.jpa.SchemaGenTarget#DATABASE
- * @see org.hibernate.jpa.SchemaGenTarget#BOTH
  *
  * @author Steve Ebersole
  */
@@ -41,15 +40,21 @@ class DatabaseTarget implements GenerationTarget {
 	private static final Logger log = Logger.getLogger( DatabaseTarget.class );
 
 	private final JdbcConnectionContext jdbcConnectionContext;
+	private final SchemaGenAction databaseAction;
 
 	private Statement jdbcStatement;
 
-	DatabaseTarget(JdbcConnectionContext jdbcConnectionContext) {
+	DatabaseTarget(JdbcConnectionContext jdbcConnectionContext, SchemaGenAction databaseAction) {
 		this.jdbcConnectionContext = jdbcConnectionContext;
+		this.databaseAction = databaseAction;
 	}
 
 	@Override
 	public void acceptCreateCommands(Iterable<String> commands) {
+		if ( !databaseAction.includesCreate() ) {
+			return;
+		}
+
 		for ( String command : commands ) {
 			try {
 				jdbcStatement().execute( command );
@@ -76,6 +81,10 @@ class DatabaseTarget implements GenerationTarget {
 
 	@Override
 	public void acceptDropCommands(Iterable<String> commands) {
+		if ( !databaseAction.includesDrop() ) {
+			return;
+		}
+
 		for ( String command : commands ) {
 			try {
 				jdbcStatement().execute( command );

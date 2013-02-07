@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 
 /**
@@ -37,23 +38,30 @@ import org.hibernate.metamodel.spi.relational.Value;
  * @author Steve Ebersole
  */
 public class RelationalValueBinding {
+	private final TableSpecification table;
 	private final Value value;
 	private final boolean includeInInsert;
 	private final boolean includeInUpdate;
 	private final boolean isDerived;
 
-	public RelationalValueBinding(final DerivedValue value) {
+	public RelationalValueBinding(final TableSpecification table, final DerivedValue value) {
+		this.table = table;
 		this.value = value;
 		this.includeInInsert = false;
 		this.includeInUpdate = false;
 		this.isDerived = true;
 	}
 
-	public RelationalValueBinding(final Column value, final boolean includeInInsert, final boolean includeInUpdate) {
+	public RelationalValueBinding(final TableSpecification table, final Column value, final boolean includeInInsert, final boolean includeInUpdate) {
+		this.table = table;
 		this.value = value;
 		this.includeInInsert = includeInInsert;
 		this.includeInUpdate = includeInUpdate;
 		this.isDerived = false;
+	}
+
+	public TableSpecification getTable() {
+		return table;
 	}
 
 	/**

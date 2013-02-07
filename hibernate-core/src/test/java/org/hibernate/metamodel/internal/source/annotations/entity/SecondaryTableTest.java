@@ -88,7 +88,7 @@ public class SecondaryTableTest extends BaseAnnotationBindingTestCase {
 		assertEquals( 1, nameAttrBinding.getRelationalValueBindings().size() );
 		RelationalValueBinding valueBinding = nameAttrBinding.getRelationalValueBindings().get( 0 );
 		assertFalse( valueBinding.isDerived() );
-		assertSame( table, valueBinding.getValue().getTable() );
+		assertSame( table, valueBinding.getTable() );
 		assertSame( column, valueBinding.getValue() );
 	}
 

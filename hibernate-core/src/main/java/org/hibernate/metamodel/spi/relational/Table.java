@@ -48,6 +48,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	private ObjectName qualifiedName;
 	private String exportIdentifier;
 	private boolean isPhysicalTable = true;
+	private boolean hasDenormalizedTables = false;
 
 	private final Set<Index> indexes = new LinkedHashSet<Index>();
 	private final Set<UniqueKey> uniqueKeys = new LinkedHashSet<UniqueKey>();
@@ -106,6 +107,14 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 	public void setPhysicalTable(boolean physicalTable) {
 		isPhysicalTable = physicalTable;
+	}
+
+	public boolean hasDenormalizedTables() {
+		return hasDenormalizedTables;
+	}
+
+	protected void setHasDenormalizedTables(boolean hasDenormalizedTables) {
+		this.hasDenormalizedTables = hasDenormalizedTables;
 	}
 
 	/**

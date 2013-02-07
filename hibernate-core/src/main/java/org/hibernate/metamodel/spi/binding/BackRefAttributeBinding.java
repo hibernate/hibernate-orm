@@ -70,9 +70,9 @@ public class BackRefAttributeBinding extends BasicAttributeBinding {
 		}
 		else {
 			relationalValueBindings = new ArrayList<RelationalValueBinding>( );
-			for ( RelationalValueBinding keyRelationalValueBindings : pluralAttributeBinding.getPluralAttributeKeyBinding().getRelationalValueBindings() ) {
-				Column keyColumn = (Column) keyRelationalValueBindings.getValue();
-				relationalValueBindings.add( new RelationalValueBinding( keyColumn, true, false ) );
+			for ( RelationalValueBinding keyRelationalValueBinding : pluralAttributeBinding.getPluralAttributeKeyBinding().getRelationalValueBindings() ) {
+				Column keyColumn = (Column) keyRelationalValueBinding.getValue();
+				relationalValueBindings.add( new RelationalValueBinding( keyRelationalValueBinding.getTable(), keyColumn, true, false ) );
 			}
 		}
 		return relationalValueBindings;

@@ -71,7 +71,7 @@ public class PluralAttributeKeyBinding {
 
 	public TableSpecification getCollectionTable() {
 		// TODO: get table directly from relationalValueBindingContainer
-		return relationalValueBindingContainer.relationalValueBindings().get( 0 ).getValue().getTable();
+		return relationalValueBindingContainer.relationalValueBindings().get( 0 ).getTable();
 	}
 
 	/**

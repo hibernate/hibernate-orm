@@ -105,9 +105,7 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 			assertEquals( 1, singularAttributeBinding.getRelationalValueBindings().size() );
 			RelationalValueBinding valueBinding = singularAttributeBinding.getRelationalValueBindings().get( 0 );
 			assertFalse( valueBinding.isDerived() );
-			org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) valueBinding
-					.getValue();
-			Table table = (Table)column.getTable();
+			Table table = (Table)valueBinding.getTable();
 
 			assertEquals( "TAB_ITEMS_SEC", table.getPhysicalName().getText() );
 
@@ -115,9 +113,7 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 			assertEquals( 1, singularAttributeBinding.getRelationalValueBindings().size() );
 			valueBinding = singularAttributeBinding.getRelationalValueBindings().get( 0 );
 			assertFalse( valueBinding.isDerived() );
-			column = (org.hibernate.metamodel.spi.relational.Column) valueBinding
-					.getValue();
-			 table = (Table)column.getTable();
+			 table = (Table)valueBinding.getTable();
 			assertEquals( "TAB_ITEMS",  table.getPhysicalName().getText());
 
 		}

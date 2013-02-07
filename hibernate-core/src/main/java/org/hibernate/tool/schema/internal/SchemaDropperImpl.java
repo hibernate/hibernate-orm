@@ -87,13 +87,21 @@ public class SchemaDropperImpl implements SchemaDropper {
 					// we need to drop constraints prior to dropping table
 
 					for ( ForeignKey foreignKey : table.getForeignKeys() ) {
-						// only add the foreign key if its target is a physical table
-						if ( Table.class.isInstance( foreignKey.getTargetTable() ) ) {
-							checkExportIdentifier( foreignKey, exportIdentifiers );
-							applySqlStrings(
-									targets,
-									dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, jdbcEnvironment )
-							);
+						// only add the foreign key if its source and target are both physical tables
+						// and if the target table does not have any denormalized tables.
+						if ( Table.class.isInstance( foreignKey.getTable() ) &&
+								Table.class.isInstance( foreignKey.getTargetTable() ) ) {
+							Table sourceTable = Table.class.cast( foreignKey.getTable() );
+							Table targetTable = Table.class.cast( foreignKey.getTargetTable() );
+							if ( sourceTable.isPhysicalTable() &&
+									targetTable.isPhysicalTable() &&
+									!targetTable.hasDenormalizedTables() ) {
+								checkExportIdentifier( foreignKey, exportIdentifiers );
+								applySqlStrings(
+										targets,
+										dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, jdbcEnvironment )
+								);
+							}
 						}
 					}
 

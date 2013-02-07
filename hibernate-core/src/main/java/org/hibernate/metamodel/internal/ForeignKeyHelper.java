@@ -50,14 +50,16 @@ public class ForeignKeyHelper {
 
 	public ForeignKey locateOrCreateForeignKey(
 			final String foreignKeyName,
+			final TableSpecification sourceTable,
 			final List<Column> sourceColumns,
+			final TableSpecification targetTable,
 			final List<Column> targetColumns) {
 		ForeignKey foreignKey = null;
 		if ( foreignKeyName != null ) {
-			foreignKey = locateAndBindForeignKeyByName( foreignKeyName, sourceColumns, targetColumns );
+			foreignKey = locateAndBindForeignKeyByName( foreignKeyName, sourceTable, sourceColumns, targetTable, targetColumns );
 		}
 		if ( foreignKey == null ) {
-			foreignKey = locateForeignKeyByColumnMapping( sourceColumns, targetColumns );
+			foreignKey = locateForeignKeyByColumnMapping( sourceTable, sourceColumns, targetTable, targetColumns );
 			if ( foreignKey != null && foreignKeyName != null ) {
 				if ( foreignKey.getName() == null ) {
 					// the foreign key name has not be initialized; set it to foreignKeyName
@@ -78,19 +80,17 @@ public class ForeignKeyHelper {
 		}
 		if ( foreignKey == null ) {
 			// no foreign key found; create one
-			final TableSpecification sourceTable = sourceColumns.get( 0 ).getTable();
-			final TableSpecification targetTable = targetColumns.get( 0 ).getTable();
 			foreignKey = sourceTable.createForeignKey( targetTable, foreignKeyName );
-			bindForeignKeyColumns( foreignKey, sourceColumns, targetColumns );
+			bindForeignKeyColumns( foreignKey, sourceTable, sourceColumns, targetTable, targetColumns );
 		}
 		return foreignKey;
 	}
 
 	private static ForeignKey locateForeignKeyByColumnMapping(
+			final TableSpecification sourceTable,
 			final List<Column> sourceColumns,
+			final TableSpecification targetTable,
 			final List<Column> targetColumns) {
-		final TableSpecification sourceTable = sourceColumns.get( 0 ).getTable();
-		final TableSpecification targetTable = targetColumns.get( 0 ).getTable();
 		// check for an existing foreign key with the same source/target columns
 		ForeignKey foreignKey = null;
 		Iterable<ForeignKey> possibleForeignKeys = sourceTable.locateForeignKey( targetTable );
@@ -109,15 +109,17 @@ public class ForeignKeyHelper {
 
 	private void bindForeignKeyColumns(
 			final ForeignKey foreignKey,
+			final TableSpecification sourceTable,
 			final List<Column> sourceColumns,
+			final TableSpecification targetTable,
 			final List<Column> targetColumns) {
 		if ( sourceColumns.size() != targetColumns.size() ) {
 			throw binder.bindingContext().makeMappingException(
 					String.format(
 							"Non-matching number columns in foreign key source columns [%s : %s] and target columns [%s : %s]",
-							sourceColumns.get( 0 ).getTable().getLogicalName().getText(),
+							sourceTable.getLogicalName().getText(),
 							sourceColumns.size(),
-							targetColumns.get( 0 ).getTable().getLogicalName().getText(),
+							targetTable.getLogicalName().getText(),
 							targetColumns.size()
 					)
 			);
@@ -129,13 +131,13 @@ public class ForeignKeyHelper {
 
 	private ForeignKey locateAndBindForeignKeyByName(
 			final String foreignKeyName,
+			final TableSpecification sourceTable,
 			final List<Column> sourceColumns,
+			final TableSpecification targetTable,
 			final List<Column> targetColumns) {
 		if ( foreignKeyName == null ) {
 			throw new AssertionFailure( "foreignKeyName must be non-null." );
 		}
-		final TableSpecification sourceTable = sourceColumns.get( 0 ).getTable();
-		final TableSpecification targetTable = targetColumns.get( 0 ).getTable();
 		ForeignKey foreignKey = sourceTable.locateForeignKey( foreignKeyName );
 		if ( foreignKey != null ) {
 			if ( !targetTable.equals( foreignKey.getTargetTable() ) ) {
@@ -151,7 +153,7 @@ public class ForeignKeyHelper {
 			// check if source and target columns have been bound already
 			if ( foreignKey.getColumnSpan() == 0 ) {
 				// foreign key was found, but no columns bound to it yet
-				bindForeignKeyColumns( foreignKey, sourceColumns, targetColumns );
+				bindForeignKeyColumns( foreignKey, sourceTable, sourceColumns, targetTable, targetColumns );
 			}
 			else {
 				// The located foreign key already has columns bound;

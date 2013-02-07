@@ -88,12 +88,12 @@ public class SchemaValidatorImpl implements SchemaValidator {
 					);
 				}
 
-				validateColumnType( column, columnInformation );
+				validateColumnType( table, column, columnInformation );
 			}
 		}
 	}
 
-	protected void validateColumnType(Column column, ColumnInformation columnInformation) {
+	protected void validateColumnType(Table table, Column column, ColumnInformation columnInformation) {
 		// this is the old Hibernate check...
 		final boolean typesMatch = column.getJdbcDataType().getTypeCode() == columnInformation.getTypeCode()
 				|| column.getSqlType().toLowerCase().startsWith( columnInformation.getTypeName().toLowerCase() );
@@ -102,7 +102,7 @@ public class SchemaValidatorImpl implements SchemaValidator {
 					String.format(
 							"Schema-validation: wrong column type encountered in column [%s] in table [%s]; found [%s], but expecting [%s]",
 							column.getColumnName().getText(),
-							((Table) column.getTable()).getTableName().toText(),
+							table.getTableName().toText(),
 							columnInformation.getTypeName().toLowerCase(),
 							column.getSqlType().toLowerCase()
 					)

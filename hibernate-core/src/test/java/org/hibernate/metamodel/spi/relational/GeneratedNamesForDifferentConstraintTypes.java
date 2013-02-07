@@ -72,42 +72,42 @@ public class GeneratedNamesForDifferentConstraintTypes {
 
 
 		// Add primary key columns to PK constraints and add generated name
-		assertTrue( generatedNames.add( addColumnToPrimaryKey( pkColTab1 ).generateName() ) );
-		assertTrue( generatedNames.add( addColumnToPrimaryKey( pkColTab2 ).generateName() ) );
-		assertTrue( generatedNames.add( addColumnToPrimaryKey( pkColTab1Ref ).generateName() ) );
-		assertTrue( generatedNames.add( addColumnToPrimaryKey( pkColTab2Ref ).generateName() ) );
+		assertTrue( generatedNames.add( addColumnToPrimaryKey( tab1, pkColTab1 ).generateName() ) );
+		assertTrue( generatedNames.add( addColumnToPrimaryKey( tab2, pkColTab2 ).generateName() ) );
+		assertTrue( generatedNames.add( addColumnToPrimaryKey( refTab1, pkColTab1Ref ).generateName() ) );
+		assertTrue( generatedNames.add( addColumnToPrimaryKey( refTab2, pkColTab2Ref ).generateName() ) );
 
 		// add constraints to tab1
 
 		// add other types of constraints to the PK column for tab1
-		assertTrue( generatedNames.add( createUniqueKey( pkColTab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createIndex( pkColTab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( pkColTab1, tab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( pkColTab1, tab1, col1Tab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createUniqueKey( tab1, pkColTab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createIndex( tab1, pkColTab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, pkColTab1, tab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, pkColTab1, tab1, col1Tab1 ).generateName() ) );
 
 		// add constraints to 1st non-PK column for tab1 (col1Tab1)
-		assertTrue( generatedNames.add( createUniqueKey( col1Tab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createIndex( col1Tab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab1, tab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab1, tab1, col2Tab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab1, refTab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab1, refTab1, col1Tab1Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab1, refTab1, col2Tab1Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab1, refTab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab1, refTab2, col1Tab2Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab1, refTab2, col2Tab2Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createUniqueKey( tab1, col1Tab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createIndex( tab1, col1Tab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col1Tab1, tab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col1Tab1, tab1, col2Tab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col1Tab1, refTab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col1Tab1, refTab1, col1Tab1Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col1Tab1, refTab1, col2Tab1Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col1Tab1, refTab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col1Tab1, refTab2, col1Tab2Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col1Tab1, refTab2, col2Tab2Ref ).generateName() ) );
 
 		// add constraints to 2nd non-PK column for tab1 (col2Tab1)
-		assertTrue( generatedNames.add( createUniqueKey( col2Tab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createIndex( col2Tab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab1, tab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab1, tab1, col1Tab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab1, refTab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab1, refTab1, col1Tab1Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab1, refTab1, col2Tab1Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab1, refTab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab1, refTab2, col1Tab2Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab1, refTab2, col2Tab2Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createUniqueKey( tab1, col2Tab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createIndex( tab1, col2Tab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col2Tab1, tab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col2Tab1, tab1, col1Tab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col2Tab1, refTab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col2Tab1, refTab1, col1Tab1Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col2Tab1, refTab1, col2Tab1Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col2Tab1, refTab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col2Tab1, refTab2, col1Tab2Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab1, col2Tab1, refTab2, col2Tab2Ref ).generateName() ) );
 
 		// add multi-column constraints to tab1
 		List<Column> colsTab1 = new ArrayList<Column>( );
@@ -139,34 +139,34 @@ public class GeneratedNamesForDifferentConstraintTypes {
 		// add constraints to tab2
 
 		// add other types of constraints to the PK column for tab2
-		assertTrue( generatedNames.add( createUniqueKey( pkColTab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createIndex( pkColTab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( pkColTab2, tab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( pkColTab2, tab2, col1Tab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createUniqueKey( tab2, pkColTab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createIndex( tab2, pkColTab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, pkColTab2, tab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, pkColTab2, tab2, col1Tab2 ).generateName() ) );
 
 		// add constraints to 1st non-PK column for tab2 (col1Tab2)
-		assertTrue( generatedNames.add( createUniqueKey( col1Tab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createIndex( col1Tab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab2, tab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab2, tab2, col2Tab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab2, refTab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab2, refTab1, col1Tab1Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab2, refTab1, col2Tab1Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab2, refTab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab2, refTab2, col1Tab2Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col1Tab2, refTab2, col2Tab2Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createUniqueKey( tab2, col1Tab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createIndex( tab2, col1Tab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col1Tab2, tab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col1Tab2, tab2, col2Tab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col1Tab2, refTab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col1Tab2, refTab1, col1Tab1Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col1Tab2, refTab1, col2Tab1Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col1Tab2, refTab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col1Tab2, refTab2, col1Tab2Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col1Tab2, refTab2, col2Tab2Ref ).generateName() ) );
 
 		// add constraints to 2nd non-PK column (col2Tab1) for tab1
-		assertTrue( generatedNames.add( createUniqueKey( col2Tab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createIndex( col2Tab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab2, tab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab2, tab2, col1Tab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab2, refTab1 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab2, refTab1, col1Tab1Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab2, refTab1, col2Tab1Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab2, refTab2 ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab2, refTab2, col1Tab2Ref ).generateName() ) );
-		assertTrue( generatedNames.add( createForeignKey( col2Tab2, refTab2, col2Tab2Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createUniqueKey( tab2, col2Tab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createIndex( tab2, col2Tab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col2Tab2, tab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col2Tab2, tab2, col1Tab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col2Tab2, refTab1 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col2Tab2, refTab1, col1Tab1Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col2Tab2, refTab1, col2Tab1Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col2Tab2, refTab2 ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col2Tab2, refTab2, col1Tab2Ref ).generateName() ) );
+		assertTrue( generatedNames.add( createForeignKey( tab2, col2Tab2, refTab2, col2Tab2Ref ).generateName() ) );
 	}
 
 	@Test
@@ -179,8 +179,9 @@ public class GeneratedNamesForDifferentConstraintTypes {
 		Column referencedPKColumn = referencedTable.locateColumn( COLUMN_NAMES[0] );
 		referencedTable.getPrimaryKey().addColumn( referencedPKColumn );
 
-		ForeignKey fkImplicitFKMapping = createForeignKey( fkColumn, referencedTable );
+		ForeignKey fkImplicitFKMapping = createForeignKey( table, fkColumn, referencedTable );
 		ForeignKey fkExplicitFKMappingToPK = createForeignKey(
+				table,
 				fkColumn,
 				referencedTable,
 				referencedPKColumn
@@ -188,20 +189,20 @@ public class GeneratedNamesForDifferentConstraintTypes {
 		assertEquals( fkImplicitFKMapping.generateName(), fkExplicitFKMappingToPK.generateName() );
 	}
 
-	private PrimaryKey addColumnToPrimaryKey(Column column) {
-		PrimaryKey primaryKey = column.getTable().getPrimaryKey();
+	private PrimaryKey addColumnToPrimaryKey(TableSpecification tableSpecification, Column column) {
+		PrimaryKey primaryKey = tableSpecification.getPrimaryKey();
 		primaryKey.addColumn( column );
 		return primaryKey;
 	}
 
-	private ForeignKey createForeignKey(Column column, TableSpecification referencedTable ) {
-		ForeignKey foreignKey = column.getTable().createForeignKey( referencedTable, null );
+	private ForeignKey createForeignKey(TableSpecification sourceTable, Column column, TableSpecification referencedTable ) {
+		ForeignKey foreignKey = sourceTable.createForeignKey( referencedTable, null );
 		foreignKey.addColumn( column );
 		return foreignKey;
 	}
 
-	private ForeignKey createForeignKey(Column column, TableSpecification referencedTable, Column referencedColumn ) {
-		ForeignKey foreignKey = column.getTable().createForeignKey( referencedTable, null );
+	private ForeignKey createForeignKey(TableSpecification sourceTable, Column column, TableSpecification referencedTable, Column referencedColumn ) {
+		ForeignKey foreignKey = sourceTable.createForeignKey( referencedTable, null );
 		foreignKey.addColumnMapping( column, referencedColumn );
 		return foreignKey;
 	}
@@ -218,8 +219,8 @@ public class GeneratedNamesForDifferentConstraintTypes {
 		return foreignKey;
 	}
 
-	private UniqueKey createUniqueKey(Column column) {
-		UniqueKey uniqueKey = column.getTable().getOrCreateUniqueKey( null );
+	private UniqueKey createUniqueKey(TableSpecification table, Column column) {
+		UniqueKey uniqueKey = table.getOrCreateUniqueKey( null );
 		uniqueKey.addColumn( column );
 		return uniqueKey;
 	}
@@ -232,8 +233,8 @@ public class GeneratedNamesForDifferentConstraintTypes {
 		return uniqueKey;
 	}
 
-	private Index createIndex(Column column) {
-		Index index = column.getTable().getOrCreateIndex( null );
+	private Index createIndex(TableSpecification table, Column column) {
+		Index index = table.getOrCreateIndex( null );
 		index.addColumn( column );
 		return index;
 	}

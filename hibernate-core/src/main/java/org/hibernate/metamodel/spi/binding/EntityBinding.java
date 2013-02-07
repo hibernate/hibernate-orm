@@ -184,6 +184,11 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		this.primaryTable = primaryTable;
 	}
 
+	public boolean hasTable(String tableName) {
+		return tableName.equals( getPrimaryTableName() ) ||
+				secondaryTables.containsKey( Identifier.toIdentifier( tableName ) );
+	}
+
 	public TableSpecification locateTable(String tableName) {
 		if ( tableName == null || tableName.equals( getPrimaryTableName() ) ) {
 			return primaryTable;
@@ -809,8 +814,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 			return 0;
 		}
 		int result=1;
-		Value value = attributeBinding.getRelationalValueBindings().get( 0 ).getValue();
-		TableSpecification table = value.getTable();
+		TableSpecification table = attributeBinding.getRelationalValueBindings().get( 0 ).getTable();
 		for ( SecondaryTable secondaryTable : getEntitiesSecondaryTableClosure() ) {
 			if ( secondaryTable.getSecondaryTableReference() == table ) {
 				return result;

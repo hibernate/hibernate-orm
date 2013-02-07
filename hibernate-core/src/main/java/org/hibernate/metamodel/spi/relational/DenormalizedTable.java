@@ -39,6 +39,7 @@ public class DenormalizedTable extends Table {
 	public DenormalizedTable(Schema database, Identifier logicalName, Identifier physicalName, Table includedTable) {
 		super( database, logicalName, physicalName );
 		this.includedTable = includedTable;
+		this.includedTable.setHasDenormalizedTables( true );
 	}
 
 	@Override

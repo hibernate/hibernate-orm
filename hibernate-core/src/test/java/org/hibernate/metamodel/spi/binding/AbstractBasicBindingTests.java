@@ -216,7 +216,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		
 		// locate the foreignKey
 		boolean sourceColumnFound = false;
-		for ( ForeignKey fk : column.getTable().getForeignKeys() ) {
+		for ( ForeignKey fk : relationalValueBinding.getTable().getForeignKeys() ) {
 			for ( Column sourceColumn : fk.getSourceColumns() ) {
 				if ( sourceColumn == column ) {
 					assertFalse( "source column not found in more than one foreign key", sourceColumnFound );

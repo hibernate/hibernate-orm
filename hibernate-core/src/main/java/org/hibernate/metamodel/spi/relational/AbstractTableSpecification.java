@@ -81,10 +81,6 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 
 	@Override
 	public boolean hasValue(Value value) {
-		//shortcut
-		if ( this != value.getTable() ) {
-			return false;
-		}
 		return valueMap.containsValue( value );
 	}
 

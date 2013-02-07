@@ -274,7 +274,7 @@ public class EntityIdentifier {
 			// the first one to get the TableSpecification.
 
 			final RelationalValueBinding relationalValueBinding = relationalValueBindings.get( 0 );
-			final TableSpecification table = relationalValueBinding.getValue().getTable();
+			final TableSpecification table = relationalValueBinding.getTable();
 			if ( !Column.class.isInstance( relationalValueBinding.getValue() ) ) {
 				throw new MappingException(
 						"Cannot create an IdentifierGenerator because the value is not a column: " +

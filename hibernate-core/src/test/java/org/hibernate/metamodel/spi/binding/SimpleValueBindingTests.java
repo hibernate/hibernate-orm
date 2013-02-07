@@ -74,6 +74,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		List<RelationalValueBinding> valueBindings = new ArrayList<RelationalValueBinding>();
 		valueBindings.add(
 				new RelationalValueBinding(
+						table,
 						idColumn,
 						true,
 						true

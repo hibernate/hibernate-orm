@@ -39,7 +39,6 @@ import static org.junit.Assert.assertNotNull;
  * @author Strong Liu <stliu@redhat.com>
  */
 @TestForIssue( jiraKey = "HHH-4825" )
-@FailureExpectedWithNewMetamodel
 public class SellCarTest extends BaseCoreFunctionalTestCase {
     @Override
 	public String[] getMappings() {

@@ -179,7 +179,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 		List<RelationalValueBinding> keyRelationalValueBindings = keyBinding.getRelationalValueBindings();
 		assertNotNull( keyRelationalValueBindings );
 		for( RelationalValueBinding keyRelationalValueBinding : keyRelationalValueBindings ) {
-			assertSame( collectionTable, keyRelationalValueBinding.getValue().getTable() );
+			assertSame( collectionTable, keyRelationalValueBinding.getTable() );
 		}
 		assertEquals( 1, keyRelationalValueBindings.size() );
 		assertEquals( 1, expectedKeyTargetAttributeBinding.getRelationalValueBindings().size() );

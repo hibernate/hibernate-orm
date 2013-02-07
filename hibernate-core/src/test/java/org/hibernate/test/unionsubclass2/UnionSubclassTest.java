@@ -53,7 +53,6 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testUnionSubclass() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

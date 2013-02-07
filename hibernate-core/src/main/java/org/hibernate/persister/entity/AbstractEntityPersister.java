@@ -982,7 +982,7 @@ public abstract class AbstractEntityPersister
 				for ( RelationalValueBinding valueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
 					colAliases[k] = valueBinding.getValue().getAlias(
 							factory.getDialect(),
-							valueBinding.getValue().getTable()
+							valueBinding.getTable()
 					);
 					if ( valueBinding.isDerived() ) {
 						foundFormula = true;
@@ -1106,7 +1106,7 @@ public abstract class AbstractEntityPersister
 						aliases.add(
 								col.getAlias(
 										factory.getDialect(),
-										col.getTable()
+										valueBinding.getTable()
 								)
 						);
 						columnsLazy.add( lazy );
@@ -2319,7 +2319,7 @@ public abstract class AbstractEntityPersister
 				for ( RelationalValueBinding relationalValueBinding : singularProp.getRelationalValueBindings() ) {
 					aliases[l] = relationalValueBinding.getValue().getAlias(
 							getFactory().getDialect(),
-							relationalValueBinding.getValue().getTable()
+							relationalValueBinding.getTable()
 					);
 					if ( relationalValueBinding.isDerived() ) {
 						cols[l] = ( (DerivedValue) relationalValueBinding.getValue() ).getExpression(); // TODO: skip formulas?

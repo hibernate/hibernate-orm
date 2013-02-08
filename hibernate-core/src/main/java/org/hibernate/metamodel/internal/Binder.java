@@ -685,7 +685,7 @@ public class Binder {
 					quotedIdentifier( secondaryTableSource.getExplicitForeignKeyName() ),
 					table,
 					joinRelationalValueBindings,
-					determineForeignKeyTargetTable( entityBinding, targetColumns ),
+					determineForeignKeyTargetTable( entityBinding, secondaryTableSource ),
 					targetColumns
 			);
 			SecondaryTable secondaryTable = new SecondaryTable( table, foreignKey );
@@ -1205,7 +1205,7 @@ public class Binder {
 					quotedIdentifier( attributeSource.getExplicitForeignKeyName() ),
 					attributeBinding.getRelationalValueBindings().get( 0 ).getTable(),
 					attributeBinding.getRelationalValueBindings(),
-					determineForeignKeyTargetTable( attributeBinding.getReferencedEntityBinding(), targetColumns ),
+					determineForeignKeyTargetTable( attributeBinding.getReferencedEntityBinding(), attributeSource ),
 					targetColumns
 			);
 		}
@@ -1328,7 +1328,7 @@ public class Binder {
 					quotedIdentifier( attributeSource.getExplicitForeignKeyName() ),
 					foreignKeyRelationalValueBindings.get( 0 ).getTable(),
 					foreignKeyRelationalValueBindings,
-					determineForeignKeyTargetTable( attributeBinding.getReferencedEntityBinding(), targetColumns ),
+					determineForeignKeyTargetTable( attributeBinding.getReferencedEntityBinding(), attributeSource ),
 					targetColumns
 			);
 		}
@@ -1896,7 +1896,7 @@ public class Binder {
 					quotedIdentifier( elementSource.getExplicitForeignKeyName() ),
 					collectionTable,
 					elementBinding.getRelationalValueBindings(),
-					determineForeignKeyTargetTable( referencedEntityBinding, targetColumns ),
+					determineForeignKeyTargetTable( referencedEntityBinding, elementSource ),
 					targetColumns
 			);
 		}
@@ -2196,43 +2196,12 @@ public class Binder {
 		final String referencedAttributeName = resolutionDelegate.getReferencedAttributeName();
 		if ( referencedAttributeName == null ) {
 			referencedAttributeBinding = attributeBindingContainer.locateAttributeBinding(
-					resolutionDelegate.getJoinColumns(
-							new JoinColumnResolutionContext() {
-								@Override
-								public List<Value> resolveRelationalValuesForAttribute(String attributeName) {
-									return null;
-								}
-
-								@Override
-								public Column resolveColumn(String logicalColumnName, String logicalTableName, String logicalSchemaName, String logicalCatalogName) {
-									for ( AttributeBinding attributeBinding : attributeBindingContainer.attributeBindings() ) {
-										if ( SingularAttributeBinding.class.isInstance( attributeBinding ) ) {
-											SingularAttributeBinding singularAttributeBinding = SingularAttributeBinding.class
-													.cast(
-															attributeBinding
-													);
-											for ( RelationalValueBinding relationalValueBinding : singularAttributeBinding
-													.getRelationalValueBindings() ) {
-												if ( Column.class.isInstance( relationalValueBinding.getValue() ) ) {
-													Identifier columnIdentifier = createIdentifier( logicalColumnName);
-													Column column = Column.class.cast( relationalValueBinding.getValue() );
-													if ( column.getColumnName().equals( columnIdentifier ) ) {
-														return column;
-													}
-												}
-											}
-										}
-									}
-									return null;
-								}
-							}
-					)
+					resolutionDelegate.getJoinColumns( new JoinColumnResolutionContextImpl( entityBinding ) )
 			);
 		}
 		else {
 			referencedAttributeBinding = attributeBindingContainer.locateAttributeBinding( referencedAttributeName );
 		}
-
 
 		if ( referencedAttributeBinding == null ) {
 			referencedAttributeBinding = attributeBinding(
@@ -2402,7 +2371,7 @@ public class Binder {
 				quotedIdentifier( keySource.getExplicitForeignKeyName() ),
 				collectionTable,
 				sourceRelationalBindings,
-				determineForeignKeyTargetTable( attributeBinding.getContainer().seekEntityBinding(), targetColumns ),
+				determineForeignKeyTargetTable( attributeBinding.getContainer().seekEntityBinding(), keySource ),
 				targetColumns
 		);
 		foreignKey.setDeleteRule( keySource.getOnDeleteAction() );
@@ -2539,7 +2508,7 @@ public class Binder {
 					quotedIdentifier( subclassEntitySource.getExplicitForeignKeyName() ),
 					entityBinding.getPrimaryTable(),
 					sourceColumns,
-					determineForeignKeyTargetTable( superEntityBinding, targetColumns ),
+					determineForeignKeyTargetTable( superEntityBinding, subclassEntitySource ),
 					targetColumns
 			);
 
@@ -2851,60 +2820,7 @@ public class Binder {
 		}
 		else {
 			final List<Column> columns = new ArrayList<Column>();
-			final JoinColumnResolutionContext resolutionContext =
-					new JoinColumnResolutionContext() {
-						@Override
-						public Column resolveColumn(
-								String logicalColumnName,
-								String logicalTableName,
-								String logicalSchemaName,
-								String logicalCatalogName) {
-							// ignore table, schema, catalog name
-							Column column = entityBinding.getPrimaryTable().locateColumn( logicalColumnName );
-							if ( column == null ) {
-								column = entityBinding.getPrimaryTable().createColumn( logicalColumnName );
-							}
-							return column;
-						}
-
-						@Override
-						public List<Value> resolveRelationalValuesForAttribute(String attributeName) {
-							if ( attributeName == null ) {
-								List<Value> values = new ArrayList<Value>();
-								for ( Column column : entityBinding.getPrimaryTable().getPrimaryKey().getColumns() ) {
-									values.add( column );
-								}
-								return values;
-							}
-							final AttributeBinding referencedAttributeBinding =
-									entityBinding.locateAttributeBindingByPath( attributeName, true );
-							if ( referencedAttributeBinding == null ) {
-								throw bindingContext().makeMappingException(
-										String.format(
-												"Could not resolve named referenced property [%s] against entity [%s]",
-												attributeName,
-												entityBinding.getEntity().getName()
-										)
-								);
-							}
-							if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
-								throw bindingContext().makeMappingException(
-										String.format(
-												"Referenced property [%s] against entity [%s] is a plural attribute; it must be a singular attribute.",
-												attributeName,
-												entityBinding.getEntity().getName()
-										)
-								);
-							}
-							List<RelationalValueBinding> valueBindings =
-									( (SingularAttributeBinding) referencedAttributeBinding ).getRelationalValueBindings();
-							List<Value> values = new ArrayList<Value>( valueBindings.size() );
-							for ( RelationalValueBinding valueBinding : valueBindings ) {
-								values.add( valueBinding.getValue() );
-							}
-							return values;
-						}
-					};
+			final JoinColumnResolutionContext resolutionContext = new JoinColumnResolutionContextImpl( entityBinding );
 			for ( Value relationalValue : fkColumnResolutionDelegate.getJoinColumns( resolutionContext ) ) {
 				if ( !Column.class.isInstance( relationalValue ) ) {
 					throw bindingContext().makeMappingException(
@@ -2917,41 +2833,19 @@ public class Binder {
 		}
 	}
 
-	private TableSpecification determineForeignKeyTargetTable(final EntityBinding entityBinding,
-															  final List<Column> targetColumns)  {
-		TableSpecification table = null;
-		TableSpecification actualTable = null;
-		boolean first = true;
-		for ( Column column : targetColumns) {
-			if ( first ) {
-				table = column.getTable();
-				if ( entityBinding.hasTable( table.getLogicalName().getText() ) ) {
-					actualTable = table;
-				}
-				else {
-					if ( entityBinding.getHierarchyDetails().getInheritanceType() == InheritanceType.TABLE_PER_CLASS &&
-							column == entityBinding.getPrimaryTable().locateColumn( column.getColumnName().getText() ) ) {
-						actualTable = entityBinding.getPrimaryTable();
-					}
-					else {
-						throw bindingContext().makeMappingException( "improve this message!!!" );
-					}
-				}
-				first = false;
-			}
-			else {
-				if ( !table.equals( column.getTable() ) ) {
-					throw bindingContext().makeMappingException(
-							String.format(
-									"Join columns come from more than one table: %s, %s ",
-									table,
-									column.getTable()
-							)
-					);
-				}
-			}
+	private TableSpecification determineForeignKeyTargetTable(
+			final EntityBinding entityBinding,
+			final ForeignKeyContributingSource foreignKeyContributingSource) {
+
+		final JoinColumnResolutionDelegate fkColumnResolutionDelegate =
+				foreignKeyContributingSource.getForeignKeyTargetColumnResolutionDelegate();
+		if ( fkColumnResolutionDelegate == null ) {
+			return entityBinding.getPrimaryTable();
 		}
-		return actualTable;
+		else {
+			final JoinColumnResolutionContext resolutionContext = new JoinColumnResolutionContextImpl( entityBinding );
+			return fkColumnResolutionDelegate.getReferencedTable( resolutionContext );
+		}
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ simple instance helper methods
@@ -3274,19 +3168,23 @@ public class Binder {
 				String logicalTableName,
 				String logicalSchemaName,
 				String logicalCatalogName) {
+			if ( bindingContext().isGloballyQuotedIdentifiers() && !StringHelper.isQuoted( logicalColumnName ) ) {
+				logicalColumnName = StringHelper.quote( logicalColumnName );
+			}
+			return resolveTable( logicalTableName, logicalSchemaName, logicalCatalogName ).locateOrCreateColumn(
+					logicalColumnName
+			);
+		}
+
+		@Override
+		public TableSpecification resolveTable(String logicalTableName, String logicalSchemaName, String logicalCatalogName) {
 			Identifier tableIdentifier = createIdentifier( logicalTableName );
 			if ( tableIdentifier == null ) {
 				tableIdentifier = referencedEntityBinding.getPrimaryTable().getLogicalName();
 			}
 
 			Schema schema = metadata.getDatabase().getSchema( logicalCatalogName, logicalSchemaName );
-			Table table = schema.locateTable( tableIdentifier );
-
-			if ( bindingContext().isGloballyQuotedIdentifiers() && !StringHelper.isQuoted( logicalColumnName ) ) {
-				logicalColumnName = StringHelper.quote( logicalColumnName );
-			}
-
-			return table.locateColumn( logicalColumnName );
+			return schema.locateTable( tableIdentifier );
 		}
 
 		@Override
@@ -3298,12 +3196,35 @@ public class Binder {
 				}
 				return values;
 			}
+			List<RelationalValueBinding> valueBindings =
+					resolveReferencedAttributeBinding( attributeName ).getRelationalValueBindings();
+			List<Value> values = new ArrayList<Value>( valueBindings.size() );
+			for ( RelationalValueBinding valueBinding : valueBindings ) {
+				values.add( valueBinding.getValue() );
+			}
+			return values;
+		}
+
+		@Override
+		public TableSpecification resolveTableForAttribute(String attributeName) {
+			if ( attributeName == null ) {
+				return referencedEntityBinding.getPrimaryTable();
+			}
+			else {
+				return resolveReferencedAttributeBinding( attributeName ).getRelationalValueBindings().get( 0 ).getTable();
+			}
+		}
+
+		private SingularAttributeBinding resolveReferencedAttributeBinding(String attributeName) {
+			if ( attributeName == null ) {
+				return referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
+			}
 			final AttributeBinding referencedAttributeBinding =
-					referencedEntityBinding.locateAttributeBinding( attributeName );
+					referencedEntityBinding.locateAttributeBindingByPath( attributeName, true );
 			if ( referencedAttributeBinding == null ) {
 				throw bindingContext().makeMappingException(
 						String.format(
-								"Could not resolve named property-ref [%s] against entity [%s]",
+								"Could not resolve named referenced property [%s] against entity [%s]",
 								attributeName,
 								referencedEntityBinding.getEntity().getName()
 						)
@@ -3312,19 +3233,13 @@ public class Binder {
 			if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
 				throw bindingContext().makeMappingException(
 						String.format(
-								"Property-ref [%s] against entity [%s] is a plural attribute; it must be a singular attribute.",
+								"Referenced property [%s] against entity [%s] is a plural attribute; it must be a singular attribute.",
 								attributeName,
 								referencedEntityBinding.getEntity().getName()
 						)
 				);
 			}
-			List<Value> values = new ArrayList<Value>();
-			SingularAttributeBinding referencedAttributeBindingAsSingular =
-					(SingularAttributeBinding) referencedAttributeBinding;
-			for ( RelationalValueBinding valueBinding : referencedAttributeBindingAsSingular.getRelationalValueBindings() ) {
-				values.add( valueBinding.getValue() );
-			}
-			return values;
+			return (SingularAttributeBinding) referencedAttributeBinding;
 		}
 	}
 }

@@ -32,6 +32,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -121,6 +122,11 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 		@Override
 		public String getReferencedAttributeName() {
 			return null;
+		}
+
+		@Override
+		public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
+			return context.resolveTableForAttribute( null );
 		}
 	}
 }

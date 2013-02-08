@@ -102,6 +102,11 @@ public class PluralAttributeKeySourceImpl
 			public String getReferencedAttributeName() {
 				return keyElement.getPropertyRef();
 			}
+
+			@Override
+			public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
+				return context.resolveTableForAttribute( keyElement.getPropertyRef() );
+			}
 		};
 	}
 

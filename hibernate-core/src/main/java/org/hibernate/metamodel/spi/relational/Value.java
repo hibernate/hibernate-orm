@@ -32,12 +32,18 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public interface Value {
+
+	public enum ValueType {
+		COLUMN,
+		DERIVED_VALUE
+	}
+
 	/**
-	 * Retrieve the table that owns this value.
+	 * Return the value type.
 	 *
-	 * @return The owning table.
+	 * @return The value type
 	 */
-	public TableSpecification getTable();
+	public ValueType getValueType();
 
 	/**
 	 * Retrieve the JDBC data type of this value.

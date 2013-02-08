@@ -224,6 +224,11 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
 			return context.resolveRelationalValuesForAttribute( propertyRef );
 		}
+
+		@Override
+		public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
+			return context.resolveTableForAttribute( propertyRef );
+		}
 	}
 
 }

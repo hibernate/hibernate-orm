@@ -125,13 +125,4 @@ public class DenormalizedTable extends Table {
 	public PrimaryKey getPrimaryKey() {
 		return includedTable.getPrimaryKey();
 	}
-
-	@Override
-	protected void sameTableCheck(Column column) {
-		try{
-			super.sameTableCheck( column );
-		} catch ( IllegalArgumentException e  ){
-			includedTable.sameTableCheck( column );
-		}
-	}
 }

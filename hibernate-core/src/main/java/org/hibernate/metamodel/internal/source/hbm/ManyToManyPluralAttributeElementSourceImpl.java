@@ -33,6 +33,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbFilterElement;
 import org.hibernate.jaxb.spi.hbm.JaxbManyToManyElement;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
@@ -222,6 +223,11 @@ public class ManyToManyPluralAttributeElementSourceImpl
 		@Override
 		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
 			return context.resolveRelationalValuesForAttribute( manyToManyElement.getPropertyRef() );
+		}
+
+		@Override
+		public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
+			return context.resolveTableForAttribute( manyToManyElement.getPropertyRef() );
 		}
 	}
 

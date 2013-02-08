@@ -28,8 +28,10 @@ import java.util.List;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ColumnSource;
+import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
@@ -128,6 +130,11 @@ public class SecondaryTableSourceImpl implements SecondaryTableSource {
 				columns.add( context.resolveColumn( name, null, null, null ) );
 			}
 			return columns;
+		}
+
+		@Override
+		public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
+			return context.resolveTable( null, null, null );
 		}
 
 		@Override

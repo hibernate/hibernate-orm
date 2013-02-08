@@ -30,6 +30,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbKeyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbOnDeleteAttribute;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
@@ -101,6 +102,11 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 			@Override
 			public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
 				return context.resolveRelationalValuesForAttribute( key.getPropertyRef() );
+			}
+
+			@Override
+			public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
+				return context.resolveTableForAttribute( key.getPropertyRef() );
 			}
 
 			@Override

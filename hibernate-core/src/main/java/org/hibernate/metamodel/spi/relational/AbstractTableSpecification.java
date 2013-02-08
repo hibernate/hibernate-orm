@@ -36,10 +36,46 @@ import java.util.List;
  * @author Brett Meyer
  */
 public abstract class AbstractTableSpecification implements TableSpecification {
+
+	// A column an derived value can have the same text, so use the Value.ValueType to disambiguate.
+	private class ValueKey {
+		private final Value.ValueType valueType;
+		private final Identifier identifier;
+
+		private ValueKey(Value.ValueType valueType, Identifier identifier) {
+			this.valueType = valueType;
+			this.identifier = identifier;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+
+			ValueKey valueKey = (ValueKey) o;
+
+			if ( identifier != null ? !identifier.equals( valueKey.identifier ) : valueKey.identifier != null ) {
+				return false;
+			}
+			return valueType == valueKey.valueType;
+
+		}
+
+		@Override
+		public int hashCode() {
+			int result = valueType != null ? valueType.hashCode() : 0;
+			result = 31 * result + ( identifier != null ? identifier.hashCode() : 0 );
+			return result;
+		}
+	}
 	private int tableNumber;
 
 	private final List<Value> valueList = new ArrayList<Value>();
-	private final LinkedHashMap<Identifier, Value> valueMap = new LinkedHashMap<Identifier, Value>();
+	private final LinkedHashMap<ValueKey, Value> valueMap = new LinkedHashMap<ValueKey, Value>();
 
 	private final PrimaryKey primaryKey = new PrimaryKey( this );
 	private final List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
@@ -72,8 +108,9 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	@Override
 	public Column locateColumn(String name) {
 		final Identifier identifier = Identifier.toIdentifier( name );
-		if ( valueMap.containsKey( identifier ) ) {
-			Value value = valueMap.get( identifier );
+		final ValueKey valueKey = new ValueKey( Value.ValueType.COLUMN, identifier );
+		if ( valueMap.containsKey( valueKey ) ) {
+			Value value = valueMap.get( valueKey );
 			return Column.class.isInstance( value ) ? Column.class.cast( value ) : null;
 		}
 		return null;
@@ -91,8 +128,8 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 
 	@Override
 	public Column createColumn(Identifier name) {
-		final Column column = new Column( this, valueList.size(), name );
-		valueMap.put( name, column );
+		final Column column = new Column( valueList.size(), name );
+		valueMap.put( new ValueKey( column.getValueType(), name ), column );
 		valueList.add( column );
 		return column;
 	}
@@ -105,8 +142,9 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 
 	protected DerivedValue locateDerivedValue(String fragment) {
 		final Identifier identifier = Identifier.toIdentifier( fragment );
-		if ( valueMap.containsKey( identifier ) ) {
-			Value value = valueMap.get( identifier );
+		final ValueKey valueKey = new ValueKey( Value.ValueType.DERIVED_VALUE, identifier );
+		if ( valueMap.containsKey( valueKey ) ) {
+			Value value = valueMap.get( valueKey );
 			if ( DerivedValue.class.isInstance( value ) ) {
 				return DerivedValue.class.cast( value );
 			}
@@ -116,8 +154,8 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 
 	protected DerivedValue createDerivedValue(String fragment) {
 		final Identifier identifier = Identifier.toIdentifier( fragment );
-		final DerivedValue value = new DerivedValue( this, valueList.size(), fragment );
-		valueMap.put( identifier, value );
+		final DerivedValue value = new DerivedValue( valueList.size(), fragment );
+		valueMap.put( new ValueKey( value.getValueType(), identifier ), value );
 		valueList.add( value );
 		return value;
 	}
@@ -180,8 +218,8 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 		return result;
 	}
 
-	protected void sameTableCheck(Column column) {
-		if ( !this.equals( column.getTable() ) ) {
+	private void sameTableCheck(Column column) {
+		if ( ! hasValue( column ) ) {
 			throw new IllegalArgumentException( "All columns must be from this table." );
 		}
 	}

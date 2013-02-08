@@ -43,6 +43,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -215,6 +216,15 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 				values.add( resolvedColumn );
 			}
 			return values;
+		}
+
+		@Override
+		public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
+			return context.resolveTable(
+					logicalJoinTableName,
+					null,
+					null
+			);
 		}
 
 		@Override

@@ -37,18 +37,11 @@ public abstract class AbstractValue implements Value {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AbstractValue.class.getName());
 
-	private final TableSpecification table;
 	private final int position;
 	private JdbcDataType jdbcDataType;
 
-	protected AbstractValue(TableSpecification table, int position) {
-		this.table = table;
+	protected AbstractValue(int position) {
 		this.position = position;
-	}
-
-	@Override
-	public TableSpecification getTable() {
-		return table;
 	}
 
 	public int getPosition() {

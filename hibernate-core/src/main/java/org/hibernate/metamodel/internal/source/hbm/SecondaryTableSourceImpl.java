@@ -168,5 +168,10 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 		public String getReferencedAttributeName() {
 			return joinElement.getKey().getPropertyRef();
 		}
+
+		@Override
+		public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
+			return context.resolveTableForAttribute( joinElement.getKey().getPropertyRef() );
+		}
 	}
 }

@@ -30,9 +30,11 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.JoinedSubclassEntitySource;
 
 /**
@@ -100,6 +102,11 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 				columns.add( context.resolveColumn( name, null, null, null ) );
 			}
 			return columns;
+		}
+
+		@Override
+		public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
+			return context.resolveTable( null, null, null );
 		}
 
 		@Override

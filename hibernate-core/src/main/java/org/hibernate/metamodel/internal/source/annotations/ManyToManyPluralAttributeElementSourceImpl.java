@@ -34,6 +34,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssoc
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
@@ -186,6 +187,11 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 				values.add( resolvedColumn );
 			}
 			return values;
+		}
+
+		@Override
+		public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
+			return context.resolveTable( logicalJoinTableName, null, null );
 		}
 
 		@Override

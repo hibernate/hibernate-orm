@@ -33,16 +33,21 @@ import org.hibernate.dialect.Dialect;
 public class DerivedValue extends AbstractValue {
 	private final String expression;
 
-	public DerivedValue(TableSpecification table, int position, String expression) {
-		super( table, position );
+	public DerivedValue(int position, String expression) {
+		super( position );
 		this.expression = expression;
+	}
+
+	@Override
+	public ValueType getValueType() {
+		return ValueType.DERIVED_VALUE;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public String toLoggableString() {
-		return getTable().toLoggableString() + ".{derived-column}";
+		return "{derived-column}";
 	}
 
 	/**

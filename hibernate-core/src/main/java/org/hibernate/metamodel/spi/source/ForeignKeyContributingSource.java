@@ -26,6 +26,7 @@ package org.hibernate.metamodel.spi.source;
 import java.util.List;
 
 import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 
 /**
@@ -67,6 +68,8 @@ public interface ForeignKeyContributingSource {
 		 */
 		public List<Value> getJoinColumns(JoinColumnResolutionContext context);
 
+		public TableSpecification getReferencedTable(JoinColumnResolutionContext context);
+
 		/**
 		 * Retrieves the explicitly named attribute that maps to the non-PK foreign-key target columns.
 		 *
@@ -89,6 +92,8 @@ public interface ForeignKeyContributingSource {
 		 */
 		public List<Value> resolveRelationalValuesForAttribute(String attributeName);
 
+		public TableSpecification resolveTableForAttribute(String attributeName);
+
 		/**
 		 * Resolve a column reference given the logical names of both the table and the column.  Used in the
 		 * {@link javax.persistence.JoinColumn} case
@@ -101,5 +106,17 @@ public interface ForeignKeyContributingSource {
 		 * @return The column.
 		 */
 		public Column resolveColumn(String logicalColumnName, String logicalTableName, String logicalSchemaName, String logicalCatalogName);
+
+		/**
+		 * Resolve a table reference given the logical names of the table and the column.  Used in the
+		 * {@link javax.persistence.JoinColumn} case
+		 *
+		 * @param logicalTableName The logical table name.
+		 * @param logicalSchemaName The logical schema name.
+		 * @param logicalCatalogName The logical catalog name.
+		 *
+		 * @return The column.
+		 */
+		public TableSpecification resolveTable(String logicalTableName, String logicalSchemaName, String logicalCatalogName);
 	}
 }

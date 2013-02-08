@@ -54,12 +54,8 @@ public class Column extends AbstractValue {
 
 	private boolean isIdentity = false;
 
-	protected Column(TableSpecification table, int position, String name) {
-		this( table, position, Identifier.toIdentifier( name ) );
-	}
-
-	protected Column(TableSpecification table, int position, Identifier name) {
-		super( table, position );
+	protected Column(int position, Identifier name) {
+		super( position );
 		this.columnName = name;
 	}
 
@@ -175,8 +171,13 @@ public class Column extends AbstractValue {
 	}
 
 	@Override
+	public ValueType getValueType() {
+		return ValueType.COLUMN;
+	}
+
+	@Override
 	public String toLoggableString() {
-		return getTable().getLoggableValueQualifier() + '.' + getColumnName();
+		return getColumnName().getText();
 	}
 
 	// TODO: this is fairly complicated logic. It would be more straightforward
@@ -232,20 +233,21 @@ public class Column extends AbstractValue {
 		if ( this == o ) {
 			return true;
 		}
-		if ( ! ( o instanceof Column ) ) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
 
-		final Column that = (Column) o;
+		Column column = (Column) o;
 
-		return EqualsHelper.equals( this.columnName, that.columnName )
-				&& EqualsHelper.equals( this.getTable(), that.getTable() );
+		if ( columnName != null ? !columnName.equals( column.columnName ) : column.columnName != null ) {
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override
 	public int hashCode() {
-		int result = columnName != null ? columnName.hashCode() : 0;
-		result = 31 * result + ( getTable() != null ? getTable().hashCode() : 0 );
-		return result;
+		return columnName != null ? columnName.hashCode() : 0;
 	}
 }

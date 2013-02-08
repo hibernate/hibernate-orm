@@ -32,7 +32,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.jboss.logging.Logger;
 
@@ -643,7 +645,9 @@ public class ActionQueue {
 
 	private static class BeforeTransactionCompletionProcessQueue {
 		private SessionImplementor session;
-		private List<BeforeTransactionCompletionProcess> processes = new ArrayList<BeforeTransactionCompletionProcess>();
+		// Concurrency handling required when transaction completion process is dynamically registered
+		// inside event listener (HHH-7478).
+		private Queue<BeforeTransactionCompletionProcess> processes = new ConcurrentLinkedQueue<BeforeTransactionCompletionProcess>();
 
 		private BeforeTransactionCompletionProcessQueue(SessionImplementor session) {
 			this.session = session;
@@ -675,8 +679,9 @@ public class ActionQueue {
 	private static class AfterTransactionCompletionProcessQueue {
 		private SessionImplementor session;
 		private Set<String> querySpacesToInvalidate = new HashSet<String>();
-		private List<AfterTransactionCompletionProcess> processes
-				= new ArrayList<AfterTransactionCompletionProcess>( INIT_QUEUE_LIST_SIZE * 3 );
+		// Concurrency handling required when transaction completion process is dynamically registered
+		// inside event listener (HHH-7478).
+		private Queue<AfterTransactionCompletionProcess> processes = new ConcurrentLinkedQueue<AfterTransactionCompletionProcess>();
 
 		private AfterTransactionCompletionProcessQueue(SessionImplementor session) {
 			this.session = session;

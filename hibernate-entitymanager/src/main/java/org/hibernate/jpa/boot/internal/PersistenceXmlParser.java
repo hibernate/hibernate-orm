@@ -388,7 +388,7 @@ public class PersistenceXmlParser {
 
 	private Schema v21Schema() {
 		if ( v21Schema == null ) {
-			v21Schema = resolveLocalSchema( "org/hibernate/ejb/persistence_2_1.xsd" );
+			v21Schema = resolveLocalSchema( "org/hibernate/jpa/persistence_2_1.xsd" );
 		}
 		return v21Schema;
 	}

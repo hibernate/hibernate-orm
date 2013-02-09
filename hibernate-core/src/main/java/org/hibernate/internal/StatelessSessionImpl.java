@@ -30,8 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
@@ -73,6 +71,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * @author Gavin King
@@ -618,13 +617,16 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	@Override
-	public ScrollableResults scroll(CriteriaImpl criteria, ScrollMode scrollMode) {
+	public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode) {
+		// TODO: Is this guaranteed to always be CriteriaImpl?
+		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
+		
 		errorIfClosed();
-		String entityName = criteria.getEntityOrClassName();
+		String entityName = criteriaImpl.getEntityOrClassName();
 		CriteriaLoader loader = new CriteriaLoader(
 				getOuterJoinLoadable( entityName ),
 		        factory,
-		        criteria,
+		        criteriaImpl,
 		        entityName,
 		        getLoadQueryInfluencers()
 		);
@@ -633,9 +635,12 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public List list(CriteriaImpl criteria) throws HibernateException {
+	public List list(Criteria criteria) throws HibernateException {
+		// TODO: Is this guaranteed to always be CriteriaImpl?
+		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
+		
 		errorIfClosed();
-		String[] implementors = factory.getImplementors( criteria.getEntityOrClassName() );
+		String[] implementors = factory.getImplementors( criteriaImpl.getEntityOrClassName() );
 		int size = implementors.length;
 
 		CriteriaLoader[] loaders = new CriteriaLoader[size];
@@ -643,7 +648,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 			loaders[i] = new CriteriaLoader(
 					getOuterJoinLoadable( implementors[i] ),
 			        factory,
-			        criteria,
+			        criteriaImpl,
 			        implementors[i],
 			        getLoadQueryInfluencers()
 			);

@@ -37,6 +37,19 @@ manifest.mainAttributes(
         'Main-Class': 'org.hibernate.Version'
 )
 
+jar {
+    manifest {
+        instruction 'Bundle-Description', 'Hibernate ORM Core'
+        instruction 'Bundle-SymbolicName', 'org.hibernate.core'
+        
+        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
+        // uses ClassLoaderServiceImpl.
+        instruction 'Export-Package',
+            'org.hibernate.boot.registry.classloading.internal',
+            '*'
+    }
+}
+
 sourceSets.main {
     ext.jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
     java.srcDir jaxbTargetDir

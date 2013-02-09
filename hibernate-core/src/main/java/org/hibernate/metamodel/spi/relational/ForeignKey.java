@@ -127,15 +127,15 @@ public class ForeignKey extends AbstractConstraint {
 	}
 
 	private void checkTargetTable(Column targetColumn) {
-//		if ( targetColumn.getTable() != getTargetTable() ) {
-//			throw new AssertionFailure(
-//					String.format(
-//							"Unable to add column to constraint; tables [%s, %s] did not match",
-//							targetColumn.getTable().toLoggableString(),
-//							getTargetTable().toLoggableString()
-//					)
-//			);
-//		}
+		if ( !getTargetTable().hasValue( targetColumn ) ) {
+			throw new AssertionFailure(
+					String.format(
+							"Unable to add column to constraint; target column [%s] is not in target table [%s]",
+							targetColumn.toLoggableString(),
+							getTargetTable().toLoggableString()
+					)
+			);
+		}
 	}
 
 	@Override

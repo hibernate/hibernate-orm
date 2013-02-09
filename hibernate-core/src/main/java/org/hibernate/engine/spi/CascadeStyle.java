@@ -285,7 +285,7 @@ public abstract class CascadeStyle implements Serializable {
 	public CascadeStyle() {
 	}
 
-	static final Map<String, CascadeStyle> STYLES = new HashMap<String, CascadeStyle>();
+	public static final Map<String, CascadeStyle> STYLES = new HashMap<String, CascadeStyle>();
 
 	static {
 		STYLES.put( "all", ALL );

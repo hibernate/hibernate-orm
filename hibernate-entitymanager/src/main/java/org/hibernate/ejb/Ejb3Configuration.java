@@ -169,6 +169,12 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 
 	public Ejb3Configuration() {
+		this(null);
+	}
+
+
+	public Ejb3Configuration(ClassLoader overridenClassLoader) {
+		this.overridenClassLoader = overridenClassLoader;
 		cfg = new Configuration();
 		cfg.setEntityNotFoundDelegate( ejb3EntityNotFoundDelegate );
 	}
@@ -541,20 +547,27 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 		// set the classloader, passed in by the container in info, to set as the TCCL so that
 		// Hibernate uses it to properly resolve class references.
-		if ( info.getClassLoader() == null ) {
-			throw new IllegalStateException(
-					"[PersistenceUnit: " + info.getPersistenceUnitName() == null ? "" : info.getPersistenceUnitName()
-							+ "] " + "PersistenceUnitInfo.getClassLoader() id null" );
-		}
 		Thread thread = Thread.currentThread();
 		ClassLoader contextClassLoader = thread.getContextClassLoader();
-		boolean sameClassLoader = info.getClassLoader().equals( contextClassLoader );
-		if ( ! sameClassLoader ) {
-			overridenClassLoader = info.getClassLoader();
+		boolean sameClassLoader = true;
+		if (overridenClassLoader != null) {
 			thread.setContextClassLoader( overridenClassLoader );
+			sameClassLoader = false;
 		}
 		else {
-			overridenClassLoader = null;
+			if ( info.getClassLoader() == null ) {
+				throw new IllegalStateException(
+						"[PersistenceUnit: " + info.getPersistenceUnitName() == null ? "" : info.getPersistenceUnitName()
+								+ "] " + "PersistenceUnitInfo.getClassLoader() id null" );
+			}
+			sameClassLoader = info.getClassLoader().equals( contextClassLoader );
+			if ( ! sameClassLoader ) {
+				overridenClassLoader = info.getClassLoader();
+				thread.setContextClassLoader( overridenClassLoader );
+			}
+			else {
+				overridenClassLoader = null;
+			}
 		}
 
 		// Best I can tell, 'workingVars' is some form of additional configuration contract.
@@ -848,6 +861,12 @@ public class Ejb3Configuration implements Serializable, Referenceable {
             LOG.containerProvidingNullPersistenceUnitRootUrl();
 			return;
 		}
+		if ( scanningContext.url.getProtocol().equalsIgnoreCase( "bundle" ) ) {
+			// TODO: Is there a way to scan the root bundle URL in OSGi containers?
+			// Although the URL provides a stream handler that works for finding
+			// resources in a specific Bundle, the root one does not work.
+			return;
+		}
 		try {
 			addScannedEntries( scanningContext, entities, packages, hbmFiles, null );
 		}
@@ -898,6 +917,10 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			thread = Thread.currentThread();
 			contextClassLoader = thread.getContextClassLoader();
 			thread.setContextClassLoader( overridenClassLoader );
+			builder.withApplicationClassLoader( overridenClassLoader );
+			builder.withEnvironmentClassLoader( overridenClassLoader );
+			builder.withHibernateClassLoader( overridenClassLoader );
+			builder.withResourceClassLoader( overridenClassLoader );
 		}
 
 		try {

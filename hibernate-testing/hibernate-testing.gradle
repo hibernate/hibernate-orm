@@ -9,3 +9,10 @@ dependencies {
         transitive=false;
     }
 }
+
+jar {
+    manifest {
+        instruction 'Bundle-Description', 'Hibernate ORM Testing'
+        instruction 'Bundle-SymbolicName', 'org.hibernate.testing'
+    }
+}

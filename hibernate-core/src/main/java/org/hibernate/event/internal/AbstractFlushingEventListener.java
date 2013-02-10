@@ -348,8 +348,10 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		persistenceContext.getCollectionsByKey().clear();
-		persistenceContext.getBatchFetchQueue()
-				.clearSubselects(); //the database has changed now, so the subselect results need to be invalidated
+		
+		// the database has changed now, so the subselect results need to be invalidated
+		// the batch fetching queues should also be cleared - especially the collection batch fetching one
+		persistenceContext.getBatchFetchQueue().clear();
 
 		for ( Map.Entry<PersistentCollection, CollectionEntry> me : IdentityMap.concurrentEntries( persistenceContext.getCollectionEntries() ) ) {
 			CollectionEntry collectionEntry = me.getValue();

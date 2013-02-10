@@ -86,6 +86,8 @@ public class BatchFetchQueue {
 
 	/**
 	 * Clears all entries from this fetch queue.
+	 * <p/>
+	 * Called after flushing or clearing the session.
 	 */
 	public void clear() {
 		batchLoadableEntityKeys.clear();
@@ -126,16 +128,6 @@ public class BatchFetchQueue {
 	public void removeSubselect(EntityKey key) {
 		subselectsByEntityKey.remove( key );
 	}
-
-	/**
-	 * Clears all pending subselect fetches from the queue.
-	 * <p/>
-	 * Called after flushing.
-	 */
-	public void clearSubselects() {
-		subselectsByEntityKey.clear();
-	}
-
 
 	// entity batch support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -291,6 +283,15 @@ public class BatchFetchQueue {
 			for ( Entry<CollectionEntry, PersistentCollection> me : map.entrySet() ) {
 				final CollectionEntry ce = me.getKey();
 				final PersistentCollection collection = me.getValue();
+				
+				if ( ce.getLoadedKey() == null ) {
+					// the loadedKey of the collectionEntry might be null as it might have been reset to null
+					// (see for example Collections.processDereferencedCollection()
+					// and CollectionEntry.afterAction())
+					// though we clear the queue on flush, it seems like a good idea to guard
+					// against potentially null loadedKeys (which leads to various NPEs as demonstrated in HHH-7821).
+					continue;
+				}
 
 				if ( collection.wasInitialized() ) {
 					// should never happen

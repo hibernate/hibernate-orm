@@ -837,12 +837,13 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private Cacheable getCacheable(Element element, XMLContext.Default defaults){
-		if(element==null)return null;
-		String attValue = element.attributeValue( "cacheable" );
-		if(attValue!=null){
-			AnnotationDescriptor ad = new AnnotationDescriptor( Cacheable.class );
-			ad.setValue( "value", Boolean.valueOf( attValue ) );
-			return AnnotationFactory.create( ad );
+		if ( element != null ) {
+			String attValue = element.attributeValue( "cacheable" );
+			if ( attValue != null ) {
+				AnnotationDescriptor ad = new AnnotationDescriptor( Cacheable.class );
+				ad.setValue( "value", Boolean.valueOf( attValue ) );
+				return AnnotationFactory.create( ad );
+			}
 		}
 		if ( defaults.canUseJavaAnnotations() ) {
 			return getJavaAnnotation( Cacheable.class );

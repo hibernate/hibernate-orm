@@ -36,7 +36,7 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
  */
 public class JOnASJtaPlatform extends AbstractJtaPlatform {
 	public static final String UT_NAME = "java:comp/UserTransaction";
-	private static final String TM_CLASS_NAME = "org.objectweb.jonas_tm.Current";
+	public static final String TM_CLASS_NAME = "org.objectweb.jonas_tm.Current";
 
 	@Override
 	protected TransactionManager locateTransactionManager() {

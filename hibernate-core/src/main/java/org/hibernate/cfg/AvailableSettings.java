@@ -283,6 +283,12 @@ public interface AvailableSettings {
 	public static final String JTA_PLATFORM = "hibernate.transaction.jta.platform";
 
 	/**
+	 * Names the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver} implementation to use.
+	 * @since 4.3
+	 */
+	public static final String JTA_PLATFORM_RESOLVER = "hibernate.transaction.jta.platform_resolver";
+
+	/**
 	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation class
 	 */
 	public static final String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";

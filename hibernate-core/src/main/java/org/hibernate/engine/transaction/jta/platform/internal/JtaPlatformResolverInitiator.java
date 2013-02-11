@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -30,35 +30,31 @@ import org.jboss.logging.Logger;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Standard initiator for the standard {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform}
- *
  * @author Steve Ebersole
  */
-public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatform> {
-	public static final JtaPlatformInitiator INSTANCE = new JtaPlatformInitiator();
+public class JtaPlatformResolverInitiator implements StandardServiceInitiator<JtaPlatformResolver> {
+	public static final JtaPlatformResolverInitiator INSTANCE = new JtaPlatformResolverInitiator();
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JtaPlatformInitiator.class.getName());
+	private static final Logger log = Logger.getLogger( JtaPlatformResolverInitiator.class );
 
 	@Override
-	public Class<JtaPlatform> getServiceInitiated() {
-		return JtaPlatform.class;
+	public JtaPlatformResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+		final Object setting = configurationValues.get( AvailableSettings.JTA_PLATFORM_RESOLVER );
+		final JtaPlatformResolver resolver = registry.getService( StrategySelector.class )
+				.resolveStrategy( JtaPlatformResolver.class, setting );
+		if ( resolver == null ) {
+			log.debugf( "No JtaPlatformResolver was specified, using default [%s]", StandardJtaPlatformResolver.class.getName() );
+			return StandardJtaPlatformResolver.INSTANCE;
+		}
+		return resolver;
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
-	public JtaPlatform initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final Object setting = configurationValues.get( AvailableSettings.JTA_PLATFORM );
-		final JtaPlatform platform = registry.getService( StrategySelector.class ).resolveStrategy( JtaPlatform.class, setting );
-		if ( platform == null ) {
-			LOG.debugf( "No JtaPlatform was specified, checking resolver" );
-			return registry.getService( JtaPlatformResolver.class ).resolveJtaPlatform( configurationValues, registry );
-		}
-		return platform;
+	public Class<JtaPlatformResolver> getServiceInitiated() {
+		return JtaPlatformResolver.class;
 	}
 }

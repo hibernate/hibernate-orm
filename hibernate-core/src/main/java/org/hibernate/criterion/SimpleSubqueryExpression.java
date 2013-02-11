@@ -47,7 +47,7 @@ public class SimpleSubqueryExpression extends SubqueryExpression {
 		TypedValue[] superTv = super.getTypedValues(criteria, criteriaQuery);
 		TypedValue[] result = new TypedValue[superTv.length+1];
 		System.arraycopy(superTv, 0, result, 1, superTv.length);
-		result[0] = new TypedValue( getTypes()[0], value, EntityMode.POJO );
+		result[0] = new TypedValue( getTypes()[0], value );
 		return result;
 	}
 	

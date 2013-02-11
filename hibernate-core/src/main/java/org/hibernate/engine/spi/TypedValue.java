@@ -52,10 +52,6 @@ public final class TypedValue implements Serializable {
 				}
 		);
 	}
-	@Deprecated
-	public TypedValue(Type type, Object value, EntityMode entityMode) {
-		this(type, value);
-	}
 
 	public Object getValue() {
 		return value;

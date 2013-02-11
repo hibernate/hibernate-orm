@@ -59,7 +59,7 @@ public class SQLCriterion implements Criterion {
 		this.sql = sql;
 		typedValues = new TypedValue[values.length];
 		for ( int i=0; i<typedValues.length; i++ ) {
-			typedValues[i] = new TypedValue( types[i], values[i], EntityMode.POJO );
+			typedValues[i] = new TypedValue( types[i], values[i] );
 		}
 	}
 

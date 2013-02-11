@@ -85,6 +85,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	private boolean isMetadataUsed;
 	private Configuration configuration;
+	private MetadataImplementor metadata;
 	private StandardServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 
@@ -96,6 +97,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected Configuration configuration() {
 		return configuration;
+	}
+
+	protected MetadataImplementor metadata() {
+		return metadata;
 	}
 
 	protected StandardServiceRegistryImpl serviceRegistry() {
@@ -137,9 +142,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				false
 		);
 		if ( isMetadataUsed ) {
-			MetadataImplementor metadataImplementor = buildMetadata( bootRegistry, serviceRegistry );
-			afterConstructAndConfigureMetadata( metadataImplementor );
-			sessionFactory = ( SessionFactoryImplementor ) metadataImplementor.buildSessionFactory();
+			metadata = buildMetadata( bootRegistry, serviceRegistry );
+			afterConstructAndConfigureMetadata( metadata );
+			sessionFactory = ( SessionFactoryImplementor ) metadata.buildSessionFactory();
 		}
 		else {
 			// this is done here because Configuration does not currently support 4.0 xsd

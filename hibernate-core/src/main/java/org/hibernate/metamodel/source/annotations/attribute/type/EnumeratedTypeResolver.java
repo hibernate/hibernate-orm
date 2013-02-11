@@ -28,14 +28,14 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.type.EnumType;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu
@@ -69,6 +69,13 @@ public class EnumeratedTypeResolver extends AbstractAttributeTypeResolver {
 			}
 			else {
 				return null;
+			}
+		}
+		if ( enumeratedAnnotation == null ) {
+			TypeDef typeDefinition = mappedAttribute.getContext().getMetadataImplementor()
+					.getTypeDefinition( mappedAttribute.getAttributeType().getName() );
+			if ( typeDefinition != null ) {
+				return typeDefinition.getName();
 			}
 		}
 		return EnumType.class.getName();

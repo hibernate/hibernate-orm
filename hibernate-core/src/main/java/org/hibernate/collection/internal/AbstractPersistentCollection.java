@@ -1114,7 +1114,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 							current,
 							session
 					);
-					currentIds.add( new TypedValue( idType, currentId, entityPersister.getEntityMode() ) );
+					currentIds.add( new TypedValue( idType, currentId ) );
 				}
 			}
 		}
@@ -1123,7 +1123,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		for ( Object old : oldElements ) {
 			if ( !currentSaving.contains( old ) ) {
 				Serializable oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, old, session );
-				if ( !currentIds.contains( new TypedValue( idType, oldId, entityPersister.getEntityMode() ) ) ) {
+				if ( !currentIds.contains( new TypedValue( idType, oldId ) ) ) {
 					res.add( old );
 				}
 			}

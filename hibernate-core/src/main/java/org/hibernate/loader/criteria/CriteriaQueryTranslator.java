@@ -512,8 +512,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		final Loadable loadable = ( Loadable ) getPropertyMapping( getEntityName( subcriteria ) );
 		return new TypedValue(
 				loadable.getIdentifierType(),
-		        value,
-		        EntityMode.POJO
+		        value
 		);
 	}
 
@@ -618,16 +617,14 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				}
 				return new TypedValue(
 						type,
-				        value,
-				        EntityMode.POJO
+				        value
 				);
 			}
 		}
 		// Otherwise, this is an ordinary value.
 		return new TypedValue(
 				getTypeUsingProjection( subcriteria, propertyName ),
-		        value,
-		        EntityMode.POJO
+		        value
 		);
 	}
 

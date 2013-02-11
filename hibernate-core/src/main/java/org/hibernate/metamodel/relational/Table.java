@@ -153,9 +153,12 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 		// Try to find out the name of the primary key to create it as identity if the IdentityGenerator is used
 		String pkColName = null;
-		if ( hasPrimaryKey && isPrimaryKeyIdentity ) {
-			Column pkColumn = getPrimaryKey().getColumns().iterator().next();
-			pkColName = pkColumn.getColumnName().encloseInQuotesIfQuoted( dialect );
+		Column pkColumn = null;
+		if ( hasPrimaryKey ) {
+			pkColumn = getPrimaryKey().getColumns().iterator().next();
+			if ( isPrimaryKeyIdentity ) {
+				pkColName = pkColumn.getColumnName().encloseInQuotesIfQuoted( dialect );
+			}
 		}
 
 		boolean isFirst = true;
@@ -173,7 +176,6 @@ public class Table extends AbstractTableSpecification implements Exportable {
 			String colName = col.getColumnName().encloseInQuotesIfQuoted( dialect );
 
 			buf.append( colName ).append( ' ' );
-
 			if ( isPrimaryKeyIdentity && colName.equals( pkColName ) ) {
 				// to support dialects that have their own identity data type
 				if ( dialect.hasDataTypeInIdentityColumn() ) {
@@ -199,7 +201,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 			}
 
-			if ( col.isUnique() ) {
+			if ( col.isUnique() && !col.equals( pkColumn ) ) {
 				UniqueKey uk = getOrCreateUniqueKey( col.getColumnName()
 						.encloseInQuotesIfQuoted( dialect ) + '_' );
 				uk.addColumn( col );

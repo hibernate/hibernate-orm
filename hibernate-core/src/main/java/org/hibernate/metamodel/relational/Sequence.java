@@ -35,17 +35,18 @@ public class Sequence implements Exportable {
 	private final Schema schema;
 	private final String name;
 	private final String qualifiedName;
-	private int initialValue = 1;
-	private int incrementSize = 1;
+	private final int initialValue;
+	private final int incrementSize;
 
 	public Sequence(Schema schema, String name) {
-		this.schema = schema;
-		this.name = name;
-		this.qualifiedName = new ObjectName( schema, name ).toText();
+		this( schema, name, 1, 1 );
 	}
 
 	public Sequence(Schema schema, String name, int initialValue, int incrementSize) {
-		this( schema, name );
+		this.schema = schema;
+		this.name = name;
+		this.qualifiedName = new ObjectName( schema, name ).toText();
+
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 	}

@@ -134,9 +134,15 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 		sb.append( " unique (" );
 		Iterator columnIterator = uniqueKey.getColumns().iterator();
 		while ( columnIterator.hasNext() ) {
-			org.hibernate.mapping.Column column
-					= (org.hibernate.mapping.Column) columnIterator.next();
-			sb.append( column.getQuotedName( dialect ) );
+			Object next = columnIterator.next();
+			if ( next instanceof org.hibernate.metamodel.relational.Column ) {
+				org.hibernate.metamodel.relational.Column c = (org.hibernate.metamodel.relational.Column) next;
+				sb.append( c.getColumnName().encloseInQuotesIfQuoted( dialect ) );
+			}
+			else {
+				org.hibernate.mapping.Column column = (org.hibernate.mapping.Column) next;
+				sb.append( column.getQuotedName( dialect ) );
+			}
 			if ( columnIterator.hasNext() ) {
 				sb.append( ", " );
 			}

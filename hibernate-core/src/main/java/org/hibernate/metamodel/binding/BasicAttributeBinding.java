@@ -133,6 +133,7 @@ public class BasicAttributeBinding
 		//will override the values set here (they are in idGenerator.getParameters().)
 		Schema schema = getValue().getTable().getSchema();
 		if ( schema != null ) {
+			params.put( Schema.EXPORTABLE_SCHEMA, schema );
 			if ( schema.getName().getSchema() != null ) {
 				params.setProperty( PersistentIdentifierGenerator.SCHEMA, schema.getName().getSchema().getName() );
 			}

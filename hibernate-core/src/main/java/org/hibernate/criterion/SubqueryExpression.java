@@ -116,7 +116,7 @@ public abstract class SubqueryExpression implements Criterion {
 		Object[] ppValues = params.getPositionalParameterValues();
 		TypedValue[] tv = new TypedValue[ppTypes.length];
 		for ( int i=0; i<ppTypes.length; i++ ) {
-			tv[i] = new TypedValue( ppTypes[i], ppValues[i], EntityMode.POJO );
+			tv[i] = new TypedValue( ppTypes[i], ppValues[i] );
 		}
 		return tv;
 	}

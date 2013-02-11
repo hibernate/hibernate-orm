@@ -86,13 +86,13 @@ public class InExpression implements Criterion {
 					Object subval = values[j]==null ? 
 						null : 
 						actype.getPropertyValues( values[j], EntityMode.POJO )[i];
-					list.add( new TypedValue( types[i], subval, EntityMode.POJO ) );
+					list.add( new TypedValue( types[i], subval ) );
 				}
 			}
 		}
 		else {
 			for ( int j=0; j<values.length; j++ ) {
-				list.add( new TypedValue( type, values[j], EntityMode.POJO ) );
+				list.add( new TypedValue( type, values[j] ) );
 			}
 		}
 		return (TypedValue[]) list.toArray( new TypedValue[ list.size() ] );

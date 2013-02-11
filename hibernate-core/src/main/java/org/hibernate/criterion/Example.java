@@ -287,7 +287,7 @@ public class Example implements Criterion {
 				if (isLikeEnabled) string = matchMode.toMatchString(string);
 				value = string;
 			}
-			list.add( new TypedValue(type, value, null) );
+			list.add( new TypedValue(type, value) );
 		}
 	}
 

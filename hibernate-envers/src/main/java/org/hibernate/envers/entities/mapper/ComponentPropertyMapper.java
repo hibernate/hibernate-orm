@@ -121,7 +121,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 			// set the component
 			try {
 				Object subObj = ReflectHelper.getDefaultConstructor(
-						Thread.currentThread().getContextClassLoader().loadClass(componentClassName)).newInstance();
+						ReflectHelper.classForName(componentClassName)).newInstance();
 				setter.set(obj, subObj, null);
 				delegate.mapToEntityFromMap(verCfg, subObj, data, primaryKey, versionsReader, revision);
 			} catch (Exception e) {

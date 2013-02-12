@@ -72,9 +72,6 @@ public final class ReflectHelper {
 		OBJECT_EQUALS = eq;
 		OBJECT_HASHCODE = hash;
 	}
-	
-	// TODO: Better way to do this?
-	public static ClassLoader overridenClassLoader = null;
 
 	/**
 	 * Disallow instantiation of ReflectHelper.
@@ -163,14 +160,9 @@ public final class ReflectHelper {
 	 */
 	public static Class classForName(String name, Class caller) throws ClassNotFoundException {
 		try {
-			if (overridenClassLoader != null) {
-				return overridenClassLoader.loadClass( name );
-			}
-			else {
-				ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-				if ( contextClassLoader != null ) {
-					return contextClassLoader.loadClass( name );
-				}
+			ClassLoader classLoader = ClassLoaderHelper.getClassLoader();
+			if ( classLoader != null ) {
+				return classLoader.loadClass( name );
 			}
 		}
 		catch ( Throwable ignore ) {
@@ -190,14 +182,9 @@ public final class ReflectHelper {
 	 */
 	public static Class classForName(String name) throws ClassNotFoundException {
 		try {
-			if (overridenClassLoader != null) {
-				return overridenClassLoader.loadClass( name );
-			}
-			else {
-				ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-				if ( contextClassLoader != null ) {
-					return contextClassLoader.loadClass(name);
-				}
+			ClassLoader classLoader = ClassLoaderHelper.getClassLoader();
+			if ( classLoader != null ) {
+				return classLoader.loadClass(name);
 			}
 		}
 		catch ( Throwable ignore ) {

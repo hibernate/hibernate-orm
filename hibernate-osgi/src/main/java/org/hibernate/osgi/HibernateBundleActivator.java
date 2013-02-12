@@ -34,7 +34,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.HibernatePersistence;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -63,7 +63,8 @@ public class HibernateBundleActivator
         context.addBundleListener(this);
         
     	osgiClassLoader = new OsgiClassLoader();
-    	ReflectHelper.overridenClassLoader = osgiClassLoader;
+    	
+    	ClassLoaderHelper.overridenClassLoader = osgiClassLoader;
 
         for ( Bundle bundle : context.getBundles() ) {
         	handleBundleChange( bundle );

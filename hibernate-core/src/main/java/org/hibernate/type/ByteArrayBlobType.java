@@ -132,10 +132,6 @@ public class ByteArrayBlobType extends AbstractLobType {
 		}
 	}
 
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) throws HibernateException {
-		node.setText( toString( value ) );
-	}
-
 	public String toString(Object val) {
 		byte[] bytes = unWrap( val );
 		StringBuilder buf = new StringBuilder( 2 * bytes.length );
@@ -149,26 +145,6 @@ public class ByteArrayBlobType extends AbstractLobType {
 
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		return value == null ? "null" : toString( value );
-	}
-
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		String xmlText = xml.getText();
-		return xmlText == null || xmlText.length() == 0 ? null : fromString( xmlText );
-	}
-
-	private Object fromString(String xmlText) {
-		if ( xmlText == null ) {
-			return null;
-		}
-		if ( xmlText.length() % 2 != 0 ) {
-			throw new IllegalArgumentException( "The string is not a valid xml representation of a binary content." );
-		}
-		byte[] bytes = new byte[xmlText.length() / 2];
-		for ( int i = 0; i < bytes.length ; i++ ) {
-			String hexStr = xmlText.substring( i * 2, ( i + 1 ) * 2 );
-			bytes[i] = (byte) ( Integer.parseInt( hexStr, 16 ) + Byte.MIN_VALUE );
-		}
-		return wrap( bytes );
 	}
 
 	protected Object wrap(byte[] bytes) {

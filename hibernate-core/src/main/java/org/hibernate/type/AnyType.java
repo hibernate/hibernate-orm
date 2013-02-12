@@ -192,10 +192,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		);
 	}
 
-	public void setToXMLNode(Node xml, Object value, SessionFactoryImplementor factory) {
-		throw new UnsupportedOperationException("any types cannot be stringified");
-	}
-
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) 
 	throws HibernateException {
 		//TODO: terrible implementation!
@@ -204,10 +200,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 				: factory.getTypeHelper()
 						.entity( HibernateProxyHelper.getClassWithoutInitializingProxy( value ) )
 						.toLoggableString( value, factory );
-	}
-
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		throw new UnsupportedOperationException(); //TODO: is this right??
 	}
 
 	public static final class ObjectTypeCacheEntry implements Serializable {
@@ -381,10 +373,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	public boolean isAlwaysDirtyChecked() {
-		return false;
-	}
-
-	public boolean isEmbeddedInXML() {
 		return false;
 	}
 	

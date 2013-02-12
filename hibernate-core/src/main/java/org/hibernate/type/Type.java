@@ -168,14 +168,6 @@ public interface Type extends Serializable {
 	public Class getReturnedClass();
 
 	/**
-	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	@Deprecated
-	public boolean isXMLElement();
-
-	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
 	 * state) taking a shortcut for entity references.
 	 * <p/>
@@ -388,38 +380,6 @@ public interface Type extends Serializable {
 	 */
 	public String toLoggableString(Object value, SessionFactoryImplementor factory)
 	throws HibernateException;
-
-	/**
-	 * A representation of the value to be embedded in an XML element.
-	 *
-	 * @param node The XML node to which to write the value
-	 * @param value The value to write
-	 * @param factory The session factory
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 *
-	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory)
-	throws HibernateException;
-
-	/**
-	 * Parse the XML representation of an instance.
-	 *
-	 * @param xml The XML node from which to read the value
-	 * @param factory The session factory
-	 *
-	 * @return an instance of the {@link #getReturnedClass() mapped class}
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 *
-	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException;
 
 	/**
 	 * Returns the abbreviated name of the type.

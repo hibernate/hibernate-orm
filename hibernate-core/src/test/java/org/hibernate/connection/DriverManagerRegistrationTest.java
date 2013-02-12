@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 import org.junit.AfterClass;
 import org.junit.Test;
 
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -91,7 +92,7 @@ public class DriverManagerRegistrationTest extends BaseUnitTestCase {
 	}
 
 	private static ClassLoader determineClassLoader() {
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		ClassLoader cl = ClassLoaderHelper.getClassLoader();
 		if ( cl == null ) {
 			cl = DriverManagerRegistrationTest.class.getClassLoader();
 		}

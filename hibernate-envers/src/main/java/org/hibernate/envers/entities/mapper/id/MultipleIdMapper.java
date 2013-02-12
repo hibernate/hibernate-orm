@@ -76,7 +76,7 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 
         Object ret;
         try {
-            final Class clazz = Thread.currentThread().getContextClassLoader().loadClass(compositeIdClass);
+            final Class clazz = ReflectHelper.classForName(compositeIdClass);
             ret = ReflectHelper.getDefaultConstructor(clazz).newInstance();
         } catch (Exception e) {
             throw new AuditException(e);

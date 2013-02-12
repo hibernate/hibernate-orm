@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration;
+import static org.hibernate.envers.tools.Tools.getProperty;
+
 import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.envers.RevisionListener;
-
-import static org.hibernate.envers.tools.Tools.getProperty;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -134,7 +135,7 @@ public class GlobalConfiguration {
 		String revisionListenerClassName = properties.getProperty("org.hibernate.envers.revision_listener", null);
         if (revisionListenerClassName != null) {
             try {
-                revisionListenerClass = (Class<? extends RevisionListener>) Thread.currentThread().getContextClassLoader().loadClass(revisionListenerClassName);
+                revisionListenerClass = (Class<? extends RevisionListener>) ReflectHelper.classForName(revisionListenerClassName);
             } catch (ClassNotFoundException e) {
                 throw new MappingException("Revision listener class not found: " + revisionListenerClassName + ".", e);
             }

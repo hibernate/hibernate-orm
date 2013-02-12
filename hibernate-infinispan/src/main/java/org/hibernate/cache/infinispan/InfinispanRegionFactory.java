@@ -34,6 +34,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.module.ModuleCommandFactory;
@@ -386,10 +387,10 @@ public class InfinispanRegionFactory implements RegionFactory {
       try {
          String configLoc = ConfigurationHelper.getString(
                INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
-         ClassLoader ctxClassLoader = Thread.currentThread().getContextClassLoader();
+         ClassLoader classLoader = ClassLoaderHelper.getClassLoader();
          InputStream is = FileLookupFactory.newInstance().lookupFileStrict(
-               configLoc, ctxClassLoader);
-         ParserRegistry parserRegistry = new ParserRegistry(ctxClassLoader);
+               configLoc, classLoader);
+         ParserRegistry parserRegistry = new ParserRegistry(classLoader);
          ConfigurationBuilderHolder holder = parserRegistry.parse(is);
 
          // Override global jmx statistics exposure

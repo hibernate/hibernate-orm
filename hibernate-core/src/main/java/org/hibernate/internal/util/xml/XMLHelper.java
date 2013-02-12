@@ -29,6 +29,7 @@ import org.dom4j.io.DOMReader;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 
@@ -81,7 +82,7 @@ public final class XMLHelper {
 
 	public static DocumentFactory getDocumentFactory() {
 
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		ClassLoader cl = ClassLoaderHelper.getClassLoader();
 		DocumentFactory factory;
 		try {
 			Thread.currentThread().setContextClassLoader( XMLHelper.class.getClassLoader() );

@@ -34,6 +34,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ClassLoaderHelper;
 
 /**
  * A proxy for a ResultSet delegate, responsible for locally caching the columnName-to-columnIndex resolution that
@@ -78,7 +79,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 	 * @return The class loader appropriate for proxy construction.
 	 */
 	public static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		ClassLoader cl = ClassLoaderHelper.getClassLoader();
 		if ( cl == null ) {
 			cl = ResultSet.class.getClassLoader();
 		}

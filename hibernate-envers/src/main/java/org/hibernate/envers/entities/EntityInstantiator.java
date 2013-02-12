@@ -97,7 +97,7 @@ public class EntityInstantiator {
         		entCfg = verCfg.getEntCfg().getNotVersionEntityConfiguration(entityName);
         	}
 
-            Class<?> cls = ReflectionTools.loadClass(entCfg.getEntityClassName());
+            Class<?> cls = ReflectHelper.classForName(entCfg.getEntityClassName());
             ret = ReflectHelper.getDefaultConstructor(cls).newInstance();
         } catch (Exception e) {
             throw new AuditException(e);
@@ -128,7 +128,14 @@ public class EntityInstantiator {
                 final Serializable entityId = initializer.getIdentifier();
                 if (verCfg.getEntCfg().isVersioned(entityName)) {
                     final String entityClassName = verCfg.getEntCfg().get(entityName).getEntityClassName();
-                    final ToOneDelegateSessionImplementor delegate = new ToOneDelegateSessionImplementor(versionsReader, ReflectionTools.loadClass(entityClassName), entityId, revision, verCfg);
+                    Class entityClass;
+                    try {
+						entityClass = ReflectHelper.classForName(entityClassName);
+					}
+					catch ( ClassNotFoundException e ) {
+						throw new AuditException( e );
+					}
+                    final ToOneDelegateSessionImplementor delegate = new ToOneDelegateSessionImplementor(versionsReader, entityClass, entityId, revision, verCfg);
                     originalId.put(key,
                             versionsReader.getSessionImplementor().getFactory().getEntityPersister(entityName).createProxy(entityId, delegate));
                 }

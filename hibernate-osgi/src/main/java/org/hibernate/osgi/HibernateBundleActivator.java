@@ -32,6 +32,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.osgi.framework.Bundle;
@@ -62,6 +63,8 @@ public class HibernateBundleActivator
         context.addBundleListener(this);
         
     	osgiClassLoader = new OsgiClassLoader();
+    	
+    	ClassLoaderHelper.overridenClassLoader = osgiClassLoader;
 
         for ( Bundle bundle : context.getBundles() ) {
         	handleBundleChange( bundle );

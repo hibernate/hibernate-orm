@@ -127,9 +127,7 @@ public class AuditConfiguration {
 				auditStrategyClass = classLoaderService.classForName( auditEntCfg.getAuditStrategyName() );
 			}
 			else {
-				auditStrategyClass = Thread.currentThread()
-						.getContextClassLoader()
-						.loadClass( auditEntCfg.getAuditStrategyName() );
+				auditStrategyClass = ReflectHelper.classForName( auditEntCfg.getAuditStrategyName() );
 			}
 
 			strategy = (AuditStrategy) ReflectHelper.getDefaultConstructor(auditStrategyClass).newInstance();

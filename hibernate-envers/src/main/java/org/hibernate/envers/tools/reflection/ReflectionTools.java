@@ -22,18 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.tools.reflection;
+import static org.hibernate.envers.tools.Pair.make;
+
 import java.util.Map;
 
 import org.hibernate.envers.entities.PropertyData;
-import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
-
-import static org.hibernate.envers.tools.Pair.make;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -47,14 +46,6 @@ public class ReflectionTools {
             new ConcurrentReferenceHashMap<Pair<Class, String>, Setter>(10,
                 ConcurrentReferenceHashMap.ReferenceType.SOFT,
                 ConcurrentReferenceHashMap.ReferenceType.SOFT);
-
-    public static Class<?> loadClass(String name) {
-        try {
-            return Thread.currentThread().getContextClassLoader().loadClass(name);
-        } catch (ClassNotFoundException e) {
-            throw new AuditException(e);
-        }
-    }
 
     private static PropertyAccessor getAccessor(String accessorType) {
         return PropertyAccessorFactory.getPropertyAccessor(accessorType);

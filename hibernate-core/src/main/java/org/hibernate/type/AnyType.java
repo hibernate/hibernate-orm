@@ -374,10 +374,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	public boolean isAlwaysDirtyChecked() {
 		return false;
 	}
-
-	public boolean isEmbeddedInXML() {
-		return false;
-	}
 	
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[ getColumnSpan(mapping) ];

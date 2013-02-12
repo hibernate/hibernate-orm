@@ -683,11 +683,6 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return propertyNullability;
 	}
 
-	@Override
-    public boolean isXMLElement() {
-		return true;
-	}
-
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[ getColumnSpan( mapping ) ];
 		if ( value == null ) {

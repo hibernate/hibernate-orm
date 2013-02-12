@@ -38,7 +38,6 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	private FetchMode fetchMode;
 	protected String referencedPropertyName;
 	private String referencedEntityName;
-	private boolean embedded;
 	private boolean lazy = true;
 	protected boolean unwrapProxy;
 
@@ -87,24 +86,6 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
-	}
-
-	/**
-	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public boolean isEmbedded() {
-		return embedded;
-	}
-
-	/**
-	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public void setEmbedded(boolean embedded) {
-		this.embedded = embedded;
 	}
 
 	public boolean isValid(Mapping mapping) throws MappingException {

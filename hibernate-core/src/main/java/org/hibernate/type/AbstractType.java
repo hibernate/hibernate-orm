@@ -62,10 +62,6 @@ public abstract class AbstractType implements Type {
 		return false;
 	}
 	
-	public boolean isXMLElement() {
-		return false;
-	}
-
 	public int compare(Object x, Object y) {
 		return ( (Comparable) x ).compareTo(y);
 	}
@@ -143,16 +139,6 @@ public abstract class AbstractType implements Type {
 	
 	public int getHashCode(Object x, SessionFactoryImplementor factory) {
 		return getHashCode(x );
-	}
-	
-	protected static void replaceNode(Node container, Element value) {
-		if ( container!=value ) { //not really necessary, I guess...
-			Element parent = container.getParent();
-			container.detach();
-			value.setName( container.getName() );
-			value.detach();
-			parent.add(value);
-		}
 	}
 	
 	public Type getSemiResolvedType(SessionFactoryImplementor factory) {

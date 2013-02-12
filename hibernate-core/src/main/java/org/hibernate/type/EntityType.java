@@ -55,7 +55,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	private final TypeFactory.TypeScope scope;
 	private final String associatedEntityName;
 	protected final String uniqueKeyPropertyName;
-	protected final boolean isEmbeddedInXML;
 	private final boolean eager;
 	private final boolean unwrapProxy;
 
@@ -69,38 +68,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param uniqueKeyPropertyName The property-ref name, or null if we
 	 * reference the PK of the associated entity.
 	 * @param eager Is eager fetching enabled.
-	 * @param isEmbeddedInXML Should values of this mapping be embedded in XML modes?
-	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
-	 * says to return the "implementation target" of lazy prooxies; typically only possible
-	 * with lazy="no-proxy".
-	 *
-	 * @deprecated Use {@link #EntityType(TypeFactory.TypeScope, String, String, boolean, boolean )} instead.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	protected EntityType(
-			TypeFactory.TypeScope scope,
-			String entityName,
-			String uniqueKeyPropertyName,
-			boolean eager,
-			boolean isEmbeddedInXML,
-			boolean unwrapProxy) {
-		this.scope = scope;
-		this.associatedEntityName = entityName;
-		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
-		this.isEmbeddedInXML = isEmbeddedInXML;
-		this.eager = eager;
-		this.unwrapProxy = unwrapProxy;
-	}
-
-	/**
-	 * Constructs the requested entity type mapping.
-	 *
-	 * @param scope The type scope
-	 * @param entityName The name of the associated entity.
-	 * @param uniqueKeyPropertyName The property-ref name, or null if we
-	 * reference the PK of the associated entity.
-	 * @param eager Is eager fetching enabled.
 	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
 	 * says to return the "implementation target" of lazy prooxies; typically only possible
 	 * with lazy="no-proxy".
@@ -114,7 +81,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		this.scope = scope;
 		this.associatedEntityName = entityName;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
-		this.isEmbeddedInXML = true;
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
 	}
@@ -399,20 +365,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				.isEqual(xid, yid, factory);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public boolean isEmbeddedInXML() {
-		return isEmbeddedInXML;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public boolean isXMLElement() {
-		return isEmbeddedInXML;
-	}
-
 	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map<String, Filter> enabledFilters)
 	throws MappingException {
 		if ( isReferenceToPrimaryKey() ) { //TODO: this is a bit arbitrary, expose a switch to the user?
@@ -471,16 +423,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	/**
-	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	protected boolean isNotEmbedded(SessionImplementor session) {
-//		return !isEmbeddedInXML;
-		return false;
-	}
-
-	/**
 	 * Generate a loggable representation of an instance of the value mapped by this type.
 	 *
 	 * @param value The instance to be logged.
@@ -500,10 +442,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			final EntityMode entityMode = persister.getEntityMode();
 			final Serializable id;
 			if ( entityMode == null ) {
-				if ( isEmbeddedInXML ) {
-					throw new ClassCastException( value.getClass().getName() );
-				}
-				id = ( Serializable ) value;
+				throw new ClassCastException( value.getClass().getName() );
 			} else if ( value instanceof HibernateProxy ) {
 				HibernateProxy proxy = ( HibernateProxy ) value;
 				id = proxy.getHibernateLazyInitializer().getIdentifier();

@@ -183,7 +183,6 @@ public class OneToOneSecondPass implements SecondPass {
 					//FIXME use ignore not found here
 					manyToOne.setIgnoreNotFound( ignoreNotFound );
 					manyToOne.setCascadeDeleteEnabled( value.isCascadeDeleteEnabled() );
-					manyToOne.setEmbedded( value.isEmbedded() );
 					manyToOne.setFetchMode( value.getFetchMode() );
 					manyToOne.setLazy( value.isLazy() );
 					manyToOne.setReferencedEntityName( value.getReferencedEntityName() );

@@ -67,27 +67,7 @@ public class ManyToOneType extends EntityType {
 	 * @param lazy Should the association be handled lazily
 	 */
 	public ManyToOneType(TypeFactory.TypeScope scope, String referencedEntityName, boolean lazy) {
-		this( scope, referencedEntityName, null, lazy, true, false, false, false );
-	}
-
-
-	/**
-	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, String, boolean, boolean, boolean, boolean ) } instead.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public ManyToOneType(
-			TypeFactory.TypeScope scope,
-			String referencedEntityName,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			boolean isEmbeddedInXML,
-			boolean ignoreNotFound,
-			boolean isLogicalOneToOne) {
-		super( scope, referencedEntityName, uniqueKeyPropertyName, !lazy, isEmbeddedInXML, unwrapProxy );
-		this.ignoreNotFound = ignoreNotFound;
-		this.isLogicalOneToOne = isLogicalOneToOne;
+		this( scope, referencedEntityName, null, lazy, true, false, false );
 	}
 
 	public ManyToOneType(
@@ -220,10 +200,6 @@ public class ManyToOneType extends EntityType {
 			SessionImplementor session,
 			Object owner) throws HibernateException {
 
-		if ( isNotEmbedded( session ) ) {
-			return getIdentifierType( session ).disassemble( value, session, owner );
-		}
-		
 		if ( value == null ) {
 			return null;
 		}
@@ -255,10 +231,6 @@ public class ManyToOneType extends EntityType {
 		
 		Serializable id = assembleId( oid, session );
 
-		if ( isNotEmbedded( session ) ) {
-			return id;
-		}
-		
 		if ( id == null ) {
 			return null;
 		}

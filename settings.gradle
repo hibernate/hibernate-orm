@@ -3,6 +3,8 @@ include 'hibernate-testing'
 include 'hibernate-entitymanager'
 include 'hibernate-envers'
 
+include 'hibernate-osgi'
+
 include 'hibernate-c3p0'
 include 'hibernate-proxool'
 

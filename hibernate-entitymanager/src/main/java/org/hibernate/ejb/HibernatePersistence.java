@@ -24,6 +24,7 @@
 package org.hibernate.ejb;
 
 import java.util.Map;
+
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceProvider;
@@ -38,8 +39,9 @@ import org.hibernate.ejb.util.PersistenceUtilHelper;
  * @author Gavin King
  */
 public class HibernatePersistence extends AvailableSettings implements PersistenceProvider {
+	
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
-
+	
 	/**
 	 * Get an entity manager factory by its entity manager name, using the specified
 	 * properties (they override any found in the peristence.xml file).

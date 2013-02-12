@@ -19,7 +19,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.spi;
+package org.hibernate.ejb.engine.spi;
+
+import static org.hibernate.engine.spi.CascadeStyle.STYLES;
+
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadingAction;
 
 /**
  * Becasue CascadeStyle is not opened and package protected,

@@ -19,7 +19,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.spi;
+package org.hibernate.ejb.engine.spi;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -28,6 +28,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
+import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
 

@@ -187,4 +187,9 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 				"org.hibernate.test.annotations.any"
 		};
 	}
+
+    @Override
+    protected String[] getXmlFiles() {
+        return new String[] { "org/hibernate/test/annotations/any/orm.xml" };
+    }
 }

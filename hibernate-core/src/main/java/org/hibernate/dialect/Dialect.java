@@ -76,12 +76,14 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
@@ -282,6 +284,10 @@ public abstract class Dialect implements ConversionContext {
 
 
 	// database type mapping support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		// by default, nothing to do
+	}
 
 	/**
 	 * Get the name of the database type associated with the given

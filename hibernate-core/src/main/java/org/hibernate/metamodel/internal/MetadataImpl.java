@@ -40,6 +40,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -61,6 +62,7 @@ import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer;
 import org.hibernate.metamodel.spi.MetadataContributor;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
+import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
@@ -91,6 +93,9 @@ import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.UserType;
+
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
@@ -192,15 +197,40 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		// build BasicTypeRegistry and TypeResolver ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// 		ultimately this needs to change a little bit to account for HHH-7792
 		final BasicTypeRegistry basicTypeRegistry = new BasicTypeRegistry();
-		// todo : add concept of Dialect contributed types
-		// add TypeContributor contributed types.
-		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
-			contributor.contribute( this );
+
+		{
+			final TypeContributions typeContributions = new TypeContributions() {
+				@Override
+				public void contributeType(org.hibernate.type.BasicType type) {
+					basicTypeRegistry.register( type );
+				}
+
+				@Override
+				public void contributeType(UserType type, String[] keys) {
+					basicTypeRegistry.register( type, keys );
+				}
+
+				@Override
+				public void contributeType(CompositeUserType type, String[] keys) {
+					basicTypeRegistry.register( type, keys );
+				}
+			};
+
+			// add Dialect contributed types
+			final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+			dialect.contributeTypes( typeContributions, serviceRegistry );
+
+			// add TypeContributor contributed types.
+			for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
+				contributor.contribute( typeContributions, serviceRegistry );
+			}
 		}
+
 		// add explicit application registered types
 		for ( org.hibernate.type.BasicType basicType : options.getBasicTypeRegistrations() ) {
 			basicTypeRegistry.register( basicType );
 		}
+
 		typeResolver = new TypeResolver( basicTypeRegistry );
 
 		processFilterDefinitions( metadataSourceProcessors );

@@ -23,19 +23,19 @@
  */
 package org.hibernate.metamodel.spi;
 
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BasicType;
+import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.UserType;
 
 /**
- * Contract for contributing types.
+ * Defines the target contributing types, whether via dialects or {@link TypeContributor}
  *
  * @author Steve Ebersole
  */
-public interface TypeContributor {
-	/**
-	 * Contribute types
-	 *
-	 * @param typeContributions The callback for adding contributed types
-	 * @param serviceRegistry The service registry
-	 */
-	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry);
+public interface TypeContributions {
+	public void contributeType(BasicType type);
+
+	public void contributeType(UserType type, String[] keys);
+
+	public void contributeType(CompositeUserType type, String[] keys);
 }

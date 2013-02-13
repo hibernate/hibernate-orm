@@ -22,7 +22,7 @@ package org.hibernate.spatial.dialect.postgis;
 
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.spatial.GeometrySqlTypeDescriptor;
 import org.hibernate.spatial.JTSGeometryType;
@@ -39,7 +39,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Karel Maesen
  */
-public class PostgisDialect extends PostgreSQLDialect implements SpatialDialect {
+public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialect {
 
 
 	public PostgisDialect() {

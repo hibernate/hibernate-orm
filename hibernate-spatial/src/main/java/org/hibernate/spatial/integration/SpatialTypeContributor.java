@@ -21,8 +21,9 @@
 
 package org.hibernate.spatial.integration;
 
-import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.TypeContributor;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.Log;
@@ -36,11 +37,11 @@ public class SpatialTypeContributor implements TypeContributor {
 
 	private static final Log LOG = LogFactory.make();
 
-	public void contribute(MetadataImplementor builder) {
+	@Override
+	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		LOG.info( "Registering JTSGeometryType" );
-		builder.getTypeResolver().registerTypeOverride( JTSGeometryType.INSTANCE );
-        LOG.info( "Registering GeolatteGeometryType" );
-		builder.getTypeResolver().registerTypeOverride( GeolatteGeometryType.INSTANCE );
+		typeContributions.contributeType( JTSGeometryType.INSTANCE );
+		LOG.info( "Registering GeolatteGeometryType" );
+		typeContributions.contributeType( GeolatteGeometryType.INSTANCE );
 	}
-
 }

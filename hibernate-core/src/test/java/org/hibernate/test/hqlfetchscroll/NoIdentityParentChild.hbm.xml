@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.hqlfetchscroll">
+	
+	<class name="Parent" table="Parents">
+		<id name="id">
+		    <generator class="native"/>
+		</id>
+		
+		<property name="name"/>
+		
+		<set name="children" cascade="all-delete-orphan" lazy="false">
+			<key column="parent_id"/>
+			<one-to-many class="Child"/>
+		</set>
+		
+	</class>
+	
+	<class name="Child" table="chlidren">
+		<id name="id">
+            <generator class="native"/>
+        </id>
+        
+        <property name="name"/>
+	</class>
+	
+
+</hibernate-mapping>

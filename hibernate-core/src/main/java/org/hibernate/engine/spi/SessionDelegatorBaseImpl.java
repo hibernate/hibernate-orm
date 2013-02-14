@@ -57,7 +57,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
-import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.CustomQuery;
@@ -180,12 +179,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public ScrollableResults scroll(CriteriaImpl criteria, ScrollMode scrollMode) {
+	public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode) {
 		return sessionImplementor.scroll( criteria, scrollMode );
 	}
 
 	@Override
-	public List list(CriteriaImpl criteria) {
+	public List list(Criteria criteria) {
 		return sessionImplementor.list( criteria );
 	}
 

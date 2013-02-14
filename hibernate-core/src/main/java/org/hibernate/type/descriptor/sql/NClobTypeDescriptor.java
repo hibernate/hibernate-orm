@@ -23,6 +23,7 @@
  */
 package org.hibernate.type.descriptor.sql;
 
+import java.sql.CallableStatement;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -42,27 +43,62 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Gail Badner
  */
 public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
+	@Override
+	public int getSqlType() {
+		return Types.NCLOB;
+	}
+
+	@Override
+	public boolean canBeRemapped() {
+		return true;
+	}
+	
+    protected abstract <X> BasicExtractor<X> getNClobExtractor(JavaTypeDescriptor<X> javaTypeDescriptor);
+	
+    @Override
+    public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+        return getNClobExtractor( javaTypeDescriptor );
+    }
+
+	protected abstract <X> BasicBinder<X> getNClobBinder(JavaTypeDescriptor<X> javaTypeDescriptor);
+
+	@Override
+    public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		return getNClobBinder( javaTypeDescriptor );
+	}
+
 
 	public static final NClobTypeDescriptor DEFAULT =
 			new NClobTypeDescriptor() {
-				public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+				@Override
+                public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 					return new BasicBinder<X>( javaTypeDescriptor, this ) {
 						@Override
 						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-							if ( options.useStreamForLobBinding() ) {
-								STREAM_BINDING.getNClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
-							}
-							else {
-								CLOB_BINDING.getNClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
-							}
+							getBinding( options ).getNClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
 						}
 					};
 				}
+				
+				@Override
+				public <X> BasicExtractor<X> getNClobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+				    return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+				        @Override
+				        protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+				        	return getBinding( options ).getNClobExtractor( javaTypeDescriptor ).doExtract( rs, name, options );
+				        }
+                    };
+				}
 			};
+			
+	private static final NClobTypeDescriptor getBinding( WrapperOptions options ) {
+		return options.useStreamForLobBinding() ? STREAM_BINDING : NCLOB_BINDING;
+	}
 
-	public static final NClobTypeDescriptor CLOB_BINDING =
+	public static final NClobTypeDescriptor NCLOB_BINDING =
 			new NClobTypeDescriptor() {
-				public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+				@Override
+                public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 					return new BasicBinder<X>( javaTypeDescriptor, this ) {
 						@Override
 						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
@@ -71,11 +107,24 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 						}
 					};
 				}
+				
+				@Override
+                public <X> BasicExtractor<X> getNClobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+				    return new BasicExtractor<X>(javaTypeDescriptor, this) {
+
+                        @Override
+                        protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+                            return javaTypeDescriptor.wrap( rs.getNClob( name ), options );
+                        }
+				        
+                    };
+				};
 			};
 
 	public static final NClobTypeDescriptor STREAM_BINDING =
 			new NClobTypeDescriptor() {
-				public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+				@Override
+                public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 					return new BasicBinder<X>( javaTypeDescriptor, this ) {
 						@Override
 						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
@@ -85,29 +134,17 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 						}
 					};
 				}
+                
+                @Override
+                public <X> BasicExtractor<X> getNClobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+                    return new BasicExtractor<X>(javaTypeDescriptor, this) {
+
+                        @Override
+                        protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+                            return javaTypeDescriptor.wrap( rs.getCharacterStream( name ), options );
+                        }
+                        
+                    };
+                };
 			};
-
-	protected abstract <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor);
-
-	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return getNClobBinder( javaTypeDescriptor );
-	}
-
-	public int getSqlType() {
-		return Types.CLOB;
-	}
-
-	@Override
-	public boolean canBeRemapped() {
-		return true;
-	}
-
-	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-			@Override
-			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getNClob( name ), options );
-			}
-		};
-	}
 }

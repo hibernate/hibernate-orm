@@ -11,6 +11,7 @@ import javax.transaction.TransactionManager;
 
 import org.junit.Test;
 
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -18,6 +19,7 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionEntity;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity1;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity2;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -32,6 +34,8 @@ import static org.junit.Assert.assertNotNull;
  * @author Erik-Berndt Scheper
  */
 @TestForIssue(jiraKey = "HHH-6349")
+@SkipForDialect(value = Oracle8iDialect.class,
+		comment = "Oracle does not support identity key generation")
 public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctionalTestCase {
 	private TransactionManager tm = null;
 

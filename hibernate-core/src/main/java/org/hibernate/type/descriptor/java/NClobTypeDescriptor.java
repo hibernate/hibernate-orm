@@ -23,10 +23,13 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.io.Reader;
 import java.io.Serializable;
 import java.sql.NClob;
+import java.sql.SQLException;
 import java.util.Comparator;
 
+import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.NClobImplementer;
 import org.hibernate.engine.jdbc.NClobProxy;
@@ -95,29 +98,33 @@ public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
 
 	@SuppressWarnings({ "unchecked" })
 	public <X> X unwrap(final NClob value, Class<X> type, WrapperOptions options) {
-		if ( ! ( NClob.class.isAssignableFrom( type ) || CharacterStream.class.isAssignableFrom( type ) ) ) {
-			throw unknownUnwrap( type );
-		}
-
 		if ( value == null ) {
 			return null;
 		}
 
-		if ( CharacterStream.class.isAssignableFrom( type ) ) {
-			if ( NClobImplementer.class.isInstance( value ) ) {
-				// if the incoming Clob is a wrapper, just pass along its CharacterStream
-				return (X) ( (NClobImplementer) value ).getUnderlyingStream();
+		try {
+			if ( CharacterStream.class.isAssignableFrom( type ) ) {
+				if ( NClobImplementer.class.isInstance( value ) ) {
+					// if the incoming NClob is a wrapper, just pass along its BinaryStream
+					return (X) ( (NClobImplementer) value ).getUnderlyingStream();
+				}
+				else {
+					// otherwise we need to build a BinaryStream...
+					return (X) new CharacterStreamImpl( DataHelper.extractString( value.getCharacterStream() ) );
+				}
 			}
-			else {
-				// otherwise we need to build one...
-				return (X) new CharacterStreamImpl( DataHelper.extractString( value ) );
+			else if (NClob.class.isAssignableFrom( type )) {
+				final NClob nclob =  WrappedNClob.class.isInstance( value )
+						? ( (WrappedNClob) value ).getWrappedNClob()
+						: value;
+				return (X) nclob;
 			}
 		}
-
-		final NClob clob =  WrappedNClob.class.isInstance( value )
-				? ( (WrappedNClob) value ).getWrappedNClob()
-				: value;
-		return (X) clob;
+		catch ( SQLException e ) {
+			throw new HibernateException( "Unable to access nclob stream", e );
+		}
+		
+		throw unknownUnwrap( type );
 	}
 
 	public <X> NClob wrap(X value, WrapperOptions options) {
@@ -125,10 +132,16 @@ public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
 			return null;
 		}
 
-		if ( ! NClob.class.isAssignableFrom( value.getClass() ) ) {
-			throw unknownWrap( value.getClass() );
+		// Support multiple return types from
+		// org.hibernate.type.descriptor.sql.ClobTypeDescriptor
+		if ( NClob.class.isAssignableFrom( value.getClass() ) ) {
+			return options.getLobCreator().wrap( (NClob) value );
+		}
+		else if ( Reader.class.isAssignableFrom( value.getClass() ) ) {
+			Reader reader = (Reader) value;
+			return options.getLobCreator().createNClob( DataHelper.extractString( reader ) );
 		}
 
-		return options.getLobCreator().wrap( (NClob) value );
+		throw unknownWrap( value.getClass() );
 	}
 }

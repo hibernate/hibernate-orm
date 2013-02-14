@@ -72,7 +72,13 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 
 		try {
 			Statement statement = jdbcCoord.getStatementPreparer().createStatement();
-			jdbcCoord.getResultSetReturn().execute( statement, "drop table SANDBOX_JDBC_TST if exists" );
+			String dropSql = getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
+			try {
+				jdbcCoord.getResultSetReturn().execute( statement, dropSql );
+			}
+			catch ( Exception e ) {
+				// ignore if the DB doesn't support "if exists" and the table doesn't exist
+			}
 			jdbcCoord.getResultSetReturn().execute( statement,
 					"create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
 			assertTrue( jdbcCoord.hasRegisteredResources() );

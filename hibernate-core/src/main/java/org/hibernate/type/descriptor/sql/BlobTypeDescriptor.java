@@ -96,27 +96,27 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 				@Override
                 public <X> BasicExtractor<X> getBlobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-						// For now, default to using getBlob.  If extraction
-						// should also check useStreamForLobBinding, add
-						// checks here and use STREAM_BINDING.
-						
 						@Override
 						protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-							return BLOB_BINDING.getExtractor( javaTypeDescriptor ).doExtract( rs, name, options );
+							return getBinding( options ).getExtractor( javaTypeDescriptor ).doExtract( rs, name, options );
 						}
 
 						@Override
 						protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-							return BLOB_BINDING.getExtractor( javaTypeDescriptor ).doExtract( statement, index, options );
+							return getBinding( options ).getExtractor( javaTypeDescriptor ).doExtract( statement, index, options );
 						}
 
 						@Override
 						protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-							return BLOB_BINDING.getExtractor( javaTypeDescriptor ).doExtract( statement, name, options );
+							return getBinding( options ).getExtractor( javaTypeDescriptor ).doExtract( statement, name, options );
 						}
 					};
 				}
 			};
+			
+	private static final BlobTypeDescriptor getBinding( WrapperOptions options ) {
+		return options.useStreamForLobBinding() ? STREAM_BINDING : BLOB_BINDING;
+	}
 
 	public static final BlobTypeDescriptor PRIMITIVE_ARRAY_BINDING =
 			new BlobTypeDescriptor() {

@@ -80,7 +80,13 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 
 		// set up some tables to use
 		Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
-		jdbcCoordinator.getResultSetReturn().execute( statement, "drop table SANDBOX_JDBC_TST if exists" );
+		String dropSql = getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
+		try {
+			jdbcCoordinator.getResultSetReturn().execute( statement, dropSql );
+		}
+		catch ( Exception e ) {
+			// ignore if the DB doesn't support "if exists" and the table doesn't exist
+		}
 		jdbcCoordinator.getResultSetReturn().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
 		assertTrue( jdbcCoordinator.hasRegisteredResources() );
 		assertTrue( logicalConnection.isPhysicallyConnected() );
@@ -138,8 +144,13 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 
 		// set up some tables to use
 		Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
-		jdbcCoordinator.getResultSetReturn().execute( statement, "drop table SANDBOX_JDBC_TST if exists" );
-		jdbcCoordinator.getResultSetReturn().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
+		String dropSql = getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
+		try {
+			jdbcCoordinator.getResultSetReturn().execute( statement, dropSql );
+		}
+		catch ( Exception e ) {
+			// ignore if the DB doesn't support "if exists" and the table doesn't exist
+		}		jdbcCoordinator.getResultSetReturn().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
 		assertTrue( jdbcCoordinator.hasRegisteredResources() );
 		assertTrue( logicalConnection.isPhysicallyConnected() );
 		jdbcCoordinator.release( statement );

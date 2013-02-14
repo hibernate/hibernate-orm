@@ -268,16 +268,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 	@Override
 	public String[] sqlDropStrings(Dialect dialect) {
-		StringBuilder buf = new StringBuilder( "drop table " );
-		if ( dialect.supportsIfExistsBeforeTableName() ) {
-			buf.append( "if exists " );
-		}
-		buf.append( getQualifiedName( dialect ) )
-				.append( dialect.getCascadeConstraintsString() );
-		if ( dialect.supportsIfExistsAfterTableName() ) {
-			buf.append( " if exists" );
-		}
-		return new String[] { buf.toString() };
+		return new String[] { dialect.getDropTableString( getQualifiedName( dialect ) ) };
 	}
 
 	@Override

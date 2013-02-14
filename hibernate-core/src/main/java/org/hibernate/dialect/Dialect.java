@@ -2011,6 +2011,18 @@ public abstract class Dialect implements ConversionContext {
 	public boolean supportsIfExistsAfterTableName() {
 		return false;
 	}
+	
+	public String getDropTableString( String tableName ) {
+		StringBuilder buf = new StringBuilder( "drop table " );
+		if ( supportsIfExistsBeforeTableName() ) {
+			buf.append( "if exists " );
+		}
+		buf.append( tableName ).append( getCascadeConstraintsString() );
+		if ( supportsIfExistsAfterTableName() ) {
+			buf.append( " if exists" );
+		}
+		return buf.toString();
+	}
 
 	/**
 	 * Does this dialect support column-level check constraints?

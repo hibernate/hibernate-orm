@@ -571,16 +571,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		StringBuilder buf = new StringBuilder( "drop table " );
-		if ( dialect.supportsIfExistsBeforeTableName() ) {
-			buf.append( "if exists " );
-		}
-		buf.append( getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
-				.append( dialect.getCascadeConstraintsString() );
-		if ( dialect.supportsIfExistsAfterTableName() ) {
-			buf.append( " if exists" );
-		}
-		return buf.toString();
+		return dialect.getDropTableString( getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
 	}
 
 	public PrimaryKey getPrimaryKey() {

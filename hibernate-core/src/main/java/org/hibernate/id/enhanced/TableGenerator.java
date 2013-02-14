@@ -571,14 +571,6 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 	@Override
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		StringBuilder sqlDropString = new StringBuilder().append( "drop table " );
-		if ( dialect.supportsIfExistsBeforeTableName() ) {
-			sqlDropString.append( "if exists " );
-		}
-		sqlDropString.append( tableName ).append( dialect.getCascadeConstraintsString() );
-		if ( dialect.supportsIfExistsAfterTableName() ) {
-			sqlDropString.append( " if exists" );
-		}
-		return new String[] { sqlDropString.toString() };
+		return new String[] { dialect.getDropTableString( tableName ) };
 	}
 }

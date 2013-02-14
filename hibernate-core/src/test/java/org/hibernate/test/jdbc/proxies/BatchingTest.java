@@ -31,6 +31,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
 import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
@@ -103,7 +104,13 @@ public class BatchingTest extends BaseUnitTestCase implements BatchKey {
 
 		// set up some tables to use
 		Statement statement = connection.createStatement();
-		statement.execute( "drop table SANDBOX_JDBC_TST if exists" );
+		String dropSql = Dialect.getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
+		try {
+			statement.execute( dropSql );
+		}
+		catch ( Exception e ) {
+			// ignore if the DB doesn't support "if exists" and the table doesn't exist
+		}
 		statement.execute( "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
 		assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
 		assertTrue( logicalConnection.isPhysicallyConnected() );
@@ -161,9 +168,16 @@ public class BatchingTest extends BaseUnitTestCase implements BatchKey {
 
 		// set up some tables to use
 		Statement statement = connection.createStatement();
-		statement.execute( "drop table SANDBOX_JDBC_TST if exists" );
+		String dropSql = Dialect.getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
+		try {
+			statement.execute( dropSql );
+		}
+		catch ( Exception e ) {
+			// ignore if the DB doesn't support "if exists" and the table doesn't exist
+		}
 		statement.execute( "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
 		assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
+
 		assertTrue( logicalConnection.isPhysicallyConnected() );
 		statement.close();
 		assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );

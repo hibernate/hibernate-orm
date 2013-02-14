@@ -26,7 +26,8 @@
   */
 package org.hibernate.test.annotations.manytoonewithformula;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -36,10 +37,9 @@ import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Sharath Reddy
@@ -155,8 +155,11 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = { HSQLDialect.class, SQLServer2005Dialect.class, Oracle8iDialect.class, DB2Dialect.class },
-			comment = "The used join conditions does not work in HSQLDB. See HHH-4497. And oracle/db2 do not support 'substring' function")
+	@SkipForDialects( {
+			@SkipForDialect( value = { HSQLDialect.class }, comment = "The used join conditions does not work in HSQLDB. See HHH-4497." ), 
+			@SkipForDialect( value = { SQLServer2005Dialect.class } ),
+			@SkipForDialect( value = { Oracle8iDialect.class }, comment = "Oracle/DB2 do not support 'substring' function" ),
+			@SkipForDialect( value = { DB2Dialect.class }, comment = "Oracle/DB2 do not support 'substring' function" ) } )
 	public void testManyToOneFromNonPkToNonPk() throws Exception {
 		// also tests usage of the stand-alone @JoinFormula annotation (i.e. not wrapped within @JoinColumnsOrFormulas)
 		Session s = openSession();

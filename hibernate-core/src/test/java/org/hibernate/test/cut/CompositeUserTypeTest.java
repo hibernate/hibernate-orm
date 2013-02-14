@@ -22,11 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cut;
+import static org.junit.Assert.assertEquals;
+
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
-
-import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
@@ -34,9 +34,9 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -78,7 +78,9 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
-    @SkipForDialect( value = {SybaseASE15Dialect.class, DB2Dialect.class}, jiraKey = "HHH-6788,HHH-6867")
+    @SkipForDialects( {
+    		@SkipForDialect ( value = { SybaseASE15Dialect.class }, jiraKey = "HHH-6788" ),
+    		@SkipForDialect ( value = { DB2Dialect.class }, jiraKey = "HHH-6867" ) } )
 	public void testCustomColumnReadAndWrite() {
 		Session s = openSession();
 		org.hibernate.Transaction t = s.beginTransaction();

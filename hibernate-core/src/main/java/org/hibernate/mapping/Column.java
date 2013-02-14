@@ -84,7 +84,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 	public void setName(String name) {
 		if (
-			name.charAt(0)=='`' ||
+			StringHelper.isNotEmpty( name ) &&
 			Dialect.QUOTE.indexOf( name.charAt(0) ) > -1 //TODO: deprecated, remove eventually
 		) {
 			quoted=true;

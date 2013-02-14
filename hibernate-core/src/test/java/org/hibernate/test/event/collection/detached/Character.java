@@ -23,17 +23,21 @@
  */
 package org.hibernate.test.event.collection.detached;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import java.util.ArrayList;
-import java.util.List;
+import javax.persistence.Table;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
+// "Character" is reserved in MySQL
+@Table( name = "CharacterTable" )
 public class Character implements Identifiable {
 	private Integer id;
 	private String name;

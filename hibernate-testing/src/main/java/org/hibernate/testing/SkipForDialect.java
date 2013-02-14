@@ -34,6 +34,8 @@ import org.hibernate.dialect.Dialect;
  * Annotation used to indicate that a test should be skipped when run against the
  * indicated dialects.
  *
+ * @see SkipForDialects
+ *
  * @author Hardy Ferentschik
  * @author Steve Ebersole
  */

@@ -6,10 +6,12 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionEntity;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity1;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity2;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
@@ -20,6 +22,8 @@ import static org.hibernate.envers.test.tools.TestTools.makeList;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-7437")
+@SkipForDialect(value = Oracle8iDialect.class,
+		comment = "Oracle does not support identity key generation")
 public class HasChangedDetachedMultipleCollection extends AbstractModifiedFlagsEntityTest {
 	private Long mce1Id = null;
 	private Long mce2Id = null;

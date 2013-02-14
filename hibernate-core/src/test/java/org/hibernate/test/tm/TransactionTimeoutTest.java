@@ -23,7 +23,8 @@
  */
 package org.hibernate.test.tm;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -35,9 +36,7 @@ import org.hibernate.test.jdbc.Person;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -79,7 +78,7 @@ public class TransactionTimeoutTest extends BaseCoreFunctionalTestCase {
 	public void testTransactionTimeoutSuccess() {
 		Session session = openSession();
 		Transaction transaction = session.getTransaction();
-		transaction.setTimeout( 5 );
+		transaction.setTimeout( 60 );
 		transaction.begin();
 		session.persist( new Person( "Lukasz", "Antoniak" ) );
 		transaction.commit();

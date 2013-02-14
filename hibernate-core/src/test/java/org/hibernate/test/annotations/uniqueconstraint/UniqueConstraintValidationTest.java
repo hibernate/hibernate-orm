@@ -8,8 +8,8 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -41,8 +41,8 @@ public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass(entity);
 		cfg.buildMappings();
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
-				.applySettings(cfg.getProperties()).build();
+		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder()
+				.applySettings(cfg.getProperties()).buildServiceRegistry();
 		cfg.buildSessionFactory(serviceRegistry);
 	}
 

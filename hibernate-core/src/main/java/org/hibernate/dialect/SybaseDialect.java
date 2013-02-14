@@ -50,4 +50,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
         return sqlCode == Types.BLOB ? BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING : super.getSqlTypeDescriptorOverride( sqlCode );
 	}
+	
+	@Override
+	public String getNullColumnString() {
+		return "null";
+	}
 }

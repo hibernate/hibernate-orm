@@ -121,10 +121,12 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 
 	/**
 	 * Adds missing aliases in provided SELECT clause and returns coma-separated list of them.
+	 * If query takes advantage of expressions like {@literal *} or {@literal {table}.*} inside SELECT clause,
+	 * method returns {@literal *}.
 	 *
 	 * @param sb SQL query.
 	 *
-	 * @return List of aliases separated with comas.
+	 * @return List of aliases separated with comas or {@literal *}.
 	 */
 	protected String fillAliasInSelectClause(StringBuilder sb) {
 		final List<String> aliases = new LinkedList<String>();
@@ -133,6 +135,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		int nextComa = startPos;
 		int prevComa = startPos;
 		int unique = 0;
+		boolean selectsMultipleColumns = false;
 
 		while ( nextComa != -1 ) {
 			prevComa = nextComa;
@@ -142,30 +145,51 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 			}
 			if ( nextComa != -1 ) {
 				String expression = sb.substring( prevComa, nextComa );
-				String alias = getAlias( expression );
-				if ( alias == null ) {
-					// Inserting alias. It is unlikely that we would have to add alias, but just in case.
-					alias = StringHelper.generateAlias( "page", unique );
-					sb.insert( nextComa, " as " + alias );
-					++unique;
-					nextComa += ( " as " + alias ).length();
+				if ( selectsMultipleColumns( expression ) ) {
+					selectsMultipleColumns = true;
 				}
-				aliases.add( alias );
+				else {
+					String alias = getAlias( expression );
+					if ( alias == null ) {
+						// Inserting alias. It is unlikely that we would have to add alias, but just in case.
+						alias = StringHelper.generateAlias( "page", unique );
+						sb.insert( nextComa, " as " + alias );
+						++unique;
+						nextComa += ( " as " + alias ).length();
+					}
+					aliases.add( alias );
+				}
 				++nextComa;
 			}
 		}
 		// Processing last column.
 		endPos = shallowIndexOfWord( sb, FROM, startPos ); // Refreshing end position, because we might have inserted new alias.
 		String expression = sb.substring( prevComa, endPos );
-		String alias = getAlias( expression );
-		if ( alias == null ) {
-			// Inserting alias. It is unlikely that we would have to add alias, but just in case.
-			alias = StringHelper.generateAlias( "page", unique );
-			sb.insert( endPos - 1, " as " + alias );
+		if ( selectsMultipleColumns( expression ) ) {
+			selectsMultipleColumns = true;
 		}
-		aliases.add( alias );
+		else {
+			String alias = getAlias( expression );
+			if ( alias == null ) {
+				// Inserting alias. It is unlikely that we would have to add alias, but just in case.
+				alias = StringHelper.generateAlias( "page", unique );
+				sb.insert( endPos - 1, " as " + alias );
+			}
+			aliases.add( alias );
+		}
 
-		return StringHelper.join( ", ", aliases.iterator() );
+		// In case of '*' or '{table}.*' expressions adding an alias breaks SQL syntax, returning '*'.
+		return selectsMultipleColumns ? "*" : StringHelper.join( ", ", aliases.iterator() );
+	}
+
+	/**
+	 * @param expression Select expression.
+	 *
+	 * @return {@code true} when expression selects multiple columns, {@code false} otherwise.
+	 */
+	private boolean selectsMultipleColumns(String expression) {
+		final String lastExpr = expression.trim().replaceFirst( "(?i)(.)*\\s", "" );
+		return "*".equals( lastExpr ) || lastExpr.endsWith( ".*" );
 	}
 
 	/**

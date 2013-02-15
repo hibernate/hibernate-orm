@@ -26,6 +26,8 @@ package org.hibernate.osgi;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 
@@ -37,11 +39,13 @@ import org.osgi.framework.Bundle;
  */
 public class OsgiClassLoader extends ClassLoader {
 
-	private HashMap<String, Bundle> bundles;
-
-	public OsgiClassLoader() {
-		bundles = new HashMap<String, Bundle>();
-	}
+	private Map<String, CachedBundle> bundles = new HashMap<String, CachedBundle>();
+	
+	private Map<String, Class<?>> classCache = new HashMap<String, Class<?>>();
+	
+	private Map<String, URL> resourceCache = new HashMap<String, URL>();
+	
+	private Map<String, Enumeration<URL>> resourceListCache = new HashMap<String, Enumeration<URL>>();
 
 	/**
 	 * Load the class and break on first found match.
@@ -51,16 +55,15 @@ public class OsgiClassLoader extends ClassLoader {
 	@SuppressWarnings("rawtypes")
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
-		// TODO: This is horrible -- we shouldn't iterate over all the
-		// classloaders every time we need to construct an entity, etc. Instead,
-		// keep references to all classes/resources found in active bundles
-		// in memory? Find a way to identify what we "care about" and keep
-		// only those? Discover them the first time and then cache the
-		// reference?
-		for ( Bundle bundle : bundles.values() ) {
+		if ( classCache.containsKey( name ) ) {
+			return classCache.get( name );
+		}
+		
+		for ( CachedBundle bundle : bundles.values() ) {
 			try {
 				Class clazz = bundle.loadClass( name );
 				if ( clazz != null ) {
+					classCache.put( name, clazz );
 					return clazz;
 				}
 			}
@@ -78,16 +81,15 @@ public class OsgiClassLoader extends ClassLoader {
 	 */
 	@Override
 	protected URL findResource(String name) {
-		// TODO: This is horrible -- we shouldn't iterate over all the
-		// classloaders every time we need to construct an entity, etc. Instead,
-		// keep references to all classes/resources found in active bundles
-		// in memory? Find a way to identify what we "care about" and keep
-		// only those? Discover them the first time and then cache the
-		// reference?
-		for ( Bundle bundle : bundles.values() ) {
+		if ( resourceCache.containsKey( name ) ) {
+			return resourceCache.get( name );
+		}
+		
+		for ( CachedBundle bundle : bundles.values() ) {
 			try {
 				URL resource = bundle.getResource( name );
 				if ( resource != null ) {
+					resourceCache.put( name, resource );
 					return resource;
 				}
 			}
@@ -106,16 +108,15 @@ public class OsgiClassLoader extends ClassLoader {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected Enumeration<URL> findResources(String name) {
-		// TODO: This is horrible -- we shouldn't iterate over all the
-		// classloaders every time we need to construct an entity, etc. Instead,
-		// keep references to all classes/resources found in active bundles
-		// in memory? Find a way to identify what we "care about" and keep
-		// only those? Discover them the first time and then cache the
-		// reference?
-		for ( Bundle bundle : bundles.values() ) {
+		if ( resourceListCache.containsKey( name ) ) {
+			return resourceListCache.get( name );
+		}
+		
+		for ( CachedBundle bundle : bundles.values() ) {
 			try {
 				Enumeration<URL> resources = bundle.getResources( name );
 				if ( resources != null ) {
+					resourceListCache.put( name, resources );
 					return resources;
 				}
 			}
@@ -132,11 +133,9 @@ public class OsgiClassLoader extends ClassLoader {
 	public void registerBundle(Bundle bundle) {
 		if ( bundle != null ) {
 			synchronized ( bundles ) {
-				// create a bundle classloader and add it to the list of
-				// classloaders
 				String key = getBundleKey( bundle );
 				if ( !bundles.containsKey( key ) ) {
-					bundles.put( key, bundle );
+					bundles.put( key, new CachedBundle( bundle, key ) );
 				}
 			}
 		}
@@ -148,17 +147,28 @@ public class OsgiClassLoader extends ClassLoader {
 	public void unregisterBundle(Bundle bundle) {
 		if ( bundle != null ) {
 			synchronized ( bundles ) {
-				// remove a bundle classloader for a given bundle
 				String key = getBundleKey( bundle );
 				if ( bundles.containsKey( key ) ) {
-					bundles.remove( key );
+					CachedBundle cachedBundle = bundles.remove( key );
+					clearCache( classCache, cachedBundle.getClassNames() );
+					clearCache( resourceCache, cachedBundle.getResourceNames() );
+					clearCache( resourceListCache, cachedBundle.getResourceListNames() );
 				}
 			}
 		}
 	}
 	
+	private void clearCache( Map cache, List<String> names ) {
+		for ( String name : names ) {
+			cache.remove( name );
+		}
+	}
+	
 	public void clear() {
 		bundles.clear();
+		classCache.clear();
+		resourceCache.clear();
+		resourceListCache.clear();
 	}
 
 	protected static String getBundleKey(Bundle bundle) {

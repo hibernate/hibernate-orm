@@ -228,7 +228,7 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	private String adjustTemplateReferences(String template) {
 		int templateLength = template.length();
 		int startPos = template.indexOf( Template.TEMPLATE );
-		while ( startPos < templateLength ) {
+		while ( startPos != -1 && startPos < templateLength ) {
 			int dotPos = startPos + TEMPLATE_MARKER_LENGTH;
 
 			// from here we need to seek the end of the qualified identifier
@@ -246,7 +246,7 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 			columnReferences.add( columnReference );
 
 			// prep for the next seek
-			startPos = ( pos - TEMPLATE_MARKER_LENGTH ) + 1;
+			startPos = template.indexOf( Template.TEMPLATE, ( pos - TEMPLATE_MARKER_LENGTH ) + 1 );
 			templateLength = template.length();
 		}
 

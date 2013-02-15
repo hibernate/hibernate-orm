@@ -917,10 +917,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			thread = Thread.currentThread();
 			contextClassLoader = thread.getContextClassLoader();
 			thread.setContextClassLoader( overridenClassLoader );
-			builder.withApplicationClassLoader( overridenClassLoader );
-			builder.withEnvironmentClassLoader( overridenClassLoader );
-			builder.withHibernateClassLoader( overridenClassLoader );
-			builder.withResourceClassLoader( overridenClassLoader );
+			builder.with( overridenClassLoader );
 		}
 
 		try {

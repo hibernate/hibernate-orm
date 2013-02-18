@@ -23,11 +23,14 @@
  */
 package org.hibernate.service;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 
 /**
@@ -40,10 +43,8 @@ import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
  */
 public class BootstrapServiceRegistryBuilder {
 	private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<Integrator>();
-	private ClassLoader applicationClassLoader;
-	private ClassLoader resourcesClassLoader;
-	private ClassLoader hibernateClassLoader;
-	private ClassLoader environmentClassLoader;
+	private List<ClassLoader> providedClassLoaders;
+	private ClassLoaderService providedClassLoaderService;
 
 	/**
 	 * Add an {@link Integrator} to be applied to the bootstrap registry.
@@ -61,23 +62,56 @@ public class BootstrapServiceRegistryBuilder {
 	 *
 	 * @param classLoader The class loader to use
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@link #with(ClassLoader)} instead
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
+	@Deprecated
 	public BootstrapServiceRegistryBuilder withApplicationClassLoader(ClassLoader classLoader) {
-		this.applicationClassLoader = classLoader;
+		return with( classLoader );
+	}
+
+	/**
+	 * Adds a provided {@link ClassLoader} for use in class-loading and resource-lookup
+	 *
+	 * @param classLoader The class loader to use
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public BootstrapServiceRegistryBuilder with(ClassLoader classLoader) {
+		if ( providedClassLoaders == null ) {
+			providedClassLoaders = new ArrayList<ClassLoader>();
+		}
+		providedClassLoaders.add( classLoader );
 		return this;
 	}
+
+
+	/**
+	 * Adds a provided {@link ClassLoaderService} for use in class-loading and resource-lookup
+	 *
+	 * @param classLoaderService The class loader to use
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public BootstrapServiceRegistryBuilder with(ClassLoaderService classLoaderService) {
+		providedClassLoaderService = classLoaderService;
+		return this;
+	}
+
 
 	/**
 	 * Applies the specified {@link ClassLoader} as the resource class loader for the bootstrap registry
 	 *
 	 * @param classLoader The class loader to use
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@link #with(ClassLoader)} instead
 	 */
+	@Deprecated
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public BootstrapServiceRegistryBuilder withResourceClassLoader(ClassLoader classLoader) {
-		this.resourcesClassLoader = classLoader;
-		return this;
+		return with( classLoader );
 	}
 
 	/**
@@ -85,11 +119,13 @@ public class BootstrapServiceRegistryBuilder {
 	 *
 	 * @param classLoader The class loader to use
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@link #with(ClassLoader)} instead
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
+	@Deprecated
 	public BootstrapServiceRegistryBuilder withHibernateClassLoader(ClassLoader classLoader) {
-		this.hibernateClassLoader = classLoader;
-		return this;
+		return with( classLoader );
 	}
 
 	/**
@@ -97,11 +133,13 @@ public class BootstrapServiceRegistryBuilder {
 	 *
 	 * @param classLoader The class loader to use
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@link #with(ClassLoader)} instead
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
+	@Deprecated
 	public BootstrapServiceRegistryBuilder withEnvironmentClassLoader(ClassLoader classLoader) {
-		this.environmentClassLoader = classLoader;
-		return this;
+		return with( classLoader );
 	}
 
 	/**
@@ -110,12 +148,12 @@ public class BootstrapServiceRegistryBuilder {
 	 * @return The built bootstrap registry
 	 */
 	public BootstrapServiceRegistry build() {
-		final ClassLoaderServiceImpl classLoaderService = new ClassLoaderServiceImpl(
-				applicationClassLoader,
-				resourcesClassLoader,
-				hibernateClassLoader,
-				environmentClassLoader
-		);
+		final ClassLoaderService classLoaderService;
+		if ( providedClassLoaderService == null ) {
+			classLoaderService = new ClassLoaderServiceImpl( providedClassLoaders );
+		} else {
+			classLoaderService = providedClassLoaderService;
+		}
 
 		final IntegratorServiceImpl integratorService = new IntegratorServiceImpl(
 				providedIntegrators,

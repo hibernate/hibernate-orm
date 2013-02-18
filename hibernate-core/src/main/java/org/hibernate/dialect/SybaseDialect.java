@@ -53,6 +53,6 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	
 	@Override
 	public String getNullColumnString() {
-		return "null";
+		return " null";
 	}
 }

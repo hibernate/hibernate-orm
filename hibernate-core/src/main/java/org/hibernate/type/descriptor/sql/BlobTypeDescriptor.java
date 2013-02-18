@@ -81,12 +81,12 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 						@Override
 						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 							BlobTypeDescriptor descriptor = BLOB_BINDING;
-							if ( options.useStreamForLobBinding() ) {
-								descriptor = STREAM_BINDING;
-							}
-							else if ( byte[].class.isInstance( value ) ) {
+							if ( byte[].class.isInstance( value ) ) {
 								// performance shortcut for binding BLOB data in byte[] format
 								descriptor = PRIMITIVE_ARRAY_BINDING;
+							}
+							else if ( options.useStreamForLobBinding() ) {
+								descriptor = STREAM_BINDING;
 							}
 							descriptor.getBlobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
 						}
@@ -115,7 +115,11 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 			};
 			
 	private static final BlobTypeDescriptor getBinding( WrapperOptions options ) {
-		return options.useStreamForLobBinding() ? STREAM_BINDING : BLOB_BINDING;
+		// TODO: STREAM_BINDING causes multiple tests to fail on oracle and
+		// mssql.  The extracted blob is not the same size as what was persisted.
+		// For now, rely only on BLOB_BINDING.  SEe HHH-8018.
+//		return options.useStreamForLobBinding() ? STREAM_BINDING : BLOB_BINDING;
+		return BLOB_BINDING;
 	}
 
 	public static final BlobTypeDescriptor PRIMITIVE_ARRAY_BINDING =

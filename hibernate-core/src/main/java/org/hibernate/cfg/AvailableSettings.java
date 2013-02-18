@@ -495,6 +495,14 @@ public interface AvailableSettings {
 	public static final String NON_CONTEXTUAL_LOB_CREATION = "hibernate.jdbc.lob.non_contextual_creation";
 
 	/**
+	 * Used to define a {@link java.util.Collection} of the {@link ClassLoader} instances Hibernate should use for
+	 * class-loading and resource-lookups.
+	 *
+	 * @since 4.2
+	 */
+	public static final String CLASSLOADERS = "hibernate.classLoaders";
+
+	/**
 	 * Names the {@link ClassLoader} used to load user application classes.
 	 * @since 4.0
 	 */

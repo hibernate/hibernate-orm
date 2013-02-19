@@ -107,11 +107,11 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 		try {
 			if ( CharacterStream.class.isAssignableFrom( type ) ) {
 				if ( ClobImplementer.class.isInstance( value ) ) {
-					// if the incoming Clob is a wrapper, just pass along its BinaryStream
+					// if the incoming Clob is a wrapper, just pass along its CharacterStream
 					return (X) ( (ClobImplementer) value ).getUnderlyingStream();
 				}
 				else {
-					// otherwise we need to build a BinaryStream...
+					// otherwise we need to build a CharacterStream...
 					return (X) new CharacterStreamImpl( DataHelper.extractString( value.getCharacterStream() ) );
 				}
 			}

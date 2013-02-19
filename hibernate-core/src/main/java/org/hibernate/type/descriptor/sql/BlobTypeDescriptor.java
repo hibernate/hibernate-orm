@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.engine.jdbc.BinaryStream;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -56,11 +57,24 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 		return true;
 	}
 
-	protected abstract <X> BasicExtractor<X> getBlobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor);
-
 	@Override
-	public <X> BasicExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return getBlobExtractor( javaTypeDescriptor );
+	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+			@Override
+			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( rs.getBlob( name ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getBlob( index ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getBlob( name ), options );
+			}
+		};
 	}
 
 	protected abstract <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor);
@@ -92,35 +106,7 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 						}
 					};
 				}
-
-				@Override
-                public <X> BasicExtractor<X> getBlobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-							return getBinding( options ).getExtractor( javaTypeDescriptor ).doExtract( rs, name, options );
-						}
-
-						@Override
-						protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-							return getBinding( options ).getExtractor( javaTypeDescriptor ).doExtract( statement, index, options );
-						}
-
-						@Override
-						protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-							return getBinding( options ).getExtractor( javaTypeDescriptor ).doExtract( statement, name, options );
-						}
-					};
-				}
 			};
-			
-	private static final BlobTypeDescriptor getBinding( WrapperOptions options ) {
-		// TODO: STREAM_BINDING causes multiple tests to fail on oracle and
-		// mssql.  The extracted blob is not the same size as what was persisted.
-		// For now, rely only on BLOB_BINDING.  SEe HHH-8018.
-//		return options.useStreamForLobBinding() ? STREAM_BINDING : BLOB_BINDING;
-		return BLOB_BINDING;
-	}
 
 	public static final BlobTypeDescriptor PRIMITIVE_ARRAY_BINDING =
 			new BlobTypeDescriptor() {
@@ -131,26 +117,6 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 						public void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 								throws SQLException {
 							st.setBytes( index, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
-						}
-					};
-				}
-
-				@Override
-                public <X> BasicExtractor<X> getBlobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-							return javaTypeDescriptor.wrap( rs.getBytes( name ), options );
-						}
-
-						@Override
-						protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-							return javaTypeDescriptor.wrap( statement.getBytes( index ), options );
-						}
-
-						@Override
-						protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-							return javaTypeDescriptor.wrap( statement.getBytes( name ), options );
 						}
 					};
 				}
@@ -168,26 +134,6 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 						}
 					};
 				}
-
-				@Override
-                public <X> BasicExtractor<X> getBlobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-							return javaTypeDescriptor.wrap( rs.getBlob( name ), options );
-						}
-
-						@Override
-						protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-							return javaTypeDescriptor.wrap( statement.getBlob( index ), options );
-						}
-
-						@Override
-						protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-							return javaTypeDescriptor.wrap( statement.getBlob( name ), options );
-						}
-					};
-				}
 			};
 
 	public static final BlobTypeDescriptor STREAM_BINDING =
@@ -200,28 +146,6 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 								throws SQLException {
 							final BinaryStream binaryStream = javaTypeDescriptor.unwrap( value, BinaryStream.class, options );
 							st.setBinaryStream( index, binaryStream.getInputStream(), binaryStream.getLength() );
-						}
-					};
-				}
-
-				@Override
-                public <X> BasicExtractor<X> getBlobExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-							return javaTypeDescriptor.wrap( rs.getBinaryStream( name ), options );
-						}
-
-						@Override
-						protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-							// TODO: CallableStatement does not have getBinaryStream
-							return javaTypeDescriptor.wrap( statement.getBytes( index ), options );
-						}
-
-						@Override
-						protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-							// TODO: CallableStatement does not have getBinaryStream
-							return javaTypeDescriptor.wrap( statement.getBytes( name ), options );
 						}
 					};
 				}

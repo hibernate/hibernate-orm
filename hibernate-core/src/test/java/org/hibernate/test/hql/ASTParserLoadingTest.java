@@ -49,6 +49,7 @@ import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -77,6 +78,7 @@ import org.hibernate.test.cid.Order;
 import org.hibernate.test.cid.Product;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -483,6 +485,33 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.delete( h );
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-2045" )
+	@RequiresDialect( H2Dialect.class )
+	public void testEmptyInList() {
+		Session session = openSession();
+		session.beginTransaction();
+		Human human = new Human();
+		human.setName( new Name( "Lukasz", null, "Antoniak" ) );
+		human.setNickName( "NONE" );
+		session.save( human );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		List results = session.createQuery( "from Human h where h.nickName in ()" ).list();
+		assertEquals( 0, results.size() );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		session.delete( human );
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test

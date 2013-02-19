@@ -73,7 +73,7 @@ import org.hibernate.type.Type;
  * @see TableHiLoGenerator
  * @author Gavin King
  * 
- * @deprecate use {@link SequenceStyleGenerator} instead.
+ * @deprecated use {@link SequenceStyleGenerator} instead.
  */
 @Deprecated
 public class TableGenerator implements PersistentIdentifierGenerator, Configurable {

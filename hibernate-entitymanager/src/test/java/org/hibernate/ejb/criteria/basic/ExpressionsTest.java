@@ -23,10 +23,13 @@
  */
 package org.hibernate.ejb.criteria.basic;
 
+import static org.junit.Assert.assertEquals;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -35,18 +38,18 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.Query;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Phone;
 import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.Product_;
 import org.hibernate.internal.AbstractQueryImpl;
-
-import static org.junit.Assert.assertEquals;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests that various expressions operate as expected
@@ -93,6 +96,21 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		criteria.where( builder.and() );
 		List<Product> result = em.createQuery( criteria ).getResultList();
 		assertEquals( 1, result.size() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-6876" )
+	@RequiresDialect( H2Dialect.class )
+	public void testEmptyInList() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		Root<Product> from = criteria.from( Product.class );
+		criteria.where( from.get( Product_.partNumber ).in() ); // empty IN list
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals( 0, result.size() );
 		em.getTransaction().commit();
 		em.close();
 	}

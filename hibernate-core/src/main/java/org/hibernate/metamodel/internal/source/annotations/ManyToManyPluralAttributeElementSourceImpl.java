@@ -36,6 +36,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
@@ -47,18 +48,24 @@ import org.jboss.jandex.AnnotationInstance;
  * @author Brett Meyer
  */
 public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPluralAttributeElementSource {
-	
+
+	private final AttributeSource ownerAttributeSource;
 	private final PluralAssociationAttribute associationAttribute;
 	private final List<RelationalValueSource> relationalValueSources
 			= new ArrayList<RelationalValueSource>();
 	private final Collection<String> referencedColumnNames
 			= new HashSet<String>();
 	private final Iterable<CascadeStyle> cascadeStyles;
+	private final boolean isUnique;
 
 	public ManyToManyPluralAttributeElementSourceImpl(
-			PluralAssociationAttribute associationAttribute) {
+			AttributeSource ownerAttributeSource,
+			PluralAssociationAttribute associationAttribute,
+			boolean isUnique) {
+		this.ownerAttributeSource = ownerAttributeSource;
 		this.associationAttribute = associationAttribute;
-		
+		this.isUnique = isUnique;
+
 		for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
 			relationalValueSources.add( new ColumnSourceImpl( 
 					associationAttribute, null, column ) );
@@ -123,8 +130,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public boolean isUnique() {
-		// TODO
-		return false;
+		return isUnique;
 	}
 
 	@Override

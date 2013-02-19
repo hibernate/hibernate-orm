@@ -39,6 +39,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
@@ -48,6 +49,7 @@ import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.Sortable;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
+import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
 /**
  * @author Hardy Ferentschik
@@ -55,23 +57,31 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderable, Sortable {
 
 	private final PluralAssociationAttribute associationAttribute;
+	private final ConfiguredClass entityClass;
 	private final Nature nature;
 	private final ExplicitHibernateTypeSource typeSource;
 	private final PluralAttributeKeySource keySource;
-	private final PluralAttributeElementSource elementSource;
 	private final FilterSource[] filterSources;
+
+	// If it is not the owner side (i.e., mappedBy != null), then the AttributeSource
+	// for the owner is required to determine elementSource.
+	private PluralAttributeElementSource elementSource;
+
 	public PluralAttributeSourceImpl(
 			final PluralAssociationAttribute associationAttribute,
 			final ConfiguredClass entityClass ) {
 		this.associationAttribute = associationAttribute;
+		this.entityClass = entityClass;
 		this.keySource = new PluralAttributeKeySourceImpl( associationAttribute );
 		this.typeSource = new ExplicitHibernateTypeSourceImpl( associationAttribute );
 		this.nature = associationAttribute.getPluralAttributeNature();
-		this.elementSource = determineElementSource( associationAttribute, entityClass );
+		if ( associationAttribute.getMappedBy() == null ) {
+			this.elementSource = determineOwnerElementSource( this, associationAttribute, entityClass );
+		}
 		this.filterSources = determineFilterSources(associationAttribute);
 	}
 
-	private FilterSource[] determineFilterSources(PluralAssociationAttribute associationAttribute) {
+	private static FilterSource[] determineFilterSources(PluralAssociationAttribute associationAttribute) {
 		AnnotationInstance filtersAnnotation = JandexHelper.getSingleAnnotation(
 				associationAttribute.annotations(),
 				HibernateDotNames.FILTERS
@@ -108,6 +118,9 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	@Override
 	public PluralAttributeElementSource getElementSource() {
+		if ( elementSource == null ) {
+			throw new IllegalStateException( "elementSource has not been initialized yet." );
+		}
 		return elementSource;
 	}
 
@@ -119,6 +132,23 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	@Override
 	public int getBatchSize() {
 		return associationAttribute.getBatchSize();
+	}
+
+	public static boolean usesJoinTable(AttributeSource ownerAttributeSource) {
+		return ownerAttributeSource.isSingular() ?
+				( (ToOneAttributeSource) ownerAttributeSource ).getContainingTableName() != null :
+				( (PluralAttributeSource) ownerAttributeSource ).usesJoinTable();
+	}
+
+	public boolean usesJoinTable() {
+		if ( associationAttribute.getMappedBy() != null ) {
+			throw new IllegalStateException( "Cannot determine if a join table is used because plural attribute is not the owner." );
+		}
+		// By default, a unidirectional one-to-many (i.e., with mappedBy == null) uses a join table,
+		// unless it has join columns defined.
+		return associationAttribute.getJoinTableAnnotation() != null ||
+				( associationAttribute.getJoinTableAnnotation() == null &&
+						associationAttribute.getJoinColumnValues().size() == 0 );
 	}
 
 	@Override
@@ -133,14 +163,19 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		}
 	}
 
-	private static PluralAttributeElementSource determineElementSource(PluralAssociationAttribute associationAttribute, ConfiguredClass entityClass) {
+	private static PluralAttributeElementSource determineOwnerElementSource(
+			AttributeSource ownerAttributeSource,
+			PluralAssociationAttribute associationAttribute,
+			ConfiguredClass entityClass) {
 		switch ( associationAttribute.getNature() ) {
 			case MANY_TO_MANY:
-				return new ManyToManyPluralAttributeElementSourceImpl( associationAttribute );
+				return new ManyToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, false );
 			case MANY_TO_ANY:
 				return new ManyToAnyPluralAttributeElementSourceImpl( associationAttribute );
 			case ONE_TO_MANY:
-				return new OneToManyPluralAttributeElementSourceImpl( associationAttribute );
+				return usesJoinTable( ownerAttributeSource ) ?
+						new ManyToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, true ) :
+						new OneToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute );
 			case ELEMENT_COLLECTION_BASIC:
 				return new BasicPluralAttributeElementSourceImpl( associationAttribute );
 			case ELEMENT_COLLECTION_EMBEDDABLE: {
@@ -300,7 +335,21 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		return associationAttribute.getFetchStyle();
 	}
 
-
+	@Override
+	public PluralAttributeElementSource resolvePluralAttributeElementSource(
+			PluralAttributeElementSourceResolutionContext context) {
+		if ( associationAttribute.getMappedBy() == null ) {
+			return elementSource;
+		}
+		else {
+			AttributeSource ownerAttributeSource = context.resolveAttributeSource(
+					associationAttribute.getReferencedEntityType(),
+					associationAttribute.getMappedBy()
+			);
+			elementSource = determineOwnerElementSource( ownerAttributeSource, associationAttribute, entityClass );
+			return elementSource;
+		}
+	}
 }
 
 

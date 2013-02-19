@@ -26,12 +26,12 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.Collections;
 import java.util.Map;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbFilterElement;
 import org.hibernate.jaxb.spi.hbm.PluralAttributeElement;
 import org.hibernate.metamodel.spi.binding.Caching;
@@ -160,6 +160,34 @@ public abstract class AbstractPluralAttributeSourceImpl
 					"Unexpected collection element type : " + pluralAttributeElement.getName(),
 					bindingContext().getOrigin()
 			);
+		}
+	}
+
+	@Override
+	public PluralAttributeElementSource resolvePluralAttributeElementSource(PluralAttributeElementSourceResolutionContext context) {
+		return elementSource;
+	}
+
+	@Override
+	public boolean usesJoinTable() {
+		switch ( elementSource.getNature() ) {
+			case BASIC:
+			case AGGREGATE:
+			case ONE_TO_MANY:
+				return false;
+			case MANY_TO_MANY:
+				return true;
+			case MANY_TO_ANY:
+				throw new NotYetImplementedException(
+						String.format( "%s is not implemented yet.", elementSource.getNature() )
+				);
+			default:
+				throw new AssertionFailure(
+						String.format(
+								"Unexpected plural attribute element source nature: %s",
+								elementSource.getNature()
+						)
+				);
 		}
 	}
 

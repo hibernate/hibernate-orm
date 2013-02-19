@@ -136,6 +136,7 @@ import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.JoinedSubclassEntitySource;
+import org.hibernate.metamodel.spi.source.PluralAttributeElementSourceResolver;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
@@ -1391,6 +1392,16 @@ public class Binder {
 			final AttributeBindingContainer attributeBindingContainer,
 			final PluralAttributeSource attributeSource) {
 		final PluralAttributeSource.Nature nature = attributeSource.getNature();
+		if ( attributeSource.getMappedBy() != null ) {
+			attributeSource.resolvePluralAttributeElementSource(
+					new PluralAttributeElementSourceResolver.PluralAttributeElementSourceResolutionContext() {
+						@Override
+						public AttributeSource resolveAttributeSource(String referencedEntityName, String mappedBy) {
+							return attributeSource( referencedEntityName, mappedBy );
+						}
+					}
+			);
+		}
 		final PluralAttribute attribute =
 				attributeBindingContainer.getAttributeContainer().locatePluralAttribute( attributeSource.getName() );
 		final AbstractPluralAttributeBinding attributeBinding;
@@ -1890,6 +1901,13 @@ public class Binder {
 						true
 				)
 		);
+		if ( elementSource.isUnique() ) {
+			for ( RelationalValueBinding relationalValueBinding : elementBinding.getRelationalValueBindings() ) {
+				if ( ! relationalValueBinding.isDerived() )  {
+					( (Column) relationalValueBinding.getValue() ).setUnique( true );
+				}
+			}
+		}
 		if ( !elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().isInverse() &&
 				!elementBinding.hasDerivedValue() ) {
 			locateOrCreateForeignKey(
@@ -3038,6 +3056,10 @@ public class Binder {
 				.createSyntheticSingularAttribute( attributeSource.getName() )
 				: attributeBindingContainer.getAttributeContainer()
 				.createSingularAttribute( attributeSource.getName() );
+	}
+
+	private AttributeSource attributeSource(final String entityName, final String attributeName) {
+		return attributeSourcesByName.get( attributeSourcesByNameKey( entityName, attributeName ) );
 	}
 
 	private static String attributeSourcesByNameKey(

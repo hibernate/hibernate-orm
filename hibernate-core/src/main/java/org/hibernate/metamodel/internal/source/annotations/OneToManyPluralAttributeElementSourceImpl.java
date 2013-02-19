@@ -27,15 +27,20 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
+import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
 
 /**
  * @author Hardy Ferentschik
  */
 public class OneToManyPluralAttributeElementSourceImpl implements OneToManyPluralAttributeElementSource {
+	private final AttributeSource ownerAttributeSource;
 	private final PluralAssociationAttribute associationAttribute;
 
-	public OneToManyPluralAttributeElementSourceImpl(PluralAssociationAttribute associationAttribute) {
+	public OneToManyPluralAttributeElementSourceImpl(
+			AttributeSource ownerAttributeSource,
+			PluralAssociationAttribute associationAttribute) {
+		this.ownerAttributeSource = ownerAttributeSource;
 		this.associationAttribute = associationAttribute;
 	}
 

@@ -49,6 +49,7 @@ public class EntityWithUnidirectionalOneToMany {
 	}
 
 	@OneToMany
+	@JoinColumn
 	public Collection<ReferencedEntity> getTheBag() {
 		return theBag;
 	}

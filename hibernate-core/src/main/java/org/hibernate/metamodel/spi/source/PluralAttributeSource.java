@@ -36,7 +36,7 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
  * @author Steve Ebersole
  */
 public interface PluralAttributeSource
-		extends AttributeSource, FetchableAttributeSource {
+		extends AttributeSource, FetchableAttributeSource, PluralAttributeElementSourceResolver {
 	public Nature getNature();
 
 	public PluralAttributeKeySource getKeySource();
@@ -76,6 +76,8 @@ public interface PluralAttributeSource
 	public String getMappedBy();
 
 	public int getBatchSize();
+
+	public boolean usesJoinTable();
 
 	/**
 	 * Describes the nature of the collection itself as declared by the metadata.

@@ -35,15 +35,13 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.jpa.test.metamodel.*;
+import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.Query;
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.jpa.test.metamodel.Phone;
-import org.hibernate.jpa.test.metamodel.Product;
-import org.hibernate.jpa.test.metamodel.Product_;
 import org.hibernate.internal.AbstractQueryImpl;
 
 import static org.junit.Assert.assertEquals;
@@ -79,7 +77,43 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	public void cleanupTestData() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		em.remove( em.find( Product.class, "product1" ) );
+		em.remove(em.find(Product.class, "product1"));
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-7985" )
+	public void testEqualByPrimitiveLong() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		Root<Product> mainRoot = criteria.from(Product.class);
+		criteria.select(mainRoot);
+		criteria.where( builder.equal( mainRoot.get( "partNumber" ).as( Long.class ), 20L ) );
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals(0, result.size());
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-7985" )
+	public void testComplexExpression() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Song> criteriaQuery = builder.createQuery(Song.class);
+		Root<Song> mainRoot = criteriaQuery.from(Song.class);
+		criteriaQuery.select(mainRoot);
+		Predicate predicate1 = builder.equal(mainRoot.get("totalDownloads").as(Long.class), 20L);
+		Predicate predicate2 = builder.equal(mainRoot.get("weight").as(Float.class), 10.00f);
+		Predicate firstOr = builder.or(predicate1, predicate2);
+		Predicate predicate3 = builder.equal(mainRoot.get("price").as(double.class), 20.00d);
+		Predicate predicate4 = builder.equal(mainRoot.get("type"), Song.Type.PRAISE);
+		Predicate secondOr = builder.or(predicate4, predicate3);
+		Predicate finalPredicate = builder.and(firstOr, secondOr);
+		criteriaQuery.where(finalPredicate);
+		em.createQuery(criteriaQuery).getResultList();
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -88,8 +122,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	public void testEmptyConjunction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
-		criteria.from( Product.class );
+		CriteriaQuery<Product> criteria = builder.createQuery(Product.class);
+		criteria.from(Product.class);
 		criteria.where( builder.and() );
 		List<Product> result = em.createQuery( criteria ).getResultList();
 		assertEquals( 1, result.size() );

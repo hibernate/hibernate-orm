@@ -98,6 +98,24 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[]{WithPrimitiveLongEntity.class};
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7985")
+	public void testFilterByPrimitiveLong() {
+		Session session = openSession();
+		session.beginTransaction();
+		session.createCriteria(WithPrimitiveLongEntity.class)
+				.add(Restrictions.eq("longValue", 20L))
+				.list();
+
+		session.getTransaction().commit();
+		session.close();
+	}
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-7209" )
 	public void testVarargJunctionSyntax() {

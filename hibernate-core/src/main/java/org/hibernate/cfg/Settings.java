@@ -96,6 +96,8 @@ public final class Settings {
 	private MultiTableBulkIdStrategy multiTableBulkIdStrategy;
 	private BatchFetchStyle batchFetchStyle;
 	private boolean directReferenceCacheEntriesEnabled;
+	
+	private boolean jtaTrackByThread;
 
 
 	/**
@@ -507,5 +509,13 @@ public final class Settings {
 
 	void setDefaultNullPrecedence(NullPrecedence defaultNullPrecedence) {
 		this.defaultNullPrecedence = defaultNullPrecedence;
+	}
+
+	public boolean isJtaTrackByThread() {
+		return jtaTrackByThread;
+	}
+
+	public void setJtaTrackByThread(boolean jtaTrackByThread) {
+		this.jtaTrackByThread = jtaTrackByThread;
 	}
 }

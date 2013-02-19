@@ -395,6 +395,16 @@ public class SettingsFactory implements Serializable {
 		}
 		settings.setInitializeLazyStateOutsideTransactions( initializeLazyStateOutsideTransactionsEnabled );
 
+		boolean jtaTrackByThread = ConfigurationHelper.getBoolean(
+				AvailableSettings.JTA_TRACK_BY_THREAD,
+				properties,
+				true
+		);
+		if ( debugEnabled ) {
+			LOG.debugf( "JTA Track by Thread: %s", enabledDisabled(jtaTrackByThread) );
+		}
+		settings.setJtaTrackByThread( jtaTrackByThread );
+
 		return settings;
 
 	}

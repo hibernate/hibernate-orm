@@ -23,6 +23,15 @@
  */
 package org.hibernate.test.hql;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -34,9 +43,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.jboss.logging.Logger;
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -87,15 +93,8 @@ import org.hibernate.transform.Transformers;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
-
-import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.jboss.logging.Logger;
+import org.junit.Test;
 
 /**
  * Tests the integration of the new AST parser into the loading of query results using
@@ -547,6 +546,75 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		s.createQuery( "delete Human" ).executeUpdate();
 		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-4150" )
+	public void testSelectClauseCaseWithSum() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Human h1 = new Human();
+		h1.setBodyWeight( 74.0f );
+		h1.setDescription( "Me" );
+		s.persist( h1 );
+
+		Human h2 = new Human();
+		h2.setBodyWeight( 125.0f );
+		h2.setDescription( "big persion #1" );
+		s.persist( h2 );
+
+		Human h3 = new Human();
+		h3.setBodyWeight( 110.0f );
+		h3.setDescription( "big persion #2" );
+		s.persist( h3 );
+
+		s.flush();
+
+		Number count = (Number) s.createQuery( "select sum(case when bodyWeight > 100 then 1 else 0 end) from Human" ).uniqueResult();
+		assertEquals( 2, count.intValue() );
+		count = (Number) s.createQuery( "select sum(case when bodyWeight > 100 then bodyWeight else 0 end) from Human" ).uniqueResult();
+		assertEquals( h2.getBodyWeight() + h3.getBodyWeight(), count.floatValue(), 0.001 );
+
+		t.rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-4150" )
+	public void testSelectClauseCaseWithCountDistinct() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Human h1 = new Human();
+		h1.setBodyWeight( 74.0f );
+		h1.setDescription( "Me" );
+		h1.setNickName( "Oney" );
+		s.persist( h1 );
+
+		Human h2 = new Human();
+		h2.setBodyWeight( 125.0f );
+		h2.setDescription( "big persion" );
+		h2.setNickName( "big #1" );
+		s.persist( h2 );
+
+		Human h3 = new Human();
+		h3.setBodyWeight( 110.0f );
+		h3.setDescription( "big persion" );
+		h3.setNickName( "big #2" );
+		s.persist( h3 );
+
+		s.flush();
+
+		Number count = (Number) s.createQuery( "select count(distinct case when bodyWeight > 100 then description else null end) from Human" ).uniqueResult();
+		assertEquals( 1, count.intValue() );
+		count = (Number) s.createQuery( "select count(case when bodyWeight > 100 then description else null end) from Human" ).uniqueResult();
+		assertEquals( 2, count.intValue() );
+		count = (Number) s.createQuery( "select count(distinct case when bodyWeight > 100 then nickName else null end) from Human" ).uniqueResult();
+		assertEquals( 2, count.intValue() );
+
+		t.rollback();
 		s.close();
 	}
 

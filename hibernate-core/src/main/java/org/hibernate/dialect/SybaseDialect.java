@@ -26,6 +26,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 
@@ -48,7 +49,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-        return sqlCode == Types.BLOB ? BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING : super.getSqlTypeDescriptorOverride( sqlCode );
+		switch (sqlCode) {
+		case Types.BLOB:
+			return BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
+		case Types.CLOB:
+			// Some Sybase drivers cannot support getClob.  See HHH-7889
+			return ClobTypeDescriptor.STREAM_BINDING_EXTRACTING;
+		default:
+			return super.getSqlTypeDescriptorOverride( sqlCode );
+		}
 	}
 	
 	@Override

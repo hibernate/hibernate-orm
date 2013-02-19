@@ -28,6 +28,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.Proxy;
 import org.hibernate.envers.Audited;
@@ -39,6 +40,8 @@ import org.hibernate.envers.NotAudited;
 @Entity
 @Audited
 @Proxy(lazy=false)
+// Class name is too long of an identifier for Oracle.
+@Table(name = "EdOneToOne")
 public final class BidirectionalEagerAnnotationRefEdOneToOne {
 	/**
 	 * ID column.

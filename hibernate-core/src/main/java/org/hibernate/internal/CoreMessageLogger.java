@@ -1609,4 +1609,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	)
 	void embedXmlAttributesNoLongerSupported();
 
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Explicit use of UPGRADE_SKIPLOCKED in lock() calls is not recommended; use normal UPGRADE locking instead",
+			id = 447
+	)
+	void explicitSkipLockedLockCombo();
+
 }

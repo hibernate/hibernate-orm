@@ -25,6 +25,8 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.TransientObjectException;
@@ -36,6 +38,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LockEvent;
 import org.hibernate.event.spi.LockEventListener;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -46,7 +49,13 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class DefaultLockEventListener extends AbstractLockUpgradeEventListener implements LockEventListener {
 
-	/** Handle the given lock event.
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			DefaultLockEventListener.class.getName()
+	);
+
+	/**
+	 * Handle the given lock event.
 	 *
 	 * @param event The lock event to be handled.
 	 * @throws HibernateException
@@ -59,6 +68,10 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 
 		if ( event.getLockMode() == LockMode.WRITE ) {
 			throw new HibernateException( "Invalid lock mode for lock()" );
+		}
+
+		if ( event.getLockMode() == LockMode.UPGRADE_SKIPLOCKED ) {
+			LOG.explicitSkipLockedLockCombo();
 		}
 
 		SessionImplementor source = event.getSession();

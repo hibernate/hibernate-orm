@@ -8,6 +8,66 @@ more about each case.
 Changes in version 4.1.9 (2012.12.13)
 ------------------------------------------------------------------------------------------------------------------------
 
+Bug
+    [HHH-995] - Order.ignoreCase() only works for VARCHAR types, not CHAR types
+    [HHH-2045] - in () result in "unexpected end of subtree"
+    [HHH-2721] - PostgreSQLDialect: function md5() always returns a string value
+    [HHH-3788] - FirebirdDialect: current_date() function
+    [HHH-3862] - Wrong link in documentation tutorial chapter 1
+    [HHH-4084] - @UniqueConstraint(columnNames="") causes StringIndexOutOfBoundsException
+    [HHH-4150] - EntityManager.createQuery does not recognize COUNT CASE statement
+    [HHH-6643] - Criteria doesn't support a chaining of 2 not restrictions (sql = not not criterion)
+    [HHH-7304] - NaturalIdResolutionCache not correctly filled on first persist when @GeneratedValue-@Id
+    [HHH-7437] - Classcast issue with new property auditing feature of Envers(withModifiedFlag)
+    [HHH-7561] - PersistenceUnitUtil.getIdentifier returning null for a persisted proxy
+    [HHH-7608] - @OrderBy in combination with @Formula fails
+    [HHH-7781] - HQL - setFirstResult generates invalid SQL when CAST is used in HQL (or JPQL) on SQLServer2008Dialect
+    [HHH-7797] - Inconsistent logic by uses of Dialect#supportsNotNullUnique
+    [HHH-7821] - NPE after upgrade from 4.1.6 to 4.1.8
+    [HHH-7829] - NullPointerException when manually flushing One-To-One relationship with orphan removal
+    [HHH-7861] - EntityManager.find() throws EntityNotFoundException when entity is not found
+    [HHH-7870] - Envers fails in Oracle when calculating the difference of an entity whose type has changed from String to non-String
+    [HHH-7871] - second level cache invalidation messages should be sent by hibernate-infinispan in a cluster
+    [HHH-7889] - Sybase jConnect driver cannot use ResultSet.getClob(String) method
+    [HHH-7911] - NPE in TwoPhaseLoad#initializeEntity
+    [HHH-7918] - Merging 2 ModWorkUnits ended with incorrect values of modified flags
+    [HHH-7923] - Revert to Javassist 3.15
+    [HHH-7928] - Regression caused by HHH-6361
+    [HHH-7930] - Hibernate will crash with (custom) enum types when running with a logback.xml in debug mode
+    [HHH-7933] - boolean is broken on SQLServerDialect
+    [HHH-7934] - Exception with @Embeddables with protected no-arg-constructor
+    [HHH-7948] - Merging CollectionChangeWorkUnit with ModWorkUnit ended with incorrect values of modified flags
+    [HHH-7970] - @javax.persistence.Cacheable is never wired up
+    [HHH-8002] - TransactionTimeoutTest#testTransactionTimeoutSuccess failing on Oracle
+    [HHH-8003] - Create "sqlDropString" method in Dialect to handle "if exists" correctly
+    [HHH-8005] - Sybase 15 - nullable column are not nullable (when created by SchemaExport)
+    [HHH-8006] - MergeCollectionEventTest & BadMergeHandlingTest fail on MySQL
+    [HHH-8007] - Update SQLServer2005LimitHandler to handle multiselects (*, table.*)
+    [HHH-8015] - Spring 3.2.1 cannot be deployed on JBoss AS7 with Hibernate 4.1.6 due to class loader issues.
+    [HHH-8017] - Correct SybaseDialect's getNullColumnString
+    [HHH-8019] - Multiple tests creating identifiers too long for Oracle
+
+Improvement
+    [HHH-1917] - Bulk Delete on the owning side of a ManyToMany relation needs to delete corresponding rows from the JoinTable
+    [HHH-2448] - Generate identical column aliases among cluster
+    [HHH-2805] - The class Order does not contain getters
+    [HHH-2951] - Restrictions.eq when passed null, should create a NullRestriction
+    [HHH-3458] - Register postgres random() function as "rand" in PostgresSQLDialect
+    [HHH-7520] - BlobProxy.invoke Javadoc is incorrect
+    [HHH-7866] - Avoid redundant log level checking in StandardQueryCache
+    [HHH-7947] - remove not maintained 2LC provider from Doc
+    [HHH-7952] - Missing Deprecated Javadoc For TableGenerator/TableHiLoGenerator
+    [HHH-7999] - Oracle test failures due to lack of support for various syntax
+
+New Feature
+    [HHH-5869] - Add suport for nationalized character mappings
+
+Patch
+    [HHH-3869] - Improve toString on SessionStatistics
+
+Changes in version 4.1.9 (2012.12.13)
+------------------------------------------------------------------------------------------------------------------------
+
 ** Bug
     * [HHH-1168] - Problem combining locking and paging on Oracle
     * [HHH-3854] - Issue with greedy loading of associations (default-lazy=false )

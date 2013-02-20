@@ -19,6 +19,7 @@ Bug
     [HHH-6643] - Criteria doesn't support a chaining of 2 not restrictions (sql = not not criterion)
     [HHH-7304] - NaturalIdResolutionCache not correctly filled on first persist when @GeneratedValue-@Id
     [HHH-7437] - Classcast issue with new property auditing feature of Envers(withModifiedFlag)
+    [HHH-7519] - Upgrade byteman version
     [HHH-7561] - PersistenceUnitUtil.getIdentifier returning null for a persisted proxy
     [HHH-7608] - @OrderBy in combination with @Formula fails
     [HHH-7781] - HQL - setFirstResult generates invalid SQL when CAST is used in HQL (or JPQL) on SQLServer2008Dialect

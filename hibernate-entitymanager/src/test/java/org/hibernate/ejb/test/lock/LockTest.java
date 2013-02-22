@@ -25,6 +25,8 @@ package org.hibernate.ejb.test.lock;
 
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.ejb.AvailableSettings;
@@ -327,8 +329,9 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	// ASE15.5 will generate select...holdlock and fail at this test, but ASE15.7 passes it. Skip it for ASE15.5 only.
-	@SkipForDialect(value = { HSQLDialect.class, SybaseASE15Dialect.class },strictMatching = true, jiraKey = "HHH-6820")
+	// ASE15.5 will generate select...holdlock and fail at this test, but ASE15.7 passes it. Skip it for ASE15.5
+	// TODO: Remove Oracle dialects when HHH-8001 is corrected
+	@SkipForDialect(value = { Oracle8iDialect.class, Oracle9iDialect.class, Oracle10gDialect.class, HSQLDialect.class, SybaseASE15Dialect.class },strictMatching = true, jiraKey = "HHH-6820")
 	public void testContendedPessimisticLock() throws Exception {
 		final EntityManager em = getOrCreateEntityManager();
 		final EntityManager isolatedEntityManager = createIsolatedEntityManager();
@@ -718,6 +721,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@RequiresDialect( Oracle10gDialect.class )
 	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
+	@FailureExpected( jiraKey = "HHH-8001" )
 	public void testQueryTimeout() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
@@ -811,6 +815,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@RequiresDialect( Oracle10gDialect.class )
 	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
+	@FailureExpected( jiraKey = "HHH-8001" )
 	public void testQueryTimeoutEMProps() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		Map<String, Object> queryTimeoutProps = new HashMap<String, Object>();

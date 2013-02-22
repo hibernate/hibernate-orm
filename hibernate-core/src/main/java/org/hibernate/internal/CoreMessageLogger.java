@@ -1609,4 +1609,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	)
 	void embedXmlAttributesNoLongerSupported();
 
+	@LogMessage(level = INFO)
+	@Message( value = "'javax.persistence.validation.mode' named multiple values : %s", id = 447 )
+	void multipleValidationModes(String modes);
 }

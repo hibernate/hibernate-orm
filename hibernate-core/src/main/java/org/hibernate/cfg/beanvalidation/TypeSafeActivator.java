@@ -23,15 +23,6 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Digits;
@@ -42,19 +33,29 @@ import javax.validation.constraints.Size;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
@@ -64,6 +65,7 @@ import org.hibernate.mapping.SingleTableSubclass;
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
 class TypeSafeActivator {
 
@@ -71,23 +73,65 @@ class TypeSafeActivator {
 
 	private static final String FACTORY_PROPERTY = "javax.persistence.validation.factory";
 
+	/**
+	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.
+	 *
+	 * @param object The supplied ValidatorFactory instance.
+	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public static void validateFactory(Object object) {
+	public static void validateSuppliedFactory(Object object) {
 		if ( ! ValidatorFactory.class.isInstance( object ) ) {
-			throw new HibernateException(
+			throw new IntegrationException(
 					"Given object was not an instance of " + ValidatorFactory.class.getName()
 							+ "[" + object.getClass().getName() + "]"
 			);
 		}
 	}
 
+	@SuppressWarnings("UnusedDeclaration")
+	public static void activate(ActivationContext activationContext) {
+		final Properties properties = activationContext.getConfiguration().getProperties();
+		final ValidatorFactory factory;
+		try {
+			factory = getValidatorFactory( properties );
+		}
+		catch (IntegrationException e) {
+			if ( activationContext.getValidationModes().contains( ValidationMode.CALLBACK ) ) {
+				throw new IntegrationException( "Bean Validation provider was not available, but 'callback' validation was requested", e );
+			}
+			if ( activationContext.getValidationModes().contains( ValidationMode.DDL ) ) {
+				throw new IntegrationException( "Bean Validation provider was not available, but 'ddl' validation was requested", e );
+			}
+
+			LOG.debug( "Unable to acquire Bean Validation ValidatorFactory, skipping activation" );
+			return;
+		}
+
+		applyRelationalConstraints( factory, activationContext );
+
+		applyCallbackListeners( factory, activationContext );
+	}
+
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public static void activateBeanValidation(EventListenerRegistry listenerRegistry, Configuration configuration) {
-		final Properties properties = configuration.getProperties();
-		ValidatorFactory factory = getValidatorFactory( properties );
-		BeanValidationEventListener listener = new BeanValidationEventListener(
-				factory, properties
+	public static void applyCallbackListeners(ValidatorFactory validatorFactory, ActivationContext activationContext) {
+		final Set<ValidationMode> modes = activationContext.getValidationModes();
+		if ( ! ( modes.contains( ValidationMode.CALLBACK ) || modes.contains( ValidationMode.AUTO ) ) ) {
+			return;
+		}
+
+		// de-activate not-null tracking at the core level when Bean Validation is present unless the user explicitly
+		// asks for it
+		if ( activationContext.getConfiguration().getProperty( Environment.CHECK_NULLABILITY ) == null ) {
+			activationContext.getSessionFactory().getSettings().setCheckNullability( false );
+		}
+
+		final BeanValidationEventListener listener = new BeanValidationEventListener(
+				validatorFactory,
+				activationContext.getConfiguration().getProperties()
 		);
+
+		final EventListenerRegistry listenerRegistry = activationContext.getServiceRegistry()
+				.getService( EventListenerRegistry.class );
 
 		listenerRegistry.addDuplicationStrategy( DuplicationStrategyImpl.INSTANCE );
 
@@ -95,27 +139,31 @@ class TypeSafeActivator {
 		listenerRegistry.appendListeners( EventType.PRE_UPDATE, listener );
 		listenerRegistry.appendListeners( EventType.PRE_DELETE, listener );
 
-		listener.initialize( configuration );
+		listener.initialize( activationContext.getConfiguration() );
 	}
 
-//    public static void activateBeanValidation( EventListenerRegistry listenerRegistry ) {
-//        final Properties properties = configuration.getProperties();
-//        ValidatorFactory factory = getValidatorFactory( properties );
-//        BeanValidationEventListener listener = new BeanValidationEventListener(
-//                factory, properties
-//        );
-//
-//        listenerRegistry.addDuplicationStrategy( DuplicationStrategyImpl.INSTANCE );
-//
-//        listenerRegistry.appendListeners( EventType.PRE_INSERT, listener );
-//        listenerRegistry.appendListeners( EventType.PRE_UPDATE, listener );
-//        listenerRegistry.appendListeners( EventType.PRE_DELETE, listener );
-//
-//        listener.initialize( configuration );
-//    }
+	@SuppressWarnings({"unchecked", "UnusedParameters"})
+	private static void applyRelationalConstraints(ValidatorFactory factory, ActivationContext activationContext) {
+		final Properties properties = activationContext.getConfiguration().getProperties();
+		if ( ! ConfigurationHelper.getBoolean( BeanValidationIntegrator.APPLY_CONSTRAINTS, properties, true ) ){
+			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
+			return;
+		}
+
+		final Set<ValidationMode> modes = activationContext.getValidationModes();
+		if ( ! ( modes.contains( ValidationMode.DDL ) || modes.contains( ValidationMode.AUTO ) ) ) {
+			return;
+		}
+
+		applyRelationalConstraints(
+				activationContext.getConfiguration().createMappings().getClasses().values(),
+				properties,
+				activationContext.getServiceRegistry().getService( JdbcServices.class ).getDialect()
+		);
+	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public static void applyDDL(Collection<PersistentClass> persistentClasses, Properties properties, Dialect dialect) {
+	public static void applyRelationalConstraints(Collection<PersistentClass> persistentClasses, Properties properties, Dialect dialect) {
 		ValidatorFactory factory = getValidatorFactory( properties );
 		Class<?>[] groupsArray = new GroupsPerOperation( properties ).get( GroupsPerOperation.Operation.DDL );
 		Set<Class<?>> groups = new HashSet<Class<?>>( Arrays.asList( groupsArray ) );
@@ -143,32 +191,14 @@ class TypeSafeActivator {
 		}
 	}
 
-//    public static void applyDDL( Iterable<EntityBinding> bindings,
-//                                 Properties properties,
-//                                 ClassLoaderService classLoaderService ) {
-//        ValidatorFactory factory = getValidatorFactory(properties);
-//        Class<?>[] groupsArray = new GroupsPerOperation(properties).get(GroupsPerOperation.Operation.DDL);
-//        Set<Class<?>> groups = new HashSet<Class<?>>(Arrays.asList(groupsArray));
-//        for (EntityBinding binding : bindings) {
-//            final String className = binding.getEntity().getClassName();
-//            if (className == null || className.length() == 0) continue;
-//            try {
-//                applyDDL("", binding, classLoaderService.classForName(className), factory, groups, true);
-//            } catch (ClassLoadingException error) {
-//                throw new AssertionFailure("Entity class not found", error);
-//            } catch (Exception error) {
-//                LOG.unableToApplyConstraints(className, error);
-//            }
-//        }
-//    }
-
-	private static void applyDDL(String prefix,
-								 PersistentClass persistentClass,
-								 Class<?> clazz,
-								 ValidatorFactory factory,
-								 Set<Class<?>> groups,
-								 boolean activateNotNull,
-                                 Dialect dialect) {
+	private static void applyDDL(
+			String prefix,
+			PersistentClass persistentClass,
+			Class<?> clazz,
+			ValidatorFactory factory,
+			Set<Class<?>> groups,
+			boolean activateNotNull,
+			Dialect dialect) {
 		final BeanDescriptor descriptor = factory.getValidator().getConstraintsForClass( clazz );
 		//no bean level constraints can be applied, go to the properties
 
@@ -200,30 +230,13 @@ class TypeSafeActivator {
 		}
 	}
 
-//    private static void applyDDL( String prefix,
-//                                  EntityBinding binding,
-//                                  Class<?> clazz,
-//                                  ValidatorFactory factory,
-//                                  Set<Class<?>> groups,
-//                                  boolean activateNotNull ) {
-//        final BeanDescriptor descriptor = factory.getValidator().getConstraintsForClass(clazz);
-//        //no bean level constraints can be applied, go to the properties
-//        for (PropertyDescriptor propertyDesc : descriptor.getConstrainedProperties()) {
-//            AttributeBinding attrBinding = findAttributeBindingByName(binding, prefix + propertyDesc.getPropertyName());
-//            if (attrBinding != null) {
-//                applyConstraints(propertyDesc.getConstraintDescriptors(), attrBinding, propertyDesc, groups, activateNotNull);
-//                // TODO: Handle composite attributes when possible
-//            }
-//        }
-//    }
-
-	private static boolean applyConstraints(Set<ConstraintDescriptor<?>> constraintDescriptors,
-											Property property,
-											PropertyDescriptor propertyDesc,
-											Set<Class<?>> groups,
-											boolean canApplyNotNull,
-                                            Dialect dialect
-	) {
+	private static boolean applyConstraints(
+			Set<ConstraintDescriptor<?>> constraintDescriptors,
+			Property property,
+			PropertyDescriptor propertyDesc,
+			Set<Class<?>> groups,
+			boolean canApplyNotNull,
+			Dialect dialect) {
 		boolean hasNotNull = false;
 		for ( ConstraintDescriptor<?> descriptor : constraintDescriptors ) {
 			if ( groups != null && Collections.disjoint( descriptor.getGroups(), groups ) ) {
@@ -255,37 +268,6 @@ class TypeSafeActivator {
 		}
 		return hasNotNull;
 	}
-
-//    private static boolean applyConstraints( Set<ConstraintDescriptor<?>> constraintDescriptors,
-//                                             AttributeBinding attributeBinding,
-//                                             PropertyDescriptor propertyDesc,
-//                                             Set<Class<?>> groups,
-//                                             boolean canApplyNotNull ) {
-//        boolean hasNotNull = false;
-//        for ( ConstraintDescriptor<?> descriptor : constraintDescriptors ) {
-//            if (groups != null && Collections.disjoint(descriptor.getGroups(), groups)) continue;
-//            if (canApplyNotNull) hasNotNull = hasNotNull || applyNotNull(attributeBinding, descriptor);
-//
-//            // apply bean validation specific constraints
-//            applyDigits( property, descriptor );
-//            applySize( property, descriptor, propertyDesc );
-//            applyMin( property, descriptor );
-//            applyMax( property, descriptor );
-//
-//            // apply hibernate validator specific constraints - we cannot import any HV specific classes though!
-//            // no need to check explicitly for @Range. @Range is a composed constraint using @Min and @Max which
-//            // will be taken care later
-//            applyLength( property, descriptor, propertyDesc );
-//
-//            // pass an empty set as composing constraints inherit the main constraint and thus are matching already
-//            hasNotNull = hasNotNull || applyConstraints(
-//                    descriptor.getComposingConstraints(),
-//                    property, propertyDesc, null,
-//                    canApplyNotNull
-//            );
-//        }
-//        return hasNotNull;
-//    }
 
 	private static void applyMin(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
 		if ( Min.class.equals( descriptor.getAnnotation().annotationType() ) ) {
@@ -338,26 +320,6 @@ class TypeSafeActivator {
 		}
 		return hasNotNull;
 	}
-
-//    private static boolean applyNotNull( AttributeBinding attributeBinding,
-//                                         ConstraintDescriptor<?> descriptor ) {
-//        boolean hasNotNull = false;
-//        if (NotNull.class.equals(descriptor.getAnnotation().annotationType())) {
-//            if ( !( attributeBinding.getPersistentClass() instanceof SingleTableSubclass ) ) {
-//                //single table should not be forced to null
-//                if ( !property.isComposite() ) { //composite should not add not-null on all columns
-//                    @SuppressWarnings( "unchecked" )
-//                    Iterator<Column> iter = property.getColumnIterator();
-//                    while ( iter.hasNext() ) {
-//                        iter.next().setNullable( false );
-//                        hasNotNull = true;
-//                    }
-//                }
-//            }
-//            hasNotNull = true;
-//        }
-//        return hasNotNull;
-//    }
 
 	private static void applyDigits(Property property, ConstraintDescriptor<?> descriptor) {
 		if ( Digits.class.equals( descriptor.getAnnotation().annotationType() ) ) {
@@ -462,44 +424,6 @@ class TypeSafeActivator {
 		return property;
 	}
 
-//    /**
-//     * @param entityBinding
-//     * @param attrName
-//     * @return the attribute by path in a recursive way, including EntityIdentifier in the loop if attrName is
-//     * <code>null</code>.  If attrName is <code>null</code> or empty, the EntityIdentifier is returned
-//     */
-//    private static AttributeBinding findAttributeBindingByName( EntityBinding entityBinding,
-//                                                                String attrName ) {
-//        AttributeBinding attrBinding = null;
-//        EntityIdentifier identifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
-//        BasicAttributeBinding idAttrBinding = identifier.getValueBinding();
-//        String idAttrName = idAttrBinding != null ? idAttrBinding.getAttribute().getName() : null;
-//        try {
-//            if (attrName == null || attrName.length() == 0 || attrName.equals(idAttrName)) attrBinding = idAttrBinding; // default to id
-//            else {
-//                if (attrName.indexOf(idAttrName + ".") == 0) {
-//                    attrBinding = idAttrBinding;
-//                    attrName = attrName.substring(idAttrName.length() + 1);
-//                }
-//                for (StringTokenizer st = new StringTokenizer(attrName, "."); st.hasMoreElements();) {
-//                    String element = st.nextToken();
-//                    if (attrBinding == null) attrBinding = entityBinding.locateAttributeBinding(element);
-//                    else return null; // TODO: if (attrBinding.isComposite()) ...
-//                }
-//            }
-//        } catch (MappingException error) {
-//            try {
-//                //if we do not find it try to check the identifier mapper
-//                if (!identifier.isIdentifierMapper()) return null;
-//                // TODO: finish once composite/embedded/component IDs get worked out
-//            }
-//            catch ( MappingException ee ) {
-//                return null;
-//            }
-//        }
-//        return attrBinding;
-//    }
-
 	private static ValidatorFactory getValidatorFactory(Map<Object, Object> properties) {
 		ValidatorFactory factory = null;
 		if ( properties != null ) {
@@ -509,7 +433,7 @@ class TypeSafeActivator {
 					factory = ValidatorFactory.class.cast( unsafeProperty );
 				}
 				catch ( ClassCastException e ) {
-					throw new HibernateException(
+					throw new IntegrationException(
 							"Property " + FACTORY_PROPERTY
 									+ " should contain an object of type " + ValidatorFactory.class.getName()
 					);
@@ -521,7 +445,7 @@ class TypeSafeActivator {
 				factory = Validation.buildDefaultValidatorFactory();
 			}
 			catch ( Exception e ) {
-				throw new HibernateException( "Unable to build the default ValidatorFactory", e );
+				throw new IntegrationException( "Unable to build the default ValidatorFactory", e );
 			}
 		}
 		return factory;

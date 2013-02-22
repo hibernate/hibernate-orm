@@ -23,27 +23,27 @@
  */
 package org.hibernate.test.nationalized;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+
+import java.sql.NClob;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 
-import java.sql.NClob;
-
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.annotations.Type;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.type.CharacterNCharType;
 import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.NClobType;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.NTextType;
 import org.hibernate.type.StringNVarcharType;
-
 import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 
 /**
  * @author Steve Ebersole
@@ -54,14 +54,26 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 	public static class NationalizedEntity {
 		@Id
 		private Integer id;
+
 		@Nationalized
 		private String nvarcharAtt;
+
 		@Lob
 		@Nationalized
 		private String materializedNclobAtt;
+
 		@Lob
 		@Nationalized
 		private NClob nclobAtt;
+
+		@Nationalized
+		private Character ncharacterAtt;
+		
+		@Nationalized
+		private Character[] ncharArrAtt;
+		
+		@Type(type = "ntext")
+		private String nlongvarcharcharAtt;
 	}
 
 	@Test
@@ -85,6 +97,21 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 		{
 			Property prop = pc.getProperty( "nclobAtt" );
 			assertSame( NClobType.INSTANCE, prop.getType() );
+		}
+
+		{
+			Property prop = pc.getProperty( "nlongvarcharcharAtt" );
+			assertSame( NTextType.INSTANCE, prop.getType() );
+		}
+
+		{
+			Property prop = pc.getProperty( "ncharArrAtt" );
+			assertSame( StringNVarcharType.INSTANCE, prop.getType() );
+		}
+
+		{
+			Property prop = pc.getProperty( "ncharacterAtt" );
+			assertSame( CharacterNCharType.INSTANCE, prop.getType() );
 		}
 	}
 }

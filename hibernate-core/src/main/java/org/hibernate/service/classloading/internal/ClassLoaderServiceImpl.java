@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -38,11 +37,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of the service for interacting with class loaders
@@ -75,7 +74,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		}
 
 		// normalize adding known class-loaders...
-		// first the Hibernate class loader
+		// first, the "overridden" classloader provided by an environment (OSGi, etc.)
+		if ( ClassLoaderHelper.overridenClassLoader != null ) {
+			orderedClassLoaderSet.add( ClassLoaderHelper.overridenClassLoader );
+		}
+		// then the Hibernate class loader
 		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
 		// then the TCCL, if one...
 		final ClassLoader tccl = locateTCCL();

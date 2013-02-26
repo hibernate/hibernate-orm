@@ -103,7 +103,7 @@ public class HibernateBundleActivator
 
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map map) {
-		Ejb3Configuration cfg = new Ejb3Configuration(osgiClassLoader);
+		Ejb3Configuration cfg = new Ejb3Configuration();
 		if ( info.getTransactionType().equals( PersistenceUnitTransactionType.JTA ) ) {
 			map.put( AvailableSettings.JTA_PLATFORM, new OsgiJtaPlatform( context ) );
 		}

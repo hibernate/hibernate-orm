@@ -82,7 +82,7 @@ public final class XMLHelper {
 
 	public static DocumentFactory getDocumentFactory() {
 
-		ClassLoader cl = ClassLoaderHelper.getClassLoader();
+		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
 		DocumentFactory factory;
 		try {
 			Thread.currentThread().setContextClassLoader( XMLHelper.class.getClassLoader() );

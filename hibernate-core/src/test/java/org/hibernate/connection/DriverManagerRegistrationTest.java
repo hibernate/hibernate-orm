@@ -92,7 +92,7 @@ public class DriverManagerRegistrationTest extends BaseUnitTestCase {
 	}
 
 	private static ClassLoader determineClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getClassLoader();
+		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
 		if ( cl == null ) {
 			cl = DriverManagerRegistrationTest.class.getClassLoader();
 		}

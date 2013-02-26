@@ -94,6 +94,7 @@ import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.SessionFactoryObserverChain;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -169,12 +170,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 
 	public Ejb3Configuration() {
-		this(null);
-	}
-
-
-	public Ejb3Configuration(ClassLoader overridenClassLoader) {
-		this.overridenClassLoader = overridenClassLoader;
+		overridenClassLoader = ClassLoaderHelper.overridenClassLoader;
 		cfg = new Configuration();
 		cfg.setEntityNotFoundDelegate( ejb3EntityNotFoundDelegate );
 	}
@@ -320,8 +316,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			integration = integration == null ?
 					CollectionHelper.EMPTY_MAP :
 					Collections.unmodifiableMap( integration );
-			Enumeration<URL> xmls = Thread.currentThread()
-					.getContextClassLoader()
+			Enumeration<URL> xmls = ClassLoaderHelper.getContextClassLoader()
 					.getResources( "META-INF/persistence.xml" );
             if (!xmls.hasMoreElements()) LOG.unableToFindPersistenceXmlInClasspath();
 			while ( xmls.hasMoreElements() ) {

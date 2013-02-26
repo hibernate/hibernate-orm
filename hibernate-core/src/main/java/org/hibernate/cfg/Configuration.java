@@ -717,7 +717,7 @@ public class Configuration implements Serializable {
 	 */
 	public Configuration addResource(String resourceName) throws MappingException {
 		LOG.readingMappingsFromResource( resourceName );
-		ClassLoader contextClassLoader = ClassLoaderHelper.getClassLoader();
+		ClassLoader contextClassLoader = ClassLoaderHelper.getContextClassLoader();
 		InputStream resourceInputStream = null;
 		if ( contextClassLoader != null ) {
 			resourceInputStream = contextClassLoader.getResourceAsStream( resourceName );
@@ -1299,6 +1299,11 @@ public class Configuration implements Serializable {
 
 	protected void secondPassCompile() throws MappingException {
 		LOG.trace( "Starting secondPassCompile() processing" );
+		
+		// TEMPORARY
+		// Ensure the correct ClassLoader is used in commons-annotations.
+		ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader( ClassLoaderHelper.getContextClassLoader() );
 
 		//process default values first
 		{
@@ -1376,6 +1381,8 @@ public class Configuration implements Serializable {
 				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns() );
 			}
 		}
+		
+		Thread.currentThread().setContextClassLoader( tccl );
 	}
 
 	private void processSecondPassesOfType(Class<? extends SecondPass> type) {

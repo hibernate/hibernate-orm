@@ -160,7 +160,7 @@ public final class ReflectHelper {
 	 */
 	public static Class classForName(String name, Class caller) throws ClassNotFoundException {
 		try {
-			ClassLoader classLoader = ClassLoaderHelper.getClassLoader();
+			ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
 			if ( classLoader != null ) {
 				return classLoader.loadClass( name );
 			}
@@ -182,7 +182,7 @@ public final class ReflectHelper {
 	 */
 	public static Class classForName(String name) throws ClassNotFoundException {
 		try {
-			ClassLoader classLoader = ClassLoaderHelper.getClassLoader();
+			ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
 			if ( classLoader != null ) {
 				return classLoader.loadClass(name);
 			}

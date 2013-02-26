@@ -88,7 +88,7 @@ public class NClobProxy extends ClobProxy {
 	 * @return The class loader appropriate for proxy construction.
 	 */
 	protected static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getClassLoader();
+		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
 		if ( cl == null ) {
 			cl = NClobImplementer.class.getClassLoader();
 		}

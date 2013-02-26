@@ -216,7 +216,7 @@ public class ClobProxy implements InvocationHandler {
 	 * @return The class loader appropriate for proxy construction.
 	 */
 	protected static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getClassLoader();
+		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
 		if ( cl == null ) {
 			cl = ClobImplementer.class.getClassLoader();
 		}

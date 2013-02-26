@@ -191,7 +191,7 @@ public final class SerializationHelper {
 	 * @return The current TCCL
 	 */
 	public static ClassLoader defaultClassLoader() {
-		return ClassLoaderHelper.getClassLoader();
+		return ClassLoaderHelper.getContextClassLoader();
 	}
 
 	public static ClassLoader hibernateClassLoader() {

@@ -14,6 +14,7 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -85,8 +86,9 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 			fail( "Could not find the expected tables." );
 		}
 		
-		assertFalse( tableA.getUniqueKeyIterator().next().getName().equals(
-				tableB.getUniqueKeyIterator().next().getName() ) );
+		UniqueKey ukA = (UniqueKey) tableA.getUniqueKeyIterator().next();
+		UniqueKey ukB = (UniqueKey) tableB.getUniqueKeyIterator().next();
+		assertFalse( ukA.getName().equals( ukB.getName() ) );
 	}
 	
 	@Entity

@@ -393,6 +393,9 @@ public class Table implements RelationalModel, Serializable {
 
 		Iterator iter = getColumnIterator();
 		List results = new ArrayList();
+		
+		int uniqueIndexInteger = 0;
+		
 		while ( iter.hasNext() ) {
 			Column column = (Column) iter.next();
 
@@ -419,8 +422,9 @@ public class Table implements RelationalModel, Serializable {
 				}
 
 				if ( column.isUnique() ) {
+					uniqueIndexInteger++;
 					UniqueKey uk = getOrCreateUniqueKey( 
-							column.getQuotedName( dialect ) + '_' );
+							"UK_" + name + "_" + uniqueIndexInteger);
 					uk.addColumn( column );
 					alter.append( dialect.getUniqueDelegate()
 							.applyUniqueToColumn( column ) );
@@ -489,6 +493,7 @@ public class Table implements RelationalModel, Serializable {
 		}
 
 		Iterator iter = getColumnIterator();
+		int uniqueIndexInteger = 0;
 		while ( iter.hasNext() ) {
 			Column col = (Column) iter.next();
 
@@ -522,8 +527,9 @@ public class Table implements RelationalModel, Serializable {
 			}
 			
 			if ( col.isUnique() ) {
+				uniqueIndexInteger++;
 				UniqueKey uk = getOrCreateUniqueKey( 
-						col.getQuotedName( dialect ) + '_' );
+						"uc_" + name + "_" + uniqueIndexInteger);
 				uk.addColumn( col );
 				buf.append( dialect.getUniqueDelegate()
 						.applyUniqueToColumn( col ) );
@@ -619,7 +625,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public UniqueKey createUniqueKey(List keyColumns) {
-		String keyName = "UK" + uniqueColumnString( keyColumns.iterator() );
+		String keyName = "UK_" + uniqueColumnString( keyColumns.iterator() );
 		UniqueKey uk = getOrCreateUniqueKey( keyName );
 		uk.addColumns( keyColumns.iterator() );
 		return uk;

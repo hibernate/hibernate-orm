@@ -1377,7 +1377,7 @@ public class Configuration implements Serializable {
 			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
 				uniqueIndexPerTable++;
 				final String keyName = StringHelper.isEmpty( holder.getName() )
-						? "key" + uniqueIndexPerTable
+						? "UK_" + table.getName() + "_" + uniqueIndexPerTable
 						: holder.getName();
 				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns() );
 			}

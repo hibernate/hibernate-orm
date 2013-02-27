@@ -36,6 +36,7 @@ import org.hibernate.annotations.Index;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3JoinColumn;
 import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
+import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -80,6 +81,7 @@ public class TableBinder {
 	private String ownerEntity;
 	private String associatedEntity;
 	private boolean isJPA2ElementCollection;
+	private List<JPAIndexHolder> jpaIndexHolders;
 
 	public void setSchema(String schema) {
 		this.schema = schema;
@@ -103,6 +105,10 @@ public class TableBinder {
 
 	public void setUniqueConstraints(UniqueConstraint[] uniqueConstraints) {
 		this.uniqueConstraints = TableBinder.buildUniqueConstraintHolders( uniqueConstraints );
+	}
+
+	public void setJpaIndex(javax.persistence.Index[] jpaIndex){
+		this.jpaIndexHolders = buildJpaIndexHolder( jpaIndex );
 	}
 
 	public void setConstraints(String constraints) {
@@ -183,12 +189,14 @@ public class TableBinder {
 				namingStrategyHelper,
 				isAbstract,
 				uniqueConstraints,
+				jpaIndexHolders,
 				constraints,
 				denormalizedSuperTable,
 				mappings,
 				null
 		);
 	}
+
 
 	private ObjectNameSource buildNameContext(String unquotedOwnerTable, String unquotedAssocTable) {
 		String logicalName = mappings.getNamingStrategy().logicalCollectionTableName(
@@ -211,10 +219,11 @@ public class TableBinder {
 			ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper,
 			boolean isAbstract,
 			List<UniqueConstraintHolder> uniqueConstraints,
+			List<JPAIndexHolder> jpaIndexHolders,
 			String constraints,
 			Table denormalizedSuperTable,
 			Mappings mappings,
-			String subselect) {
+			String subselect){
 		schema = BinderHelper.isEmptyAnnotationValue( schema ) ? mappings.getSchemaName() : schema;
 		catalog = BinderHelper.isEmptyAnnotationValue( catalog ) ? mappings.getCatalogName() : catalog;
 
@@ -244,8 +253,12 @@ public class TableBinder {
 			);
 		}
 
-		if ( uniqueConstraints != null && uniqueConstraints.size() > 0 ) {
+		if ( CollectionHelper.isNotEmpty( uniqueConstraints ) ) {
 			mappings.addUniqueConstraintHolders( table, uniqueConstraints );
+		}
+
+		if ( CollectionHelper.isNotEmpty( jpaIndexHolders ) ) {
+			mappings.addJpaIndexHolders( table, jpaIndexHolders );
 		}
 
 		if ( constraints != null ) table.addCheckConstraint( constraints );
@@ -256,6 +269,23 @@ public class TableBinder {
 			mappings.addTableBinding( schema, catalog, logicalName, realTableName, denormalizedSuperTable );
 		}
 		return table;
+	}
+
+
+
+	public static Table buildAndFillTable(
+			String schema,
+			String catalog,
+			ObjectNameSource nameSource,
+			ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper,
+			boolean isAbstract,
+			List<UniqueConstraintHolder> uniqueConstraints,
+			String constraints,
+			Table denormalizedSuperTable,
+			Mappings mappings,
+			String subselect) {
+		return buildAndFillTable( schema, catalog, nameSource, namingStrategyHelper, isAbstract, uniqueConstraints, null, constraints
+		, denormalizedSuperTable, mappings, subselect);
 	}
 
 	/**
@@ -515,18 +545,15 @@ public class TableBinder {
 	}
 
 	public static void addIndexes(Table hibTable, javax.persistence.Index[] indexes, Mappings mappings) {
-		for ( javax.persistence.Index index : indexes ) {
-			//no need to handle inSecondPass here since it is only called from EntityBinder
-			mappings.addSecondPass(
-					new IndexOrUniqueKeySecondPass(
-							hibTable,
-							index.name(),
-							index.columnList(),
-							mappings,
-							index.unique()
-					)
-			);
+		mappings.addJpaIndexHolders( hibTable, buildJpaIndexHolder( indexes ) );
+	}
+
+	public static List<JPAIndexHolder> buildJpaIndexHolder(javax.persistence.Index[] indexes){
+		List<JPAIndexHolder> holders = new ArrayList<JPAIndexHolder>( indexes.length );
+		for(javax.persistence.Index index : indexes){
+			holders.add( new JPAIndexHolder( index ) );
 		}
+		return holders;
 	}
 
 	/**

@@ -2172,7 +2172,6 @@ public final class AnnotationBinder {
 		JoinColumn[] annInverseJoins;
 		JoinTable assocTable = propertyHolder.getJoinTable( property );
 		CollectionTable collectionTable = property.getAnnotation( CollectionTable.class );
-
 		if ( assocTable != null || collectionTable != null ) {
 
 			final String catalog;
@@ -2181,6 +2180,8 @@ public final class AnnotationBinder {
 			final UniqueConstraint[] uniqueConstraints;
 			final JoinColumn[] joins;
 			final JoinColumn[] inverseJoins;
+			final javax.persistence.Index[] jpaIndexes;
+
 
 			//JPA 2 has priority
 			if ( collectionTable != null ) {
@@ -2190,6 +2191,7 @@ public final class AnnotationBinder {
 				uniqueConstraints = collectionTable.uniqueConstraints();
 				joins = collectionTable.joinColumns();
 				inverseJoins = null;
+				jpaIndexes = collectionTable.indexes();
 			}
 			else {
 				catalog = assocTable.catalog();
@@ -2198,10 +2200,13 @@ public final class AnnotationBinder {
 				uniqueConstraints = assocTable.uniqueConstraints();
 				joins = assocTable.joinColumns();
 				inverseJoins = assocTable.inverseJoinColumns();
+				jpaIndexes = assocTable.indexes();
 			}
 
 			collectionBinder.setExplicitAssociationTable( true );
-
+			if ( jpaIndexes != null && jpaIndexes.length > 0 ) {
+				associationTableBinder.setJpaIndex( jpaIndexes );
+			}
 			if ( !BinderHelper.isEmptyAnnotationValue( schema ) ) {
 				associationTableBinder.setSchema( schema );
 			}
@@ -2212,7 +2217,7 @@ public final class AnnotationBinder {
 				associationTableBinder.setName( tableName );
 			}
 			associationTableBinder.setUniqueConstraints( uniqueConstraints );
-
+			associationTableBinder.setJpaIndex( jpaIndexes );
 			//set check constaint in the second pass
 			annJoins = joins.length == 0 ? null : joins;
 			annInverseJoins = inverseJoins == null || inverseJoins.length == 0 ? null : inverseJoins;

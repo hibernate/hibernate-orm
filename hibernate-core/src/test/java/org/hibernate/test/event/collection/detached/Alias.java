@@ -26,6 +26,7 @@ package org.hibernate.test.event.collection.detached;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -68,7 +69,7 @@ public class Alias implements Identifiable {
 	}
 
 	@ManyToMany( cascade = CascadeType.ALL )
-	@JoinTable( name = "CHARACTER_ALIAS" )
+	@JoinTable( name = "CHARACTER_ALIAS", indexes = @Index( columnList = "characters_id", unique = true))
 //	@JoinTable(
 //			name = "CHARACTER_ALIAS",
 //			joinColumns = @JoinColumn(name="ALIAS_ID", referencedColumnName="ID"),

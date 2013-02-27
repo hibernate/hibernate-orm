@@ -251,6 +251,7 @@ public class Configuration implements Serializable {
 	private Set<String> defaultNamedGenerators;
 	private Map<String, Properties> generatorTables;
 	private Map<Table, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
+	private Map<Table, List<JPAIndexHolder>> jpaIndexHoldersByTable;
 	private Map<String, String> mappedByResolver;
 	private Map<String, String> propertyRefResolver;
 	private Map<String, AnyMetaDef> anyMetaDefs;
@@ -324,6 +325,7 @@ public class Configuration implements Serializable {
 		defaultSqlResultSetMappingNames = new HashSet<String>();
 		defaultNamedGenerators = new HashSet<String>();
 		uniqueConstraintHoldersByTable = new HashMap<Table, List<UniqueConstraintHolder>>();
+		jpaIndexHoldersByTable = new HashMap<Table,List<JPAIndexHolder>>(  );
 		mappedByResolver = new HashMap<String, String>();
 		propertyRefResolver = new HashMap<String, String>();
 		caches = new ArrayList<CacheHolder>();
@@ -1380,6 +1382,17 @@ public class Configuration implements Serializable {
 				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns() );
 			}
 		}
+		for(Table table : jpaIndexHoldersByTable.keySet()){
+			final List<JPAIndexHolder> jpaIndexHolders = jpaIndexHoldersByTable.get( table );
+			int uniqueIndexPerTable = 0;
+			for ( JPAIndexHolder holder : jpaIndexHolders ) {
+				uniqueIndexPerTable++;
+				final String keyName = StringHelper.isEmpty( holder.getName() )
+						? "idx_"+table.getName()+"_" + uniqueIndexPerTable
+						: holder.getName();
+				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns(), holder.getOrdering(), holder.isUnique() );
+			}
+		}
 	}
 
 	private void processSecondPassesOfType(Class<? extends SecondPass> type) {
@@ -1533,7 +1546,11 @@ public class Configuration implements Serializable {
 		}
 	}
 
-	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames) {
+	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames){
+		buildUniqueKeyFromColumnNames( table, keyName, columnNames, null, true );
+	}
+
+	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames, String[] orderings, boolean unique) {
 		keyName = normalizer.normalizeIdentifierQuoting( keyName );
 
 		int size = columnNames.length;
@@ -1553,13 +1570,29 @@ public class Configuration implements Serializable {
 				unboundNoLogical.add( new Column( logicalColumnName ) );
 			}
 		}
-		UniqueKey uk = table.getOrCreateUniqueKey( keyName );
-		for ( Column column : columns ) {
-			if ( table.containsColumn( column ) ) {
-				uk.addColumn( column );
-				unbound.remove( column );
+		if ( unique ) {
+			UniqueKey uk = table.getOrCreateUniqueKey( keyName );
+			for ( int i = 0; i < columns.length; i++ ) {
+				Column column = columns[i];
+				String order = orderings != null ? orderings[i] : null;
+				if ( table.containsColumn( column ) ) {
+					uk.addColumn( column, order );
+					unbound.remove( column );
+				}
 			}
 		}
+		else {
+			Index index = table.getOrCreateIndex( keyName );
+			for ( int i = 0; i < columns.length; i++ ) {
+				Column column = columns[i];
+				String order = orderings != null ? orderings[i] : null;
+				if ( table.containsColumn( column ) ) {
+					index.addColumn( column, order );
+					unbound.remove( column );
+				}
+			}
+		}
+
 		if ( unbound.size() > 0 || unboundNoLogical.size() > 0 ) {
 			StringBuilder sb = new StringBuilder( "Unable to create unique key constraint (" );
 			for ( String columnName : columnNames ) {
@@ -3307,6 +3340,15 @@ public class Configuration implements Serializable {
 				getUniqueConstraintHoldersByTable().put( table, holderList );
 			}
 			holderList.addAll( uniqueConstraintHolders );
+		}
+
+		public void addJpaIndexHolders(Table table, List<JPAIndexHolder> holders) {
+			List<JPAIndexHolder> holderList = jpaIndexHoldersByTable.get( table );
+			if ( holderList == null ) {
+				holderList = new ArrayList<JPAIndexHolder>();
+				jpaIndexHoldersByTable.put( table, holderList );
+			}
+			holderList.addAll( holders );
 		}
 
 		public void addMappedBy(String entityName, String propertyName, String inversePropertyName) {

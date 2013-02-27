@@ -721,6 +721,8 @@ public interface Mappings {
 
 	public void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraintHolders);
 
+	public void addJpaIndexHolders(Table table, List<JPAIndexHolder> jpaIndexHolders);
+
 	public void addMappedBy(String entityName, String propertyName, String inversePropertyName);
 
 	public String getFromMappedBy(String entityName, String propertyName);

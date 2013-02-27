@@ -4,6 +4,7 @@ import java.util.Set;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.Index;
 
 @Entity
 public class WealthyPerson extends Person {
@@ -15,6 +16,6 @@ public class WealthyPerson extends Person {
 	protected Set<Address> legacyVacationHomes = new HashSet<Address>();
 
 	@ElementCollection
-	@CollectionTable(name = "WelPers_VacHomes")
+	@CollectionTable(name = "WelPers_VacHomes", indexes = @Index( columnList = "countryName, type_id"))
 	protected Set<Address> explicitVacationHomes = new HashSet<Address>();
 }

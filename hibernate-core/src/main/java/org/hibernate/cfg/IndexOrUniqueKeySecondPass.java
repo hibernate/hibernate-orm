@@ -42,7 +42,6 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	private Table table;
 	private final String indexName;
 	private final String[] columns;
-	private final String[] ordering;
 	private final Mappings mappings;
 	private final Ejb3Column column;
 	private final boolean unique;
@@ -54,45 +53,9 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 		this.table = table;
 		this.indexName = indexName;
 		this.columns = columns;
-		this.ordering = null;
 		this.mappings = mappings;
 		this.column = null;
 		this.unique = false;
-	}
-	//used for the new JPA 2.1 @Index
-	public IndexOrUniqueKeySecondPass(Table table, String indexName, String columnList, Mappings mappings, boolean unique) {
-		this.table = table;
-		StringTokenizer tokenizer = new StringTokenizer( columnList, "," );
-		List<String> tmp = new ArrayList<String>();
-		while ( tokenizer.hasMoreElements() ) {
-			tmp.add( tokenizer.nextToken().trim() );
-		}
-		this.indexName = StringHelper.isNotEmpty( indexName ) ? indexName : "IDX_" + table.uniqueColumnString( tmp.iterator() );
-		this.columns = new String[tmp.size()];
-		this.ordering = new String[tmp.size()];
-		initializeColumns(columns, ordering, tmp);
-		this.mappings = mappings;
-		this.column = null;
-		this.unique = unique;
-	}
-
-	private void initializeColumns(String[] columns, String[] ordering, List<String> list) {
-		for ( int i = 0, size = list.size(); i < size; i++ ) {
-			final String description = list.get( i );
-			final String tmp = description.toLowerCase();
-			if ( tmp.endsWith( " desc" ) ) {
-				columns[i] = description.substring( 0, description.length() - 5 );
-				ordering[i] = "desc";
-			}
-			else if ( tmp.endsWith( " asc" ) ) {
-				columns[i] = description.substring( 0, description.length() - 4 );
-				ordering[i] = "asc";
-			}
-			else {
-				columns[i] = description;
-				ordering[i] = null;
-			}
-		}
 	}
 
 
@@ -112,23 +75,21 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 		this.columns = null;
 		this.mappings = mappings;
 		this.unique = unique;
-		this.ordering = null;
 	}
 	@Override
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		if ( columns != null ) {
 			for ( int i = 0; i < columns.length; i++ ) {
-				final String order = ordering != null ? ordering[i] : null;
-				addConstraintToColumn( columns[i], order );
+				addConstraintToColumn( columns[i] );
 			}
 		}
 		if ( column != null ) {
 			this.table = column.getTable();
-			addConstraintToColumn( mappings.getLogicalColumnName( column.getMappingColumn().getQuotedName(), table ), null );
+			addConstraintToColumn( mappings.getLogicalColumnName( column.getMappingColumn().getQuotedName(), table ) );
 		}
 	}
 
-	private void addConstraintToColumn(final String columnName, final String ordering) {
+	private void addConstraintToColumn(final String columnName ) {
 		Column column = table.getColumn(
 				new Column(
 						mappings.getPhysicalColumnName( columnName, table )
@@ -140,8 +101,8 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 			);
 		}
 		if ( unique )
-			table.getOrCreateUniqueKey( indexName ).addColumn( column, ordering );
+			table.getOrCreateUniqueKey( indexName ).addColumn( column );
 		else
-			table.getOrCreateIndex( indexName ).addColumn( column, ordering );
+			table.getOrCreateIndex( indexName ).addColumn( column );
 	}
 }

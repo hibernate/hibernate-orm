@@ -30,13 +30,24 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.List;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Set;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.mapping.Value;
+import org.hibernate.test.annotations.embedded.Address;
+import org.hibernate.test.annotations.embedded.AddressType;
 import org.hibernate.test.annotations.embedded.Book;
+import org.hibernate.test.annotations.embedded.Person;
 import org.hibernate.test.annotations.embedded.Summary;
+import org.hibernate.test.annotations.embedded.WealthyPerson;
+import org.hibernate.test.event.collection.detached.*;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -45,11 +56,20 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class IndexTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Car.class, Book.class, Summary.class };
+		return new Class[] { Car.class,
+				Book.class,
+				Summary.class,
+				WealthyPerson.class,
+				Person.class,
+				AddressType.class,
+				Address.class,
+				Alias.class,
+				org.hibernate.test.event.collection.detached.Character.class
+		};
 	}
 
 	@Test
-	public void testBasicIndex() {
+	public void testTableIndex() {
 		PersistentClass entity = configuration().getClassMapping( Car.class.getName() );
 		Iterator itr = entity.getTable().getUniqueKeyIterator();
 		assertTrue( itr.hasNext() );
@@ -93,5 +113,51 @@ public class IndexTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "text", column.getName() );
 		assertSame( join.getTable(), index.getTable() );
 
+	}
+
+	@Test
+	public void testCollectionTableIndex(){
+		PersistentClass entity = configuration().getClassMapping( WealthyPerson.class.getName() );
+		Property property = entity.getProperty( "explicitVacationHomes" );
+		Set set = (Set)property.getValue();
+		Table collectionTable = set.getCollectionTable();
+
+		Iterator<Index> itr = collectionTable.getIndexIterator();
+		assertTrue( itr.hasNext() );
+		Index index = itr.next();
+		assertFalse( itr.hasNext() );
+		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
+		assertEquals( 2, index.getColumnSpan() );
+		Iterator<Column> columnIterator = index.getColumnIterator();
+		Column column = columnIterator.next();
+		assertEquals( "countryName", column.getName() );
+		column = columnIterator.next();
+		assertEquals( "type_id", column.getName() );
+		assertSame( collectionTable, index.getTable() );
+
+	}
+
+	@Test
+	public void testJoinTableIndex(){
+		PersistentClass entity = configuration().getClassMapping( Alias.class.getName() );
+		Property property = entity.getProperty( "characters" );
+		Bag set = (Bag)property.getValue();
+		Table collectionTable = set.getCollectionTable();
+
+		Iterator<UniqueKey> itr = collectionTable.getUniqueKeyIterator();
+		assertTrue( itr.hasNext() );
+		UniqueKey index = itr.next();
+		assertFalse( itr.hasNext() );
+		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
+		assertEquals( 1, index.getColumnSpan() );
+		Iterator<Column> columnIterator = index.getColumnIterator();
+		Column column = columnIterator.next();
+		assertEquals( "characters_id", column.getName() );
+		assertSame( collectionTable, index.getTable() );
+	}
+
+	@Test
+	public void testTableGeneratorIndex(){
+	   //todo
 	}
 }

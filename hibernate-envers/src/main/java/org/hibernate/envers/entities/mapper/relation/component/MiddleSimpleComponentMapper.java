@@ -24,6 +24,7 @@
 package org.hibernate.envers.entities.mapper.relation.component;
 import java.util.Map;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.tools.query.Parameters;
@@ -46,11 +47,11 @@ public final class MiddleSimpleComponentMapper implements MiddleComponentMapper 
         return ((Map<String, Object>) data.get(verEntCfg.getOriginalIdPropName())).get(propertyName);
     }
 
-    public void mapToMapFromObject(Map<String, Object> data, Object obj) {
-        data.put(propertyName, obj);
+    public void mapToMapFromObject(SessionImplementor session, Map<String, Object> idData, Map<String, Object> data, Object obj) {
+		idData.put(propertyName, obj);
     }
 
-    public void addMiddleEqualToQuery(Parameters parameters, String prefix1, String prefix2) {
-        parameters.addWhere(prefix1 + "." + propertyName, false, "=", prefix2 + "." + propertyName, false);
+    public void addMiddleEqualToQuery(Parameters parameters, String idPrefix1, String prefix1, String idPrefix2, String prefix2) {
+        parameters.addWhere(idPrefix1 + "." + propertyName, false, "=", idPrefix2 + "." + propertyName, false);
     }
 }

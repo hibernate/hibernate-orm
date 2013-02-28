@@ -24,6 +24,7 @@
 package org.hibernate.envers.entities.mapper.relation.component;
 import java.util.Map;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.tools.query.Parameters;
@@ -43,11 +44,11 @@ public final class MiddleRelatedComponentMapper implements MiddleComponentMapper
         return entityInstantiator.createInstanceFromVersionsEntity(relatedIdData.getEntityName(), data, revision);
     }
 
-    public void mapToMapFromObject(Map<String, Object> data, Object obj) {
-        relatedIdData.getPrefixedMapper().mapToMapFromEntity(data, obj);
+    public void mapToMapFromObject(SessionImplementor session, Map<String, Object> idData, Map<String, Object> data, Object obj) {
+        relatedIdData.getPrefixedMapper().mapToMapFromEntity(idData, obj);
     }
 
-    public void addMiddleEqualToQuery(Parameters parameters, String prefix1, String prefix2) {
-        relatedIdData.getPrefixedMapper().addIdsEqualToQuery(parameters, prefix1, prefix2);
+    public void addMiddleEqualToQuery(Parameters parameters, String idPrefix1, String prefix1, String idPrefix2, String prefix2) {
+        relatedIdData.getPrefixedMapper().addIdsEqualToQuery(parameters, idPrefix1, idPrefix2);
     }
 }

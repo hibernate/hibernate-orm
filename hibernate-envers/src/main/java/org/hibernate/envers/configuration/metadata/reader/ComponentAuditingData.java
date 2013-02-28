@@ -24,6 +24,7 @@
  */
 package org.hibernate.envers.configuration.metadata.reader;
 import java.util.Map;
+import java.util.Set;
 
 import static org.hibernate.envers.tools.Tools.newHashMap;
 
@@ -53,5 +54,9 @@ public class ComponentAuditingData extends PropertyAuditingData implements Audit
     
     public boolean contains(String propertyName) {
     	return properties.containsKey(propertyName);
-    }    
+    }
+
+	public Set<String> getPropertyNames() {
+		return properties.keySet();
+	}
 }

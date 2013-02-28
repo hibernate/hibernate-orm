@@ -47,9 +47,8 @@ import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants
  * Selects data from a relation middle-table and a related versions entity.
  * @author Adam Warski (adam at warski dot org)
  */
-public final class TwoEntityQueryGenerator implements RelationQueryGenerator {
+public final class TwoEntityQueryGenerator extends AbstractRelationQueryGenerator {
     private final String queryString;
-    private final MiddleIdData referencingIdData;
 
     public TwoEntityQueryGenerator(GlobalConfiguration globalCfg,
                                    AuditEntitiesConfiguration verEntCfg,
@@ -57,8 +56,9 @@ public final class TwoEntityQueryGenerator implements RelationQueryGenerator {
                                    String versionsMiddleEntityName,
                                    MiddleIdData referencingIdData,
                                    MiddleIdData referencedIdData,
+								   boolean revisionTypeInId,
                                    MiddleComponentData... componentDatas) {
-        this.referencingIdData = referencingIdData;
+		super( verEntCfg, referencingIdData, revisionTypeInId );
 
         /*
          * The query that we need to create:
@@ -118,26 +118,21 @@ public final class TwoEntityQueryGenerator implements RelationQueryGenerator {
         // --> based on auditStrategy (see above)
         auditStrategy.addAssociationAtRevisionRestriction(qb, revisionPropertyPath,
         		verEntCfg.getRevisionEndFieldName(), true, referencingIdData, versionsMiddleEntityName,
-        		eeOriginalIdPropertyPath, revisionPropertyPath, originalIdPropertyName, componentDatas);
+        		eeOriginalIdPropertyPath, revisionPropertyPath, originalIdPropertyName, MIDDLE_ENTITY_ALIAS, componentDatas);
 
         // ee.revision_type != DEL
-        rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), "!=", DEL_REVISION_TYPE_PARAMETER);
+		String revisionTypePropName = getRevisionTypePath();
+        rootParameters.addWhereWithNamedParam(revisionTypePropName, "!=", DEL_REVISION_TYPE_PARAMETER);
         // e.revision_type != DEL
-        rootParameters.addWhereWithNamedParam(REFERENCED_ENTITY_ALIAS + "." + verEntCfg.getRevisionTypePropName(), false, "!=", DEL_REVISION_TYPE_PARAMETER);
+        rootParameters.addWhereWithNamedParam(REFERENCED_ENTITY_ALIAS + "." + revisionTypePropName, false, "!=", DEL_REVISION_TYPE_PARAMETER);
 
         StringBuilder sb = new StringBuilder();
         qb.build(sb, Collections.<String, Object>emptyMap());
         queryString = sb.toString();
     }
 
-    public Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision) {
-        Query query = versionsReader.getSession().createQuery(queryString);
-        query.setParameter(REVISION_PARAMETER, revision);
-        query.setParameter(DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL);
-        for (QueryParameterData paramData: referencingIdData.getPrefixedMapper().mapToQueryParametersFromId(primaryKey)) {
-            paramData.setParameterValue(query);
-        }
-
-        return query;
-    }
+	@Override
+	protected String getQueryString() {
+		return queryString;
+	}
 }

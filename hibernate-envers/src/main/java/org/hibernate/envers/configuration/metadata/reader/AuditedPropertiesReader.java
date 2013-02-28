@@ -319,7 +319,7 @@ public class AuditedPropertiesReader {
 			// Marking component properties as placed directly in class (not inside another component).
 			componentData.setBeanName(null);
 
-			PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource( propertyValue );
+			PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource( reflectionManager, propertyValue );
 			AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
 					ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg, reflectionManager,
 					propertyNamePrefix + MappingTools.createComponentPrefix(embeddedName)
@@ -338,7 +338,7 @@ public class AuditedPropertiesReader {
 				allClassAudited);
 
 		PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
-				propertyValue
+				reflectionManager, propertyValue
 		);
 		
 		ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
@@ -541,11 +541,11 @@ public class AuditedPropertiesReader {
 		public Class<? extends Annotation> annotationType() { return this.getClass(); }
 	};
 
-    private class ComponentPropertiesSource implements PersistentPropertiesSource {
+    public static class ComponentPropertiesSource implements PersistentPropertiesSource {
 		private final XClass xclass;
 		private final Component component;
 
-		private ComponentPropertiesSource(Component component) {
+		public ComponentPropertiesSource(ReflectionManager reflectionManager, Component component) {
 			try {
 				this.xclass = reflectionManager.classForName(component.getComponentClassName(), this.getClass());
 			} catch (ClassNotFoundException e) {

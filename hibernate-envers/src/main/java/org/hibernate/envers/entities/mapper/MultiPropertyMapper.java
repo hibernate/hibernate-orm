@@ -171,14 +171,14 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		}
 	}
 
-	public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
-                                                                                    PersistentCollection newColl,
-                                                                                    Serializable oldColl,
-                                                                                    Serializable id) {
+	public List<PersistentCollectionChangeData> mapCollectionChanges(SessionImplementor session,
+																	 String referencingPropertyName,
+                                                                     PersistentCollection newColl,
+                                                                     Serializable oldColl, Serializable id) {
 		Pair<PropertyMapper, String> pair = getMapperAndDelegatePropName(referencingPropertyName);
 		PropertyMapper mapper = pair.getFirst();
 		if (mapper != null) {
-			return mapper.mapCollectionChanges(pair.getSecond(), newColl, oldColl, id);
+			return mapper.mapCollectionChanges(session, pair.getSecond(), newColl, oldColl, id);
 		} else {
 			return null;
 		}

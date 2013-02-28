@@ -16,6 +16,7 @@ import java.util.Set;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
@@ -37,6 +38,8 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.property.Getter;
 import org.hibernate.sql.Update;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
@@ -234,20 +237,37 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
     @SuppressWarnings({"unchecked"})
-    public void performCollectionChange(Session session, AuditConfiguration auditCfg,
+    public void performCollectionChange(Session session, String entityName, String propertyName, AuditConfiguration auditCfg,
                                         PersistentCollectionChangeData persistentCollectionChangeData, Object revision) {
         final QueryBuilder qb = new QueryBuilder(persistentCollectionChangeData.getEntityName(), MIDDLE_ENTITY_ALIAS);
 
-        // Adding a parameter for each id component, except the rev number
         final String originalIdPropName = auditCfg.getAuditEntCfg().getOriginalIdPropName();
-        final Map<String, Object> originalId = (Map<String, Object>) persistentCollectionChangeData.getData().get(
-                originalIdPropName);
+        final Map<String, Object> originalId = (Map<String, Object>) persistentCollectionChangeData.getData().get(originalIdPropName);
+		final String revisionFieldName = auditCfg.getAuditEntCfg().getRevisionFieldName();
+		final String revisionTypePropName = auditCfg.getAuditEntCfg().getRevisionTypePropName();
+
+		// Adding a parameter for each id component, except the rev number and type.
         for (Map.Entry<String, Object> originalIdEntry : originalId.entrySet()) {
-            if (!auditCfg.getAuditEntCfg().getRevisionFieldName().equals(originalIdEntry.getKey())) {
+            if (!revisionFieldName.equals(originalIdEntry.getKey()) && !revisionTypePropName.equals(originalIdEntry.getKey())) {
                 qb.getRootParameters().addWhereWithParam(originalIdPropName + "." + originalIdEntry.getKey(),
                         true, "=", originalIdEntry.getValue());
             }
         }
+
+		final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) session ).getFactory();
+		final Type propertyType = sessionFactory.getEntityPersister( entityName ).getPropertyType( propertyName );
+		if ( propertyType.isCollectionType() ) {
+			CollectionType collectionPropertyType = (CollectionType) propertyType;
+			// Handling collection of components.
+			if ( collectionPropertyType.getElementType( sessionFactory ) instanceof ComponentType ) {
+				// Adding restrictions to compare data outside of primary key.
+				for ( Map.Entry<String, Object> dataEntry : persistentCollectionChangeData.getData().entrySet() ) {
+					if ( !originalIdPropName.equals( dataEntry.getKey() ) ) {
+						qb.getRootParameters().addWhereWithParam( dataEntry.getKey(), true, "=", dataEntry.getValue() );
+					}
+				}
+			}
+		}
 
         addEndRevisionNullRestriction(auditCfg, qb.getRootParameters());
 
@@ -280,7 +300,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	public void addAssociationAtRevisionRestriction(QueryBuilder rootQueryBuilder,  String revisionProperty, 
 		    String revisionEndProperty, boolean addAlias, MiddleIdData referencingIdData, 
 		    String versionsMiddleEntityName, String eeOriginalIdPropertyPath, String revisionPropertyPath,
-		    String originalIdPropertyName, MiddleComponentData... componentDatas) {
+		    String originalIdPropertyName, String alias1, MiddleComponentData... componentDatas) {
 		Parameters rootParameters = rootQueryBuilder.getRootParameters();
 		addRevisionRestriction(rootParameters, revisionProperty, revisionEndProperty, addAlias);
 	}

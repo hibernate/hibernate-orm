@@ -144,9 +144,9 @@ public class IndexTest extends BaseCoreFunctionalTestCase {
 		Bag set = (Bag)property.getValue();
 		Table collectionTable = set.getCollectionTable();
 
-		Iterator<UniqueKey> itr = collectionTable.getUniqueKeyIterator();
+		Iterator<Index> itr = collectionTable.getIndexIterator();
 		assertTrue( itr.hasNext() );
-		UniqueKey index = itr.next();
+		Index index = itr.next();
 		assertFalse( itr.hasNext() );
 		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
 		assertEquals( 1, index.getColumnSpan() );

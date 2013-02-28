@@ -69,7 +69,7 @@ public class Alias implements Identifiable {
 	}
 
 	@ManyToMany( cascade = CascadeType.ALL )
-	@JoinTable( name = "CHARACTER_ALIAS", indexes = @Index( columnList = "characters_id", unique = true))
+	@JoinTable( name = "CHARACTER_ALIAS", indexes = @Index( columnList = "characters_id"))
 //	@JoinTable(
 //			name = "CHARACTER_ALIAS",
 //			joinColumns = @JoinColumn(name="ALIAS_ID", referencedColumnName="ID"),

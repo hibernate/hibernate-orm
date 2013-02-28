@@ -130,11 +130,13 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 		}
     }
 
- 	public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
-                                                                                    PersistentCollection newColl,
-                                                                                    Serializable oldColl,
-                                                                                    Serializable id) {
-        return delegate.mapCollectionChanges(referencingPropertyName, newColl, oldColl, id);
+	public List<PersistentCollectionChangeData> mapCollectionChanges(SessionImplementor session, String referencingPropertyName,
+                                                                     PersistentCollection newColl,
+                                                                     Serializable oldColl, Serializable id) {
+        return delegate.mapCollectionChanges(session, referencingPropertyName, newColl, oldColl, id);
     }
 
+	public Map<PropertyData, PropertyMapper> getProperties() {
+		return delegate.getProperties();
+	}
 }

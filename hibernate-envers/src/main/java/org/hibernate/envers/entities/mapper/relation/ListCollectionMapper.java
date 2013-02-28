@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
@@ -45,8 +46,9 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
     private final MiddleComponentData indexComponentData;
 
     public ListCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
-                                MiddleComponentData elementComponentData, MiddleComponentData indexComponentData) {
-        super(commonCollectionMapperData, List.class, ListProxy.class);
+                                MiddleComponentData elementComponentData, MiddleComponentData indexComponentData,
+								boolean revisionTypeInId) {
+        super(commonCollectionMapperData, List.class, ListProxy.class, revisionTypeInId);
         this.elementComponentData = elementComponentData;
         this.indexComponentData = indexComponentData;
     }
@@ -76,9 +78,9 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
     }
 
     @SuppressWarnings({"unchecked"})
-    protected void mapToMapFromObject(Map<String, Object> data, Object changed) {
+    protected void mapToMapFromObject(SessionImplementor session, Map<String, Object> idData, Map<String, Object> data, Object changed) {
         Pair<Integer, Object> indexValuePair = (Pair<Integer, Object>) changed;
-        elementComponentData.getComponentMapper().mapToMapFromObject(data, indexValuePair.getSecond());
-        indexComponentData.getComponentMapper().mapToMapFromObject(data, indexValuePair.getFirst());
+        elementComponentData.getComponentMapper().mapToMapFromObject(session, idData, data, indexValuePair.getSecond());
+        indexComponentData.getComponentMapper().mapToMapFromObject(session, idData, data, indexValuePair.getFirst());
     }
 }

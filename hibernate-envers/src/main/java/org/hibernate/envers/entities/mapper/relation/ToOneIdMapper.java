@@ -34,6 +34,7 @@ import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Tools;
+import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -105,4 +106,8 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 
         setPropertyValue(obj, value);
     }
+
+	public void addMiddleEqualToQuery(Parameters parameters, String idPrefix1, String prefix1, String idPrefix2, String prefix2) {
+		delegate.addIdsEqualToQuery( parameters, prefix1, delegate, prefix2 );
+	}
 }

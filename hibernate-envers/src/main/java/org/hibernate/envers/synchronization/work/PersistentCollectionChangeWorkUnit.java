@@ -53,7 +53,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 		this.referencingPropertyName = referencingPropertyName;
 
         collectionChanges = auditCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
-                .mapCollectionChanges(referencingPropertyName, collection, snapshot, id);
+                .mapCollectionChanges(sessionImplementor, referencingPropertyName, collection, snapshot, id);
     }
 
     public PersistentCollectionChangeWorkUnit(SessionImplementor sessionImplementor, String entityName,
@@ -83,7 +83,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
             ((Map<String, Object>) persistentCollectionChangeData.getData().get(entitiesCfg.getOriginalIdPropName()))
                     .put(entitiesCfg.getRevisionFieldName(), revisionData);
 
-            auditStrategy.performCollectionChange(session, verCfg, persistentCollectionChangeData, revisionData);
+            auditStrategy.performCollectionChange(session, getEntityName(), referencingPropertyName, verCfg, persistentCollectionChangeData, revisionData);
         }
     }
 

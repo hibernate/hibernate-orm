@@ -45,15 +45,15 @@ import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants
  * Selects data from an audit entity.
  * @author Adam Warski (adam at warski dot org)
  */
-public final class OneAuditEntityQueryGenerator implements RelationQueryGenerator {
+public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGenerator {
     private final String queryString;
-    private final MiddleIdData referencingIdData;
 
     public OneAuditEntityQueryGenerator(GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg, 
                                         AuditStrategy auditStrategy,
                                         MiddleIdData referencingIdData,
-                                        String referencedEntityName, MiddleIdData referencedIdData) {
-        this.referencingIdData = referencingIdData;
+                                        String referencedEntityName, MiddleIdData referencedIdData,
+										boolean revisionTypeInId) {
+		super( verEntCfg, referencingIdData, revisionTypeInId );
 
         /*
          * The query that we need to create:
@@ -93,21 +93,15 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
 				revisionPropertyPath, originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR);
 
         // e.revision_type != DEL
-        rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), false, "!=", DEL_REVISION_TYPE_PARAMETER);
+        rootParameters.addWhereWithNamedParam(getRevisionTypePath(), false, "!=", DEL_REVISION_TYPE_PARAMETER);
 
         StringBuilder sb = new StringBuilder();
         qb.build(sb, Collections.<String, Object>emptyMap());
         queryString = sb.toString();
     }
 
-    public Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision) {
-        Query query = versionsReader.getSession().createQuery(queryString);
-        query.setParameter(REVISION_PARAMETER, revision);
-        query.setParameter(DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL);
-        for (QueryParameterData paramData: referencingIdData.getPrefixedMapper().mapToQueryParametersFromId(primaryKey)) {
-            paramData.setParameterValue(query);
-        }
-
-        return query;
-    }
+	@Override
+	protected String getQueryString() {
+		return queryString;
+	}
 }

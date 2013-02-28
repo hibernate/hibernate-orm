@@ -115,10 +115,10 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 		}
 	}
 
-    public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
+    public List<PersistentCollectionChangeData> mapCollectionChanges(SessionImplementor sessionImplementor,
+																	 String referencingPropertyName,
                                                                      PersistentCollection newColl,
-                                                                     Serializable oldColl,
-                                                                     Serializable id) {
+                                                                     Serializable oldColl, Serializable id) {
         return null;
     }
 

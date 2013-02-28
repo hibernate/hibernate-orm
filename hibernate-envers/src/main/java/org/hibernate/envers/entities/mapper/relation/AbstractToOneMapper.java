@@ -42,9 +42,9 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
     }
 
     @Override
-    public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
-                                                                     PersistentCollection newColl,
-                                                                     Serializable oldColl, Serializable id) {
+    public List<PersistentCollectionChangeData> mapCollectionChanges(SessionImplementor session, String referencingPropertyName,
+                                                                     PersistentCollection newColl, Serializable oldColl,
+																	 Serializable id) {
         return null;
     }
 

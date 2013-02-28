@@ -2064,7 +2064,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		// Ensure Restrictions creates "where foo is null", instead of
 		// "where foo = null"
 		List<Course> courses = s.createCriteria( Course.class ).add(
-				Restrictions.eq( "description", null) ).list();
+				Restrictions.eqOrIsNull( "description", null) ).list();
 		
 		assertEquals( courses.size(), 1 );
 		assertEquals( courses.get( 0 ).getCourseCode(), course.getCourseCode() );

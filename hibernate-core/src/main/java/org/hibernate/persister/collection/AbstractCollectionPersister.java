@@ -47,7 +47,6 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StructuredCollectionCacheEntry;
 import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
@@ -87,6 +86,7 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.Filterable;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.ListBinding;
+import org.hibernate.metamodel.spi.binding.ManyToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
@@ -696,7 +696,15 @@ public abstract class AbstractCollectionPersister
 		isMutable = collection.isMutable();
 
 		TableSpecification table = collection.getPluralAttributeKeyBinding().getCollectionTable();
-		fetchMode = collection.getFetchMode();
+		if ( collection.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.MANY_TO_MANY ) {
+			fetchMode = ( (ManyToManyPluralAttributeElementBinding) collection.getPluralAttributeElementBinding() ).fetchImmediately() ?
+					FetchMode.JOIN :
+					FetchMode.SELECT;
+		}
+		else {
+			// TODO: is this correct???
+			fetchMode = collection.getFetchMode();
+		}
 		elementType = collection.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getResolvedTypeMapping();
 		// isSet = collection.isSet();
 		// isSorted = collection.isSorted();
@@ -1002,20 +1010,39 @@ public abstract class AbstractCollectionPersister
 
 		if ( collection.getPluralAttributeElementBinding()
 				.getNature() == PluralAttributeElementBinding.Nature.MANY_TO_MANY ) {
-			manyToManyFilterHelper = new FilterHelper(
-					Filterable.class.cast( collection.getPluralAttributeElementBinding() )
-							.getFilterConfigurations(), factory
-			);
+			final ManyToManyPluralAttributeElementBinding manyToManyElementBinding =
+					(ManyToManyPluralAttributeElementBinding) collection.getPluralAttributeElementBinding();
+			manyToManyFilterHelper = new FilterHelper( manyToManyElementBinding.getFilterConfigurations(), factory );
+			manyToManyWhereString = StringHelper.isNotEmpty( manyToManyElementBinding.getManyToManyWhere() ) ?
+					"( " +manyToManyElementBinding.getManyToManyWhere() + ")" :
+					null;
+			manyToManyWhereTemplate = manyToManyWhereString == null ?
+					null :
+					Template.renderWhereStringTemplate(
+							manyToManyWhereString, factory.getDialect(), factory.getSqlFunctionRegistry()
+					);
+
+			hasManyToManyOrder = manyToManyElementBinding.getManyToManyOrderBy() != null;
+			if ( hasManyToManyOrder ) {
+				manyToManyOrderByTranslation = Template.translateOrderBy(
+						manyToManyElementBinding.getManyToManyOrderBy(),
+						new ColumnMapperImpl(),
+						factory,
+						dialect,
+						factory.getSqlFunctionRegistry()
+				);
+			}
+			else {
+				manyToManyOrderByTranslation = null;
+			}
 		}
 		else {
 			manyToManyFilterHelper = new FilterHelper( Collections.<FilterConfiguration>emptyList(), factory );
+			manyToManyWhereString = null;
+			manyToManyWhereTemplate = null;
+			hasManyToManyOrder = false;
+			manyToManyOrderByTranslation = null;
 		}
-		// TODO: fix this when ManyToManyPluralAttributeElementBinding is working
-
-		manyToManyWhereString = null;
-		manyToManyWhereTemplate = null;
-		hasManyToManyOrder = false;
-		manyToManyOrderByTranslation = null;
 
 		initCollectionPropertyMap();
 	}

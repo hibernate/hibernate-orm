@@ -42,7 +42,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
-@FailureExpectedWithNewMetamodel
 public class ABCProxyTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {

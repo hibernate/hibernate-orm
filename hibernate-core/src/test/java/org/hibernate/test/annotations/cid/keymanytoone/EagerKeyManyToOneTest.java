@@ -37,7 +37,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	public static final String CARD_ID = "cardId";
 	public static final String KEY_ID = "keyId";

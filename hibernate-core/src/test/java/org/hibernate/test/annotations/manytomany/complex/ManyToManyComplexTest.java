@@ -50,7 +50,6 @@ import static org.junit.Assert.assertTrue;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-@FailureExpectedWithNewMetamodel
 public class ManyToManyComplexTest
  extends BaseCoreFunctionalTestCase {
 

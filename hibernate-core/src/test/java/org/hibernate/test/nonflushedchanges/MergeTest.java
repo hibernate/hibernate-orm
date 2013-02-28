@@ -415,8 +415,11 @@ public class MergeTest extends AbstractOperationTestCase {
 		Node grandchild = new Node( "grandchild" );
 		root.addChild( child );
 		child.addChild( grandchild );
-		s.merge( root );
+		root = ( Node ) s.merge( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		root = ( Node ) getOldToNewEntityRefMap().get( root );
+		child = ( Node ) root.getChildren().iterator().next();
+		grandchild = ( Node ) child.getChildren().iterator().next();
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 3 );
@@ -429,8 +432,9 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
-		s.merge( root );
+		root = ( Node ) s.merge( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		root = ( Node ) getOldToNewEntityRefMap().get( root );
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
@@ -444,8 +448,9 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();
-		s.merge( root );
+		root = ( Node ) s.merge( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		root = ( Node ) getOldToNewEntityRefMap().get( root );
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 2 );

@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToMany;
 
 /**
  * @author Gail Badner
@@ -66,7 +66,7 @@ public class EntityWithUnidirectionalManyToMany {
 		this.name = name;
 	}
 
-	@OneToMany
+	@ManyToMany
 	public Collection<SimpleEntity> getTheBag() {
 		return theBag;
 	}
@@ -75,7 +75,7 @@ public class EntityWithUnidirectionalManyToMany {
 		this.theBag = theBag;
 	}
 
-	@OneToMany
+	@ManyToMany
 	public Set<SimpleEntity> getTheSet() {
 		return theSet;
 	}
@@ -84,7 +84,7 @@ public class EntityWithUnidirectionalManyToMany {
 		this.theSet = theSet;
 	}
 
-	@OneToMany
+	@ManyToMany
 	public Collection<SimpleEntity> getThePropertyRefSet() {
 		return thePropertyRefBag;
 	}

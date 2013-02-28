@@ -28,7 +28,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
@@ -40,7 +43,10 @@ import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
+
 import org.jboss.jandex.AnnotationInstance;
 
 /**
@@ -118,14 +124,30 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 	@Override
 	public String getExplicitForeignKeyName() {
-		// TODO: If inverse, does getInverseForeignKeyName need to be handled?
-		return associationAttribute.getExplicitForeignKeyName();
+		if ( associationAttribute.getMappedBy() != null ) {
+			throw new NotYetImplementedException( "foreign key name on mappedBy side not implemented yet." );
+		}
+		else {
+			return associationAttribute.getInverseForeignKeyName();
+		}
 	}
 
 	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
-		return associationAttribute.getJoinColumnValues()
-				.isEmpty() ? null : new AnnotationJoinColumnResolutionDelegate();
+		if ( associationAttribute.getMappedBy() != null ) {
+			if ( ownerAttributeSource instanceof PluralAttributeSource ) {
+				PluralAttributeSource ownerPluralAttributeSource = (PluralAttributeSource) ownerAttributeSource;
+				return ownerPluralAttributeSource.getKeySource().getForeignKeyTargetColumnResolutionDelegate();
+
+			}
+			else {
+				ToOneAttributeSource ownerSingularAttributeSource = (ToOneAttributeSource) ownerAttributeSource;
+				return ownerSingularAttributeSource.getForeignKeyTargetColumnResolutionDelegate();
+			}
+		}
+		return associationAttribute.getJoinColumnValues().isEmpty() ?
+				null :
+				new AnnotationJoinColumnResolutionDelegate();
 	}
 
 	@Override
@@ -134,18 +156,13 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	}
 
 	@Override
-	public String getOrderBy() {
-		return associationAttribute.getOrderBy();
-	}
-
-	@Override
 	public String getWhere() {
 		return associationAttribute.getWhereClause();
 	}
 
 	@Override
-	public boolean fetchImmediately() {
-		return associationAttribute.isLazy();
+	public FetchTiming getFetchTiming() {
+		return FetchTiming.IMMEDIATE;
 	}
 
 	@Override
@@ -168,6 +185,16 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 		return false;
 	}
 
+	@Override
+	public boolean isOrdered() {
+		return StringHelper.isNotEmpty( associationAttribute.getOrderBy() );
+	}
+
+	@Override
+	public String getOrder() {
+		return associationAttribute.getOrderBy();
+	}
+
 	// TODO: This needs reworked.
 	public class AnnotationJoinColumnResolutionDelegate
 			implements ForeignKeyContributingSource.JoinColumnResolutionDelegate {
@@ -186,7 +213,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 				}
 				org.hibernate.metamodel.spi.relational.Column resolvedColumn = context.resolveColumn(
 						column.getReferencedColumnName(),
-						logicalJoinTableName,
+						null,
 						null,
 						null
 				);
@@ -197,7 +224,7 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 
 		@Override
 		public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
-			return context.resolveTable( logicalJoinTableName, null, null );
+			return context.resolveTable( null, null, null );
 		}
 
 		@Override

@@ -34,7 +34,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
  * @author Gail Badner
  */
 @SuppressWarnings("unchecked")
-@FailureExpectedWithNewMetamodel
 public class ManyToManyMaxFetchDepth0Test extends ManyToManyComplexTest {
 	@Override
 	protected void configure(Configuration cfg) {

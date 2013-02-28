@@ -31,7 +31,6 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -40,7 +39,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Gail Badner (extracted from ManyToManyTest authored by Emmanuel Bernard)
  */
-@FailureExpectedWithNewMetamodel
 public class ManyToManySimpleTest extends BaseCoreFunctionalTestCase {
 	@Test
 	 public void testDefault() throws Exception {

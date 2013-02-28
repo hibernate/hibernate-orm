@@ -78,8 +78,8 @@ public class ManyToManyCollectionTableNamingStrategyHelper extends TableNamingSt
 	public String getLogicalName(NamingStrategy strategy) {
 		return strategy.logicalCollectionTableName(
 				logicalName,
-				ownerEntityBinding.getEntity().getName(),
-				inverseEntityBinding.getEntity().getName(),
+				ownerEntityBinding.getPrimaryTable().getLogicalName().getText(),
+				inverseEntityBinding.getPrimaryTable().getLogicalName().getText(),
 				propertyName
 		);
 	}

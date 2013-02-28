@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.AnnotationException;
@@ -250,15 +251,19 @@ public class EntitySourceImpl implements EntitySource {
 			attributeList.add( new SingularAttributeSourceImpl( attribute , override ));
 		}
 
-		for ( EmbeddableClass component : entityClass.getEmbeddedClasses().values() ) {
-			attributeList.add(
-					new ComponentAttributeSourceImpl(
-							component,
-							"",
-							entityClass.getAttributeOverrideMap(),
-							entityClass.getClassAccessType()
-					)
-			);
+		for ( Map.Entry<String,EmbeddableClass> entry : entityClass.getEmbeddedClasses().entrySet() ) {
+			final String attributeName = entry.getKey();
+			if ( !entityClass.isIdAttribute( attributeName ) ) {
+				final EmbeddableClass component = entry.getValue();
+				attributeList.add(
+						new ComponentAttributeSourceImpl(
+								component,
+								"",
+								entityClass.getAttributeOverrideMap(),
+								entityClass.getClassAccessType()
+						)
+				);
+			}
 		}
 		SourceHelper.resolveAssociationAttributes( entityClass, attributeList );
 		return attributeList;

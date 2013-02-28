@@ -515,7 +515,7 @@ public abstract class AbstractEntitySourceImpl
 
 	@Override
 	public String getPath() {
-		return bindingContext().determineEntityName( entityElement );
+		return "";
 	}
 
 	@Override

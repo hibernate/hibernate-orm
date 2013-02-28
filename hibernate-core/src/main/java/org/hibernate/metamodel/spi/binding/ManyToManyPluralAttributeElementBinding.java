@@ -38,6 +38,7 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 	private List<FilterConfiguration> filterConfigurations = new ArrayList<FilterConfiguration>();
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
+	private boolean fetchImmediately;
 	// TODO: really should have value defined (which defines table), but may not know 
 	private RelationalValueBindingContainer relationalValueBindingContainer;
 
@@ -75,6 +76,13 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 		this.manyToManyOrderBy = manyToManyOrderBy;
 	}
 
+	public boolean fetchImmediately() {
+		return fetchImmediately;
+	}
+
+	public void setFetchImmediately(boolean fetchImmediately) {
+		this.fetchImmediately = fetchImmediately;
+	}
 	@Override
 	public void addFilterConfiguration(FilterConfiguration filterConfiguration) {
 		filterConfigurations.add( filterConfiguration );

@@ -30,11 +30,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -195,14 +198,20 @@ public class Binder {
 	private final MetadataImplementor metadata;
 	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 	private final ObjectNameNormalizer nameNormalizer;
-	private final HashMap<String, EntitySource> entitySourcesByName = new HashMap<String, EntitySource>();
-	private final HashMap<RootEntitySource, EntityHierarchy> entityHierarchiesByRootEntitySource =
-			new HashMap<RootEntitySource, EntityHierarchy>();
-	private final HashMap<String, AttributeSource> attributeSourcesByName = new HashMap<String, AttributeSource>();
+
+	// sources should be available throughout the binding process
+	private final Map<String, EntitySource> entitySourcesByName = new HashMap<String, EntitySource>();
+	private final Map<RootEntitySource, EntityHierarchy> entityHierarchiesByRootEntitySource =
+				new LinkedHashMap<RootEntitySource, EntityHierarchy>();
+	private final Map<String, AttributeSource> attributeSourcesByName = new HashMap<String, AttributeSource>();
+
 	// todo : apply org.hibernate.metamodel.MetadataSources.getExternalCacheRegionDefinitions()
+	// the inheritanceTypes and entityModes correspond with bindingContexts
 	private final LinkedList<LocalBindingContext> bindingContexts = new LinkedList<LocalBindingContext>();
 	private final LinkedList<InheritanceType> inheritanceTypes = new LinkedList<InheritanceType>();
 	private final LinkedList<EntityMode> entityModes = new LinkedList<EntityMode>();
+
+	// helpers
 	private final HibernateTypeHelper typeHelper; // todo: refactor helper and remove redundant methods in this class
 	private final ForeignKeyHelper foreignKeyHelper;
 
@@ -216,13 +225,11 @@ public class Binder {
 	}
 
 	/**
-	 * The entry point of {@linkplain Binder} class, binds all the entity hierarchy one by one.
+	 * The entry point of {@linkplain Binder} class, adds all the entity hierarchy one by one.
 	 *
 	 * @param entityHierarchies The entity hierarchies resolved from mappings
 	 */
-	public void bindEntityHierarchies(final Iterable<EntityHierarchy> entityHierarchies) {
-		entitySourcesByName.clear();
-		attributeSourcesByName.clear();
+	public void addEntityHierarchies(final Iterable<EntityHierarchy> entityHierarchies) {
 		inheritanceTypes.clear();
 		entityModes.clear();
 		bindingContexts.clear();
@@ -231,61 +238,335 @@ public class Binder {
 		for ( final EntityHierarchy entityHierarchy : entityHierarchies ) {
 			entityHierarchiesByRootEntitySource.put( entityHierarchy.getRootEntitySource(), entityHierarchy );
 			mapSourcesByName( entityHierarchy.getRootEntitySource() );
+			addEntityBindings( entityHierarchy );
 		}
-		// Bind each entity hierarchy
-		for ( final EntityHierarchy entityHierarchy : entityHierarchies ) {
-			bindEntityHierarchy( entityHierarchy );
+	}
+
+	private void addEntityBindings(final EntityHierarchy entityHierarchy) {
+		final LocalBindingContextExecutor createEntityExecutor = new LocalBindingContextExecutor() {
+			@Override
+			public void execute(LocalBindingContextExecutionContext executorContext) {
+				createEntityBinding( executorContext.getSuperEntityBinding(), executorContext.getEntitySource() );
+			}
+		};
+		applyToEntityHierarchy( entityHierarchy, createEntityExecutor, createEntityExecutor );
+	}
+
+	public void bindEntityHierarchies() {
+		bindingContexts.clear();
+		inheritanceTypes.clear();
+		entityModes.clear();
+
+		LocalBindingContextExecutor rootEntityCallback = new LocalBindingContextExecutor() {
+			@Override
+			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
+				final RootEntitySource rootEntitySource = (RootEntitySource) bindingContextContext.getEntitySource();
+				final EntityBinding rootEntityBinding = bindingContextContext.getEntityBinding();
+				bindPrimaryTable( rootEntityBinding, rootEntitySource );
+				// Create/Bind root-specific information
+				bindIdentifier( rootEntityBinding, rootEntitySource.getIdentifierSource() );
+				bindSecondaryTables( rootEntityBinding, rootEntitySource );
+				//bindUniqueConstraints( rootEntityBinding, rootEntitySource );
+				bindVersion( rootEntityBinding, rootEntitySource.getVersioningAttributeSource() );
+				bindDiscriminator( rootEntityBinding, rootEntitySource );
+				bindIdentifierGenerator( rootEntityBinding );
+				bindMultiTenancy( rootEntityBinding, rootEntitySource );
+				rootEntityBinding.getHierarchyDetails().setCaching( rootEntitySource.getCaching() );
+				rootEntityBinding.getHierarchyDetails().setNaturalIdCaching( rootEntitySource.getNaturalIdCaching() );
+				rootEntityBinding.getHierarchyDetails()
+								.setExplicitPolymorphism( rootEntitySource.isExplicitPolymorphism() );
+				rootEntityBinding.getHierarchyDetails().setOptimisticLockStyle( rootEntitySource.getOptimisticLockStyle() );
+				rootEntityBinding.setMutable( rootEntitySource.isMutable() );
+				rootEntityBinding.setWhereFilter( rootEntitySource.getWhere() );
+				rootEntityBinding.setRowId( rootEntitySource.getRowId() );
+				//bindAttributes( rootEntityBinding, rootEntitySource );
+			}
+		};
+		LocalBindingContextExecutor subEntityCallback = new LocalBindingContextExecutor() {
+			@Override
+			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
+				final EntitySource entitySource = bindingContextContext.getEntitySource();
+				final EntityBinding entityBinding = bindingContextContext.getEntityBinding();
+				final EntityBinding superEntityBinding = bindingContextContext.getSuperEntityBinding();
+				// Create new entity binding
+				entityBinding.setMutable( entityBinding.getHierarchyDetails().getRootEntityBinding().isMutable() );
+				markSuperEntityTableAbstractIfNecessary( superEntityBinding );
+				bindPrimaryTable( entityBinding, entitySource );
+				bindSubEntityPrimaryKey( entityBinding, entitySource );
+				bindSecondaryTables( entityBinding, entitySource );
+				//bindUniqueConstraints( entityBinding, entitySource );
+				//bindAttributes( entityBinding, entitySource );
+			}
+		};
+		Set<EntityHierarchy> unresolvedEntityHierarchies = new HashSet<EntityHierarchy>( );
+		for ( final EntityHierarchy entityHierarchy : entityHierarchiesByRootEntitySource.values() ) {
+			if ( isIdentifierDependentOnOtherEntityHierarchy( entityHierarchy ) ) {
+				unresolvedEntityHierarchies.add( entityHierarchy );
+			}
+			else {
+				applyToEntityHierarchy( entityHierarchy, rootEntityCallback, subEntityCallback );
+			}
+		}
+
+		for ( EntityHierarchy entityHierarchy : unresolvedEntityHierarchies ) {
+			applyToEntityHierarchy( entityHierarchy, rootEntityCallback, subEntityCallback );
+		}
+
+		for ( final EntityHierarchy entityHierarchy : entityHierarchiesByRootEntitySource.values() ) {
+			createCompositeAttributes( entityHierarchy );
+		}
+
+		for ( final EntityHierarchy entityHierarchy : entityHierarchiesByRootEntitySource.values() ) {
+			bindSingularAttributes( entityHierarchy, SingularAttributeSource.Nature.BASIC );
+		}
+
+		// do many-to-one before one-to-one
+		for ( final EntityHierarchy entityHierarchy : entityHierarchiesByRootEntitySource.values() ) {
+			bindSingularAttributes( entityHierarchy, SingularAttributeSource.Nature.MANY_TO_ONE );
+		}
+
+		for ( final EntityHierarchy entityHierarchy : entityHierarchiesByRootEntitySource.values() ) {
+			bindSingularAttributes( entityHierarchy, SingularAttributeSource.Nature.ONE_TO_ONE );
+		}
+
+		for ( final EntityHierarchy entityHierarchy : entityHierarchiesByRootEntitySource.values() ) {
+			bindPluralAttributes( entityHierarchy, false );
+		}
+
+		for ( final EntityHierarchy entityHierarchy : entityHierarchiesByRootEntitySource.values() ) {
+			bindPluralAttributes( entityHierarchy, true );
+		}
+
+		//for ( final EntityHierarchy entityHierarchy : entityHierarchiesByRootEntitySource.values() ) {
+		//	completeCompositeAttributes( entityHierarchy );
+		//}
+
+		LocalBindingContextExecutor uniqueKeyExecutor = new LocalBindingContextExecutor() {
+			@Override
+			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
+				bindUniqueConstraints( bindingContextContext.getEntityBinding(), bindingContextContext.getEntitySource() );
+			}
+		};
+		for ( final EntityHierarchy entityHierarchy : entityHierarchiesByRootEntitySource.values() ) {
+			applyToEntityHierarchy( entityHierarchy, uniqueKeyExecutor, uniqueKeyExecutor );
+		}
+	}
+
+	private boolean isIdentifierDependentOnOtherEntityHierarchy(EntityHierarchy entityHierarchy) {
+		final RootEntitySource rootEntitySource = entityHierarchy.getRootEntitySource();
+		final IdentifierSource identifierSource = rootEntitySource.getIdentifierSource();
+		if ( identifierSource.getNature() != EntityIdentifierNature.SIMPLE ) {
+			List<? extends AttributeSource> subAttributeSources =
+					identifierSource.getNature() == EntityIdentifierNature.AGGREGATED_COMPOSITE ?
+							( (AggregatedCompositeIdentifierSource) identifierSource ).getIdentifierAttributeSource().attributeSources() :
+							( (NonAggregatedCompositeIdentifierSource) identifierSource ).getAttributeSourcesMakingUpIdentifier();
+			return containsSingularAssociation( subAttributeSources );
+		}
+		else {
+			return false;
+		}
+	}
+
+	private boolean containsSingularAssociation(List<? extends AttributeSource> subAttributeSources) {
+		for ( AttributeSource attributeSource : subAttributeSources ) {
+			SingularAttributeSource singularAttributeSource = (SingularAttributeSource) attributeSource;
+			if ( singularAttributeSource.getNature() == SingularAttributeSource.Nature.MANY_TO_ONE ||
+					singularAttributeSource.getNature() == SingularAttributeSource.Nature.ONE_TO_ONE ) {
+				return true;
+			}
+			else if ( ( (SingularAttributeSource) attributeSource ).getNature() == SingularAttributeSource.Nature.COMPOSITE ) {
+				ComponentAttributeSource componentAttributeSource = (ComponentAttributeSource) attributeSource;
+				return containsSingularAssociation( componentAttributeSource.attributeSources() );
+			}
+		}
+		return false;
+	}
+
+	private void createCompositeAttributes(
+			final EntityHierarchy entityHierarchy) {
+		LocalBindingContextExecutor executor = new LocalBindingContextExecutor() {
+			@Override
+			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
+				createCompositeAttributes(
+						bindingContextContext.getEntityBinding(),
+						bindingContextContext.getEntitySource()
+				);
+			}
+		};
+		applyToEntityHierarchy( entityHierarchy, executor, executor );
+	}
+
+	private void createCompositeAttributes(
+			final AttributeBindingContainer attributeBindingContainer,
+			final AttributeSourceContainer attributeSourceContainer) {
+		for ( AttributeSource attributeSource : attributeSourceContainer.attributeSources() ) {
+			if ( attributeSource.isSingular() ) {
+				SingularAttributeSource singularAttributeSource = (SingularAttributeSource) attributeSource;
+				if (  singularAttributeSource.getNature() == SingularAttributeSource.Nature.COMPOSITE ) {
+					ComponentAttributeSource componentAttributeSource = (ComponentAttributeSource) attributeSource;
+					CompositeAttributeBinding compositeAttributeBinding =
+							createAggregatedCompositeAttribute( attributeBindingContainer, componentAttributeSource, null );
+					createCompositeAttributes( compositeAttributeBinding, componentAttributeSource );
+				}
+			}
+		}
+	}
+
+	private void completeCompositeAttributes(
+			final EntityHierarchy entityHierarchy) {
+		LocalBindingContextExecutor executor = new LocalBindingContextExecutor() {
+			@Override
+			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
+				completeCompositeAttributes(
+						bindingContextContext.getEntityBinding(),
+						bindingContextContext.getEntitySource()
+				);
+			}
+		};
+		applyToEntityHierarchy( entityHierarchy, executor, executor );
+	}
+
+	private void completeCompositeAttributes(
+			final AttributeBindingContainer attributeBindingContainer,
+			final AttributeSourceContainer attributeSourceContainer) {
+		for ( AttributeSource attributeSource : attributeSourceContainer.attributeSources() ) {
+			if ( attributeSource.isSingular() ) {
+				SingularAttributeSource singularAttributeSource = (SingularAttributeSource) attributeSource;
+				if (  singularAttributeSource.getNature() == SingularAttributeSource.Nature.COMPOSITE ) {
+					ComponentAttributeSource componentAttributeSource = (ComponentAttributeSource) attributeSource;
+					CompositeAttributeBinding compositeAttributeBinding =
+							(CompositeAttributeBinding) attributeBindingContainer.locateAttributeBinding( componentAttributeSource.getName() );
+					completeCompositeAttributes( compositeAttributeBinding, componentAttributeSource );
+					typeHelper.bindAggregatedCompositeAttributeType(
+							false,
+							(Aggregate) compositeAttributeBinding.getAttribute().getSingularAttributeType(),
+							null, // TODO: don't have the default value at this point; shouldn't be needed...
+							compositeAttributeBinding
+					);
+				}
+			}
+		}
+	}
+
+	private void bindSingularAttributes(
+			final EntityHierarchy entityHierarchy,
+			final SingularAttributeSource.Nature nature) {
+		LocalBindingContextExecutor executor = new LocalBindingContextExecutor() {
+			@Override
+			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
+				bindSingularAttributes(
+						bindingContextContext.getEntityBinding(),
+						bindingContextContext.getEntitySource(),
+						nature,
+						null
+				);
+			}
+		};
+		applyToEntityHierarchy( entityHierarchy, executor, executor );
+	}
+
+	private void bindSingularAttributes(
+			final AttributeBindingContainer attributeBindingContainer,
+			final AttributeSourceContainer attributeSourceContainer,
+			final SingularAttributeSource.Nature nature,
+			final SingularAttribute parentReference) {
+		for ( AttributeSource attributeSource : attributeSourceContainer.attributeSources() ) {
+			if ( parentReference != null && parentReference.getName().equals( attributeSource.getName() ) ) {
+				// skip the attribute because it is the parent reference
+				continue;
+			}
+			if ( attributeSource.isSingular() ) {
+				SingularAttributeSource singularAttributeSource = (SingularAttributeSource) attributeSource;
+				if ( singularAttributeSource.getNature() == SingularAttributeSource.Nature.COMPOSITE ) {
+					final ComponentAttributeSource compositeAttributeSource = (ComponentAttributeSource) attributeSource;
+					final CompositeAttributeBinding compositeAttributeBinding =
+							(CompositeAttributeBinding) attributeBindingContainer.locateAttributeBinding( attributeSource.getName() );
+					bindSingularAttributes(
+							compositeAttributeBinding,
+							compositeAttributeSource,
+							nature,
+							compositeAttributeBinding.getParentReference()
+					);
+					completeCompositeAttributeBindingIfPossible( compositeAttributeBinding, compositeAttributeSource );
+				}
+				else if ( singularAttributeSource.getNature() == nature ) {
+					bindAttribute( attributeBindingContainer, attributeSource );
+				}
+			}
+		}
+	}
+
+	private void completeCompositeAttributeBindingIfPossible(
+			CompositeAttributeBinding compositeAttributeBinding,
+			ComponentAttributeSource compositeAttributeSource
+	) {
+		final int nAttributeSourcesExcludingParent =
+				compositeAttributeBinding.getParentReference() != null ?
+						compositeAttributeSource.attributeSources().size() - 1 :
+						compositeAttributeSource.attributeSources().size();
+		if ( compositeAttributeBinding.attributeBindingSpan() == nAttributeSourcesExcludingParent ) {
+			boolean allResolved = true;
+			for ( AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
+				if ( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() == null ) {
+					allResolved = false;
+					break;
+				}
+			}
+			if ( allResolved ) {
+				typeHelper.bindAggregatedCompositeAttributeType(
+						false,
+						(Aggregate) compositeAttributeBinding.getAttribute().getSingularAttributeType(),
+						null, // TODO: don't have the default value at this point; shouldn't be needed...
+						compositeAttributeBinding
+				);
+			}
+		}
+	}
+
+	private void bindPluralAttributes(
+			final EntityHierarchy entityHierarchy,
+			final boolean isInverse) {
+		LocalBindingContextExecutor executor = new LocalBindingContextExecutor() {
+			@Override
+			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
+				bindPluralAttributes(
+						bindingContextContext.getEntityBinding(),
+						bindingContextContext.getEntitySource(),
+						isInverse
+				);
+			}
+		};
+		applyToEntityHierarchy( entityHierarchy, executor, executor );
+	}
+
+	private void bindPluralAttributes(
+			final AttributeBindingContainer attributeBindingContainer,
+			final AttributeSourceContainer attributeSourceContainer,
+			final boolean isInverse) {
+		for ( AttributeSource attributeSource : attributeSourceContainer.attributeSources() ) {
+			if ( attributeSource.isSingular() ) {
+				SingularAttributeSource singularAttributeSource = (SingularAttributeSource) attributeSource;
+				if ( singularAttributeSource.getNature() == SingularAttributeSource.Nature.COMPOSITE ) {
+					final ComponentAttributeSource compositeAttributeSource = (ComponentAttributeSource) attributeSource;
+					final CompositeAttributeBinding compositeAttributeBinding =
+							(CompositeAttributeBinding) attributeBindingContainer.locateAttributeBinding( attributeSource.getName() );
+					bindPluralAttributes(
+							compositeAttributeBinding,
+							compositeAttributeSource,
+							isInverse
+					);
+					completeCompositeAttributeBindingIfPossible( compositeAttributeBinding, compositeAttributeSource );
+				}
+			}
+			else {
+				if ( isInverse == ( (PluralAttributeSource) attributeSource ).isInverse() ) {
+					bindAttribute( attributeBindingContainer, attributeSource );
+				}
+			}
 		}
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Entity binding relates methods
-
-	/**
-	 * Binding a single entity hierarchy.
-	 *
-	 * @param entityHierarchy The entity hierarchy to be binded.
-	 *
-	 * @return The root {@link EntityBinding} of the entity hierarchy mapping.
-	 */
-	private EntityBinding bindEntityHierarchy(final EntityHierarchy entityHierarchy) {
-		final RootEntitySource rootEntitySource = entityHierarchy.getRootEntitySource();
-		// Return existing binding if available
-		EntityBinding rootEntityBinding = metadata.getEntityBinding( rootEntitySource.getEntityName() );
-		if ( rootEntityBinding != null ) {
-			return rootEntityBinding;
-		}
-		setupBindingContext( entityHierarchy, rootEntitySource );
-		try {
-			// Create root entity binding
-			rootEntityBinding = createEntityBinding( null, rootEntitySource );
-			bindPrimaryTable( rootEntityBinding, rootEntitySource );
-			// Create/Bind root-specific information
-			bindIdentifier( rootEntityBinding, rootEntitySource.getIdentifierSource() );
-			bindSecondaryTables( rootEntityBinding, rootEntitySource );
-			bindUniqueConstraints( rootEntityBinding, rootEntitySource );
-			bindVersion( rootEntityBinding, rootEntitySource.getVersioningAttributeSource() );
-			bindDiscriminator( rootEntityBinding, rootEntitySource );
-			bindIdentifierGenerator( rootEntityBinding );
-			bindMultiTenancy( rootEntityBinding, rootEntitySource );
-			rootEntityBinding.getHierarchyDetails().setCaching( rootEntitySource.getCaching() );
-			rootEntityBinding.getHierarchyDetails().setNaturalIdCaching( rootEntitySource.getNaturalIdCaching() );
-			rootEntityBinding.getHierarchyDetails()
-					.setExplicitPolymorphism( rootEntitySource.isExplicitPolymorphism() );
-			rootEntityBinding.getHierarchyDetails().setOptimisticLockStyle( rootEntitySource.getOptimisticLockStyle() );
-			rootEntityBinding.setMutable( rootEntitySource.isMutable() );
-			rootEntityBinding.setWhereFilter( rootEntitySource.getWhere() );
-			rootEntityBinding.setRowId( rootEntitySource.getRowId() );
-			// Bind attributes and sub-entities to root entity
-			bindAttributes( rootEntityBinding, rootEntitySource );
-			if ( inheritanceTypes.peek() != InheritanceType.NO_INHERITANCE ) {
-				bindSubEntities( rootEntityBinding, rootEntitySource );
-			}
-		}
-		finally {
-			cleanupBindingContext();
-		}
-		return rootEntityBinding;
-	}
 
 	private EntityBinding findOrBindEntityBinding(
 			final ValueHolder<Class<?>> entityJavaTypeValue,
@@ -301,7 +582,11 @@ public class Binder {
 		// Check if binding has already been created
 		EntityBinding entityBinding = metadata.getEntityBinding( entityName );
 		if ( entityBinding == null ) {
+			 throw bindingContext().makeMappingException(
+					 String.format( "No entity binding with name: %s", entityName )
+			 );
 			// Find appropriate source to create binding
+			/*
 			final EntitySource entitySource = entitySourcesByName.get( entityName );
 			if ( entitySource == null ) {
 				String msg = log.missingEntitySource( entityName );
@@ -323,6 +608,7 @@ public class Binder {
 				);
 				entityBinding = bindEntityHierarchy( entityHierarchy );
 			}
+			*/
 		}
 		return entityBinding;
 	}
@@ -933,6 +1219,7 @@ public class Binder {
 	private AttributeBinding attributeBinding(
 			final String entityName,
 			final String attributeName) {
+		/*
 		// Check if binding has already been created
 		final EntityBinding entityBinding = findOrBindEntityBinding( entityName );
 		final AttributeSource attributeSource = attributeSourcesByName.get(
@@ -943,6 +1230,8 @@ public class Binder {
 		);
 		bindAttribute( entityBinding, attributeSource );
 		return entityBinding.locateAttributeBinding( attributeName );
+		*/
+		return null;
 	}
 
 	private AttributeBinding bindAttribute(
@@ -1036,6 +1325,25 @@ public class Binder {
 			final ComponentAttributeSource attributeSource,
 			SingularAttribute attribute,
 			boolean isAttributeIdentifier) {
+		CompositeAttributeBinding attributeBinding = createAggregatedCompositeAttribute(
+				attributeBindingContainer,
+				attributeSource,
+				attribute
+		);
+		bindAttributes( attributeBinding, attributeSource );
+		typeHelper.bindAggregatedCompositeAttributeType(
+				isAttributeIdentifier,
+				(Aggregate) attributeBinding.getAttribute().getSingularAttributeType(),
+				null, // TODO: don't have the default value at this point; shouldn't be needed...
+				attributeBinding
+		);
+		return attributeBinding;
+	}
+
+	private CompositeAttributeBinding createAggregatedCompositeAttribute(
+			final AttributeBindingContainer attributeBindingContainer,
+			final ComponentAttributeSource attributeSource,
+			SingularAttribute attribute) {
 		final Aggregate composite;
 		ValueHolder<Class<?>> defaultJavaClassReference = null;
 		if ( attribute == null ) {
@@ -1091,13 +1399,6 @@ public class Binder {
 					.classForName( attributeSource.getExplicitTuplizerClassName() );
 			attributeBinding.setCustomComponentTuplizerClass( tuplizerClass );
 		}
-		bindAttributes( attributeBinding, attributeSource );
-		typeHelper.bindAggregatedCompositeAttributeType(
-				isAttributeIdentifier,
-				composite,
-				defaultJavaClassReference,
-				attributeBinding
-		);
 		return attributeBinding;
 	}
 
@@ -1447,18 +1748,6 @@ public class Binder {
 			}
 		}
 
-		final Type resolvedType = typeHelper.resolvePluralType( attributeBinding, attributeSource, nature );
-		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
-		ReflectedCollectionJavaTypes reflectedCollectionJavaTypes = HibernateTypeHelper.getReflectedCollectionJavaTypes(
-				attributeBinding
-		);
-		typeHelper.bindHibernateTypeDescriptor(
-				hibernateTypeDescriptor,
-				attributeSource.getTypeInformation(),
-				HibernateTypeHelper.defaultCollectionJavaTypeName( reflectedCollectionJavaTypes, attributeSource ),
-				resolvedType
-
-		);
 		// Note: Collection types do not have a relational model
 		attributeBinding.setFetchTiming( attributeSource.getFetchTiming() );
 		attributeBinding.setFetchStyle( attributeSource.getFetchStyle() );
@@ -1481,6 +1770,9 @@ public class Binder {
 		attributeBinding.setWhere( attributeSource.getWhere() );
 		attributeBinding.setMutable( attributeSource.isMutable() );
 		attributeBinding.setBatchSize( attributeSource.getBatchSize() );
+		ReflectedCollectionJavaTypes reflectedCollectionJavaTypes = HibernateTypeHelper.getReflectedCollectionJavaTypes(
+				attributeBinding
+		);
 		switch ( attributeSource.getElementSource().getNature() ) {
 			case BASIC:
 				bindBasicPluralAttribute( attributeSource, attributeBinding, reflectedCollectionJavaTypes );
@@ -1504,6 +1796,15 @@ public class Binder {
 						)
 				);
 		}
+		// Cannot resolve plural attribute type until after the element binding is bound.
+		final Type resolvedType = typeHelper.resolvePluralType( attributeBinding, attributeSource, nature );
+		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
+		typeHelper.bindHibernateTypeDescriptor(
+				hibernateTypeDescriptor,
+				attributeSource.getTypeInformation(),
+				HibernateTypeHelper.defaultCollectionJavaTypeName( reflectedCollectionJavaTypes, attributeSource ),
+				resolvedType
+		);
 		if ( attributeBinding.hasIndex() ) {
 			bindPluralAttributeIndex(
 					(IndexedPluralAttributeSource) attributeSource,
@@ -1659,7 +1960,8 @@ public class Binder {
 		bindCollectionTableForeignKey(
 				attributeBinding,
 				attributeSource.getKeySource(),
-				collectionTable
+				collectionTable,
+				null
 		);
 	}
 
@@ -1928,7 +2230,8 @@ public class Binder {
 		elementBinding.getPluralAttributeBinding().getAttribute().setElementType( referencedEntityBinding.getEntity() );
 		elementBinding.setCascadeStyle( determineCascadeStyle( elementSource.getCascadeStyles() ) );
 		elementBinding.setManyToManyWhere( elementSource.getWhere() );
-		elementBinding.setManyToManyOrderBy( elementSource.getOrderBy() );
+		elementBinding.setManyToManyOrderBy( elementSource.getOrder() );
+		elementBinding.setFetchImmediately( elementSource.getFetchTiming() == FetchTiming.IMMEDIATE );
 		//TODO: initialize filters from elementSource
 	}
 
@@ -1947,22 +2250,16 @@ public class Binder {
 					)
 			);
 		}
-		// TODO - verify whether table spec source should/can be null or whether there will always be one (HF)
-		if ( attributeSource.getCollectionTableSpecificationSource() != null ) {
-			TableSpecificationSource tableSpecificationSource = attributeSource.getCollectionTableSpecificationSource();
-			if ( tableSpecificationSource.getExplicitCatalogName() != null || tableSpecificationSource.getExplicitSchemaName() != null ) {
-				// TODO: Need to look up the table to be able to create the foreign key
-				throw new NotYetImplementedException( "one-to-many using a join table is not supported yet." );
-			}
-		}
+		// By definition, a one-to-many can only be on a foreign key, so the
+		// colleciton table is the referenced entity bindings primary table.
 		final TableSpecification collectionTable = referencedEntityBinding.getPrimaryTable();
 		final boolean isInverse = attributeSource.isInverse();
 		final PluralAttributeKeyBinding keyBinding = attributeBinding.getPluralAttributeKeyBinding();
 		keyBinding.setInverse( isInverse );
 		if ( isInverse && StringHelper.isNotEmpty( attributeSource.getMappedBy() ) ) {
 			final String mappedBy = attributeSource.getMappedBy();
-			SingularAssociationAttributeBinding referencedAttributeBinding = (SingularAssociationAttributeBinding) referencedEntityBinding
-					.locateAttributeBinding( mappedBy );
+			SingularAssociationAttributeBinding referencedAttributeBinding =
+					(SingularAssociationAttributeBinding) referencedEntityBinding.locateAttributeBindingByPath( mappedBy, true );
 			if ( referencedAttributeBinding == null ) {
 				referencedAttributeBinding = (SingularAssociationAttributeBinding) attributeBinding(
 						referencedEntityBinding.getEntity()
@@ -1989,7 +2286,7 @@ public class Binder {
 			keyBinding.setRelationalValueBindings( sourceColumnBindings );
 		}
 		else {
-			bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable );
+			bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable, null );
 		}
 
 	}
@@ -2018,7 +2315,33 @@ public class Binder {
 				);
 		final PluralAttributeKeyBinding keyBinding = attributeBinding.getPluralAttributeKeyBinding();
 		keyBinding.setInverse( isInverse );
-		bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable );
+		String oppositeAttributeName = null;
+		if ( attributeSource.getMappedBy() == null ) {
+			final String path;
+			//if ( StringHelper.isEmpty( attributeBinding.getContainer().getPathBase() ) ) {
+				path = createAttributePath( attributeBinding );
+			//}
+			//else {
+			//	path = attributeBinding.getContainer().getPathBase() + '.' +  attributeBinding.getAttribute().getName();
+			//}
+			// determine if there is an association that is mappedBy this one
+			EntitySource referencedEntitySource = entitySourcesByName.get( referencedEntityBinding.getEntityName() );
+
+			for ( AttributeSource referencedAttributeSource : referencedEntitySource.attributeSources() ) {
+				// TODO: move this somewhere else or index beforehand.
+				// TODO: deal with mappedBy w/in CompositeAttributeBindings.
+				if ( referencedAttributeSource instanceof PluralAttributeSource) {
+					PluralAttributeSource referencedPluralAttributeSource = (PluralAttributeSource) referencedAttributeSource;
+					if ( path.equals( referencedPluralAttributeSource.getMappedBy() ) ) {
+						oppositeAttributeName = referencedPluralAttributeSource.getName();
+					}
+				}
+			}
+		}
+		else {
+			oppositeAttributeName = attributeSource.getMappedBy();
+		}
+		bindCollectionTableForeignKey( attributeBinding, attributeSource.getKeySource(), collectionTable, oppositeAttributeName );
 	}
 
 	private void bindPluralAttributeIndex(
@@ -2094,7 +2417,7 @@ public class Binder {
 			throw bindingContext().makeMappingException(
 					String.format(
 							"The mapping for the entity associated with one-to-many attribute (%s) is undefined.",
-							createAttributePath( attributeBinding )
+							createAttributePathQualifiedByEntityName( attributeBinding )
 					)
 			);
 		}
@@ -2138,7 +2461,7 @@ public class Binder {
 			throw bindingContext().makeMappingException(
 					String.format(
 							"The mapping for the entity associated with one-to-many attribute (%s) is undefined.",
-							createAttributePath( attributeBinding )
+							createAttributePathQualifiedByEntityName( attributeBinding )
 					)
 			);
 		}
@@ -2346,7 +2669,8 @@ public class Binder {
 	private void bindCollectionTableForeignKey(
 			final AbstractPluralAttributeBinding attributeBinding,
 			final PluralAttributeKeySource keySource,
-			final TableSpecification collectionTable) {
+			final TableSpecification collectionTable,
+			final String oppositeAttributeName ) {
 
 		final AttributeBindingContainer attributeBindingContainer = attributeBinding.getContainer();
 		final PluralAttributeKeyBinding keyBinding = attributeBinding.getPluralAttributeKeyBinding();
@@ -2364,7 +2688,7 @@ public class Binder {
 						public String defaultName() {
 							final EntityBinding entityBinding = attributeBinding.getContainer().seekEntityBinding();
 							return bindingContext().getNamingStrategy().foreignKeyColumnName(
-									null,
+									oppositeAttributeName,
 									entityBinding.getEntityName(),
 									entityBinding.getPrimaryTableName(),
 									targetColumn.getColumnName().getText()
@@ -2867,21 +3191,66 @@ public class Binder {
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ simple instance helper methods
-	private void mapSourcesByName(final EntitySource rootEntitySource) {
-		String entityName = rootEntitySource.getEntityName();
-		entitySourcesByName.put( entityName, rootEntitySource );
+	private void mapSourcesByName(final EntitySource entitySource) {
+		String entityName = entitySource.getEntityName();
+		entitySourcesByName.put( entityName, entitySource );
 		log.debugf( "Mapped entity source \"%s\"", entityName );
-		for ( final AttributeSource attributeSource : rootEntitySource.attributeSources() ) {
-			String key = attributeSourcesByNameKey( entityName, attributeSource.getName() );
-			attributeSourcesByName.put( key, attributeSource );
-			log.debugf(
-					"Mapped attribute source \"%s\" for entity source \"%s\"",
-					key,
-					rootEntitySource.getEntityName()
-			);
+		final String emptyString = "";
+		if ( entitySource instanceof RootEntitySource ) {
+			RootEntitySource rootEntitySource = (RootEntitySource) entitySource;
+			IdentifierSource identifierSource = rootEntitySource.getIdentifierSource();
+			switch ( identifierSource.getNature() ) {
+				case SIMPLE:
+					final AttributeSource identifierAttributeSource =
+							( (SimpleIdentifierSource) identifierSource ).getIdentifierAttributeSource();
+					mapAttributeSourceByName( entitySource, emptyString, identifierAttributeSource );
+					break;
+				case NON_AGGREGATED_COMPOSITE:
+					final List<SingularAttributeSource> nonAggregatedAttributeSources =
+							( (NonAggregatedCompositeIdentifierSource) identifierSource ).getAttributeSourcesMakingUpIdentifier();
+					for ( SingularAttributeSource nonAggregatedAttributeSource : nonAggregatedAttributeSources ) {
+						mapAttributeSourceByName( entitySource, emptyString, nonAggregatedAttributeSource );
+					}
+					break;
+				case AGGREGATED_COMPOSITE:
+					final ComponentAttributeSource aggregatedAttributeSource =
+							( (AggregatedCompositeIdentifierSource) identifierSource ).getIdentifierAttributeSource();
+					mapAttributeSourceByName( entitySource, emptyString, aggregatedAttributeSource );
+					break;
+				default:
+					throw new AssertionFailure(
+							String.format( "Unknown type of identifier: [%s]", identifierSource.getNature() )
+					);
+			}
 		}
-		for ( final SubclassEntitySource subclassEntitySource : rootEntitySource.subclassEntitySources() ) {
+		for ( final AttributeSource attributeSource : entitySource.attributeSources() ) {
+			mapAttributeSourceByName( entitySource, emptyString, attributeSource );
+		}
+		for ( final SubclassEntitySource subclassEntitySource : entitySource.subclassEntitySources() ) {
 			mapSourcesByName( subclassEntitySource );
+		}
+	}
+
+	private void mapAttributeSourceByName(EntitySource entitySource, String pathBase, AttributeSource attributeSource) {
+		String attributePath = StringHelper.isEmpty( pathBase ) ?
+				attributeSource.getName() :
+				pathBase + '.' + attributeSource.getName();
+		String key = attributeSourcesByNameKey( entitySource.getEntityName(), attributePath );
+		attributeSourcesByName.put( key, attributeSource );
+		log.debugf(
+				"Mapped attribute source \"%s\" for entity source \"%s\"",
+				key,
+				entitySource.getEntityName()
+		);
+		if ( attributeSource instanceof ComponentAttributeSource ) {
+			for ( AttributeSource subAttributeSource : ( (ComponentAttributeSource) attributeSource ).attributeSources() ) {
+
+				mapAttributeSourceByName(
+						entitySource,
+						attributePath,
+						subAttributeSource
+				);
+			}
 		}
 	}
 
@@ -2982,9 +3351,9 @@ public class Binder {
 
 	private static String getRelativePathFromEntityName(
 			final AttributeBinding attributeBinding) {
-		final String fullPath = attributeBinding.getContainer().getPathBase() + "." + attributeBinding.getAttribute()
-				.getName();
-		return fullPath.substring( attributeBinding.getContainer().seekEntityBinding().getEntityName().length() + 1 );
+		return StringHelper.isEmpty(  attributeBinding.getContainer().getPathBase() ) ?
+				attributeBinding.getAttribute().getName() :
+				attributeBinding.getContainer().getPathBase() + "." + attributeBinding.getAttribute().getName();
 	}
 
 	// TODO: should this be moved to CascadeStyles as a static method?
@@ -3058,21 +3427,25 @@ public class Binder {
 				.createSingularAttribute( attributeSource.getName() );
 	}
 
-	private AttributeSource attributeSource(final String entityName, final String attributeName) {
-		return attributeSourcesByName.get( attributeSourcesByNameKey( entityName, attributeName ) );
+	private AttributeSource attributeSource(final String entityName, final String attributePath) {
+		return attributeSourcesByName.get( attributeSourcesByNameKey( entityName, attributePath ) );
 	}
 
 	private static String attributeSourcesByNameKey(
 			final String entityName,
-			final String attributeName) {
-		return entityName + "." + attributeName;
+			final String attributePath) {
+		return entityName + '.' + attributePath;
 	}
 
-	static String createAttributePath(
-			final AttributeBinding attributeBinding) {
-		return attributeBinding.getContainer().getPathBase() + '.' + attributeBinding.getAttribute().getName();
+	static String createAttributePathQualifiedByEntityName(final AttributeBinding attributeBinding) {
+		final String entityName = attributeBinding.getContainer().seekEntityBinding().getEntityName();
+		return entityName + '.' + createAttributePath( attributeBinding );
 	}
-
+	static String createAttributePath(final AttributeBinding attributeBinding) {
+		return StringHelper.isEmpty( attributeBinding.getContainer().getPathBase() ) ?
+				attributeBinding.getAttribute().getName() :
+				attributeBinding.getContainer().getPathBase() + '.' + attributeBinding.getAttribute().getName();
+	}
 
 	private static ValueHolder<Class<?>> createSingularAttributeJavaType(
 			final Class<?> attributeContainerClassReference,
@@ -3152,11 +3525,96 @@ public class Binder {
 		return unsavedValue;
 	}
 
+	/**
+	 * Apply executors to a single entity hierarchy.
+	 *
+	 * @param entityHierarchy The entity hierarchy to be binded.
+	 *
+	 * @return The root {@link EntityBinding} of the entity hierarchy mapping.
+	 */
+	private void applyToEntityHierarchy(
+			final EntityHierarchy entityHierarchy,
+			final LocalBindingContextExecutor rootEntityExecutor,
+			final LocalBindingContextExecutor subEntityExecutor) {
+		final RootEntitySource rootEntitySource = entityHierarchy.getRootEntitySource();
+		setupBindingContext( entityHierarchy, rootEntitySource );
+		try {
+			LocalBindingContextExecutionContext executionContext =
+					new LocalBindingContextExecutionContextImpl( rootEntitySource, null );
+			rootEntityExecutor.execute( executionContext );
+			if ( inheritanceTypes.peek() != InheritanceType.NO_INHERITANCE ) {
+				applyToSubEntities( executionContext.getEntityBinding(), rootEntitySource, subEntityExecutor );
+			}
+		}
+		finally {
+			cleanupBindingContext();
+		}
+	}
+
+	private void applyToSubEntities(
+			final EntityBinding entityBinding,
+			final EntitySource entitySource,
+			final LocalBindingContextExecutor subEntityExecutor) {
+		for ( final SubclassEntitySource subEntitySource : entitySource.subclassEntitySources() ) {
+			applyToSubEntity( entityBinding, subEntitySource, subEntityExecutor );
+		}
+	}
+
+	private void applyToSubEntity(
+			final EntityBinding superEntityBinding,
+			final EntitySource entitySource,
+			final LocalBindingContextExecutor subEntityExecutor) {
+		final LocalBindingContext bindingContext = entitySource.getLocalBindingContext();
+		bindingContexts.push( bindingContext );
+		try {
+			LocalBindingContextExecutionContext executionContext =
+					new LocalBindingContextExecutionContextImpl( entitySource, superEntityBinding );
+			subEntityExecutor.execute( executionContext );
+			applyToSubEntities( executionContext.getEntityBinding(), entitySource, subEntityExecutor );
+		}
+		finally {
+			bindingContexts.pop();
+		}
+	}
+
 	private static void addUniqueConstraintForNaturalIdColumn(
 			final TableSpecification table,
 			final Column column) {
 		final UniqueKey uniqueKey = table.getOrCreateUniqueKey( table.getLogicalName().getText()+"_UNIQUEKEY" );
 		uniqueKey.addColumn( column );
+	}
+
+	private interface LocalBindingContextExecutor {
+		void execute(LocalBindingContextExecutionContext bindingContextContext);
+	}
+
+	private interface LocalBindingContextExecutionContext {
+		EntitySource getEntitySource();
+		EntityBinding getEntityBinding();
+		EntityBinding getSuperEntityBinding();
+	}
+
+	private class LocalBindingContextExecutionContextImpl implements LocalBindingContextExecutionContext {
+		private final EntitySource entitySource;
+		private final EntityBinding superEntityBinding;
+
+		private LocalBindingContextExecutionContextImpl(EntitySource entitySource, EntityBinding superEntityBinding) {
+			this.entitySource = entitySource;
+			this.superEntityBinding = superEntityBinding;
+		}
+
+		@Override
+		public EntitySource getEntitySource() {
+			return entitySource;
+		}
+		@Override
+		public EntityBinding getEntityBinding() {
+			return metadata.getEntityBinding( entitySource.getEntityName() );
+		}
+		@Override
+		public EntityBinding getSuperEntityBinding() {
+			return superEntityBinding;
+		}
 	}
 
 	public static interface DefaultNamingStrategy {

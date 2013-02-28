@@ -79,10 +79,9 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 				componentName
 		);
 
-		// todo - is this really correct? Does the path start w/ the class name
 		assertEquals(
 				"Wrong path",
-				EmbeddableBindingTest.User.class.getName() + ".phone",
+				"phone",
 				compositeBinding.getPathBase()
 		);
 

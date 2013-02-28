@@ -39,7 +39,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Gail Badner (extracted from ManyToManyTest authored by Emmanuel Bernard)
  */
-@FailureExpectedWithNewMetamodel
 public class ManyToManySelfReferenceTest extends BaseCoreFunctionalTestCase {
 
 	@Test

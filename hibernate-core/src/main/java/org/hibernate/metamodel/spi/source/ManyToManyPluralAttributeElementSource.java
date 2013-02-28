@@ -25,11 +25,13 @@ package org.hibernate.metamodel.spi.source;
 
 import java.util.Collection;
 
+import org.hibernate.engine.FetchTiming;
+
 /**
  * @author Steve Ebersole
  */
 public interface ManyToManyPluralAttributeElementSource
-		extends PluralAttributeElementSource, CascadeStyleSource, RelationalValueSourceContainer, ForeignKeyContributingSource {
+		extends PluralAttributeElementSource, CascadeStyleSource, RelationalValueSourceContainer, ForeignKeyContributingSource, Orderable {
 	public String getReferencedEntityName();
 
 	public String getReferencedEntityAttributeName();
@@ -42,11 +44,9 @@ public interface ManyToManyPluralAttributeElementSource
 
 	public boolean isUnique();
 
-	public String getOrderBy();
-
 	public FilterSource[] getFilterSources();
 
 	public String getWhere();
 
-	public boolean fetchImmediately();
+	public FetchTiming getFetchTiming();
 }

@@ -189,7 +189,8 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 						// In the old mappings, attributes mapped from hbm.xml files are processed in the order
 						// they appear in the mappping. This is why the index of the component attribute
 						// depends on which metamodel is used.
-						int detailsIndex = isMetadataUsed() ? 1: 0;
+						//int detailsIndex = isMetadataUsed() ? 1: 0;
+						int detailsIndex = 0;
 						if ( state[detailsIndex] == null ) {
 							Image.Details detail = new Image.Details();
 							detail.setPerm1( checkPerm );

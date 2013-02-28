@@ -25,6 +25,7 @@ package org.hibernate.test.annotations.manytomany.compositepk;
 import java.io.Serializable;
 import java.util.Set;
 import javax.persistence.CascadeType;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -76,7 +77,7 @@ public class Woman implements Serializable {
 		this.mens = mens;
 	}
 
-	@Id
+	@EmbeddedId
 	public WomanPk getId() {
 		return id;
 	}

@@ -44,6 +44,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -273,7 +274,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			isInverses.add( join.isInverse() );
 			isNullables.add( join.isOptional() );
 			isLazies.add( lazyAvailable && join.isLazy() );
-			if ( join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin(join) ) hasDeferred = true;
+			if ( join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin( join ) ) {
+				hasDeferred = true;
+			}
 			subclassTables.add( join.getTable().getQualifiedName( 
 					factory.getDialect(), 
 					factory.getSettings().getDefaultCatalogName(), 
@@ -555,7 +558,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			isInverses.add( join.isInverse() );
 			isNullables.add( join.isOptional() );
 			isLazies.add( lazyAvailable && join.isLazy() );
-			if ( isDeferred && !isConcrete ) hasDeferred = true;
+			if ( isDeferred && !isConcrete ) {
+				hasDeferred = true;
+			}
 			subclassTables.add( join.getSecondaryTableReference().getQualifiedName( factory.getDialect() ) );
 			final List<org.hibernate.metamodel.spi.relational.Column> joinColumns = join.getForeignKeyReference().getSourceColumns();
 			String[] keyCols = new String[ joinColumns.size() ];
@@ -677,10 +682,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
 				int join = entityBinding.getSecondaryTableNumber( singularAttributeBinding );
 				propertyJoinNumbers.add( join );
-				propertyTableNumbersByNameAndSubclass.put(
-						attributeBinding.getContainer().getPathBase() + '.' + attributeBinding.getAttribute().getName(),
-						join
-				);
+				// We need the name of the actual entity that contains this attribute binding.
+				final String entityName = attributeBinding.getContainer().seekEntityBinding().getEntityName();
+				String path = StringHelper.isEmpty( attributeBinding.getContainer().getPathBase() ) ?
+						entityName + '.' + attributeBinding.getAttribute().getName() :
+						entityName + '.' + attributeBinding.getContainer().getPathBase() + '.' +  attributeBinding.getAttribute().getName();
+				propertyTableNumbersByNameAndSubclass.put( path, join );
 				for ( RelationalValueBinding relationalValueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
 					if ( DerivedValue.class.isInstance( relationalValueBinding.getValue() ) ) {
 						formulaJoinedNumbers.add( join );
@@ -799,7 +806,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 		else {
 			String result = (String) subclassesByDiscriminatorValue.get(value);
-			if (result==null) result = (String) subclassesByDiscriminatorValue.get(NOT_NULL_DISCRIMINATOR);
+			if ( result == null ) {
+				result = (String) subclassesByDiscriminatorValue.get( NOT_NULL_DISCRIMINATOR );
+			}
 			return result;
 		}
 	}
@@ -846,7 +855,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	public String filterFragment(String alias) throws MappingException {
 		String result = discriminatorFilterFragment(alias);
-		if ( hasWhere() ) result += " and " + getSQLWhereString(alias);
+		if ( hasWhere() ) {
+			result += " and " + getSQLWhereString( alias );
+		}
 		return result;
 	}
 	
@@ -946,7 +957,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	
 	private int getSubclassPropertyTableNumber(String propertyName, String entityName) {
 		Type type = propertyMapping.toType(propertyName);
-		if ( type.isAssociationType() && ( (AssociationType) type ).useLHSPrimaryKey() ) return 0;
+		if ( type.isAssociationType() && ( (AssociationType) type ).useLHSPrimaryKey() ) {
+			return 0;
+		}
 		final Integer tabnum = propertyTableNumbersByNameAndSubclass.get(entityName + '.' + propertyName);
 		return tabnum==null ? 0 : tabnum;
 	}
@@ -972,7 +985,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				tableNumbers.add( propTableNumber);
 			}
 		}
-		if ( tableNumbers.isEmpty() ) return null;
+		if ( tableNumbers.isEmpty() ) {
+			return null;
+		}
 		
 		//figure out which columns are needed
 		ArrayList<Integer> columnNumbers = new ArrayList<Integer>();
@@ -1031,7 +1046,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	public String getPropertyTableName(String propertyName) {
 		Integer index = getEntityMetamodel().getPropertyIndexOrNull(propertyName);
-		if (index==null) return null;
+		if ( index == null ) {
+			return null;
+		}
 		return qualifiedTableNames[ propertyTableNumbers[ index ] ];
 	}
 	

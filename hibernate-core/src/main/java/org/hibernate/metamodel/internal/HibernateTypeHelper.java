@@ -49,6 +49,7 @@ import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.ManyToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
@@ -476,6 +477,10 @@ class HibernateTypeHelper {
 						);
 					}
 					else if ( pluralAttributeBinding.getOrderBy() != null ) {
+						return typeFactory().orderedSet( role, propertyRef );
+					}
+					else if ( pluralAttributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.MANY_TO_MANY &&
+							  ( (ManyToManyPluralAttributeElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding() ).getManyToManyOrderBy() != null ) {
 						return typeFactory().orderedSet( role, propertyRef );
 					}
 					else {

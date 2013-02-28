@@ -209,6 +209,10 @@ public class ConfiguredClass {
 		return simpleAttributeMap.values();
 	}
 
+	public boolean isIdAttribute(String attributeName) {
+		return idAttributeMap.containsKey( attributeName );
+	}
+
 	public Collection<BasicAttribute> getIdAttributes() {
 		return idAttributeMap.values();
 	}
@@ -448,11 +452,11 @@ public class ConfiguredClass {
 		final ResolvedMember[] resolvedMembers = Field.class.isInstance( member ) ? resolvedType.getMemberFields() : resolvedType
 				.getMemberMethods();
 		ResolvedMember resolvedMember = findResolvedMember( member.getName(), resolvedMembers );
-		Class<?> attributeType = resolvedMember.getType().getErasedType();
-		Class<?> referencedCollectionType = resolveCollectionValuedReferenceType( resolvedMember );
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
 				classInfo, member.getName(), localBindingContext.getServiceRegistry()
 		);
+		Class<?> attributeType = resolvedMember.getType().getErasedType();
+		Class<?> referencedCollectionType = resolveCollectionValuedReferenceType( resolvedMember, annotations );
 
 		MappedAttribute.Nature attributeNature = determineAttributeNature( 
 				annotations, attributeType, referencedCollectionType );
@@ -702,7 +706,32 @@ public class ConfiguredClass {
 		);
 	}
 
-	private Class<?> resolveCollectionValuedReferenceType(ResolvedMember resolvedMember) {
+	private Class<?> resolveCollectionValuedReferenceType(
+			ResolvedMember resolvedMember, Map<DotName,
+			List<AnnotationInstance>> annotations) {
+		final AnnotationInstance annotation;
+		final String targetElementName;
+		if ( JandexHelper.containsSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY ) ) {
+			annotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY );
+			targetElementName = "targetEntity";
+		}
+		else if ( JandexHelper.containsSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY ) ) {
+			annotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY );
+			targetElementName = "targetEntity";
+		}
+		else if ( JandexHelper.containsSingleAnnotation( annotations, JPADotNames.ELEMENT_COLLECTION ) ) {
+			annotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ELEMENT_COLLECTION );
+			targetElementName = "targetClass";
+		}
+		else {
+			annotation = null;
+			targetElementName = null;
+		}
+		if ( annotation != null && annotation.value( targetElementName ) != null ) {
+			return getLocalBindingContext().locateClassByName(
+					JandexHelper.getValue( annotation, targetElementName, String.class  )
+			);
+		}
 		if ( resolvedMember.getType().isArray() ) {
 			return resolvedMember.getType().getArrayElementType().getErasedType();
 		}

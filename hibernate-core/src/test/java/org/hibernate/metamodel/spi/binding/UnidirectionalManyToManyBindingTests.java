@@ -35,6 +35,7 @@ import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -62,7 +63,7 @@ public class UnidirectionalManyToManyBindingTests extends BaseUnitTestCase {
 //	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-7436" )
+	@TestForIssue( jiraKey = "HHH-7436" )
 	public void testHbm() {
 		doTest( MetadataSourceProcessingOrder.HBM_FIRST );
 	}

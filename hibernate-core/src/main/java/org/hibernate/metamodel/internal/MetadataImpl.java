@@ -26,7 +26,6 @@ package org.hibernate.metamodel.internal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -80,7 +79,6 @@ import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.BasicType;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.domain.Type;
-import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
@@ -248,8 +246,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 		final HbmMetadataSourceProcessorImpl processor = new HbmMetadataSourceProcessorImpl( this, jaxbRoots );
 		final Binder binder = new Binder( this, identifierGeneratorFactory );
-		binder.bindEntityHierarchies( processor.extractEntityHierarchies() );
-		
+		binder.addEntityHierarchies( processor.extractEntityHierarchies() );
+		binder.bindEntityHierarchies();
+
 		secondPass();
 	}
 
@@ -276,12 +275,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		// This must be done outside of Table, rather than statically, to ensure
 		// deterministic alias names.  See HHH-2448.
 		int uniqueInteger = 0;
-		Iterator<Schema> schemaIter = database.getSchemas().iterator();
-		while ( schemaIter.hasNext() ) {
-			Schema schema = schemaIter.next();
-			Iterator<Table> tableIter = schema.getTables().iterator();
-			while (tableIter.hasNext()) {
-				tableIter.next().setTableNumber( uniqueInteger++ );
+		for ( Schema schema : database.getSchemas() ) {
+			for ( Table table : schema.getTables() ) {
+				table.setTableNumber( uniqueInteger++ );
 			}
 		}
 	}
@@ -417,8 +413,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private void processMappings(MetadataSourceProcessor[] metadataSourceProcessors) {
 		final Binder binder = new Binder( this, identifierGeneratorFactory );
 		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			binder.bindEntityHierarchies( processor.extractEntityHierarchies() );
+			binder.addEntityHierarchies( processor.extractEntityHierarchies() );
 		}
+		binder.bindEntityHierarchies();
 	}
 
 	private void bindMappingDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors) {
@@ -680,9 +677,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void addCollection(PluralAttributeBinding pluralAttributeBinding) {
-		final String owningEntityName = pluralAttributeBinding.getContainer().getPathBase();
+		final String owningEntityName = pluralAttributeBinding.getContainer().seekEntityBinding().getEntityName();
+		final String containerPathBase = pluralAttributeBinding.getContainer().getPathBase();
 		final String attributeName = pluralAttributeBinding.getAttribute().getName();
-		final String collectionRole = owningEntityName + '.' + attributeName;
+		final String collectionRole;
+		if ( StringHelper.isEmpty( containerPathBase ) ) {
+			collectionRole = owningEntityName + '.' + attributeName;
+		}
+		else {
+			collectionRole = owningEntityName + '.' + containerPathBase + '.' + attributeName;
+		}
 		if ( collectionBindingMap.containsKey( collectionRole ) ) {
 			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, collectionRole );
 		}

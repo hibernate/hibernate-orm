@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
@@ -66,6 +67,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	// If it is not the owner side (i.e., mappedBy != null), then the AttributeSource
 	// for the owner is required to determine elementSource.
 	private PluralAttributeElementSource elementSource;
+	private AttributeSource ownerAttributeSource;
 
 	public PluralAttributeSourceImpl(
 			final PluralAssociationAttribute associationAttribute,
@@ -76,6 +78,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		this.typeSource = new ExplicitHibernateTypeSourceImpl( associationAttribute );
 		this.nature = associationAttribute.getPluralAttributeNature();
 		if ( associationAttribute.getMappedBy() == null ) {
+			this.ownerAttributeSource = this;
 			this.elementSource = determineOwnerElementSource( this, associationAttribute, entityClass );
 		}
 		this.filterSources = determineFilterSources(associationAttribute);
@@ -197,6 +200,16 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	public TableSpecificationSource getCollectionTableSpecificationSource() {
 		// todo - see org.hibernate.metamodel.internal.Binder#bindOneToManyCollectionKey
 		// todo - needs to cater for @CollectionTable and @JoinTable
+		if ( associationAttribute.getMappedBy() != null ) {
+			if ( ownerAttributeSource.isSingular() ) {
+				ToOneAttributeSource ownerSingularAttributeSource = (ToOneAttributeSource) ownerAttributeSource;
+				throw new NotYetImplementedException( "mappedBy many-to-many owned by many-to-one not supported yet." );
+			}
+			else {
+				PluralAttributeSource ownerPluralAttributeSource = (PluralAttributeSource) ownerAttributeSource;
+				return ownerPluralAttributeSource.getCollectionTableSpecificationSource();
+			}
+		}
 		final AnnotationInstance joinTableAnnotation = associationAttribute.getJoinTableAnnotation();
 		return joinTableAnnotation == null ? null : new TableSourceImpl( joinTableAnnotation );
 	}
@@ -294,7 +307,9 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	@Override
 	public String getOrder() {
-		return associationAttribute.getOrderBy();
+		return elementSource.getNature() == PluralAttributeElementSource.Nature.MANY_TO_MANY ?
+				null :
+				associationAttribute.getOrderBy();
 	}
 
 	@Override
@@ -342,7 +357,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 			return elementSource;
 		}
 		else {
-			AttributeSource ownerAttributeSource = context.resolveAttributeSource(
+			ownerAttributeSource = context.resolveAttributeSource(
 					associationAttribute.getReferencedEntityType(),
 					associationAttribute.getMappedBy()
 			);

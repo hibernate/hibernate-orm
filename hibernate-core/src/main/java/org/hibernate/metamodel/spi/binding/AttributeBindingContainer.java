@@ -23,7 +23,9 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;

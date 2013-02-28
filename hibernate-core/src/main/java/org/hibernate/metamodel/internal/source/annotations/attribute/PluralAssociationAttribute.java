@@ -430,17 +430,17 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private String determineOrderBy() {
 		String orderBy = null;
 
-		AnnotationInstance hibernateWhereAnnotation = JandexHelper.getSingleAnnotation(
+		AnnotationInstance hibernateOrderByAnnotation = JandexHelper.getSingleAnnotation(
 				annotations(),
 				HibernateDotNames.ORDER_BY
 		);
 
-		AnnotationInstance jpaWhereAnnotation = JandexHelper.getSingleAnnotation(
+		AnnotationInstance jpaOrderByAnnotation = JandexHelper.getSingleAnnotation(
 				annotations(),
 				JPADotNames.ORDER_BY
 		);
 
-		if ( jpaWhereAnnotation != null && hibernateWhereAnnotation != null ) {
+		if ( jpaOrderByAnnotation != null && hibernateOrderByAnnotation != null ) {
 			throw new MappingException(
 					"Cannot use sql order by clause (@org.hibernate.annotations.OrderBy) " +
 							"in conjunction with JPA order by clause (@java.persistence.OrderBy) on  " + getRole(),
@@ -448,16 +448,16 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 			);
 		}
 
-		if ( hibernateWhereAnnotation != null ) {
-			orderBy = JandexHelper.getValue( hibernateWhereAnnotation, "clause", String.class );
+		if ( hibernateOrderByAnnotation != null ) {
+			orderBy = JandexHelper.getValue( hibernateOrderByAnnotation, "clause", String.class );
 		}
 
-		if ( jpaWhereAnnotation != null ) {
+		if ( jpaOrderByAnnotation != null ) {
 			// this could be an empty string according to JPA spec 11.1.38 -
 			// If the ordering element is not specified for an entity association, ordering by the primary key of the
 			// associated entity is assumed
 			// The binder will need to take this into account and generate the right property names
-			orderBy = JandexHelper.getValue( jpaWhereAnnotation, "value", String.class );
+			orderBy = JandexHelper.getValue( jpaOrderByAnnotation, "value", String.class );
 			if ( orderBy == null ) {
 				orderBy = isBasicCollection() ?  "$element$ asc" :"id asc" ;
 			}

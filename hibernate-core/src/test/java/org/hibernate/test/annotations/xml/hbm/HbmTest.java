@@ -34,7 +34,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class HbmTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {

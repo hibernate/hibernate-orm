@@ -44,7 +44,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner (extracted from ManyToManyTest authored by Emmanuel Bernard)
  */
-@FailureExpectedWithNewMetamodel
 public class ManyToManyTargetEntityTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testBasic() throws Exception {

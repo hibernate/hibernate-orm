@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
@@ -37,6 +38,7 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
@@ -166,11 +168,6 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public String getOrderBy() {
-		return manyToManyElement.getOrderBy();
-	}
-
-	@Override
 	public String getWhere() {
 		return manyToManyElement.getWhere();
 	}
@@ -181,22 +178,43 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public boolean fetchImmediately() {
-		if ( manyToManyElement.getLazy() != null ) {
-			if ( "false".equals( manyToManyElement.getLazy().value() ) ) {
-				return true;
-			}
-		}
+	public FetchTiming getFetchTiming() {
+		final String fetchSelection = manyToManyElement.getFetch() != null ?
+				manyToManyElement.getFetch().value() :
+				null;
+		final String lazySelection = manyToManyElement.getLazy() != null
+				? manyToManyElement.getLazy().value()
+				: null;
+		final String outerJoinSelection = manyToManyElement.getOuterJoin() != null
+				? manyToManyElement.getOuterJoin().value()
+				: null;
 
-		if ( manyToManyElement.getOuterJoin() == null ) {
-			return !bindingContext().getMappingDefaults().areAssociationsLazy();
-		}
-		else {
-			final String value = manyToManyElement.getOuterJoin().value();
-			if ( "auto".equals( value ) ) {
+		if ( lazySelection == null ) {
+			if ( "join".equals( fetchSelection ) || "true".equals( outerJoinSelection ) ) {
+				return FetchTiming.IMMEDIATE;
 			}
-			return "true".equals( value );
+			else if ( "false".equals( outerJoinSelection ) ) {
+				return FetchTiming.DELAYED;
+			}
+			else {
+				// default is FetchTiming.IMMEDIATE.
+				return FetchTiming.IMMEDIATE;
+			}
 		}
+		else if ( "true".equals( lazySelection ) ) {
+			return FetchTiming.DELAYED;
+		}
+		else if ( "false".equals( lazySelection ) ) {
+			return FetchTiming.IMMEDIATE;
+		}
+		// TODO: improve this method to say attribute name.
+		throw new MappingException(
+				String.format(
+						"Unexpected lazy selection [%s] on many-to-many element",
+						lazySelection
+				),
+				origin()
+		);
 	}
 
 	@Override
@@ -212,6 +230,16 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	@Override
 	public boolean areValuesNullableByDefault() {
 		return false;
+	}
+
+	@Override
+	public boolean isOrdered() {
+		return StringHelper.isNotEmpty( getOrder() );
+	}
+
+	@Override
+	public String getOrder() {
+		return manyToManyElement.getOrderBy();
 	}
 
 	public class JoinColumnResolutionDelegateImpl implements JoinColumnResolutionDelegate {

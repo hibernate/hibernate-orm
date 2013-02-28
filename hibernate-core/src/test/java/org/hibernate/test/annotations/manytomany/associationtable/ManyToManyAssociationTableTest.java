@@ -43,7 +43,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Gail Badner (extracted from ManyToManyTest authored by Emmanuel Bernard)
  */
-@FailureExpectedWithNewMetamodel
 public class ManyToManyAssociationTableTest extends BaseCoreFunctionalTestCase {
 
 	@Test

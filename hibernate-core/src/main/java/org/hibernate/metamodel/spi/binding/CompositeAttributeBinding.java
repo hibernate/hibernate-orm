@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
@@ -184,7 +185,10 @@ public class CompositeAttributeBinding
 	}
 
 	private static String createContainerPath(AttributeBindingContainer container, SingularAttribute attribute) {
-		return container.getPathBase() + '.' + attribute.getName();
+		return StringHelper.isEmpty( container.getPathBase() ) ?
+				attribute.getName() :
+				'.' + attribute.getName();
+
 	}
 
 	/**

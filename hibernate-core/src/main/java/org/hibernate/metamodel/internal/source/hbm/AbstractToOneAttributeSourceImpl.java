@@ -124,6 +124,7 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 			}
 		}
 		else  if ( "extra".equals( lazySelection ) ) {
+			// TODO: don't think "extra" is valid here
 			return FetchTiming.EXTRA_DELAYED;
 		}
 		else if ( "true".equals( lazySelection ) || "proxy".equals( lazySelection ) || "no-proxy".equals( lazySelection ) ) {

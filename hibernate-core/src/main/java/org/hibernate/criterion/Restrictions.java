@@ -59,18 +59,44 @@ public class Restrictions {
 	 * Apply an "equal" constraint to the named property
 	 * @param propertyName
 	 * @param value
-	 * @return Criterion
+	 * @return SimpleExpression
 	 */
 	public static SimpleExpression eq(String propertyName, Object value) {
+		return new SimpleExpression(propertyName, value, "=");
+	}
+	/**
+	 * Apply an "equal" constraint to the named property.  If the value
+	 * is null, instead apply "is null".
+	 * @param propertyName
+	 * @param value
+	 * @return Criterion
+	 */
+	public static Criterion eqOrIsNull(String propertyName, Object value) {
+		if (value == null) {
+			return isNull(propertyName);
+		}
 		return new SimpleExpression(propertyName, value, "=");
 	}
 	/**
 	 * Apply a "not equal" constraint to the named property
 	 * @param propertyName
 	 * @param value
-	 * @return Criterion
+	 * @return SimpleExpression
 	 */
 	public static SimpleExpression ne(String propertyName, Object value) {
+		return new SimpleExpression(propertyName, value, "<>");
+	}
+	/**
+	 * Apply a "not equal" constraint to the named property.  If the value
+	 * is null, instead apply "is not null".
+	 * @param propertyName
+	 * @param value
+	 * @return Criterion
+	 */
+	public static Criterion neOrIsNotNull(String propertyName, Object value) {
+		if (value == null) {
+			return isNotNull(propertyName);
+		}
 		return new SimpleExpression(propertyName, value, "<>");
 	}
 	/**

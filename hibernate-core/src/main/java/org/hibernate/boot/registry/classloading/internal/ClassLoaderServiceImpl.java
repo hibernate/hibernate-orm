@@ -40,7 +40,6 @@ import java.util.ServiceLoader;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.ClassLoaderHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -61,7 +60,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		this( Collections.singletonList( classLoader ) );
 	}
 
-	public ClassLoaderServiceImpl(List<ClassLoader> providedClassLoaders) {
+	public ClassLoaderServiceImpl(Collection<ClassLoader> providedClassLoaders) {
 		final LinkedHashSet<ClassLoader> orderedClassLoaderSet = new LinkedHashSet<ClassLoader>();
 
 		// first add all provided class loaders, if any
@@ -74,14 +73,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		}
 
 		// normalize adding known class-loaders...
-		// first, the "overridden" classloader provided by an environment (OSGi, etc.)
-		// TODO: This should probably be wired into BootstrapServiceRegistryBuilder
-		// instead, however that wasn't available in 4.2.  Once JPA 2.1 is testable
-		// in an OSGi container, move this and re-work.
-		if ( ClassLoaderHelper.overridenClassLoader != null ) {
-			orderedClassLoaderSet.add( ClassLoaderHelper.overridenClassLoader );
-		}
-		// then the Hibernate class loader
+		// first, the Hibernate class loader
 		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
 		// then the TCCL, if one...
 		final ClassLoader tccl = locateTCCL();

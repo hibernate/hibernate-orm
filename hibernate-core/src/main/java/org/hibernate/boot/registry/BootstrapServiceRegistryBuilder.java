@@ -24,17 +24,20 @@
 package org.hibernate.boot.registry;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.selector.Availability;
 import org.hibernate.boot.registry.selector.AvailabilityAnnouncer;
+import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
+import org.hibernate.internal.util.ClassLoaderHelper;
 
 /**
  * Builder for bootstrap {@link org.hibernate.service.ServiceRegistry} instances.
@@ -189,7 +192,18 @@ public class BootstrapServiceRegistryBuilder {
 	public BootstrapServiceRegistry build() {
 		final ClassLoaderService classLoaderService;
 		if ( providedClassLoaderService == null ) {
-			classLoaderService = new ClassLoaderServiceImpl( providedClassLoaders );
+			// Use a set.  As an example, in JPA, OsgiClassLoader may be in both
+			// the providedClassLoaders and the overridenClassLoader.
+			final Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
+
+            if ( providedClassLoaders != null )  {
+                classLoaders.addAll( providedClassLoaders );
+            }
+			if ( ClassLoaderHelper.overridenClassLoader != null ) {
+                classLoaders.add( ClassLoaderHelper.overridenClassLoader );
+            }
+			
+			classLoaderService = new ClassLoaderServiceImpl( classLoaders );
 		} else {
 			classLoaderService = providedClassLoaderService;
 		}

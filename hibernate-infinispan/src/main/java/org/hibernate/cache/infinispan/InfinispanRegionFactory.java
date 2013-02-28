@@ -387,7 +387,7 @@ public class InfinispanRegionFactory implements RegionFactory {
       try {
          String configLoc = ConfigurationHelper.getString(
                INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
-         ClassLoader classLoader = ClassLoaderHelper.getClassLoader();
+         ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
          InputStream is = FileLookupFactory.newInstance().lookupFileStrict(
                configLoc, classLoader);
          ParserRegistry parserRegistry = new ParserRegistry(classLoader);

@@ -78,7 +78,7 @@ public final class ConfigHelper {
 
 		// First, try to locate this resource through the current
 		// context classloader.
-		ClassLoader contextClassLoader = ClassLoaderHelper.getClassLoader();
+		ClassLoader contextClassLoader = ClassLoaderHelper.getContextClassLoader();
 		if (contextClassLoader!=null) {
 			url = contextClassLoader.getResource(path);
 		}
@@ -159,7 +159,7 @@ public final class ConfigHelper {
 				resource.substring(1) : resource;
 
 		InputStream stream = null;
-		ClassLoader classLoader = ClassLoaderHelper.getClassLoader();
+		ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
 		if (classLoader!=null) {
 			stream = classLoader.getResourceAsStream( stripped );
 		}
@@ -182,7 +182,7 @@ public final class ConfigHelper {
 
 		InputStream stream = null;
 
-		ClassLoader classLoader = ClassLoaderHelper.getClassLoader();
+		ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
 		if ( classLoader != null ) {
 			stream = classLoader.getResourceAsStream( resource );
 			if ( stream == null && hasLeadingSlash ) {

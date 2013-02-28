@@ -197,7 +197,7 @@ public class BlobProxy implements InvocationHandler {
 	 * @return The class loader appropriate for proxy construction.
 	 */
 	private static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getClassLoader();
+		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
 		if ( cl == null ) {
 			cl = BlobImplementer.class.getClassLoader();
 		}

@@ -22,7 +22,7 @@ package org.hibernate.internal.util;
 
 /**
  * This exists purely to allow custom ClassLoaders to be injected and used
- * prior to ServiceRegistry and ClassLoadingService existance.  This should be
+ * prior to ServiceRegistry and ClassLoadingService existence.  This should be
  * replaced in Hibernate 5.
  * 
  * @author Brett Meyer
@@ -31,7 +31,7 @@ public class ClassLoaderHelper {
 	
 	public static ClassLoader overridenClassLoader = null;
 	
-	public static ClassLoader getClassLoader() {
+	public static ClassLoader getContextClassLoader() {
 		return overridenClassLoader != null ?
 			overridenClassLoader : Thread.currentThread().getContextClassLoader();
 	}

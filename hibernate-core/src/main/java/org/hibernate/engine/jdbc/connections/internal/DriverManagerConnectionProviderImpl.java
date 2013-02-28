@@ -24,6 +24,7 @@
 package org.hibernate.engine.jdbc.connections.internal;
 
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,9 +32,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -41,12 +42,11 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.jboss.logging.Logger;
 
 /**
  * A connection provider that uses the {@link java.sql.DriverManager} directly to open connections and provides
@@ -74,6 +74,8 @@ public class DriverManagerConnectionProviderImpl
 	private boolean stopped;
 
 	private transient ServiceRegistryImplementor serviceRegistry;
+	
+	private Driver driver;
 
 	@Override
 	public boolean isUnwrappableAs(Class unwrapType) {
@@ -102,12 +104,14 @@ public class DriverManagerConnectionProviderImpl
 		}
 		else if ( serviceRegistry != null ) {
 			try {
-				serviceRegistry.getService( ClassLoaderService.class ).classForName( driverClassName );
+				driver = (Driver) serviceRegistry.getService(
+						ClassLoaderService.class ).classForName( driverClassName )
+						.newInstance();
 			}
-			catch ( ClassLoadingException e ) {
+			catch ( Exception e ) {
 				throw new ClassLoadingException(
-						"Specified JDBC Driver " + driverClassName + " class not found",
-						e
+						"Specified JDBC Driver " + driverClassName
+						+ " could not be loaded", e
 				);
 			}
 		}
@@ -115,14 +119,14 @@ public class DriverManagerConnectionProviderImpl
 		else {
 			try {
 				// trying via forName() first to be as close to DriverManager's semantics
-				Class.forName( driverClassName );
+				driver = (Driver) Class.forName( driverClassName ).newInstance();
 			}
-			catch ( ClassNotFoundException cnfe ) {
+			catch ( Exception e1 ) {
 				try{
-					ReflectHelper.classForName( driverClassName );
+					driver = (Driver) ReflectHelper.classForName( driverClassName ).newInstance();
 				}
-				catch ( ClassNotFoundException e ) {
-					throw new HibernateException( "Specified JDBC Driver " + driverClassName + " class not found", e );
+				catch ( Exception e2 ) {
+					throw new HibernateException( "Specified JDBC Driver " + driverClassName + " could not be loaded", e2 );
 				}
 			}
 		}
@@ -191,11 +195,22 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		// otherwise we open a new connection...
-
 		final boolean debugEnabled = LOG.isDebugEnabled();
 		if ( debugEnabled ) LOG.debug( "Opening new JDBC connection" );
-
-		Connection conn = DriverManager.getConnection( url, connectionProps );
+		
+		Connection conn;
+		if ( driver != null ) {
+			// If a Driver is available, completely circumvent
+			// DriverManager#getConnection.  It attempts to double check
+			// ClassLoaders before using a Driver.  This does not work well in
+			// OSGi environments without wonky workarounds.
+			conn = driver.connect( url, connectionProps );
+		}
+		else {
+			// If no Driver, fall back on the original method.
+			conn = DriverManager.getConnection( url, connectionProps );
+		}
+		
 		if ( isolation != null ) {
 			conn.setTransactionIsolation( isolation.intValue() );
 		}

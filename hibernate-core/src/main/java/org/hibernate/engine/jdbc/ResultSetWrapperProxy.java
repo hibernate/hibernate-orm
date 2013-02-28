@@ -79,7 +79,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 	 * @return The class loader appropriate for proxy construction.
 	 */
 	public static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getClassLoader();
+		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
 		if ( cl == null ) {
 			cl = ResultSet.class.getClassLoader();
 		}

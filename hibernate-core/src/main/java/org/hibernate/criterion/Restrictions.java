@@ -61,10 +61,7 @@ public class Restrictions {
 	 * @param value
 	 * @return Criterion
 	 */
-	public static Criterion eq(String propertyName, Object value) {
-		if (null == value) {
-			return isNull(propertyName);
-		}
+	public static SimpleExpression eq(String propertyName, Object value) {
 		return new SimpleExpression(propertyName, value, "=");
 	}
 	/**
@@ -73,10 +70,7 @@ public class Restrictions {
 	 * @param value
 	 * @return Criterion
 	 */
-	public static Criterion ne(String propertyName, Object value) {
-		if (null == value) {
-			return isNotNull(propertyName);
-		}
+	public static SimpleExpression ne(String propertyName, Object value) {
 		return new SimpleExpression(propertyName, value, "<>");
 	}
 	/**

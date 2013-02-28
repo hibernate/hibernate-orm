@@ -25,15 +25,16 @@ package org.hibernate.testing.junit4;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.jboss.logging.Logger;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.manipulation.NoTestsRemainException;
+import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
@@ -121,9 +122,22 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.junit.runners.ParentRunner#classBlock(org.junit.runner.notification.RunNotifier)
+	 */
+	@Override
+	protected Statement classBlock( RunNotifier notifier ) {
+		log.info( BeforeClass.class.getSimpleName() + ": " + getName() );
+
+		return super.classBlock( notifier );
+	}
 
 	@Override
 	protected Statement methodBlock(FrameworkMethod method) {
+		log.info( Test.class.getSimpleName() + ": " + method.getName() );
+
 		final Statement originalMethodBlock = super.methodBlock( method );
 		final ExtendedFrameworkMethod extendedFrameworkMethod = (ExtendedFrameworkMethod) method;
 		return new FailureExpectedHandler( originalMethodBlock, testClassMetadata, extendedFrameworkMethod, testInstance );

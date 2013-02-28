@@ -44,8 +44,8 @@ public class BeforeClassCallbackHandler extends Statement {
 	public void evaluate() throws Throwable {
 		try {
 			runner.getTestClassMetadata().performBeforeClassCallbacks( runner.getTestInstance() );
-		}
-		catch ( CallbackException error ) {
+			wrappedStatement.evaluate();
+		} catch ( Throwable error ) {
 			runner.setBeforeClassMethodFailed();
 			if ( runner.getTestClass().getJavaClass().getAnnotation( FailureExpected.class ) == null &&
 					( !runner.useNewMetamodel() ||
@@ -53,6 +53,5 @@ public class BeforeClassCallbackHandler extends Statement {
 				throw error;
 			}
 		}
-		wrappedStatement.evaluate();
 	}
 }

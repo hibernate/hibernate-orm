@@ -188,6 +188,11 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
+	public boolean isUnique() {
+		return true;
+	}
+
+	@Override
 	public String getExplicitForeignKeyName() {
 		return oneToOneElement.getForeignKey();
 	}

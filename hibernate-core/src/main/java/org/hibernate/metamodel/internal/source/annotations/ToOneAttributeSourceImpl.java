@@ -38,6 +38,7 @@ import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
@@ -47,6 +48,7 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 import org.hibernate.type.ForeignKeyDirection;
 
@@ -56,8 +58,10 @@ import org.hibernate.type.ForeignKeyDirection;
 public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implements ToOneAttributeSource {
 	private final AssociationAttribute associationAttribute;
 	private final Set<CascadeStyle> cascadeStyles;
+	private SingularAttributeSource.Nature nature;
+	private SingularAttributeSource ownerAttributeSource;
 
-	public ToOneAttributeSourceImpl(AssociationAttribute associationAttribute) {
+	public ToOneAttributeSourceImpl(SingularAssociationAttribute associationAttribute) {
 
 		super( associationAttribute );
 		this.associationAttribute = associationAttribute;
@@ -66,15 +70,26 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 				associationAttribute.getHibernateCascadeTypes(),
 				associationAttribute.getContext()
 		);
+		this.nature = getNature( associationAttribute );
 	}
 
-	@Override
-	public Nature getNature() {
+	private static Nature getNature(SingularAssociationAttribute associationAttribute) {
 		if ( MappedAttribute.Nature.MANY_TO_ONE.equals( associationAttribute.getNature() ) ) {
 			return Nature.MANY_TO_ONE;
 		}
 		else if ( MappedAttribute.Nature.ONE_TO_ONE.equals( associationAttribute.getNature() ) ) {
-				throw new NotYetImplementedException( "One-to-one using annotations is not supported yet." );
+			if ( associationAttribute.getMappedBy() != null || associationAttribute.hasPrimaryKeyJoinColumn()) {
+				return Nature.ONE_TO_ONE;
+			}
+			else if ( associationAttribute.getJoinTableAnnotation() != null ) {
+				return Nature.MANY_TO_ONE;
+			}
+			else {
+			//if ( associationAttribute.getJoinColumnValues() ) {
+				throw new NotYetImplementedException( "One-to-one without mappedBy configured using annotations is not supported yet." );
+				// if ID is not initialized, then this can't be a one-to-one   (mapToPk == false)
+				// if join columns are the entity's ID, then it is a one-to-one (mapToPk == true)
+			}
 		}
 		else {
 			throw new AssertionError(String.format( "Wrong attribute nature[%s] for toOne attribute: %s",
@@ -82,9 +97,38 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 		}
 	}
 
+	/*
+	private static Nature determineNature(
+			ToOneAttributeSource currentAttributeSource
+			ToOneAttributeSource ownerAttributeSource,
+			AssociationAttribute associationAttribute) {
+		switch ( associationAttribute.getNature() ) {
+			case ONE_TO_ONE:
+				throw new NotYetImplementedException(  );
+			case MANY_TO_ONE:
+				return new ManyToAnyPluralAttributeElementSourceImpl( associationAttribute );
+//			case ONE_TO_MANY:
+//				return usesJoinTable( ownerAttributeSource ) ?
+//						new ManyToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, true ) :
+//						new OneToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute );
+		}
+		throw new AssertionError( "Unexpected attribute nature for a to-one association attribute:" + associationAttribute.getNature() );
+	}
+	*/
+
+	@Override
+	public Nature getNature() {
+		return nature;
+	}
+
 	@Override
 	public String getReferencedEntityName() {
 		return associationAttribute.getReferencedEntityType();
+	}
+
+	@Override
+	public boolean isUnique() {
+		return MappedAttribute.Nature.ONE_TO_ONE.equals( associationAttribute.getNature() );
 	}
 
 	@Override

@@ -186,6 +186,11 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
+	public boolean isUnique() {
+		return manyToOneElement.isUnique();
+	}
+
+	@Override
 	public String getExplicitForeignKeyName() {
 		return manyToOneElement.getForeignKey();
 	}

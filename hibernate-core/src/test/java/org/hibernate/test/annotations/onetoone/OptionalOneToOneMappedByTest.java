@@ -41,7 +41,6 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel(message = "Needs one to one mapping support. See Binder#bindSingularAttribute")
 public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 
 	// @OneToOne(mappedBy="address") with foreign generator

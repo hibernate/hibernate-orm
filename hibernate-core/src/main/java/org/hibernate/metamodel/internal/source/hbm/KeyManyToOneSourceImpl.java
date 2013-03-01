@@ -181,6 +181,11 @@ class KeyManyToOneSourceImpl
 	}
 
 	@Override
+	public boolean isUnique() {
+		return false;
+	}
+
+	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
 		return ForeignKeyDirection.TO_PARENT;
 	}

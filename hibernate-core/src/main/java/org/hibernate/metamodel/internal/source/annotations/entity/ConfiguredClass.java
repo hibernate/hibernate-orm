@@ -54,6 +54,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOv
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -514,7 +515,7 @@ public class ConfiguredClass {
 			}
 			case ONE_TO_ONE:
 			case MANY_TO_ONE: {
-				final AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
+				final AssociationAttribute attribute = SingularAssociationAttribute.createSingularAssociationAttribute(
 						classInfo,
 						attributeName,
 						resolvedMember.getType().getErasedType(),

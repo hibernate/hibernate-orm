@@ -44,6 +44,7 @@ public interface ToOneAttributeSource
 	 * @return The name of the referenced entity
 	 */
 	public String getReferencedEntityName();
+	public boolean isUnique();
 	public boolean isNotFoundAnException();
 	public boolean isUnWrapProxy();
 	ForeignKeyDirection getForeignKeyDirection();

@@ -147,7 +147,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
+	@FailureExpectedWithNewMetamodel( message = "sequential selects not supported yet.")
 	public void testManyToOne() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

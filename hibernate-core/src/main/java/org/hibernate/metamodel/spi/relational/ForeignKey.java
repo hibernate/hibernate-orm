@@ -59,6 +59,9 @@ public class ForeignKey extends AbstractConstraint {
 
 	protected ForeignKey(TableSpecification sourceTable, TableSpecification targetTable, String name) {
 		super( sourceTable, name );
+		if ( targetTable == null ) {
+			throw new IllegalArgumentException( "targetTable must be non-null." );
+		}
 		this.targetTable = targetTable;
 	}
 

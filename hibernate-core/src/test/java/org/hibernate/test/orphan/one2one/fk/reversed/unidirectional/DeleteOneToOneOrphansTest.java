@@ -30,7 +30,6 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -64,7 +63,6 @@ public class DeleteOneToOneOrphansTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOrphanedWhileManaged() {
 		createData();
 

@@ -29,6 +29,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
@@ -48,7 +49,7 @@ public class SourceHelper {
 			switch ( associationAttribute.getNature() ) {
 				case ONE_TO_ONE:
 				case MANY_TO_ONE: {
-					attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );
+					attributeList.add( new ToOneAttributeSourceImpl( (SingularAssociationAttribute) associationAttribute ) );
 					break;
 				}
 				case MANY_TO_MANY:

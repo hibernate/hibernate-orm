@@ -91,7 +91,7 @@ public class AssociationAttribute extends MappedAttribute {
 	private AttributeTypeResolver resolver;
 
 
-	public static AssociationAttribute createAssociationAttribute(
+	static AssociationAttribute createAssociationAttribute(
 			ClassInfo classInfo,
 			String name,
 			Class<?> attributeType,

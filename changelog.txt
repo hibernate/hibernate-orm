@@ -5,6 +5,51 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.0.CR2 (2013.03.02)
+------------------------------------------------------------------------------------------------------------------------
+
+Sub-task
+    [HHH-7941] - Script OSGi manifest creation in Gradle
+    [HHH-7942] - Create Hibernate OSGi bundle activator and class loader services
+    [HHH-7966] - Remove external use of internal impls
+    [HHH-7968] - Upgrade to JACC 1.0.2.Final -- needed for OSGi manifests
+    [HHH-7991] - Correct all instances of Thread.currentThread().getContextClassLoader()
+    [HHH-7994] - Improve OsgiClassLoader performance
+    [HHH-8010] - Ensure Hibernate manifests allow user bundle managed SF/EMF
+
+Bug
+    [HHH-2045] - in () result in "unexpected end of subtree"
+    [HHH-4084] - @UniqueConstraint(columnNames="") causes StringIndexOutOfBoundsException
+    [HHH-4150] - EntityManager.createQuery does not recognize COUNT CASE statement
+    [HHH-7519] - Upgrade byteman version
+    [HHH-7608] - @OrderBy in combination with @Formula fails
+    [HHH-7821] - NPE after upgrade from 4.1.6 to 4.1.8
+    [HHH-7829] - NullPointerException when manually flushing One-To-One relationship with orphan removal
+    [HHH-7889] - Sybase jConnect driver cannot use ResultSet.getClob(String) method
+    [HHH-7970] - @javax.persistence.Cacheable is never wired up
+    [HHH-7990] - Bootstrapping Hibernate fails if javax.validation API is on classpath but no provider
+    [HHH-8002] - TransactionTimeoutTest#testTransactionTimeoutSuccess failing on Oracle
+    [HHH-8003] - Create "sqlDropString" method in Dialect to handle "if exists" correctly
+    [HHH-8005] - Sybase 15 - nullable column are not nullable (when created by SchemaExport)
+    [HHH-8006] - MergeCollectionEventTest & BadMergeHandlingTest fail on MySQL
+    [HHH-8007] - Update SQLServer2005LimitHandler to handle multiselects (*, table.*)
+    [HHH-8015] - Spring 3.2.1 cannot be deployed on JBoss AS7 with Hibernate 4.1.6 due to class loader issues.
+    [HHH-8017] - Correct SybaseDialect's getNullColumnString
+    [HHH-8019] - Multiple tests creating identifiers too long for Oracle
+    [HHH-8025] - Binary compatibility broken between 4.1.9 -> 4.1.10 for Restrictions.eq and Restrictions.ne
+    [HHH-8026] - Duplicate constraint names with unique=true
+
+Improvement
+    [HHH-6841] - Allow multiple @SkipForDialect annotations
+    [HHH-7952] - Missing Deprecated Javadoc For TableGenerator/TableHiLoGenerator
+    [HHH-7992] - Add a base Session delegator implementation
+    [HHH-7999] - Oracle test failures due to lack of support for various syntax
+    [HHH-8029] - Improve SimpleNationalizedTest
+
+New Feature
+    [HHH-6613] - Support for audited @ElementCollection / collection of elements
+
+
 Changes in version 4.2.0.CR1 (2013.01.13)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,15 +21,39 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tuple;
+package org.hibernate.loader.plan.spi;
+
+import org.hibernate.engine.FetchStrategy;
+import org.hibernate.loader.PropertyPath;
 
 /**
- * Defines the basic contract of a Property within the runtime metamodel.
+ * Contract for associations that are being fetched.
+ * <p/>
+ * NOTE : can represent components/embeddables
  *
  * @author Steve Ebersole
  */
-@Deprecated
-public interface Property extends Attribute {
-	@Deprecated
-	public String getNode();
+public interface Fetch extends FetchOwner {
+	/**
+	 * Obtain the owner of this fetch.
+	 *
+	 * @return The fetch owner.
+	 */
+	public FetchOwner getOwner();
+
+	/**
+	 * Obtain the name of the property, relative to the owner, being fetched.
+	 *
+	 * @return The fetched property name.
+	 */
+	public String getOwnerPropertyName();
+
+	public FetchStrategy getFetchStrategy();
+
+	/**
+	 * Get the property path to this fetch
+	 *
+	 * @return The property path
+	 */
+	public PropertyPath getPropertyPath();
 }

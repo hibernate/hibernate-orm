@@ -56,8 +56,9 @@ import org.hibernate.property.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Instantiator;
+import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.StandardProperty;
-import org.hibernate.tuple.VersionProperty;
+import org.hibernate.tuple.entity.VersionProperty;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -604,7 +605,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		final Object[] result = new Object[span];
 
 		for ( int j = 0; j < span; j++ ) {
-			StandardProperty property = entityMetamodel.getProperties()[j];
+			NonIdentifierAttribute property = entityMetamodel.getProperties()[j];
 			if ( getAll || !property.isLazy() ) {
 				result[j] = getters[j].get( entity );
 			}

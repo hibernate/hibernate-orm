@@ -44,22 +44,25 @@ import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 
 /**
- * Implementors define mapping and persistence logic for a particular
- * strategy of entity mapping.  An instance of entity persisters corresponds
- * to a given mapped entity.
+ * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given
+ * persister instance corresponds to a given mapped entity class.
  * <p/>
- * Implementors must be threadsafe (preferrably immutable) and must provide a constructor
- * matching the signature of: {@link org.hibernate.mapping.PersistentClass}, {@link org.hibernate.engine.spi.SessionFactoryImplementor}
+ * Implementations must be thread-safe (preferably immutable).
  *
  * @author Gavin King
+ * @author Steve Ebersole
+ *
+ * @see org.hibernate.persister.spi.PersisterFactory
+ * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends OptimisticCacheSource {
+public interface EntityPersister extends OptimisticCacheSource, EntityDefinition {
 
 	/**
 	 * The property name of the "special" identifier property in HQL

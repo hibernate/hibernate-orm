@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,15 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tuple;
+package org.hibernate.persister.walking.spi;
+
+import java.util.Arrays;
 
 /**
- * Defines the basic contract of a Property within the runtime metamodel.
- *
- * @author Steve Ebersole
+ * Used to uniquely identify a foreign key, so that we don't join it more than once creating circularities.
+ * <p/>
+ * bit of a misnomer to call this an association attribute.  But this follows the legacy use of AssociationKey
+ * from old JoinWalkers to denote circular join detection
  */
-@Deprecated
-public interface Property extends Attribute {
-	@Deprecated
-	public String getNode();
+public class AssociationKey {
+	private final String table;
+	private final String[] columns;
+
+	public AssociationKey(String table, String[] columns) {
+		this.table = table;
+		this.columns = columns;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		AssociationKey that = (AssociationKey) other;
+		return that.table.equals(table) && Arrays.equals( columns, that.columns );
+	}
+
+	@Override
+	public int hashCode() {
+		return table.hashCode(); //TODO: inefficient
+	}
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,15 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tuple;
+package org.hibernate.persister.walking.spi;
 
 /**
- * Defines the basic contract of a Property within the runtime metamodel.
- *
  * @author Steve Ebersole
  */
-@Deprecated
-public interface Property extends Attribute {
-	@Deprecated
-	public String getNode();
+public interface CompositeDefinition extends AttributeDefinition, AttributeSource {
 }

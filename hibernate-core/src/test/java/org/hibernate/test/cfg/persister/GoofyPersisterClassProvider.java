@@ -37,6 +37,7 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
@@ -54,6 +55,9 @@ import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
+import org.hibernate.persister.walking.spi.CollectionElementDefinition;
+import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.NonPojoInstrumentationMetadata;
@@ -579,6 +583,21 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			// TODO Auto-generated method stub
 			return null;
 		}
+
+		@Override
+		public EntityPersister getEntityPersister() {
+			return this;
+		}
+
+		@Override
+		public Iterable<AttributeDefinition> getEmbeddedCompositeIdentifierAttributes() {
+			throw new NotYetImplementedException();
+		}
+
+		@Override
+		public Iterable<AttributeDefinition> getAttributes() {
+			throw new NotYetImplementedException();
+		}
 	}
 
 	public static class NoopCollectionPersister implements CollectionPersister {
@@ -606,8 +625,23 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
+		public CollectionPersister getCollectionPersister() {
+			return this;
+		}
+
 		public CollectionType getCollectionType() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			throw new NotYetImplementedException();
+		}
+
+		@Override
+		public CollectionIndexDefinition getIndexDefinition() {
+			throw new NotYetImplementedException();
+		}
+
+		@Override
+		public CollectionElementDefinition getElementDefinition() {
+			throw new NotYetImplementedException();
 		}
 
 		public Type getKeyType() {

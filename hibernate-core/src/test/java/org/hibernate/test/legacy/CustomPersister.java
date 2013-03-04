@@ -17,6 +17,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
@@ -34,6 +35,7 @@ import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.NonPojoInstrumentationMetadata;
@@ -670,5 +672,20 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new StaticFilterAliasGenerator(rootAlias);
+	}
+
+	@Override
+	public EntityPersister getEntityPersister() {
+		return this;
+	}
+
+	@Override
+	public Iterable<AttributeDefinition> getEmbeddedCompositeIdentifierAttributes() {
+		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public Iterable<AttributeDefinition> getAttributes() {
+		throw new NotYetImplementedException();
 	}
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,15 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tuple;
+package org.hibernate.loader.plan.spi;
 
 /**
- * Defines the basic contract of a Property within the runtime metamodel.
+ * Represents a return value in the query results.  Not the same as a result (column) in the JDBC ResultSet!
+ * <p/>
+ * This is merely a unifying contract; it defines no behavior.
+ * <p/>
+ * Return is distinctly different from a {@link Fetch}.
+ *
+ * @see ScalarReturn
+ * @see EntityReturn
+ * @see CollectionReturn
  *
  * @author Steve Ebersole
  */
-@Deprecated
-public interface Property extends Attribute {
-	@Deprecated
-	public String getNode();
+public interface Return {
 }

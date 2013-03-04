@@ -38,6 +38,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -60,7 +61,7 @@ import org.hibernate.type.Type;
  * @see org.hibernate.collection.spi.PersistentCollection
  * @author Gavin King
  */
-public interface CollectionPersister {
+public interface CollectionPersister extends CollectionDefinition {
 	/**
 	 * Initialize the given collection with the given key
 	 */

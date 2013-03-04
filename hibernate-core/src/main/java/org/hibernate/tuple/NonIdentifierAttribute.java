@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,13 +23,33 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.FetchMode;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
+
 /**
- * Defines the basic contract of a Property within the runtime metamodel.
- *
  * @author Steve Ebersole
  */
-@Deprecated
-public interface Property extends Attribute {
-	@Deprecated
-	public String getNode();
+public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
+	public boolean isLazy();
+
+	public boolean isInsertable();
+
+	public boolean isUpdateable();
+
+	public boolean isInsertGenerated();
+
+	public boolean isUpdateGenerated();
+
+	public boolean isNullable();
+
+	public boolean isDirtyCheckable(boolean hasUninitializedProperties);
+
+	public boolean isDirtyCheckable();
+
+	public boolean isVersionable();
+
+	public CascadeStyle getCascadeStyle();
+
+	public FetchMode getFetchMode();
 }

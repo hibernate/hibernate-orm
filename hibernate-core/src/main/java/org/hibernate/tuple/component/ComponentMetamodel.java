@@ -32,8 +32,8 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
+import org.hibernate.tuple.PropertyFactory;
 
 /**
  * Centralizes metamodel information about a component.

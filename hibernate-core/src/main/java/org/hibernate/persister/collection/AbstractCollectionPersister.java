@@ -79,6 +79,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.walking.spi.CollectionDefinition;
+import org.hibernate.persister.walking.spi.CollectionElementDefinition;
+import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
+import org.hibernate.persister.walking.spi.CompositeDefinition;
+import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.SelectFragment;
@@ -90,6 +95,7 @@ import org.hibernate.sql.ordering.antlr.FormulaReference;
 import org.hibernate.sql.ordering.antlr.OrderByAliasResolver;
 import org.hibernate.sql.ordering.antlr.OrderByTranslation;
 import org.hibernate.sql.ordering.antlr.SqlValueReference;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -1934,4 +1940,79 @@ public abstract class AbstractCollectionPersister
 	
 	public abstract FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 
+
+	// ColectionDefinition impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public CollectionPersister getCollectionPersister() {
+		return this;
+	}
+
+	@Override
+	public CollectionIndexDefinition getIndexDefinition() {
+		if ( ! hasIndex() ) {
+			return null;
+		}
+
+		return new CollectionIndexDefinition() {
+			@Override
+			public CollectionDefinition getCollectionDefinition() {
+				return AbstractCollectionPersister.this;
+			}
+
+			@Override
+			public Type getType() {
+				return getIndexType();
+			}
+
+			@Override
+			public EntityDefinition toEntityDefinition() {
+				if ( getType().isComponentType() ) {
+					throw new IllegalStateException( "Cannot treat composite collection index type as entity" );
+				}
+				return (EntityPersister) ( (AssociationType) getIndexType() ).getAssociatedJoinable( getFactory() );
+			}
+
+			@Override
+			public CompositeDefinition toCompositeDefinition() {
+				if ( ! getType().isComponentType() ) {
+					throw new IllegalStateException( "Cannot treat entity collection index type as composite" );
+				}
+				// todo : implement
+				throw new NotYetImplementedException();
+			}
+		};
+	}
+
+	@Override
+	public CollectionElementDefinition getElementDefinition() {
+		return new CollectionElementDefinition() {
+			@Override
+			public CollectionDefinition getCollectionDefinition() {
+				return AbstractCollectionPersister.this;
+			}
+
+			@Override
+			public Type getType() {
+				return getElementType();
+			}
+
+			@Override
+			public EntityDefinition toEntityDefinition() {
+				if ( getType().isComponentType() ) {
+					throw new IllegalStateException( "Cannot treat composite collection element type as entity" );
+				}
+				return getElementPersister();
+			}
+
+			@Override
+			public CompositeDefinition toCompositeDefinition() {
+				if ( ! getType().isComponentType() ) {
+					throw new IllegalStateException( "Cannot treat entity collection element type as composite" );
+				}
+				// todo : implement
+				throw new NotYetImplementedException();
+			}
+		};
+	}
 }

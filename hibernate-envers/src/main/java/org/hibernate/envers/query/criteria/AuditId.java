@@ -21,40 +21,63 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.envers.query.criteria;
+
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.query.projection.PropertyAuditProjection;
+import org.hibernate.envers.query.property.EntityPropertyName;
 import org.hibernate.envers.query.property.OriginalIdPropertyName;
+import org.hibernate.envers.query.property.PropertyNameGetter;
 
 /**
  * Create restrictions and projections for the id of an audited entity.
+ *
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@SuppressWarnings({"JavaDoc"})
-public class AuditId {
-    /**
+@SuppressWarnings({ "JavaDoc" })
+public class AuditId<T> extends AuditProperty<T> {
+	public static final String IDENTIFIER_PLACEHOLDER = "$$id$$";
+	private static final PropertyNameGetter identifierPropertyGetter = new EntityPropertyName( IDENTIFIER_PLACEHOLDER );
+
+	public AuditId() {
+		super( identifierPropertyGetter );
+	}
+
+	/**
 	 * Apply an "equal" constraint
 	 */
 	public AuditCriterion eq(Object id) {
-		return new IdentifierEqAuditExpression(id, true);
+		return new IdentifierEqAuditExpression( id, true );
 	}
 
-    /**
+	/**
 	 * Apply a "not equal" constraint
 	 */
 	public AuditCriterion ne(Object id) {
-		return new IdentifierEqAuditExpression(id, false);
+		return new IdentifierEqAuditExpression( id, false );
 	}
 
-    // Projections
+	// Projections
 
-    /**
-     * Projection counting the values
-     * TODO: idPropertyName isn't needed, should be read from the configuration
-     * @param idPropertyName Name of the identifier property
-     */
-    public AuditProjection count(String idPropertyName) {
-        return new PropertyAuditProjection(new OriginalIdPropertyName(idPropertyName), "count", false);
-    }
+	/**
+	 * Projection counting the values
+	 *
+	 * @param idPropertyName Name of the identifier property
+	 *
+	 * @deprecated Use {@link #count()}.
+	 */
+	public AuditProjection count(String idPropertyName) {
+		return new PropertyAuditProjection( new OriginalIdPropertyName( idPropertyName ), "count", false );
+	}
+
+	@Override
+	public AuditCriterion hasChanged() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public AuditCriterion hasNotChanged() {
+		throw new UnsupportedOperationException();
+	}
 }

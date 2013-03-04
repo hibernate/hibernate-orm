@@ -22,6 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query;
+
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.criteria.AuditConjunction;
 import org.hibernate.envers.query.criteria.AuditCriterion;
@@ -39,7 +41,7 @@ import org.hibernate.envers.query.property.RevisionTypePropertyName;
 /**
  * TODO: ilike
  * @author Adam Warski (adam at warski dot org)
- * @see org.hibernate.criterion.Restrictions
+ * @see Restrictions
  */
 @SuppressWarnings({"JavaDoc"})
 public class AuditEntity {

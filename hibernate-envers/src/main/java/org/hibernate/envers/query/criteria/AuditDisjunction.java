@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
@@ -44,14 +45,15 @@ public class AuditDisjunction implements AuditCriterion, ExtendableCriterion {
         return this;
     }
 
-    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+    public void addToQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
+						   QueryBuilder qb, Parameters parameters) {
         Parameters orParameters = parameters.addSubParameters(Parameters.OR);
 
         if (criterions.size() == 0) {
             orParameters.addWhere("0", false, "=", "1", false);
         } else {
             for (AuditCriterion criterion : criterions) {
-                criterion.addToQuery(verCfg, entityName, qb, orParameters);
+                criterion.addToQuery(verCfg, versionsReader, entityName, qb, orParameters);
             }
         }
     }

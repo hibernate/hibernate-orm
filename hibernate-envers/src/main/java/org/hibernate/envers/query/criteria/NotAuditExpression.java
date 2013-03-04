@@ -22,7 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query.criteria;
+
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
@@ -36,7 +38,8 @@ public class NotAuditExpression implements AuditCriterion {
         this.criterion = criterion;
     }
 
-    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        criterion.addToQuery(verCfg, entityName, qb, parameters.addNegatedParameters());
+    public void addToQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
+						   QueryBuilder qb, Parameters parameters) {
+        criterion.addToQuery(verCfg, versionsReader, entityName, qb, parameters.addNegatedParameters());
     }
 }

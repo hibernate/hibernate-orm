@@ -29,8 +29,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -38,7 +36,10 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.relational.Identifier;
+import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * <b>sequence</b><br>
@@ -108,6 +109,11 @@ public class SequenceGenerator
 
 		this.identifierType = type;
 		sql = dialect.getSequenceNextValString( sequenceName );
+		
+		Schema schema = (Schema) params.get( Schema.EXPORTABLE_SCHEMA );
+		if ( schema != null ) {
+			schema.locateOrCreateSequence( Identifier.toIdentifier( sequenceName ) );
+		}
 	}
 
 	@Override

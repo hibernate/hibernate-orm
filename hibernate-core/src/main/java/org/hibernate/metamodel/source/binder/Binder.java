@@ -131,6 +131,11 @@ public class Binder {
 		try {
 			final EntityBinding entityBinding = doCreateEntityBinding( entitySource, superEntityBinding );
 
+			String jpaEntityName = entityBinding.getJpaEntityName();
+			if ( StringHelper.isEmpty( jpaEntityName ) ) {
+				jpaEntityName = entityBinding.getEntity().getClassReference().getSimpleName();
+			}
+			metadata.addImport( jpaEntityName, entityBinding.getEntity().getName() );
 			metadata.addEntity( entityBinding );
 			processedEntityNames.add( entityBinding.getEntity().getName() );
 

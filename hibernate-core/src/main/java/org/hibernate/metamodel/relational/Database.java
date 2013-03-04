@@ -110,6 +110,10 @@ public class Database {
 			for ( Table table : schema.getTables() ) {
 				addSqlCreateStrings( dialect, exportIdentifiers, script, table );
 			}
+            
+			for ( Sequence sequence : schema.getSequences() ) {
+				addSqlCreateStrings( dialect, exportIdentifiers, script, sequence );
+			}
 		}
 
 		for ( Schema schema : schemaMap.values() ) {
@@ -175,6 +179,10 @@ public class Database {
 		for ( Schema schema : schemaMap.values() ) {
 			for ( Table table : schema.getTables() ) {
 				addSqlDropStrings( dialect, exportIdentifiers, script, table );
+			}
+			
+			for ( Sequence sequence : schema.getSequences() ) {
+				addSqlDropStrings( dialect, exportIdentifiers, script, sequence );
 			}
 		}
 

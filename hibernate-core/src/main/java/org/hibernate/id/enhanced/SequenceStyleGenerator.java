@@ -26,8 +26,6 @@ package org.hibernate.id.enhanced;
 import java.io.Serializable;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
@@ -40,7 +38,10 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.relational.Identifier;
+import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Generates identifier values based on an sequence-style database structure.
@@ -207,6 +208,11 @@ public class SequenceStyleGenerator
 				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
 		);
 		this.databaseStructure.prepare( optimizer );
+		
+		Schema schema = (Schema) params.get( Schema.EXPORTABLE_SCHEMA );
+		if ( schema != null ) {
+			schema.locateOrCreateSequence( Identifier.toIdentifier( sequenceName ), initialValue, incrementSize );
+		}
 	}
 
 	/**

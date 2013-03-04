@@ -32,9 +32,12 @@ import java.util.Map;
  * @author Steve Ebersole
  */
 public class Schema {
+	public static final String EXPORTABLE_SCHEMA = "exportable_schema";
+	
 	private final Name name;
 	private Map<String, InLineView> inLineViews = new HashMap<String, InLineView>();
 	private Map<Identifier, Table> tables = new HashMap<Identifier, Table>();
+	private final Map<Identifier, Sequence> sequences = new HashMap<Identifier, Sequence>();
 
 	public Schema(Name name) {
 		this.name = name;
@@ -68,6 +71,42 @@ public class Schema {
 
 	public Iterable<Table> getTables() {
 		return tables.values();
+	}
+
+	public Sequence locateSequence(Identifier name) {
+		return sequences.get( name );
+	}
+
+	public Sequence createSequence(Identifier name) {
+		Sequence sequence = new Sequence( this, name.getName() );
+		sequences.put( name, sequence );
+		return sequence;
+	}
+
+	public Sequence createSequence(Identifier name, int initialValue, int incrementSize) {
+		Sequence sequence = new Sequence( this, name.getName(), initialValue, initialValue );
+		sequences.put( name, sequence );
+		return sequence;
+	}
+
+	public Sequence locateOrCreateSequence(Identifier name) {
+		final Sequence existing = locateSequence( name );
+		if ( existing == null ) {
+			return createSequence( name );
+		}
+		return existing;
+	}
+
+	public Sequence locateOrCreateSequence(Identifier name, int initialValue, int incrementSize) {
+		final Sequence existing = locateSequence( name );
+		if ( existing == null ) {
+			return createSequence( name, initialValue, incrementSize );
+		}
+		return existing;
+	}
+
+	public Iterable<Sequence> getSequences() {
+		return sequences.values();
 	}
 
 	public InLineView getInLineView(String logicalName) {

@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.property.PropertyNameGetter;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
@@ -56,8 +57,9 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
         return this;
     }
 
-    public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        String propertyName = propertyNameGetter.get(auditCfg);
+    public void addToQuery(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
+						   QueryBuilder qb, Parameters parameters) {
+        String propertyName = CriteriaTools.determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter );
 
         CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, propertyName);
 
@@ -69,8 +71,8 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
         // Adding all specified conditions both to the main query, as well as to the
         // aggregated one.
         for (AuditCriterion versionsCriteria : criterions) {
-            versionsCriteria.addToQuery(auditCfg, entityName, qb, subParams);
-            versionsCriteria.addToQuery(auditCfg, entityName, subQb, subQb.getRootParameters());
+            versionsCriteria.addToQuery(auditCfg, versionsReader, entityName, qb, subParams);
+            versionsCriteria.addToQuery(auditCfg, versionsReader, entityName, subQb, subQb.getRootParameters());
         }
 
         // Setting the desired projection of the aggregated query

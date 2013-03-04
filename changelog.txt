@@ -5,7 +5,7 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
-Changes in version 4.1.9 (2012.12.13)
+Changes in version 4.1.10 (2013.02.20)
 ------------------------------------------------------------------------------------------------------------------------
 
 Bug

@@ -38,6 +38,7 @@ import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.query.criteria.AuditCriterion;
+import org.hibernate.envers.query.criteria.CriteriaTools;
 import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.reader.AuditReaderImplementor;
@@ -64,7 +65,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
     protected boolean hasOrder;
 
     protected final AuditConfiguration verCfg;
-    private final AuditReaderImplementor versionsReader;
+    protected final AuditReaderImplementor versionsReader;
 
     protected AbstractAuditQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
                                     Class<?> cls) {
@@ -129,15 +130,16 @@ public abstract class AbstractAuditQuery implements AuditQuery {
     public AuditQuery addProjection(AuditProjection projection) {
         Triple<String, String, Boolean> projectionData = projection.getData(verCfg);
         hasProjection = true;
-        qb.addProjection(projectionData.getFirst(), projectionData.getSecond(), projectionData.getThird());
+		String propertyName = CriteriaTools.determinePropertyName( verCfg, versionsReader, entityName, projectionData.getSecond() );
+        qb.addProjection(projectionData.getFirst(), propertyName, projectionData.getThird());
         return this;
     }
 
     public AuditQuery addOrder(AuditOrder order) {
         hasOrder = true;
-
         Pair<String, Boolean> orderData = order.getData(verCfg);
-        qb.addOrder(orderData.getFirst(), orderData.getSecond());
+		String propertyName = CriteriaTools.determinePropertyName( verCfg, versionsReader, entityName, orderData.getFirst() );
+        qb.addOrder(propertyName, orderData.getSecond());
         return this;
     }
 

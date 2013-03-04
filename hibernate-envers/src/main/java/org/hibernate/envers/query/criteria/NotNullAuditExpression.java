@@ -22,9 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query.criteria;
+
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
 import org.hibernate.envers.query.property.PropertyNameGetter;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
@@ -38,8 +40,9 @@ public class NotNullAuditExpression implements AuditCriterion {
         this.propertyNameGetter = propertyNameGetter;
     }
 
-    public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        String propertyName = propertyNameGetter.get(auditCfg);
+    public void addToQuery(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
+						   QueryBuilder qb, Parameters parameters) {
+		String propertyName = CriteriaTools.determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter );
         RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(auditCfg, entityName, propertyName);
 
         if (relatedEntity == null) {

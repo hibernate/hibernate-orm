@@ -22,8 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query.criteria;
+
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.property.PropertyNameGetter;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
@@ -41,8 +43,9 @@ public class PropertyAuditExpression implements AuditCriterion {
         this.op = op;
     }
 
-    public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {   
-        String propertyName = propertyNameGetter.get(auditCfg);
+    public void addToQuery(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
+						   QueryBuilder qb, Parameters parameters) {
+		String propertyName = CriteriaTools.determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter );
         CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, propertyName);
         CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, otherPropertyName);
         parameters.addWhere(propertyName, op, otherPropertyName);

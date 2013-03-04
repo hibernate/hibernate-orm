@@ -96,7 +96,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 
         // all specified conditions, transformed
         for (AuditCriterion criterion : criterions) {
-            criterion.addToQuery(verCfg, entityName, qb, qb.getRootParameters());
+            criterion.addToQuery(verCfg, versionsReader, entityName, qb, qb.getRootParameters());
         }
 
         if (!hasProjection && !hasOrder) {

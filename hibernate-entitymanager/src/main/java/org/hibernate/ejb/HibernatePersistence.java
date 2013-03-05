@@ -43,6 +43,16 @@ public class HibernatePersistence extends AvailableSettings implements Persisten
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 	
 	/**
+	 * Used for environment-supplied properties.  Ex: hibernate-osgi's
+	 * HibernateBundleActivator needs to set a custom JtaPlatform.
+	 */
+	private Map environmentProperties;
+	
+	public void setEnvironmentProperties( Map environmentProperties ) {
+		this.environmentProperties = environmentProperties;
+	}
+	
+	/**
 	 * Get an entity manager factory by its entity manager name, using the specified
 	 * properties (they override any found in the peristence.xml file).
 	 * <p/>
@@ -54,6 +64,9 @@ public class HibernatePersistence extends AvailableSettings implements Persisten
 	 * @return initialized EntityManagerFactory
 	 */
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
+		if ( environmentProperties != null ) {
+			properties.putAll( environmentProperties );
+		}
 		Ejb3Configuration cfg = new Ejb3Configuration();
 		Ejb3Configuration configured = cfg.configure( persistenceUnitName, properties );
 		return configured != null ? configured.buildEntityManagerFactory() : null;
@@ -71,6 +84,9 @@ public class HibernatePersistence extends AvailableSettings implements Persisten
 	 * @return initialized EntityManagerFactory
 	 */
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
+		if ( environmentProperties != null ) {
+			properties.putAll( environmentProperties );
+		}
 		Ejb3Configuration cfg = new Ejb3Configuration();
 		Ejb3Configuration configured = cfg.configure( info, properties );
 		return configured != null ? configured.buildEntityManagerFactory() : null;

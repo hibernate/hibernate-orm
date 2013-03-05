@@ -23,16 +23,13 @@
  */
 package org.hibernate.osgi;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.HibernatePersistence;
 import org.hibernate.internal.util.ClassLoaderHelper;
 import org.osgi.framework.Bundle;
@@ -46,19 +43,14 @@ import org.osgi.framework.BundleListener;
  * @author Martin Neimeier
  */
 public class HibernateBundleActivator
-		extends HibernatePersistence
 		implements BundleActivator, /*ServiceListener,*/ BundleListener {
 	
-	private BundleContext context;
-	
-    private OsgiClassLoader osgiClassLoader;
+	private OsgiClassLoader osgiClassLoader;
 
     @Override
     public void start(BundleContext context) throws Exception {
     	
-    	this.context = context;
-
-        // register this instance as a bundle listener to get informed about all
+    	// register this instance as a bundle listener to get informed about all
         // bundle live cycle events
         context.addBundleListener(this);
         
@@ -69,14 +61,15 @@ public class HibernateBundleActivator
         for ( Bundle bundle : context.getBundles() ) {
         	handleBundleChange( bundle );
         }
+        
+        HibernatePersistence hp = new HibernatePersistence();
+        Map map = new HashMap();
+        map.put( AvailableSettings.JTA_PLATFORM, new OsgiJtaPlatform( context ) );
+        hp.setEnvironmentProperties( map );
     	
         Properties properties = new Properties();
-        properties.put( "javax.persistence.provider", HibernateBundleActivator.class.getName() );
-        context.registerService(
-                PersistenceProvider.class.getName(),
-                this, 
-                properties
-        );
+        properties.put( "javax.persistence.provider", HibernatePersistence.class.getName() );
+        context.registerService( PersistenceProvider.class.getName(), hp, properties );
     }
 
     @Override
@@ -100,15 +93,5 @@ public class HibernateBundleActivator
     		osgiClassLoader.unregisterBundle(bundle);
     	}
     }
-
-	@Override
-	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map map) {
-		Ejb3Configuration cfg = new Ejb3Configuration();
-		if ( info.getTransactionType().equals( PersistenceUnitTransactionType.JTA ) ) {
-			map.put( AvailableSettings.JTA_PLATFORM, new OsgiJtaPlatform( context ) );
-		}
-		Ejb3Configuration configured = cfg.configure( info, map );
-		return configured != null ? configured.buildEntityManagerFactory() : null;
-	}
 
 }

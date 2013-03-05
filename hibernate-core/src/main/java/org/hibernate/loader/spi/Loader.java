@@ -21,24 +21,45 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tuple.entity;
+package org.hibernate.loader.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.BaselineAttributeInformation;
-import org.hibernate.type.Type;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.loader.plan.spi.LoadPlan;
+import org.hibernate.transform.ResultTransformer;
 
 /**
+ * Definition of the Loader contract.
+ * <p/>
+ * Capabilities I'd like to see added (todo):<ul>
+ *     <li>
+ *         expose the underlying "query" (although what I see here relies heavily on
+ *         https://github.com/hibernate/hibernate-orm/wiki/Proposal---SQL-generation)
+ *     </li>
+ * </ul>
+ *
+ *
+ * @author Gavin King
  * @author Steve Ebersole
  */
-public class EntityBasedBasicAttribute extends AbstractEntityBasedAttribute {
-	public EntityBasedBasicAttribute(
-			EntityPersister source,
-			SessionFactoryImplementor factory,
-			int attributeNumber,
-			String attributeName,
-			Type attributeType,
-			BaselineAttributeInformation baselineInfo) {
-		super( source, factory, attributeNumber, attributeName, attributeType, baselineInfo );
-	}
+public interface Loader {
+	public LoadPlan getLoadPlan();
+
+	/**
+	 * Obtain the on-demand form of this loader, if possible.
+	 *
+	 * @return The on-demand version of this loader
+	 */
+	public OnDemandLoader asOnDemandLoader();
+
+	public List extractResults(
+			ResultSet resultSet,
+			SessionImplementor session,
+			QueryParameters queryParameters,
+			boolean returnProxies,
+			ResultTransformer forcedResultTransformer) throws SQLException;
 }

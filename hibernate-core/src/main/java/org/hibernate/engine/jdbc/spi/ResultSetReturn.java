@@ -40,7 +40,8 @@ import java.sql.Statement;
 public interface ResultSetReturn {
 	
 	/**
-	 * Extract the ResultSet from the statement.
+	 * Extract the ResultSet from the statement. If user passes {@link CallableStatement}
+	 * reference, method calls {@link #extract(CallableStatement)} internally.
 	 *
 	 * @param statement
 	 *

@@ -51,6 +51,16 @@ import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
+	
+	/**
+	 * Used for environment-supplied properties.  Ex: hibernate-osgi's
+	 * HibernateBundleActivator needs to set a custom JtaPlatform.
+	 */
+	private Map environmentProperties;
+	
+	public void setEnvironmentProperties( Map environmentProperties ) {
+		this.environmentProperties = environmentProperties;
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -59,6 +69,9 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	 */
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
+		if ( environmentProperties != null ) {
+			properties.putAll( environmentProperties );
+		}
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
 		return builder == null ? null : builder.build();
 	}
@@ -100,8 +113,11 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	 * Note: per-spec, the values passed as {@code properties} override values found in {@link PersistenceUnitInfo}
 	 */
 	@Override
-	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map integration) {
-		return Bootstrap.getEntityManagerFactoryBuilder( info, integration ).build();
+	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
+		if ( environmentProperties != null ) {
+			properties.putAll( environmentProperties );
+		}
+		return Bootstrap.getEntityManagerFactoryBuilder( info, properties ).build();
 	}
 
 	@Override

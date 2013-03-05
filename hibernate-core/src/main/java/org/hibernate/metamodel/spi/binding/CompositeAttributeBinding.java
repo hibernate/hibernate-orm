@@ -187,7 +187,7 @@ public class CompositeAttributeBinding
 	private static String createContainerPath(AttributeBindingContainer container, SingularAttribute attribute) {
 		return StringHelper.isEmpty( container.getPathBase() ) ?
 				attribute.getName() :
-				'.' + attribute.getName();
+				container.getPathBase() + '.' + attribute.getName();
 
 	}
 

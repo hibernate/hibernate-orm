@@ -44,6 +44,11 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public ResultSet extract(PreparedStatement statement) {
 		// sql logged by StatementPreparerImpl
+		if ( statement instanceof CallableStatement ) {
+			// we actually need to extract from callable statement
+			CallableStatement callableStatement = (CallableStatement) statement;
+			return extract( callableStatement );
+		}
 		try {
 			ResultSet rs = statement.executeQuery();
 			postExtract( rs );

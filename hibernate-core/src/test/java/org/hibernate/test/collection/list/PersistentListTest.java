@@ -27,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -116,6 +117,63 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 		session2.delete( root );
+		session2.getTransaction().commit();
+		session2.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-5732"  )
+	@FailureExpected( jiraKey = "HHH-5732" )
+	public void testInverseListIndexColumnWritten2() {
+		// make sure no one changes the mapping
+		final CollectionPersister collectionPersister = sessionFactory().getCollectionPersister( Order.class.getName() + ".lineItems" );
+		assertTrue( collectionPersister.isInverse() );
+
+		// do some creations...
+		Session session = openSession();
+		session.beginTransaction();
+
+		Order order = new Order( "acme-1" );
+		order.addLineItem( "abc", 2, new BigDecimal( 16.1 ) );
+		order.addLineItem( "def", 200, new BigDecimal( .01 ) );
+		order.addLineItem( "ghi", 13, new BigDecimal( 12.9 ) );
+		session.save( order );
+		session.getTransaction().commit();
+		session.close();
+
+		// now, make sure the list-index column gotten written...
+		final Session session2 = openSession();
+		session2.beginTransaction();
+		session2.doWork(
+				new Work() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
+						SimpleSelect select = new SimpleSelect( getDialect() )
+								.setTableName( queryableCollection.getTableName() )
+								.addColumn( "ORDER_ID" )
+								.addColumn( "INDX" )
+								.addColumn( "PRD_CODE" );
+						PreparedStatement preparedStatement = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
+						ResultSet resultSet = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
+						Map<String, Integer> valueMap = new HashMap<String, Integer>();
+						while ( resultSet.next() ) {
+							final int fk = resultSet.getInt( 1 );
+							assertFalse( "Collection key (FK) column was null", resultSet.wasNull() );
+							final int indx = resultSet.getInt( 2 );
+							assertFalse( "List index column was null", resultSet.wasNull() );
+							final String prodCode = resultSet.getString( 3 );
+							assertFalse( "Prod code column was null", resultSet.wasNull() );
+							valueMap.put( prodCode, indx );
+						}
+						assertEquals( 3, valueMap.size() );
+						assertEquals( Integer.valueOf( 0 ), valueMap.get( "abc" ) );
+						assertEquals( Integer.valueOf( 1 ), valueMap.get( "def" ) );
+						assertEquals( Integer.valueOf( 2 ), valueMap.get( "ghi" ) );
+					}
+				}
+		);
+		session2.delete( order );
 		session2.getTransaction().commit();
 		session2.close();
 	}

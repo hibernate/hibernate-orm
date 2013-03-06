@@ -29,6 +29,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
@@ -43,7 +44,6 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
-import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.loader.collection.BatchingCollectionInitializerBuilder;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.loader.collection.SubselectOneToManyLoader;
@@ -58,6 +58,7 @@ import org.hibernate.sql.Update;
  * Collection persister for one-to-many associations.
  *
  * @author Gavin King
+ * @author Brett Meyer
  */
 public class OneToManyPersister extends AbstractCollectionPersister {
 
@@ -135,11 +136,20 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	/**
-	 * Not needed for one-to-many association
+	 * Generate the SQL UPDATE that inserts a collection index
 	 */
 	@Override
     protected String generateUpdateRowString() {
-		return null;
+		Update update = new Update( getDialect() ).setTableName( qualifiedTableName );
+		update.addPrimaryKeyColumns( elementColumnNames, elementColumnIsSettable, elementColumnWriters );
+		if ( hasIdentifier ) {
+			update.addPrimaryKeyColumns( new String[]{ identifierColumnName } );
+		}
+		if ( hasIndex && !indexContainsFormula ) {
+			update.addColumns( indexColumnNames );
+		}
+		
+		return update.toStatementString();
 	}
 
 	/**
@@ -165,6 +175,105 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		String[] rowSelectColumnNames = ArrayHelper.join( keyColumnNames, elementColumnNames );
 		return update.addPrimaryKeyColumns( rowSelectColumnNames )
 				.toStatementString();
+	}
+	
+	@Override
+	public void recreate(PersistentCollection collection, Serializable id, SessionImplementor session)
+			throws HibernateException {
+		super.recreate( collection, id, session );
+		writeIndex( collection, id, session );
+	}
+	
+	@Override
+	public void insertRows(PersistentCollection collection, Serializable id, SessionImplementor session)
+			throws HibernateException {
+		super.insertRows( collection, id, session );
+		writeIndex( collection, id, session );
+	}
+	
+	private void writeIndex(PersistentCollection collection, Serializable id, SessionImplementor session) {
+		// If one-to-many and inverse, still need to create the index.  See HHH-5732.
+		if ( isInverse && hasIndex && !indexContainsFormula ) {
+			try {
+				Iterator entries = collection.entries( this );
+				if ( entries.hasNext() ) {
+					Expectation expectation = Expectations.appropriateExpectation( getUpdateCheckStyle() );
+					int i = 0;
+					int count = 0;
+					while ( entries.hasNext() ) {
+
+						final Object entry = entries.next();
+						if ( collection.entryExists( entry, i ) ) {
+							int offset = 1;
+							PreparedStatement st = null;
+							boolean callable = isUpdateCallable();
+							boolean useBatch = expectation.canBeBatched();
+							String sql = getSQLUpdateRowString();
+
+							if ( useBatch ) {
+								if ( recreateBatchKey == null ) {
+									recreateBatchKey = new BasicBatchKey(
+											getRole() + "#RECREATE",
+											expectation
+											);
+								}
+								st = session.getTransactionCoordinator()
+										.getJdbcCoordinator()
+										.getBatch( recreateBatchKey )
+										.getBatchStatement( sql, callable );
+							}
+							else {
+								st = session.getTransactionCoordinator()
+										.getJdbcCoordinator()
+										.getStatementPreparer()
+										.prepareStatement( sql, callable );
+							}
+
+							try {
+								offset += expectation.prepare( st );
+								if ( hasIdentifier ) {
+									offset = writeIdentifier( st, collection.getIdentifier( entry, i ), offset, session );
+								}
+								offset = writeIndex( st, collection.getIndex( entry, i, this ), offset, session );
+								offset = writeElement( st, collection.getElement( entry ), offset, session );
+
+								if ( useBatch ) {
+									session.getTransactionCoordinator()
+											.getJdbcCoordinator()
+											.getBatch( recreateBatchKey )
+											.addToBatch();
+								}
+								else {
+									expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+								}
+								count++;
+							}
+							catch ( SQLException sqle ) {
+								if ( useBatch ) {
+									session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
+								}
+								throw sqle;
+							}
+							finally {
+								if ( !useBatch ) {
+									session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+								}
+							}
+
+						}
+						i++;
+					}
+				}
+			}
+			catch ( SQLException sqle ) {
+				throw sqlExceptionHelper.convert(
+						sqle,
+						"could not update collection: " +
+								MessageHelper.collectionInfoString( this, collection, id, session ),
+						getSQLUpdateRowString()
+						);
+			}
+		}
 	}
 
 	public boolean consumesEntityAlias() {

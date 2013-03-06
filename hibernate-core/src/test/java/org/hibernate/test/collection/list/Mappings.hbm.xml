@@ -18,4 +18,26 @@
         </list>
 	</class>
 
+    <class name="Order" table="T_ORDER">
+        <id name="id" column="id" type="integer">
+            <generator class="increment"/>
+        </id>
+        <property name="code" column="code" type="string"/>
+        <list name="lineItems" inverse="true" cascade="all">
+            <key column="order_id" />
+            <list-index column="INDX"/>
+            <one-to-many class="LineItem" />
+        </list>
+    </class>
+
+    <class name="LineItem" table="T_LINE_ITEM">
+        <id name="id" column="id" type="integer">
+            <generator class="increment"/>
+        </id>
+        <many-to-one name="order" class="Order" column="order_id" cascade="all"/>
+        <property name="productCode" column="PRD_CODE" type="string"/>
+        <property name="quantity" column="qty" type="integer"/>
+        <property name="costPer" column="cost_per" type="big_decimal"/>
+    </class>
+
 </hibernate-mapping>

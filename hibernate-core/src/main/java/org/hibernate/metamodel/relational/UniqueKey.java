@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.relational;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Models a SQL <tt>INDEX</tt> defined as UNIQUE
@@ -49,13 +50,13 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 	@Override
 	public String[] sqlCreateStrings(Dialect dialect) {
 		String s = dialect.getUniqueDelegate().applyUniquesOnAlter(this);
-		return (s == null || s.length() == 0) ? new String[0] : new String[]{s};
+		return StringHelper.toArrayElement( s );
 	}
 
 	@Override
 	public String[] sqlDropStrings(Dialect dialect) {
 		String s = dialect.getUniqueDelegate().dropUniquesOnAlter(this);
-		return (s == null || s.length() == 0) ? new String[0] : new String[]{s};
+		return StringHelper.toArrayElement( s );
 	}
 
 	@Override

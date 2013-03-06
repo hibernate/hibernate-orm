@@ -43,7 +43,6 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.SimpleSelect;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -54,6 +53,7 @@ import org.junit.Test;
  * @author Steve Ebersole
  */
 public class PersistentListTest extends BaseCoreFunctionalTestCase {
+	
 	@Override
 	public String[] getMappings() {
 		return new String[] { "collection/list/Mappings.hbm.xml" };
@@ -61,8 +61,7 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-5732"  )
-	@FailureExpected( jiraKey = "HHH-5732" )
-	public void testInverseListIndexColumnWritten() {
+	public void testInverseListIndex() {
 		// make sure no one changes the mapping
 		final CollectionPersister collectionPersister = sessionFactory().getCollectionPersister( ListOwner.class.getName() + ".children" );
 		assertTrue( collectionPersister.isInverse() );
@@ -123,8 +122,7 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-5732"  )
-	@FailureExpected( jiraKey = "HHH-5732" )
-	public void testInverseListIndexColumnWritten2() {
+	public void testInverseListIndex2() {
 		// make sure no one changes the mapping
 		final CollectionPersister collectionPersister = sessionFactory().getCollectionPersister( Order.class.getName() + ".lineItems" );
 		assertTrue( collectionPersister.isInverse() );

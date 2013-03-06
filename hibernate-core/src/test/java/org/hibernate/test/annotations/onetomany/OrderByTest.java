@@ -23,12 +23,19 @@
  */
 package org.hibernate.test.annotations.onetomany;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.Map;
 
 import org.hibernate.Criteria;
 import org.hibernate.NullPrecedence;
@@ -36,15 +43,20 @@ import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.sql.SimpleSelect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Brett Meyer
  */
 public class OrderByTest extends BaseCoreFunctionalTestCase {
 	@Test
@@ -305,11 +317,61 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		session.close();
 	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-5732")
+	public void testInverseIndex() {
+		final CollectionPersister transactionsPersister = sessionFactory().getCollectionPersister(
+				BankAccount.class.getName() + ".transactions" );
+		assertTrue( transactionsPersister.isInverse() );
+
+		Session s = openSession();
+		s.getTransaction().begin();
+
+		BankAccount account = new BankAccount();
+		account.addTransaction( "zzzzz" );
+		account.addTransaction( "aaaaa" );
+		account.addTransaction( "mmmmm" );
+		s.save( account );
+		s.getTransaction().commit();
+
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		
+		try {
+			final QueryableCollection queryableCollection = (QueryableCollection) transactionsPersister;
+			SimpleSelect select = new SimpleSelect( getDialect() )
+					.setTableName( queryableCollection.getTableName() )
+					.addColumn( "code" )
+					.addColumn( "transactions_index" );
+			PreparedStatement preparedStatement = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
+			ResultSet resultSet = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
+			Map<Integer, String> valueMap = new HashMap<Integer, String>();
+			while ( resultSet.next() ) {
+				final String code = resultSet.getString( 1 );
+				assertFalse( "code column was null", resultSet.wasNull() );
+				final int indx = resultSet.getInt( 2 );
+				assertFalse( "List index column was null", resultSet.wasNull() );
+				valueMap.put( indx, code );
+			}
+			assertEquals( 3, valueMap.size() );
+			assertEquals( "zzzzz", valueMap.get( 0 ) );
+			assertEquals( "aaaaa", valueMap.get( 1 ) );
+			assertEquals( "mmmmm", valueMap.get( 2 ) );
+		}
+		catch ( SQLException e ) {
+			fail(e.getMessage());
+		}
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
-				Order.class, OrderItem.class, Zoo.class, Tiger.class, Monkey.class, Visitor.class, Box.class, Item.class
+				Order.class, OrderItem.class, Zoo.class, Tiger.class,
+				Monkey.class, Visitor.class, Box.class, Item.class,
+				BankAccount.class, Transaction.class
 		};
 	}
 }

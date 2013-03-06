@@ -45,7 +45,10 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	public ResultSet extract(PreparedStatement statement) {
 		// sql logged by StatementPreparerImpl
 		if ( statement instanceof CallableStatement ) {
-			// we actually need to extract from callable statement
+			// We actually need to extract from Callable statement.  Although
+			// this seems needless, Oracle can return an
+			// OracleCallableStatementWrapper that finds its way to this method,
+			// rather than extract(CallableStatement).  See HHH-8022.
 			CallableStatement callableStatement = (CallableStatement) statement;
 			return extract( callableStatement );
 		}

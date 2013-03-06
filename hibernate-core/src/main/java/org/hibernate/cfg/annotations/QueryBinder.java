@@ -96,10 +96,12 @@ public abstract class QueryBinder {
 		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
-		NamedSQLQueryDefinition query;
 		String resultSetMapping = queryAnn.resultSetMapping();
 		QueryHint[] hints = queryAnn.hints();
 		String queryName = queryAnn.query();
+		
+		NamedSQLQueryDefinition query;
+		
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
 			query = new NamedSQLQueryDefinition(
@@ -142,18 +144,24 @@ public abstract class QueryBinder {
 			);
 		}
 		else {
-			query = new NamedSQLQueryDefinitionBuilder( queryAnn.name() ).setQuery( queryName )
-					.setQueryReturns( new NativeSQLQueryReturn[0] ).setQuerySpaces( null )
-					.setCacheable( getBoolean( queryName, "org.hibernate.cacheable", hints ) )
-					.setCacheRegion( getString( queryName, "org.hibernate.cacheRegion", hints ) )
-					.setTimeout( getTimeout( queryName, hints ) )
-					.setFetchSize( getInteger( queryName, "org.hibernate.fetchSize", hints ) )
-					.setFlushMode( getFlushMode( queryName, hints ) ).setCacheMode( getCacheMode( queryName, hints ) )
-					.setReadOnly( getBoolean( queryName, "org.hibernate.readOnly", hints ) )
-					.setComment( getString( queryName, "org.hibernate.comment", hints ) ).setParameterTypes( null )
-					.setCallable( getBoolean( queryName, "org.hibernate.callable", hints ) )
-					.createNamedQueryDefinition();
+			query = new NamedSQLQueryDefinition(
+					queryAnn.name(),
+					queryName,
+					new NativeSQLQueryReturn[0],
+					null,
+					getBoolean( queryName, "org.hibernate.cacheable", hints ),
+					getString( queryName, "org.hibernate.cacheRegion", hints ),
+					getTimeout( queryName, hints ),
+					getInteger( queryName, "org.hibernate.fetchSize", hints ),
+					getFlushMode( queryName, hints ),
+					getCacheMode( queryName, hints ),
+					getBoolean( queryName, "org.hibernate.readOnly", hints ),
+					getString( queryName, "org.hibernate.comment", hints ),
+					null,
+					getBoolean( queryName, "org.hibernate.callable", hints )
+			);
 		}
+		
 		if ( isDefault ) {
 			mappings.addDefaultSQLQuery( query.getName(), query );
 		}

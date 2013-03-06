@@ -747,4 +747,15 @@ public final class StringHelper {
 			}
 		}
 	}
+	
+	/**
+	 * Takes a String s and returns a new String[1] with s as the only element.
+	 * If s is null or "", return String[0].
+	 * 
+	 * @param s
+	 * @return String[]
+	 */
+	public static String[] toArrayElement(String s) {
+		return ( s == null || s.length() == 0 ) ? new String[0] : new String[] { s };
+	}
 }

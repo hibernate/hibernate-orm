@@ -114,26 +114,27 @@ public abstract class QueryBinder {
 		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
-		NamedSQLQueryDefinition query;
 		String resultSetMapping = queryAnn.resultSetMapping();
 		QueryHint[] hints = queryAnn.hints();
 		String queryName = queryAnn.query();
+		
+		NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder( queryAnn.name() )
+				.setQuery( queryName )
+				.setQuerySpaces( null )
+				.setCacheable( getBoolean( queryName, "org.hibernate.cacheable", hints ) )
+				.setCacheRegion( getString( queryName, "org.hibernate.cacheRegion", hints ) )
+				.setTimeout( getTimeout( queryName, hints ) )
+				.setFetchSize( getInteger( queryName, "org.hibernate.fetchSize", hints ) )
+				.setFlushMode( getFlushMode( queryName, hints ) )
+				.setCacheMode( getCacheMode( queryName, hints ) )
+				.setReadOnly( getBoolean( queryName, "org.hibernate.readOnly", hints ) )
+				.setComment( getString( queryName, "org.hibernate.comment", hints ) )
+				.setParameterTypes( null )
+				.setCallable( getBoolean( queryName, "org.hibernate.callable", hints ) );
+		
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
-			query = new NamedSQLQueryDefinitionBuilder( queryAnn.name() )
-					.setQuery( queryName )
-					.setResultSetRef( resultSetMapping )
-					.setQuerySpaces( null )
-					.setCacheable( getBoolean( queryName, "org.hibernate.cacheable", hints ) )
-					.setCacheRegion( getString( queryName, "org.hibernate.cacheRegion", hints ) )
-					.setTimeout( getTimeout( queryName, hints ) )
-					.setFetchSize( getInteger( queryName, "org.hibernate.fetchSize", hints ) )
-					.setFlushMode( getFlushMode( queryName, hints ) )
-					.setCacheMode( getCacheMode( queryName, hints ) )
-					.setReadOnly( getBoolean( queryName, "org.hibernate.readOnly", hints ) )
-					.setComment( getString( queryName, "org.hibernate.comment", hints ) )
-					.setParameterTypes( null )
-					.setCallable( getBoolean( queryName, "org.hibernate.callable", hints ) )
+			builder.setResultSetRef( resultSetMapping )
 					.createNamedQueryDefinition();
 		}
 		else if ( !void.class.equals( queryAnn.resultClass() ) ) {
@@ -141,35 +142,14 @@ public abstract class QueryBinder {
 			//FIXME should be done in a second pass due to entity name?
 			final NativeSQLQueryRootReturn entityQueryReturn =
 					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
-			query = new NamedSQLQueryDefinitionBuilder( queryAnn.name() )
-					.setQuery( queryName )
-					.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} )
-					.setQuerySpaces( null )
-					.setCacheable( getBoolean( queryName, "org.hibernate.cacheable", hints ) )
-					.setCacheRegion( getString( queryName, "org.hibernate.cacheRegion", hints ) )
-					.setTimeout( getTimeout( queryName, hints ) )
-					.setFetchSize( getInteger( queryName, "org.hibernate.fetchSize", hints ) )
-					.setFlushMode( getFlushMode( queryName, hints ) )
-					.setCacheMode( getCacheMode( queryName, hints ) )
-					.setReadOnly( getBoolean( queryName, "org.hibernate.readOnly", hints ) )
-					.setComment( getString( queryName, "org.hibernate.comment", hints ) )
-					.setParameterTypes( null )
-					.setCallable( getBoolean( queryName, "org.hibernate.callable", hints ) )
-					.createNamedQueryDefinition();
+			builder.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} );
 		}
 		else {
-			query = new NamedSQLQueryDefinitionBuilder( queryAnn.name() ).setQuery( queryName )
-					.setQueryReturns( new NativeSQLQueryReturn[0] ).setQuerySpaces( null )
-					.setCacheable( getBoolean( queryName, "org.hibernate.cacheable", hints ) )
-					.setCacheRegion( getString( queryName, "org.hibernate.cacheRegion", hints ) )
-					.setTimeout( getTimeout( queryName, hints ) )
-					.setFetchSize( getInteger( queryName, "org.hibernate.fetchSize", hints ) )
-					.setFlushMode( getFlushMode( queryName, hints ) ).setCacheMode( getCacheMode( queryName, hints ) )
-					.setReadOnly( getBoolean( queryName, "org.hibernate.readOnly", hints ) )
-					.setComment( getString( queryName, "org.hibernate.comment", hints ) ).setParameterTypes( null )
-					.setCallable( getBoolean( queryName, "org.hibernate.callable", hints ) )
-					.createNamedQueryDefinition();
+			builder.setQueryReturns( new NativeSQLQueryReturn[0] );
 		}
+		
+		NamedSQLQueryDefinition query = builder.createNamedQueryDefinition();
+		
 		if ( isDefault ) {
 			mappings.addDefaultSQLQuery( query.getName(), query );
 		}

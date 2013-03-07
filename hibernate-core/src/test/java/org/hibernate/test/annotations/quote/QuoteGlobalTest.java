@@ -23,20 +23,40 @@
  */
 package org.hibernate.test.annotations.quote;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.util.Iterator;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.mapping.UniqueKey;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
+ * @author Brett Meyer
  */
 public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-7890")
+	public void testQuotedUniqueConstraint() {
+		Iterator<UniqueKey> itr = configuration().getClassMapping( Person.class.getName() )
+				.getTable().getUniqueKeyIterator();
+		while ( itr.hasNext() ) {
+			UniqueKey uk = itr.next();
+			assertEquals( uk.getColumns().size(), 1 );
+			assertEquals( uk.getColumn( 0 ).getName(),  "name");
+			return;
+		}
+		fail( "GLOBALLY_QUOTED_IDENTIFIERS caused the unique key creation to fail." );
+	}
+	
 	@Test
 	public void testQuoteManytoMany() {
 		Session s = openSession();
@@ -67,7 +87,8 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 		return new Class[] {
 				User.class,
 				Role.class,
-				Phone.class
+				Phone.class,
+				Person.class
 		};
 	}
 }

@@ -623,4 +623,13 @@ public interface AvailableSettings {
 	public static final String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
 
 	public static final String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
+	
+	/**
+	 * A transaction can be rolled back by another thread -- not the original
+	 * application. Examples of this include a JTA transaction timeout handled
+	 * by a background reaper thread.  The ability to handle this situation
+	 * requires checking the Thread ID every time Session is called.  This can
+	 * certainly have performance considerations.  Default is enabled;
+	 */
+	public static final String ENABLE_JTA_THREAD_HANDLING = "hibernate.enable_jta_thread_handling";
 }

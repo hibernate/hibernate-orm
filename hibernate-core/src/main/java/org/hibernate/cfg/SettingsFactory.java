@@ -395,6 +395,16 @@ public class SettingsFactory implements Serializable {
 		}
 		settings.setInitializeLazyStateOutsideTransactions( initializeLazyStateOutsideTransactionsEnabled );
 
+		boolean enableJtaThreadHandling = ConfigurationHelper.getBoolean(
+				AvailableSettings.ENABLE_JTA_THREAD_HANDLING,
+				properties,
+				true
+		);
+		if ( debugEnabled ) {
+			LOG.debugf( "JTA Thread Handling: %s", enabledDisabled(enableJtaThreadHandling) );
+		}
+		settings.setJtaThreadHandling( enableJtaThreadHandling );
+
 		return settings;
 
 	}

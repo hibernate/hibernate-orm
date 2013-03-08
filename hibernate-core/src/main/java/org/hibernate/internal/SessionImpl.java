@@ -169,6 +169,7 @@ import org.jboss.logging.Logger;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public final class SessionImpl extends AbstractSessionImpl implements EventSource {
 
@@ -320,7 +321,9 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	public void clear() {
 		errorIfClosed();
-		checkTransactionSynchStatus();
+		// Do not call checkTransactionSynchStatus() here -- if a delayed
+		// afterCompletion exists, it can cause an infinite loop.
+		pulseTransactionCoordinator();
 		internalClear();
 	}
 
@@ -706,6 +709,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		if ( persistenceContext.getCascadeLevel() == 0 ) {
 			actionQueue.checkNoUnresolvedActionsAfterOperation();
 		}
+		delayedAfterCompletion();
+	}
+	
+	private void delayedAfterCompletion() {
+		transactionCoordinator.getSynchronizationCallbackCoordinator().delayedAfterCompletion();
 	}
 
 	// saveOrUpdate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -808,6 +816,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( LockEventListener listener : listeners( EventType.LOCK ) ) {
 			listener.onLock( event );
 		}
+		delayedAfterCompletion();
 	}
 
 
@@ -832,6 +841,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( PersistEventListener listener : listeners( EventType.PERSIST ) ) {
 			listener.onPersist( event, copiedAlready );
 		}
+		delayedAfterCompletion();
 	}
 
 	private void firePersist(PersistEvent event) {
@@ -867,6 +877,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( PersistEventListener listener : listeners( EventType.PERSIST_ONFLUSH ) ) {
 			listener.onPersist( event, copiedAlready );
 		}
+		delayedAfterCompletion();
 	}
 
 	private void firePersistOnFlush(PersistEvent event) {
@@ -911,6 +922,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
 			listener.onMerge( event, copiedAlready );
 		}
+		delayedAfterCompletion();
 	}
 
 
@@ -943,6 +955,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
 			listener.onDelete( event );
 		}
+		delayedAfterCompletion();
 	}
 
 	private void fireDelete(DeleteEvent event, Set transientEntities) {
@@ -951,6 +964,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
 			listener.onDelete( event, transientEntities );
 		}
+		delayedAfterCompletion();
 	}
 
 
@@ -1076,6 +1090,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( LoadEventListener listener : listeners( EventType.LOAD ) ) {
 			listener.onLoad( event, loadType );
 		}
+		delayedAfterCompletion();
 	}
 
 	private void fireResolveNaturalId(ResolveNaturalIdEvent event) {
@@ -1084,6 +1099,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( ResolveNaturalIdEventListener listener : listeners( EventType.RESOLVE_NATURAL_ID ) ) {
 			listener.onResolveNaturalId( event );
 		}
+		delayedAfterCompletion();
 	}
 
 
@@ -1120,6 +1136,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
 			listener.onRefresh( event );
 		}
+		delayedAfterCompletion();
 	}
 
 	private void fireRefresh(Map refreshedAlready, RefreshEvent event) {
@@ -1128,6 +1145,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
 			listener.onRefresh( event, refreshedAlready );
 		}
+		delayedAfterCompletion();
 	}
 
 
@@ -1148,6 +1166,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( ReplicateEventListener listener : listeners( EventType.REPLICATE ) ) {
 			listener.onReplicate( event );
 		}
+		delayedAfterCompletion();
 	}
 
 
@@ -1167,6 +1186,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( EvictEventListener listener : listeners( EventType.EVICT ) ) {
 			listener.onEvict( event );
 		}
+		delayedAfterCompletion();
 	}
 
 	/**
@@ -1198,6 +1218,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( DirtyCheckEventListener listener : listeners( EventType.DIRTY_CHECK ) ) {
 			listener.onDirtyCheck( event );
 		}
+		delayedAfterCompletion();
 		return event.isDirty();
 	}
 
@@ -1211,6 +1232,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( FlushEventListener listener : listeners( EventType.FLUSH ) ) {
 			listener.onFlush( flushEvent );
 		}
+		delayedAfterCompletion();
 	}
 
 	public void forceFlush(EntityEntry entityEntry) throws HibernateException {
@@ -1249,6 +1271,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		finally {
 			dontFlushFromFind--;
 			afterOperation(success);
+			delayedAfterCompletion();
 		}
 		return results;
 	}
@@ -1268,6 +1291,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 		finally {
 			afterOperation(success);
+			delayedAfterCompletion();
 		}
 		return result;
 	}
@@ -1289,6 +1313,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
             success = true;
         } finally {
             afterOperation(success);
+    		delayedAfterCompletion();
         }
         return result;
     }
@@ -1305,6 +1330,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			return plan.performIterate( queryParameters, this );
 		}
 		finally {
+			delayedAfterCompletion();
 			dontFlushFromFind--;
 		}
 	}
@@ -1319,6 +1345,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			return plan.performScroll( queryParameters, this );
 		}
 		finally {
+			delayedAfterCompletion();
 			dontFlushFromFind--;
 		}
 	}
@@ -1333,13 +1360,16 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		        getFilterQueryPlan( collection, queryString, null, false ).getParameterMetadata()
 		);
 		filter.setComment( queryString );
+		delayedAfterCompletion();
 		return filter;
 	}
 
 	public Query getNamedQuery(String queryName) throws MappingException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		return super.getNamedQuery( queryName );
+		Query query = super.getNamedQuery( queryName );
+		delayedAfterCompletion();
+		return query;
 	}
 
 	public Object instantiate(String entityName, Serializable id) throws HibernateException {
@@ -1356,6 +1386,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		if ( result == null ) {
 			result = persister.instantiate( id, this );
 		}
+		delayedAfterCompletion();
 		return result;
 	}
 
@@ -1525,6 +1556,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		finally {
 			dontFlushFromFind--;
 			afterOperation(success);
+			delayedAfterCompletion();
 		}
 		return results;
 	}
@@ -1534,7 +1566,9 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		FilterQueryPlan plan = getFilterQueryPlan( collection, filter, queryParameters, true );
-		return plan.performIterate( queryParameters, this );
+		Iterator itr = plan.performIterate( queryParameters, this );
+		delayedAfterCompletion();
+		return itr;
 	}
 
 	public Criteria createCriteria(Class persistentClass, String alias) {
@@ -1581,6 +1615,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			return loader.scroll(this, scrollMode);
 		}
 		finally {
+			delayedAfterCompletion();
 			dontFlushFromFind--;
 		}
 	}
@@ -1632,6 +1667,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		finally {
 			dontFlushFromFind--;
 			afterOperation(success);
+			delayedAfterCompletion();
 		}
 
 		return results;
@@ -1731,6 +1767,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		// an entry in the session's persistence context and the entry reports
 		// that the entity has not been removed
 		EntityEntry entry = persistenceContext.getEntry( object );
+		delayedAfterCompletion();
 		return entry != null && entry.getStatus() != Status.DELETED && entry.getStatus() != Status.GONE;
 	}
 
@@ -1764,6 +1801,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			return loader.scroll(queryParameters, this);
 		}
 		finally {
+			delayedAfterCompletion();
 			dontFlushFromFind--;
 		}
 	}
@@ -1791,6 +1829,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 		finally {
 			dontFlushFromFind--;
+			delayedAfterCompletion();
 			afterOperation(success);
 		}
 	}
@@ -1808,6 +1847,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		for ( InitializeCollectionEventListener listener : listeners( EventType.INIT_COLLECTION ) ) {
 			listener.onInitializeCollection( event );
 		}
+		delayedAfterCompletion();
 	}
 
 	public String bestGuessEntityName(Object object) {
@@ -2063,8 +2103,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		loadQueryInfluencers.disableFetchProfile( name );
 	}
 
-
 	private void checkTransactionSynchStatus() {
+		pulseTransactionCoordinator();
+		delayedAfterCompletion();
+	}
+
+	private void pulseTransactionCoordinator() {
 		if ( !isClosed() ) {
 			transactionCoordinator.pulse();
 		}

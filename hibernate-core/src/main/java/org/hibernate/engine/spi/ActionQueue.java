@@ -733,8 +733,8 @@ public class ActionQueue {
 		private HashMap<String,Integer> latestBatches = new HashMap<String,Integer>();
 		private HashMap<Object,Integer> entityBatchNumber;
 
-		// the map of batch numbers to EntityInsertAction lists
-		private HashMap<Integer,List<EntityInsertAction>> actionBatches = new HashMap<Integer,List<EntityInsertAction>>();
+		// the map of batch numbers to AbstractEntityInsertAction lists
+		private HashMap<Integer,List<AbstractEntityInsertAction>> actionBatches = new HashMap<Integer,List<AbstractEntityInsertAction>>();
 
 		public InsertActionSorter() {
 			//optimize the hash size to eliminate a rehash.
@@ -747,7 +747,7 @@ public class ActionQueue {
 		@SuppressWarnings({ "unchecked", "UnnecessaryBoxing" })
 		public void sort() {
 			// the list of entity names that indicate the batch number
-			for ( EntityInsertAction action : (List<EntityInsertAction>) insertions ) {
+			for ( AbstractEntityInsertAction action : (List<AbstractEntityInsertAction>) insertions ) {
 				// remove the current element from insertions. It will be added back later.
 				String entityName = action.getEntityName();
 
@@ -778,8 +778,8 @@ public class ActionQueue {
 
 			// now rebuild the insertions list. There is a batch for each entry in the name list.
 			for ( int i = 0; i < actionBatches.size(); i++ ) {
-				List<EntityInsertAction> batch = actionBatches.get( i );
-				for ( EntityInsertAction action : batch ) {
+				List<AbstractEntityInsertAction> batch = actionBatches.get( i );
+				for ( AbstractEntityInsertAction action : batch ) {
 					insertions.add( action );
 				}
 			}
@@ -795,7 +795,7 @@ public class ActionQueue {
 		 */
 		@SuppressWarnings({ "UnnecessaryBoxing", "unchecked" })
 		private Integer findBatchNumber(
-				EntityInsertAction action,
+				AbstractEntityInsertAction action,
 				String entityName) {
 			// loop through all the associated entities and make sure they have been
 			// processed before the latest
@@ -831,11 +831,11 @@ public class ActionQueue {
 		}
 
 		@SuppressWarnings({ "unchecked" })
-		private void addToBatch(Integer batchNumber, EntityInsertAction action) {
-			List<EntityInsertAction> actions = actionBatches.get( batchNumber );
+		private void addToBatch(Integer batchNumber, AbstractEntityInsertAction action) {
+			List<AbstractEntityInsertAction> actions = actionBatches.get( batchNumber );
 
 			if ( actions == null ) {
-				actions = new LinkedList<EntityInsertAction>();
+				actions = new LinkedList<AbstractEntityInsertAction>();
 				actionBatches.put( batchNumber, actions );
 			}
 			actions.add( action );

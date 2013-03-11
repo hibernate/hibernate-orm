@@ -24,7 +24,6 @@
 package org.hibernate.loader.plan.spi;
 
 import org.hibernate.LockMode;
-import org.hibernate.loader.EntityAliases;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -32,7 +31,7 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Steve Ebersole
  */
-public interface EntityReference {
+public interface EntityReference extends IdentifierDescriptionInjectable {
 	/**
 	 * Retrieve the alias associated with the persister (entity/collection).
 	 *
@@ -54,20 +53,5 @@ public interface EntityReference {
 	 */
 	public EntityPersister getEntityPersister();
 
-	/**
-	 * Returns the description of the aliases in the JDBC ResultSet that identify values "belonging" to the this entity.
-	 *
-	 * @return The ResultSet alias descriptor.
-	 */
-	public EntityAliases getEntityAliases();
-
-	/**
-	 * Obtain the SQL table alias associated with this entity.
-	 *
-	 * TODO : eventually this needs to not be a String, but a representation like I did for the Antlr3 branch
-	 * 		(AliasRoot, I think it was called)
-	 *
-	 * @return The SQL table alias for this entity
-	 */
-	public String getSqlTableAlias();
+	public IdentifierDescription getIdentifierDescription();
 }

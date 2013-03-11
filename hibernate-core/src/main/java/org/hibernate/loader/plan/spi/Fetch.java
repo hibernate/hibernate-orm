@@ -23,8 +23,12 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.spi.ResultSetProcessingContext;
 
 /**
  * Contract for associations that are being fetched.
@@ -33,7 +37,7 @@ import org.hibernate.loader.PropertyPath;
  *
  * @author Steve Ebersole
  */
-public interface Fetch extends FetchOwner {
+public interface Fetch {
 	/**
 	 * Obtain the owner of this fetch.
 	 *
@@ -56,4 +60,8 @@ public interface Fetch extends FetchOwner {
 	 * @return The property path
 	 */
 	public PropertyPath getPropertyPath();
+
+	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
+
+	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
 }

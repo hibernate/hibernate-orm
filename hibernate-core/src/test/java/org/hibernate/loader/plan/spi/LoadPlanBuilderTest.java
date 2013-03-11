@@ -119,9 +119,9 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 		CollectionReturn collectionReturn = ExtraAssertions.assertTyping( CollectionReturn.class, rtn );
 		assertEquals( "abc", collectionReturn.getAlias() );
 
-		assertNotNull( collectionReturn.getFetches() );
-		assertEquals( 1, collectionReturn.getFetches().length ); // the collection elements are fetched
-		Fetch fetch = collectionReturn.getFetches()[0];
+		assertNotNull( collectionReturn.getElementGraph().getFetches() );
+		assertEquals( 1, collectionReturn.getElementGraph().getFetches().length ); // the collection elements are fetched
+		Fetch fetch = collectionReturn.getElementGraph().getFetches()[0];
 		EntityFetch entityFetch = ExtraAssertions.assertTyping( EntityFetch.class, fetch );
 		assertNotNull( entityFetch.getFetches() );
 		assertEquals( 0, entityFetch.getFetches().length );
@@ -130,8 +130,8 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 	@Entity( name = "Message" )
 	public static class Message {
 		@Id
-		private Integer id;
-		private String name;
+		private Integer mid;
+		private String msgTxt;
 		@ManyToOne( cascade = CascadeType.MERGE )
 		@JoinColumn
 		private Poster poster;
@@ -140,7 +140,7 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 	@Entity( name = "Poster" )
 	public static class Poster {
 		@Id
-		private Integer id;
+		private Integer pid;
 		private String name;
 		@OneToMany(mappedBy = "poster")
 		private List<Message> messages;

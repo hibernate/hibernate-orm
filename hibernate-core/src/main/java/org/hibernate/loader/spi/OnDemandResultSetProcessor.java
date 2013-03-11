@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -25,22 +25,24 @@ package org.hibernate.loader.spi;
 
 import java.sql.ResultSet;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**
- * Represents an on-demand loading strategy as need for processing single *logical* rows one at a time as required
- * for {@link org.hibernate.ScrollableResults} implementations.
+ * Contract for processing JDBC ResultSets a single logical row at a time.  These are intended for use by
+ * {@link org.hibernate.ScrollableResults} implementations.
+ *
+ * NOTE : these methods initially taken directly from {@link org.hibernate.loader.Loader} counterparts in an effort
+ * to break Loader into manageable pieces, especially in regards to the processing of result sets.
  *
  * @author Steve Ebersole
  */
-public interface OnDemandLoader {
+public interface OnDemandResultSetProcessor {
 
 	/**
-	 * Given a ResultSet, extract just a single result row.
+	 * Give a ResultSet, extract just a single result row.
 	 *
-	 * Copy of {@link org.hibernate.loader.Loader#loadSingleRow(ResultSet, SessionImplementor, QueryParameters, boolean)}
+	 * Copy of {@link org.hibernate.loader.Loader#loadSingleRow(java.sql.ResultSet, org.hibernate.engine.spi.SessionImplementor, org.hibernate.engine.spi.QueryParameters, boolean)}
 	 * but dropping the 'returnProxies' (that method has only one use in the entire codebase and it always passes in
 	 * false...)
 	 *
@@ -50,19 +52,19 @@ public interface OnDemandLoader {
 	 *
 	 * @return The extracted result row
 	 *
-	 * @throws HibernateException Indicates a problem extracting values from the result set.
+	 * @throws org.hibernate.HibernateException Indicates a problem extracting values from the result set.
 	 */
 	public Object extractSingleRow(
 			ResultSet resultSet,
 			SessionImplementor session,
-			QueryParameters queryParameters) throws HibernateException;
+			QueryParameters queryParameters);
 
 	/**
 	 * Given a ResultSet extract "sequential rows".  This is used in cases where we have multi-row fetches that
 	 * are sequential within the ResultSet due to ordering.  Multiple ResultSet rows are read into a single query
 	 * result "row".
 	 *
-	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsForward(ResultSet, SessionImplementor, QueryParameters, boolean)}
+	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsForward(java.sql.ResultSet, org.hibernate.engine.spi.SessionImplementor, org.hibernate.engine.spi.QueryParameters, boolean)}
 	 * but dropping the 'returnProxies' (that method has only one use in the entire codebase and it always passes in
 	 * false...)
 	 *
@@ -77,12 +79,12 @@ public interface OnDemandLoader {
 	public Object extractSequentialRowsForward(
 			final ResultSet resultSet,
 			final SessionImplementor session,
-			final QueryParameters queryParameters) throws HibernateException;
+			final QueryParameters queryParameters);
 
 	/**
 	 * Like {@link #extractSequentialRowsForward} but here moving back through the ResultSet.
 	 *
-	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsReverse(ResultSet, SessionImplementor, QueryParameters, boolean, boolean)}
+	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsReverse(java.sql.ResultSet, org.hibernate.engine.spi.SessionImplementor, org.hibernate.engine.spi.QueryParameters, boolean, boolean)}
 	 * but dropping the 'returnProxies' (that method has only one use in the entire codebase and it always passes in
 	 * false...).
 	 *
@@ -101,5 +103,5 @@ public interface OnDemandLoader {
 			ResultSet resultSet,
 			SessionImplementor session,
 			QueryParameters queryParameters,
-			boolean isLogicallyAfterLast) throws HibernateException;
+			boolean isLogicallyAfterLast);
 }

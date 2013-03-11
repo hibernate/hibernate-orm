@@ -35,8 +35,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationVisitationStrategy;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
-import org.hibernate.persister.walking.spi.CompositeDefinition;
+import org.hibernate.persister.walking.spi.CollectionElementDefinition;
+import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
+import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.MetadataDrivenModelGraphVisitor;
 
 import org.junit.Test;
@@ -92,6 +95,16 @@ public class BasicWalkingTest extends BaseCoreFunctionalTestCase {
 					}
 
 					@Override
+					public void startingEntityIdentifier(EntityIdentifierDefinition entityIdentifierDefinition) {
+						//To change body of implemented methods use File | Settings | File Templates.
+					}
+
+					@Override
+					public void finishingEntityIdentifier(EntityIdentifierDefinition entityIdentifierDefinition) {
+						//To change body of implemented methods use File | Settings | File Templates.
+					}
+
+					@Override
 					public void startingCollection(CollectionDefinition collectionDefinition) {
 						System.out.println(
 								String.format(
@@ -114,23 +127,43 @@ public class BasicWalkingTest extends BaseCoreFunctionalTestCase {
 					}
 
 					@Override
-					public void startingComposite(CompositeDefinition compositeDefinition) {
+					public void startingCollectionIndex(CollectionIndexDefinition collectionIndexDefinition) {
+						//To change body of implemented methods use File | Settings | File Templates.
+					}
+
+					@Override
+					public void finishingCollectionIndex(CollectionIndexDefinition collectionIndexDefinition) {
+						//To change body of implemented methods use File | Settings | File Templates.
+					}
+
+					@Override
+					public void startingCollectionElements(CollectionElementDefinition elementDefinition) {
+						//To change body of implemented methods use File | Settings | File Templates.
+					}
+
+					@Override
+					public void finishingCollectionElements(CollectionElementDefinition elementDefinition) {
+						//To change body of implemented methods use File | Settings | File Templates.
+					}
+
+					@Override
+					public void startingComposite(CompositionDefinition compositionDefinition) {
 						System.out.println(
 								String.format(
 										"%s Starting composite (%s)",
 										StringHelper.repeat( ">>", ++depth ),
-										compositeDefinition.toString()
+										compositionDefinition.toString()
 								)
 						);
 					}
 
 					@Override
-					public void finishingComposite(CompositeDefinition compositeDefinition) {
+					public void finishingComposite(CompositionDefinition compositionDefinition) {
 						System.out.println(
 								String.format(
 										"%s Finishing composite (%s)",
 										StringHelper.repeat( ">>", depth-- ),
-										compositeDefinition.toString()
+										compositionDefinition.toString()
 								)
 						);
 					}

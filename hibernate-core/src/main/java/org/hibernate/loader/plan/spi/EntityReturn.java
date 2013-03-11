@@ -23,12 +23,25 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.io.Serializable;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.internal.ResultSetProcessorHelper;
+import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
+import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.CompositionDefinition;
+
+import static org.hibernate.loader.spi.ResultSetProcessingContext.IdentifierResolutionContext;
 
 /**
  * @author Steve Ebersole
@@ -40,6 +53,8 @@ public class EntityReturn extends AbstractFetchOwner implements Return, FetchOwn
 	private final EntityPersister persister;
 
 	private final PropertyPath propertyPath = new PropertyPath(); // its a root
+
+	private IdentifierDescription identifierDescription;
 
 	public EntityReturn(
 			SessionFactoryImplementor sessionFactory,
@@ -71,13 +86,8 @@ public class EntityReturn extends AbstractFetchOwner implements Return, FetchOwn
 	}
 
 	@Override
-	public EntityAliases getEntityAliases() {
-		return entityAliases;
-	}
-
-	@Override
-	public String getSqlTableAlias() {
-		return sqlTableAlias;
+	public IdentifierDescription getIdentifierDescription() {
+		return identifierDescription;
 	}
 
 	@Override
@@ -92,5 +102,84 @@ public class EntityReturn extends AbstractFetchOwner implements Return, FetchOwn
 	@Override
 	public PropertyPath getPropertyPath() {
 		return propertyPath;
+	}
+
+	@Override
+	public CollectionFetch buildCollectionFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return LoadPlanBuildingHelper.buildStandardCollectionFetch(
+				this,
+				attributeDefinition,
+				fetchStrategy,
+				loadPlanBuildingContext
+		);
+	}
+
+	@Override
+	public EntityFetch buildEntityFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return LoadPlanBuildingHelper.buildStandardEntityFetch(
+				this,
+				attributeDefinition,
+				fetchStrategy,
+				loadPlanBuildingContext
+		);
+	}
+
+	@Override
+	public CompositeFetch buildCompositeFetch(
+			CompositionDefinition attributeDefinition,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return LoadPlanBuildingHelper.buildStandardCompositeFetch( this, attributeDefinition, loadPlanBuildingContext );
+	}
+
+	@Override
+	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+		EntityKey entityKey = context.getDictatedRootEntityKey();
+		if ( entityKey != null ) {
+			context.getIdentifierResolutionContext( this ).registerEntityKey( entityKey );
+			return;
+		}
+
+		identifierDescription.hydrate( resultSet, context );
+
+		for ( Fetch fetch : getFetches() ) {
+			fetch.hydrate( resultSet, context );
+		}
+	}
+
+	@Override
+	public void resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+		final IdentifierResolutionContext identifierResolutionContext = context.getIdentifierResolutionContext( this );
+		EntityKey entityKey = identifierResolutionContext.getEntityKey();
+		if ( entityKey == null ) {
+			return;
+		}
+
+		entityKey = identifierDescription.resolve( resultSet, context );
+		identifierResolutionContext.registerEntityKey( entityKey );
+
+		for ( Fetch fetch : getFetches() ) {
+			fetch.resolve( resultSet, context );
+		}
+	}
+
+	@Override
+	public Object read(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+		return null;
+	}
+
+	@Override
+	public void injectIdentifierDescription(IdentifierDescription identifierDescription) {
+		this.identifierDescription = identifierDescription;
+	}
+
+	@Override
+	public String toString() {
+		return "EntityReturn(" + persister.getEntityName() + ")";
 	}
 }

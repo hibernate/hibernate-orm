@@ -126,8 +126,12 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 		return attributeInformation.getFetchMode();
 	}
 
+	protected String loggableMetadata() {
+		return "non-identifier";
+	}
+
 	@Override
 	public String toString() {
-		return "Attribute[non-identifier]( " + getName() + ")";
+		return "Attribute(name=" + getName() + ", type=" + getType().getName() + " [" + loggableMetadata() + "])";
 	}
 }

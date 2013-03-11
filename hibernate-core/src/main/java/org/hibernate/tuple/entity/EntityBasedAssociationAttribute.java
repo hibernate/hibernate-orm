@@ -33,6 +33,7 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.persister.spi.HydratedCompoundValueHandler;
 import org.hibernate.persister.walking.internal.Helper;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;
@@ -151,5 +152,30 @@ public class EntityBasedAssociationAttribute
 	@Override
 	public CascadeStyle determineCascadeStyle() {
 		return getSource().getEntityPersister().getPropertyCascadeStyles()[attributeNumber()];
+	}
+
+	private HydratedCompoundValueHandler hydratedCompoundValueHandler;
+
+	@Override
+	public HydratedCompoundValueHandler getHydratedCompoundValueExtractor() {
+		if ( hydratedCompoundValueHandler == null ) {
+			hydratedCompoundValueHandler = new HydratedCompoundValueHandler() {
+				@Override
+				public Object extract(Object hydratedState) {
+					return ( (Object[] ) hydratedState )[ attributeNumber() ];
+				}
+
+				@Override
+				public void inject(Object hydratedState, Object value) {
+					( (Object[] ) hydratedState )[ attributeNumber() ] = value;
+				}
+			};
+		}
+		return hydratedCompoundValueHandler;
+	}
+
+	@Override
+	protected String loggableMetadata() {
+		return super.loggableMetadata() + ",association";
 	}
 }

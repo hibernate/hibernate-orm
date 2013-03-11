@@ -27,6 +27,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.persister.spi.HydratedCompoundValueHandler;
 
 /**
  * @author Steve Ebersole
@@ -43,4 +44,6 @@ public interface AssociationAttributeDefinition extends AttributeDefinition {
 	public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath);
 
 	public CascadeStyle determineCascadeStyle();
+
+	public HydratedCompoundValueHandler getHydratedCompoundValueExtractor();
 }

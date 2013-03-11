@@ -26,6 +26,8 @@ package org.hibernate.loader.plan.spi;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.CompositionDefinition;
 
 /**
  * Contract for owners of fetches.  Any non-scalar return could be a fetch owner.
@@ -37,6 +39,14 @@ public interface FetchOwner {
 	 * Convenient constant for returning no fetches from {@link #getFetches()}
 	 */
 	public static final Fetch[] NO_FETCHES = new Fetch[0];
+
+	/**
+	 * Contract to add fetches to this owner.  Care should be taken in calling this method; it is intended
+	 * for Hibernate usage
+	 *
+	 * @param fetch The fetch to add
+	 */
+	public void addFetch(Fetch fetch);
 
 	/**
 	 * Retrieve the fetches owned by this return.
@@ -65,4 +75,19 @@ public interface FetchOwner {
 	 * @return The property path
 	 */
 	public PropertyPath getPropertyPath();
+
+	public CollectionFetch buildCollectionFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			LoadPlanBuildingContext loadPlanBuildingContext);
+
+	public EntityFetch buildEntityFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			LoadPlanBuildingContext loadPlanBuildingContext);
+
+	public CompositeFetch buildCompositeFetch(
+			CompositionDefinition attributeDefinition,
+			LoadPlanBuildingContext loadPlanBuildingContext);
+
 }

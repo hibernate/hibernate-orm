@@ -54,7 +54,7 @@ import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityBasedBasicAttribute;
-import org.hibernate.tuple.entity.EntityBasedCompositeAttribute;
+import org.hibernate.tuple.entity.EntityBasedCompositionAttribute;
 import org.hibernate.tuple.entity.VersionProperty;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
@@ -282,7 +282,7 @@ public class PropertyFactory {
 				);
 			}
 			case COMPOSITE: {
-				return new EntityBasedCompositeAttribute(
+				return new EntityBasedCompositionAttribute(
 						persister,
 						sessionFactory,
 						attributeNumber,

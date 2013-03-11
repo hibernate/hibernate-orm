@@ -33,28 +33,22 @@ import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.transform.ResultTransformer;
 
 /**
- * Definition of the Loader contract.
- * <p/>
- * Capabilities I'd like to see added (todo):<ul>
- *     <li>
- *         expose the underlying "query" (although what I see here relies heavily on
- *         https://github.com/hibernate/hibernate-orm/wiki/Proposal---SQL-generation)
- *     </li>
- * </ul>
- *
+ * Definition of the Loader contract.  A Loader is intended to perform loading based on a query and a load-plan.
+ * Under the covers it uses many delegates to perform that work that might be better used individually in
+ * different situations.  In general, Loader is intended for being fed a set of results and processing through
+ * all of those result rows in one swoop.  For cases that do not fit that template, it is probably better to
+ * individually use the delegates to perform the work.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
 public interface Loader {
-	public LoadPlan getLoadPlan();
-
 	/**
-	 * Obtain the on-demand form of this loader, if possible.
+	 * Obtain the LoadPlan this Loader is following.
 	 *
-	 * @return The on-demand version of this loader
+	 * @return
 	 */
-	public OnDemandLoader asOnDemandLoader();
+	public LoadPlan getLoadPlan();
 
 	public List extractResults(
 			ResultSet resultSet,

@@ -58,6 +58,7 @@ import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
+import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.NonPojoInstrumentationMetadata;
@@ -590,8 +591,8 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Iterable<AttributeDefinition> getEmbeddedCompositeIdentifierAttributes() {
-			throw new NotYetImplementedException();
+		public EntityIdentifierDefinition getEntityKeyDefinition() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
 		@Override

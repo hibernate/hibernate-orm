@@ -23,6 +23,8 @@
  */
 package org.hibernate.tuple.component;
 
+import java.io.Serializable;
+
 import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
@@ -34,6 +36,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.spi.HydratedCompoundValueHandler;
 import org.hibernate.persister.walking.internal.Helper;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;
@@ -54,7 +57,7 @@ public class CompositeBasedAssociationAttribute
 	private Joinable joinable;
 
 	public CompositeBasedAssociationAttribute(
-			AbstractCompositeDefinition source,
+			AbstractCompositionDefinition source,
 			SessionFactoryImplementor factory,
 			int attributeNumber,
 			String attributeName,
@@ -153,5 +156,30 @@ public class CompositeBasedAssociationAttribute
 	public CascadeStyle determineCascadeStyle() {
 		final CompositeType compositeType = (CompositeType) locateOwningPersister().getPropertyType( getName() );
 		return compositeType.getCascadeStyle( attributeNumber() );
+	}
+
+	private HydratedCompoundValueHandler hydratedCompoundValueHandler;
+
+	@Override
+	public HydratedCompoundValueHandler getHydratedCompoundValueExtractor() {
+		if ( hydratedCompoundValueHandler == null ) {
+			hydratedCompoundValueHandler = new HydratedCompoundValueHandler() {
+				@Override
+				public Object extract(Object hydratedState) {
+					return ( (Object[] ) hydratedState )[ attributeNumber() ];
+				}
+
+				@Override
+				public void inject(Object hydratedState, Object value) {
+					( (Object[] ) hydratedState )[ attributeNumber() ] = value;
+				}
+			};
+		}
+		return hydratedCompoundValueHandler;
+	}
+
+	@Override
+	protected String loggableMetadata() {
+		return super.loggableMetadata() + ",association";
 	}
 }

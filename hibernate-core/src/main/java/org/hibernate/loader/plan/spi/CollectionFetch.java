@@ -23,58 +23,75 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.spi.ResultSetProcessingContext;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionFetch extends AbstractFetch implements CollectionReference {
-	private final CollectionAliases collectionAliases;
-	private final EntityAliases elementEntityAliases;
-
-	private final CollectionPersister persister;
+public class CollectionFetch extends AbstractCollectionReference implements CollectionReference, Fetch {
+	private final FetchOwner fetchOwner;
+	private final FetchStrategy fetchStrategy;
 
 	public CollectionFetch(
 			SessionFactoryImplementor sessionFactory,
 			String alias,
 			LockMode lockMode,
-			AbstractFetchOwner owner,
+			FetchOwner fetchOwner,
 			FetchStrategy fetchStrategy,
 			String ownerProperty,
 			CollectionAliases collectionAliases,
 			EntityAliases elementEntityAliases) {
-		super( sessionFactory, alias, lockMode, owner, ownerProperty, fetchStrategy );
-		this.collectionAliases = collectionAliases;
-		this.elementEntityAliases = elementEntityAliases;
-
-		final String role = owner.retrieveFetchSourcePersister().getEntityName() + '.' + getOwnerPropertyName();
-		this.persister = sessionFactory.getCollectionPersister( role );
+		super(
+				sessionFactory,
+				alias,
+				lockMode,
+				sessionFactory.getCollectionPersister(
+						fetchOwner.retrieveFetchSourcePersister().getEntityName() + '.' + ownerProperty
+				),
+				fetchOwner.getPropertyPath().append( ownerProperty ),
+				collectionAliases,
+				elementEntityAliases
+		);
+		this.fetchOwner = fetchOwner;
+		this.fetchStrategy = fetchStrategy;
 	}
 
 	@Override
-	public CollectionAliases getCollectionAliases() {
-		return collectionAliases;
+	public FetchOwner getOwner() {
+		return fetchOwner;
 	}
 
 	@Override
-	public EntityAliases getElementEntityAliases() {
-		return elementEntityAliases;
+	public String getOwnerPropertyName() {
+		return getPropertyPath().getProperty();
 	}
 
 	@Override
-	public CollectionPersister getCollectionPersister() {
-		return persister;
+	public FetchStrategy getFetchStrategy() {
+		return fetchStrategy;
 	}
 
 	@Override
-	public EntityPersister retrieveFetchSourcePersister() {
-		return ( (QueryableCollection) getCollectionPersister() ).getElementPersister();
+	public PropertyPath getPropertyPath() {
+		return propertyPath();
+	}
+
+	@Override
+	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+		//To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 }

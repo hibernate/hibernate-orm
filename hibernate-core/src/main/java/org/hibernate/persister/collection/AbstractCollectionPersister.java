@@ -82,7 +82,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
-import org.hibernate.persister.walking.spi.CompositeDefinition;
+import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Alias;
@@ -1974,7 +1974,7 @@ public abstract class AbstractCollectionPersister
 			}
 
 			@Override
-			public CompositeDefinition toCompositeDefinition() {
+			public CompositionDefinition toCompositeDefinition() {
 				if ( ! getType().isComponentType() ) {
 					throw new IllegalStateException( "Cannot treat entity collection index type as composite" );
 				}
@@ -2006,7 +2006,7 @@ public abstract class AbstractCollectionPersister
 			}
 
 			@Override
-			public CompositeDefinition toCompositeDefinition() {
+			public CompositionDefinition toCompositeDefinition() {
 				if ( ! getType().isComponentType() ) {
 					throw new IllegalStateException( "Cannot treat entity collection element type as composite" );
 				}

@@ -23,12 +23,18 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.CompositionDefinition;
 
 /**
  * @author Steve Ebersole
@@ -47,5 +53,37 @@ public class CompositeFetch extends AbstractFetch implements Fetch {
 	@Override
 	public EntityPersister retrieveFetchSourcePersister() {
 		return getOwner().retrieveFetchSourcePersister();
+	}
+
+	@Override
+	public CollectionFetch buildCollectionFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public EntityFetch buildEntityFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public CompositeFetch buildCompositeFetch(
+			CompositionDefinition attributeDefinition, LoadPlanBuildingContext loadPlanBuildingContext) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+		//To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 }

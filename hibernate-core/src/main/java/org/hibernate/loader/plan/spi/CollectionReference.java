@@ -55,6 +55,12 @@ public interface CollectionReference {
 	 */
 	public CollectionPersister getCollectionPersister();
 
+	public FetchOwner getIndexGraph();
+
+	public FetchOwner getElementGraph();
+
+	public boolean hasEntityElements();
+
 	/**
 	 * Returns the description of the aliases in the JDBC ResultSet that identify values "belonging" to the
 	 * this collection.

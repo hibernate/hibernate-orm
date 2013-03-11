@@ -21,26 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tuple.component;
+package org.hibernate.loader.plan.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.walking.spi.CompositeDefinition;
-import org.hibernate.tuple.BaselineAttributeInformation;
-import org.hibernate.type.CompositeType;
+import org.hibernate.loader.CollectionAliases;
+import org.hibernate.loader.EntityAliases;
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.CollectionDefinition;
+import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.persister.walking.spi.EntityDefinition;
 
 /**
  * @author Steve Ebersole
  */
-public class CompositeBasedCompositeAttribute
-		extends AbstractCompositeDefinition
-		implements CompositeDefinition {
-	public CompositeBasedCompositeAttribute(
-			CompositeDefinition source,
-			SessionFactoryImplementor sessionFactory,
-			int attributeNumber,
-			String attributeName,
-			CompositeType attributeType,
-			BaselineAttributeInformation baselineInfo) {
-		super( source, sessionFactory, attributeNumber, attributeName, attributeType, baselineInfo );
-	}
+public interface LoadPlanBuildingContext {
+	public SessionFactoryImplementor getSessionFactory();
+
+	public CollectionAliases resolveCollectionColumnAliases(AssociationAttributeDefinition attributeDefinition);
+	public EntityAliases resolveEntityColumnAliases(AssociationAttributeDefinition attributeDefinition);
+
+	public String resolveRootSourceAlias(EntityDefinition definition);
+	public String resolveRootSourceAlias(CollectionDefinition definition);
+
+	public String resolveFetchSourceAlias(AssociationAttributeDefinition attributeDefinition);
+	public String resolveFetchSourceAlias(CompositionDefinition compositionDefinition);
 }

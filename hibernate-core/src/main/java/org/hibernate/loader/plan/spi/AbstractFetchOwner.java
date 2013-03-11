@@ -56,7 +56,8 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 		return lockMode;
 	}
 
-	void addFetch(Fetch fetch) {
+	@Override
+	public void addFetch(Fetch fetch) {
 		if ( fetch.getOwner() != this ) {
 			throw new IllegalArgumentException( "Fetch and owner did not match" );
 		}

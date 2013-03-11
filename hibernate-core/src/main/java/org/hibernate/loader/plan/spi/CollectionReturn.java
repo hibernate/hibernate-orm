@@ -23,28 +23,22 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.loader.spi.ResultSetProcessingContext;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionReturn extends AbstractFetchOwner implements Return, FetchOwner, CollectionReference {
+public class CollectionReturn extends AbstractCollectionReference implements Return, CollectionReference {
 	private final String ownerEntityName;
 	private final String ownerProperty;
-	private final CollectionAliases collectionAliases;
-	private final EntityAliases elementEntityAliases;
-
-	private final CollectionPersister persister;
-
-	private final PropertyPath propertyPath = new PropertyPath(); // its a root
 
 	public CollectionReturn(
 			SessionFactoryImplementor sessionFactory,
@@ -54,14 +48,17 @@ public class CollectionReturn extends AbstractFetchOwner implements Return, Fetc
 			String ownerProperty,
 			CollectionAliases collectionAliases,
 			EntityAliases elementEntityAliases) {
-		super( sessionFactory, alias, lockMode );
+		super(
+				sessionFactory,
+				alias,
+				lockMode,
+				sessionFactory.getCollectionPersister( ownerEntityName + '.' + ownerProperty ),
+				new PropertyPath(), // its a root
+				collectionAliases,
+				elementEntityAliases
+		);
 		this.ownerEntityName = ownerEntityName;
 		this.ownerProperty = ownerProperty;
-		this.collectionAliases = collectionAliases;
-		this.elementEntityAliases = elementEntityAliases;
-
-		final String role = ownerEntityName + '.' + ownerProperty;
-		this.persister = sessionFactory.getCollectionPersister( role );
 	}
 
 	/**
@@ -83,31 +80,22 @@ public class CollectionReturn extends AbstractFetchOwner implements Return, Fetc
 	}
 
 	@Override
-	public CollectionAliases getCollectionAliases() {
-		return collectionAliases;
+	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+		// todo : anything to do here?
 	}
 
 	@Override
-	public EntityAliases getElementEntityAliases() {
-		return elementEntityAliases;
+	public void resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+		// todo : anything to do here?
 	}
 
 	@Override
-	public CollectionPersister getCollectionPersister() {
-		return persister;
+	public Object read(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
-	public void validateFetchPlan(FetchStrategy fetchStrategy) {
-	}
-
-	@Override
-	public EntityPersister retrieveFetchSourcePersister() {
-		return ( (QueryableCollection) persister ).getElementPersister();
-	}
-
-	@Override
-	public PropertyPath getPropertyPath() {
-		return propertyPath;
+	public String toString() {
+		return "CollectionReturn(" + getCollectionPersister().getRole() + ")";
 	}
 }

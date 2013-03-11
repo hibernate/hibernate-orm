@@ -79,6 +79,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FetchingScrollableResultsImpl;
 import org.hibernate.internal.ScrollableResultsImpl;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -243,10 +244,6 @@ public abstract class Loader {
 		return getFactory().getSettings().isCommentsEnabled()
 				? prependComment( sql, parameters )
 				: sql;
-	}
-
-	protected static interface AfterLoadAction {
-		public void afterLoad(SessionImplementor session, Object entity, Loadable persister);
 	}
 
 	protected boolean shouldUseFollowOnLocking(
@@ -509,7 +506,7 @@ public abstract class Loader {
 			}
 
 			// We call getKeyFromResultSet() here so that we can know the
-			// key value upon which to doAfterTransactionCompletion the breaking logic.  However,
+			// key value upon which to perform the breaking logic.  However,
 			// it is also then called from getRowFromResultSet() which is certainly
 			// not the most efficient.  But the call here is needed, and there
 			// currently is no other way without refactoring of the doQuery()/getRowFromResultSet()
@@ -527,7 +524,7 @@ public abstract class Loader {
 		catch ( SQLException sqle ) {
 			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
-			        "could not doAfterTransactionCompletion sequential read of results (forward)",
+			        "could not perform sequential read of results (forward)",
 			        getSQLString()
 				);
 		}

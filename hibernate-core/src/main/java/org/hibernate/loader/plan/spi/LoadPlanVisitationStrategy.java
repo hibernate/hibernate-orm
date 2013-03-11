@@ -26,16 +26,16 @@ package org.hibernate.loader.plan.spi;
 /**
  * @author Steve Ebersole
  */
-public interface ReturnVisitationStrategy {
+public interface LoadPlanVisitationStrategy {
 	/**
 	 * Notification we are preparing to start visitation.
 	 */
-	public void start();
+	public void start(LoadPlan loadPlan);
 
 	/**
 	 * Notification we are finished visitation.
 	 */
-	public void finish();
+	public void finish(LoadPlan loadPlan);
 
 	/**
 	 * Notification that a new root return branch is being started.  Will be followed by calls to one of the following

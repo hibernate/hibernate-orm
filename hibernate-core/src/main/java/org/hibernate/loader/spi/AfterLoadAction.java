@@ -21,29 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tuple.entity;
+package org.hibernate.loader.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.component.AbstractCompositeDefinition;
-import org.hibernate.persister.walking.spi.CompositeDefinition;
-import org.hibernate.tuple.BaselineAttributeInformation;
-import org.hibernate.type.CompositeType;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.Loadable;
 
 /**
- * @author Steve Ebersole
- */
-public class EntityBasedCompositeAttribute
-		extends AbstractCompositeDefinition
-		implements CompositeDefinition {
-
-	public EntityBasedCompositeAttribute(
-			EntityPersister source,
-			SessionFactoryImplementor factory,
-			int attributeNumber,
-			String attributeName,
-			CompositeType attributeType,
-			BaselineAttributeInformation baselineInfo) {
-		super( source, factory, attributeNumber, attributeName, attributeType, baselineInfo );
-	}
+* @author Steve Ebersole
+*/
+public interface AfterLoadAction {
+	public void afterLoad(SessionImplementor session, Object entity, Loadable persister);
 }

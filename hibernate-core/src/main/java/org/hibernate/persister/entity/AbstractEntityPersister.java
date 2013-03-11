@@ -110,6 +110,11 @@ import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.Value;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeSource;
+import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinition;
+import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.persister.walking.spi.NonEncapsulatedEntityIdentifierDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.sql.Alias;
@@ -5076,11 +5081,12 @@ public abstract class AbstractEntityPersister
 
 	// EntityDefinition impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	private EntityIdentifierDefinition entityIdentifierDefinition;
 	private Iterable<AttributeDefinition> embeddedCompositeIdentifierAttributes;
 	private Iterable<AttributeDefinition> attributeDefinitions;
 
 	protected void generateEntityDefinition() {
-		collectEmbeddedCompositeIdentifierAttributeDefinitions();
+		prepareEntityIdentifierDefinition();
 		collectAttributeDefinitions();
 	}
 
@@ -5090,8 +5096,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Iterable<AttributeDefinition> getEmbeddedCompositeIdentifierAttributes() {
-		return embeddedCompositeIdentifierAttributes;
+	public EntityIdentifierDefinition getEntityKeyDefinition() {
+		return entityIdentifierDefinition;
 	}
 
 	@Override
@@ -5099,52 +5105,85 @@ public abstract class AbstractEntityPersister
 		return attributeDefinitions;
 	}
 
-	private synchronized void collectEmbeddedCompositeIdentifierAttributeDefinitions() {
+
+	private void prepareEntityIdentifierDefinition() {
 		final Type idType = getIdentifierType();
+
 		if ( !idType.isComponentType() ) {
+			entityIdentifierDefinition = buildEncapsulatedIdentifierDefinition();
 			return;
 		}
 
 		final CompositeType cidType = (CompositeType) idType;
 		if ( !cidType.isEmbedded() ) {
+			entityIdentifierDefinition = buildEncapsulatedIdentifierDefinition();
 			return;
 		}
 
-		// we have an embedded composite identifier.  Most likely we need to process the composite
-		// properties separately, although there is an edge case where the identifier is really
-		// a simple identifier (single value) wrapped in a JPA @IdClass or even in the case of a
-		// a simple identifier (single value) wrapped in a Hibernate composite type.
-		//
-		// We really do not have a built-in method to determine that.  However, generally the
-		// persister would report that there is single, physical identifier property which is
-		// explicitly at odds with the notion of "embedded composite".  So we use that for now
-		if ( getEntityMetamodel().getIdentifierProperty().isEmbedded() ) {
-			this.embeddedCompositeIdentifierAttributes = new Iterable<AttributeDefinition>() {
-				@Override
-				public Iterator<AttributeDefinition> iterator() {
-					return new Iterator<AttributeDefinition>() {
-						private final int numberOfAttributes = countSubclassProperties();
-						private int currentAttributeNumber = 0;
+		entityIdentifierDefinition = new NonEncapsulatedEntityIdentifierDefinition() {
+			@Override
+			public Iterable<AttributeDefinition> getAttributes() {
+				// todo : implement
+				throw new NotYetImplementedException();
+			}
 
-						@Override
-						public boolean hasNext() {
-							return currentAttributeNumber < numberOfAttributes;
-						}
+			@Override
+			public Class getSeparateIdentifierMappingClass() {
+				// todo : implement
+				throw new NotYetImplementedException();
+			}
 
-						@Override
-						public AttributeDefinition next() {
-							// todo : implement
-							throw new NotYetImplementedException();
-						}
+			@Override
+			public boolean isEncapsulated() {
+				return false;
+			}
 
-						@Override
-						public void remove() {
-							throw new UnsupportedOperationException( "Remove operation not supported here" );
-						}
-					};
-				}
-			};
-		}
+			@Override
+			public EntityDefinition getEntityDefinition() {
+				return AbstractEntityPersister.this;
+			}
+		};
+	}
+
+	private EntityIdentifierDefinition buildEncapsulatedIdentifierDefinition() {
+		final AttributeDefinition simpleIdentifierAttributeAdapter = new AttributeDefinition() {
+			@Override
+			public String getName() {
+				return entityMetamodel.getIdentifierProperty().getName();
+			}
+
+			@Override
+			public Type getType() {
+				return entityMetamodel.getIdentifierProperty().getType();
+			}
+
+			@Override
+			public AttributeSource getSource() {
+				return AbstractEntityPersister.this;
+			}
+
+			@Override
+			public String toString() {
+				return "<identifier-property:" + getName() + ">";
+			}
+		};
+
+		return new EncapsulatedEntityIdentifierDefinition() {
+			@Override
+			public AttributeDefinition getAttributeDefinition() {
+				return simpleIdentifierAttributeAdapter;
+			}
+
+			@Override
+			public boolean isEncapsulated() {
+				return true;
+			}
+
+			@Override
+			public EntityDefinition getEntityDefinition() {
+				return AbstractEntityPersister.this;
+			}
+		};
 	}
 
 	private void collectAttributeDefinitions() {

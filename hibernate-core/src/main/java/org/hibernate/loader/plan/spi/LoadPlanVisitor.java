@@ -28,25 +28,25 @@ package org.hibernate.loader.plan.spi;
  *
  * @author Steve Ebersole
  */
-public class ReturnVisitor {
-	public static void visit(Return[] rootReturns, ReturnVisitationStrategy strategy) {
-		new ReturnVisitor( strategy ).visitReturns( rootReturns );
+public class LoadPlanVisitor {
+	public static void visit(LoadPlan loadPlan, LoadPlanVisitationStrategy strategy) {
+		new LoadPlanVisitor( strategy ).visit( loadPlan );
 	}
 
-	private final ReturnVisitationStrategy strategy;
+	private final LoadPlanVisitationStrategy strategy;
 
-	public ReturnVisitor(ReturnVisitationStrategy strategy) {
+	public LoadPlanVisitor(LoadPlanVisitationStrategy strategy) {
 		this.strategy = strategy;
 	}
 
-	private void visitReturns(Return[] rootReturns) {
-		strategy.start();
+	private void visit(LoadPlan loadPlan) {
+		strategy.start( loadPlan );
 
-		for ( Return rootReturn : rootReturns ) {
+		for ( Return rootReturn : loadPlan.getReturns() ) {
 			visitRootReturn( rootReturn );
 		}
 
-		strategy.finish();
+		strategy.finish( loadPlan );
 	}
 
 	private void visitRootReturn(Return rootReturn) {
@@ -69,7 +69,9 @@ public class ReturnVisitor {
 		}
 		else if ( CollectionReturn.class.isInstance( rootReturn ) ) {
 			strategy.handleCollectionReturn( (CollectionReturn) rootReturn );
-			visitFetches( (CollectionReturn) rootReturn );
+			final CollectionReturn collectionReturn = (CollectionReturn) rootReturn;
+			visitFetches( collectionReturn.getIndexGraph() );
+			visitFetches( collectionReturn.getElementGraph() );
 		}
 		else {
 			throw new IllegalStateException(
@@ -92,17 +94,18 @@ public class ReturnVisitor {
 	private void visitFetch(Fetch fetch) {
 		if ( EntityFetch.class.isInstance( fetch ) ) {
 			strategy.startingEntityFetch( (EntityFetch) fetch );
-			visitFetches( fetch );
+			visitFetches( (EntityFetch) fetch );
 			strategy.finishingEntityFetch( (EntityFetch) fetch );
 		}
 		else if ( CollectionFetch.class.isInstance( fetch ) ) {
 			strategy.startingCollectionFetch( (CollectionFetch) fetch );
-			visitFetches( fetch );
+			visitFetches( ( (CollectionFetch) fetch ).getIndexGraph() );
+			visitFetches( ( (CollectionFetch) fetch ).getElementGraph() );
 			strategy.finishingCollectionFetch( (CollectionFetch) fetch );
 		}
 		else if ( CompositeFetch.class.isInstance( fetch ) ) {
 			strategy.startingCompositeFetch( (CompositeFetch) fetch );
-			visitFetches( fetch );
+			visitFetches( (CompositeFetch) fetch );
 			strategy.finishingCompositeFetch( (CompositeFetch) fetch );
 		}
 		else {

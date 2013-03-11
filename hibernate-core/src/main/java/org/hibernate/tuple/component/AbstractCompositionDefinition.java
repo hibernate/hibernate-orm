@@ -32,7 +32,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeSource;
-import org.hibernate.persister.walking.spi.CompositeDefinition;
+import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
@@ -48,8 +48,9 @@ import static org.hibernate.engine.internal.JoinHelper.getRHSColumnNames;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractCompositeDefinition extends AbstractNonIdentifierAttribute implements CompositeDefinition {
-	protected AbstractCompositeDefinition(
+public abstract class AbstractCompositionDefinition extends AbstractNonIdentifierAttribute implements
+																						   CompositionDefinition {
+	protected AbstractCompositionDefinition(
 			AttributeSource source,
 			SessionFactoryImplementor sessionFactory,
 			int attributeNumber,
@@ -119,41 +120,41 @@ public abstract class AbstractCompositeDefinition extends AbstractNonIdentifierA
 							}
 
 							return new CompositeBasedAssociationAttribute(
-									AbstractCompositeDefinition.this,
+									AbstractCompositionDefinition.this,
 									sessionFactory(),
 									currentAttributeNumber,
 									name,
 									(AssociationType) type,
 									new BaselineAttributeInformation.Builder()
-											.setInsertable( AbstractCompositeDefinition.this.isInsertable() )
-											.setUpdateable( AbstractCompositeDefinition.this.isUpdateable() )
-											.setInsertGenerated( AbstractCompositeDefinition.this.isInsertGenerated() )
-											.setUpdateGenerated( AbstractCompositeDefinition.this.isUpdateGenerated() )
+											.setInsertable( AbstractCompositionDefinition.this.isInsertable() )
+											.setUpdateable( AbstractCompositionDefinition.this.isUpdateable() )
+											.setInsertGenerated( AbstractCompositionDefinition.this.isInsertGenerated() )
+											.setUpdateGenerated( AbstractCompositionDefinition.this.isUpdateGenerated() )
 											.setNullable( getType().getPropertyNullability()[currentAttributeNumber] )
 											.setDirtyCheckable( true )
-											.setVersionable( AbstractCompositeDefinition.this.isVersionable() )
+											.setVersionable( AbstractCompositionDefinition.this.isVersionable() )
 											.setCascadeStyle( getType().getCascadeStyle( currentAttributeNumber ) )
 											.setFetchMode( getType().getFetchMode( currentAttributeNumber ) )
 											.createInformation(),
-									AbstractCompositeDefinition.this.attributeNumber(),
+									AbstractCompositionDefinition.this.attributeNumber(),
 									associationKey
 							);
 						}
 						else if ( type.isComponentType() ) {
-							return new CompositeBasedCompositeAttribute(
-									AbstractCompositeDefinition.this,
+							return new CompositionBasedCompositionAttribute(
+									AbstractCompositionDefinition.this,
 									sessionFactory(),
 									currentAttributeNumber,
 									name,
 									(CompositeType) type,
 									new BaselineAttributeInformation.Builder()
-											.setInsertable( AbstractCompositeDefinition.this.isInsertable() )
-											.setUpdateable( AbstractCompositeDefinition.this.isUpdateable() )
-											.setInsertGenerated( AbstractCompositeDefinition.this.isInsertGenerated() )
-											.setUpdateGenerated( AbstractCompositeDefinition.this.isUpdateGenerated() )
+											.setInsertable( AbstractCompositionDefinition.this.isInsertable() )
+											.setUpdateable( AbstractCompositionDefinition.this.isUpdateable() )
+											.setInsertGenerated( AbstractCompositionDefinition.this.isInsertGenerated() )
+											.setUpdateGenerated( AbstractCompositionDefinition.this.isUpdateGenerated() )
 											.setNullable( getType().getPropertyNullability()[currentAttributeNumber] )
 											.setDirtyCheckable( true )
-											.setVersionable( AbstractCompositeDefinition.this.isVersionable() )
+											.setVersionable( AbstractCompositionDefinition.this.isVersionable() )
 											.setCascadeStyle( getType().getCascadeStyle( currentAttributeNumber ) )
 											.setFetchMode( getType().getFetchMode( currentAttributeNumber ) )
 											.createInformation()
@@ -161,19 +162,19 @@ public abstract class AbstractCompositeDefinition extends AbstractNonIdentifierA
 						}
 						else {
 							return new CompositeBasedBasicAttribute(
-									AbstractCompositeDefinition.this,
+									AbstractCompositionDefinition.this,
 									sessionFactory(),
 									currentAttributeNumber,
 									name,
 									type,
 									new BaselineAttributeInformation.Builder()
-											.setInsertable( AbstractCompositeDefinition.this.isInsertable() )
-											.setUpdateable( AbstractCompositeDefinition.this.isUpdateable() )
-											.setInsertGenerated( AbstractCompositeDefinition.this.isInsertGenerated() )
-											.setUpdateGenerated( AbstractCompositeDefinition.this.isUpdateGenerated() )
+											.setInsertable( AbstractCompositionDefinition.this.isInsertable() )
+											.setUpdateable( AbstractCompositionDefinition.this.isUpdateable() )
+											.setInsertGenerated( AbstractCompositionDefinition.this.isInsertGenerated() )
+											.setUpdateGenerated( AbstractCompositionDefinition.this.isUpdateGenerated() )
 											.setNullable( getType().getPropertyNullability()[currentAttributeNumber] )
 											.setDirtyCheckable( true )
-											.setVersionable( AbstractCompositeDefinition.this.isVersionable() )
+											.setVersionable( AbstractCompositionDefinition.this.isVersionable() )
 											.setCascadeStyle( getType().getCascadeStyle( currentAttributeNumber ) )
 											.setFetchMode( getType().getFetchMode( currentAttributeNumber ) )
 											.createInformation()
@@ -195,8 +196,13 @@ public abstract class AbstractCompositeDefinition extends AbstractNonIdentifierA
 			return ( (EntityDefinition) getSource() ).getEntityPersister();
 		}
 		else {
-			return ( (AbstractCompositeDefinition) getSource() ).locateOwningPersister();
+			return ( (AbstractCompositionDefinition) getSource() ).locateOwningPersister();
 		}
+	}
+
+	@Override
+	protected String loggableMetadata() {
+		return super.loggableMetadata() + ",composition";
 	}
 }
 

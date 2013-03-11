@@ -21,10 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.persister.walking.spi;
+package org.hibernate.loader.plan.spi;
 
 /**
  * @author Steve Ebersole
  */
-public interface CompositeDefinition extends AttributeDefinition, AttributeSource {
+public interface CollectionReferenceImplementor {
 }

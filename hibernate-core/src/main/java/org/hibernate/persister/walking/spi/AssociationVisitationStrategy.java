@@ -40,11 +40,20 @@ public interface AssociationVisitationStrategy {
 	public void startingEntity(EntityDefinition entityDefinition);
 	public void finishingEntity(EntityDefinition entityDefinition);
 
+	public void startingEntityIdentifier(EntityIdentifierDefinition entityIdentifierDefinition);
+	public void finishingEntityIdentifier(EntityIdentifierDefinition entityIdentifierDefinition);
+
 	public void startingCollection(CollectionDefinition collectionDefinition);
 	public void finishingCollection(CollectionDefinition collectionDefinition);
 
-	public void startingComposite(CompositeDefinition compositeDefinition);
-	public void finishingComposite(CompositeDefinition compositeDefinition);
+	public void startingCollectionIndex(CollectionIndexDefinition collectionIndexDefinition);
+	public void finishingCollectionIndex(CollectionIndexDefinition collectionIndexDefinition);
+
+	public void startingCollectionElements(CollectionElementDefinition elementDefinition);
+	public void finishingCollectionElements(CollectionElementDefinition elementDefinition);
+
+	public void startingComposite(CompositionDefinition compositionDefinition);
+	public void finishingComposite(CompositionDefinition compositionDefinition);
 
 	public boolean startingAttribute(AttributeDefinition attributeDefinition);
 	public void finishingAttribute(AttributeDefinition attributeDefinition);

@@ -44,7 +44,7 @@ public abstract class AbstractFetch extends AbstractFetchOwner implements Fetch 
 			SessionFactoryImplementor factory,
 			String alias,
 			LockMode lockMode,
-			AbstractFetchOwner owner,
+			FetchOwner owner,
 			String ownerProperty,
 			FetchStrategy fetchStrategy) {
 		super( factory, alias, lockMode );
@@ -84,5 +84,10 @@ public abstract class AbstractFetch extends AbstractFetchOwner implements Fetch 
 	@Override
 	public PropertyPath getPropertyPath() {
 		return propertyPath;
+	}
+
+	@Override
+	public String toString() {
+		return "Fetch(" + propertyPath.getFullPath() + ")";
 	}
 }

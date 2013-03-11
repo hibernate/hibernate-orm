@@ -81,26 +81,26 @@ public class MetadataDrivenModelGraphVisitor {
 
 	private void visitEntityDefinition(EntityDefinition entityDefinition) {
 		strategy.startingEntity( entityDefinition );
-		try {
-			visitAttributes( entityDefinition );
-			optionallyVisitEmbeddedCompositeIdentifier( entityDefinition );
-		}
-		finally {
-			strategy.finishingEntity( entityDefinition );
-		}
+
+		visitAttributes( entityDefinition );
+		visitIdentifierDefinition( entityDefinition.getEntityKeyDefinition() );
+
+		strategy.finishingEntity( entityDefinition );
 	}
 
-	private void optionallyVisitEmbeddedCompositeIdentifier(EntityDefinition entityDefinition) {
-		// if the entity has a composite identifier, see if we need to handle its sub-properties separately
-		final Iterable<AttributeDefinition> embeddedCompositeIdentifierAttributes =
-				entityDefinition.getEmbeddedCompositeIdentifierAttributes();
-		if ( embeddedCompositeIdentifierAttributes == null ) {
-			return;
+	private void visitIdentifierDefinition(EntityIdentifierDefinition entityIdentifierDefinition) {
+		strategy.startingEntityIdentifier( entityIdentifierDefinition );
+
+		if ( entityIdentifierDefinition.isEncapsulated() ) {
+			visitAttributeDefinition( ( (EncapsulatedEntityIdentifierDefinition) entityIdentifierDefinition).getAttributeDefinition() );
+		}
+		else {
+			for ( AttributeDefinition attributeDefinition : ( (NonEncapsulatedEntityIdentifierDefinition) entityIdentifierDefinition).getAttributes() ) {
+				visitAttributeDefinition( attributeDefinition );
+			}
 		}
 
-		for ( AttributeDefinition attributeDefinition : embeddedCompositeIdentifierAttributes ) {
-			visitAttributeDefinition( attributeDefinition );
-		}
+		strategy.finishingEntityIdentifier( entityIdentifierDefinition );
 	}
 
 	private void visitAttributes(AttributeSource attributeSource) {
@@ -122,7 +122,7 @@ public class MetadataDrivenModelGraphVisitor {
 					visitAssociation( (AssociationAttributeDefinition) attributeDefinition );
 				}
 				else if ( attributeDefinition.getType().isComponentType() ) {
-					visitCompositeDefinition( (CompositeDefinition) attributeDefinition );
+					visitCompositeDefinition( (CompositionDefinition) attributeDefinition );
 				}
 			}
 			finally {
@@ -148,42 +148,34 @@ public class MetadataDrivenModelGraphVisitor {
 		}
 	}
 
-	private void visitCompositeDefinition(CompositeDefinition compositeDefinition) {
-		strategy.startingComposite( compositeDefinition );
-		try {
-			visitAttributes( compositeDefinition );
-		}
-		finally {
-			strategy.finishingComposite( compositeDefinition );
-		}
+	private void visitCompositeDefinition(CompositionDefinition compositionDefinition) {
+		strategy.startingComposite( compositionDefinition );
+
+		visitAttributes( compositionDefinition );
+
+		strategy.finishingComposite( compositionDefinition );
 	}
 
 	private void visitCollectionDefinition(CollectionDefinition collectionDefinition) {
 		strategy.startingCollection( collectionDefinition );
 
-		try {
-			visitCollectionIndex( collectionDefinition.getIndexDefinition() );
+		visitCollectionIndex( collectionDefinition );
+		visitCollectionElements( collectionDefinition );
 
-			final CollectionElementDefinition elementDefinition = collectionDefinition.getElementDefinition();
-			if ( elementDefinition.getType().isComponentType() ) {
-				visitCompositeDefinition( elementDefinition.toCompositeDefinition() );
-			}
-			else {
-				visitEntityDefinition( elementDefinition.toEntityDefinition() );
-			}
-		}
-		finally {
-			strategy.finishingCollection( collectionDefinition );
-		}
+		strategy.finishingCollection( collectionDefinition );
 	}
 
-	private void visitCollectionIndex(CollectionIndexDefinition collectionIndexDefinition) {
+	private void visitCollectionIndex(CollectionDefinition collectionDefinition) {
+		final CollectionIndexDefinition collectionIndexDefinition = collectionDefinition.getIndexDefinition();
 		if ( collectionIndexDefinition == null ) {
 			return;
 		}
 
-		log.debug( "Visiting collection index :  " + currentPropertyPath.getFullPath() );
-		currentPropertyPath = currentPropertyPath.append( "<key>" );
+		strategy.startingCollectionIndex( collectionIndexDefinition );
+
+		log.debug( "Visiting index for collection :  " + currentPropertyPath.getFullPath() );
+		currentPropertyPath = currentPropertyPath.append( "<index>" );
+
 		try {
 			final Type collectionIndexType = collectionIndexDefinition.getType();
 			if ( collectionIndexType.isComponentType() ) {
@@ -196,6 +188,22 @@ public class MetadataDrivenModelGraphVisitor {
 		finally {
 			currentPropertyPath = currentPropertyPath.getParent();
 		}
+
+		strategy.finishingCollectionIndex( collectionIndexDefinition );
+	}
+
+	private void visitCollectionElements(CollectionDefinition collectionDefinition) {
+		final CollectionElementDefinition elementDefinition = collectionDefinition.getElementDefinition();
+		strategy.startingCollectionElements( elementDefinition );
+
+		if ( elementDefinition.getType().isComponentType() ) {
+			visitCompositeDefinition( elementDefinition.toCompositeDefinition() );
+		}
+		else {
+			visitEntityDefinition( elementDefinition.toEntityDefinition() );
+		}
+
+		strategy.finishingCollectionElements( elementDefinition );
 	}
 
 

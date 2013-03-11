@@ -42,6 +42,10 @@ public class EnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 
 		Assert.assertNotNull( values );
 		Assert.assertEquals( 1, values.size() );
-		Assert.assertArrayEquals( new Object[] { "X", 0 }, values.get( 0 ) );
+		Object[] results = values.get( 0 );
+		Assert.assertEquals( "X", results[0] );
+		// Compare the Strings to account for, as an example, Oracle
+		// returning a BigDecimal instead of an int.
+		Assert.assertEquals( "0", results[1] + "" );
 	}
 }

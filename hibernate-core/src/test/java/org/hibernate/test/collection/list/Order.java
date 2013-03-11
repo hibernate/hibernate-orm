@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.collection.list;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,8 +65,8 @@ public class Order {
 		this.lineItems = lineItems;
 	}
 
-	public LineItem addLineItem(String productCode, int quantity, BigDecimal costPer) {
-		LineItem lineItem = new LineItem( this, productCode, quantity, costPer );
+	public LineItem addLineItem(String productCode, int quantity) {
+		LineItem lineItem = new LineItem( this, productCode, quantity );
 		lineItems.add( lineItem );
 		return lineItem;
 	}

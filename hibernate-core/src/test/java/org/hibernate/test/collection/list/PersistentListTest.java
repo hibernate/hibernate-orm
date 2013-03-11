@@ -27,7 +27,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -132,9 +131,9 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 
 		Order order = new Order( "acme-1" );
-		order.addLineItem( "abc", 2, new BigDecimal( 16.1 ) );
-		order.addLineItem( "def", 200, new BigDecimal( .01 ) );
-		order.addLineItem( "ghi", 13, new BigDecimal( 12.9 ) );
+		order.addLineItem( "abc", 2 );
+		order.addLineItem( "def", 200 );
+		order.addLineItem( "ghi", 13 );
 		session.save( order );
 		session.getTransaction().commit();
 		session.close();

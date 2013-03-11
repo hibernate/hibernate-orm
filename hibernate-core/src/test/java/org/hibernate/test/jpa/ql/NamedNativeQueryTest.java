@@ -30,6 +30,8 @@ import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -82,8 +84,10 @@ public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 		Object[] unique = (Object[]) select.uniqueResult();
 		session.close();
 
-		assertEquals( destination.id, unique[0] );
-		assertEquals( destination.from.id, unique[1] );
+		// Compare the Strings, not the actual IDs.  Can come back as, for ex,
+		// a BigDecimal in Oracle.
+		assertEquals( destination.id + "", unique[0] + "" );
+		assertEquals( destination.from.id + "", unique[1] + "" );
 		assertEquals( destination.fullNameFrom, unique[2] );
 	}
 
@@ -111,8 +115,10 @@ public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 		for ( int i = 0; i < list.size(); i++ ) {
 			Object[] object = (Object[]) list.get( i );
 			DestinationEntity destination = destinations.get( i );
-			assertEquals( destination.id, object[0] );
-			assertEquals( destination.from.id, object[1] );
+			// Compare the Strings, not the actual IDs.  Can come back as, for ex,
+			// a BigDecimal in Oracle.
+			assertEquals( destination.id + "", object[0] + "" );
+			assertEquals( destination.from.id + "", object[1] + "" );
 			assertEquals( destination.fullNameFrom, object[2] );
 		}
 	}
@@ -145,6 +151,9 @@ public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect( value = MySQLDialect.class,
+			comment = "MySQL appears to have trouble with fe.id selected twice in one statement")
+	// TODO: Re-form DestinationEntity.insertSelect to something more supported?
 	public void testInsertMultipleValues() {
 		final String name = "Name";
 		final String lastName = "LastName";

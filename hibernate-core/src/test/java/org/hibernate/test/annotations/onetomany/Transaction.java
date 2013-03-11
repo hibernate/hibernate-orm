@@ -25,11 +25,14 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * @author Brett Meyer
  */
 @Entity
+// "Transaction" reserved in some Dialects
+@Table( name = "BankTransaction" )
 public class Transaction {
 	
 	@Id

@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
-	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 
 <hibernate-mapping package="org.hibernate.test.collection.list">
 
     <class name="ListOwner">
-		<id name="name" column="NAME" type="string" />
+        <id name="name" column="NAME" type="string" />
 
         <many-to-one name="parent" class="ListOwner" cascade="none" />
 
@@ -16,7 +16,7 @@
             <list-index column="LIST_INDEX"/>
             <one-to-many class="ListOwner" />
         </list>
-	</class>
+    </class>
 
     <class name="Order" table="T_ORDER">
         <id name="id" column="id" type="integer">
@@ -37,7 +37,6 @@
         <many-to-one name="order" class="Order" column="order_id" cascade="all"/>
         <property name="productCode" column="PRD_CODE" type="string"/>
         <property name="quantity" column="qty" type="integer"/>
-        <property name="costPer" column="cost_per" type="big_decimal"/>
     </class>
 
 </hibernate-mapping>

@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.collection.list;
 
-import java.math.BigDecimal;
 
 /**
  * @author Steve Ebersole
@@ -32,17 +31,15 @@ public class LineItem {
 	private Integer id;
 	private Order order;
 	private String productCode;
-	private BigDecimal costPer;
 	private int quantity;
 
 	public LineItem() {
 	}
 
-	public LineItem(Order order, String productCode, int quantity, BigDecimal costPer) {
+	public LineItem(Order order, String productCode, int quantity) {
 		this.order = order;
 		this.productCode = productCode;
 		this.quantity = quantity;
-		this.costPer = costPer;
 	}
 
 	public Integer getId() {
@@ -67,14 +64,6 @@ public class LineItem {
 
 	public void setProductCode(String productCode) {
 		this.productCode = productCode;
-	}
-
-	public BigDecimal getCostPer() {
-		return costPer;
-	}
-
-	public void setCostPer(BigDecimal costPer) {
-		this.costPer = costPer;
 	}
 
 	public int getQuantity() {

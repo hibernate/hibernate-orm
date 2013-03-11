@@ -37,6 +37,7 @@ import org.hibernate.cache.spi.RegionFactory;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings( {"UnusedDeclaration"})
 public class AvailabilityAnnouncerImpl implements AvailabilityAnnouncer {
 	@Override
 	public Iterable<Availability> getAvailabilities() {

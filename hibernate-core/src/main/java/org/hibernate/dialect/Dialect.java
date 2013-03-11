@@ -42,6 +42,7 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.TableHiLoGenerator;
@@ -634,7 +635,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return The native generator class.
 	 */
-	public Class getNativeIdentifierGeneratorClass() {
+	public Class<? extends IdentifierGenerator> getNativeIdentifierGeneratorClass() {
 		if ( supportsIdentityColumns() ) {
 			return IdentityGenerator.class;
 		}

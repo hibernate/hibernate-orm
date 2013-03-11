@@ -41,6 +41,7 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.type.StandardBasicTypes;
@@ -273,7 +274,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		return true;
 	}
 
-	public Class getNativeIdentifierGeneratorClass() {
+	public Class<? extends IdentifierGenerator> getNativeIdentifierGeneratorClass() {
 		return SequenceGenerator.class;
 	}
 

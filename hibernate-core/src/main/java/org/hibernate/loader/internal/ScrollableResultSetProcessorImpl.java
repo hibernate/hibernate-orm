@@ -27,12 +27,12 @@ import java.sql.ResultSet;
 
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.loader.spi.OnDemandResultSetProcessor;
+import org.hibernate.loader.spi.ScrollableResultSetProcessor;
 
 /**
  * @author Steve Ebersole
  */
-public class OnDemandResultSetProcessorImpl implements OnDemandResultSetProcessor {
+public class ScrollableResultSetProcessorImpl implements ScrollableResultSetProcessor {
 	@Override
 	public Object extractSingleRow(
 			ResultSet resultSet,
@@ -42,13 +42,13 @@ public class OnDemandResultSetProcessorImpl implements OnDemandResultSetProcesso
 	}
 
 	@Override
-	public Object extractSequentialRowsForward(
+	public Object extractLogicalRowForward(
 			ResultSet resultSet, SessionImplementor session, QueryParameters queryParameters) {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
-	public Object extractSequentialRowsReverse(
+	public Object extractLogicalRowReverse(
 			ResultSet resultSet,
 			SessionImplementor session,
 			QueryParameters queryParameters,

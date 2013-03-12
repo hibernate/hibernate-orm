@@ -37,12 +37,12 @@ import org.hibernate.engine.spi.SessionImplementor;
  *
  * @author Steve Ebersole
  */
-public interface OnDemandResultSetProcessor {
+public interface ScrollableResultSetProcessor {
 
 	/**
 	 * Give a ResultSet, extract just a single result row.
 	 *
-	 * Copy of {@link org.hibernate.loader.Loader#loadSingleRow(java.sql.ResultSet, org.hibernate.engine.spi.SessionImplementor, org.hibernate.engine.spi.QueryParameters, boolean)}
+	 * Copy of {@link org.hibernate.loader.Loader#loadSingleRow(ResultSet, SessionImplementor, QueryParameters, boolean)}
 	 * but dropping the 'returnProxies' (that method has only one use in the entire codebase and it always passes in
 	 * false...)
 	 *
@@ -60,11 +60,11 @@ public interface OnDemandResultSetProcessor {
 			QueryParameters queryParameters);
 
 	/**
-	 * Given a ResultSet extract "sequential rows".  This is used in cases where we have multi-row fetches that
-	 * are sequential within the ResultSet due to ordering.  Multiple ResultSet rows are read into a single query
+	 * Given a scrollable ResultSet, extract a logical row.  The assumption here is that the ResultSet is already
+	 * properly ordered to account for any to-many fetches.  Multiple ResultSet rows are read into a single query
 	 * result "row".
 	 *
-	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsForward(java.sql.ResultSet, org.hibernate.engine.spi.SessionImplementor, org.hibernate.engine.spi.QueryParameters, boolean)}
+	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsForward(ResultSet, SessionImplementor, QueryParameters, boolean)}
 	 * but dropping the 'returnProxies' (that method has only one use in the entire codebase and it always passes in
 	 * false...)
 	 *
@@ -76,15 +76,15 @@ public interface OnDemandResultSetProcessor {
 	 *
 	 * @throws org.hibernate.HibernateException Indicates a problem extracting values from the result set.
 	 */
-	public Object extractSequentialRowsForward(
+	public Object extractLogicalRowForward(
 			final ResultSet resultSet,
 			final SessionImplementor session,
 			final QueryParameters queryParameters);
 
 	/**
-	 * Like {@link #extractSequentialRowsForward} but here moving back through the ResultSet.
+	 * Like {@link #extractLogicalRowForward} but here moving through the ResultSet in reverse.
 	 *
-	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsReverse(java.sql.ResultSet, org.hibernate.engine.spi.SessionImplementor, org.hibernate.engine.spi.QueryParameters, boolean, boolean)}
+	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsReverse(ResultSet, SessionImplementor, QueryParameters, boolean, boolean)}
 	 * but dropping the 'returnProxies' (that method has only one use in the entire codebase and it always passes in
 	 * false...).
 	 *
@@ -99,7 +99,7 @@ public interface OnDemandResultSetProcessor {
 	 *
 	 * @throws org.hibernate.HibernateException Indicates a problem extracting values from the result set.
 	 */
-	public Object extractSequentialRowsReverse(
+	public Object extractLogicalRowReverse(
 			ResultSet resultSet,
 			SessionImplementor session,
 			QueryParameters queryParameters,

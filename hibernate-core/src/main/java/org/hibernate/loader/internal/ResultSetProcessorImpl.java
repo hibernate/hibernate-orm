@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.QueryParameters;
@@ -45,7 +46,7 @@ import org.hibernate.loader.plan.spi.LoadPlanVisitor;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.loader.spi.NamedParameterContext;
-import org.hibernate.loader.spi.OnDemandResultSetProcessor;
+import org.hibernate.loader.spi.ScrollableResultSetProcessor;
 import org.hibernate.loader.spi.ResultSetProcessor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -70,8 +71,9 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 	}
 
 	@Override
-	public OnDemandResultSetProcessor toOnDemandForm() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	public ScrollableResultSetProcessor toOnDemandForm() {
+		// todo : implement
+		throw new NotYetImplementedException();
 	}
 
 	@Override

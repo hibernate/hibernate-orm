@@ -41,7 +41,7 @@ import org.hibernate.transform.ResultTransformer;
  */
 public interface ResultSetProcessor {
 
-	public OnDemandResultSetProcessor toOnDemandForm();
+	public ScrollableResultSetProcessor toOnDemandForm();
 
 	/**
 	 * Process an entire ResultSet, performing all extractions.

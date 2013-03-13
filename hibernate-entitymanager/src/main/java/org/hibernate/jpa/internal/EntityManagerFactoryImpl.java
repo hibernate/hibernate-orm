@@ -208,7 +208,12 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	public EntityManager createEntityManager() {
-		return createEntityManager( null );
+		return createEntityManager( Collections.EMPTY_MAP );
+	}
+
+	@Override
+	public EntityManager createEntityManager(SynchronizationType synchronizationType) {
+		return createEntityManager( synchronizationType, Collections.EMPTY_MAP );
 	}
 
 	public EntityManager createEntityManager(Map map) {

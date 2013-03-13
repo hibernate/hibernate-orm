@@ -24,31 +24,65 @@
 package org.hibernate.jpa.internal.graph;
 
 import javax.persistence.AttributeNode;
+import javax.persistence.Subgraph;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Type;
+import javax.persistence.metamodel.PluralAttribute;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.jpa.internal.metamodel.Helper;
+import org.hibernate.jpa.internal.metamodel.PluralAttributeImpl;
+import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
+import org.hibernate.type.AssociationType;
+import org.hibernate.type.Type;
 
 /**
  * Hibernate implementation of the JPA AttributeNode contract
  *
  * @author Steve Ebersole
  */
-public class AttributeNodeImpl<T> implements AttributeNode<T>, GraphNode<T> {
+public class AttributeNodeImpl<T> implements AttributeNode<T> {
+	private final HibernateEntityManagerFactory entityManagerFactory;
 	private final Attribute attribute;
 
-	public AttributeNodeImpl(Attribute attribute) {
+	private Map<Class, Subgraph> subgraphMap;
+	private Map<Class, Subgraph> keySubgraphMap;
+
+	public AttributeNodeImpl(HibernateEntityManagerFactory entityManagerFactory, Attribute attribute) {
+		this.entityManagerFactory = entityManagerFactory;
 		this.attribute = attribute;
 	}
 
-	@Override
-	public AttributeNodeImpl<T> makeImmutableCopy() {
-		// simple attribute nodes are immutable already
-		return this;
+	/**
+	 * Intended only for use from {@link #makeImmutableCopy()}
+	 */
+	private AttributeNodeImpl(
+			HibernateEntityManagerFactory entityManagerFactory,
+			Attribute attribute,
+			Map<Class, Subgraph> subgraphMap,
+			Map<Class, Subgraph> keySubgraphMap) {
+		this.entityManagerFactory = entityManagerFactory;
+		this.attribute = attribute;
+		this.subgraphMap = subgraphMap;
+		this.keySubgraphMap = keySubgraphMap;
 	}
 
-	@Override
-	public Type<T> getType() {
-		// Linda says this is going away
-		return null;
+	private SessionFactoryImplementor sessionFactory() {
+		return (SessionFactoryImplementor) entityManagerFactory.getSessionFactory();
+	}
+
+	public Attribute getAttribute() {
+		return attribute;
+	}
+
+	public String getRegistrationName() {
+		return getAttributeName();
 	}
 
 	@Override
@@ -56,12 +90,178 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, GraphNode<T> {
 		return attribute.getName();
 	}
 
-	public Attribute getAttribute() {
-		return attribute;
+	@Override
+	public Map<Class, Subgraph> getSubgraphs() {
+		return subgraphMap == null ? Collections.<Class, Subgraph>emptyMap() : subgraphMap;
 	}
 
 	@Override
-	public String getRegistrationName() {
-		return getAttributeName();
+	public Map<Class, Subgraph> getKeySubgraphs() {
+		return keySubgraphMap == null ? Collections.<Class, Subgraph>emptyMap() : keySubgraphMap;
 	}
+
+	@SuppressWarnings("unchecked")
+	public <T> Subgraph<T> makeSubgraph() {
+		return (Subgraph<T>) makeSubgraph( null );
+	}
+
+	@SuppressWarnings("unchecked")
+	public <X extends T> Subgraph<X> makeSubgraph(Class<X> type) {
+		if ( attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC
+				|| attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED ) {
+			throw new IllegalArgumentException(
+					String.format( "Attribute [%s] is not of managed type", getAttributeName() )
+			);
+		}
+		if ( attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION ) {
+			throw new IllegalArgumentException(
+					String.format( "Collection elements [%s] is not of managed type", getAttributeName() )
+			);
+		}
+
+		if ( subgraphMap == null ) {
+			subgraphMap = new HashMap<Class, Subgraph>();
+		}
+
+		final AssociationType attributeType = (AssociationType) Helper.resolveType( sessionFactory(), attribute );
+		final Joinable joinable = attributeType.getAssociatedJoinable( sessionFactory() );
+
+		if ( joinable.isCollection() ) {
+			final EntityPersister elementEntityPersister = ( (QueryableCollection) joinable ).getElementPersister();
+			if ( type == null ) {
+				type = elementEntityPersister.getMappedClass();
+			}
+			else  {
+				if ( !isTreatableAs( elementEntityPersister, type ) ) {
+					throw new IllegalArgumentException(
+							String.format(
+									"Collection elements [%s] cannot be treated as requested type [%s] : %s",
+									getAttributeName(),
+									type.getName(),
+									elementEntityPersister.getMappedClass().getName()
+							)
+					);
+				}
+			}
+		}
+		else {
+			final EntityPersister entityPersister = (EntityPersister) joinable;
+			if ( type == null ) {
+				type = entityPersister.getMappedClass();
+			}
+			else {
+				if ( !isTreatableAs( entityPersister, type ) ) {
+					throw new IllegalArgumentException(
+							String.format(
+									"Attribute [%s] cannot be treated as requested type [%s] : %s",
+									getAttributeName(),
+									type.getName(),
+									entityPersister.getMappedClass().getName()
+							)
+					);
+				}
+			}
+		}
+
+		final SubgraphImpl subgraph = new SubgraphImpl( this.entityManagerFactory, attribute.getDeclaringType(), type );
+		subgraphMap.put( type, subgraph );
+		return subgraph;
+	}
+
+	/**
+	 * Check to make sure that the java type of the given entity persister is treatable as the given type.  In other
+	 * words, is the given type a subclass of the class represented by the persister.
+	 *
+	 * @param entityPersister The persister to check
+	 * @param type The type to check it against
+	 *
+	 * @return {@code true} indicates it is treatable as such; {@code false} indicates it is not
+	 */
+	@SuppressWarnings("unchecked")
+	private boolean isTreatableAs(EntityPersister entityPersister, Class type) {
+		return type.isAssignableFrom( entityPersister.getMappedClass() );
+	}
+
+	public <T> Subgraph<T> makeKeySubgraph() {
+		return (SubgraphImpl<T>) makeKeySubgraph( null );
+	}
+
+	@SuppressWarnings("unchecked")
+	public <X extends T> Subgraph<X> makeKeySubgraph(Class<X> type) {
+		if ( ! attribute.isCollection() ) {
+			throw new IllegalArgumentException(
+					String.format( "Non-collection attribute [%s] cannot be target of key subgraph", getAttributeName() )
+			);
+		}
+
+		final PluralAttributeImpl pluralAttribute = (PluralAttributeImpl) attribute;
+		if ( pluralAttribute.getCollectionType() != PluralAttribute.CollectionType.MAP ) {
+			throw new IllegalArgumentException(
+					String.format( "Non-Map attribute [%s] cannot be target of key subgraph", getAttributeName() )
+			);
+		}
+
+		final AssociationType attributeType = (AssociationType) Helper.resolveType( sessionFactory(), attribute );
+		final QueryableCollection collectionPersister = (QueryableCollection) attributeType.getAssociatedJoinable( sessionFactory() );
+		final Type indexType = collectionPersister.getIndexType();
+
+		if ( ! indexType.isAssociationType() ) {
+			throw new IllegalArgumentException(
+					String.format( "Map index [%s] is not an entity; cannot be target of key subgraph", getAttributeName() )
+			);
+		}
+
+		if ( keySubgraphMap == null ) {
+			keySubgraphMap = new HashMap<Class, Subgraph>();
+		}
+
+		final AssociationType indexAssociationType = (AssociationType) indexType;
+		final EntityPersister indexEntityPersister = (EntityPersister) indexAssociationType.getAssociatedJoinable( sessionFactory() );
+
+		if ( type == null ) {
+			type = indexEntityPersister.getMappedClass();
+		}
+		else {
+			if ( !isTreatableAs( indexEntityPersister, type ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Map key [%s] cannot be treated as requested type [%s] : %s",
+								getAttributeName(),
+								type.getName(),
+								indexEntityPersister.getMappedClass().getName()
+						)
+				);
+			}
+		}
+
+		final SubgraphImpl subgraph = new SubgraphImpl( this.entityManagerFactory, attribute.getDeclaringType(), type );
+		keySubgraphMap.put( type, subgraph );
+		return subgraph;
+	}
+
+	AttributeNodeImpl<T> makeImmutableCopy() {
+		return new AttributeNodeImpl<T>(
+				this.entityManagerFactory,
+				this.attribute,
+				makeSafeMapCopy( subgraphMap ),
+				makeSafeMapCopy( keySubgraphMap )
+		);
+	}
+
+	private static Map<Class, Subgraph> makeSafeMapCopy(Map<Class, Subgraph> subgraphMap) {
+		if ( subgraphMap == null ) {
+			return null;
+		}
+
+		final int properSize = CollectionHelper.determineProperSizing( subgraphMap );
+		final HashMap<Class,Subgraph> copy = new HashMap<Class,Subgraph>( properSize );
+		for ( Map.Entry<Class, Subgraph> subgraphEntry : subgraphMap.entrySet() ) {
+			copy.put(
+					subgraphEntry.getKey(),
+					( ( SubgraphImpl ) subgraphEntry.getValue() ).makeImmutableCopy()
+			);
+		}
+		return copy;
+	}
+
 }

@@ -138,7 +138,7 @@ public abstract class AbstractManagedType<X>
 	 * {@inheritDoc}
 	 */
 	public Attribute<X, ?> getDeclaredAttribute(String name) {
-		final Attribute<X, ?> attr = declaredSingularAttributes.get( name );
+		Attribute<X, ?> attr = declaredAttributes.get( name );
 		checkNotNull( "Attribute ", attr, name );
 		return attr;
 	}

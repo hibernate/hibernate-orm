@@ -622,6 +622,11 @@ public interface AvailableSettings {
 	 */
 	public static final String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
 
+	/**
+	 * Enable nationalized character support on all string / clob based attribute ( string, char, clob, text etc ).
+	 *
+	 * Default is <clode>false</clode>.
+	 */
 	public static final String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
 	
 	/**
@@ -631,7 +636,7 @@ public interface AvailableSettings {
 	 * to handle this situation requires checking the Thread ID every time
 	 * Session is called.  This can certainly have performance considerations.
 	 * 
-	 * Default is true (enabled).
+	 * Default is <code>true</code> (enabled).
 	 */
 	public static final String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
 }

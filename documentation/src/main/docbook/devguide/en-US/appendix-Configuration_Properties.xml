@@ -262,6 +262,15 @@
             <entry><para><literal>true</literal> or <literal>false</literal></para></entry>
             <entry>Forces Hibernate to store data in the second-level cache in a more human-readable format.</entry>
           </row>
+            <row>
+                <entry>hibernate.cache.use_reference_entries</entry>
+                <entry><para><literal>true</literal> or <literal>false</literal></para></entry>
+                <entry>Optimizes second-level cache operation to store immutable entities  (aka "reference")  which do
+                    not have associations into cache directly, this case, lots of disasseble and deep copy operations
+                can be avoid.
+                    Default value of this property is <literal>false</literal>.
+                </entry>
+            </row>
         </tbody>
       </tgroup>
     </table>

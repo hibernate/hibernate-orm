@@ -43,6 +43,7 @@ public class EnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 		Assert.assertNotNull( values );
 		Assert.assertEquals( 1, values.size() );
 		Object[] results = values.get( 0 );
+		Assert.assertEquals( 2, results.length );
 		Assert.assertEquals( "X", results[0] );
 		// Compare the Strings to account for, as an example, Oracle
 		// returning a BigDecimal instead of an int.

@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.Type;
@@ -15,6 +17,7 @@ import org.junit.Test;
  * 
  * @author Janario Oliveira
  */
+@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 public class SerializableToBlobTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testTypeDefinition() {

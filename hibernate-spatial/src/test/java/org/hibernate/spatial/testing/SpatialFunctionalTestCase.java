@@ -35,7 +35,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.spatial.integration.GeomEntity;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -74,12 +73,17 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 * Removes the test data.
 	 */
 	public void cleanupTest() {
+		cleanUpTest( "jts" );
+		cleanUpTest( "geolatte" );
+	}
+
+	private void cleanUpTest(String pckg) {
 		Session session = null;
 		Transaction tx = null;
 		try {
 			session = openSession();
 			tx = session.beginTransaction();
-			String hql = "delete from org.hibernate.spatial.integration.GeomEntity";
+			String hql = String.format("delete from org.hibernate.spatial.integration.%s.GeomEntity", pckg);
 			Query q = session.createQuery( hql );
 			q.executeUpdate();
 			tx.commit();
@@ -145,12 +149,15 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	}
 
 	public String[] getMappings() {
-		return new String[] { }; //new String[]{"GeomEntity.hbm.xml"};
+		return new String[] { };
 	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { GeomEntity.class };
+		return new Class<?>[] {
+				org.hibernate.spatial.integration.geolatte.GeomEntity.class,
+				org.hibernate.spatial.integration.jts.GeomEntity.class
+		};
 	}
 
 	/**

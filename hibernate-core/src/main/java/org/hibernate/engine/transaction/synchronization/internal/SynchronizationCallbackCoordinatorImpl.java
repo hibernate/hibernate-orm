@@ -127,10 +127,8 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 	}
 
 	public void afterCompletion(int status) {
-		if ( !settings.isJtaTrackByThread() || isRegistrationThread() ) {
-			doAfterCompletion( status );
-		}
-		else if ( JtaStatusHelper.isRollback( status ) ) {
+		if ( settings.isJtaTrackByThread() && !isRegistrationThread()
+				&& JtaStatusHelper.isRollback( status ) ) {
 			// The transaction was rolled back by another thread -- not the
 			// original application. Examples of this include a JTA transaction
 			// timeout getting cleaned up by a reaper thread. If this happens,
@@ -139,6 +137,9 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 			// check for it in SessionImpl. See HHH-7910.
 			LOG.warnv( "Transaction afterCompletion called by a background thread! Delaying action until the original thread can handle it. [status={0}]", status );
 			delayedCompletionHandlingStatus = status;
+		}
+		else {
+			doAfterCompletion( status );
 		}
 	}
 	

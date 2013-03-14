@@ -456,10 +456,57 @@ Cat fritz = (Cat) iter.next();</programlisting>
 
       <programlisting role="XML">&lt;class name="Person" batch-size="10"&gt;...&lt;/class&gt;</programlisting>
 
-      <para>Hibernate will now execute only three queries: the pattern is 10,
-      10, 5.</para>
+      <para>With this <literal>batch-size</literal> specified, Hibernate will now execute queries on demand when need to access the
+          uninitialized proxy, as above, but the difference is that instead of querying the exactly proxy entity that
+          being accessed, it will query more Person's owner at once, so, when accessing other person's owner, it may
+          already been initialized by this batch fetch with only a few ( much less than 25) queries will be executed.
+      </para>
 
-      <para>You can also enable batch fetching of collections. For example, if
+        <para>This behavior is controlled by the <literal>batch-size</literal> and batch fetch style configuration.
+            The batch fetch style configuration ( <literal>hibernate.batch_fetch_style</literal> ) is a new performance
+            improvement since 4.2.0, there are 3 different strategies provided, which is <literal>legacy</literal>,
+            <literal>padded</literal> and <literal>dynamic</literal>.
+        </para>
+
+        <itemizedlist>
+            <listitem>
+                <para><literal>LEGACY</literal></para>
+                <para>The legacy algorithm where we keep a set of pre-built batch sizes based on
+                    <classname>org.hibernate.internal.util.collections.ArrayHelper#getBatchSizes</classname>.
+                    Batches are performed using the next-smaller pre-built batch size from the number of existing batchable identifiers.</para>
+                <para>In the above example, with a batch-size setting of 25 the pre-built batch sizes would be [25, 12, 10, 9, 8, 7, .., 1].</para>
+                <para>And since there are 25 persons' owner to be initialized, then only one query will be executed using these 25 owners' identifier.</para>
+                <para>But in another case, suppose there are only 24 persons, there will be 3 queries (12, 10, 2) will
+                    be executed to go through all person's owner, and the query will looks like :
+                </para>
+                <programlisting role="SQL">select * from owner where id in (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      select * from owner where id in (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      select * from owner where id in (?, ?)
+                </programlisting>
+            </listitem>
+
+            <listitem>
+                <para><literal>PADDED</literal></para>
+                <para> This is kind of similar with the legacy algorithm, it uses the pre-build batch sizes based on same
+                <classname>org.hibernate.internal.util.collections.ArrayHelper#getBatchSizes</classname>. The difference
+                is that here hibernate will use the next-bigger batch size and pads the extra  identifier placeholders.</para>
+                <para>So, using the same example above, initializing 25 persons the query would be same as above,
+                    only 1 query will be executed to batch query all the owners.
+                </para>
+                <para>However, the attempt to batch load 24 owners would result just a single batch of size 25, the
+                    identifiers to load would be "padded" (aka, repeated) to make up the difference.
+                </para>
+            </listitem>
+
+            <listitem>
+                <para><literal>DYNAMIC</literal></para>
+                <para>Dynamically builds its SQL based on the actual number of available ids.  Does still limit to the batch-size defined on the entity.</para>
+            </listitem>
+
+        </itemizedlist>
+
+
+        <para>You can also enable batch fetching of collections. For example, if
       each <literal>Person</literal> has a lazy collection of
       <literal>Cat</literal>s, and 10 persons are currently loaded in the
       <literal>Session</literal>, iterating through all persons will generate
@@ -474,8 +521,8 @@ Cat fritz = (Cat) iter.next();</programlisting>
     &lt;/set&gt;
 &lt;/class&gt;</programlisting>
 
-      <para>With a <literal>batch-size</literal> of 3, Hibernate will load 3,
-      3, 3, 1 collections in four <literal>SELECT</literal>s. Again, the value
+      <para>For example, with a <literal>batch-size</literal> of 3 and using <literal>legacy</literal> batch style,
+      Hibernate will load 3, 3, 3, 1 collections in four <literal>SELECT</literal>s. Again, the value
       of the attribute depends on the expected number of uninitialized
       collections in a particular <literal>Session</literal>.</para>
 

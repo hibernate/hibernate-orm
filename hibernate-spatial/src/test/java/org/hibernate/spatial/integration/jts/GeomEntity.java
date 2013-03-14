@@ -19,7 +19,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.hibernate.spatial.integration;
+package org.hibernate.spatial.integration.jts;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -74,7 +74,7 @@ public class GeomEntity {
 
 	public static GeomEntity createFrom(TestDataElement element) throws ParseException {
 		WktDecoder decoder = Wkt.newDecoder( Wkt.Dialect.POSTGIS_EWKT_1 );
-		Geometry geom = JTS.to( decoder.decode( element.wkt) );
+		Geometry geom = JTS.to( decoder.decode( element.wkt ) );
 		GeomEntity result = new GeomEntity();
 		result.setId( element.id );
 		result.setGeom( geom );
@@ -104,4 +104,7 @@ public class GeomEntity {
 	public int hashCode() {
 		return id;
 	}
+
 }
+
+

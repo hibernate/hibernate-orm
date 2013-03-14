@@ -35,6 +35,7 @@ import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.criterion.SpatialRestrictions;
+import org.hibernate.spatial.integration.jts.GeomEntity;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.testing.Skip;

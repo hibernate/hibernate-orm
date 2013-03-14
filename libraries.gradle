@@ -45,7 +45,7 @@ ext {
             commons_annotations:
                             'org.hibernate.common:hibernate-commons-annotations:4.0.1.Final@jar',
             jandex:         'org.jboss:jandex:1.1.0.Alpha1',
-            classmate:      'com.fasterxml:classmate:0.5.4',
+            classmate:      'com.fasterxml:classmate:0.8.0',
 
             // Dom4J
             dom4j:          'dom4j:dom4j:1.6.1@jar',
@@ -56,7 +56,7 @@ ext {
             // javax
             jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Draft-14',
             jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.0.0.Alpha1',
-            validation:     'javax.validation:validation-api:1.0.0.GA',
+            validation:     'javax.validation:validation-api:1.1.0.CR3',
             jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.2.Final',
 
             // logging
@@ -84,7 +84,7 @@ ext {
             jpa_modelgen:    'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
             shrinkwrap_api:  'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
             shrinkwrap:      'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
-            validator:       'org.hibernate:hibernate-validator:4.2.0.Final',
+            validator:       'org.hibernate:hibernate-validator:5.0.0.CR4',
             h2:              "com.h2database:h2:${h2Version}",
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
             xapool:          "com.experlog:xapool:1.5.0",

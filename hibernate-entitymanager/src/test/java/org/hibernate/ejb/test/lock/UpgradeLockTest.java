@@ -82,8 +82,8 @@ public class UpgradeLockTest extends BaseEntityManagerFunctionalTestCase {
 					}
 					finally {
 						em2.getTransaction().commit();
-						latch.countDown();	// signal that tx2 is committed
 						em2.close();
+						latch.countDown();	// signal that tx2 is committed
 					}
 				}
 			} );

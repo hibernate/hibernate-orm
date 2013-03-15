@@ -18,7 +18,7 @@ public class ItemId implements Serializable {
     private Integer version;
 
     @ManyToOne
-    @JoinColumn(name = "producer")
+    @JoinColumn(name = "producer", nullable = false) // NOT NULL for Sybase
     private Producer producer;
 
     public ItemId() {

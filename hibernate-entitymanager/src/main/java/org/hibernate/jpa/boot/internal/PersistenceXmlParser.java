@@ -108,7 +108,7 @@ public class PersistenceXmlParser {
 	}
 
 	private List<ParsedPersistenceXmlDescriptor> parsePersistenceXml(URL xmlUrl, Map integration) {
-		// todo : if implementing a "xml binding service" this should be part of it, binding persistence.xml : HHH-6145
+		LOG.tracef( "Attempting to parse persistence.xml file : %s" + xmlUrl.toExternalForm() );
 
 		final Document doc = loadUrl( xmlUrl );
 		final Element top = doc.getDocumentElement();

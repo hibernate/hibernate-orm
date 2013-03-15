@@ -107,6 +107,15 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		addIfSet( providedClassLoaders, AvailableSettings.HIBERNATE_CLASSLOADER, configVales );
 		addIfSet( providedClassLoaders, AvailableSettings.ENVIRONMENT_CLASSLOADER, configVales );
 
+		if ( providedClassLoaders.isEmpty() ) {
+			log.debugf( "Incoming config yielded no classloaders; adding standard SE ones" );
+			final ClassLoader tccl = locateTCCL();
+			if ( tccl != null ) {
+				providedClassLoaders.add( tccl );
+			}
+			providedClassLoaders.add( ClassLoaderServiceImpl.class.getClassLoader() );
+		}
+
 		return new ClassLoaderServiceImpl( providedClassLoaders );
 	}
 

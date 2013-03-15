@@ -30,6 +30,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
@@ -48,6 +49,7 @@ public class EmbeddableMapEntity {
 	@Audited
 	@ElementCollection
 	@CollectionTable(name = "EmbMapEnt_map")
+	@MapKeyColumn(nullable = false) // NOT NULL for Sybase
 	private Map<String, Component3> componentMap;
 
 	public EmbeddableMapEntity() {

@@ -12,7 +12,7 @@
     over-ridden by a particular HQL or <literal>Criteria</literal>
     query.</para>
 
-    <para>Hibernate3 defines the following fetching strategies:</para>
+    <para>Hibernate defines the following fetching strategies:</para>
 
     <itemizedlist>
       <listitem>
@@ -104,7 +104,7 @@
     <section xml:id="performance-fetching-lazy">
       <title>Working with lazy associations</title>
 
-      <para>By default, Hibernate3 uses lazy select fetching for collections
+      <para>By default, Hibernate uses lazy select fetching for collections
       and lazy proxy fetching for single-valued associations. These defaults
       make sense for most associations in the majority of applications.</para>
 
@@ -144,7 +144,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!</program
 
       <para>On the other hand, you can use join fetching, which is non-lazy by
       nature, instead of select fetching in a particular transaction. We will
-      now explain how to customize the fetching strategy. In Hibernate3, the
+      now explain how to customize the fetching strategy. In Hibernate, the
       mechanisms for choosing a fetch strategy are identical for single-valued
       associations and collections.</para>
     </section>
@@ -224,9 +224,9 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!</program
       is needed for lazy behavior in single-ended associations. The target
       entity of the association must be proxied. Hibernate implements lazy
       initializing proxies for persistent objects using runtime bytecode
-      enhancement which is accessed via the CGLIB library.</para>
+      enhancement which is accessed via the bytecode provider.</para>
 
-      <para>At startup, Hibernate3 generates proxies by default for all
+      <para>At startup, Hibernate generates proxies by default for all
       persistent classes and uses them to enable lazy fetching of
       <literal>many-to-one</literal> and <literal>one-to-one</literal>
       associations.</para>
@@ -273,7 +273,7 @@ System.out.println(cat==dc);                            // false</programlisting
       <programlisting role="JAVA">cat.setWeight(11.0);  // hit the db to initialize the proxy
 System.out.println( dc.getWeight() );  // 11.0</programlisting>
 
-      <para>Third, you cannot use a CGLIB proxy for a <literal>final</literal>
+      <para>Third, you cannot use a bytecode provider generated proxy for a <literal>final</literal>
       class or a class with any <literal>final</literal> methods.</para>
 
       <para>Finally, if your persistent object acquires any resources upon
@@ -670,7 +670,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
     <section xml:id="performance-fetching-lazyproperties">
       <title>Using lazy property fetching</title>
 
-      <para>Hibernate3 supports the lazy fetching of individual properties.
+      <para>Hibernate supports the lazy fetching of individual properties.
       This optimization technique is also known as <emphasis>fetch
       groups</emphasis>. Please note that this is mostly a marketing feature;
       optimizing row reads is much more important than optimization of column
@@ -1329,7 +1329,52 @@ hibernate.cache.use_structured_entries true</programlisting>
       <literal>org.hibernate.SessionFactory.evictQueries()</literal>.</para>
     </section>
   </section>
+  <section xml:id="bytecode-enhancement" revision="1">
+      <title>Bytecode Enhancement</title>
+      <para>Hibernate internally needs an entry ( <classname>org.hibernate.engine.spi.EntityEntry</classname> ) to tell
+          the current state of an object with respect to its persistent state, when the object is associated with a
+          <classname>Session</classname>. However, maintaining this association was kind of heavy operation due to lots of
+          other rules must by applied, since 4.2.0, there is a new improvement designed for this purpose, which will reduce
+          session-related memory and CPU overloads.
+      </para>
+      <para>Basically, the idea is, instead of having a customized ( kind of heavy and which was usually identified as hotspot )
+          map to do the look up, we change it to </para>
+      <programlisting role="JAVA"><![CDATA[EntityEntry entry = (ManagedEntity)entity.$$_hibernate_getEntityEntry();
+]]></programlisting>
 
+      <para>There are three ways to get benefits from this new improvement:</para>
+
+      <section xml:id="entityentry-lookup-impl-interface">
+         <title>Implementing <classname>org.hibernate.engine.spi.ManagedEntity</classname> interface</title>
+         <para>An entity can choose to implement this interface by itself, then it is the entity's responsibility to maintain
+         the bi-association that essentially provides access to information about an instance's association to a
+         Session/EntityManager.
+         More info about <classname>org.hibernate.engine.spi.ManagedEntity</classname> please find from its javadoc.
+         </para>
+      </section>
+
+      <section xml:id="entityentry-lookup-impl-interface-by-wrapper">
+          <title>Runtime instrument</title>
+          <para>Sometimes, you probably don't want to implement an intrusive interface, maybe due to portable concern,
+          which is fine and Hibernate will take care of this internally with a wrapper class which implements that interface,
+          and also an internal cache that maps this entity instance and the wrapper together.</para>
+
+          <para>Obviously, this is the easiest way to choose, since it doesn't require any change of the project source code,
+          but it also cost more memory and CUP usage, comparing to the first one.</para>
+      </section>
+
+      <section xml:id="entityentry-lookup-buildtime-instrument">
+          <title>Buildtime instrument</title>
+          <para>Besides above two approaches, Hibernate also provides you the third choice, which is an ANT task (
+          <classname>org.hibernate.tool.enhance.EnhancementTask</classname>) that can be used at build time to
+          instrument your entity classes with the required interfaces and methods.
+
+          Meanwhile, the maven and gradle plugin are still under development and will be available soon.
+          </para>
+
+      </section>
+
+  </section>
   <section xml:id="performance-collections">
     <title>Understanding Collection performance</title>
 

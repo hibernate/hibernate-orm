@@ -3,7 +3,7 @@
 <chapter xml:id="filters" xmlns="http://docbook.org/ns/docbook" >
   <title>Filtering data</title>
 
-  <para>Hibernate3 provides an innovative new approach to handling data with
+  <para>Hibernate provides an innovative new approach to handling data with
   "visibility" rules. A <emphasis>Hibernate filter</emphasis> is a global,
   named, parameterized filter that can be enabled or disabled for a particular
   Hibernate session.</para>
@@ -11,7 +11,7 @@
   <section xml:id="objectstate-filters" revision="1">
     <title>Hibernate filters</title>
 
-    <para>Hibernate3 has the ability to pre-define filter criteria and attach
+    <para>Hibernate has the ability to pre-define filter criteria and attach
     those filters at both a class level and a collection level. A filter
     criteria allows you to define a restriction clause similar to the existing
     "where" attribute available on the class and various collection elements.

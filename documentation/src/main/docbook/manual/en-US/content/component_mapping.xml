@@ -272,7 +272,7 @@
 	<note>
 	<title>Note</title>
         <para>
-            In Hibernate3, although the second requirement is not an absolutely hard
+            In Hibernate, although the second requirement is not an absolutely hard
             requirement of Hibernate, it is recommended.
         </para>
 	</note>

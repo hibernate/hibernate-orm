@@ -373,13 +373,6 @@
             created. With <command>create-drop</command>, the database schema is dropped when the
             <classname>SessionFactory</classname> is closed explicitly.</entry>
           </row>
-          <row>          
-            <entry>cglib.use_reflection_optimizer</entry>
-            <entry><para><literal>true</literal> or <literal>false</literal></para></entry>
-            <entry>If enabled, Hibernate uses CGLIB instead of runtime reflection. This is a system-level
-            property. Reflection is useful for troubleshooting. Hibernate always requires CGLIB even if you disable the
-            optimizer. You cannot set this property in hibernate.cfg.xml.</entry>
-          </row>
         </tbody>
       </tgroup>
     </table>

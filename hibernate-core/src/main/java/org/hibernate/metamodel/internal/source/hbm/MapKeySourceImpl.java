@@ -33,6 +33,7 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 
 /**
  *
@@ -52,6 +53,16 @@ public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPlur
 					public String getColumnAttribute() {
 						return mapKey.getColumnAttribute();
 					}
+
+					@Override
+					public SizeSource getSizeSource() {
+						return Helper.createSizeSourceIfMapped(
+								mapKey.getLength(),
+								null,
+								null
+						);
+					}
+
 
 					@Override
 					public List<JaxbColumnElement> getColumn() {
@@ -111,6 +122,16 @@ public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPlur
 					public String getColumnAttribute() {
 						return indexElement.getColumnAttribute();
 					}
+
+					@Override
+					public SizeSource getSizeSource() {
+						return Helper.createSizeSourceIfMapped(
+								indexElement.getLength(),
+								null,
+								null
+						);
+					}
+
 
 					@Override
 					public List<JaxbColumnElement> getColumn() {

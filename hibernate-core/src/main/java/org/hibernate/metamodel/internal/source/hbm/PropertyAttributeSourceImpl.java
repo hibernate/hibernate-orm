@@ -34,6 +34,7 @@ import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 
 /**
  * Implementation for {@code <property/>} mappings
@@ -81,6 +82,17 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 					@Override
 					public String getColumnAttribute() {
 						return propertyElement.getColumnAttribute();
+					}
+
+					@Override
+					public SizeSource getSizeSource() {
+						// TODO: propertyElement.getPrecision() and getScale() return String,
+						//       but should return int
+						return Helper.createSizeSourceIfMapped(
+								propertyElement.getLength(),
+								propertyElement.getPrecision() == null ? null : Integer.valueOf( propertyElement.getPrecision() ),
+								propertyElement.getScale() == null ? null : Integer.valueOf( propertyElement.getScale() )
+						);
 					}
 
 					@Override

@@ -25,8 +25,8 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.TruthValue;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
-import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 
 /**
  * Implementation of a {@link ColumnSource} when the column is declared as just the name via the column XML
@@ -39,6 +39,7 @@ class ColumnAttributeSourceImpl
 		implements ColumnSource {
 	private final String tableName;
 	private final String columnName;
+	private final SizeSource sizeSource;
 	private TruthValue includedInInsert;
 	private TruthValue includedInUpdate;
     private TruthValue nullable;
@@ -47,21 +48,24 @@ class ColumnAttributeSourceImpl
 			MappingDocument mappingDocument,
 			String tableName,
 			String columnName,
+			SizeSource sizeSource,
 			TruthValue includedInInsert,
 			TruthValue includedInUpdate) {
-		this( mappingDocument, tableName, columnName, includedInInsert, includedInUpdate, TruthValue.UNKNOWN );
+		this( mappingDocument, tableName, columnName, sizeSource, includedInInsert, includedInUpdate, TruthValue.UNKNOWN );
 	}
 
     ColumnAttributeSourceImpl(
 			MappingDocument mappingDocument,
 			String tableName,
 			String columnName,
+			SizeSource sizeSource,
 			TruthValue includedInInsert,
 			TruthValue includedInUpdate,
             TruthValue nullable) {
 		super( mappingDocument );
 		this.tableName = tableName;
 		this.columnName = columnName;
+		this.sizeSource = sizeSource;
 		this.includedInInsert = includedInInsert;
 		this.includedInUpdate = includedInUpdate;
         this.nullable = nullable;
@@ -113,8 +117,8 @@ class ColumnAttributeSourceImpl
 	}
 
 	@Override
-	public Size getSize() {
-		return null;
+	public SizeSource getSizeSource() {
+		return sizeSource;
 	}
 
 	@Override

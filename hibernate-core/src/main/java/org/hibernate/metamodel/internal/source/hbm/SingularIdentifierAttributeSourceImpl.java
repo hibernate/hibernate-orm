@@ -34,6 +34,7 @@ import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 
 /**
  * Implementation for {@code <id/>} mappings
@@ -78,6 +79,15 @@ class SingularIdentifierAttributeSourceImpl
 					@Override
 					public String getColumnAttribute() {
 						return idElement.getColumnAttribute();
+					}
+
+					@Override
+					public SizeSource getSizeSource() {
+						return Helper.createSizeSourceIfMapped(
+								idElement.getLength(),
+								null,
+								null
+						);
 					}
 
 					@Override

@@ -36,7 +36,6 @@ import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbCompositeIdElement;
 import org.hibernate.jaxb.spi.hbm.JaxbDiscriminatorElement;
-import org.hibernate.jaxb.spi.hbm.JaxbFilterElement;
 import org.hibernate.jaxb.spi.hbm.JaxbKeyManyToOneElement;
 import org.hibernate.jaxb.spi.hbm.JaxbKeyPropertyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMultiTenancyElement;
@@ -50,7 +49,6 @@ import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
-import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
@@ -60,6 +58,7 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 
@@ -222,11 +221,13 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		return new DiscriminatorSource() {
 			@Override
 			public RelationalValueSource getDiscriminatorRelationalValueSource() {
-				if ( StringHelper.isNotEmpty( discriminatorElement.getColumnAttribute() ) ) {
+				SizeSource sizeSource = Helper.createSizeSourceIfMapped( discriminatorElement.getLength(), null, null );
+				if ( StringHelper.isNotEmpty( discriminatorElement.getColumnAttribute() ) || sizeSource != null ) {
 					return new ColumnAttributeSourceImpl(
 							sourceMappingDocument(),
 							null, // root table
 							discriminatorElement.getColumnAttribute(),
+							sizeSource,
 							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE,
 							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE,
 							discriminatorElement.isNotNull() ? TruthValue.FALSE : TruthValue.TRUE
@@ -293,6 +294,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 							sourceMappingDocument(),
 							null, // root table
 							jaxbMultiTenancy.getColumnAttribute(),
+							null,
 							TruthValue.TRUE,
 							TruthValue.FALSE
 					);

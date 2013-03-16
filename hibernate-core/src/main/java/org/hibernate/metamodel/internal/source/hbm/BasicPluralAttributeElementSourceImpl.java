@@ -31,6 +31,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbElementElement;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 
 /**
  * @author Steve Ebersole
@@ -66,6 +67,15 @@ public class BasicPluralAttributeElementSourceImpl
 					@Override
 					public String getFormulaAttribute() {
 						return elementElement.getFormulaAttribute();
+					}
+
+					@Override
+					public SizeSource getSizeSource() {
+						return Helper.createSizeSourceIfMapped(
+								elementElement.getLength(),
+								elementElement.getPrecision(),
+								elementElement.getScale()
+						);
 					}
 
 					@Override

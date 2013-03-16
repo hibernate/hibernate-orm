@@ -35,6 +35,7 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.SequentialPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 
 /**
  *
@@ -94,6 +95,14 @@ public class SequentialPluralAttributeIndexSourceImpl extends AbstractHbmSourceN
 				return indexElement.getColumnAttribute();
 			}
 
+			@Override
+			public SizeSource getSizeSource() {
+				return Helper.createSizeSourceIfMapped(
+						indexElement.getLength(),
+						null,
+						null
+				);
+			}
 			@Override
 			public List<JaxbColumnElement> getColumn() {
 				return indexElement.getColumn();

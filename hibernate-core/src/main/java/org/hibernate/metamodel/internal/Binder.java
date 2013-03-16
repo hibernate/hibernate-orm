@@ -114,6 +114,7 @@ import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
@@ -140,7 +141,6 @@ import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.JoinedSubclassEntitySource;
-import org.hibernate.metamodel.spi.source.PluralAttributeElementSourceResolver;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
@@ -161,6 +161,7 @@ import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SequentialPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 import org.hibernate.metamodel.spi.source.Sortable;
 import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
@@ -175,6 +176,8 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.SingleColumnType;
+import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -2902,7 +2905,18 @@ public class Binder {
 		resolveColumnNullable( columnSource, forceNotNull, isNullableByDefault, column );
 		column.setDefaultValue( columnSource.getDefaultValue() );
 		column.setSqlType( columnSource.getSqlType() );
-		column.setSize( columnSource.getSize() );
+		if ( columnSource.getSizeSource() != null ) {
+			final SizeSource sizeSource = columnSource.getSizeSource();
+			if ( sizeSource.isLengthDefined() ) {
+				column.getSize().setLength( sizeSource.getLength() );
+			}
+			if ( sizeSource.isPrecisionDefined() ) {
+				column.getSize().setPrecision( sizeSource.getPrecision() );
+			}
+			if ( sizeSource.isScaleDefined() ) {
+				column.getSize().setScale( sizeSource.getScale() );
+			}
+		}
 		column.setJdbcDataType( columnSource.getDatatype() );
 		column.setReadFragment( columnSource.getReadFragment() );
 		column.setWriteFragment( columnSource.getWriteFragment() );

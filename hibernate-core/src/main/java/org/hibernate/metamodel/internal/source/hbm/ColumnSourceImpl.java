@@ -26,8 +26,8 @@ package org.hibernate.metamodel.internal.source.hbm;
 import org.hibernate.TruthValue;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
-import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 
 /**
 * @author Steve Ebersole
@@ -96,13 +96,8 @@ class ColumnSourceImpl
 	}
 
 	@Override
-	public Size getSize() {
-		return new Size(
-				Helper.getValue( columnElement.getPrecision(), Size.DEFAULT_PRECISION ),
-				Helper.getValue( columnElement.getScale(), Size.DEFAULT_SCALE ),
-				Helper.getValue( columnElement.getLength(), Size.DEFAULT_LENGTH ),
-				Size.LobMultiplier.NONE
-		);
+	public SizeSource getSizeSource() {
+		return new SizeSourceImpl( columnElement.getPrecision(), columnElement.getScale(), columnElement.getLength() );
 	}
 
 	@Override

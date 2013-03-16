@@ -115,6 +115,7 @@ public class Size implements Serializable {
 		this.precision = size.precision;
 		this.scale =  size.scale;
 		this.length = size.length;
+		this.lobMultiplier = size.lobMultiplier;
 	}
 
 	public void setPrecision(int precision) {

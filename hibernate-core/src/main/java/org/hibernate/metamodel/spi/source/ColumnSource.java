@@ -25,7 +25,6 @@ package org.hibernate.metamodel.spi.source;
 
 import org.hibernate.TruthValue;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
-import org.hibernate.metamodel.spi.relational.Size;
 
 /**
  * Contract for source information pertaining to a physical column definition specific to a particular attribute
@@ -88,11 +87,11 @@ public interface ColumnSource extends RelationalValueSource {
 	public JdbcDataType getDatatype();
 
 	/**
-	 * Obtain the specified column size.
+	 * Obtain the source for the specified column size.
 	 *
-	 * @return The column size.
+	 * @return The source for the column size.
 	 */
-	public Size getSize();
+	public SizeSource getSizeSource();
 
 	/**
 	 * Is this column unique?

@@ -34,6 +34,7 @@ import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 
 /**
  * Implementation for {@code <key-property/>} mappings
@@ -82,6 +83,16 @@ class KeyAttributeSourceImpl
 					public String getColumnAttribute() {
 						return keyPropertyElement.getColumnAttribute();
 					}
+
+					@Override
+					public SizeSource getSizeSource() {
+						return Helper.createSizeSourceIfMapped(
+								keyPropertyElement.getLength(),
+								null,
+								null
+						);
+					}
+
 
 					@Override
 					public List<JaxbColumnElement> getColumn() {

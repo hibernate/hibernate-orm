@@ -26,8 +26,8 @@ package org.hibernate.metamodel.internal.source.annotations;
 import org.hibernate.TruthValue;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.spi.relational.JdbcDataType;
-import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.source.ColumnSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 
 /**
  * @author Steve Ebersole
@@ -76,13 +76,10 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 	}
 
 	@Override
-	public Size getSize() {
+	public SizeSource getSizeSource() {
 		if(columnValues == null) return null;
-		return new Size(
-				columnValues.getPrecision(),
-				columnValues.getScale(),
-				columnValues.getLength(),
-				Size.LobMultiplier.NONE
+		return new SizeSourceImpl(
+				columnValues.getPrecision(), columnValues.getScale(), columnValues.getLength()
 		);
 	}
 

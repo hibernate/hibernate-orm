@@ -64,6 +64,7 @@ import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
 /**
@@ -269,7 +270,12 @@ public class Helper {
 		return params;
 	}
 
-
+	public static SizeSource createSizeSourceIfMapped(Integer length, Integer precision, Integer scale) {
+		if ( length != null || precision != null || scale != null ) {
+			return new SizeSourceImpl( precision, scale, length );
+		}
+		return null;
+	}
 
 	public static Schema.Name determineDatabaseSchemaName(
 			String explicitSchemaName,
@@ -391,6 +397,10 @@ public class Helper {
             return null;
         }
 
+		public SizeSource getSizeSource() {
+			return null;
+		}
+
         public List<JaxbColumnElement> getColumn(){
 			return Collections.emptyList();
 		}
@@ -409,7 +419,7 @@ public class Helper {
 				valueSourcesAdapter.getFormula()
 		) ) {
 			throw mappingDocument.getMappingLocalBindingContext().makeMappingException(
-					"column/formula attribute may not be used together with <column>/<formula> subelement"
+					"column/formula/size attribute may not be used together with <column>/<formula> subelement"
 			);
 		}
 	}
@@ -443,6 +453,7 @@ public class Helper {
 							mappingDocument,
 							valueSourcesAdapter.getContainingTableName(),
 							valueSourcesAdapter.getColumnAttribute(),
+							valueSourcesAdapter.getSizeSource(),
 							valueSourcesAdapter.isIncludedInInsertByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
 							valueSourcesAdapter.isIncludedInUpdateByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
                             valueSourcesAdapter.isForceNotNull() ? TruthValue.FALSE : TruthValue.UNKNOWN
@@ -462,6 +473,24 @@ public class Helper {
 							valueSourcesAdapter.getFormulaAttribute()
 					)
 			);
+		}
+		else if ( valueSourcesAdapter.getSizeSource() != null ) {
+			// we have XML defining a length, precision, and/or scale attribute with neither
+			// a column nor formula attribute; assume this is a column.
+			//		it is therefore illegal for there to also be any nested formula or column elements
+			checkColumnOrFormulaElements(mappingDocument, valueSourcesAdapter);
+			result.add(
+					new ColumnAttributeSourceImpl(
+							mappingDocument,
+							valueSourcesAdapter.getContainingTableName(),
+							valueSourcesAdapter.getColumnAttribute(),
+							valueSourcesAdapter.getSizeSource(),
+							valueSourcesAdapter.isIncludedInInsertByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
+							valueSourcesAdapter.isIncludedInUpdateByDefault() ? TruthValue.TRUE : TruthValue.FALSE,
+							valueSourcesAdapter.isForceNotNull() ? TruthValue.FALSE : TruthValue.UNKNOWN
+					)
+			);
+
 		}
 		// we have the XML defining nested formula or column elements (and not column attribute nor formula attribute)
 		if ( CollectionHelper.isNotEmpty( valueSourcesAdapter.getColumn() ) ) {

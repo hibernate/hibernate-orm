@@ -74,6 +74,9 @@ public class GlobalConfiguration {
     // Use revision entity with native id generator
     private final boolean useRevisionEntityWithNativeId;
 
+	// While deleting revision entry, remove data of associated audited entities
+	private final boolean cascadeDeleteRevision;
+
     /*
      Which operator to use in correlated subqueries (when we want a property to be equal to the result of
      a correlated subquery, for example: e.p <operator> (select max(e2.p) where e2.p2 = e.p2 ...).
@@ -112,6 +115,12 @@ public class GlobalConfiguration {
         		"org.hibernate.envers.track_entities_changed_in_revision",
         		"false");
         trackEntitiesChangedInRevisionEnabled = Boolean.parseBoolean(trackEntitiesChangedInRevisionEnabledStr);
+
+		String cascadeDeleteRevisionStr = getProperty(properties,
+				"org.hibernate.envers.cascade_delete_revision",
+				"org.hibernate.envers.cascade_delete_revision",
+				"false");
+		cascadeDeleteRevision = Boolean.parseBoolean(cascadeDeleteRevisionStr);
 
         String useRevisionEntityWithNativeIdStr = getProperty(properties,
         		"org.hibernate.envers.use_revision_entity_with_native_id",
@@ -195,4 +204,8 @@ public class GlobalConfiguration {
     public boolean isUseRevisionEntityWithNativeId() {
         return useRevisionEntityWithNativeId;
     }
+
+	public boolean isCascadeDeleteRevision() {
+		return cascadeDeleteRevision;
+	}
 }

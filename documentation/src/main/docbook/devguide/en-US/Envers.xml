@@ -315,6 +315,18 @@
                             For example: a property called "age", will by default get modified flag with column name "age_MOD".
                         </entry>
                     </row>
+                    <row>
+                        <entry>
+                            <property>org.hibernate.envers.cascade_delete_revision</property>
+                        </entry>
+                        <entry>
+                            false
+                        </entry>
+                        <entry>
+                            While deleting revision entry, remove data of associated audited entities.
+                            Requires database support for cascade row removal.
+                        </entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>

@@ -130,6 +130,9 @@ public final class AuditMetadataGenerator {
     private Element cloneAndSetupRevisionInfoRelationMapping() {
         Element rev_mapping = (Element) revisionInfoRelationMapping.clone();
         rev_mapping.addAttribute("name", verEntCfg.getRevisionFieldName());
+		if ( globalCfg.isCascadeDeleteRevision() ) {
+			rev_mapping.addAttribute( "on-delete", "cascade" );
+		}
 
         MetadataTools.addOrModifyColumn(rev_mapping, verEntCfg.getRevisionFieldName());
 

@@ -23,9 +23,9 @@
  */
 package org.hibernate.annotations;
 
+import java.lang.annotation.Retention;
 import javax.persistence.Column;
 import javax.persistence.FetchType;
-import java.lang.annotation.Retention;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;

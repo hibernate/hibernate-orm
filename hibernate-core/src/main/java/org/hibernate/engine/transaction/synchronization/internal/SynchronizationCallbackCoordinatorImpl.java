@@ -25,6 +25,8 @@ package org.hibernate.engine.transaction.synchronization.internal;
 
 import javax.transaction.SystemException;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
@@ -35,7 +37,6 @@ import org.hibernate.engine.transaction.synchronization.spi.ExceptionMapper;
 import org.hibernate.engine.transaction.synchronization.spi.ManagedFlushChecker;
 import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.jboss.logging.Logger;
 
 /**
  * Manages callbacks from the {@link javax.transaction.Synchronization} registered by Hibernate.

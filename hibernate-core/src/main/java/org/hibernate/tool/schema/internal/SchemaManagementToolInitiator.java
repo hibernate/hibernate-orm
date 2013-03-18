@@ -28,8 +28,8 @@ import java.util.Map;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
 /**
  * @author Steve Ebersole

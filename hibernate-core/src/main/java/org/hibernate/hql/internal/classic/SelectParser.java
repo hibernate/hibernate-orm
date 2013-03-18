@@ -33,7 +33,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.internal.QuerySplitter;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 

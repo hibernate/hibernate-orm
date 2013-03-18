@@ -27,7 +27,6 @@ import java.util.List;
 
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.type.ForeignKeyDirection;
 
 /**

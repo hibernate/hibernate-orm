@@ -31,10 +31,10 @@ import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
-import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
+import org.hibernate.tool.schema.spi.SchemaManagementException;
+import org.hibernate.tool.schema.spi.SchemaValidator;
 
 /**
  * @author Steve Ebersole

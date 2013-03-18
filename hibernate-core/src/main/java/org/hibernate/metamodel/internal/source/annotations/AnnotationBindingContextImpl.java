@@ -34,6 +34,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
@@ -42,7 +43,6 @@ import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * @author Steve Ebersole

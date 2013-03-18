@@ -29,6 +29,8 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -40,7 +42,6 @@ import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.persister.entity.Queryable;
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

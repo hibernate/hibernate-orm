@@ -1,7 +1,7 @@
 package org.hibernate.test.annotations.persister;
+
 import java.io.Serializable;
 import java.util.Set;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;

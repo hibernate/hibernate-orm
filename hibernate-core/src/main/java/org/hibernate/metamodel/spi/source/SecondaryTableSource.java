@@ -26,7 +26,6 @@ package org.hibernate.metamodel.spi.source;
 import java.util.List;
 
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.FetchTiming;
 
 /**
  * @author Steve Ebersole

@@ -26,7 +26,6 @@ package org.hibernate.test.nonflushedchanges;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 /**

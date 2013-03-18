@@ -31,9 +31,9 @@ import java.util.List;
 import org.jboss.logging.Logger;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 
 /**
  * A {@link DialectResolver} implementation which coordinates resolution by delegating to sub-resolvers.

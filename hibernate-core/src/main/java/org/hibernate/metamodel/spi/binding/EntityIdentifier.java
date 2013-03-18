@@ -23,10 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import static org.hibernate.id.EntityIdentifierNature.AGGREGATED_COMPOSITE;
-import static org.hibernate.id.EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
-import static org.hibernate.id.EntityIdentifierNature.SIMPLE;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Properties;
@@ -41,6 +37,10 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+
+import static org.hibernate.id.EntityIdentifierNature.AGGREGATED_COMPOSITE;
+import static org.hibernate.id.EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
+import static org.hibernate.id.EntityIdentifierNature.SIMPLE;
 
 /**
  * Hold information about the entity identifier.  At a high-level, can be one of 2-types:<ul>

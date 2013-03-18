@@ -39,7 +39,6 @@ import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

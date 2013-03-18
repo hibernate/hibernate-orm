@@ -25,13 +25,11 @@ package org.hibernate.test.annotations.collectionelement;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.Table;
 
 /**

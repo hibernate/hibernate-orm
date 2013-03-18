@@ -27,6 +27,8 @@ import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -34,9 +36,6 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;

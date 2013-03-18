@@ -25,16 +25,16 @@ package org.hibernate.boot.registry.internal;
 
 import java.util.LinkedHashSet;
 
-import org.hibernate.integrator.internal.IntegratorServiceImpl;
-import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.service.Service;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.internal.StrategySelectorImpl;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.integrator.internal.IntegratorServiceImpl;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.service.Service;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;

@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.List;
-
 /**
  * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#MANY_TO_ANY} elements
  *

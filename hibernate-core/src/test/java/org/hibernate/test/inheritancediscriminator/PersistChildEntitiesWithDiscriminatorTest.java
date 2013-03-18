@@ -23,11 +23,12 @@
  */
 package org.hibernate.test.inheritancediscriminator;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 /**
  * @author Pawel Stawicki

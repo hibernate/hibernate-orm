@@ -38,6 +38,7 @@ import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.JoinStatus;
 import org.hibernate.engine.transaction.spi.SynchronizationRegistry;
 import org.hibernate.engine.transaction.spi.TransactionContext;
@@ -51,7 +52,6 @@ import org.hibernate.engine.transaction.synchronization.internal.Synchronization
 import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 /**
  * Standard implementation of the Hibernate {@link TransactionCoordinator}

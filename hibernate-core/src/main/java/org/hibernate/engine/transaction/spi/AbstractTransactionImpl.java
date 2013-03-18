@@ -30,8 +30,8 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Abstract support for creating {@link TransactionImplementor transaction} implementations

@@ -31,7 +31,6 @@ import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
-import org.hibernate.tuple.Tuplizer;
 import org.hibernate.tuple.component.ComponentTuplizer;
 
 /**

@@ -1,7 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.entity;
-import java.util.Set;
 
+import java.util.Set;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

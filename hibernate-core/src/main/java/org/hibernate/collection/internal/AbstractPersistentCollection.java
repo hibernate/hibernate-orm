@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.ListIterator;
 import javax.naming.NamingException;
 
-import javax.naming.NamingException;
+import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -55,7 +55,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Base class implementing {@link org.hibernate.collection.spi.PersistentCollection}

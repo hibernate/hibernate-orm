@@ -31,10 +31,10 @@ import java.sql.SQLException;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.engine.jdbc.WrappedBlob;
-import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
 

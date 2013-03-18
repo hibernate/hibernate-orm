@@ -31,7 +31,6 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJ
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ColumnSource;
-import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 

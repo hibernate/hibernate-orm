@@ -31,7 +31,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.OrderBy;
 
 import org.hibernate.annotations.GenericGenerator;

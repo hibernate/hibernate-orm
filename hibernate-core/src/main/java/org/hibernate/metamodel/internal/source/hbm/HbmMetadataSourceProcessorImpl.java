@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.internal.util.collections.CollectionHelper;

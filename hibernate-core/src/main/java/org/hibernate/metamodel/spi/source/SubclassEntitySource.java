@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import java.util.List;
-
 /**
  * @author Steve Ebersole
  * @author Strong Liu

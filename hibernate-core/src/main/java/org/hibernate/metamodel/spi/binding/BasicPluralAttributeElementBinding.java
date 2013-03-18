@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.Collections;
 import java.util.List;
 
 /**

@@ -24,8 +24,8 @@
 package org.hibernate.tool.schema.internal;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**

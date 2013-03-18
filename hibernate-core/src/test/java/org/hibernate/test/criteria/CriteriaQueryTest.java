@@ -61,7 +61,6 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.test.hql.Animal;
 import org.hibernate.test.hql.Reptile;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;

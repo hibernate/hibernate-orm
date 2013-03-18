@@ -35,6 +35,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+import org.jboss.logging.Logger.Level;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
@@ -56,8 +59,6 @@ import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.jboss.logging.Logger;
-import org.jboss.logging.Logger.Level;
 
 /**
  * Standard Hibernate implementation of {@link JdbcCoordinator}

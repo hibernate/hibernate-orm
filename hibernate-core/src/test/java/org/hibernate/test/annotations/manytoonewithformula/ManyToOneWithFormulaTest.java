@@ -26,8 +26,7 @@
   */
 package org.hibernate.test.annotations.manytoonewithformula;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -40,7 +39,9 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Sharath Reddy

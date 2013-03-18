@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
-import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 

@@ -25,6 +25,8 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
@@ -38,7 +40,6 @@ import org.hibernate.event.spi.InitializeCollectionEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.jboss.logging.Logger;
 
 /**
  * @author Gavin King

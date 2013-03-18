@@ -28,7 +28,6 @@ import java.util.Collection;
 
 import org.hibernate.test.event.collection.AbstractCollectionEventTest;
 import org.hibernate.test.event.collection.ParentWithCollection;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  *

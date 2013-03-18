@@ -1,6 +1,6 @@
 package org.hibernate.test.annotations.derivedidentities.e5.b;
-import java.io.Serializable;
 
+import java.io.Serializable;
 import javax.persistence.Embeddable;
 
 /**

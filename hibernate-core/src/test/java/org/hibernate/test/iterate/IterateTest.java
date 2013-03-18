@@ -22,11 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.iterate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
+
+import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
@@ -35,7 +34,10 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King

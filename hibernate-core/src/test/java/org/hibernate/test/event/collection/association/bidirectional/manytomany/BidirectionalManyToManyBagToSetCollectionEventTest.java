@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.event.collection.association.bidirectional.manytomany;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hibernate.test.event.collection.ParentWithCollection;
 import org.hibernate.test.event.collection.association.AbstractAssociationCollectionEventTest;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  *

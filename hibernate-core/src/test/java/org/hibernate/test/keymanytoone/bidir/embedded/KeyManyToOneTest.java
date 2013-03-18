@@ -22,9 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.keymanytoone.bidir.embedded;
-import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+
+import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -32,7 +33,8 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole

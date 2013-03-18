@@ -27,7 +27,6 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.sql.Template;
 
 /**

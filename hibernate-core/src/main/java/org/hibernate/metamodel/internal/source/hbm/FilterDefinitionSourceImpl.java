@@ -25,7 +25,6 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.xml.bind.JAXBElement;
 
 import org.hibernate.internal.util.StringHelper;

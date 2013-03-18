@@ -22,16 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-import java.util.ArrayList;
-import java.util.List;
+
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 

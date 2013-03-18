@@ -38,12 +38,12 @@ import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.filter.IndexedAnnotationFilter;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * @author Strong Liu

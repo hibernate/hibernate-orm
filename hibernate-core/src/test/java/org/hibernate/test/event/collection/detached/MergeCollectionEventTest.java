@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.event.spi.AbstractCollectionEvent;
@@ -35,10 +38,6 @@ import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

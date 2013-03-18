@@ -28,6 +28,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.jboss.jandex.AnnotationInstance;
+
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -46,8 +48,6 @@ import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
-
-import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Hardy Ferentschik

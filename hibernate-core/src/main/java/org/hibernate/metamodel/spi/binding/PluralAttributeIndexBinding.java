@@ -26,7 +26,6 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.metamodel.spi.domain.Type;
-import org.hibernate.metamodel.spi.relational.Value;
 
 /**
  * @author Steve Ebersole

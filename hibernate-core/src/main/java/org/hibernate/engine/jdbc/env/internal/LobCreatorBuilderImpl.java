@@ -36,9 +36,9 @@ import org.hibernate.engine.jdbc.ContextualLobCreator;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
 
 /**
  * Builds {@link LobCreator} instances based on the capabilities of the environment.

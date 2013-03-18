@@ -26,8 +26,8 @@ package org.hibernate.persister.internal;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 

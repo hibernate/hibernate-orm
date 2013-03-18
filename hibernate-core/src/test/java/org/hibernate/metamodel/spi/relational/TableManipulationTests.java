@@ -23,18 +23,19 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
+import java.sql.Types;
+
+import org.junit.Test;
+
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-
-import java.sql.Types;
-
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
 
 /**
  * @author Steve Ebersole

@@ -29,11 +29,11 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 /**
  * A {@link ConnectionHelper} implementation based on an internally

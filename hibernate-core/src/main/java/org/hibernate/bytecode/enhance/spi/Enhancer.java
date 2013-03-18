@@ -23,16 +23,14 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
-import javax.persistence.Transient;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
+import javax.persistence.Transient;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -54,7 +52,6 @@ import javassist.bytecode.Opcode;
 import javassist.bytecode.StackMapTable;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.stackmap.MapMaker;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
@@ -65,7 +62,6 @@ import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.PersistentClass;
 
 /**
  * @author Steve Ebersole

@@ -26,13 +26,12 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.CUBRIDLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.type.StandardBasicTypes;
 

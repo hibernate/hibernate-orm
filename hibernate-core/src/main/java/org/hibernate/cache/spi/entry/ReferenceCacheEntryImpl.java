@@ -25,10 +25,6 @@ package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
 
-import org.hibernate.Interceptor;
-import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.EntityPersister;
-
 /**
  * @author Steve Ebersole
  */

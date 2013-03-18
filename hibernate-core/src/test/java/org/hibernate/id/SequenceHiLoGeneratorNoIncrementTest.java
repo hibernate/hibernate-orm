@@ -23,13 +23,15 @@
  */
 package org.hibernate.id;
 
-import static org.junit.Assert.assertEquals;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.TestingDatabaseInfo;
@@ -48,9 +50,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.StandardBasicTypes;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this

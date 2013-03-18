@@ -23,8 +23,7 @@
  */
 package org.hibernate.test.tm;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -35,7 +34,9 @@ import org.hibernate.test.jdbc.Person;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

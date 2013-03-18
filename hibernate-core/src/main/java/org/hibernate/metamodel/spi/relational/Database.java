@@ -28,9 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.Metadata;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
  * Represents a database and manages the named schema/catalog pairs defined within.

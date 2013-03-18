@@ -26,8 +26,8 @@ package org.hibernate.boot.registry.internal;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.service.Service;
 import org.hibernate.service.internal.AbstractServiceRegistryImpl;

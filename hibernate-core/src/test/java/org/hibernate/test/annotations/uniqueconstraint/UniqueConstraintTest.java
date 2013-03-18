@@ -1,15 +1,13 @@
 package org.hibernate.test.annotations.uniqueconstraint;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
-
 import java.util.Iterator;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
+import org.junit.Test;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
@@ -17,7 +15,9 @@ import org.hibernate.Transaction;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 /**
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>

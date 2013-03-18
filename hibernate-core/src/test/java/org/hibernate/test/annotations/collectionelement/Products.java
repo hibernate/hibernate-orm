@@ -1,10 +1,10 @@
 package org.hibernate.test.annotations.collectionelement;
+
 import java.util.Set;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 
 @SuppressWarnings({"unchecked", "serial"})

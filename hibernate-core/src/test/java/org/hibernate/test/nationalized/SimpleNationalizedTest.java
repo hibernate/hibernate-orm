@@ -23,14 +23,12 @@
  */
 package org.hibernate.test.nationalized;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-
 import java.sql.NClob;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+
+import org.junit.Test;
 
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Type;
@@ -43,7 +41,9 @@ import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.NClobType;
 import org.hibernate.type.NTextType;
 import org.hibernate.type.StringNVarcharType;
-import org.junit.Test;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author Steve Ebersole

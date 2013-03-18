@@ -23,16 +23,15 @@
  */
 package org.hibernate.test.annotations.enumerated.ormXml;
 
-import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
-import org.hibernate.type.Type;
-
 import org.junit.Test;
 
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
+import org.hibernate.type.CustomType;
+import org.hibernate.type.EnumType;
+import org.hibernate.type.Type;
 
 import static org.junit.Assert.assertFalse;
 

@@ -25,7 +25,6 @@ package org.hibernate.context.internal;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.transaction.Synchronization;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
@@ -39,8 +38,8 @@ import org.hibernate.context.spi.AbstractCurrentSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * An implementation of {@link CurrentSessionContext} which scopes the notion

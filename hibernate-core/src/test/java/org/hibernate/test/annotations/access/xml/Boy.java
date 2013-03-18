@@ -16,8 +16,8 @@
 * limitations under the License.
 */
 package org.hibernate.test.annotations.access.xml;
-import java.util.Set;
 
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

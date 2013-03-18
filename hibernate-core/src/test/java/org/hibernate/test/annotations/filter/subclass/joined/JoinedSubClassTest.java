@@ -1,11 +1,11 @@
 package org.hibernate.test.annotations.filter.subclass.joined;
 
 import junit.framework.Assert;
+import org.junit.Test;
 
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.test.annotations.filter.subclass.SubClassTest;
 import org.hibernate.testing.SkipForDialect;
-import org.junit.Test;
 
 @SkipForDialect(
         value = CUBRIDDialect.class,

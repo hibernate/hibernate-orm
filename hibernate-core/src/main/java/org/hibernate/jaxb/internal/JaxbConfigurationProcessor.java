@@ -52,12 +52,12 @@ import javax.xml.validation.SchemaFactory;
 import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.XsdException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * @author Steve Ebersole

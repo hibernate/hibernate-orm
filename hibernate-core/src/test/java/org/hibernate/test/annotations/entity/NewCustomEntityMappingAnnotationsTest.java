@@ -23,12 +23,13 @@
  */
 package org.hibernate.test.annotations.entity;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole

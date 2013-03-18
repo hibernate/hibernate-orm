@@ -31,6 +31,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -46,7 +48,6 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.jboss.logging.Logger;
 
 /**
  * Represents state associated with the processing of a given {@link ResultSet}

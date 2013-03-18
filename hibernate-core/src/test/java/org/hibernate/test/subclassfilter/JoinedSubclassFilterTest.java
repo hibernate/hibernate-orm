@@ -28,13 +28,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.dialect.CUBRIDDialect;
-import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

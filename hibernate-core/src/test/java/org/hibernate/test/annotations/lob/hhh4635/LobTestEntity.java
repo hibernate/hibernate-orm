@@ -1,7 +1,6 @@
 package org.hibernate.test.annotations.lob.hhh4635;
 
 import java.sql.Blob;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;

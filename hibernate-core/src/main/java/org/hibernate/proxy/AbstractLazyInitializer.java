@@ -26,7 +26,7 @@ package org.hibernate.proxy;
 import java.io.Serializable;
 import javax.naming.NamingException;
 
-import javax.naming.NamingException;
+import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
@@ -38,7 +38,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.persister.entity.EntityPersister;
-import org.jboss.logging.Logger;
 
 /**
  * Convenience base class for lazy initialization handlers.  Centralizes the basic plumbing of doing lazy

@@ -31,7 +31,6 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;

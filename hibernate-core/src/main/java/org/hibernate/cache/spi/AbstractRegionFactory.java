@@ -32,8 +32,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Settings;
 import org.hibernate.cfg.SettingsFactory;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 

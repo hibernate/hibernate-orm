@@ -28,11 +28,10 @@ import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.internal.util.StringHelper;
+import org.jboss.jandex.AnnotationInstance;
+
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
@@ -41,9 +40,6 @@ import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrappedMaterializedBlobType;
-import org.hibernate.usertype.DynamicParameterizedType;
-
-import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu

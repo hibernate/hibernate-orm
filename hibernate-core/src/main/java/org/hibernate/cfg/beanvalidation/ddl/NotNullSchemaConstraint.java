@@ -24,7 +24,6 @@
 package org.hibernate.cfg.beanvalidation.ddl;
 
 import java.util.Iterator;
-
 import javax.validation.constraints.NotNull;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.PropertyDescriptor;

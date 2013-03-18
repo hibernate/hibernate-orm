@@ -20,13 +20,12 @@
  */
 package org.hibernate.test.lob;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.util.Random;
+
+import org.junit.Test;
 
 import org.hibernate.LobHelper;
 import org.hibernate.Session;
@@ -36,7 +35,9 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Brett Meyer

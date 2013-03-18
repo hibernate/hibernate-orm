@@ -23,7 +23,6 @@ package org.hibernate.metamodel.internal.source.hbm.parser;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.xml.bind.JAXBElement;
 
 import org.hibernate.engine.ResultSetMappingDefinition;
@@ -40,7 +39,6 @@ import org.hibernate.jaxb.spi.hbm.JaxbReturnScalarElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSynchronizeElement;
 import org.hibernate.metamodel.internal.source.hbm.BindHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.source.BindingContext;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.type.Type;
 

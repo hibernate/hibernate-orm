@@ -27,8 +27,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
-import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.ManagedEntity;
 
 /**
  * @author Steve Ebersole

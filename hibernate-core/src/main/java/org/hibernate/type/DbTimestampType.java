@@ -30,10 +30,11 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.jboss.logging.Logger;
 
 /**
  * <tt>dbtimestamp</tt>: An extension of {@link TimestampType} which

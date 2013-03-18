@@ -26,6 +26,8 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -49,7 +51,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-import org.jboss.logging.Logger;
 
 /**
  * A convenience bas class for listeners responding to save events.

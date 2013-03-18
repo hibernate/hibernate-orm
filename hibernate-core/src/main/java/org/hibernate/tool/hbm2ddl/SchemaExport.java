@@ -44,11 +44,14 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -61,9 +64,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
 /**

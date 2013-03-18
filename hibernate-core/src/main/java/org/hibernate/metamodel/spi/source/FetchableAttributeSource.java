@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 

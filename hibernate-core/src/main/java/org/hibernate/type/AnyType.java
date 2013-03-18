@@ -31,8 +31,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.dom4j.Node;
-
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;

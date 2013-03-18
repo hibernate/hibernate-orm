@@ -23,15 +23,16 @@
  */
 package org.hibernate.test.jpa.naturalid;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole

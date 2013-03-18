@@ -22,11 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.hql;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -35,6 +30,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import antlr.RecognitionException;
+import antlr.collections.AST;
+import org.junit.Test;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.DB2Dialect;
@@ -77,10 +76,12 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.type.CalendarDateType;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.StringType;
-import org.junit.Test;
 
-import antlr.RecognitionException;
-import antlr.collections.AST;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests cases where the AST based query translator and the 'classic' query translator generate identical SQL.

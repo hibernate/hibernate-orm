@@ -22,9 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.criteria;
-import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -32,7 +33,8 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 
 public class LikeTest extends BaseCoreFunctionalTestCase {

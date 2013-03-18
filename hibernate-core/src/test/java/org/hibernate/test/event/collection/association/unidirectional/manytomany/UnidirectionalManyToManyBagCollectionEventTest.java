@@ -31,7 +31,6 @@ import org.hibernate.test.event.collection.ChildEntity;
 import org.hibernate.test.event.collection.ParentWithCollection;
 import org.hibernate.test.event.collection.association.AbstractAssociationCollectionEventTest;
 import org.hibernate.test.event.collection.association.unidirectional.ParentWithCollectionOfEntities;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner

@@ -23,14 +23,13 @@
  */
 package org.hibernate.metamodel.internal;
 
-import javax.persistence.SharedCacheMode;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.SharedCacheMode;
 
 import org.jboss.jandex.IndexView;
-import org.xml.sax.EntityResolver;
-
 import org.jboss.logging.Logger;
+import org.xml.sax.EntityResolver;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;

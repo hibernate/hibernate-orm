@@ -35,6 +35,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+
 import static org.hibernate.metamodel.spi.binding.SingularAttributeBinding.NaturalIdMutability;
 
 /**

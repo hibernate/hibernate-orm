@@ -23,8 +23,7 @@
  */
 package org.hibernate.test.annotations.id;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -48,7 +47,9 @@ import org.hibernate.test.annotations.id.entities.Store;
 import org.hibernate.test.annotations.id.entities.Tree;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Emmanuel Bernard

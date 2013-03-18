@@ -23,13 +23,11 @@
  */
 package org.hibernate.test.event.collection.detached;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.event.spi.AbstractCollectionEvent;
@@ -38,7 +36,10 @@ import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * Test HHH-6361: Collection events may contain wrong stored snapshot after

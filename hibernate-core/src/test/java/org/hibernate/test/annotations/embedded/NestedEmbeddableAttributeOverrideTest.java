@@ -20,11 +20,12 @@
  */
 package org.hibernate.test.annotations.embedded;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 /**
  * @author Brett Meyer

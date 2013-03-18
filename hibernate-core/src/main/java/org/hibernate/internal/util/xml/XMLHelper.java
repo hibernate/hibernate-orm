@@ -29,9 +29,10 @@ import org.dom4j.io.DOMReader;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
-import org.hibernate.internal.util.ClassLoaderHelper;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
+
+import org.hibernate.internal.util.ClassLoaderHelper;
 
 /**
  * Small helper class that lazy loads DOM and SAX reader and keep them for fast use afterwards.

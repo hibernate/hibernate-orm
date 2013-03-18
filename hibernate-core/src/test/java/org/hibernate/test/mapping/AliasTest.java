@@ -20,14 +20,15 @@
  */
 package org.hibernate.test.mapping;
 
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Column aliases utilize {@link Table#getUniqueInteger()} for naming.  The

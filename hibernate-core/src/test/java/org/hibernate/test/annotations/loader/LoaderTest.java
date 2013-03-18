@@ -23,15 +23,16 @@
  */
 package org.hibernate.test.annotations.loader;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Iterator;
 import java.util.Set;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Emmanuel Bernard

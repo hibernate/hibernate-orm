@@ -22,13 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.legacy;
+
 import java.io.Serializable;
 
 import org.junit.Test;
 
 import org.hibernate.LockMode;
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertTrue;
 

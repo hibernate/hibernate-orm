@@ -1,9 +1,9 @@
 //$Id$
 package org.hibernate.test.annotations.embedded;
+
 import java.io.Serializable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 
 /**
  * A regional article is typically a bad design, it keep the country iso2 and a business key as

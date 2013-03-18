@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Exportable;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
@@ -35,13 +36,12 @@ import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
-import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.hibernate.tool.schema.spi.SchemaMigrator;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
+import org.hibernate.tool.schema.spi.SchemaManagementException;
+import org.hibernate.tool.schema.spi.SchemaMigrator;
 import org.hibernate.tool.schema.spi.Target;
 
 

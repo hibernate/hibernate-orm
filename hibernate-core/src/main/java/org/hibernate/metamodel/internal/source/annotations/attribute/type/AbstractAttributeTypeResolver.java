@@ -28,11 +28,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.jandex.AnnotationInstance;
+
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.usertype.DynamicParameterizedType;
-
-import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu

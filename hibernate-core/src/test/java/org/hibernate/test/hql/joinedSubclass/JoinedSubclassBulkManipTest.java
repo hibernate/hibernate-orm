@@ -23,11 +23,11 @@
  */
 package org.hibernate.test.hql.joinedSubclass;
 
-import org.hibernate.dialect.CUBRIDDialect;
-import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.CUBRIDDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

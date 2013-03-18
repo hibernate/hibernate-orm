@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.lazyonetoone;
+
 import java.util.Date;
 
 import org.junit.Test;
@@ -32,7 +33,6 @@ import org.hibernate.Transaction;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

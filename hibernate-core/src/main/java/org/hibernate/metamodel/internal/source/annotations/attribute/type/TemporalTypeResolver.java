@@ -27,8 +27,9 @@ package org.hibernate.metamodel.internal.source.annotations.attribute.type;
 import java.sql.Time;
 import java.util.Calendar;
 import java.util.Date;
-
 import javax.persistence.TemporalType;
+
+import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -37,7 +38,6 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttrib
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.type.StandardBasicTypes;
-import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu

@@ -28,6 +28,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -41,7 +43,6 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Delete;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
 * @author Steve Ebersole

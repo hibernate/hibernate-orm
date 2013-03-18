@@ -29,6 +29,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.jandex.IndexView;
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.EntityMode;
@@ -93,9 +96,6 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-
-import org.jboss.jandex.IndexView;
-import org.jboss.logging.Logger;
 
 /**
  * Container for configuration data collected during binding the metamodel.

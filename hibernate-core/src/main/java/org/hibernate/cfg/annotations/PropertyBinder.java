@@ -24,10 +24,11 @@
 package org.hibernate.cfg.annotations;
 
 import java.util.Map;
-
 import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Generated;
@@ -57,7 +58,6 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard

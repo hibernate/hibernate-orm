@@ -23,7 +23,7 @@
  */
 package org.hibernate.test.annotations.idmanytoone;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -32,7 +32,8 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Emmanuel Bernard

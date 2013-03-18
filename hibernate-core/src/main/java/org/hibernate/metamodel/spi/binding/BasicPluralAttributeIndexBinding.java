@@ -25,9 +25,6 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.List;
 
-import org.hibernate.metamodel.spi.domain.IndexedPluralAttribute;
-import org.hibernate.metamodel.spi.domain.Type;
-
 /**
  *
  */

@@ -26,7 +26,6 @@ package org.hibernate.test.ops;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Steve Ebersole

@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.annotations.enumerated.mapkey;
 
+import java.util.EnumMap;
+import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -31,9 +33,6 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyEnumerated;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-
-import java.util.EnumMap;
-import java.util.Map;
 
 /**
  * @author Dmitry Spikhalskiy

@@ -36,7 +36,6 @@ import org.hibernate.jaxb.spi.hbm.JaxbQueryElement;
 import org.hibernate.jaxb.spi.hbm.JaxbQueryParamElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSqlQueryElement;
 import org.hibernate.jaxb.spi.hbm.QuerySourceElement;
-import org.hibernate.metamodel.internal.source.hbm.HibernateMappingProcessor;
 
 /**
  * @author Brett Meyer

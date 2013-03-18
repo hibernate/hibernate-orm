@@ -29,12 +29,11 @@ import java.sql.NClob;
 import java.sql.Timestamp;
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
-
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertJdbcTypeCode;
 import static org.junit.Assert.assertEquals;

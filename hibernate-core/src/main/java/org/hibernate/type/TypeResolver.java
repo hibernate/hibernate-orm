@@ -27,12 +27,10 @@ import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
 /**

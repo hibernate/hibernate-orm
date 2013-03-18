@@ -27,6 +27,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -47,7 +49,6 @@ import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
-import org.jboss.logging.Logger;
 
 /**
  * Support listeners for Test HHH-6361: Collection events may contain wrong

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.tuple.entity;
+
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -43,7 +44,6 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.map.MapProxyFactory;
 import org.hibernate.tuple.DynamicMapInstantiator;
 import org.hibernate.tuple.Instantiator;
-import org.hibernate.tuple.PropertyFactory;
 
 /**
  * An {@link EntityTuplizer} specific to the dynamic-map entity mode.

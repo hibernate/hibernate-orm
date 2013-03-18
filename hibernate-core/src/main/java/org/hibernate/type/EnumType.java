@@ -23,8 +23,6 @@
  */
 package org.hibernate.type;
 
-import javax.persistence.Enumerated;
-import javax.persistence.MapKeyEnumerated;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.sql.PreparedStatement;
@@ -32,6 +30,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
+import javax.persistence.Enumerated;
+import javax.persistence.MapKeyEnumerated;
 
 import org.jboss.logging.Logger;
 

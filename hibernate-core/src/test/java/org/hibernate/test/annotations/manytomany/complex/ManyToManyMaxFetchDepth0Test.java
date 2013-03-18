@@ -26,7 +26,6 @@ package org.hibernate.test.annotations.manytomany.complex;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * Many to many tests using max_fetch_depth == 0

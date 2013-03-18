@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
-import org.hibernate.tuple.Tuplizer;
 import org.hibernate.tuple.component.ComponentTuplizer;
 
 /**

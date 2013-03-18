@@ -23,13 +23,9 @@
  */
 package org.hibernate.test.annotations.inheritance;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
+
+import org.junit.Test;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -42,7 +38,12 @@ import org.hibernate.test.annotations.inheritance.singletable.Music;
 import org.hibernate.test.annotations.inheritance.singletable.Noise;
 import org.hibernate.test.annotations.inheritance.singletable.Rock;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard

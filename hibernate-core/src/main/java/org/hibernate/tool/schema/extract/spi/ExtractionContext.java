@@ -26,7 +26,6 @@ package org.hibernate.tool.schema.extract.spi;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 

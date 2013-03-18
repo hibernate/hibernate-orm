@@ -24,8 +24,6 @@
 package org.hibernate.boot.registry;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;

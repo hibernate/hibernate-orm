@@ -27,8 +27,8 @@ package org.hibernate.tool.hbm2ddl;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 
 /**
  * A {@link ConnectionHelper} implementation based on a provided

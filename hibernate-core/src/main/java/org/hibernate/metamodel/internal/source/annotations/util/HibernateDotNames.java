@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.util;
 
+import org.jboss.jandex.DotName;
+
 import org.hibernate.annotations.AccessType;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyMetaDef;
@@ -104,7 +106,6 @@ import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
-import org.jboss.jandex.DotName;
 
 /**
  * Defines the dot names for the Hibernate specific mapping annotations.

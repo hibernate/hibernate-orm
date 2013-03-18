@@ -23,13 +23,14 @@
  */
 package org.hibernate.test.component.cascading.collection;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Locale;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole

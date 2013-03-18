@@ -28,13 +28,14 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.jandex.AnnotationInstance;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.type.EnumType;
-import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu

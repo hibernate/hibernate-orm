@@ -23,8 +23,6 @@
  */
 package org.hibernate.tool.enhance;
 
-import javax.persistence.Entity;
-import javax.persistence.Transient;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -32,6 +30,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.Transient;
 
 import javassist.ClassPool;
 import javassist.CtClass;

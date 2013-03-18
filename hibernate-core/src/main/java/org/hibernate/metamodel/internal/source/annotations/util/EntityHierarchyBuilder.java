@@ -41,9 +41,7 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.EntityHierarchyImpl;
 import org.hibernate.metamodel.internal.source.annotations.JoinedSubclassEntitySourceImpl;

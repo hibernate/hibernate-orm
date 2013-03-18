@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cut;
-import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
@@ -37,7 +38,8 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Gavin King

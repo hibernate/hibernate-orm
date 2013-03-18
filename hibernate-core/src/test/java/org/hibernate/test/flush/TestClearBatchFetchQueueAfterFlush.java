@@ -25,12 +25,13 @@ package org.hibernate.test.flush;
 
 import java.util.Iterator;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 /**
  * Thanks to Jan Hodac and Laurent Almeras for providing test cases for this

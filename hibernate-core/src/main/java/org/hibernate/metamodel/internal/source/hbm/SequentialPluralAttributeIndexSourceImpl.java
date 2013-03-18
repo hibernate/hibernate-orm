@@ -33,8 +33,8 @@ import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.SequentialPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.hibernate.metamodel.spi.source.SequentialPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.SizeSource;
 
 /**

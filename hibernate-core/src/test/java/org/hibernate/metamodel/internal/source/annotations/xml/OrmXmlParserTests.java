@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.xml;
 
-import static junit.framework.Assert.assertNotNull;
+import org.junit.Test;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataSources;
@@ -31,7 +31,8 @@ import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+
+import static junit.framework.Assert.assertNotNull;
 
 /**
  * @author Hardy Ferentschik

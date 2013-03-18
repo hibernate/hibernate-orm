@@ -24,9 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.util.Comparator;
-import java.util.List;
 
-import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.persister.collection.CollectionPersister;
 

@@ -24,7 +24,6 @@
 package org.hibernate.test.immutable.entitywithmutablecollection.noninverse;
 
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner

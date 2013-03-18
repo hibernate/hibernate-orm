@@ -22,8 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.manytomany.compositepk;
-import java.io.Serializable;
 
+import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 

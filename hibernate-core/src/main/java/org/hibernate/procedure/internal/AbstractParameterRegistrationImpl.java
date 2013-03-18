@@ -23,13 +23,12 @@
  */
 package org.hibernate.procedure.internal;
 
-import javax.persistence.ParameterMode;
-import javax.persistence.TemporalType;
-
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Date;
+import javax.persistence.ParameterMode;
+import javax.persistence.TemporalType;
 
 import org.jboss.logging.Logger;
 

@@ -23,7 +23,7 @@
  */
 package org.hibernate.test.criterion;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.IrrelevantEntity;
@@ -38,7 +38,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.loader.criteria.CriteriaQueryTranslator;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole

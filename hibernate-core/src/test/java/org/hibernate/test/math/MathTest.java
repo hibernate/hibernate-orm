@@ -20,14 +20,15 @@
  */
 package org.hibernate.test.math;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Brett Meyer

@@ -24,13 +24,10 @@
  */
 package org.hibernate.engine.jdbc.dialect.internal;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+
+import org.junit.Test;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
@@ -39,7 +36,11 @@ import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit test of the {@link StandardDatabaseMetaDataDialectResolver} class.

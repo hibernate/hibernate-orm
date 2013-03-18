@@ -23,11 +23,7 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadeStyles;
 
 /**
  * @author Steve Ebersole

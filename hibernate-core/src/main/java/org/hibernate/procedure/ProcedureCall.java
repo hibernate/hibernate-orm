@@ -23,8 +23,8 @@
  */
 package org.hibernate.procedure;
 
-import javax.persistence.ParameterMode;
 import java.util.List;
+import javax.persistence.ParameterMode;
 
 import org.hibernate.BasicQueryContract;
 import org.hibernate.MappingException;

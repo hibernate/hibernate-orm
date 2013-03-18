@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.hql;
 
-import org.hibernate.dialect.CUBRIDDialect;
 import org.junit.Test;
 
 import org.hibernate.HibernateException;
@@ -31,6 +30,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;

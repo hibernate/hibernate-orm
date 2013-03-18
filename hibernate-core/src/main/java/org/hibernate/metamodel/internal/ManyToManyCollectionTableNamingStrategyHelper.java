@@ -27,7 +27,6 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>

@@ -23,8 +23,8 @@
  */
 package org.hibernate.tool.schema.spi;
 
-import org.hibernate.metamodel.spi.relational.Exportable;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.metamodel.spi.relational.Exportable;
 
 /**
  * Defines a contract for exporting of database objects (tables, sequences, etc) for use in SQL {@code CREATE} and

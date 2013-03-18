@@ -28,12 +28,10 @@ import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.metamodel.spi.relational.CheckConstraint;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
-import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>

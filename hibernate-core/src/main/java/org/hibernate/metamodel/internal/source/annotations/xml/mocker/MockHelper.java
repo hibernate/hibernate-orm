@@ -41,12 +41,12 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.orm.JaxbCascadeType;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * @author Strong Liu

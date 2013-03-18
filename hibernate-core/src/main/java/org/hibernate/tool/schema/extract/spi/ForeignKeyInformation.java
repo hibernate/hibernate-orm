@@ -23,8 +23,6 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
-import java.util.List;
-
 import org.hibernate.metamodel.spi.relational.Identifier;
 
 /**

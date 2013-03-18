@@ -30,8 +30,6 @@ import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
 
 /**
  * A factory for building/retrieving PropertyAccessor instances.

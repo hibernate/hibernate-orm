@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.spi.relational;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * Models a SQL <tt>INDEX</tt> defined as UNIQUE

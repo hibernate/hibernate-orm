@@ -31,8 +31,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
-import org.dom4j.Node;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.Mapping;

@@ -24,12 +24,12 @@
 package org.hibernate.test.annotations.cascade.multicircle.nonjpa.sequence;
 
 import junit.framework.Assert;
-
-import org.hibernate.Session;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import org.hibernate.Session;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * This test uses a complicated model that requires Hibernate to delay

@@ -1,11 +1,12 @@
 package org.hibernate.test.annotations.uniqueconstraint;
 
 import java.io.Serializable;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
+import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -13,7 +14,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
 
 /**
  * @author Nikolay Shestakov

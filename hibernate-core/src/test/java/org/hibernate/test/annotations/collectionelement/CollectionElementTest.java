@@ -23,14 +23,12 @@
  */
 package org.hibernate.test.annotations.collectionelement;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+
+import org.junit.Test;
 
 import org.hibernate.Filter;
 import org.hibernate.Query;
@@ -40,7 +38,10 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard

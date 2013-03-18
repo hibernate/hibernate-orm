@@ -23,12 +23,10 @@
  */
 package org.hibernate.test.manytomany.batchload;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
 
 import junit.framework.Assert;
+import org.junit.Test;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
@@ -43,7 +41,9 @@ import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests loading of many-to-many collection which should trigger

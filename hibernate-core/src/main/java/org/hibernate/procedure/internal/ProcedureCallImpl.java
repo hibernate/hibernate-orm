@@ -23,7 +23,6 @@
  */
 package org.hibernate.procedure.internal;
 
-import javax.persistence.ParameterMode;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -32,6 +31,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.persistence.ParameterMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -47,9 +47,9 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.AbstractBasicQueryContractImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.NamedParametersNotSupportedException;
 import org.hibernate.procedure.ParameterRegistration;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureResult;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.type.Type;

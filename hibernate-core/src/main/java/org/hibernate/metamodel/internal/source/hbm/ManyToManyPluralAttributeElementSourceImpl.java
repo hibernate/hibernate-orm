@@ -30,7 +30,6 @@ import java.util.List;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbFilterElement;
 import org.hibernate.jaxb.spi.hbm.JaxbManyToManyElement;

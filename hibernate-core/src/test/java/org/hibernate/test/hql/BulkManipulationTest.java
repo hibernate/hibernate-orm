@@ -23,16 +23,12 @@
  */
 package org.hibernate.test.hql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import junit.framework.AssertionFailedError;
+import org.junit.Test;
 
 import org.hibernate.QueryException;
 import org.hibernate.Session;
@@ -51,7 +47,11 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests execution of bulk UPDATE/DELETE statements through the new AST parser.

@@ -5,6 +5,25 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.1.11 (2013.03.18)
+------------------------------------------------------------------------------------------------------------------------
+
+Bug
+    [HHH-5732] - @OrderColumn not updated if @OneToMany has mappedby defined
+    [HHH-7890] - Quoting identifiers breaks @UniqueConstraint
+    [HHH-7990] - Bootstrapping Hibernate fails if javax.validation API is on classpath but no provider
+    [HHH-8025] - Binary compatibility broken between 4.1.9 -> 4.1.10 for Restrictions.eq and Restrictions.ne
+    [HHH-8026] - Duplicate constraint names with unique=true
+    [HHH-8036] - Envers projection max causes mysql syntax error
+    [HHH-8037] - Empty SQL statements with custom UniqueDelegate
+    [HHH-8061] - tests failing on master-matrix CI
+    [HHH-8072] - envers @ElementCollection Map support failing -- nullable KEY
+    [HHH-8073] - Column#getAlias logic incorrectly uses Dialect#getMaxAliasLength
+
+Improvement
+    [HHH-8029] - Improve SimpleNationalizedTest
+
+
 Changes in version 4.1.10 (2013.02.20)
 ------------------------------------------------------------------------------------------------------------------------
 

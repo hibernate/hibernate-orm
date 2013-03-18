@@ -249,7 +249,7 @@ public final class Cascade {
 							//				orphaned value, something a delete with a subquery to
 							// 				match the owner.
 //							final EntityType entityType = (EntityType) type;
-//							final String propertyPath = composePropertyPath( entityType.getPropertyName() );
+//							final String getPropertyPath = composePropertyPath( entityType.getPropertyName() );
 							loadedValue = null;
 						}
 						if ( loadedValue != null ) {

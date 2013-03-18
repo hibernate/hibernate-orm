@@ -60,6 +60,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
+import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.NonPojoInstrumentationMetadata;
@@ -608,6 +610,21 @@ public class PersisterClassProviderTest {
 		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
 			// TODO Auto-generated method stub
 			return null;
+		}
+
+		@Override
+		public EntityPersister getEntityPersister() {
+			return this;
+		}
+
+		@Override
+		public EntityIdentifierDefinition getEntityKeyDefinition() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public Iterable<AttributeDefinition> getAttributes() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 	}
 

@@ -81,11 +81,6 @@ public class CollectionFetch extends AbstractCollectionReference implements Coll
 	}
 
 	@Override
-	public PropertyPath getPropertyPath() {
-		return propertyPath();
-	}
-
-	@Override
 	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
 		//To change body of implemented methods use File | Settings | File Templates.
 	}

@@ -26,6 +26,7 @@ package org.hibernate.loader.plan.spi;
 import org.hibernate.LockMode;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
+import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -58,6 +59,8 @@ public interface CollectionReference {
 	public FetchOwner getIndexGraph();
 
 	public FetchOwner getElementGraph();
+
+	public PropertyPath getPropertyPath();
 
 	public boolean hasEntityElements();
 

@@ -72,11 +72,11 @@ public abstract class AbstractCollectionReference extends AbstractPlanNode imple
 			final Type type = persister.getIndexType();
 			if ( type.isAssociationType() ) {
 				if ( type.isEntityType() ) {
-					return new EntityIndexGraph( sessionFactory(), this, propertyPath() );
+					return new EntityIndexGraph( sessionFactory(), this, getPropertyPath() );
 				}
 			}
 			else if ( type.isComponentType() ) {
-				return new CompositeIndexGraph( sessionFactory(), this, propertyPath() );
+				return new CompositeIndexGraph( sessionFactory(), this, getPropertyPath() );
 			}
 		}
 
@@ -87,17 +87,18 @@ public abstract class AbstractCollectionReference extends AbstractPlanNode imple
 		final Type type = persister.getElementType();
 		if ( type.isAssociationType() ) {
 			if ( type.isEntityType() ) {
-				return new EntityElementGraph( sessionFactory(), this, propertyPath() );
+				return new EntityElementGraph( sessionFactory(), this, getPropertyPath() );
 			}
 		}
 		else if ( type.isComponentType() ) {
-			return new CompositeElementGraph( sessionFactory(), this, propertyPath() );
+			return new CompositeElementGraph( sessionFactory(), this, getPropertyPath() );
 		}
 
 		return null;
 	}
 
-	public PropertyPath propertyPath() {
+	@Override
+	public PropertyPath getPropertyPath() {
 		return propertyPath;
 	}
 

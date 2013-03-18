@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
+import org.jboss.logging.MDC;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -70,6 +71,7 @@ import static org.hibernate.loader.spi.ResultSetProcessingContext.IdentifierReso
  */
 public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilderStrategy, LoadPlanBuildingContext {
 	private static final Logger log = Logger.getLogger( AbstractLoadPlanBuilderStrategy.class );
+	private static final String MDC_KEY = "hibernateLoadPlanWalkPath";
 
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -103,10 +105,12 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 							"be sure to not use LoadPlanBuilderStrategy instances concurrently"
 			);
 		}
+		MDC.put( MDC_KEY, new MDCStack() );
 	}
 
 	@Override
 	public void finish() {
+		MDC.remove( MDC_KEY );
 		fetchOwnerStack.clear();
 		collectionReferenceStack.clear();
 	}
@@ -419,12 +423,18 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 	private void pushToStack(FetchOwner fetchOwner) {
 		log.trace( "Pushing fetch owner to stack : " + fetchOwner );
+		mdcStack().push( fetchOwner.getPropertyPath() );
 		fetchOwnerStack.addFirst( fetchOwner );
+	}
+
+	private MDCStack mdcStack() {
+		return (MDCStack) MDC.get( MDC_KEY );
 	}
 
 	private FetchOwner popFromStack() {
 		final FetchOwner last = fetchOwnerStack.removeFirst();
 		log.trace( "Popped fetch owner from stack : " + last );
+		mdcStack().pop();
 		if ( FetchStackAware.class.isInstance( last ) ) {
 			( (FetchStackAware) last ).poppedFromStack();
 		}
@@ -433,12 +443,14 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 	private void pushToCollectionStack(CollectionReference collectionReference) {
 		log.trace( "Pushing collection reference to stack : " + collectionReference );
+		mdcStack().push( collectionReference.getPropertyPath() );
 		collectionReferenceStack.addFirst( collectionReference );
 	}
 
 	private CollectionReference popFromCollectionStack() {
 		final CollectionReference last = collectionReferenceStack.removeFirst();
 		log.trace( "Popped collection reference from stack : " + last );
+		mdcStack().pop();
 		if ( FetchStackAware.class.isInstance( last ) ) {
 			( (FetchStackAware) last ).poppedFromStack();
 		}
@@ -720,6 +732,23 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 					.getIdentifierType()
 					.resolve( hydratedState, context.getSession(), null );
 			return context.getSession().generateEntityKey( resolvedId, entityReference.getEntityPersister() );
+		}
+	}
+
+	public static class MDCStack {
+		private ArrayDeque<PropertyPath> pathStack = new ArrayDeque<PropertyPath>();
+
+		public void push(PropertyPath path) {
+			pathStack.addFirst( path );
+		}
+
+		public void pop() {
+			pathStack.removeFirst();
+		}
+
+		public String toString() {
+			final PropertyPath path = pathStack.peekFirst();
+			return path == null ? "<no-path>" : path.getFullPath();
 		}
 	}
 }

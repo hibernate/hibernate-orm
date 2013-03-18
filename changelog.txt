@@ -5,6 +5,30 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.0.Final (2013.03.18)
+------------------------------------------------------------------------------------------------------------------------
+
+Bug
+    [HHH-5732] - @OrderColumn not updated if @OneToMany has mappedby defined
+    [HHH-7890] - Quoting identifiers breaks @UniqueConstraint
+    [HHH-7910] - Transaction timeout can cause non-threadsafe session access by reaper thread
+    [HHH-8022] - Return REFCURSOR on native named query: regression on 4.2.0 CR1
+    [HHH-8036] - Envers projection max causes mysql syntax error
+    [HHH-8037] - Empty SQL statements with custom UniqueDelegate
+    [HHH-8053] - HibernateBundleActivator should not register itself as a PersistenceProvider
+    [HHH-8061] - tests failing on master-matrix CI
+    [HHH-8067] - Hibernate's ManagedType#getDeclaredAttribute fails to find plural attributes
+    [HHH-8072] - envers @ElementCollection Map support failing -- nullable KEY
+    [HHH-8073] - Column#getAlias logic incorrectly uses Dialect#getMaxAliasLength
+
+Improvement
+    [HHH-4412] - bulk update with native sql queries
+    [HHH-8076] - javax.security and javax.validation should be optional in OSGi manifest
+
+Task
+    [HHH-7978] - Document new feature from HHH-5869
+
+
 Changes in version 4.2.0.CR2 (2013.03.02)
 ------------------------------------------------------------------------------------------------------------------------
 

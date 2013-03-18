@@ -34,6 +34,7 @@ import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
  * Entry into the bootstrap process.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public final class Bootstrap {
 	/**
@@ -52,6 +53,12 @@ public final class Bootstrap {
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			Map integration) {
 		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration );
+	}
+	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			Map integration,
+			ClassLoader providedClassLoader) {
+		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, providedClassLoader );
 	}
 
 	/**
@@ -73,5 +80,12 @@ public final class Bootstrap {
 			PersistenceUnitInfo persistenceUnitInfo,
 			Map integration) {
 		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration );
+	}
+
+	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitInfo persistenceUnitInfo,
+			Map integration,
+			ClassLoader providedClassLoader) {
+		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, providedClassLoader );
 	}
 }

@@ -67,7 +67,7 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
         boolean dbLogicallyDifferent = true;
         if ((session.getFactory().getDialect() instanceof Oracle8iDialect) && (newObj instanceof String || oldObj instanceof String)) {
             // Don't generate new revision when database replaces empty string with NULL during INSERT or UPDATE statements.
-            dbLogicallyDifferent = !(StringTools.isEmpty((String) newObj) && StringTools.isEmpty((String) oldObj));
+            dbLogicallyDifferent = !(StringTools.isEmpty(newObj) && StringTools.isEmpty(oldObj));
         }
         return dbLogicallyDifferent && !Tools.objectsEqual(newObj, oldObj);
     }
@@ -115,10 +115,10 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 		}
 	}
 
-    public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
+    public List<PersistentCollectionChangeData> mapCollectionChanges(SessionImplementor sessionImplementor,
+																	 String referencingPropertyName,
                                                                      PersistentCollection newColl,
-                                                                     Serializable oldColl,
-                                                                     Serializable id) {
+                                                                     Serializable oldColl, Serializable id) {
         return null;
     }
 

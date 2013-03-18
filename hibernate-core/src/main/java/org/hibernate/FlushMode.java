@@ -89,22 +89,11 @@ public enum FlushMode {
 			return null;
 		}
 
-		if ( AUTO.name().equalsIgnoreCase( setting ) ) {
-			return FlushMode.AUTO;
+		try {
+			return FlushMode.valueOf( setting.toUpperCase() );
 		}
-		if ( COMMIT.name().equalsIgnoreCase( setting ) ) {
-			return FlushMode.COMMIT;
+		catch ( IllegalArgumentException e ) {
+			throw new MappingException( "unknown FlushMode : " + setting );
 		}
-		if ( NEVER.name().equalsIgnoreCase( setting ) ) {
-			return FlushMode.NEVER;
-		}
-		if ( MANUAL.name().equalsIgnoreCase( setting ) ) {
-			return FlushMode.MANUAL;
-		}
-		if ( ALWAYS.name().equalsIgnoreCase( setting ) ) {
-			return FlushMode.ALWAYS;
-		}
-
-		throw new MappingException( "unknown FlushMode : " + setting );
 	}
 }

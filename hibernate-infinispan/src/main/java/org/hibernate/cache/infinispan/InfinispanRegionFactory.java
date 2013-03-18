@@ -39,10 +39,16 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.infinispan.impl.BaseRegion;
+import org.hibernate.cache.infinispan.naturalid.NaturalIdRegionImpl;
 import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
+import org.hibernate.cache.infinispan.timestamp.ClusteredTimestampsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampTypeOverrides;
 import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
+import org.hibernate.cache.infinispan.util.CacheCommandFactory;
+import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
@@ -55,6 +61,24 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.internal.util.ClassLoaderHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.infinispan.AdvancedCache;
+import org.infinispan.commands.module.ModuleCommandFactory;
+import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.configuration.parsing.ParserRegistry;
+import org.infinispan.factories.GlobalComponentRegistry;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.transaction.TransactionMode;
+import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
+import org.infinispan.util.FileLookupFactory;
+import org.infinispan.util.concurrent.IsolationLevel;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
@@ -383,10 +407,10 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
       try {
          String configLoc = ConfigurationHelper.getString(
                INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
-         ClassLoader ctxClassLoader = Thread.currentThread().getContextClassLoader();
+         ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
          InputStream is = FileLookupFactory.newInstance().lookupFileStrict(
-               configLoc, ctxClassLoader);
-         ParserRegistry parserRegistry = new ParserRegistry(ctxClassLoader);
+               configLoc, classLoader);
+         ParserRegistry parserRegistry = new ParserRegistry(classLoader);
          ConfigurationBuilderHolder holder = parserRegistry.parse(is);
 
          // Override global jmx statistics exposure

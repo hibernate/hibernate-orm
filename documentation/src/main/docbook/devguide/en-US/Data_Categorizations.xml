@@ -35,6 +35,7 @@
     </para>
     <itemizedlist>
       <listitem><para><xref linkend="value-basic-types" /></para></listitem>
+        <listitem><para><xref linkend="value-national-character-types" /></para></listitem>
       <listitem><para><xref linkend="value-composite-types" /></para></listitem>
       <listitem><para><xref linkend="value-collection-types" /></para></listitem>
     </itemizedlist>
@@ -294,7 +295,111 @@
         </tgroup>
       </table>
     </section>
-    
+    <section xml:id="value-national-character-types">
+        <title>National Character Types</title>
+        <para>
+            National Character types, which is a new feature since JDBC 4.0 API, now available in hibernate type system.
+            National Language Support enables you retrieve data or insert data into a database in any character
+            set that the underlying database supports.
+        </para>
+
+        <para>
+            Depending on your environment, you might want to set the configuration option <property>hibernate.use_nationalized_character_data</property>
+            to true and having all string or clob based attributes having this national character support automatically.
+            There is nothing else to be changed, and you don't have to use any hibernate specific mapping, so it is portable
+            ( though the national character support feature is not required and may not work on other JPA provider impl ).
+        </para>
+
+        <para>
+            The other way of using this feature is having the <classname>@Nationalized</classname> annotation on the attribute
+            that should be nationalized. This only works on string based attributes, including string, char, char array and clob.
+
+            <programlisting role="JAVA">
+                @Entity( name="NationalizedEntity")
+                public static class NationalizedEntity {
+                    @Id
+                    private Integer id;
+
+                    @Nationalized
+                    private String nvarcharAtt;
+
+                    @Lob
+                    @Nationalized
+                    private String materializedNclobAtt;
+
+                    @Lob
+                    @Nationalized
+                    private NClob nclobAtt;
+
+                    @Nationalized
+                    private Character ncharacterAtt;
+
+                    @Nationalized
+                    private Character[] ncharArrAtt;
+
+                    @Type(type = "ntext")
+                    private String nlongvarcharcharAtt;
+                }</programlisting>
+        </para>
+
+        <table>
+            <title>National Character Type Mappings</title>
+            <tgroup cols="4">
+                <thead>
+                    <row>
+                        <entry>Hibernate type</entry>
+                        <entry>Database type</entry>
+                        <entry>JDBC type</entry>
+                        <entry>Type registry</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>org.hibernate.type.StringNVarcharType</entry>
+                        <entry>string</entry>
+                        <entry>NVARCHAR</entry>
+                        <entry>nstring</entry>
+                    </row>
+                    <row>
+                        <entry>org.hibernate.type.NTextType</entry>
+                        <entry>string</entry>
+                        <entry>LONGNVARCHAR</entry>
+                        <entry>materialized_clob</entry>
+                    </row>
+                    <row>
+                        <entry>org.hibernate.type.NClobType</entry>
+                        <entry>java.sql.NClob</entry>
+                        <entry>NCLOB</entry>
+                        <entry>nclob</entry>
+                    </row>
+                    <row>
+                        <entry>org.hibernate.type.MaterializedNClobType</entry>
+                        <entry>string</entry>
+                        <entry>NCLOB</entry>
+                        <entry>materialized_nclob</entry>
+                    </row>
+                    <row>
+                        <entry>org.hibernate.type.PrimitiveCharacterArrayNClobType</entry>
+                        <entry>char[]</entry>
+                        <entry>NCHAR</entry>
+                        <entry>char[]</entry>
+                    </row>
+                    <row>
+                        <entry>org.hibernate.type.CharacterNCharType</entry>
+                        <entry>java.lang.Character</entry>
+                        <entry>NCHAR</entry>
+                        <entry>ncharacter</entry>
+                    </row>
+                    <row>
+                        <entry>org.hibernate.type.CharacterArrayNClobType</entry>
+                        <entry>java.lang.Character[]</entry>
+                        <entry>NCLOB</entry>
+                        <entry>Character[], java.lang.Character[]</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
     <section xml:id="value-composite-types">
       <title>Composite types</title>
       <para>

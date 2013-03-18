@@ -126,6 +126,12 @@
             reduces the likelihood of transaction deadlocks in highly-concurrent systems.</entry>
           </row>
           <row>
+            <entry>hibernate.order_by.default_null_ordering</entry>
+            <entry><para><literal>none</literal>, <literal>first</literal> or <literal>last</literal></para></entry>
+            <entry>Defines precedence of null values in <literal>ORDER BY</literal> clause. Defaults to
+            <literal>none</literal> which varies between RDBMS implementation.</entry>
+          </row>
+          <row>
             <entry>hibernate.generate_statistics</entry>
             <entry><para><literal>true</literal> or <literal>false</literal></para></entry>
             <entry>Causes Hibernate to collect statistics for performance tuning.</entry>

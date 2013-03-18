@@ -55,6 +55,7 @@ import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -83,6 +84,7 @@ import org.hibernate.test.cid.Product;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -486,6 +488,33 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-2045" )
+	@RequiresDialect( H2Dialect.class )
+	public void testEmptyInList() {
+		Session session = openSession();
+		session.beginTransaction();
+		Human human = new Human();
+		human.setName( new Name( "Lukasz", null, "Antoniak" ) );
+		human.setNickName( "NONE" );
+		session.save( human );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		List results = session.createQuery( "from Human h where h.nickName in ()" ).list();
+		assertEquals( 0, results.size() );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		session.delete( human );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
 	public void testComponentNullnessChecks() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -524,6 +553,75 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		s.createQuery( "delete Human" ).executeUpdate();
 		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-4150" )
+	public void testSelectClauseCaseWithSum() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Human h1 = new Human();
+		h1.setBodyWeight( 74.0f );
+		h1.setDescription( "Me" );
+		s.persist( h1 );
+
+		Human h2 = new Human();
+		h2.setBodyWeight( 125.0f );
+		h2.setDescription( "big persion #1" );
+		s.persist( h2 );
+
+		Human h3 = new Human();
+		h3.setBodyWeight( 110.0f );
+		h3.setDescription( "big persion #2" );
+		s.persist( h3 );
+
+		s.flush();
+
+		Number count = (Number) s.createQuery( "select sum(case when bodyWeight > 100 then 1 else 0 end) from Human" ).uniqueResult();
+		assertEquals( 2, count.intValue() );
+		count = (Number) s.createQuery( "select sum(case when bodyWeight > 100 then bodyWeight else 0 end) from Human" ).uniqueResult();
+		assertEquals( h2.getBodyWeight() + h3.getBodyWeight(), count.floatValue(), 0.001 );
+
+		t.rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-4150" )
+	public void testSelectClauseCaseWithCountDistinct() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Human h1 = new Human();
+		h1.setBodyWeight( 74.0f );
+		h1.setDescription( "Me" );
+		h1.setNickName( "Oney" );
+		s.persist( h1 );
+
+		Human h2 = new Human();
+		h2.setBodyWeight( 125.0f );
+		h2.setDescription( "big persion" );
+		h2.setNickName( "big #1" );
+		s.persist( h2 );
+
+		Human h3 = new Human();
+		h3.setBodyWeight( 110.0f );
+		h3.setDescription( "big persion" );
+		h3.setNickName( "big #2" );
+		s.persist( h3 );
+
+		s.flush();
+
+		Number count = (Number) s.createQuery( "select count(distinct case when bodyWeight > 100 then description else null end) from Human" ).uniqueResult();
+		assertEquals( 1, count.intValue() );
+		count = (Number) s.createQuery( "select count(case when bodyWeight > 100 then description else null end) from Human" ).uniqueResult();
+		assertEquals( 2, count.intValue() );
+		count = (Number) s.createQuery( "select count(distinct case when bodyWeight > 100 then nickName else null end) from Human" ).uniqueResult();
+		assertEquals( 2, count.intValue() );
+
+		t.rollback();
 		s.close();
 	}
 
@@ -2431,7 +2529,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Zoo zooRead = ( Zoo ) results.get( 0 );
 		assertEquals( zoo, zooRead );
 		assertTrue( Hibernate.isInitialized( zooRead.getMammals() ) );
-		Mammal mammalRead = ( Mammal ) ( ( Map ) zooRead.getMammals() ).get( "zebra" );
+		Mammal mammalRead = ( Mammal ) zooRead.getMammals().get( "zebra" );
 		assertEquals( mammal, mammalRead );
 		session.delete( mammalRead );
 		session.delete( zooRead );

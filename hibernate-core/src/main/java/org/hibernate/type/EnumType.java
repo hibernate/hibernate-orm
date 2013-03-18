@@ -37,12 +37,13 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
+import org.hibernate.usertype.LoggableUserType;
 
 /**
  * Value type mapper for enumerations.
@@ -67,12 +68,9 @@ import org.hibernate.usertype.EnhancedUserType;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
-public class EnumType implements EnhancedUserType, DynamicParameterizedType, Serializable, StringRepresentableType {
-    private static final Logger LOG = Logger.getLogger( EnumType.class.getName() );
-	/**
-	 * @deprecated use {@link DynamicParameterizedType#RETURNED_CLASS} instead.
-	 */
-	@Deprecated
+public class EnumType implements EnhancedUserType, DynamicParameterizedType,LoggableUserType, Serializable {
+	private static final Logger LOG = Logger.getLogger( EnumType.class.getName() );
+
 	public static final String ENUM = "enumClass";
 	public static final String NAMED = "useNamed";
 	public static final String TYPE = "type";
@@ -236,9 +234,6 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 		}
 		else {
 			String enumClassName = (String) parameters.get( ENUM );
-			if( StringHelper.isEmpty(enumClassName)){
-				enumClassName = (String)parameters.get( DynamicParameterizedType.RETURNED_CLASS );
-			}
 			try {
 				enumClass = ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
 			}
@@ -311,13 +306,11 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 	}
 
 	@Override
-	public String toString(Object value) throws HibernateException {
-		return enumValueMapper.toString( ( Enum) value );
-	}
-
-	@Override
-	public Object fromStringValue(String string) throws HibernateException {
-		return enumValueMapper.fromString( string );
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
+		if ( enumValueMapper != null ) {
+			return enumValueMapper.toXMLString( (Enum) value );
+		}
+		return value.toString();
 	}
 
 	private static interface EnumValueMapper extends Serializable {
@@ -326,8 +319,8 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 		public void setValue(PreparedStatement st, Enum value, int index) throws SQLException;
 
 		public String objectToSQLString(Enum value);
-		public String toString(Enum value);
-		public Enum fromString(String xml);
+		public String toXMLString(Enum value);
+		public Enum fromXMLString(String xml);
 	}
 
 	public abstract class EnumValueMapperSupport implements EnumValueMapper {
@@ -404,16 +397,16 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 
 		@Override
 		public String objectToSQLString(Enum value) {
-			return toString( value );
+			return toXMLString( value );
 		}
 
 		@Override
-		public String toString(Enum value) {
+		public String toXMLString(Enum value) {
 			return Integer.toString( value.ordinal() );
 		}
 
 		@Override
-		public Enum fromString(String xml) {
+		public Enum fromXMLString(String xml) {
 			return fromOrdinal( Integer.parseInt( xml ) );
 		}
 
@@ -464,16 +457,16 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType, Ser
 
 		@Override
 		public String objectToSQLString(Enum value) {
-			return '\'' + toString( value ) + '\'';
+			return '\'' + toXMLString( value ) + '\'';
 		}
 
 		@Override
-		public String toString(Enum value) {
+		public String toXMLString(Enum value) {
 			return value.name();
 		}
 
 		@Override
-		public Enum fromString(String xml) {
+		public Enum fromXMLString(String xml) {
 			return fromName( xml );
 		}
 

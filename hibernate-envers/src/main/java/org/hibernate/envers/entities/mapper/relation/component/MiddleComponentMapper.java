@@ -22,8 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.component;
-import java.util.Map;
 
+import java.util.Map;
+import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
+
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.tools.query.Parameters;
 
@@ -45,18 +49,22 @@ public interface MiddleComponentMapper {
 
     /**
      * Maps from an object to the object's map representation (for an entity - only its id).
+	 * @param session The current session.
+	 * @param idData Map to which composite-id data should be added.
      * @param data Map to which data should be added.
      * @param obj Object to map from.
      */
-    void mapToMapFromObject(Map<String, Object> data, Object obj);
+    void mapToMapFromObject(SessionImplementor session, Map<String, Object> idData, Map<String, Object> data, Object obj);
 
     /**
      * Adds query statements, which contains restrictions, which express the property that part of the middle
      * entity with alias prefix1, is equal to part of the middle entity with alias prefix2 (the entity is the same).
      * The part is the component's representation in the middle entity.
      * @param parameters Parameters, to which to add the statements.
+	 * @param idPrefix1 First alias of the entity + prefix + id to add to the properties.
      * @param prefix1 First alias of the entity + prefix to add to the properties.
+	 * @param idPrefix2 Second alias of the entity + prefix + id to add to the properties.
      * @param prefix2 Second alias of the entity + prefix to add to the properties.
      */
-    void addMiddleEqualToQuery(Parameters parameters, String prefix1, String prefix2);
+    void addMiddleEqualToQuery(Parameters parameters, String idPrefix1, String prefix1, String idPrefix2, String prefix2);
 }

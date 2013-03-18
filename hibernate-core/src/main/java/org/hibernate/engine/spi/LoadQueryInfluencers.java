@@ -56,8 +56,8 @@ public class LoadQueryInfluencers implements Serializable {
 
 	private final SessionFactoryImplementor sessionFactory;
 	private String internalFetchProfile;
-	private Map<String,Filter> enabledFilters;
-	private Set<String> enabledFetchProfileNames;
+	private final Map<String,Filter> enabledFilters;
+	private final Set<String> enabledFetchProfileNames;
 
 	public LoadQueryInfluencers() {
 		this( null, Collections.<String, Filter>emptyMap(), Collections.<String>emptySet() );
@@ -168,7 +168,7 @@ public class LoadQueryInfluencers implements Serializable {
 	// fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public boolean hasEnabledFetchProfiles() {
-		return enabledFetchProfileNames != null && !enabledFetchProfileNames.isEmpty();
+		return !enabledFetchProfileNames.isEmpty();
 	}
 
 	public Set<String> getEnabledFetchProfileNames() {

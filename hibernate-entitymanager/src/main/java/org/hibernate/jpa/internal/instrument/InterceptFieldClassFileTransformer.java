@@ -51,11 +51,11 @@ public class InterceptFieldClassFileTransformer implements javax.persistence.spi
 				},
 				//TODO change it to a static class to make it faster?
 				new FieldFilter() {
-
+					@Override
 					public boolean shouldInstrumentField(String className, String fieldName) {
 						return true;
 					}
-
+					@Override
 					public boolean shouldTransformFieldAccess(
 							String transformingClassName, String fieldOwnerClassName, String fieldName
 					) {
@@ -64,7 +64,7 @@ public class InterceptFieldClassFileTransformer implements javax.persistence.spi
 				}
 		);
 	}
-
+	@Override
 	public byte[] transform(
 			ClassLoader loader,
 			String className,

@@ -184,6 +184,25 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected boolean isMetadataUsed() {
 		return isMetadataUsed;
 	}
+	protected void rebuildSessionFactory() {
+		if ( sessionFactory == null ) {
+			return;
+		}
+		buildSessionFactory();
+	}
+
+
+	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
+
+	}
+
+	private MetadataImplementor buildMetadata(
+			BootstrapServiceRegistry bootRegistry,
+			StandardServiceRegistryImpl serviceRegistry) {
+		MetadataSources sources = new MetadataSources( bootRegistry );
+		addMappings( sources );
+		return (MetadataImplementor) sources.getMetadataBuilder( serviceRegistry ).build();
+	}
 
 	protected void configMetadataBuilder(MetadataBuilder metadataBuilder, Configuration configuration) {
 		//see if the naming strategy is the default one
@@ -202,18 +221,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		if ( configuration.getInterceptor() != EmptyInterceptor.INSTANCE ) {
 			sessionFactoryBuilder.with( configuration.getInterceptor() );
 		}
-	}
-
-	protected void rebuildSessionFactory() {
-		if ( sessionFactory == null ) {
-			return;
-		}
-		buildSessionFactory();
-	}
-
-
-	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
-
 	}
 
 	protected MetadataBuilder getMetadataBuilder(

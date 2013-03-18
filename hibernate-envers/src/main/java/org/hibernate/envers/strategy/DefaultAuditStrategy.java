@@ -34,7 +34,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
         sessionCacheCleaner.scheduleAuditDataRemoval(session, data);
     }
 
-    public void performCollectionChange(Session session, AuditConfiguration auditCfg,
+    public void performCollectionChange(Session session, String entityName, String propertyName, AuditConfiguration auditCfg,
                                         PersistentCollectionChangeData persistentCollectionChangeData, Object revision) {
         session.save(persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData());
         sessionCacheCleaner.scheduleAuditDataRemoval(session, persistentCollectionChangeData.getData());
@@ -66,7 +66,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 	public void addAssociationAtRevisionRestriction(QueryBuilder rootQueryBuilder,  String revisionProperty, 
 	          String revisionEndProperty, boolean addAlias, MiddleIdData referencingIdData, String versionsMiddleEntityName,
 	          String eeOriginalIdPropertyPath, String revisionPropertyPath,
-	          String originalIdPropertyName, MiddleComponentData... componentDatas) {
+	          String originalIdPropertyName, String alias1, MiddleComponentData... componentDatas) {
 		Parameters rootParameters = rootQueryBuilder.getRootParameters();
 
     	// SELECT max(ee2.revision) FROM middleEntity ee2
@@ -80,7 +80,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
         String ee2OriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS_DEF_AUD_STR + "." + originalIdPropertyName;
         referencingIdData.getPrefixedMapper().addIdsEqualToQuery(maxEeRevQbParameters, eeOriginalIdPropertyPath, ee2OriginalIdPropertyPath);
         for (MiddleComponentData componentData : componentDatas) {
-            componentData.getComponentMapper().addMiddleEqualToQuery(maxEeRevQbParameters, eeOriginalIdPropertyPath, ee2OriginalIdPropertyPath);
+            componentData.getComponentMapper().addMiddleEqualToQuery(maxEeRevQbParameters, eeOriginalIdPropertyPath, alias1, ee2OriginalIdPropertyPath, MIDDLE_ENTITY_ALIAS_DEF_AUD_STR);
         }
 
 		// add subquery to rootParameters

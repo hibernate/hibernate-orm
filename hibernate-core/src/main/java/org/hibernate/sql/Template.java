@@ -119,7 +119,12 @@ public final class Template {
 	@Deprecated
     @SuppressWarnings({ "JavaDoc" })
 	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect) {
-		return renderWhereStringTemplate( sqlWhereString, placeholder, dialect, new SQLFunctionRegistry( dialect, java.util.Collections.EMPTY_MAP ) );
+		return renderWhereStringTemplate(
+				sqlWhereString,
+				placeholder,
+				dialect,
+				new SQLFunctionRegistry( dialect, java.util.Collections.<String, SQLFunction>emptyMap() )
+		);
 	}
 
 	/**
@@ -302,7 +307,7 @@ public final class Template {
 			else if ( isNamedParameter(token) ) {
 				result.append(token);
 			}
-			else if ( isIdentifier(token, dialect)
+			else if ( isIdentifier(token)
 					&& !isFunctionOrKeyword(lcToken, nextToken, dialect , functionRegistry) ) {
 				result.append(placeholder)
 						.append('.')
@@ -569,31 +574,32 @@ public final class Template {
 		private final String trimSource;
 
 		private TrimOperands(List<String> operands) {
-			if ( operands.size() == 1 ) {
+			final int size = operands.size();
+			if ( size == 1 ) {
 				trimSpec = null;
 				trimChar = null;
 				from = null;
 				trimSource = operands.get(0);
 			}
-			else if ( operands.size() == 4 ) {
+			else if ( size == 4 ) {
 				trimSpec = operands.get(0);
 				trimChar = operands.get(1);
 				from = operands.get(2);
 				trimSource = operands.get(3);
 			}
 			else {
-				if ( operands.size() < 1 || operands.size() > 4 ) {
-					throw new HibernateException( "Unexpected number of trim function operands : " + operands.size() );
+				if ( size < 1 || size > 4 ) {
+					throw new HibernateException( "Unexpected number of trim function operands : " + size );
 				}
 
 				// trim-source will always be the last operand
-				trimSource = operands.get( operands.size() - 1 );
+				trimSource = operands.get( size - 1 );
 
 				// ANSI SQL says that more than one operand means that the FROM is required
-				if ( ! "from".equals( operands.get( operands.size() - 2 ) ) ) {
-					throw new HibernateException( "Expecting FROM, found : " + operands.get( operands.size() - 2 ) );
+				if ( ! "from".equals( operands.get( size - 2 ) ) ) {
+					throw new HibernateException( "Expecting FROM, found : " + operands.get( size - 2 ) );
 				}
-				from = operands.get( operands.size() - 2 );
+				from = operands.get( size - 2 );
 
 				// trim-spec, if there is one will always be the first operand
 				if ( "leading".equalsIgnoreCase( operands.get(0) )
@@ -604,7 +610,7 @@ public final class Template {
 				}
 				else {
 					trimSpec = null;
-					if ( operands.size() - 2 == 0 ) {
+					if ( size - 2 == 0 ) {
 						trimChar = null;
 					}
 					else {
@@ -749,7 +755,7 @@ public final class Template {
 		return ! function.hasParenthesesIfNoArguments();
 	}
 
-	private static boolean isIdentifier(String token, Dialect dialect) {
+	private static boolean isIdentifier(String token) {
 		return token.charAt(0)=='`' || ( //allow any identifier quoted with backtick
 			Character.isLetter( token.charAt(0) ) && //only recognizes identifiers beginning with a letter
 			token.indexOf('.') < 0

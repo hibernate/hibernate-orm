@@ -361,8 +361,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			public void check(Object results) {
 				assertTrue( results instanceof Course );
 				assertEquals( courseExpected, results );
-				assertTrue( Hibernate.isInitialized( ((Course) courseExpected).getCourseMeetings() ) );
-				assertEquals( courseExpected.getCourseMeetings(), ((Course) courseExpected).getCourseMeetings() );
+				assertTrue( Hibernate.isInitialized( courseExpected.getCourseMeetings() ) );
+				assertEquals( courseExpected.getCourseMeetings(), courseExpected.getCourseMeetings() );
 			}
 		};
 		runTest( hqlExecutor, criteriaExecutor, checker, true );
@@ -2219,7 +2219,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 			private Constructor getConstructor() {
 				Type studentNametype =
-						( ( SessionFactoryImpl ) sessionFactory() )
+						sessionFactory()
 								.getEntityPersister( Student.class.getName() )
 								.getPropertyType( "name" );
 				return ReflectHelper.getConstructor( Student.class, new Type[] {StandardBasicTypes.LONG, studentNametype} );
@@ -2705,7 +2705,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	}
 
 	protected void assertCount(int expected) {
-		int actual = ( int ) sessionFactory().getStatistics().getQueries().length;
+		int actual = sessionFactory().getStatistics().getQueries().length;
 		assertEquals( expected, actual );
 	}
 

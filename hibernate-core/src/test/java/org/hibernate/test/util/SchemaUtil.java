@@ -44,7 +44,7 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
  * @author Brett Meyer
  */
 public abstract class SchemaUtil {
-	
+
 	public static boolean isColumnPresent(
 			String tableName, String columnName, MetadataImplementor metadata ) {
 		try {
@@ -92,7 +92,7 @@ public abstract class SchemaUtil {
 		}
 		throw new AssertionFailure( "can't find table " +tableName );
 	}
-	
+
 	public static TableSpecification getTable( 
 			String tableName, MetadataImplementor metadata ) throws AssertionFailure {
 		return getTable( null, tableName, metadata );

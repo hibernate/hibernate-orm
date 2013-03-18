@@ -3,6 +3,7 @@ package org.hibernate.envers.test.performance;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -93,8 +94,8 @@ public class EvictAuditDataAfterCommitTest extends BaseEnversFunctionalTestCase 
     private void checkEmptyAuditSessionCache(Session session, String ... auditEntityNames) {
         List<String> entityNames = Arrays.asList(auditEntityNames);
         PersistenceContext persistenceContext = ((SessionImplementor) session).getPersistenceContext();
-        for (Object entry : persistenceContext.getEntityEntries().values()) {
-            EntityEntry entityEntry = (EntityEntry) entry;
+        for ( Map.Entry<Object,EntityEntry> entrySet : persistenceContext.reentrantSafeEntityEntries() ) {
+            final EntityEntry entityEntry = entrySet.getValue();
             if (entityNames.contains(entityEntry.getEntityName())) {
                 assert false : "Audit data shall not be stored in the session level cache. This causes performance issues.";
             }

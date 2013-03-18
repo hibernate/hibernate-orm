@@ -23,25 +23,29 @@
  */
 package org.hibernate.jpa.test.transaction;
 
-import javax.persistence.EntityManager;
-import javax.transaction.Synchronization;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+
+import javax.persistence.EntityManager;
+import javax.transaction.Status;
+import javax.transaction.Synchronization;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.CMTTransaction;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.AvailableSettings;
-
-import org.junit.Test;
-
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Largely a copy of {@link org.hibernate.test.jpa.txn.TransactionJoiningTest}
@@ -137,5 +141,50 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 				}
 		);
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+	}
+	
+	/**
+	 * In certain JTA environments (JBossTM, etc.), a background thread (reaper)
+	 * can rollback a transaction if it times out.  These timeouts are rare and
+	 * typically come from server failures.  However, we need to handle the
+	 * multi-threaded nature of the transaction afterCompletion action.
+	 * Emulate a timeout with a simple afterCompletion call in a thread.
+	 * See HHH-7910
+	 */
+	@Test
+	@TestForIssue(jiraKey="HHH-7910")
+	public void testMultiThreadTransactionTimeout() throws Exception {
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+		
+		EntityManager em = entityManagerFactory().createEntityManager();
+		final SessionImpl sImpl = em.unwrap( SessionImpl.class );
+		
+		final CountDownLatch latch = new CountDownLatch(1);
+		
+		Thread thread = new Thread() {
+			public void run() {
+				sImpl.getTransactionCoordinator().getSynchronizationCallbackCoordinator().afterCompletion( Status.STATUS_ROLLEDBACK );
+				latch.countDown();
+			}
+		};
+		thread.start();
+		
+		latch.await();
+		
+		em.persist( new Book( "The Book of Foo", 1 ) );
+		
+		// Ensure that the session was cleared by the background thread.
+		assertEquals( "The background thread did not clear the session as expected!",
+				0, em.createQuery( "from Book" ).getResultList().size() );
+
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		em.close();
+	}
+
+	@Override
+	public Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Book.class
+		};
 	}
 }

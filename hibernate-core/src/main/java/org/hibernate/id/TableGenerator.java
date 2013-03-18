@@ -141,7 +141,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		return generateHolder( session ).makeValue();
 	}
 
-	protected IntegralDataTypeHolder generateHolder(SessionImplementor session) {
+	protected IntegralDataTypeHolder generateHolder(final SessionImplementor session) {
 		final SqlStatementLogger statementLogger = session
 				.getFactory()
 				.getServiceRegistry()
@@ -179,7 +179,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 							}
 
 							statementLogger.logStatement( update, FormatStyle.BASIC.getFormatter() );
-							PreparedStatement ups = connection.prepareStatement(update);
+							PreparedStatement ups = connection.prepareStatement( update );
 							try {
 								value.copy().increment().bind( ups, 1 );
 								value.bind( ups, 2 );
@@ -214,15 +214,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	public String[] sqlDropStrings(Dialect dialect) {
-		StringBuilder sqlDropString = new StringBuilder( "drop table " );
-		if ( dialect.supportsIfExistsBeforeTableName() ) {
-			sqlDropString.append( "if exists " );
-		}
-		sqlDropString.append( tableName ).append( dialect.getCascadeConstraintsString() );
-		if ( dialect.supportsIfExistsAfterTableName() ) {
-			sqlDropString.append( " if exists" );
-		}
-		return new String[] { sqlDropString.toString() };
+		return new String[] { dialect.getDropTableString( tableName ) };
 	}
 
 	public Object generatorKey() {

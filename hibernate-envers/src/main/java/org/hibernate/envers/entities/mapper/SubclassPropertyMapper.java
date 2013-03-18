@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -78,15 +79,14 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
         main.mapToEntityFromMap(verCfg, obj, data, primaryKey, versionsReader, revision);
     }
 
-    public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
-                                                                                    PersistentCollection newColl,
-                                                                                    Serializable oldColl,
-                                                                                    Serializable id) {
+    public List<PersistentCollectionChangeData> mapCollectionChanges(SessionImplementor session, String referencingPropertyName,
+                                                                     PersistentCollection newColl,
+                                                                     Serializable oldColl, Serializable id) {
         List<PersistentCollectionChangeData> parentCollectionChanges = parentMapper.mapCollectionChanges(
-                referencingPropertyName, newColl, oldColl, id);
+                session, referencingPropertyName, newColl, oldColl, id);
 
 		List<PersistentCollectionChangeData> mainCollectionChanges = main.mapCollectionChanges(
-				referencingPropertyName, newColl, oldColl, id);
+				session, referencingPropertyName, newColl, oldColl, id);
 
         if (parentCollectionChanges == null) {
             return mainCollectionChanges;
@@ -109,4 +109,11 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
     public void add(PropertyData propertyData) {
         main.add(propertyData);
     }
+
+	public Map<PropertyData, PropertyMapper> getProperties() {
+		final Map<PropertyData, PropertyMapper> joinedProperties = new HashMap<PropertyData, PropertyMapper>();
+		joinedProperties.putAll(parentMapper.getProperties());
+		joinedProperties.putAll(main.getProperties());
+		return joinedProperties;
+	}
 }

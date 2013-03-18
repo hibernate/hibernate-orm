@@ -166,9 +166,9 @@ public final class ReflectHelper {
 	 */
 	public static Class classForName(String name, Class caller) throws ClassNotFoundException {
 		try {
-			ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-			if ( contextClassLoader != null ) {
-				return contextClassLoader.loadClass( name );
+			ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
+			if ( classLoader != null ) {
+				return classLoader.loadClass( name );
 			}
 		}
 		catch ( Throwable ignore ) {
@@ -192,7 +192,15 @@ public final class ReflectHelper {
 	 * @throws ClassNotFoundException From {@link Class#forName(String)}.
 	 */
 	public static Class classForName(String name) throws ClassNotFoundException {
-		return classForName( name, null );
+		try {
+			ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
+			if ( classLoader != null ) {
+				return classLoader.loadClass(name);
+			}
+		}
+		catch ( Throwable ignore ) {
+		}
+		return Class.forName( name );
 	}
 
 	/**

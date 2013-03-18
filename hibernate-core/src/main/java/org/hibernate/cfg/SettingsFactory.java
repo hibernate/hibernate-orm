@@ -32,6 +32,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.NullPrecedence;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
@@ -247,6 +248,14 @@ public class SettingsFactory implements Serializable {
 		}
 		settings.setOrderInsertsEnabled( orderInserts );
 
+		String defaultNullPrecedence = ConfigurationHelper.getString(
+				AvailableSettings.DEFAULT_NULL_ORDERING, properties, "none", "first", "last"
+		);
+		if ( debugEnabled ) {
+			LOG.debugf( "Default null ordering: %s", defaultNullPrecedence );
+		}
+		settings.setDefaultNullPrecedence( NullPrecedence.parse( defaultNullPrecedence ) );
+
 		//Query parser settings:
 
 		settings.setQueryTranslatorFactory( createQueryTranslatorFactory( properties, serviceRegistry ) );
@@ -364,6 +373,16 @@ public class SettingsFactory implements Serializable {
 			LOG.debugf( "Allow initialization of lazy state outside session : : %s", enabledDisabled( initializeLazyStateOutsideTransactionsEnabled ) );
 		}
 		settings.setInitializeLazyStateOutsideTransactions( initializeLazyStateOutsideTransactionsEnabled );
+
+		boolean jtaTrackByThread = ConfigurationHelper.getBoolean(
+				AvailableSettings.JTA_TRACK_BY_THREAD,
+				properties,
+				true
+		);
+		if ( debugEnabled ) {
+			LOG.debugf( "JTA Track by Thread: %s", enabledDisabled(jtaTrackByThread) );
+		}
+		settings.setJtaTrackByThread( jtaTrackByThread );
 
 		return settings;
 

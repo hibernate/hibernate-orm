@@ -53,7 +53,7 @@ public class PrimitiveTestEntity {
 	public PrimitiveTestEntity(Integer id, int numVal1, int number2) {
 		this.id = id;
 		this.numVal1 = numVal1;
-		this.numVal2 = numVal2;
+		this.numVal2 = number2;
 	}
 
 	public Integer getId() {

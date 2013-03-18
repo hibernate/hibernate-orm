@@ -720,6 +720,8 @@ public interface Mappings {
 
 	public void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraintHolders);
 
+	public void addJpaIndexHolders(Table table, List<JPAIndexHolder> jpaIndexHolders);
+
 	public void addMappedBy(String entityName, String propertyName, String inversePropertyName);
 
 	public String getFromMappedBy(String entityName, String propertyName);
@@ -763,6 +765,14 @@ public interface Mappings {
 	 * @return True if the new generators should be used, false otherwise.
 	 */
 	public boolean useNewGeneratorMappings();
+
+	/**
+	 * Should we use nationalized variants of character data by default?  This is controlled by the
+	 * {@link AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA} setting.
+	 *
+	 * @return {@code true} if nationalized character data should be used by default; {@code false} otherwise.
+	 */
+	public boolean useNationalizedCharacterData();
 
 	/**
 	 * Return the property annotated with @ToOne and @Id if any.

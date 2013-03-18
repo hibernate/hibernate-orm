@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+import org.hibernate.LockOptions;
 import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.JoinFragment;
 
@@ -44,5 +45,22 @@ public class Oracle10gDialect extends Oracle9iDialect {
 
 	public JoinFragment createOuterJoinFragment() {
 		return new ANSIJoinFragment();
+	}
+
+	public String getWriteLockString(int timeout) {
+		if ( timeout == LockOptions.SKIP_LOCKED ) {
+			return  getForUpdateSkipLockedString();
+		}
+		else {
+			return super.getWriteLockString(timeout);
+		}
+	}
+
+	public String getForUpdateSkipLockedString() {
+		return " for update skip locked";
+	}
+
+	public String getForUpdateSkipLockedString(String aliases) {
+		return getForUpdateString() + " of " + aliases + " skip locked";
 	}
 }

@@ -364,7 +364,7 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 			if ( !event.isPre() ) {
 				CacheKey cacheKey = (CacheKey) event.getKey();
 				Integer primKey = (Integer) cacheKey.getKey();
-				String key = (String) cacheKey.getEntityOrRoleName() + '#' + primKey;
+				String key = cacheKey.getEntityOrRoleName() + '#' + primKey;
 				log.debug( "MyListener[" + name + "] - Visiting key " + key );
 				// String name = fqn.toString();
 				String token = ".functional.";

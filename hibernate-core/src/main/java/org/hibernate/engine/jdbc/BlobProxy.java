@@ -32,6 +32,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
@@ -90,8 +91,10 @@ public class BlobProxy implements InvocationHandler {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws UnsupportedOperationException if any methods other than {@link Blob#length()}
-	 * or {@link Blob#getBinaryStream} are invoked.
+	 * @throws UnsupportedOperationException if any methods other than
+	 * {@link Blob#length}, {@link Blob#getUnderlyingStream},
+	 * {@link Blob#getBinaryStream}, {@link Blob#getBytes}, {@link Blob#free},
+	 * or toString/equals/hashCode are invoked.
 	 */
 	@Override
 	@SuppressWarnings({ "UnnecessaryBoxing" })
@@ -194,7 +197,7 @@ public class BlobProxy implements InvocationHandler {
 	 * @return The class loader appropriate for proxy construction.
 	 */
 	private static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
 		if ( cl == null ) {
 			cl = BlobImplementer.class.getClassLoader();
 		}

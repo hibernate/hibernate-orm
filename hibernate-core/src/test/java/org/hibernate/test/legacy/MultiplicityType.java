@@ -57,8 +57,8 @@ public class MultiplicityType implements CompositeUserType {
 	public Object getPropertyValue(Object component, int property) {
 		Multiplicity o = (Multiplicity) component;
 		return property==0 ?
-			(Object) new Integer(o.count) :
-			(Object) o.glarch;
+				new Integer(o.count) :
+				o.glarch;
 	}
 
 	public void setPropertyValue(
@@ -94,7 +94,7 @@ public class MultiplicityType implements CompositeUserType {
 	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
 		throws HibernateException, SQLException {
 
-		Integer c = (Integer) IntegerType.INSTANCE.nullSafeGet( rs, names[0], session );
+		Integer c = IntegerType.INSTANCE.nullSafeGet( rs, names[0], session );
 		GlarchProxy g = (GlarchProxy) ( (Session) session ).getTypeHelper().entity( Glarch.class ).nullSafeGet(rs, names[1], session, owner);
 		Multiplicity m = new Multiplicity();
 		m.count = c==null ? 0 : c.intValue();

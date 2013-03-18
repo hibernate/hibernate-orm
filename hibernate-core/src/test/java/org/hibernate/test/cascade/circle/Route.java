@@ -96,11 +96,11 @@ public class Route {
 		
 		buffer.append("Route name: " + name + " id: " + routeID + " transientField: " + transientField + "\n");
 		for (Iterator it = nodes.iterator(); it.hasNext();) {
-			buffer.append("Node: " + (Node)it.next());
+			buffer.append("Node: " + it.next() );
 		}
 		
 		for (Iterator it = vehicles.iterator(); it.hasNext();) {
-			buffer.append("Vehicle: " + (Vehicle)it.next());
+			buffer.append("Vehicle: " + it.next() );
 		}
 
 		return buffer.toString();

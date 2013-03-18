@@ -122,5 +122,5 @@ public class EntityConfiguration {
      */
     public String getEntityClassName() {
 		return entityClassName;
-	}    
+	}
 }

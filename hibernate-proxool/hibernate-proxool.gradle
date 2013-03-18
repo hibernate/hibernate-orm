@@ -1,6 +1,12 @@
-
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.proxool )
     testCompile project( ':hibernate-testing' )
+}
+
+jar {
+    manifest {
+        instruction 'Bundle-Description', 'Hibernate ORM Proxool'
+        instruction 'Bundle-SymbolicName', 'org.hibernate.proxool'
+    }
 }

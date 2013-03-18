@@ -25,6 +25,8 @@ package org.hibernate.engine.jdbc.spi;
 
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
@@ -35,6 +37,7 @@ import org.hibernate.jdbc.WorkExecutorVisitable;
  * Coordinates JDBC-related activities.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public interface JdbcCoordinator extends Serializable {
 	/**
@@ -78,6 +81,13 @@ public interface JdbcCoordinator extends Serializable {
 	public StatementPreparer getStatementPreparer();
 
 	/**
+	 * Obtain the resultset extractor associated with this JDBC coordinator.
+	 *
+	 * @return This coordinator's resultset extractor
+	 */
+	public ResultSetReturn getResultSetReturn();
+
+	/**
 	 * Callback to let us know that a flush is beginning.  We use this fact
 	 * to temporarily circumvent aggressive connection releasing until after
 	 * the flush cycle is complete {@link #flushEnding()}
@@ -106,6 +116,13 @@ public interface JdbcCoordinator extends Serializable {
 	 * release the JDBC connection aggressively if the configured release mode indicates.
 	 */
 	public void afterTransaction();
+
+	/**
+	 * Used to signify that a statement has completed execution which may
+	 * indicate that this logical connection need to perform an
+	 * aggressive release of its physical connection.
+	 */
+	public void afterStatementExecution();
 
 	/**
 	 * Perform the requested work handling exceptions, coordinating and handling return processing.
@@ -137,4 +154,56 @@ public interface JdbcCoordinator extends Serializable {
 	 * @throws org.hibernate.TransactionException Indicates the time out period has already been exceeded.
 	 */
     public int determineRemainingTransactionTimeOutPeriod();
+	/**
+	 * Register a JDBC statement.
+	 *
+	 * @param statement The statement to register.
+	 */
+	public void register(Statement statement);
+	
+	/**
+	 * Release a previously registered statement.
+	 *
+	 * @param statement The statement to release.
+	 */
+	public void release(Statement statement);
+
+	/**
+	 * Register a JDBC result set.
+	 *
+	 * @param resultSet The result set to register.
+	 */
+	public void register(ResultSet resultSet);
+
+	/**
+	 * Release a previously registered result set.
+	 *
+	 * @param resultSet The result set to release.
+	 */
+	public void release(ResultSet resultSet);
+
+	/**
+	 * Does this registry currently have any registered resources?
+	 *
+	 * @return True if the registry does have registered resources; false otherwise.
+	 */
+	public boolean hasRegisteredResources();
+
+	/**
+	 * Release all registered resources.
+	 */
+	public void releaseResources();
+	
+	public void enableReleases();
+	
+	public void disableReleases();
+
+	/**
+	 * Register a query statement as being able to be cancelled.
+	 * 
+	 * @param statement The cancel-able query statement.
+	 */
+	public void registerLastQuery(Statement statement);
+
+	public boolean isReadyForSerialization();
 }

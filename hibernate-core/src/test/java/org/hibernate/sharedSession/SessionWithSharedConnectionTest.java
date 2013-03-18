@@ -27,6 +27,12 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
@@ -41,12 +47,6 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -67,8 +67,6 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 		assertFalse(
 				((SessionImplementor) secondSession).getTransactionCoordinator()
 						.getJdbcCoordinator()
-						.getLogicalConnection()
-						.getResourceRegistry()
 						.hasRegisteredResources()
 		);
 

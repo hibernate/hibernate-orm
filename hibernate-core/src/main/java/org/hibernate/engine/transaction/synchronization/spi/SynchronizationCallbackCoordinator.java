@@ -31,5 +31,7 @@ import javax.transaction.Synchronization;
 public interface SynchronizationCallbackCoordinator extends Synchronization{
 	public void setManagedFlushChecker(ManagedFlushChecker managedFlushChecker);
 	public void setAfterCompletionAction(AfterCompletionAction afterCompletionAction);
+	public void pulse();
+	public void delayedAfterCompletion();
 	public void setExceptionMapper(ExceptionMapper exceptionMapper);
 }

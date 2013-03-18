@@ -25,9 +25,8 @@ package org.hibernate.hql.spi;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -37,8 +36,12 @@ import org.hibernate.hql.internal.ast.tree.DeleteStatement;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Delete;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
 * @author Steve Ebersole
@@ -52,7 +55,7 @@ public class TableBasedDeleteHandlerImpl
 
 	private final String idInsertSelect;
 	private final List<ParameterSpecification> idSelectParameterSpecifications;
-	private final String[] deletes;
+	private final List<String> deletes;
 
 	public TableBasedDeleteHandlerImpl(SessionFactoryImplementor factory, HqlSqlWalker walker) {
 		this( factory, walker, null, null );
@@ -75,26 +78,41 @@ public class TableBasedDeleteHandlerImpl
 		this.idSelectParameterSpecifications = processedWhereClause.getIdSelectParameterSpecifications();
 		this.idInsertSelect = generateIdInsertSelect( targetedPersister, bulkTargetAlias, processedWhereClause );
 		log.tracev( "Generated ID-INSERT-SELECT SQL (multi-table delete) : {0}", idInsertSelect );
+		
+		final String idSubselect = generateIdSubselect( targetedPersister );
+		deletes = new ArrayList<String>();
+		
+		// If many-to-many, delete the FK row in the collection table.
+		for ( Type type : targetedPersister.getPropertyTypes() ) {
+			if ( type.isCollectionType() ) {
+				CollectionType cType = (CollectionType) type;
+				AbstractCollectionPersister cPersister = (AbstractCollectionPersister)factory.getCollectionPersister( cType.getRole() );
+				if ( cPersister.isManyToMany() ) {
+					deletes.add( generateDelete( cPersister.getTableName(),
+							cPersister.getKeyColumnNames(), idSubselect, "bulk delete - m2m join table cleanup"));
+				}
+			}
+		}
 
 		String[] tableNames = targetedPersister.getConstraintOrderedTableNameClosure();
 		String[][] columnNames = targetedPersister.getContraintOrderedTableKeyColumnClosure();
-		String idSubselect = generateIdSubselect( targetedPersister );
-
-		deletes = new String[tableNames.length];
-		for ( int i = tableNames.length - 1; i >= 0; i-- ) {
+		for ( int i = 0; i < tableNames.length; i++ ) {
 			// TODO : an optimization here would be to consider cascade deletes and not gen those delete statements;
 			//      the difficulty is the ordering of the tables here vs the cascade attributes on the persisters ->
 			//          the table info gotten here should really be self-contained (i.e., a class representation
 			//          defining all the needed attributes), then we could then get an array of those
-			final Delete delete = new Delete()
-					.setTableName( tableNames[i] )
-					.setWhere( "(" + StringHelper.join( ", ", columnNames[i] ) + ") IN (" + idSubselect + ")" );
-			if ( factory().getSettings().isCommentsEnabled() ) {
-				delete.setComment( "bulk delete" );
-			}
-
-			deletes[i] = delete.toStatementString();
+			deletes.add( generateDelete( tableNames[i], columnNames[i], idSubselect, "bulk delete"));
 		}
+	}
+	
+	private String generateDelete(String tableName, String[] columnNames, String idSubselect, String comment) {
+		final Delete delete = new Delete()
+				.setTableName( tableName )
+				.setWhere( "(" + StringHelper.join( ", ", columnNames ) + ") IN (" + idSubselect + ")" );
+		if ( factory().getSettings().isCommentsEnabled() ) {
+			delete.setComment( comment );
+		}
+		return delete.toStatementString();
 	}
 
 	@Override
@@ -104,7 +122,7 @@ public class TableBasedDeleteHandlerImpl
 
 	@Override
 	public String[] getSqlStatements() {
-		return deletes;
+		return deletes.toArray( new String[deletes.size()] );
 	}
 
 	@Override
@@ -121,11 +139,11 @@ public class TableBasedDeleteHandlerImpl
 					for ( ParameterSpecification parameterSpecification : idSelectParameterSpecifications ) {
 						pos += parameterSpecification.bind( ps, queryParameters, session, pos );
 					}
-					resultCount = ps.executeUpdate();
+					resultCount = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 				}
 				finally {
 					if ( ps != null ) {
-						ps.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 					}
 				}
 			}
@@ -142,11 +160,11 @@ public class TableBasedDeleteHandlerImpl
 								.getStatementPreparer()
 								.prepareStatement( delete, false );
 						handleAddedParametersOnDelete( ps, session );
-						ps.executeUpdate();
+						session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 					}
 					finally {
 						if ( ps != null ) {
-							ps.close();
+							session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 						}
 					}
 				}

@@ -64,7 +64,6 @@ public class ContractVariation implements Serializable {
 
 	public ContractVariation(int version, Contract contract) {
 		this.contract = contract;
-		this.id = id;
 		contract.getVariations().add(this);
 	}
 

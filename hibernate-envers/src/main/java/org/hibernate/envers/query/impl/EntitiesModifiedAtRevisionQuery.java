@@ -45,7 +45,7 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 
         // all specified conditions
         for (AuditCriterion criterion : criterions) {
-            criterion.addToQuery(verCfg, entityName, qb, qb.getRootParameters());
+            criterion.addToQuery(verCfg, versionsReader, entityName, qb, qb.getRootParameters());
         }
 
         Query query = buildQuery();

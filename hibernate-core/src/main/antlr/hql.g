@@ -78,6 +78,9 @@ tokens
 	UPDATE="update";
 	VERSIONED="versioned";
 	WHERE="where";
+	NULLS="nulls";
+	FIRST;
+	LAST;
 
 	// -- SQL tokens --
 	// These aren't part of HQL, but the SQL fragment parser uses the HQL lexer, so they need to be declared here.
@@ -439,13 +442,31 @@ orderByClause
 	;
 
 orderElement
-	: expression ( ascendingOrDescending )?
+	: expression ( ascendingOrDescending )? ( nullOrdering )?
 	;
 
 ascendingOrDescending
 	: ( "asc" | "ascending" )	{ #ascendingOrDescending.setType(ASCENDING); }
 	| ( "desc" | "descending") 	{ #ascendingOrDescending.setType(DESCENDING); }
 	;
+
+nullOrdering
+    : NULLS nullPrecedence
+    ;
+
+nullPrecedence
+    : IDENT {
+            if ( "first".equalsIgnoreCase( #nullPrecedence.getText() ) ) {
+                #nullPrecedence.setType( FIRST );
+            }
+            else if ( "last".equalsIgnoreCase( #nullPrecedence.getText() ) ) {
+                #nullPrecedence.setType( LAST );
+            }
+            else {
+                throw new SemanticException( "Expecting 'first' or 'last', but found '" +  #nullPrecedence.getText() + "' as null ordering precedence." );
+            }
+    }
+    ;
 
 //## havingClause:
 //##     HAVING logicalExpression;
@@ -723,7 +744,7 @@ castedIdentPrimaryBase
 aggregate
 	: ( SUM^ | AVG^ | MAX^ | MIN^ ) OPEN! additiveExpression CLOSE! { #aggregate.setType(AGGREGATE); }
 	// Special case for count - It's 'parameters' can be keywords.
-	|  COUNT^ OPEN! ( STAR { #STAR.setType(ROW_STAR); } | ( ( DISTINCT | ALL )? ( path | collectionExpr | NUM_INT ) ) ) CLOSE!
+	|  COUNT^ OPEN! ( STAR { #STAR.setType(ROW_STAR); } | ( ( DISTINCT | ALL )? ( path | collectionExpr | NUM_INT | caseExpression ) ) ) CLOSE!
 	|  collectionExpr
 	;
 
@@ -737,6 +758,7 @@ collectionExpr
 compoundExpr
 	: collectionExpr
 	| path
+	| { LA(1) == OPEN && LA(2) == CLOSE }? OPEN! CLOSE!
 	| (OPEN! ( (expression (COMMA! expression)*) | subQuery ) CLOSE!)
 	| parameter
 	;

@@ -82,60 +82,52 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
 	private void evictOrRemoveTest() throws Exception {
 		Configuration cfg = createConfiguration();
-		InfinispanRegionFactory regionFactory = null;
-		InfinispanRegionFactory remoteRegionFactory = null;
-		try {
-			regionFactory = CacheTestUtil.startRegionFactory(
-					new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
-					cfg,
-					getCacheTestSupport()
-			);
-			boolean invalidation = false;
+		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+				new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
+				cfg,
+				getCacheTestSupport()
+		);
+		boolean invalidation = false;
 
-			// Sleep a bit to avoid concurrent FLUSH problem
-			avoidConcurrentFlush();
+		// Sleep a bit to avoid concurrent FLUSH problem
+		avoidConcurrentFlush();
 
-			GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
-					regionFactory,
-					getStandardRegionName( REGION_PREFIX ), cfg.getProperties(), null
-			);
+		GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
+				regionFactory,
+				getStandardRegionName( REGION_PREFIX ), cfg.getProperties(), null
+		);
 
-			cfg = createConfiguration();
-			remoteRegionFactory = CacheTestUtil.startRegionFactory(
-					new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
-					cfg,
-					getCacheTestSupport()
-			);
+		cfg = createConfiguration();
+		regionFactory = CacheTestUtil.startRegionFactory(
+				new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
+				cfg,
+				getCacheTestSupport()
+		);
 
-			GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
-					remoteRegionFactory,
-					getStandardRegionName( REGION_PREFIX ),
-					cfg.getProperties(),
-					null
-			);
+		GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
+				regionFactory,
+				getStandardRegionName( REGION_PREFIX ),
+				cfg.getProperties(),
+				null
+		);
 
-			assertNull( "local is clean", localRegion.get( KEY ) );
-			assertNull( "remote is clean", remoteRegion.get( KEY ) );
+		assertNull( "local is clean", localRegion.get( KEY ) );
+		assertNull( "remote is clean", remoteRegion.get( KEY ) );
 
-			regionPut( localRegion );
-			assertEquals( VALUE1, localRegion.get( KEY ) );
+      regionPut(localRegion);
+      assertEquals( VALUE1, localRegion.get( KEY ) );
 
-			// allow async propagation
-			sleep( 250 );
-			Object expected = invalidation ? null : VALUE1;
-			assertEquals( expected, remoteRegion.get( KEY ) );
+		// allow async propagation
+		sleep( 250 );
+		Object expected = invalidation ? null : VALUE1;
+		assertEquals( expected, remoteRegion.get( KEY ) );
 
-			regionEvict( localRegion );
+      regionEvict(localRegion);
 
-			// allow async propagation
-			sleep( 250 );
-			assertEquals( null, localRegion.get( KEY ) );
-			assertEquals( null, remoteRegion.get( KEY ) );
-		}
-		finally {
-			CacheTestUtil.stopRegionFactory( regionFactory, getCacheTestSupport() );
-			CacheTestUtil.stopRegionFactory( remoteRegionFactory, getCacheTestSupport() );
-		}
+      // allow async propagation
+		sleep( 250 );
+		assertEquals( null, localRegion.get( KEY ) );
+		assertEquals( null, remoteRegion.get( KEY ) );
 	}
 
 	protected void regionEvict(GeneralDataRegion region) throws Exception {

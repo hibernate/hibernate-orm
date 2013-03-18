@@ -47,6 +47,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
 		registerColumnType( Types.LONGVARBINARY, "image" );
 		registerColumnType( Types.LONGVARCHAR, "text" );
+		registerColumnType( Types.BOOLEAN, "bit" );
 
 		registerFunction( "second", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(second, ?1)" ) );
 		registerFunction( "minute", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(minute, ?1)" ) );
@@ -133,6 +134,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				return tableName + " with (updlock, rowlock)";
 			case PESSIMISTIC_READ:
 				return tableName + " with (holdlock, rowlock)";
+            case UPGRADE_SKIPLOCKED:
+                return tableName + " with (updlock, rowlock, readpast)";
 			default:
 				return tableName;
 		}

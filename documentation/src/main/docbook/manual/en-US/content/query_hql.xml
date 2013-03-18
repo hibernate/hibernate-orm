@@ -855,11 +855,16 @@ WHERE prod.name = 'widget'
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat
-order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
+order by cat.name asc, cat.weight desc nulls first, cat.birthdate]]></programlisting>
 
         <para>
             The optional <literal>asc</literal> or <literal>desc</literal> indicate ascending or descending order
             respectively.
+        </para>
+
+        <para>
+            The optional <literal>nulls first</literal> or <literal>nulls last</literal> indicate precedence of null
+            values while sorting.
         </para>
     </section>
 

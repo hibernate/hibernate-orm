@@ -78,7 +78,7 @@ public class ComponentTest extends BaseCoreFunctionalTestCase {
 		Component component = ( Component ) personProperty.getValue();
 		Formula f = ( Formula ) component.getProperty( "yob" ).getValue().getColumnIterator().next();
 
-		SQLFunction yearFunction = ( SQLFunction ) dialect.getFunctions().get( "year" );
+		SQLFunction yearFunction = dialect.getFunctions().get( "year" );
 		if ( yearFunction == null ) {
 			// the dialect not know to support a year() function, so rely on the
 			// ANSI SQL extract function

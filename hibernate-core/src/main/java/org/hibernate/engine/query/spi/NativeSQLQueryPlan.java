@@ -87,7 +87,7 @@ public class NativeSQLQueryPlan implements Serializable {
 					customQuery.getSQL() );
 		}
 		if ( loc instanceof Integer ) {
-			return new int[] { ((Integer) loc ).intValue() };
+			return new int[] { (Integer) loc };
 		}
 		else {
 			return ArrayHelper.toIntArray( (List) loc );
@@ -201,11 +201,11 @@ public class NativeSQLQueryPlan implements Serializable {
 						session );
 				col += bindNamedParameters( ps, queryParameters
 						.getNamedParameters(), col, session );
-				result = ps.executeUpdate();
+				result = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 			}
 			finally {
 				if ( ps != null ) {
-					ps.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 				}
 			}
 		}

@@ -27,8 +27,8 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <!-- Test class for issue HHH-3854. Restricting creation of proxy objects is essential. -->
 <hibernate-mapping package="org.hibernate.envers.test.entities.onetoone" default-lazy="false">
-    <class name="BidirectionalEagerHbmRefIngPK" table="BIDIRECTIONAL_REFERENCING_ENTITY">
-        <id name="id" type="long" column="BIDIRECTIONAL_REFERENCING_ID">
+    <class name="BidirectionalEagerHbmRefIngPK" table="REFERENCING">
+        <id name="id" type="long" column="REFERENCING_ID">
             <generator class="native" />
         </id>
         <property name="data" />
@@ -36,8 +36,8 @@
                      class="BidirectionalEagerHbmRefEdPK" column="BIDIRECTIONAL_REFERENCED_ID" />
     </class>
 
-    <class name="BidirectionalEagerHbmRefEdPK" table="BIDIRECTIONAL_REFERENCED_ENTITY">
-        <id name="id" type="long" column="BIDIRECTIONAL_REFERENCED_ID">
+    <class name="BidirectionalEagerHbmRefEdPK" table="REFERENCED_ENTITY">
+        <id name="id" type="long" column="REFERENCED_ID">
             <generator class="native" />
         </id>
         <property name="data" />

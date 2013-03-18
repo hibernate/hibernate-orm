@@ -1389,7 +1389,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 
 		s.flush();
 
-		List enrolments = ( List ) s.createCriteria( Enrolment.class).setProjection( Projections.id() ).list();
+		List enrolments = s.createCriteria( Enrolment.class).setProjection( Projections.id() ).list();
 		t.rollback();
 		s.close();
 	}
@@ -1406,7 +1406,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		s.save(course);
 		s.flush();
 		s.clear();
-		List data = ( List ) s.createCriteria( CourseMeeting.class).setProjection( Projections.id() ).list();
+		List data = s.createCriteria( CourseMeeting.class).setProjection( Projections.id() ).list();
 		t.commit();
 		s.close();
 
@@ -1464,7 +1464,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		s.save(course);
 		s.flush();
 
-		List data = ( List ) s.createCriteria( CourseMeeting.class).setProjection( Projections.id().as( "id" ) ).list();
+		List data = s.createCriteria( CourseMeeting.class).setProjection( Projections.id().as( "id" ) ).list();
 		t.rollback();
 		s.close();
 	}
@@ -1481,7 +1481,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		s.save( gaith );
 		s.flush();
 
-		List cityStates = ( List ) s.createCriteria( Student.class).setProjection( Projections.property( "cityState" ) ).list();
+		List cityStates = s.createCriteria( Student.class).setProjection( Projections.property( "cityState" ) ).list();
 		t.rollback();
 		s.close();
 	}
@@ -1497,7 +1497,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		gaith.setCityState( new CityState( "Chicago", "Illinois" ) );
 		s.save(gaith);
 		s.flush();
-		List data = ( List ) s.createCriteria( Student.class)
+		List data = s.createCriteria( Student.class)
 				.setProjection( Projections.projectionList()
 					.add( Projections.property( "cityState" ) )
 					.add( Projections.property("name") ) )
@@ -1546,7 +1546,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		gavin.getEnrolments().add(enrolment);
 		s.save(enrolment);
 		s.flush();
-		List data = ( List ) s.createCriteria( Enrolment.class)
+		List data = s.createCriteria( Enrolment.class)
 				.setProjection( Projections.projectionList()
 					.add( Projections.property( "semester" ) )
 					.add( Projections.property("year") )
@@ -2012,6 +2012,67 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 
 	}
+        
+    @Test
+    @TestForIssue( jiraKey = "HHH-6643" )
+    public void testNotNot() {
+    	Student student1 = new Student();
+    	student1.setName("Foo1 Foo1");
+    	student1.setStudentNumber(1);
+    	Student student2 = new Student();
+    	student2.setName("Foo2 Foo2");
+    	student2.setStudentNumber(2);
+    	
+    	Session s = openSession();
+		Transaction t = s.beginTransaction();
+		
+		s.persist( student1 );
+		s.persist( student2 );
+		s.flush();
+		s.clear();
+		
+		// Although this example is simplified and the "not not" is pointless,
+		// double negatives can occur in some dynamic applications (regardless
+		// if it results from bad design or not).  Test to ensure the dialect
+		// handles them as expected.
+		List<Student> students = s.createCriteria( Student.class ).add(
+				Restrictions.not(
+						Restrictions.not(
+								Restrictions.eq( "studentNumber", 1l ) ) )
+		).list();
+		
+		assertEquals( students.size(), 1 );
+		assertEquals( students.get( 0 ).getStudentNumber(), 1 );
+		
+		t.rollback();
+		s.close();
+    }
+    
+    @Test
+    @TestForIssue( jiraKey = "HHH-2951" )
+    public void testNullCriteria() {
+    	Course course = new Course();
+    	course.setCourseCode( "1234" );
+    	course.setDescription( null );
+    	
+    	Session s = openSession();
+		Transaction t = s.beginTransaction();
+		
+		s.persist( course );
+		s.flush();
+		s.clear();
+		
+		// Ensure Restrictions creates "where foo is null", instead of
+		// "where foo = null"
+		List<Course> courses = s.createCriteria( Course.class ).add(
+				Restrictions.eqOrIsNull( "description", null) ).list();
+		
+		assertEquals( courses.size(), 1 );
+		assertEquals( courses.get( 0 ).getCourseCode(), course.getCourseCode() );
+		
+		t.rollback();
+		s.close();
+    }
 
 }
 

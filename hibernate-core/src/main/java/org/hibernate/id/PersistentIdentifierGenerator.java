@@ -96,11 +96,4 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator, Expo
 	 * @return Object an identifying key for this generator
 	 */
 	public Object generatorKey();
-
 }
-
-
-
-
-
-

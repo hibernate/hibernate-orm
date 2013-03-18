@@ -59,8 +59,16 @@ public class Property extends PropertyProjection {
 		return Restrictions.eq(getPropertyName(), value);
 	}
 
+	public Criterion eqOrIsNull(Object value) {
+		return Restrictions.eqOrIsNull(getPropertyName(), value);
+	}
+
 	public SimpleExpression ne(Object value) {
 		return Restrictions.ne(getPropertyName(), value);
+	}
+
+	public Criterion neOrIsNotNull(Object value) {
+		return Restrictions.neOrIsNotNull(getPropertyName(), value);
 	}
 
 	public SimpleExpression gt(Object value) {

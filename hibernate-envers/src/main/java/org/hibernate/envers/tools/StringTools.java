@@ -32,6 +32,10 @@ public class StringTools {
         return s == null || "".equals(s);
     }
 
+    public static boolean isEmpty(Object o) {
+        return o == null || "".equals(o);
+    }
+
     /**
      * @param s String, from which to get the last component.
      * @return The last component of the dot-separated string <code>s</code>. For example, for a string

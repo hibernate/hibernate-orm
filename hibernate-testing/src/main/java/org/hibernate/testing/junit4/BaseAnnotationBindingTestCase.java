@@ -26,6 +26,9 @@ package org.hibernate.testing.junit4;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.metamodel.MetadataBuilder;
+import org.hibernate.metamodel.MetadataSources;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,9 +36,6 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.metamodel.MetadataBuilder;
-import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 

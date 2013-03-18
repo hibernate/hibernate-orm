@@ -29,7 +29,6 @@ import javax.transaction.UserTransaction;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
 
 /**
@@ -39,45 +38,42 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
  * @author Steve Ebersole
  */
 public class WebSphereJtaPlatform extends AbstractJtaPlatform {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, WebSphereJtaPlatform.class.getName());
-
-	public static final String VERSION_5_UT_NAME = "java:comp/UserTransaction";
-	public static final String VERSION_4_UT_NAME = "jta/usertransaction";
+	private static final Logger log = Logger.getLogger( WebSphereJtaPlatform.class );
 
 	private final Class transactionManagerAccessClass;
-	private final int webSphereVersion;
+	private final WebSphereEnvironment webSphereEnvironment;
 
 	public WebSphereJtaPlatform() {
-		try {
-			Class clazz;
-			int version;
-			try {
-				clazz = Class.forName( "com.ibm.ws.Transaction.TransactionManagerFactory" );
-				version = 5;
-                LOG.debug("WebSphere 5.1");
-			}
-			catch ( Exception e ) {
-				try {
-					clazz = Class.forName( "com.ibm.ejs.jts.jta.TransactionManagerFactory" );
-					version = 5;
-                    LOG.debug("WebSphere 5.0");
-				}
-				catch ( Exception e2 ) {
-					clazz = Class.forName( "com.ibm.ejs.jts.jta.JTSXA" );
-					version = 4;
-                    LOG.debug("WebSphere 4");
-				}
-			}
+		Class tmAccessClass = null;
+		WebSphereEnvironment webSphereEnvironment = null;
 
-			transactionManagerAccessClass = clazz;
-			webSphereVersion = version;
+		for ( WebSphereEnvironment check : WebSphereEnvironment.values() ) {
+			try {
+				tmAccessClass = Class.forName( check.getTmAccessClassName() );
+				webSphereEnvironment = check;
+				log.debugf( "WebSphere version : %s", webSphereEnvironment.getWebSphereVersion() );
+				break;
+			}
+			catch ( Exception ignore ) {
+				// go on to the next iteration
+			}
 		}
-		catch ( Exception e ) {
-			throw new JtaPlatformException( "Could not locate WebSphere TransactionManager access class", e );
+
+		if ( webSphereEnvironment == null ) {
+			throw new JtaPlatformException( "Could not locate WebSphere TransactionManager access class" );
 		}
+
+		this.transactionManagerAccessClass = tmAccessClass;
+		this.webSphereEnvironment = webSphereEnvironment;
+	}
+
+	public WebSphereJtaPlatform(Class transactionManagerAccessClass, WebSphereEnvironment webSphereEnvironment) {
+		this.transactionManagerAccessClass = transactionManagerAccessClass;
+		this.webSphereEnvironment = webSphereEnvironment;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	protected TransactionManager locateTransactionManager() {
 		try {
 			final Method method = transactionManagerAccessClass.getMethod( "getTransactionManager" );
@@ -91,7 +87,36 @@ public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 
 	@Override
 	protected UserTransaction locateUserTransaction() {
-		final String utName = webSphereVersion == 5 ? VERSION_5_UT_NAME : VERSION_4_UT_NAME;
+		final String utName = webSphereEnvironment.getUtName();
 		return (UserTransaction) jndiService().locate( utName );
+	}
+
+	public static enum WebSphereEnvironment {
+		WS_4_0( "4.x", "com.ibm.ejs.jts.jta.JTSXA", "jta/usertransaction" ),
+		WS_5_0( "5.0", "com.ibm.ejs.jts.jta.TransactionManagerFactory", "java:comp/UserTransaction" ),
+		WS_5_1( "5.1", "com.ibm.ws.Transaction.TransactionManagerFactory", "java:comp/UserTransaction" )
+		;
+
+		private final String webSphereVersion;
+		private final String tmAccessClassName;
+		private final String utName;
+
+		private WebSphereEnvironment(String webSphereVersion, String tmAccessClassName, String utName) {
+			this.webSphereVersion = webSphereVersion;
+			this.tmAccessClassName = tmAccessClassName;
+			this.utName = utName;
+		}
+
+		public String getWebSphereVersion() {
+			return webSphereVersion;
+		}
+
+		public String getTmAccessClassName() {
+			return tmAccessClassName;
+		}
+
+		public String getUtName() {
+			return utName;
+		}
 	}
 }

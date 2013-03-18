@@ -747,53 +747,6 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
             <entry>yes</entry>
           </row>
 
-<!--          <row>
-            <entry>OSCache</entry>
-
-            <entry><literal>org.hibernate.cache.OSCacheProvider</literal></entry>
-
-            <entry>memory, disk</entry>
-
-            <entry></entry>
-
-            <entry>yes</entry>
-          </row>
-
-          <row>
-            <entry>SwarmCache</entry>
-
-            <entry><literal>org.hibernate.cache.SwarmCacheProvider</literal></entry>
-
-            <entry>clustered (ip multicast)</entry>
-
-            <entry>yes (clustered invalidation)</entry>
-
-            <entry></entry>
-          </row>
-
-          <row>
-            <entry>JBoss Cache 1.x</entry>
-
-            <entry><literal>org.hibernate.cache.TreeCacheProvider</literal></entry>
-
-            <entry>clustered (ip multicast), transactional</entry>
-
-            <entry>yes (replication)</entry>
-
-            <entry>yes (clock sync req.)</entry>
-          </row>
-
-          <row>
-            <entry>JBoss Cache 2</entry>
-
-            <entry><literal>org.hibernate.cache.jbc.JBossCacheRegionFactory</literal></entry>
-
-            <entry>clustered (ip multicast), transactional</entry>
-
-            <entry>yes (replication or invalidation)</entry>
-
-            <entry>yes (clock sync req.)</entry>
-          </row> -->
           <row>
             <entry>Infinispan</entry>
 
@@ -1122,53 +1075,6 @@ public SortedSet&lt;Ticket&gt; getTickets() {
               <entry>yes</entry>
             </row>
 
- <!--           <row>
-              <entry>OSCache</entry>
-
-              <entry>yes</entry>
-
-              <entry>yes</entry>
-
-              <entry>yes</entry>
-
-              <entry></entry>
-            </row>
-
-            <row>
-              <entry>SwarmCache</entry>
-
-              <entry>yes</entry>
-
-              <entry>yes</entry>
-
-              <entry></entry>
-
-              <entry></entry>
-            </row>
-
-            <row>
-              <entry>JBoss Cache 1.x</entry>
-
-              <entry>yes</entry>
-
-              <entry></entry>
-
-              <entry></entry>
-
-              <entry>yes</entry>
-            </row>
-
-            <row>
-              <entry>JBoss Cache 2</entry>
-
-              <entry>yes</entry>
-
-              <entry></entry>
-
-              <entry></entry>
-
-              <entry>yes</entry>
-            </row> -->
             <row>
               <entry>Infinispan</entry>
 

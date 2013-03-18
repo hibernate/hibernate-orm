@@ -110,11 +110,10 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			final Connection connection = session.getTransactionCoordinator()
 					.getJdbcCoordinator()
 					.getLogicalConnection()
-					.getShareableConnectionProxy();
+					.getConnection();
 			work.execute( connection );
 			session.getTransactionCoordinator()
 					.getJdbcCoordinator()
-					.getLogicalConnection()
 					.afterStatementExecution();
 		}
 	}
@@ -132,11 +131,10 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 				final Connection connection = session.getTransactionCoordinator()
 						.getJdbcCoordinator()
 						.getLogicalConnection()
-						.getShareableConnectionProxy();
+						.getConnection();
 				work.execute( connection );
 				session.getTransactionCoordinator()
 						.getJdbcCoordinator()
-						.getLogicalConnection()
 						.afterStatementExecution();
 			}
 		}
@@ -146,7 +144,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			try {
 				final String sql = "delete from " + persister.getTemporaryIdTableName();
 				ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
-				ps.executeUpdate();
+				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 			}
 			catch( Throwable t ) {
 				log.unableToCleanupTemporaryIdTable(t);
@@ -154,7 +152,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			finally {
 				if ( ps != null ) {
 					try {
-						ps.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 					}
 					catch( Throwable ignore ) {
 						// ignore
@@ -246,7 +244,6 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			try {
 				Statement statement = connection.createStatement();
 				try {
-					statement = connection.createStatement();
 					statement.executeUpdate( command );
 				}
 				finally {

@@ -96,15 +96,15 @@ public class BasicExecutor implements StatementExecutor {
 				}
 				if ( selection != null ) {
 					if ( selection.getTimeout() != null ) {
-						st.setQueryTimeout( selection.getTimeout().intValue() );
+						st.setQueryTimeout( selection.getTimeout() );
 					}
 				}
 
-				return st.executeUpdate();
+				return session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
 			}
 			finally {
 				if ( st != null ) {
-					st.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 				}
 			}
 		}

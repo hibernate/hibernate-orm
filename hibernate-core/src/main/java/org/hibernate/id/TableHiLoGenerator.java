@@ -49,7 +49,7 @@ import org.hibernate.type.Type;
  * @see SequenceHiLoGenerator
  * @author Gavin King
  * 
- * @deprecate use {@link SequenceStyleGenerator} instead.
+ * @deprecated use {@link SequenceStyleGenerator} instead.
  */
 @Deprecated 
 public class TableHiLoGenerator extends TableGenerator {

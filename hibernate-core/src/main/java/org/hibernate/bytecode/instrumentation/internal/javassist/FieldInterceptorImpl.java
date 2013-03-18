@@ -81,8 +81,7 @@ public final class FieldInterceptorImpl extends AbstractFieldInterceptor impleme
 	}
 
 	public int readInt(Object target, String name, int oldValue) {
-		return ( ( Integer ) intercept( target, name, Integer.valueOf( oldValue ) ) )
-				.intValue();
+		return ( ( Integer ) intercept( target, name, Integer.valueOf( oldValue ) ) );
 	}
 
 	public long readLong(Object target, String name, long oldValue) {

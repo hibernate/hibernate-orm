@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.beanvalidation;
-
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -37,6 +36,7 @@ import javax.validation.ValidatorFactory;
 import org.jboss.logging.Logger;
 
 import org.hibernate.EntityMode;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
@@ -53,13 +53,12 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
+//FIXME review exception model
 public class BeanValidationEventListener
 		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			BeanValidationEventListener.class.getName()
-	);
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
+			BeanValidationEventListener.class.getName());
 
 	private ValidatorFactory factory;
 	private ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister =
@@ -77,19 +76,20 @@ public class BeanValidationEventListener
 	 * Constructor used in an environment where validator factory is injected (JPA2).
 	 *
 	 * @param factory The {@code ValidatorFactory} to use to create {@code Validator} instance(s)
-	 * @param properties Configured properties
+	 * @param properties Configued properties
 	 */
 	public BeanValidationEventListener(ValidatorFactory factory, Properties properties) {
 		init( factory, properties );
 	}
 
-	public void initialize(Properties properties) {
+	public void initialize(Configuration cfg) {
 		if ( !initialized ) {
 			ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-			init( factory, properties );
+			Properties props = cfg.getProperties();
+			init( factory, props );
 		}
 	}
-	@Override
+
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
 				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
@@ -97,7 +97,7 @@ public class BeanValidationEventListener
 		);
 		return false;
 	}
-	@Override
+
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
 				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
@@ -105,7 +105,7 @@ public class BeanValidationEventListener
 		);
 		return false;
 	}
-	@Override
+
 	public boolean onPreDelete(PreDeleteEvent event) {
 		validate(
 				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
@@ -135,36 +135,32 @@ public class BeanValidationEventListener
 		if ( groups.length > 0 ) {
 			final Set<ConstraintViolation<T>> constraintViolations = validator.validate( object, groups );
 			if ( constraintViolations.size() > 0 ) {
-				throw createConstraintViolationException( operation, groups, constraintViolations );
+				Set<ConstraintViolation<?>> propagatedViolations =
+						new HashSet<ConstraintViolation<?>>( constraintViolations.size() );
+				Set<String> classNames = new HashSet<String>();
+				for ( ConstraintViolation<?> violation : constraintViolations ) {
+					LOG.trace( violation );
+					propagatedViolations.add( violation );
+					classNames.add( violation.getLeafBean().getClass().getName() );
+				}
+				StringBuilder builder = new StringBuilder();
+				builder.append( "Validation failed for classes " );
+				builder.append( classNames );
+				builder.append( " during " );
+				builder.append( operation.getName() );
+				builder.append( " time for groups " );
+				builder.append( toString( groups ) );
+				builder.append( "\nList of constraint violations:[\n" );
+				for (ConstraintViolation<?> violation : constraintViolations) {
+					builder.append( "\t" ).append( violation.toString() ).append("\n");
+				}
+				builder.append( "]" );
+
+				throw new ConstraintViolationException(
+						builder.toString(), propagatedViolations
+				);
 			}
 		}
-	}
-
-	private <T> ConstraintViolationException createConstraintViolationException(GroupsPerOperation.Operation operation, Class<?>[] groups, Set<ConstraintViolation<T>> constraintViolations) {
-		Set<ConstraintViolation<?>> propagatedViolations =
-				new HashSet<ConstraintViolation<?>>( constraintViolations.size() );
-		Set<String> classNames = new HashSet<String>();
-		for ( ConstraintViolation<?> violation : constraintViolations ) {
-			LOG.trace( violation );
-			propagatedViolations.add( violation );
-			classNames.add( violation.getLeafBean().getClass().getName() );
-		}
-		StringBuilder builder = new StringBuilder();
-		builder.append( "Validation failed for classes " );
-		builder.append( classNames );
-		builder.append( " during " );
-		builder.append( operation.getName() );
-		builder.append( " time for groups " );
-		builder.append( toString( groups ) );
-		builder.append( "\nList of constraint violations:[\n" );
-		for ( ConstraintViolation<?> violation : constraintViolations ) {
-			builder.append( "\t" ).append( violation.toString() ).append( "\n" );
-		}
-		builder.append( "]" );
-
-		return new ConstraintViolationException(
-				builder.toString(), propagatedViolations
-		);
 	}
 
 	private String toString(Class<?>[] groups) {

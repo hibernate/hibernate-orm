@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -56,19 +57,19 @@ public class RowIdTest extends BaseCoreFunctionalTestCase {
 
 	public void afterSessionFactoryBuilt() {
 		super.afterSessionFactoryBuilt();
-		Session session = sessionFactory().openSession();
+		final Session session = sessionFactory().openSession();
 		session.doWork(
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
-						Statement st = connection.createStatement();
+						Statement st = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 						try {
-							st.execute( "drop table Point");
+							((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().execute( st, "drop table Point");
 						}
 						catch (Exception ignored) {
 						}
-						st.execute("create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
-						st.close();
+						((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().execute( st, "create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
+						((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().release( st );
 					}
 				}
 		);

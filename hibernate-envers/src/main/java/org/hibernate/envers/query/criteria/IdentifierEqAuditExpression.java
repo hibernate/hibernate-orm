@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.query.criteria;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
@@ -39,7 +40,8 @@ public class IdentifierEqAuditExpression implements AuditCriterion {
         this.equals = equals;
     }
 
-    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+    public void addToQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
+						   QueryBuilder qb, Parameters parameters) {
         verCfg.getEntCfg().get(entityName).getIdMapper()
                 .addIdEqualsToQuery(parameters, id, verCfg.getAuditEntCfg().getOriginalIdPropName(), equals);
     }

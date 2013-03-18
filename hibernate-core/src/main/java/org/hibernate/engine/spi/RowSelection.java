@@ -68,6 +68,6 @@ public final class RowSelection {
 
 	public boolean definesLimits() {
 		return maxRows != null ||
-	           ( firstRow != null && firstRow.intValue() <= 0 );
+	           ( firstRow != null && firstRow <= 0 );
 	}
 }

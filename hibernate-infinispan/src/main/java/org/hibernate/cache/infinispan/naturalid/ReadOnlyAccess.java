@@ -10,7 +10,6 @@ import org.hibernate.cache.spi.access.SoftLock;
  * @author Strong Liu <stliu@hibernate.org>
  */
 class ReadOnlyAccess extends TransactionalAccess {
-	private static final Log log = LogFactory.getLog( ReadOnlyAccess.class );
 
 	ReadOnlyAccess(NaturalIdRegionImpl naturalIdRegion) {
 		super( naturalIdRegion );

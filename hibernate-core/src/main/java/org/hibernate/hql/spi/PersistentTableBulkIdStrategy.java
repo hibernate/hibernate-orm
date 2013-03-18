@@ -143,8 +143,8 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			}
 
 			try {
+				// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				Statement statement = connection.createStatement();
-
 				for ( Table idTableDefinition : idTableDefinitions ) {
 					if ( cleanUpTables ) {
 						if ( tableCleanUpDdl == null ) {
@@ -155,6 +155,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 					try {
 						final String sql = idTableDefinition.sqlCreateString( jdbcServices.getDialect(), mapping, null, null );
 						jdbcServices.getSqlStatementLogger().logStatement( sql );
+						// TODO: ResultSetExtractor
 						statement.execute( sql );
 					}
 					catch (SQLException e) {
@@ -162,6 +163,8 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 					}
 				}
 				
+				// TODO
+//				session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
 				statement.close();
 			}
 			catch (SQLException e) {
@@ -190,6 +193,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			Connection connection = connectionAccess.obtainConnection();
 
 			try {
+				// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				Statement statement = connection.createStatement();
 
 				for ( String cleanupDdl : tableCleanUpDdl ) {
@@ -202,6 +206,8 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 					}
 				}
 				
+				// TODO
+//				session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
 				statement.close();
 			}
 			catch (SQLException e) {
@@ -266,12 +272,12 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			try {
 				ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 				bindSessionIdentifier( ps, session, 1 );
-				ps.executeUpdate();
+				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 			}
 			finally {
 				if ( ps != null ) {
 					try {
-						ps.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 					}
 					catch( Throwable ignore ) {
 						// ignore

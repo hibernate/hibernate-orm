@@ -311,7 +311,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 	public <T extends Annotation> boolean isAnnotationPresent(Class<T> annotationType) {
 		initAnnotations();
-		return (T) annotationsMap.get( annotationType ) != null;
+		return annotationsMap.containsKey( annotationType );
 	}
 
 	public Annotation[] getAnnotations() {
@@ -837,12 +837,13 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private Cacheable getCacheable(Element element, XMLContext.Default defaults){
-		if(element==null)return null;
-		String attValue = element.attributeValue( "cacheable" );
-		if(attValue!=null){
-			AnnotationDescriptor ad = new AnnotationDescriptor( Cacheable.class );
-			ad.setValue( "value", Boolean.valueOf( attValue ) );
-			return AnnotationFactory.create( ad );
+		if ( element != null ) {
+			String attValue = element.attributeValue( "cacheable" );
+			if ( attValue != null ) {
+				AnnotationDescriptor ad = new AnnotationDescriptor( Cacheable.class );
+				ad.setValue( "value", Boolean.valueOf( attValue ) );
+				return AnnotationFactory.create( ad );
+			}
 		}
 		if ( defaults.canUseJavaAnnotations() ) {
 			return getJavaAnnotation( Cacheable.class );
@@ -2262,6 +2263,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 						annotation.setValue( "schema", table.schema() );
 						annotation.setValue( "catalog", table.catalog() );
 						annotation.setValue( "uniqueConstraints", table.uniqueConstraints() );
+						annotation.setValue( "indexes", table.indexes() );
 					}
 				}
 				if ( StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) )

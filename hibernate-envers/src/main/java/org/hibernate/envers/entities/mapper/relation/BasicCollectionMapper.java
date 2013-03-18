@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.BasicCollectionInitializor;
@@ -42,8 +43,8 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 
     public BasicCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
                                  Class<? extends T> collectionClass, Class<? extends T> proxyClass,
-                                 MiddleComponentData elementComponentData) {
-        super(commonCollectionMapperData, collectionClass, proxyClass);
+                                 MiddleComponentData elementComponentData, boolean revisionTypeInId) {
+        super(commonCollectionMapperData, collectionClass, proxyClass, revisionTypeInId);
         this.elementComponentData = elementComponentData;
     }
 
@@ -67,7 +68,7 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
         }
     }
 
-    protected void mapToMapFromObject(Map<String, Object> data, Object changed) {
-        elementComponentData.getComponentMapper().mapToMapFromObject(data, changed);
+    protected void mapToMapFromObject(SessionImplementor session, Map<String, Object> idData, Map<String, Object> data, Object changed) {
+        elementComponentData.getComponentMapper().mapToMapFromObject(session, idData, data, changed);
     }
 }

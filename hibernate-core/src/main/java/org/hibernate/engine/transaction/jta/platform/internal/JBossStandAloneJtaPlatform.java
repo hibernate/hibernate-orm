@@ -37,8 +37,8 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
  * @author Steve Ebersole
  */
 public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
-	private static final String JBOSS_TM_CLASS_NAME = "com.arjuna.ats.jta.TransactionManager";
-	private static final String JBOSS_UT_CLASS_NAME = "com.arjuna.ats.jta.UserTransaction";
+	public static final String JBOSS_TM_CLASS_NAME = "com.arjuna.ats.jta.TransactionManager";
+	public static final String JBOSS_UT_CLASS_NAME = "com.arjuna.ats.jta.UserTransaction";
 
 	@Override
 	protected TransactionManager locateTransactionManager() {

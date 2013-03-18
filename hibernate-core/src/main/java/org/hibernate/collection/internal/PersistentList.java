@@ -52,8 +52,6 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		final EntityMode entityMode = persister.getOwnerEntityPersister().getEntityMode();
-
 		ArrayList clonedList = new ArrayList( list.size() );
 		for ( Object element : list ) {
 			Object deepCopy = persister.getElementType().deepCopy( element, persister.getFactory() );
@@ -399,7 +397,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	public Object readFrom(ResultSet rs, CollectionPersister persister, CollectionAliases descriptor, Object owner)
 	throws HibernateException, SQLException {
 		Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
-		int index = ( (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() ) ).intValue();
+		int index = (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
 
 		//pad with nulls from the current last element up to the new index
 		for ( int i = list.size(); i<=index; i++) {

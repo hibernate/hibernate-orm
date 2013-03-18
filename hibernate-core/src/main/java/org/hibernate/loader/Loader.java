@@ -254,22 +254,24 @@ public abstract class Loader {
 			Dialect dialect,
 			List<AfterLoadAction> afterLoadActions) {
 		if ( dialect.useFollowOnLocking() ) {
-			LOG.usingFollowOnLocking();
 			// currently only one lock mode is allowed in follow-on locking
 			final LockMode lockMode = determineFollowOnLockMode( parameters.getLockOptions() );
 			final LockOptions lockOptions = new LockOptions( lockMode );
-			lockOptions.setTimeOut( parameters.getLockOptions().getTimeOut() );
-			lockOptions.setScope( parameters.getLockOptions().getScope() );
-			afterLoadActions.add(
-					new AfterLoadAction() {
-						@Override
-						public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
-							( (Session) session ).buildLockRequest( lockOptions ).lock( persister.getEntityName(), entity );
+			if ( lockOptions.getLockMode() != LockMode.UPGRADE_SKIPLOCKED ) {
+				LOG.usingFollowOnLocking();
+				lockOptions.setTimeOut( parameters.getLockOptions().getTimeOut() );
+				lockOptions.setScope( parameters.getLockOptions().getScope() );
+				afterLoadActions.add(
+						new AfterLoadAction() {
+							@Override
+							public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
+								( (Session) session ).buildLockRequest( lockOptions ).lock( persister.getEntityName(), entity );
+							}
 						}
-					}
-			);
-			parameters.setLockOptions( new LockOptions() );
-			return true;
+				);
+				parameters.setLockOptions( new LockOptions() );
+				return true;
+			}
 		}
 		return false;
 	}
@@ -906,7 +908,7 @@ public abstract class Loader {
 			return processResultSet( rs, queryParameters, session, returnProxies, forcedResultTransformer, maxRows, afterLoadActions );
 		}
 		finally {
-			st.close();
+			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 		}
 
 	}
@@ -1904,11 +1906,11 @@ public abstract class Loader {
 			LOG.tracev( "Bound [{0}] parameters total", col );
 		}
 		catch ( SQLException sqle ) {
-			st.close();
+			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			throw sqle;
 		}
 		catch ( HibernateException he ) {
-			st.close();
+			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			throw he;
 		}
 
@@ -2029,7 +2031,7 @@ public abstract class Loader {
 	throws SQLException, HibernateException {
 
 		try {
-			ResultSet rs = st.executeQuery();
+			ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 			rs = wrapResultSetIfEnabled( rs , session );
 
 			if ( !limitHandler.supportsLimitOffset() || !LimitHelper.useLimit( limitHandler, selection ) ) {
@@ -2042,7 +2044,7 @@ public abstract class Loader {
 			return rs;
 		}
 		catch ( SQLException sqle ) {
-			st.close();
+			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			throw sqle;
 		}
 	}

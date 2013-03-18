@@ -18,6 +18,13 @@ public class Book {
 
 	@Version
 	public Integer version;
+	
+	public Book() {}
+	
+	public Book(String name, Integer version) {
+		this.name = name;
+		this.version = version;
+	}
 
 	public Integer getId() {
 		return id;

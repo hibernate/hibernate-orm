@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -29,37 +29,41 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 
 /**
- * @author Hardy Ferentschik
+ * Duplicates the javax.validation enum (because javax validation might not be on the runtime classpath)
+ *
+ * @author Steve Ebersole
  */
 public enum ValidationMode {
-	AUTO,
-	CALLBACK,
-	NONE,
-	DDL;
+	AUTO( "auto" ),
+	CALLBACK( "callback" ),
+	NONE( "none" ),
+	DDL( "ddl" );
+
+	private final String externalForm;
+
+	private ValidationMode(String externalForm) {
+		this.externalForm = externalForm;
+	}
 
 	public static Set<ValidationMode> getModes(Object modeProperty) {
-		Set<ValidationMode> modes = new HashSet<ValidationMode>( 3 );
-		if ( modeProperty == null ) {
+		Set<ValidationMode> modes = new HashSet<ValidationMode>(3);
+		if (modeProperty == null) {
 			modes.add( ValidationMode.AUTO );
 		}
 		else {
 			final String[] modesInString = modeProperty.toString().split( "," );
 			for ( String modeInString : modesInString ) {
-				modes.add( getMode( modeInString ) );
+				modes.add( getMode(modeInString) );
 			}
 		}
 		if ( modes.size() > 1 && ( modes.contains( ValidationMode.AUTO ) || modes.contains( ValidationMode.NONE ) ) ) {
-			StringBuilder message = new StringBuilder( "Incompatible validation modes mixed: " );
-			for ( ValidationMode mode : modes ) {
-				message.append( mode ).append( ", " );
-			}
-			throw new HibernateException( message.substring( 0, message.length() - 2 ) );
+			throw new HibernateException( "Incompatible validation modes mixed: " +  loggable( modes ) );
 		}
 		return modes;
 	}
 
 	private static ValidationMode getMode(String modeProperty) {
-		if ( modeProperty == null || modeProperty.length() == 0 ) {
+		if (modeProperty == null || modeProperty.length() == 0) {
 			return AUTO;
 		}
 		else {
@@ -70,5 +74,18 @@ public enum ValidationMode {
 				throw new HibernateException( "Unknown validation mode in " + BeanValidationIntegrator.MODE_PROPERTY + ": " + modeProperty );
 			}
 		}
+	}
+
+	public static String loggable(Set<ValidationMode> modes) {
+		if ( modes == null || modes.isEmpty() ) {
+			return "[<empty>]";
+		}
+		StringBuilder buffer = new StringBuilder( "[" );
+		String sep = "";
+		for ( ValidationMode mode : modes ) {
+			buffer.append( sep ).append( mode.externalForm );
+			sep = ", ";
+		}
+		return buffer.append( "]" ).toString();
 	}
 }

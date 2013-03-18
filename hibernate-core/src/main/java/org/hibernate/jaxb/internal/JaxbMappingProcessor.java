@@ -26,6 +26,7 @@ package org.hibernate.jaxb.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -45,13 +46,12 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
@@ -59,7 +59,6 @@ import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.XsdException;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.engine.config.spi.StandardConverters;
 
 /**
  * Loads {@code hbm.xml} and {@code orm.xml} files and processes them using StAX and JAXB.

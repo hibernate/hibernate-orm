@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.xml;
 
-import org.junit.Test;
+import static junit.framework.Assert.assertNotNull;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataSources;
@@ -31,8 +31,7 @@ import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static junit.framework.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Hardy Ferentschik
@@ -53,7 +52,6 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 		sources.addResource( "org/hibernate/metamodel/internal/source/annotations/xml/orm-star.xml" );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
-
 		EntityBinding binding = metadata.getEntityBinding( Star.class.getName() );
 		assertNotNull( binding );
 	}

@@ -55,26 +55,9 @@ public interface LogicalConnection extends Serializable {
 	 * connection has either not yet been obtained (non-UserSuppliedConnectionProvider)
 	 * or has previously been aggressively released.
 	 *
-	 * @todo ?? Move this to {@link LogicalConnectionImplementor} in lieu of {@link #getShareableConnectionProxy} and {@link #getDistinctConnectionProxy} ??
-	 *
 	 * @return The current Connection.
 	 */
 	public Connection getConnection();
-
-	/**
-	 * Retrieves the shareable connection proxy.
-	 *
-	 * @return The shareable connection proxy.
-	 */
-	public Connection getShareableConnectionProxy();
-
-	/**
-	 * Retrieves a distinct connection proxy.  It is distinct in that it is not shared with others unless the caller
-	 * explicitly shares it.
-	 *
-	 * @return The distinct connection proxy.
-	 */
-	public Connection getDistinctConnectionProxy();
 
 	/**
 	 * Release the underlying connection and clean up any other resources associated
@@ -85,9 +68,4 @@ public interface LogicalConnection extends Serializable {
 	 * @return The application-supplied connection, or {@code null} if Hibernate was managing connection.
 	 */
 	public Connection close();
-
-	/**
-	 * Signals the end of current transaction in which this logical connection operated.
-	 */
-	public void afterTransaction();
 }

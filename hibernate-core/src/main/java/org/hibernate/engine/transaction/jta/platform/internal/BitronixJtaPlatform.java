@@ -34,7 +34,7 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
  * @author Steve Ebersole
  */
 public class BitronixJtaPlatform extends AbstractJtaPlatform {
-	private static final String TM_CLASS_NAME = "bitronix.tm.TransactionManagerServices";
+	public static final String TM_CLASS_NAME = "bitronix.tm.TransactionManagerServices";
 
 	@Override
 	protected TransactionManager locateTransactionManager() {

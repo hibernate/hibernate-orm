@@ -28,6 +28,14 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
+import org.hibernate.engine.jdbc.dialect.internal.DatabaseInfoDialectResolverInitiator;
+import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
+import org.hibernate.engine.transaction.internal.TransactionFactoryInitiator;
+import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformResolverInitiator;
+import org.hibernate.id.factory.internal.MutableIdentifierGeneratorFactoryInitiator;
+import org.hibernate.persister.internal.PersisterClassResolverInitiator;
+import org.hibernate.persister.internal.PersisterFactoryInitiator;
 import org.hibernate.engine.config.internal.ConfigurationServiceInitiator;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
@@ -70,6 +78,7 @@ public class StandardServiceInitiators {
 
 		serviceInitiators.add( ConnectionProviderInitiator.INSTANCE );
 		serviceInitiators.add( MultiTenantConnectionProviderInitiator.INSTANCE );
+		serviceInitiators.add( DatabaseInfoDialectResolverInitiator.INSTANCE );
 		serviceInitiators.add( DialectResolverInitiator.INSTANCE );
 		serviceInitiators.add( DialectFactoryInitiator.INSTANCE );
 		serviceInitiators.add( BatchBuilderInitiator.INSTANCE );
@@ -82,6 +91,7 @@ public class StandardServiceInitiators {
 		serviceInitiators.add( MutableIdentifierGeneratorFactoryInitiator.INSTANCE);
 
 		serviceInitiators.add( JtaPlatformInitiator.INSTANCE );
+		serviceInitiators.add( JtaPlatformResolverInitiator.INSTANCE );
 		serviceInitiators.add( TransactionFactoryInitiator.INSTANCE );
 
 		serviceInitiators.add( SessionFactoryServiceRegistryFactoryInitiator.INSTANCE );

@@ -894,7 +894,7 @@ public abstract class AbstractEntityPersister
 			}
 			else {
 				rootTableKeyColumnReaders[i] = col.getReadFragment();
-				rootTableKeyColumnReaderTemplates[i] = getTemplateFromString( col.getReadFragment(), factory );
+				rootTableKeyColumnReaderTemplates[i] = getTemplateFromString( rootTableKeyColumnReaders[i], factory );
 			}
 			identifierAliases[i] = col.getAlias( factory.getDialect(), entityBinding.getHierarchyDetails().getRootEntityBinding().getPrimaryTable() );
 		}
@@ -1272,8 +1272,146 @@ public abstract class AbstractEntityPersister
 	@Override
 	public Object initializeLazyProperty(String fieldName, Object entity, SessionImplementor session)
 			throws HibernateException {
-		return lazyPropertyInitializerDelegater.initializeLazyProperty( fieldName, entity, session );
+//		return lazyPropertyInitializerDelegater.initializeLazyProperty( fieldName, entity, session );
+//
+//<<<<<<< HEAD
+//=======
+		final Serializable id = session.getContextEntityIdentifier( entity );
 
+		final EntityEntry entry = session.getPersistenceContext().getEntry( entity );
+		if ( entry == null ) {
+			throw new HibernateException( "entity is not associated with the session: " + id );
+		}
+
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Initializing lazy properties of: {0}, field access: {1}", MessageHelper.infoString( this, id, getFactory() ), fieldName );
+		}
+
+		if ( hasCache() ) {
+			CacheKey cacheKey = session.generateCacheKey( id, getIdentifierType(), getEntityName() );
+			Object ce = getCacheAccessStrategy().get( cacheKey, session.getTimestamp() );
+			if (ce!=null) {
+				CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure(ce, factory);
+				if ( !cacheEntry.areLazyPropertiesUnfetched() ) {
+					//note early exit here:
+					return initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
+				}
+			}
+		}
+
+		return initializeLazyPropertiesFromDatastore( fieldName, entity, session, id, entry );
+
+	}
+
+	private Object initializeLazyPropertiesFromDatastore(
+			final String fieldName,
+			final Object entity,
+			final SessionImplementor session,
+			final Serializable id,
+			final EntityEntry entry) {
+
+		if ( !hasLazyProperties() ) throw new AssertionFailure( "no lazy properties" );
+
+		LOG.trace( "Initializing lazy properties from datastore" );
+
+		try {
+
+			Object result = null;
+			PreparedStatement ps = null;
+			try {
+				final String lazySelect = getSQLLazySelectString();
+				ResultSet rs = null;
+				try {
+					if ( lazySelect != null ) {
+						// null sql means that the only lazy properties
+						// are shared PK one-to-one associations which are
+						// handled differently in the Type#nullSafeGet code...
+						ps = session.getTransactionCoordinator()
+								.getJdbcCoordinator()
+								.getStatementPreparer()
+								.prepareStatement( lazySelect );
+						getIdentifierType().nullSafeSet( ps, id, 1, session );
+						rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( ps );
+						rs.next();
+					}
+					final Object[] snapshot = entry.getLoadedState();
+					for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
+						Object propValue = lazyPropertyTypes[j].nullSafeGet( rs, lazyPropertyColumnAliases[j], session, entity );
+						if ( initializeLazyProperty( fieldName, entity, session, snapshot, j, propValue ) ) {
+							result = propValue;
+						}
+					}
+				}
+				finally {
+					if ( rs != null ) {
+						session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					}
+				}
+			}
+			finally {
+				if ( ps != null ) {
+					session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+				}
+			}
+
+			LOG.trace( "Done initializing lazy properties" );
+
+			return result;
+
+		}
+		catch ( SQLException sqle ) {
+			throw getFactory().getSQLExceptionHelper().convert(
+					sqle,
+					"could not initialize lazy properties: " +
+					MessageHelper.infoString( this, id, getFactory() ),
+					getSQLLazySelectString()
+				);
+		}
+	}
+
+	private Object initializeLazyPropertiesFromCache(
+			final String fieldName,
+			final Object entity,
+			final SessionImplementor session,
+			final EntityEntry entry,
+			final CacheEntry cacheEntry
+	) {
+
+		LOG.trace( "Initializing lazy properties from second-level cache" );
+
+		Object result = null;
+		Serializable[] disassembledValues = cacheEntry.getDisassembledState();
+		final Object[] snapshot = entry.getLoadedState();
+		for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
+			final Object propValue = lazyPropertyTypes[j].assemble(
+					disassembledValues[ lazyPropertyNumbers[j] ],
+					session,
+					entity
+				);
+			if ( initializeLazyProperty( fieldName, entity, session, snapshot, j, propValue ) ) {
+				result = propValue;
+			}
+		}
+
+		LOG.trace( "Done initializing lazy properties" );
+
+		return result;
+	}
+
+	private boolean initializeLazyProperty(
+			final String fieldName,
+			final Object entity,
+			final SessionImplementor session,
+			final Object[] snapshot,
+			final int j,
+			final Object propValue) {
+		setPropertyValue( entity, lazyPropertyNumbers[j], propValue );
+		if ( snapshot != null ) {
+			// object have been loaded with setReadOnly(true); HHH-2236
+			snapshot[ lazyPropertyNumbers[j] ] = lazyPropertyTypes[j].deepCopy( propValue, factory );
+		}
+		return fieldName.equals( lazyPropertyNames[j] );
+//>>>>>>> master
 	}
 
 	public boolean isBatchable() {
@@ -1446,7 +1584,7 @@ public abstract class AbstractEntityPersister
 			try {
 				getIdentifierType().nullSafeSet( ps, id, 1, session );
 				//if ( isVersioned() ) getVersionType().nullSafeSet( ps, version, getIdentifierColumnSpan()+1, session );
-				ResultSet rs = ps.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( ps );
 				try {
 					//if there is no resulting row, return null
 					if ( !rs.next() ) {
@@ -1464,11 +1602,11 @@ public abstract class AbstractEntityPersister
 					return values;
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				ps.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 			}
 		}
 		catch ( SQLException e ) {
@@ -1506,7 +1644,7 @@ public abstract class AbstractEntityPersister
 					.prepareStatement( generateIdByUniqueKeySelectString( uniquePropertyName ) );
 			try {
 				propertyType.nullSafeSet( ps, key, 1, session );
-				ResultSet rs = ps.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( ps );
 				try {
 					//if there is no resulting row, return null
 					if ( !rs.next() ) {
@@ -1515,11 +1653,11 @@ public abstract class AbstractEntityPersister
 					return (Serializable) getIdentifierType().nullSafeGet( rs, getIdentifierAliases(), session, null );
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				ps.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 			}
 		}
 		catch ( SQLException e ) {
@@ -1763,13 +1901,13 @@ public abstract class AbstractEntityPersister
 				getVersionType().nullSafeSet( st, nextVersion, 1, session );
 				getIdentifierType().nullSafeSet( st, id, 2, session );
 				getVersionType().nullSafeSet( st, currentVersion, 2 + getIdentifierColumnSpan(), session );
-				int rows = st.executeUpdate();
+				int rows = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
 				if ( rows != 1 ) {
 					throw new StaleObjectStateException( getEntityName(), id );
 				}
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
 		catch ( SQLException sqle ) {
@@ -1812,7 +1950,7 @@ public abstract class AbstractEntityPersister
 					.prepareStatement( getVersionSelectString() );
 			try {
 				getIdentifierType().nullSafeSet( st, id, 1, session );
-				ResultSet rs = st.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 				try {
 					if ( !rs.next() ) {
 						return null;
@@ -1823,11 +1961,11 @@ public abstract class AbstractEntityPersister
 					return getVersionType().nullSafeGet( rs, getVersionColumnName(), session, null );
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
 		catch ( SQLException e ) {
@@ -1843,6 +1981,7 @@ public abstract class AbstractEntityPersister
 		lockers.put( LockMode.READ, generateLocker( LockMode.READ ) );
 		lockers.put( LockMode.UPGRADE, generateLocker( LockMode.UPGRADE ) );
 		lockers.put( LockMode.UPGRADE_NOWAIT, generateLocker( LockMode.UPGRADE_NOWAIT ) );
+		lockers.put( LockMode.UPGRADE_SKIPLOCKED, generateLocker( LockMode.UPGRADE_SKIPLOCKED ) );
 		lockers.put( LockMode.FORCE, generateLocker( LockMode.FORCE ) );
 		lockers.put( LockMode.PESSIMISTIC_READ, generateLocker( LockMode.PESSIMISTIC_READ ) );
 		lockers.put( LockMode.PESSIMISTIC_WRITE, generateLocker( LockMode.PESSIMISTIC_WRITE ) );
@@ -2836,7 +2975,7 @@ public abstract class AbstractEntityPersister
 							.getStatementPreparer()
 							.prepareStatement( sql );
 					rootPersister.getIdentifierType().nullSafeSet( sequentialSelect, id, 1, session );
-					sequentialResultSet = sequentialSelect.executeQuery();
+					sequentialResultSet = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( sequentialSelect );
 					if ( !sequentialResultSet.next() ) {
 						// TODO: Deal with the "optional" attribute in the <join> mapping;
 						// this code assumes that optional defaults to "true" because it
@@ -2893,7 +3032,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			if ( sequentialResultSet != null ) {
-				sequentialResultSet.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( sequentialResultSet );
 			}
 
 			return values;
@@ -2901,7 +3040,7 @@ public abstract class AbstractEntityPersister
 		}
 		finally {
 			if ( sequentialSelect != null ) {
-				sequentialSelect.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( sequentialSelect );
 			}
 		}
 	}
@@ -3051,7 +3190,7 @@ public abstract class AbstractEntityPersister
 					session.getTransactionCoordinator().getJdbcCoordinator().getBatch( inserBatchKey ).addToBatch();
 				}
 				else {
-					expectation.verifyOutcome( insert.executeUpdate(), insert, -1 );
+					expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( insert ), insert, -1 );
 				}
 
 			}
@@ -3063,7 +3202,7 @@ public abstract class AbstractEntityPersister
 			}
 			finally {
 				if ( !useBatch ) {
-					insert.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( insert );
 				}
 			}
 		}
@@ -3210,7 +3349,7 @@ public abstract class AbstractEntityPersister
 					return true;
 				}
 				else {
-					return check( update.executeUpdate(), id, j, expectation, update );
+					return check( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( update ), id, j, expectation, update );
 				}
 
 			}
@@ -3222,7 +3361,7 @@ public abstract class AbstractEntityPersister
 			}
 			finally {
 				if ( !useBatch ) {
-					update.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( update );
 				}
 			}
 
@@ -3328,7 +3467,7 @@ public abstract class AbstractEntityPersister
 					session.getTransactionCoordinator().getJdbcCoordinator().getBatch( deleteBatchKey ).addToBatch();
 				}
 				else {
-					check( delete.executeUpdate(), id, j, expectation, delete );
+					check( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( delete ), id, j, expectation, delete );
 				}
 
 			}
@@ -3340,7 +3479,7 @@ public abstract class AbstractEntityPersister
 			}
 			finally {
 				if ( !useBatch ) {
-					delete.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( delete );
 				}
 			}
 
@@ -3854,6 +3993,12 @@ public abstract class AbstractEntityPersister
 				disableForUpdate ?
 						readLoader :
 						createEntityLoader( LockMode.UPGRADE_NOWAIT )
+			);
+		loaders.put(
+				LockMode.UPGRADE_SKIPLOCKED,
+				disableForUpdate ?
+						readLoader :
+						createEntityLoader( LockMode.UPGRADE_SKIPLOCKED )
 			);
 		loaders.put(
 				LockMode.FORCE,
@@ -4641,7 +4786,7 @@ public abstract class AbstractEntityPersister
 					.prepareStatement( selectionSQL );
 			try {
 				getIdentifierType().nullSafeSet( ps, id, 1, session );
-				ResultSet rs = ps.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( ps );
 				try {
 					if ( !rs.next() ) {
 						throw new HibernateException(
@@ -4659,12 +4804,12 @@ public abstract class AbstractEntityPersister
 				}
 				finally {
 					if ( rs != null ) {
-						rs.close();
+						session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 					}
 				}
 			}
 			finally {
-				ps.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 			}
 		}
 		catch( SQLException e ) {
@@ -4741,7 +4886,7 @@ public abstract class AbstractEntityPersister
 					.prepareStatement( sql );
 			try {
 				getIdentifierType().nullSafeSet( ps, id, 1, session );
-				ResultSet rs = ps.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( ps );
 				try {
 					//if there is no resulting row, return null
 					if ( !rs.next() ) {
@@ -4758,11 +4903,11 @@ public abstract class AbstractEntityPersister
 					return snapshot;
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				ps.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 			}
 		}
 		catch ( SQLException e ) {
@@ -4806,7 +4951,7 @@ public abstract class AbstractEntityPersister
 						positions += type.getColumnSpan( session.getFactory() );
 					}
 				}
-				ResultSet rs = ps.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( ps );
 				try {
 					// if there is no resulting row, return null
 					if ( !rs.next() ) {
@@ -4816,11 +4961,11 @@ public abstract class AbstractEntityPersister
 					return (Serializable) getIdentifierType().hydrate( rs, getIdentifierAliases(), session, null );
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				ps.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 			}
 		}
 		catch ( SQLException e ) {

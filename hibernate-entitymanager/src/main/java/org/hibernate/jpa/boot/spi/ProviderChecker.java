@@ -25,8 +25,10 @@ package org.hibernate.jpa.boot.spi;
 
 import java.util.Map;
 
-import org.hibernate.ejb.AvailableSettings;
+import org.jboss.logging.Logger;
+
 import org.hibernate.ejb.HibernatePersistence;
+import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
 /**
@@ -36,6 +38,9 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
  * @author Steve Ebersole
  */
 public class ProviderChecker {
+	private static final Logger log = Logger.getLogger( ProviderChecker.class );
+
+	@SuppressWarnings("deprecation")
 	private static String[] HIBERNATE_PROVIDER_NAMES = new String[] {
 			HibernatePersistenceProvider.class.getName(),
 			HibernatePersistence.class.getName()
@@ -53,9 +58,7 @@ public class ProviderChecker {
 	 */
 	public static boolean isProvider(PersistenceUnitDescriptor persistenceUnit, Map integration) {
 		// See if we (Hibernate) are the persistence provider
-		final String requestedProviderName = extractRequestedProviderName( persistenceUnit, integration );
-		// NOTE : if no requested name, we assume we are the provider (the calls got to us somehow...)
-		return requestedProviderName == null || hibernateProviderNamesContain( requestedProviderName );
+		return hibernateProviderNamesContain( extractRequestedProviderName( persistenceUnit, integration ) );
 	}
 
 	/**
@@ -66,11 +69,18 @@ public class ProviderChecker {
 	 * @return {@code true} if Hibernate should be the provider; {@code false} otherwise.
 	 */
 	public static boolean hibernateProviderNamesContain(String requestedProviderName) {
+		log.tracef(
+				"Checking requested PersistenceProvider name [%s] against Hibernate provider names",
+				requestedProviderName
+		);
+
 		for ( String hibernateProviderName : HIBERNATE_PROVIDER_NAMES ) {
 			if ( requestedProviderName.equals( hibernateProviderName ) ) {
 				return true;
 			}
 		}
+
+		log.tracef( "Found no match against Hibernate provider names" );
 		return false;
 	}
 
@@ -85,15 +95,37 @@ public class ProviderChecker {
 	 * @return The extracted provider name, or {@code null} if none found.
 	 */
 	public static String extractRequestedProviderName(PersistenceUnitDescriptor persistenceUnit, Map integration) {
-		String providerName = integration == null ? null : (String) integration.get( AvailableSettings.PROVIDER );
-		if ( providerName == null ) {
-			providerName = persistenceUnit.getProviderClassName();
+		final String integrationProviderName = extractProviderName( integration );
+		if ( integrationProviderName != null ) {
+			log.debugf( "Integration provided explicit PersistenceProvider [%s]", integrationProviderName );
+			return integrationProviderName;
 		}
 
-		if ( providerName != null ) {
-			providerName = providerName.trim();
+		final String persistenceUnitRequestedProvider = extractProviderName( persistenceUnit );
+		if ( persistenceUnitRequestedProvider != null ) {
+			log.debugf(
+					"Persistence-unit [%s] requested PersistenceProvider [%s]",
+					persistenceUnit.getName(),
+					persistenceUnitRequestedProvider
+			);
+			return persistenceUnitRequestedProvider;
 		}
 
-		return providerName;
+		// NOTE : if no provider requested we assume we are the provider (the calls got to us somehow...)
+		log.debug( "No PersistenceProvider explicitly requested, assuming Hibernate" );
+		return HibernatePersistenceProvider.class.getName();
+	}
+
+	private static String extractProviderName(Map integration) {
+		if ( integration == null ) {
+			return null;
+		}
+		final String setting = (String) integration.get( AvailableSettings.PROVIDER );
+		return setting == null ? null : setting.trim();
+	}
+
+	private static String extractProviderName(PersistenceUnitDescriptor persistenceUnit) {
+		final String persistenceUnitRequestedProvider = persistenceUnit.getProviderClassName();
+		return persistenceUnitRequestedProvider == null ? null : persistenceUnitRequestedProvider.trim();
 	}
 }

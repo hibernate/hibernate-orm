@@ -44,16 +44,16 @@ import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants
  * Selects data from a relation middle-table only.
  * @author Adam Warski (adam at warski dot org)
  */
-public final class OneEntityQueryGenerator implements RelationQueryGenerator {
+public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerator {
     private final String queryString;
-    private final MiddleIdData referencingIdData;
 
     public OneEntityQueryGenerator(AuditEntitiesConfiguration verEntCfg,
                                    AuditStrategy auditStrategy,
                                    String versionsMiddleEntityName,
                                    MiddleIdData referencingIdData,
+								   boolean revisionTypeInId,
                                    MiddleComponentData... componentDatas) {
-        this.referencingIdData = referencingIdData;
+		super( verEntCfg, referencingIdData, revisionTypeInId );
 
         /*
          * The query that we need to create:
@@ -90,25 +90,19 @@ public final class OneEntityQueryGenerator implements RelationQueryGenerator {
         // (with ee association at revision :revision)
         // --> based on auditStrategy (see above)
         auditStrategy.addAssociationAtRevisionRestriction(qb, revisionPropertyPath,
-         		verEntCfg.getRevisionEndFieldName(), true,referencingIdData, versionsMiddleEntityName, 
-         		eeOriginalIdPropertyPath, revisionPropertyPath, originalIdPropertyName, componentDatas);
+         		verEntCfg.getRevisionEndFieldName(), true, referencingIdData, versionsMiddleEntityName,
+         		eeOriginalIdPropertyPath, revisionPropertyPath, originalIdPropertyName, MIDDLE_ENTITY_ALIAS, componentDatas);
          
         // ee.revision_type != DEL
-        rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), "!=", DEL_REVISION_TYPE_PARAMETER);
+        rootParameters.addWhereWithNamedParam(getRevisionTypePath(), "!=", DEL_REVISION_TYPE_PARAMETER);
 
         StringBuilder sb = new StringBuilder();
         qb.build(sb, Collections.<String, Object>emptyMap());
         queryString = sb.toString();
     }
 
-    public Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision) {
-        Query query = versionsReader.getSession().createQuery(queryString);
-        query.setParameter(REVISION_PARAMETER, revision);
-        query.setParameter(DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL);
-        for (QueryParameterData paramData: referencingIdData.getPrefixedMapper().mapToQueryParametersFromId(primaryKey)) {
-            paramData.setParameterValue(query);
-        }
-
-        return query;
-    }
+	@Override
+	protected String getQueryString() {
+		return queryString;
+	}
 }

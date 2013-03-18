@@ -23,10 +23,7 @@
  */
 package org.hibernate.cfg.annotations;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.annotations.OrderBy;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 
@@ -36,7 +33,6 @@ import org.hibernate.mapping.PersistentClass;
  * @author Matthew Inger
  */
 public class SetBinder extends CollectionBinder {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SetBinder.class.getName());
 
 	public SetBinder() {
 	}

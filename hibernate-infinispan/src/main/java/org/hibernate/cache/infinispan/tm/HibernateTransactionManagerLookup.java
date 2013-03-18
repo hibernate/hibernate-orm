@@ -38,12 +38,7 @@ public class HibernateTransactionManagerLookup implements org.infinispan.transac
 	private final JtaPlatform jtaPlatform;
 
 	public HibernateTransactionManagerLookup(Settings settings, Properties properties) {
-		if ( settings != null ) {
-			jtaPlatform = settings.getJtaPlatform();
-		}
-		else {
-			jtaPlatform = null;
-		}
+		this.jtaPlatform = settings != null ? settings.getJtaPlatform() : null;
 	}
 
 	public HibernateTransactionManagerLookup(ServiceRegistry serviceRegistry) {
@@ -55,6 +50,7 @@ public class HibernateTransactionManagerLookup implements org.infinispan.transac
 		}
 	}
 
+	@Override
 	public TransactionManager getTransactionManager() throws Exception {
 		return jtaPlatform == null ? null : jtaPlatform.retrieveTransactionManager();
 	}

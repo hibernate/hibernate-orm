@@ -238,7 +238,7 @@ public class DetachedMultipleCollectionChangeTest extends BaseCoreFunctionalTest
 			org.hibernate.test.event.collection.Entity ownerExpected,
 			List<? extends org.hibernate.test.event.collection.Entity> expectedCollectionEntrySnapshot,
 			int index) {
-		AbstractCollectionEvent event = (AbstractCollectionEvent) listeners
+		AbstractCollectionEvent event = listeners
 				.getEvents().get(index);
 
 		assertSame(listenerExpected, listeners.getListenersCalled().get(index));

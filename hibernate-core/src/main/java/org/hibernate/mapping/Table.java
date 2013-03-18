@@ -55,7 +55,7 @@ public class Table implements RelationalModel, Serializable {
 	private Map columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
-	private Map indexes = new LinkedHashMap();
+	private Map<String, Index> indexes = new LinkedHashMap<String, Index>();
 	private Map foreignKeys = new LinkedHashMap();
 	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
 	private int uniqueInteger;
@@ -214,7 +214,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public void addColumn(Column column) {
-		Column old = (Column) getColumn( column );
+		Column old = getColumn( column );
 		if ( old == null ) {
 			columns.put( column.getCanonicalName(), column );
 			column.uniqueInteger = columns.size();
@@ -232,7 +232,7 @@ public class Table implements RelationalModel, Serializable {
 		return columns.values().iterator();
 	}
 
-	public Iterator getIndexIterator() {
+	public Iterator<Index> getIndexIterator() {
 		return indexes.values().iterator();
 	}
 
@@ -240,11 +240,11 @@ public class Table implements RelationalModel, Serializable {
 		return foreignKeys.values().iterator();
 	}
 
-	public Iterator getUniqueKeyIterator() {
+	public Iterator<UniqueKey> getUniqueKeyIterator() {
 		return getUniqueKeys().values().iterator();
 	}
 
-	Map getUniqueKeys() {
+	Map<String, UniqueKey> getUniqueKeys() {
 		cleanseUniqueKeyMapIfNeeded();
 		return uniqueKeys;
 	}
@@ -394,6 +394,9 @@ public class Table implements RelationalModel, Serializable {
 
 		Iterator iter = getColumnIterator();
 		List results = new ArrayList();
+		
+		int uniqueIndexInteger = 0;
+		
 		while ( iter.hasNext() ) {
 			Column column = (Column) iter.next();
 
@@ -420,8 +423,9 @@ public class Table implements RelationalModel, Serializable {
 				}
 
 				if ( column.isUnique() ) {
+					uniqueIndexInteger++;
 					UniqueKey uk = getOrCreateUniqueKey( 
-							column.getQuotedName( dialect ) + '_' );
+							"UK_" + name + "_" + uniqueIndexInteger);
 					uk.addColumn( column );
 					alter.append( dialect.getUniqueDelegate()
 							.applyUniqueToColumn( column ) );
@@ -489,7 +493,8 @@ public class Table implements RelationalModel, Serializable {
 			pkname = ( (Column) getPrimaryKey().getColumnIterator().next() ).getQuotedName( dialect );
 		}
 
-		Iterator iter = getSortedColumnIterator();
+		Iterator iter = getColumnIterator();
+		int uniqueIndexInteger = 0;
 		while ( iter.hasNext() ) {
 			Column col = (Column) iter.next();
 
@@ -523,8 +528,9 @@ public class Table implements RelationalModel, Serializable {
 			}
 			
 			if ( col.isUnique() ) {
+				uniqueIndexInteger++;
 				UniqueKey uk = getOrCreateUniqueKey( 
-						col.getQuotedName( dialect ) + '_' );
+						"uc_" + name + "_" + uniqueIndexInteger);
 				uk.addColumn( col );
 				buf.append( dialect.getUniqueDelegate()
 						.applyUniqueToColumn( col ) );
@@ -599,16 +605,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		StringBuilder buf = new StringBuilder( "drop table " );
-		if ( dialect.supportsIfExistsBeforeTableName() ) {
-			buf.append( "if exists " );
-		}
-		buf.append( getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
-				.append( dialect.getCascadeConstraintsString() );
-		if ( dialect.supportsIfExistsAfterTableName() ) {
-			buf.append( " if exists" );
-		}
-		return buf.toString();
+		return dialect.getDropTableString( getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
 	}
 
 	public PrimaryKey getPrimaryKey() {
@@ -621,7 +618,7 @@ public class Table implements RelationalModel, Serializable {
 
 	public Index getOrCreateIndex(String indexName) {
 
-		Index index = (Index) indexes.get( indexName );
+		Index index =  indexes.get( indexName );
 
 		if ( index == null ) {
 			index = new Index();
@@ -634,11 +631,11 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public Index getIndex(String indexName) {
-		return (Index) indexes.get( indexName );
+		return  indexes.get( indexName );
 	}
 
 	public Index addIndex(Index index) {
-		Index current = (Index) indexes.get( index.getName() );
+		Index current =  indexes.get( index.getName() );
 		if ( current != null ) {
 			throw new MappingException( "Index " + index.getName() + " already exists!" );
 		}
@@ -647,7 +644,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public UniqueKey addUniqueKey(UniqueKey uniqueKey) {
-		UniqueKey current = (UniqueKey) uniqueKeys.get( uniqueKey.getName() );
+		UniqueKey current = uniqueKeys.get( uniqueKey.getName() );
 		if ( current != null ) {
 			throw new MappingException( "UniqueKey " + uniqueKey.getName() + " already exists!" );
 		}
@@ -656,18 +653,18 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public UniqueKey createUniqueKey(List keyColumns) {
-		String keyName = "UK" + uniqueColumnString( keyColumns.iterator() );
+		String keyName = "UK_" + uniqueColumnString( keyColumns.iterator() );
 		UniqueKey uk = getOrCreateUniqueKey( keyName );
 		uk.addColumns( keyColumns.iterator() );
 		return uk;
 	}
 
 	public UniqueKey getUniqueKey(String keyName) {
-		return (UniqueKey) uniqueKeys.get( keyName );
+		return uniqueKeys.get( keyName );
 	}
 
 	public UniqueKey getOrCreateUniqueKey(String keyName) {
-		UniqueKey uk = (UniqueKey) uniqueKeys.get( keyName );
+		UniqueKey uk = uniqueKeys.get( keyName );
 
 		if ( uk == null ) {
 			uk = new UniqueKey();
@@ -731,6 +728,7 @@ public class Table implements RelationalModel, Serializable {
 		}
 		return ( Integer.toHexString( name.hashCode() ) + Integer.toHexString( result ) ).toUpperCase();
 	}
+
 
 
 	public String getSchema() {

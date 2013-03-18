@@ -283,6 +283,12 @@ public interface AvailableSettings {
 	public static final String JTA_PLATFORM = "hibernate.transaction.jta.platform";
 
 	/**
+	 * Names the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver} implementation to use.
+	 * @since 4.3
+	 */
+	public static final String JTA_PLATFORM_RESOLVER = "hibernate.transaction.jta.platform_resolver";
+
+	/**
 	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation class
 	 */
 	public static final String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";
@@ -399,6 +405,12 @@ public interface AvailableSettings {
 	 * Enable ordering of insert statements for the purpose of more efficient JDBC batching.
 	 */
 	public static final String ORDER_INSERTS = "hibernate.order_inserts";
+
+	/**
+	 * Default precedence of null values in {@code ORDER BY} clause.  Supported options: {@code none} (default),
+	 * {@code first}, {@code last}.
+	 */
+	public static final String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
 
 	/**
 	 * The EntityMode in which set the Session opened from the SessionFactory.
@@ -658,4 +670,22 @@ public interface AvailableSettings {
 	 * Default is to not store direct references.
 	 */
 	public static final String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
+
+	/**
+	 * Enable nationalized character support on all string / clob based attribute ( string, char, clob, text etc ).
+	 *
+	 * Default is <clode>false</clode>.
+	 */
+	public static final String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
+	
+	/**
+	 * A transaction can be rolled back by another thread ("tracking by thread")
+	 * -- not the original application. Examples of this include a JTA
+	 * transaction timeout handled by a background reaper thread.  The ability
+	 * to handle this situation requires checking the Thread ID every time
+	 * Session is called.  This can certainly have performance considerations.
+	 * 
+	 * Default is <code>true</code> (enabled).
+	 */
+	public static final String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
 }

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.components.relations;
+
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;

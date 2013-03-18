@@ -83,28 +83,17 @@ public final class IteratorImpl implements HibernateIterator {
 
 	public void close() throws JDBCException {
 		if (ps!=null) {
+			LOG.debug("Closing iterator");
+			session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+			ps = null;
+			rs = null;
+			hasNext = false;
 			try {
-				LOG.debug("Closing iterator");
-				ps.close();
-				ps = null;
-				rs = null;
-				hasNext = false;
+				session.getPersistenceContext().getLoadContexts().cleanup( rs );
 			}
-			catch (SQLException e) {
-                LOG.unableToCloseIterator(e);
-				throw session.getFactory().getSQLExceptionHelper().convert(
-				        e,
-				        "Unable to close iterator"
-					);
-			}
-			finally {
-				try {
-					session.getPersistenceContext().getLoadContexts().cleanup( rs );
-				}
-				catch( Throwable ignore ) {
-					// ignore this error for now
-                    LOG.debugf("Exception trying to cleanup load context : %s", ignore.getMessage());
-				}
+			catch( Throwable ignore ) {
+				// ignore this error for now
+                LOG.debugf("Exception trying to cleanup load context : %s", ignore.getMessage());
 			}
 		}
 	}

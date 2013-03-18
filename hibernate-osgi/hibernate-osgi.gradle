@@ -1,0 +1,13 @@
+dependencies {
+    compile( project( ':hibernate-core' ) )
+    compile( project( ':hibernate-entitymanager' ) )
+    compile( "org.osgi:org.osgi.core:4.2.0" )
+}
+
+jar {
+    manifest {
+        instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'
+        instruction 'Bundle-Description', 'Hibernate ORM OSGi'
+        instruction 'Bundle-SymbolicName', 'org.hibernate.osgi'
+    }
+}

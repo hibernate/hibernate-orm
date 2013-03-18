@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
@@ -43,8 +44,9 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 
     public MapCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
                                Class<? extends T> collectionClass, Class<? extends T> proxyClass,
-                               MiddleComponentData elementComponentData, MiddleComponentData indexComponentData) {
-        super(commonCollectionMapperData, collectionClass, proxyClass);
+                               MiddleComponentData elementComponentData, MiddleComponentData indexComponentData,
+							   boolean revisionTypeInId) {
+        super(commonCollectionMapperData, collectionClass, proxyClass, revisionTypeInId);
         this.elementComponentData = elementComponentData;
         this.indexComponentData = indexComponentData;
     }
@@ -71,8 +73,8 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
         }
     }
 
-    protected void mapToMapFromObject(Map<String, Object> data, Object changed) {
-        elementComponentData.getComponentMapper().mapToMapFromObject(data, ((Map.Entry) changed).getValue());
-        indexComponentData.getComponentMapper().mapToMapFromObject(data, ((Map.Entry) changed).getKey());
+    protected void mapToMapFromObject(SessionImplementor session, Map<String, Object> idData, Map<String, Object> data, Object changed) {
+        elementComponentData.getComponentMapper().mapToMapFromObject(session, idData, data, ((Map.Entry) changed).getValue());
+        indexComponentData.getComponentMapper().mapToMapFromObject(session, idData, data, ((Map.Entry) changed).getKey());
     }
 }

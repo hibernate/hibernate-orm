@@ -110,7 +110,7 @@ public class CacheKey implements Serializable {
 
 	@Override
 	public String toString() {
-		// Mainly for OSCache
+		// Used to be required for OSCache
 		return entityOrRoleName + '#' + key.toString();//"CacheKey#" + type.toString(key, sf);
 	}
 }

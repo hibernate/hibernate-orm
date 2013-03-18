@@ -31,6 +31,7 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 /**
  * @author Guenther Demetz
@@ -43,12 +44,21 @@ public class Product2 implements Serializable {
 	@Column(name = "description", nullable = false)
 	public String description;
 
+	@ManyToOne
+	public Category category;
+
 	public Product2() {
 	}
 
 	public Product2(Integer id, String description) {
 		this.id = id;
 		this.description = description;
+	}
+
+	public Product2(Integer id, String description, Category category) {
+		this.category = category;
+		this.description = description;
+		this.id = id;
 	}
 
 	@Override

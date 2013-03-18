@@ -194,7 +194,7 @@ public class PutFromLoadValidator {
             // or regionRemoved has been called. Check if we can proceed
             if (now > invalidationTimestamp) {
                Long removedTime = recentRemovals.get(key);
-               if (removedTime == null || now > removedTime.longValue()) {
+               if (removedTime == null || now > removedTime ) {
                   // It's legal to proceed. But we have to record this key
                   // in pendingPuts so releasePutFromLoadLock can find it.
                   // To do this we basically simulate a normal "register
@@ -280,7 +280,7 @@ public class PutFromLoadValidator {
 
       // Don't let recentRemovals map become a memory leak
       RecentRemoval toClean = null;
-      boolean attemptClean = removal.timestamp.longValue() > earliestRemovalTimestamp;
+      boolean attemptClean = removal.timestamp > earliestRemovalTimestamp;
       removalsLock.lock();
       try {
          removalsQueue.add(removal);
@@ -290,7 +290,7 @@ public class PutFromLoadValidator {
                // just added it
                toClean = removalsQueue.remove(0);
             }
-            earliestRemovalTimestamp = removalsQueue.get(0).timestamp.longValue();
+            earliestRemovalTimestamp = removalsQueue.get( 0 ).timestamp;
          }
       } finally {
          removalsLock.unlock();
@@ -526,7 +526,7 @@ public class PutFromLoadValidator {
 
       private RecentRemoval(Object key, long nakedPutInvalidationPeriod) {
          this.key = key;
-         timestamp = Long.valueOf(System.currentTimeMillis() + nakedPutInvalidationPeriod);
+         timestamp = System.currentTimeMillis() + nakedPutInvalidationPeriod;
       }
    }
 

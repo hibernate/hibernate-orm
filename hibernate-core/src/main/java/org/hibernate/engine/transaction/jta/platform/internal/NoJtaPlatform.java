@@ -38,6 +38,8 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
  * @author Steve Ebersole
  */
 public class NoJtaPlatform implements JtaPlatform {
+	public static final NoJtaPlatform INSTANCE = new NoJtaPlatform();
+
 	@Override
 	public TransactionManager retrieveTransactionManager() {
 		return null;

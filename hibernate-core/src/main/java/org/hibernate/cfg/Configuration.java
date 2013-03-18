@@ -98,6 +98,7 @@ import org.hibernate.id.factory.internal.DefaultIdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.SerializationHelper;
@@ -250,6 +251,7 @@ public class Configuration implements Serializable {
 	private Set<String> defaultNamedGenerators;
 	private Map<String, Properties> generatorTables;
 	private Map<Table, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
+	private Map<Table, List<JPAIndexHolder>> jpaIndexHoldersByTable;
 	private Map<String, String> mappedByResolver;
 	private Map<String, String> propertyRefResolver;
 	private Map<String, AnyMetaDef> anyMetaDefs;
@@ -323,6 +325,7 @@ public class Configuration implements Serializable {
 		defaultSqlResultSetMappingNames = new HashSet<String>();
 		defaultNamedGenerators = new HashSet<String>();
 		uniqueConstraintHoldersByTable = new HashMap<Table, List<UniqueConstraintHolder>>();
+		jpaIndexHoldersByTable = new HashMap<Table,List<JPAIndexHolder>>(  );
 		mappedByResolver = new HashMap<String, String>();
 		propertyRefResolver = new HashMap<String, String>();
 		caches = new ArrayList<CacheHolder>();
@@ -720,7 +723,7 @@ public class Configuration implements Serializable {
 	 */
 	public Configuration addResource(String resourceName) throws MappingException {
 		LOG.readingMappingsFromResource( resourceName );
-		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+		ClassLoader contextClassLoader = ClassLoaderHelper.getContextClassLoader();
 		InputStream resourceInputStream = null;
 		if ( contextClassLoader != null ) {
 			resourceInputStream = contextClassLoader.getResourceAsStream( resourceName );
@@ -876,7 +879,7 @@ public class Configuration implements Serializable {
 
 
 	@SuppressWarnings({ "unchecked" })
-	private Iterator<IdentifierGenerator> iterateGenerators(Dialect dialect) throws MappingException {
+	public Iterator<IdentifierGenerator> iterateGenerators(Dialect dialect) throws MappingException {
 
 		TreeMap generators = new TreeMap();
 		String defaultCatalog = properties.getProperty( Environment.DEFAULT_CATALOG );
@@ -1302,6 +1305,11 @@ public class Configuration implements Serializable {
 
 	protected void secondPassCompile() throws MappingException {
 		LOG.trace( "Starting secondPassCompile() processing" );
+		
+		// TEMPORARY
+		// Ensure the correct ClassLoader is used in commons-annotations.
+		ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader( ClassLoaderHelper.getContextClassLoader() );
 
 		//process default values first
 		{
@@ -1374,11 +1382,25 @@ public class Configuration implements Serializable {
 			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
 				uniqueIndexPerTable++;
 				final String keyName = StringHelper.isEmpty( holder.getName() )
-						? "key" + uniqueIndexPerTable
+						? "UK_" + table.getName() + "_" + uniqueIndexPerTable
 						: holder.getName();
 				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns() );
 			}
 		}
+		
+		for(Table table : jpaIndexHoldersByTable.keySet()){
+			final List<JPAIndexHolder> jpaIndexHolders = jpaIndexHoldersByTable.get( table );
+			int uniqueIndexPerTable = 0;
+			for ( JPAIndexHolder holder : jpaIndexHolders ) {
+				uniqueIndexPerTable++;
+				final String keyName = StringHelper.isEmpty( holder.getName() )
+						? "idx_"+table.getName()+"_" + uniqueIndexPerTable
+						: holder.getName();
+				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns(), holder.getOrdering(), holder.isUnique() );
+			}
+		}
+		
+		Thread.currentThread().setContextClassLoader( tccl );
 	}
 
 	private void processSecondPassesOfType(Class<? extends SecondPass> type) {
@@ -1532,7 +1554,11 @@ public class Configuration implements Serializable {
 		}
 	}
 
-	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames) {
+	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames){
+		buildUniqueKeyFromColumnNames( table, keyName, columnNames, null, true );
+	}
+
+	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames, String[] orderings, boolean unique) {
 		keyName = normalizer.normalizeIdentifierQuoting( keyName );
 
 		int size = columnNames.length;
@@ -1540,24 +1566,40 @@ public class Configuration implements Serializable {
 		Set<Column> unbound = new HashSet<Column>();
 		Set<Column> unboundNoLogical = new HashSet<Column>();
 		for ( int index = 0; index < size; index++ ) {
-			final String logicalColumnName = normalizer.normalizeIdentifierQuoting( columnNames[index] );
+			String column = columnNames[index];
 			try {
-				final String columnName = createMappings().getPhysicalColumnName( logicalColumnName, table );
+				final String columnName = createMappings().getPhysicalColumnName( column, table );
 				columns[index] = new Column( columnName );
 				unbound.add( columns[index] );
 				//column equals and hashcode is based on column name
 			}
 			catch ( MappingException e ) {
-				unboundNoLogical.add( new Column( logicalColumnName ) );
+				unboundNoLogical.add( new Column( column ) );
 			}
 		}
-		UniqueKey uk = table.getOrCreateUniqueKey( keyName );
-		for ( Column column : columns ) {
-			if ( table.containsColumn( column ) ) {
-				uk.addColumn( column );
-				unbound.remove( column );
+		if ( unique ) {
+			UniqueKey uk = table.getOrCreateUniqueKey( keyName );
+			for ( int i = 0; i < columns.length; i++ ) {
+				Column column = columns[i];
+				String order = orderings != null ? orderings[i] : null;
+				if ( table.containsColumn( column ) ) {
+					uk.addColumn( column, order );
+					unbound.remove( column );
+				}
 			}
 		}
+		else {
+			Index index = table.getOrCreateIndex( keyName );
+			for ( int i = 0; i < columns.length; i++ ) {
+				Column column = columns[i];
+				String order = orderings != null ? orderings[i] : null;
+				if ( table.containsColumn( column ) ) {
+					index.addColumn( column, order );
+					unbound.remove( column );
+				}
+			}
+		}
+
 		if ( unbound.size() > 0 || unboundNoLogical.size() > 0 ) {
 			StringBuilder sb = new StringBuilder( "Unable to create unique key constraint (" );
 			for ( String columnName : columnNames ) {
@@ -1566,10 +1608,10 @@ public class Configuration implements Serializable {
 			sb.setLength( sb.length() - 2 );
 			sb.append( ") on table " ).append( table.getName() ).append( ": database column " );
 			for ( Column column : unbound ) {
-				sb.append( column.getName() ).append( ", " );
+				sb.append("'").append( column.getName() ).append( "', " );
 			}
 			for ( Column column : unboundNoLogical ) {
-				sb.append( column.getName() ).append( ", " );
+				sb.append("'").append( column.getName() ).append( "', " );
 			}
 			sb.setLength( sb.length() - 2 );
 			sb.append( " not found. Make sure that you use the correct column name which depends on the naming strategy in use (it may not be the same as the property name in the entity, especially for relational types)" );
@@ -3144,6 +3186,19 @@ public class Configuration implements Serializable {
 			return useNewGeneratorMappings.booleanValue();
 		}
 
+		private Boolean useNationalizedCharacterData;
+
+		@Override
+		@SuppressWarnings( {"UnnecessaryUnboxing"})
+		public boolean useNationalizedCharacterData() {
+			if ( useNationalizedCharacterData == null ) {
+				final String booleanName = getConfigurationProperties()
+						.getProperty( AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA );
+				useNationalizedCharacterData = Boolean.valueOf( booleanName );
+			}
+			return useNationalizedCharacterData.booleanValue();
+		}
+
 		private Boolean forceDiscriminatorInSelectsByDefault;
 
 		@Override
@@ -3292,6 +3347,15 @@ public class Configuration implements Serializable {
 				getUniqueConstraintHoldersByTable().put( table, holderList );
 			}
 			holderList.addAll( uniqueConstraintHolders );
+		}
+
+		public void addJpaIndexHolders(Table table, List<JPAIndexHolder> holders) {
+			List<JPAIndexHolder> holderList = jpaIndexHoldersByTable.get( table );
+			if ( holderList == null ) {
+				holderList = new ArrayList<JPAIndexHolder>();
+				jpaIndexHoldersByTable.put( table, holderList );
+			}
+			holderList.addAll( holders );
 		}
 
 		public void addMappedBy(String entityName, String propertyName, String inversePropertyName) {

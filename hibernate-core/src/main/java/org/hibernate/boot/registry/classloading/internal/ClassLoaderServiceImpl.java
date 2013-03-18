@@ -37,11 +37,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.cfg.AvailableSettings;
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of the service for interacting with class loaders
@@ -61,7 +60,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		this( Collections.singletonList( classLoader ) );
 	}
 
-	public ClassLoaderServiceImpl(List<ClassLoader> providedClassLoaders) {
+	public ClassLoaderServiceImpl(Collection<ClassLoader> providedClassLoaders) {
 		final LinkedHashSet<ClassLoader> orderedClassLoaderSet = new LinkedHashSet<ClassLoader>();
 
 		// first add all provided class loaders, if any
@@ -74,7 +73,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		}
 
 		// normalize adding known class-loaders...
-		// first the Hibernate class loader
+		// first, the Hibernate class loader
 		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
 		// then the TCCL, if one...
 		final ClassLoader tccl = locateTCCL();
@@ -102,11 +101,19 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 				providedClassLoaders.add( classLoader );
 			}
 		}
-
 		addIfSet( providedClassLoaders, AvailableSettings.APP_CLASSLOADER, configVales );
 		addIfSet( providedClassLoaders, AvailableSettings.RESOURCES_CLASSLOADER, configVales );
 		addIfSet( providedClassLoaders, AvailableSettings.HIBERNATE_CLASSLOADER, configVales );
 		addIfSet( providedClassLoaders, AvailableSettings.ENVIRONMENT_CLASSLOADER, configVales );
+
+		if ( providedClassLoaders.isEmpty() ) {
+			log.debugf( "Incoming config yielded no classloaders; adding standard SE ones" );
+			final ClassLoader tccl = locateTCCL();
+			if ( tccl != null ) {
+				providedClassLoaders.add( tccl );
+			}
+			providedClassLoaders.add( ClassLoaderServiceImpl.class.getClassLoader() );
+		}
 
 		return new ClassLoaderServiceImpl( providedClassLoaders );
 	}

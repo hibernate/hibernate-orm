@@ -115,26 +115,16 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 	}
 
 	public final void close() throws HibernateException {
+		// not absolutely necessary, but does help with aggressive release
+		//session.getJDBCContext().getConnectionManager().closeQueryStatement( ps, resultSet );
+		session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
 		try {
-			// not absolutely necessary, but does help with aggressive release
-			//session.getJDBCContext().getConnectionManager().closeQueryStatement( ps, resultSet );
-			ps.close();
+			session.getPersistenceContext().getLoadContexts().cleanup( resultSet );
 		}
-		catch (SQLException sqle) {
-			throw session.getFactory().getSQLExceptionHelper().convert(
-					sqle,
-					"could not close results"
-				);
-		}
-		finally {
-			try {
-				session.getPersistenceContext().getLoadContexts().cleanup( resultSet );
-			}
-			catch( Throwable ignore ) {
-				// ignore this error for now
-				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Exception trying to cleanup load context : {0}", ignore.getMessage() );
-				}
+		catch( Throwable ignore ) {
+			// ignore this error for now
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Exception trying to cleanup load context : {0}", ignore.getMessage() );
 			}
 		}
 	}

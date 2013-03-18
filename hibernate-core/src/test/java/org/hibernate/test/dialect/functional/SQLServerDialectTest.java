@@ -26,9 +26,14 @@
   */
 package org.hibernate.test.dialect.functional;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,16 +43,15 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
 import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * used driver hibernate.connection.driver_class com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -60,13 +64,14 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-7198")
 	public void testMaxResultsSqlServerWithCaseSensitiveCollation() throws Exception {
 
-		Session s = openSession();
+		final Session s = openSession();
 		s.beginTransaction();
 		String defaultCollationName = s.doReturningWork( new ReturningWork<String>() {
 			@Override
 			public String execute(Connection connection) throws SQLException {
 				String databaseName = connection.getCatalog();
-				ResultSet rs =  connection.createStatement().executeQuery( "SELECT collation_name FROM sys.databases WHERE name = '"+databaseName+ "';" );
+				Statement st = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
+				ResultSet rs =  ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st, "SELECT collation_name FROM sys.databases WHERE name = '"+databaseName+ "';" );
 				while(rs.next()){
 					return rs.getString( "collation_name" );
 				}
@@ -77,40 +82,44 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession();
-		String databaseName = s.doReturningWork( new ReturningWork<String>() {
+		Session s2 = openSession();
+		String databaseName = s2.doReturningWork( new ReturningWork<String>() {
 			@Override
 			public String execute(Connection connection) throws SQLException {
 				return connection.getCatalog();
 			}
 		} );
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
 				.executeUpdate();
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE Latin1_General_CS_AS" ).executeUpdate();
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE Latin1_General_CS_AS" ).executeUpdate();
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
 
-		Transaction tx = s.beginTransaction();
+		Transaction tx = s2.beginTransaction();
 
 		for ( int i = 1; i <= 20; i++ ) {
-			s.persist( new Product2( i, "Kit" + i ) );
+			s2.persist( new Product2( i, "Kit" + i ) );
 		}
-		s.flush();
-		s.clear();
+		s2.flush();
+		s2.clear();
 
-		List list = s.createQuery( "from Product2 where description like 'Kit%'" )
+		List list = s2.createQuery( "from Product2 where description like 'Kit%'" )
 				.setFirstResult( 2 )
 				.setMaxResults( 2 )
 				.list();
 		assertEquals( 2, list.size() );
 		tx.rollback();
-		s.close();
+		s2.close();
 
-		s = openSession();
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
+		s2 = openSession();
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " set single_user with rollback immediate" )
 				.executeUpdate();
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE " + defaultCollationName ).executeUpdate();
-		s.createSQLQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
-		s.close();
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " COLLATE " + defaultCollationName ).executeUpdate();
+		s2.createSQLQuery( "ALTER DATABASE " + databaseName + " set multi_user" ).executeUpdate();
+		s2.close();
+	}
+	
+	private void doWork(Session s) {
+		
 	}
 
 	@Test
@@ -215,6 +224,102 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-6627")
+	public void testPaginationWithAggregation() {
+		Session session = openSession();
+		Transaction tx = session.beginTransaction();
+
+		// populating test data
+		Category category1 = new Category( 1, "Category1" );
+		Category category2 = new Category( 2, "Category2" );
+		Category category3 = new Category( 3, "Category3" );
+		session.persist( category1 );
+		session.persist( category2 );
+		session.persist( category3 );
+		session.flush();
+		session.persist( new Product2( 1, "Kit1", category1 ) );
+		session.persist( new Product2( 2, "Kit2", category1 ) );
+		session.persist( new Product2( 3, "Kit3", category1 ) );
+		session.persist( new Product2( 4, "Kit4", category2 ) );
+		session.persist( new Product2( 5, "Kit5", category2 ) );
+		session.persist( new Product2( 6, "Kit6", category3 ) );
+		session.flush();
+		session.clear();
+
+		// count number of products in each category
+		List<Object[]> result = session.createCriteria( Category.class, "c" ).createAlias( "products", "p" )
+				.setProjection(
+						Projections.projectionList()
+								.add( Projections.groupProperty( "c.id" ) )
+								.add( Projections.countDistinct( "p.id" ) )
+				)
+				.addOrder( Order.asc( "c.id" ) )
+				.setFirstResult( 1 ).setMaxResults( 3 ).list();
+
+		assertEquals( 2, result.size() );
+		assertArrayEquals( new Object[] { 2, 2L }, result.get( 0 ) ); // two products of second category
+		assertArrayEquals( new Object[] { 3, 1L }, result.get( 1 ) ); // one products of third category
+
+		tx.rollback();
+		session.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7752")
+	public void testPaginationWithFormulaSubquery() {
+		Session session = openSession();
+		Transaction tx = session.beginTransaction();
+
+		// populating test data
+		Folder folder1 = new Folder( 1L, "Folder1" );
+		Folder folder2 = new Folder( 2L, "Folder2" );
+		Folder folder3 = new Folder( 3L, "Folder3" );
+		session.persist( folder1 );
+		session.persist( folder2 );
+		session.persist( folder3 );
+		session.flush();
+		session.persist( new Contact( 1L, "Lukasz", "Antoniak", "owner", folder1 ) );
+		session.persist( new Contact( 2L, "Kinga", "Mroz", "co-owner", folder2 ) );
+		session.flush();
+		session.clear();
+		session.refresh( folder1 );
+		session.refresh( folder2 );
+		session.clear();
+
+		List<Long> folderCount = session.createQuery( "select count(distinct f) from Folder f" ).setMaxResults( 1 ).list();
+		assertEquals( Arrays.asList( 3L ), folderCount );
+
+		List<Folder> distinctFolders = session.createQuery( "select distinct f from Folder f order by f.id desc" )
+				.setFirstResult( 1 ).setMaxResults( 2 ).list();
+		assertEquals( Arrays.asList( folder2, folder1 ), distinctFolders );
+
+		tx.rollback();
+		session.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7781")
+	public void testPaginationWithCastOperator() {
+		Session session = openSession();
+		Transaction tx = session.beginTransaction();
+
+		for ( int i = 40; i < 50; i++ ) {
+			session.persist( new Product2( i, "Kit" + i ) );
+		}
+		session.flush();
+		session.clear();
+
+		List<Object[]> list = session.createQuery( "select p.id, cast(p.id as string) as string_id from Product2 p order by p.id" )
+				.setFirstResult( 1 ).setMaxResults( 2 ).list();
+		assertEquals( 2, list.size() );
+		assertArrayEquals( new Object[] { 41, "41" }, list.get( 0 ) );
+		assertArrayEquals( new Object[] { 42, "42" }, list.get( 1 ) );
+
+		tx.rollback();
+		session.close();
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-3961")
 	public void testLockNowaitSqlServer() throws Exception {
 		Session s = openSession();
@@ -274,14 +379,12 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		s.delete( kit );
 		s.getTransaction().commit();
-
-
 	}
 
 	@Override
 	protected java.lang.Class<?>[] getAnnotatedClasses() {
 		return new java.lang.Class[] {
-				Product2.class
+				Product2.class, Category.class, Folder.class, Contact.class
 		};
 	}
 }

@@ -22,10 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query.criteria;
+
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
 import org.hibernate.envers.entities.RelationType;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.query.property.PropertyNameGetter;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -56,4 +59,28 @@ public class CriteriaTools {
         throw new AuditException("This type of relation (" + entityName + "." + propertyName +
                 ") isn't supported and can't be used in queries.");
     }
+
+	/**
+	 * @see #determinePropertyName(AuditConfiguration, AuditReaderImplementor, String, String)
+	 */
+	public static String determinePropertyName(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader,
+											   String entityName, PropertyNameGetter propertyNameGetter) {
+		return determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter.get( auditCfg ) );
+	}
+
+	/**
+	 * @param auditCfg Audit configuration.
+	 * @param versionsReader Versions reader.
+	 * @param entityName Original entity name (not audited).
+	 * @param propertyName Property name or placeholder.
+	 * @return Path to property. Handles identifier placeholder used by {@link AuditId}.
+	 */
+	public static String determinePropertyName(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader,
+											   String entityName, String propertyName) {
+		if ( AuditId.IDENTIFIER_PLACEHOLDER.equals( propertyName ) ) {
+			final String identifierPropertyName = versionsReader.getSessionImplementor().getFactory().getEntityPersister( entityName ).getIdentifierPropertyName();
+			propertyName = auditCfg.getAuditEntCfg().getOriginalIdPropName() + "." + identifierPropertyName;
+		}
+		return propertyName;
+	}
 }

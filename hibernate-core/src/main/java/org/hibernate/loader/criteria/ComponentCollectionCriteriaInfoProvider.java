@@ -66,7 +66,7 @@ class ComponentCollectionCriteriaInfoProvider implements CriteriaInfoProvider {
     }
 
     public PropertyMapping getPropertyMapping() {
-	return (PropertyMapping)persister;
+	return persister;
     }
 
     public Type getType(String relativePath) {

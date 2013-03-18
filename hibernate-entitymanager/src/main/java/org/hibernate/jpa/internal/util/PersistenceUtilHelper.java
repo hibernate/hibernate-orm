@@ -55,7 +55,7 @@ public class PersistenceUtilHelper {
 				//it's ours so we know it's loaded
 				if (state == LoadState.UNKNOWN) state = LoadState.LOADED;
 			}
-			else if ( interceptor != null && (! isInitialized)) {
+			else if ( interceptor != null ) {
 				state = LoadState.NOT_LOADED;
 			}
 			else if ( sureFromUs ) { //interceptor == null

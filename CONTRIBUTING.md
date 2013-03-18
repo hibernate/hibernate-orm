@@ -24,7 +24,7 @@ on the Jira HHH-123 : `git checkout -b HHH-123 master`
 
 
 ## Code
-Do yo thang!
+Do yo thing!
 
 ## Commit
 

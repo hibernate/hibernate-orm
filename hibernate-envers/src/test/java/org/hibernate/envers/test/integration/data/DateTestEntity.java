@@ -50,7 +50,7 @@ public class DateTestEntity {
 
     public DateTestEntity(Integer id, Date date) {
         this.id = id;
-        this.dateValue = dateValue;
+        this.dateValue = date;
     }
 
     public Integer getId() {

@@ -52,6 +52,14 @@ public interface LobCreator {
 	public Clob wrap(Clob clob);
 
 	/**
+	 * Wrap the given nclob in a serializable wrapper.
+	 *
+	 * @param nclob The nclob to be wrapped.
+	 * @return The wrapped nclob which will be castable to {@link NClob} as well as {@link WrappedNClob}.
+	 */
+	public NClob wrap(NClob nclob);
+
+	/**
 	 * Create a BLOB reference encapsulating the given byte array.
 	 *
 	 * @param bytes The byte array to wrap as a blob.

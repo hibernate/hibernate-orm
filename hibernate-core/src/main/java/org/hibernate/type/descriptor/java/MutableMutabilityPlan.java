@@ -44,7 +44,7 @@ public abstract class MutableMutabilityPlan<T> implements MutabilityPlan<T> {
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public T assemble(Serializable cached) {
-		return (T) deepCopy( (T) cached );
+		return deepCopy( (T) cached );
 	}
 
 	@Override

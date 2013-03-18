@@ -39,6 +39,7 @@ import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.synchronization.AuditProcessManager;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.Getter;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
@@ -126,12 +127,10 @@ public class AuditConfiguration {
 				auditStrategyClass = classLoaderService.classForName( auditEntCfg.getAuditStrategyName() );
 			}
 			else {
-				auditStrategyClass = Thread.currentThread()
-						.getContextClassLoader()
-						.loadClass( auditEntCfg.getAuditStrategyName() );
+				auditStrategyClass = ReflectHelper.classForName( auditEntCfg.getAuditStrategyName() );
 			}
 
-			strategy = (AuditStrategy) auditStrategyClass.newInstance();
+			strategy = (AuditStrategy) ReflectHelper.getDefaultConstructor(auditStrategyClass).newInstance();
 		}
 		catch ( Exception e ) {
 			throw new MappingException(

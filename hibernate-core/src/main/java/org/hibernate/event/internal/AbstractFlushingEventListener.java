@@ -120,7 +120,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 				session.getActionQueue().numberOfInsertions(),
 				session.getActionQueue().numberOfUpdates(),
 				session.getActionQueue().numberOfDeletions(),
-				persistenceContext.getEntityEntries().size()
+				persistenceContext.getNumberOfManagedEntities()
 		);
 		LOG.debugf(
 				"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
@@ -145,7 +145,8 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		final Object anything = getAnything();
 		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
-		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
+		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
+//		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 			EntityEntry entry = (EntityEntry) me.getValue();
 			Status status = entry.getStatus();
 			if ( status == Status.MANAGED || status == Status.SAVING || status == Status.READ_ONLY ) {
@@ -213,7 +214,8 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		// So this needs to be safe from concurrent modification problems.
 		// It is safe because of how IdentityMap implements entrySet()
 
-		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
+		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
+//		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 
 			// Update the status of the object and if necessary, schedule an update
 
@@ -348,8 +350,10 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		persistenceContext.getCollectionsByKey().clear();
-		persistenceContext.getBatchFetchQueue()
-				.clearSubselects(); //the database has changed now, so the subselect results need to be invalidated
+		
+		// the database has changed now, so the subselect results need to be invalidated
+		// the batch fetching queues should also be cleared - especially the collection batch fetching one
+		persistenceContext.getBatchFetchQueue().clear();
 
 		for ( Map.Entry<PersistentCollection, CollectionEntry> me : IdentityMap.concurrentEntries( persistenceContext.getCollectionEntries() ) ) {
 			CollectionEntry collectionEntry = me.getValue();

@@ -112,7 +112,7 @@ public class EhcacheHibernateMBeanRegistrationImpl
                     exception
             );
         }
-        status = status.STATUS_ALIVE;
+        status = Status.STATUS_ALIVE;
     }
 
     private MBeanServer getMBeanServer() {

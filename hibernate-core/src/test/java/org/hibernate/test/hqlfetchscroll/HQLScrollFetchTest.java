@@ -27,7 +27,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.junit.Test;
 
-
+@SkipForDialect( value = { Oracle8iDialect.class },
+		comment = "Oracle does not support the identity column used in the mapping.  Extended by NoIdentityHQLScrollFetchTest" )
 public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	private static final String QUERY = "select p from Parent p join fetch p.children c";
 
@@ -342,7 +343,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		List list = s.createQuery( "from Parent" ).list();
 		for ( Iterator i = list.iterator(); i.hasNext(); ) {
-			s.delete( (Parent) i.next() );
+			s.delete( i.next() );
 		}
 		t.commit();
 		s.close();

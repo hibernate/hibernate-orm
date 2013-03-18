@@ -83,7 +83,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
-import org.hibernate.StoredProcedureCall;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnresolvableObjectException;
@@ -285,7 +285,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new PersistenceException( "Unable to parse " + AvailableSettings.LOCK_TIMEOUT + ": " + lockTimeout );
 		}
 		if ( timeoutSet ) {
-			if ( timeout < 0 ) {
+            if ( timeout == LockOptions.SKIP_LOCKED ) {
+                options.setTimeOut( LockOptions.SKIP_LOCKED );
+            }
+			else if ( timeout < 0 ) {
 				options.setTimeOut( LockOptions.WAIT_FOREVER );
 			}
 			else if ( timeout == 0 ) {
@@ -813,8 +816,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	@Override
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
 		try {
-			StoredProcedureCall call = getSession().createStoredProcedureCall( procedureName );
-			return new StoredProcedureQueryImpl( call, this );
+			ProcedureCall procedureCall = getSession().createStoredProcedureCall( procedureName );
+			return new StoredProcedureQueryImpl( procedureCall, this );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
@@ -824,8 +827,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	@Override
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
 		try {
-			StoredProcedureCall call = getSession().createStoredProcedureCall( procedureName, resultClasses );
-			return new StoredProcedureQueryImpl( call, this );
+			ProcedureCall procedureCall = getSession().createStoredProcedureCall( procedureName, resultClasses );
+			return new StoredProcedureQueryImpl( procedureCall, this );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
@@ -886,6 +889,16 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			else {
 				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey );
 			}
+		}
+		catch ( EntityNotFoundException ignored ) {
+			// DefaultLoadEventListener.returnNarrowedProxy may throw ENFE (see HHH-7861 for details),
+			// which find() should not throw.  Find() should return null if the entity was not found.
+			if ( LOG.isDebugEnabled() ) {
+				String entityName = entityClass != null ? entityClass.getName(): null;
+				String identifierValue = primaryKey != null ? primaryKey.toString() : null ;
+				LOG.ignoringEntityNotFound( entityName, identifierValue );
+			}
+			return null;
 		}
 		catch ( ObjectDeletedException e ) {
 			//the spec is silent about people doing remove() find() on the same PC

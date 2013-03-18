@@ -272,7 +272,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 									.addToBatch();
 						}
 						else {
-							expectation.verifyOutcome( st.executeUpdate(), st, -1 );
+							expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 						}
 					}
 					catch ( SQLException sqle ) {
@@ -283,7 +283,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					}
 					finally {
 						if ( !useBatch ) {
-							st.close();
+							session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 						}
 					}
 					count++;

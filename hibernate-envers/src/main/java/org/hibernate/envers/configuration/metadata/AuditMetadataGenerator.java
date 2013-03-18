@@ -140,13 +140,13 @@ public final class AuditMetadataGenerator {
         any_mapping.add(cloneAndSetupRevisionInfoRelationMapping());
     }
 
-    void addRevisionType(Element any_mapping) {
+    void addRevisionType(Element any_mapping, Element any_mapping_end) {
         Element revTypeProperty = MetadataTools.addProperty(any_mapping, verEntCfg.getRevisionTypePropName(),
                 verEntCfg.getRevisionTypePropType(), true, false);
         revTypeProperty.addAttribute("type", "org.hibernate.envers.entities.RevisionTypeType");
 
         // Adding the end revision, if appropriate
-        addEndRevision(any_mapping);
+        addEndRevision(any_mapping_end);
     }
 
     private void addEndRevision(Element any_mapping ) {
@@ -377,7 +377,7 @@ public final class AuditMetadataGenerator {
         class_mapping.add((Element) idMapper.getXmlMapping().clone());
 
         // Adding the "revision type" property
-        addRevisionType(class_mapping);
+        addRevisionType(class_mapping, class_mapping);
 
         return Triple.make(class_mapping, propertyMapper, null);
     }

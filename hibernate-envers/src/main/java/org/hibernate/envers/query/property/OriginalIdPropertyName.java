@@ -21,13 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.envers.query.property;
+
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.query.criteria.AuditId;
 
 /**
  * Used for specifying restrictions on the identifier.
- * TODO: idPropertyName should be read basing on auditCfg + entityName
+ *
+ * @deprecated To be removed together with {@link AuditId#count(String)} in version 5.0.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 public class OriginalIdPropertyName implements PropertyNameGetter {

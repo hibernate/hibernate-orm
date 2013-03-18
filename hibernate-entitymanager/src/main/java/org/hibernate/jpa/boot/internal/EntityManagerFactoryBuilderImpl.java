@@ -75,12 +75,14 @@ import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.JpaUnifiedSettingsBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.event.spi.JpaIntegrator;
+import org.hibernate.jpa.internal.schemagen.JpaSchemaGenerator;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.LogHelper;
@@ -154,6 +156,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private Configuration hibernateConfiguration;
 
 	private static EntityNotFoundDelegate jpaEntityNotFoundDelegate = new JpaEntityNotFoundDelegate();
+	
+	private ClassLoader providedClassLoader;
 
 	private static class JpaEntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
 		public void handleEntityNotFound(String entityName, Serializable id) {
@@ -162,6 +166,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	public EntityManagerFactoryBuilderImpl(PersistenceUnitDescriptor persistenceUnit, Map integrationSettings) {
+		this( persistenceUnit, integrationSettings, null );
+	}
+
+	public EntityManagerFactoryBuilderImpl(
+			PersistenceUnitDescriptor persistenceUnit,
+			Map integrationSettings,
+			ClassLoader providedClassLoader ) {
+		
 		LogHelper.logPersistenceUnitInformation( persistenceUnit );
 
 		this.persistenceUnit = persistenceUnit;
@@ -169,6 +181,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( integrationSettings == null ) {
 			integrationSettings = Collections.emptyMap();
 		}
+		
+		this.providedClassLoader = providedClassLoader;
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// First we build the boot-strap service registry, which mainly handles class loader interactions
@@ -377,6 +391,185 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
+<<<<<<< HEAD
+=======
+	/**
+	 * Builds the {@link BootstrapServiceRegistry} used to eventually build the {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder}; mainly
+	 * used here during instantiation to define class-loading behavior.
+	 *
+	 * @param integrationSettings Any integration settings passed by the EE container or SE application
+	 *
+	 * @return The built BootstrapServiceRegistry
+	 */
+	private BootstrapServiceRegistry buildBootstrapServiceRegistry(Map integrationSettings) {
+		final BootstrapServiceRegistryBuilder bootstrapServiceRegistryBuilder = new BootstrapServiceRegistryBuilder();
+		bootstrapServiceRegistryBuilder.with( new JpaIntegrator() );
+
+		final IntegratorProvider integratorProvider = (IntegratorProvider) integrationSettings.get( INTEGRATOR_PROVIDER );
+		if ( integratorProvider != null ) {
+			integrationSettings.remove( INTEGRATOR_PROVIDER );
+			for ( Integrator integrator : integratorProvider.getIntegrators() ) {
+				bootstrapServiceRegistryBuilder.with( integrator );
+			}
+		}
+
+		// TODO: If providedClassLoader is present (OSGi, etc.) *and*
+		// an APP_CLASSLOADER is provided, should throw an exception or
+		// warn?
+		ClassLoader classLoader;
+		ClassLoader appClassLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
+		if ( providedClassLoader != null ) {
+			classLoader = providedClassLoader;
+		}
+		else if ( appClassLoader != null ) {
+			classLoader = appClassLoader;
+			integrationSettings.remove( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
+		}
+		else {
+			classLoader = persistenceUnit.getClassLoader();
+		}
+		bootstrapServiceRegistryBuilder.with( classLoader );
+
+		return bootstrapServiceRegistryBuilder.build();
+	}
+
+	@SuppressWarnings("unchecked")
+	private Map mergePropertySources(
+			PersistenceUnitDescriptor persistenceUnit,
+			Map integrationSettings,
+			final BootstrapServiceRegistry bootstrapServiceRegistry) {
+		final Map merged = new HashMap();
+		// first, apply persistence.xml-defined settings
+		if ( persistenceUnit.getProperties() != null ) {
+			merged.putAll( persistenceUnit.getProperties() );
+		}
+
+		merged.put( AvailableSettings.PERSISTENCE_UNIT_NAME, persistenceUnit.getName() );
+
+		// see if the persistence.xml settings named a Hibernate config file....
+		final ValueHolder<ConfigLoader> configLoaderHolder = new ValueHolder<ConfigLoader>(
+				new ValueHolder.DeferredInitializer<ConfigLoader>() {
+					@Override
+					public ConfigLoader initialize() {
+						return new ConfigLoader( bootstrapServiceRegistry );
+					}
+				}
+		);
+
+		{
+			final String cfgXmlResourceName = (String) merged.remove( AvailableSettings.CFG_FILE );
+			if ( StringHelper.isNotEmpty( cfgXmlResourceName ) ) {
+				// it does, so load those properties
+				JaxbHibernateConfiguration configurationElement = configLoaderHolder.getValue()
+						.loadConfigXmlResource( cfgXmlResourceName );
+				processHibernateConfigurationElement( configurationElement, merged );
+			}
+		}
+
+		// see if integration settings named a Hibernate config file....
+		{
+			final String cfgXmlResourceName = (String) integrationSettings.get( AvailableSettings.CFG_FILE );
+			if ( StringHelper.isNotEmpty( cfgXmlResourceName ) ) {
+				integrationSettings.remove( AvailableSettings.CFG_FILE );
+				// it does, so load those properties
+				JaxbHibernateConfiguration configurationElement = configLoaderHolder.getValue().loadConfigXmlResource(
+						cfgXmlResourceName
+				);
+				processHibernateConfigurationElement( configurationElement, merged );
+			}
+		}
+
+		// finally, apply integration-supplied settings (per JPA spec, integration settings should override other sources)
+		merged.putAll( integrationSettings );
+
+		if ( ! merged.containsKey( AvailableSettings.VALIDATION_MODE ) ) {
+			if ( persistenceUnit.getValidationMode() != null ) {
+				merged.put( AvailableSettings.VALIDATION_MODE, persistenceUnit.getValidationMode() );
+			}
+		}
+
+		if ( ! merged.containsKey( AvailableSettings.SHARED_CACHE_MODE ) ) {
+			if ( persistenceUnit.getSharedCacheMode() != null ) {
+				merged.put( AvailableSettings.SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
+			}
+		}
+
+		// was getting NPE exceptions from the underlying map when just using #putAll, so going this safer route...
+		Iterator itr = merged.entrySet().iterator();
+		while ( itr.hasNext() ) {
+			final Map.Entry entry = (Map.Entry) itr.next();
+			if ( entry.getValue() == null ) {
+				itr.remove();
+			}
+		}
+
+		return merged;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void processHibernateConfigurationElement(
+			JaxbHibernateConfiguration configurationElement,
+			Map mergeMap) {
+		if ( ! mergeMap.containsKey( org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME ) ) {
+			String cfgName = configurationElement.getSessionFactory().getName();
+			if ( cfgName != null ) {
+				mergeMap.put( org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME, cfgName );
+			}
+		}
+
+		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbProperty jaxbProperty : configurationElement.getSessionFactory().getProperty() ) {
+			mergeMap.put( jaxbProperty.getName(), jaxbProperty.getValue() );
+		}
+
+		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping jaxbMapping : configurationElement.getSessionFactory().getMapping() ) {
+			cfgXmlNamedMappings.add( jaxbMapping );
+		}
+
+		for ( Object cacheDeclaration : configurationElement.getSessionFactory().getClassCacheOrCollectionCache() ) {
+			if ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbClassCache.class.isInstance( cacheDeclaration ) ) {
+				final JaxbHibernateConfiguration.JaxbSessionFactory.JaxbClassCache jaxbClassCache
+						= (JaxbHibernateConfiguration.JaxbSessionFactory.JaxbClassCache) cacheDeclaration;
+				cacheRegionDefinitions.add(
+						new CacheRegionDefinition(
+								CacheRegionDefinition.CacheType.ENTITY,
+								jaxbClassCache.getClazz(),
+								jaxbClassCache.getUsage().value(),
+								jaxbClassCache.getRegion(),
+								"all".equals( jaxbClassCache.getInclude() )
+						)
+				);
+			}
+			else {
+				final JaxbHibernateConfiguration.JaxbSessionFactory.JaxbCollectionCache jaxbCollectionCache
+						= (JaxbHibernateConfiguration.JaxbSessionFactory.JaxbCollectionCache) cacheDeclaration;
+				cacheRegionDefinitions.add(
+						new CacheRegionDefinition(
+								CacheRegionDefinition.CacheType.COLLECTION,
+								jaxbCollectionCache.getCollection(),
+								jaxbCollectionCache.getUsage().value(),
+								jaxbCollectionCache.getRegion(),
+								false
+						)
+				);
+			}
+		}
+
+		if ( configurationElement.getSecurity() != null ) {
+			final String contextId = configurationElement.getSecurity().getContext();
+			for ( JaxbHibernateConfiguration.JaxbSecurity.JaxbGrant grant : configurationElement.getSecurity().getGrant() ) {
+				jaccDefinitions.add(
+						new JaccDefinition(
+								contextId,
+								grant.getRole(),
+								grant.getEntityName(),
+								grant.getActions()
+						)
+				);
+			}
+		}
+	}
+
+>>>>>>> master
 	private String jaccContextId;
 
 	private void addJaccDefinition(String key, Object value) {
@@ -549,6 +742,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			LOG.containerProvidingNullPersistenceUnitRootUrl();
 			return;
 		}
+		if ( scanningContext.getUrl().getProtocol().equalsIgnoreCase( "bundle" ) ) {
+			// TODO: Is there a way to scan the root bundle URL in OSGi containers?
+			// Although the URL provides a stream handler that works for finding
+			// resources in a specific Bundle, the root one does not work.
+			return;
+		}
 
 		try {
 			if ( scanningContext.isDetectClasses() ) {
@@ -615,6 +814,32 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	public void cancel() {
 		// todo : close the bootstrap registry (not critical, but nice to do)
 
+	}
+
+	@Override
+	public void generateSchema() {
+		processProperties();
+
+		final ServiceRegistry serviceRegistry = buildServiceRegistry();
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
+		// IMPL NOTE : TCCL handling here is temporary.
+		//		It is needed because this code still uses Hibernate Configuration and Hibernate commons-annotations
+		// 		in turn which relies on TCCL being set.
+
+		( (ClassLoaderServiceImpl) classLoaderService ).withTccl(
+				new ClassLoaderServiceImpl.Work() {
+					@Override
+					public Object perform() {
+						final Configuration hibernateConfiguration = buildHibernateConfiguration( serviceRegistry );
+						JpaSchemaGenerator.performGeneration( hibernateConfiguration, serviceRegistry );
+						return null;
+					}
+				}
+		);
+
+		// release this builder
+		cancel();
 	}
 
 	@SuppressWarnings("unchecked")

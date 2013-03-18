@@ -68,7 +68,7 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @return The parameters named by this configuration.
 	 */
-	public Set getParameterNames() {
+	public Set<String> getParameterNames() {
 		return parameterTypes.keySet();
 	}
 

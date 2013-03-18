@@ -336,7 +336,7 @@ public class BasicFormatterImpl implements Formatter {
 			parensSinceSelect--;
 			if ( parensSinceSelect < 0 ) {
 				indent--;
-				parensSinceSelect = parenCounts.removeLast().intValue();
+				parensSinceSelect = parenCounts.removeLast();
 				afterByOrSetOrFromOrSelect = afterByOrFromOrSelects.removeLast().booleanValue();
 			}
 			if ( inFunction > 0 ) {

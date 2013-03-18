@@ -37,6 +37,28 @@ manifest.mainAttributes(
         'Main-Class': 'org.hibernate.Version'
 )
 
+jar {
+    manifest {
+        instruction 'Bundle-Description', 'Hibernate ORM Core'
+        instruction 'Bundle-SymbolicName', 'org.hibernate.core'
+
+        instruction 'Import-Package',
+            'javax.security.auth;resolution:=optional',
+            'javax.security.jacc;resolution:=optional',
+            'javax.validation;resolution:=optional',
+            'javax.validation.constraints;resolution:=optional',
+            'javax.validation.groups;resolution:=optional',
+            'javax.validation.metadata;resolution:=optional',
+            '*'
+
+        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
+        // uses ClassLoaderServiceImpl.
+        instruction 'Export-Package',
+            'org.hibernate.boot.registry.classloading.internal',
+            '*'
+    }
+}
+
 sourceSets.main {
     ext.jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
     java.srcDir jaxbTargetDir

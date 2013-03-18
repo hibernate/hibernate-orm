@@ -782,8 +782,8 @@ public class FumTest extends LegacyTestCase {
 		s.beginTransaction();
 
 		simple = (Simple) s.get( Simple.class, Long.valueOf(10) );
-		assertTrue("Not same parent instances", check.getName().equals( simple.getName() ) );
-		assertTrue("Not same child instances", check.getOther().getName().equals( other.getName() ) );
+		assertEquals( "Not same parent instances", check.getName(), simple.getName() );
+		assertEquals( "Not same child instances", check.getOther().getName(), other.getName() );
 
 		simple.setName("My updated name");
 
@@ -805,8 +805,8 @@ public class FumTest extends LegacyTestCase {
 		s.beginTransaction();
 
 		simple = (Simple) s.get( Simple.class, Long.valueOf( 10 ) );
-		assertTrue("Not same parent instances", check.getName().equals( simple.getName() ) );
-		assertTrue("Not same child instances", check.getOther().getName().equals( other.getName() ) );
+		assertEquals( "Not same parent instances", check.getName(), simple.getName() );
+		assertEquals( "Not same child instances", check.getOther().getName(), other.getName() );
 
 		// Now, lets delete across serialization...
 		s.delete(simple);
@@ -858,7 +858,7 @@ public class FumTest extends LegacyTestCase {
 		s.beginTransaction();
 		fum = (Fum) s.load( Fum.class, fum.getId() );
 
-		assertTrue("the Fum.friends did not get saved", fum.getFriends().size() == 2);
+		assertEquals( "the Fum.friends did not get saved", 2, fum.getFriends().size() );
 
 		fum.setFriends(null);
 		s.getTransaction().commit();

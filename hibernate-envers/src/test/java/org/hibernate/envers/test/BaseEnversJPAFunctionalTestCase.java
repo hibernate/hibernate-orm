@@ -129,7 +129,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 			settings.put( "org.hibernate.envers.audit_strategy", getAuditStrategy() );
 		}
 
-		if ( ! isAudit() ) {
+		if ( ! autoRegisterListeners() ) {
 			settings.put( EnversIntegrator.AUTO_REGISTER, "false" );
 		}
 
@@ -214,7 +214,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		return null;
 	}
 
-	protected boolean isAudit() {
+	protected boolean autoRegisterListeners() {
 		return true;
 	}
 
@@ -224,11 +224,12 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 			entityManagerFactory.close();
 		}
 	}
+
 	@After
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public void releaseUnclosedEntityManagers() {
 		releaseUnclosedEntityManager( this.em );
-		auditReader =null;
+		auditReader = null;
 		for ( EntityManager isolatedEm : isolatedEms ) {
 			releaseUnclosedEntityManager( isolatedEm );
 		}

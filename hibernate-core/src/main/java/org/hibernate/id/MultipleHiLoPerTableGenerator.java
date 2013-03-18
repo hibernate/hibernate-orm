@@ -124,6 +124,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private Class returnClass;
 	private int keySize;
 
+
 	public Object generatorKey() {
 		return tableName;
 	}
@@ -307,15 +308,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		};
 	}
 
+
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		StringBuilder sqlDropString = new StringBuilder( "drop table " );
-		if ( dialect.supportsIfExistsBeforeTableName() ) {
-			sqlDropString.append( "if exists " );
-		}
-		sqlDropString.append( tableName ).append( dialect.getCascadeConstraintsString() );
-		if ( dialect.supportsIfExistsAfterTableName() ) {
-			sqlDropString.append( " if exists" );
-		}
-		return new String[] { sqlDropString.toString() };
+		return new String[] { dialect.getDropTableString( tableName ) };
 	}
 }

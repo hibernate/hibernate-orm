@@ -38,7 +38,7 @@ public enum ConnectionReleaseMode{
 	 * explicitly close all iterators and scrollable results. This mode may
 	 * only be used with a JTA datasource.
 	 */
-	AFTER_STATEMENT("after_statement"),
+	AFTER_STATEMENT,
 
 	/**
 	 * Indicates that JDBC connections should be released after each transaction 
@@ -47,18 +47,14 @@ public enum ConnectionReleaseMode{
 	 * <p/>
 	 * This is the default mode starting in 3.1; was previously {@link #ON_CLOSE}.
 	 */
-	AFTER_TRANSACTION("after_transaction"),
+	AFTER_TRANSACTION,
 
 	/**
 	 * Indicates that connections should only be released when the Session is explicitly closed 
 	 * or disconnected; this is the legacy (Hibernate2 and pre-3.1) behavior.
 	 */
-	ON_CLOSE("on_close");
+	ON_CLOSE;
 
-	private final String name;
-	ConnectionReleaseMode(String name){
-		this.name = name;
-	}
 	public static ConnectionReleaseMode parse(String name){
 		return ConnectionReleaseMode.valueOf( name.toUpperCase() );
 	}

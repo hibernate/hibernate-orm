@@ -33,9 +33,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Define a DB index
  *
  * @author Emmanuel Bernard
+ * @deprecated Using {@link javax.persistence.Index} instead.
  */
 @Target({FIELD, METHOD})
 @Retention(RUNTIME)
+@Deprecated
 public @interface Index {
 	String name();
 

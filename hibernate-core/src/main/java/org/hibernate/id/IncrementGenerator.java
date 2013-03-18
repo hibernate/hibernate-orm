@@ -126,7 +126,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		try {
 			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
-				ResultSet rs = st.executeQuery();
+				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 				try {
                     if (rs.next()) previousValueHolder.initialize(rs, 0L).increment();
                     else previousValueHolder.initialize(1L);
@@ -136,11 +136,11 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 					}
 				}
 				finally {
-					rs.close();
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
 				}
 			}
 			finally {
-				st.close();
+				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
 		catch (SQLException sqle) {

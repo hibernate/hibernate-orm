@@ -1,7 +1,9 @@
 package org.hibernate.envers.strategy;
+
 import java.io.Serializable;
 
 import org.hibernate.Session;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
@@ -33,11 +35,13 @@ public interface AuditStrategy {
      * Perform the persistence of audited data for collection ("middle") entities.
      *
      * @param session Session, which can be used to persist the data.
+	 * @param entityName Name of the entity, in which the audited change happens.
+	 * @param propertyName The name of the property holding the {@link PersistentCollection}.
      * @param auditCfg Audit configuration
      * @param persistentCollectionChangeData Collection change data to be persisted.
      * @param revision Current revision data
      */
-    void performCollectionChange(Session session, AuditConfiguration auditCfg,
+    void performCollectionChange(Session session, String entityName, String propertyName, AuditConfiguration auditCfg,
                                  PersistentCollectionChangeData persistentCollectionChangeData, Object revision);
     
 
@@ -89,11 +93,12 @@ public interface AuditStrategy {
 	 * @param eeOriginalIdPropertyPath name of the id property (only used for {@link ValidityAuditStrategy})
 	 * @param revisionPropertyPath path of the revision property (only used for {@link ValidityAuditStrategy})
 	 * @param originalIdPropertyName name of the id property (only used for {@link ValidityAuditStrategy})
+	 * @param alias1 an alias used for subqueries (only used for {@link DefaultAuditStrategy})
 	 * @param componentDatas information about the middle-entity relation
 	 */
 	void addAssociationAtRevisionRestriction(QueryBuilder rootQueryBuilder,  String revisionProperty, 
 			String revisionEndProperty, boolean addAlias, MiddleIdData referencingIdData, 
 			String versionsMiddleEntityName, String eeOriginalIdPropertyPath, String revisionPropertyPath,
-          String originalIdPropertyName, MiddleComponentData... componentDatas);
+          String originalIdPropertyName, String alias1, MiddleComponentData... componentDatas);
 
 }

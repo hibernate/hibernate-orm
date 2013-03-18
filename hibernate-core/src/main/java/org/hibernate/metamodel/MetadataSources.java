@@ -78,7 +78,6 @@ public class MetadataSources {
 	private final ServiceRegistry serviceRegistry;
 	private final JaxbMappingProcessor jaxbProcessor;
 	private final List<CacheRegionDefinition> externalCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
-
 	private List<JaxbRoot> jaxbRootList = new ArrayList<JaxbRoot>();
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
 	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<String>();

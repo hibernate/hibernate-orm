@@ -23,39 +23,14 @@
  */
 package org.hibernate.dialect;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.NClob;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CastFunction;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.dialect.function.*;
+import org.hibernate.dialect.lock.*;
 import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
@@ -96,10 +71,16 @@ import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.TemporaryTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.sql.*;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.jboss.logging.Logger;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.*;
+import java.util.*;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.
@@ -1212,6 +1193,8 @@ public abstract class Dialect implements ConversionContext {
             case FORCE:
             case PESSIMISTIC_FORCE_INCREMENT:
                 return getForUpdateNowaitString();
+            case UPGRADE_SKIPLOCKED:
+                return getForUpdateSkipLockedString();
             default:
                 return "";
         }
@@ -1331,6 +1314,16 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	* Retrieves the <tt>FOR UPDATE SKIP LOCKED</tt> syntax specific to this dialect.
+	*
+	* @return The appropriate <tt>FOR UPDATE SKIP LOCKED</tt> clause string.
+	*/
+	public String getForUpdateSkipLockedString() {
+		// by default we report no support for SKIP_LOCKED lock semantics
+		return getForUpdateString();
+	}
+
+	/**
 	 * Get the <tt>FOR UPDATE OF column_list NOWAIT</tt> fragment appropriate
 	 * for this dialect given the aliases of the columns to be write locked.
 	 *
@@ -1338,6 +1331,17 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The appropriate <tt>FOR UPDATE OF colunm_list NOWAIT</tt> clause string.
 	 */
 	public String getForUpdateNowaitString(String aliases) {
+		return getForUpdateString( aliases );
+	}
+
+ 	/**
+	 * Get the <tt>FOR UPDATE OF column_list SKIP LOCKED</tt> fragment appropriate
+	 * for this dialect given the aliases of the columns to be write locked.
+	 *
+	 * @param aliases The columns to be write locked.
+	 * @return The appropriate <tt>FOR UPDATE colunm_list SKIP LOCKED</tt> clause string.
+	 */
+	public String getForUpdateSkipLockedString(String aliases) {
 		return getForUpdateString( aliases );
 	}
 
@@ -2059,6 +2063,18 @@ public abstract class Dialect implements ConversionContext {
 	public boolean supportsIfExistsAfterTableName() {
 		return false;
 	}
+	
+	public String getDropTableString( String tableName ) {
+		StringBuilder buf = new StringBuilder( "drop table " );
+		if ( supportsIfExistsBeforeTableName() ) {
+			buf.append( "if exists " );
+		}
+		buf.append( tableName ).append( getCascadeConstraintsString() );
+		if ( supportsIfExistsAfterTableName() ) {
+			buf.append( " if exists" );
+		}
+		return buf.toString();
+	}
 
 	/**
 	 * Does this dialect support column-level check constraints?
@@ -2200,6 +2216,30 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean replaceResultVariableInOrderByClauseWithPosition() {
 		return false;
+	}
+
+	/**
+	 * @param expression The SQL order expression. In case of {@code @OrderBy} annotation user receives property placeholder
+	 * (e.g. attribute name enclosed in '{' and '}' signs).
+	 * @param collation Collation string in format {@code collate IDENTIFIER}, or {@code null}
+	 * if expression has not been explicitly specified.
+	 * @param order Order direction. Possible values: {@code asc}, {@code desc}, or {@code null}
+	 * if expression has not been explicitly specified.
+	 * @param nulls Nulls precedence. Default value: {@link NullPrecedence#NONE}.
+	 * @return Renders single element of {@code ORDER BY} clause.
+	 */
+	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
+		final StringBuilder orderByElement = new StringBuilder( expression );
+		if ( collation != null ) {
+			orderByElement.append( " " ).append( collation );
+		}
+		if ( order != null ) {
+			orderByElement.append( " " ).append( order );
+		}
+		if ( nulls != NullPrecedence.NONE ) {
+			orderByElement.append( " nulls " ).append( nulls.name().toLowerCase() );
+		}
+		return orderByElement.toString();
 	}
 
 	/**
@@ -2438,5 +2478,54 @@ public abstract class Dialect implements ConversionContext {
 	
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+
+	public String getNotExpression( String expression ) {
+		return "not " + expression;
+	}
+
+	/**
+	 * Does this dialect support the <tt>UNIQUE</tt> column syntax?
+	 *
+	 * @return boolean
+	 * 
+	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean supportsUnique() {
+		return true;
+	}
+
+    /**
+     * Does this dialect support adding Unique constraints via create and alter table ?
+     * 
+     * @return boolean
+     * 
+     * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+     */
+	@Deprecated
+	public boolean supportsUniqueConstraintInCreateAlterTable() {
+	    return true;
+	}
+
+    /**
+     * The syntax used to add a unique constraint to a table.
+     *
+     * @param constraintName The name of the unique constraint.
+     * @return The "add unique" fragment
+     * 
+     * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+     */
+	@Deprecated
+	public String getAddUniqueConstraintString(String constraintName) {
+        return " add constraint " + constraintName + " unique ";
+    }
+
+	/**
+	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean supportsNotNullUnique() {
+		return true;
 	}
 }

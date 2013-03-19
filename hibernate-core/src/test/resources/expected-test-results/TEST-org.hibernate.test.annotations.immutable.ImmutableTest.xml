@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.immutable.ImmutableTest" tests="3" time="0.116" timestamp="2013-02-28T20:10:30">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.immutable.ImmutableTest" name="testImmutableCollection" time="0.035" />
+  <testcase classname="org.hibernate.test.annotations.immutable.ImmutableTest" name="testImmutableEntity" time="0.022" />
+  <testcase classname="org.hibernate.test.annotations.immutable.ImmutableTest" name="testMiscplacedImmutableAnnotation" time="0.003" />
+  <system-out><![CDATA[14:10:30,505  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.immutable.ImmutableTest
+14:10:30,519  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:30,519  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:30,519  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:30,520  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:30,520  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:30,521  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:30,521  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:30,522  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:30,522  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:30,522  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:30,532  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:30,532 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:30,532 DEBUG SQL:104 - 
+    alter table Country_State 
+        drop constraint FKDF6436685AAECABD
+14:10:30,533 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Country_State drop constraint FKDF6436685AAECABD
+14:10:30,533 ERROR SchemaExport:426 - Table "COUNTRY_STATE" not found; SQL statement:
+
+    alter table Country_State 
+        drop constraint FKDF6436685AAECABD [42102-145]
+14:10:30,533 DEBUG SQL:104 - 
+    alter table Country_State 
+        drop constraint FKDF6436685B34DEAE
+14:10:30,533 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Country_State drop constraint FKDF6436685B34DEAE
+14:10:30,533 ERROR SchemaExport:426 - Table "COUNTRY_STATE" not found; SQL statement:
+
+    alter table Country_State 
+        drop constraint FKDF6436685B34DEAE [42102-145]
+14:10:30,533 DEBUG SQL:104 - 
+    drop table Country if exists
+14:10:30,533 DEBUG SQL:104 - 
+    drop table Country_State if exists
+14:10:30,546 DEBUG SQL:104 - 
+    drop table State if exists
+14:10:30,546 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:30,547 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:30,547 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:30,547 DEBUG SQL:104 - 
+    create table Country (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:30,547 DEBUG SQL:104 - 
+    create table Country_State (
+        Country_id integer not null,
+        states_id integer not null
+    )
+14:10:30,547 DEBUG SQL:104 - 
+    create table State (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:30,548 DEBUG SQL:104 - 
+    alter table Country_State 
+        add constraint UK_DF64366883B9CC78 unique (states_id)
+14:10:30,553 DEBUG SQL:104 - 
+    alter table Country_State 
+        add constraint FKDF6436685AAECABD 
+        foreign key (states_id) 
+        references State
+14:10:30,554 DEBUG SQL:104 - 
+    alter table Country_State 
+        add constraint FKDF6436685B34DEAE 
+        foreign key (Country_id) 
+        references Country
+14:10:30,555 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:30,555  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:30,556  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:30,556  INFO CustomRunner:139 - Test: testImmutableCollection
+14:10:30,557 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:30,557 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:30,558 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:30,558 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:30,559 DEBUG SQL:104 - 
+    insert 
+    into
+        Country
+        (name, id) 
+    values
+        (?, ?)
+14:10:30,564 DEBUG SQL:104 - 
+    insert 
+    into
+        State
+        (name, id) 
+    values
+        (?, ?)
+14:10:30,565 DEBUG SQL:104 - 
+    insert 
+    into
+        State
+        (name, id) 
+    values
+        (?, ?)
+14:10:30,565 DEBUG SQL:104 - 
+    insert 
+    into
+        State
+        (name, id) 
+    values
+        (?, ?)
+14:10:30,565 DEBUG SQL:104 - 
+    insert 
+    into
+        Country_State
+        (Country_id, states_id) 
+    values
+        (?, ?)
+14:10:30,566 DEBUG SQL:104 - 
+    insert 
+    into
+        Country_State
+        (Country_id, states_id) 
+    values
+        (?, ?)
+14:10:30,566 DEBUG SQL:104 - 
+    insert 
+    into
+        Country_State
+        (Country_id, states_id) 
+    values
+        (?, ?)
+14:10:30,566 DEBUG SQL:104 - 
+    select
+        country0_.id as id0_0_,
+        country0_.name as name0_0_ 
+    from
+        Country country0_ 
+    where
+        country0_.id=?
+14:10:30,567 DEBUG SQL:104 - 
+    select
+        states0_.Country_id as Country1_0_1_,
+        states0_.states_id as states2_1_1_,
+        state1_.id as id2_0_,
+        state1_.name as name2_0_ 
+    from
+        Country_State states0_ 
+    inner join
+        State state1_ 
+            on states0_.states_id=state1_.id 
+    where
+        states0_.Country_id=?
+14:10:30,580 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:30,581 DEBUG SQL:104 - 
+    select
+        country0_.id as id0_0_,
+        country0_.name as name0_0_ 
+    from
+        Country country0_ 
+    where
+        country0_.id=?
+14:10:30,581 DEBUG SQL:104 - 
+    select
+        states0_.Country_id as Country1_0_1_,
+        states0_.states_id as states2_1_1_,
+        state1_.id as id2_0_,
+        state1_.name as name2_0_ 
+    from
+        Country_State states0_ 
+    inner join
+        State state1_ 
+            on states0_.states_id=state1_.id 
+    where
+        states0_.Country_id=?
+14:10:30,582 DEBUG SQL:104 - 
+    select
+        country0_.id as id0_0_,
+        country0_.name as name0_0_ 
+    from
+        Country country0_ 
+    where
+        country0_.id=?
+14:10:30,590 DEBUG SQL:104 - 
+    select
+        states0_.Country_id as Country1_0_1_,
+        states0_.states_id as states2_1_1_,
+        state1_.id as id2_0_,
+        state1_.name as name2_0_ 
+    from
+        Country_State states0_ 
+    inner join
+        State state1_ 
+            on states0_.states_id=state1_.id 
+    where
+        states0_.Country_id=?
+14:10:30,591  INFO CustomRunner:139 - Test: testImmutableEntity
+14:10:30,592 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:30,593 DEBUG SQL:104 - 
+    insert 
+    into
+        Country
+        (name, id) 
+    values
+        (?, ?)
+14:10:30,593 DEBUG SQL:104 - 
+    select
+        country0_.id as id0_0_,
+        country0_.name as name0_0_ 
+    from
+        Country country0_ 
+    where
+        country0_.id=?
+14:10:30,595 DEBUG SQL:104 - 
+    select
+        country0_.id as id0_0_,
+        country0_.name as name0_0_ 
+    from
+        Country country0_ 
+    where
+        country0_.id=?
+14:10:30,615  INFO CustomRunner:139 - Test: testMiscplacedImmutableAnnotation
+14:10:30,618  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:30,619 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:30,619 DEBUG SQL:104 - 
+    alter table Country_State 
+        drop constraint FKDF6436685AAECABD
+14:10:30,619 DEBUG SQL:104 - 
+    alter table Country_State 
+        drop constraint FKDF6436685B34DEAE
+14:10:30,619 DEBUG SQL:104 - 
+    drop table Country if exists
+14:10:30,620 DEBUG SQL:104 - 
+    drop table Country_State if exists
+14:10:30,620 DEBUG SQL:104 - 
+    drop table State if exists
+14:10:30,620 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:30,620  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:30,620  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

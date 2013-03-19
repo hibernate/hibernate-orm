@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.lob.SerializableTypeTest" tests="1" time="0.108" timestamp="2013-02-28T20:17:05">
+  <properties />
+  <testcase classname="org.hibernate.test.lob.SerializableTypeTest" name="testNewSerializableType" time="0.009" />
+  <system-out><![CDATA[14:17:05,846  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.lob.SerializableTypeTest
+14:17:05,848  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/lob/SerializableMappings.hbm.xml
+14:17:05,883  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:05,883  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:05,883  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:05,884  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:05,884  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:05,894  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:05,895  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:05,895  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:05,896  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:05,896  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:05,902  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:05,903 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:05,903 DEBUG SQL:104 - 
+    drop table SerializableHolder if exists
+14:17:05,903 DEBUG SQL:104 - 
+    create table SerializableHolder (
+        ID bigint not null,
+        SER_DATA binary(255),
+        primary key (ID)
+    )
+14:17:05,904  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:05,904  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:05,905  INFO CustomRunner:139 - Test: testNewSerializableType
+14:17:05,906 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        SerializableHolder
+14:17:05,906 DEBUG SQL:104 - 
+    insert 
+    into
+        SerializableHolder
+        (SER_DATA, ID) 
+    values
+        (?, ?)
+14:17:05,907 DEBUG SQL:104 - 
+    select
+        serializab0_.ID as ID0_0_,
+        serializab0_.SER_DATA as SER2_0_0_ 
+    from
+        SerializableHolder serializab0_ 
+    where
+        serializab0_.ID=?
+14:17:05,908 DEBUG SQL:104 - 
+    update
+        SerializableHolder 
+    set
+        SER_DATA=? 
+    where
+        ID=?
+14:17:05,910 DEBUG SQL:104 - 
+    select
+        serializab0_.ID as ID0_0_,
+        serializab0_.SER_DATA as SER2_0_0_ 
+    from
+        SerializableHolder serializab0_ 
+    where
+        serializab0_.ID=?
+14:17:05,911 DEBUG SQL:104 - 
+    update
+        SerializableHolder 
+    set
+        SER_DATA=? 
+    where
+        ID=?
+14:17:05,911 DEBUG SQL:104 - 
+    select
+        serializab0_.ID as ID0_0_,
+        serializab0_.SER_DATA as SER2_0_0_ 
+    from
+        SerializableHolder serializab0_ 
+    where
+        serializab0_.ID=?
+14:17:05,912 DEBUG SQL:104 - 
+    update
+        SerializableHolder 
+    set
+        SER_DATA=? 
+    where
+        ID=?
+14:17:05,912 DEBUG SQL:104 - 
+    select
+        serializab0_.ID as ID0_0_,
+        serializab0_.SER_DATA as SER2_0_0_ 
+    from
+        SerializableHolder serializab0_ 
+    where
+        serializab0_.ID=?
+14:17:05,913 DEBUG SQL:104 - 
+    update
+        SerializableHolder 
+    set
+        SER_DATA=? 
+    where
+        ID=?
+14:17:05,913 DEBUG SQL:104 - 
+    select
+        serializab0_.ID as ID0_0_,
+        serializab0_.SER_DATA as SER2_0_0_ 
+    from
+        SerializableHolder serializab0_ 
+    where
+        serializab0_.ID=?
+14:17:05,913 DEBUG SQL:104 - 
+    delete 
+    from
+        SerializableHolder 
+    where
+        ID=?
+14:17:05,914  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:05,915 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:05,915 DEBUG SQL:104 - 
+    drop table SerializableHolder if exists
+14:17:05,916  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:05,916  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

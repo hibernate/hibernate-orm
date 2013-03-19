@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.timestamp.TimestampTest" tests="2" time="0.079" timestamp="2013-02-28T20:19:23">
+  <properties />
+  <testcase classname="org.hibernate.test.timestamp.TimestampTest" name="testComponent" time="0.004" />
+  <testcase classname="org.hibernate.test.timestamp.TimestampTest" name="testUpdateFalse" time="0.01" />
+  <system-out><![CDATA[14:19:23,499  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.timestamp.TimestampTest
+14:19:23,501  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/timestamp/User.hbm.xml
+14:19:23,542  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:23,543  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:23,543  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:23,543  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:23,543  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:23,545  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:23,545  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:23,545  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:23,546  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:23,546  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:23,552  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:23,552 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:23,552 DEBUG SQL:104 - 
+    drop table T_USER if exists
+14:19:23,553 DEBUG SQL:104 - 
+    create table T_USER (
+        userName varchar(255) not null,
+        lastModified timestamp not null,
+        "password" varchar(255) not null,
+        name varchar(255) not null,
+        dob timestamp not null,
+        address varchar(255),
+        primary key (userName)
+    )
+14:19:23,553  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:23,553  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:23,554 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.timestamp.User where person.name in (:nameList) or userName in (:nameList)
+14:19:23,555 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'timestamp'
+    |           \-[IDENT] Node: 'User'
+    \-[WHERE] Node: 'where'
+       \-[OR] Node: 'or'
+          +-[IN] Node: 'in'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'person'
+          |  |  \-[IDENT] Node: 'name'
+          |  \-[IN_LIST] Node: 'inList'
+          |     \-[COLON] Node: ':'
+          |        \-[IDENT] Node: 'nameList'
+          \-[IN] Node: 'in'
+             +-[IDENT] Node: 'userName'
+             \-[IN_LIST] Node: 'inList'
+                \-[COLON] Node: ':'
+                   \-[IDENT] Node: 'nameList'
+
+14:19:23,555 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,555 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.timestamp.User (<no alias>) -> user0_
+14:19:23,556 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:23,556 DEBUG DotNode:599 - getDataType() : person -> org.hibernate.type.ComponentType@b841ae1
+14:19:23,556 DEBUG DotNode:585 - Unresolved property path is now 'person.name'
+14:19:23,556 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.person -> user0_.name
+14:19:23,556 DEBUG DotNode:599 - getDataType() : person.name -> org.hibernate.type.StringType@2dc8de40
+14:19:23,557 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.person.name -> user0_.name
+14:19:23,557 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:23,557 DEBUG DotNode:599 - getDataType() : userName -> org.hibernate.type.StringType@2dc8de40
+14:19:23,557 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.userName -> user0_.userName
+14:19:23,557 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} T_USER user0_ ) ( where ( or ( in ( user0_.name ( user0_.name {synthetic-alias} person ) name ) ( inList ? ) ) ( in ( user0_.userName {synthetic-alias} userName ) ( inList ? ) ) ) ) )
+14:19:23,558 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:23,558 DEBUG JoinProcessor:175 - Using FROM fragment [T_USER user0_]
+14:19:23,558 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_USER)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user0_.userName as userName0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.timestamp.User}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'user0_.lastModified as lastModi2_0_, user0_."password" as password3_0_, user0_.name as name0_, user0_.dob as dob0_, user0_.address as address0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_USER user0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.timestamp.User}}
+    \-[WHERE] SqlNode: 'where'
+       \-[OR] SqlNode: 'or'
+          +-[IN] InLogicOperatorNode: 'in'
+          |  +-[DOT] DotNode: 'user0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=person.name,path={synthetic-alias}.person.name,tableAlias=user0_,className=org.hibernate.test.timestamp.User,classAlias=null}
+          |  |  +-[DOT] DotNode: 'user0_.name' {propertyName=name,dereferenceType=2,propertyPath=person.name,path={synthetic-alias}.person,tableAlias=user0_,className=org.hibernate.test.timestamp.User,classAlias=null}
+          |  |  |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  |  |  \-[IDENT] IdentNode: 'person' {originalText=person}
+          |  |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          |  \-[IN_LIST] SqlNode: 'inList'
+          |     \-[NAMED_PARAM] ParameterNode: '?' {name=nameList, expectedType=org.hibernate.type.StringType@2dc8de40}
+          \-[IN] InLogicOperatorNode: 'in'
+             +-[DOT] DotNode: 'user0_.userName' {propertyName=userName,dereferenceType=ALL,propertyPath=userName,path={synthetic-alias}.userName,tableAlias=user0_,className=org.hibernate.test.timestamp.User,classAlias=null}
+             |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             |  \-[IDENT] IdentNode: 'userName' {originalText=userName}
+             \-[IN_LIST] SqlNode: 'inList'
+                \-[NAMED_PARAM] ParameterNode: '?' {name=nameList, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:19:23,558 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,559 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.timestamp.User where person.name in (:nameList) or userName in (:nameList)
+14:19:23,559 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.userName as userName0_, user0_.lastModified as lastModi2_0_, user0_."password" as password3_0_, user0_.name as name0_, user0_.dob as dob0_, user0_.address as address0_ from T_USER user0_ where user0_.name in (?) or user0_.userName in (?)
+14:19:23,559 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,559  INFO CustomRunner:139 - Test: testComponent
+14:19:23,561 DEBUG SQL:104 - 
+    insert 
+    into
+        T_USER
+        (lastModified, "password", name, dob, userName) 
+    values
+        (?, ?, ?, ?, ?)
+14:19:23,562 DEBUG SQL:104 - 
+    select
+        user0_.userName as userName0_0_,
+        user0_.lastModified as lastModi2_0_0_,
+        user0_."password" as password3_0_0_,
+        user0_.name as name0_0_,
+        user0_.dob as dob0_0_,
+        user0_.address as address0_0_ 
+    from
+        T_USER user0_ 
+    where
+        user0_.userName=?
+14:19:23,562 DEBUG SQL:104 - 
+    update
+        T_USER 
+    set
+        "password"=? 
+    where
+        userName=?
+14:19:23,563 DEBUG SQL:104 - 
+    select
+        user0_.userName as userName0_0_,
+        user0_.lastModified as lastModi2_0_0_,
+        user0_."password" as password3_0_0_,
+        user0_.name as name0_0_,
+        user0_.dob as dob0_0_,
+        user0_.address as address0_0_ 
+    from
+        T_USER user0_ 
+    where
+        user0_.userName=?
+14:19:23,563 DEBUG SQL:104 - 
+    delete 
+    from
+        T_USER 
+    where
+        userName=? 
+        and lastModified=?
+14:19:23,564  INFO CustomRunner:139 - Test: testUpdateFalse
+14:19:23,565 DEBUG SQL:104 - 
+    insert 
+    into
+        T_USER
+        (lastModified, "password", name, dob, userName) 
+    values
+        (?, ?, ?, ?, ?)
+14:19:23,565 DEBUG SQL:104 - 
+    select
+        user0_.userName as userName0_0_,
+        user0_.lastModified as lastModi2_0_0_,
+        user0_."password" as password3_0_0_,
+        user0_.name as name0_0_,
+        user0_.dob as dob0_0_,
+        user0_.address as address0_0_ 
+    from
+        T_USER user0_ 
+    where
+        user0_.userName=?
+14:19:23,566 DEBUG SQL:104 - 
+    delete 
+    from
+        T_USER 
+    where
+        userName=? 
+        and lastModified=?
+14:19:23,574  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:23,575 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:23,575 DEBUG SQL:104 - 
+    drop table T_USER if exists
+14:19:23,576  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:23,576  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,4643 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.MasterDetailTest" tests="26" time="2.013" timestamp="2013-02-28T20:16:28">
+  <properties />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testCachedCollectionRefresh" time="0.141" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testCascading" time="0.117" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testCategories" time="0.179" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testCollectionQuery" time="0.041" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testCollectionRefresh" time="0.053" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testCollectionReplace" time="0.043" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testCollectionReplace2" time="0.073" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testCollectionReplaceOnUpdate" time="0.045" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testCopy" time="0.111" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testCustomPersister" time="0.01" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testExample" time="0.078" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testIncomingOutgoing" time="0.111" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testInterface" time="0.002" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testMasterDetail" time="0.283" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testMeta" time="0.001" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testMixNativeAssigned" time="0.003" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testMultiLevelCascade" time="0.087" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testNamedQuery" time="0.002" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testNoUpdateManyToOne" time="0.021" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testNonLazyBidirectional" time="0.034" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testNotNullDiscriminator" time="0.013" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testOuterJoin" time="0.042" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testPolymorphicCriteria" time="0.076" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testQueuedBagAdds" time="0.052" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testSelfManyToOne" time="0.023" />
+  <testcase classname="org.hibernate.test.legacy.MasterDetailTest" name="testUpdateLazyCollections" time="0.066" />
+  <system-out><![CDATA[14:16:28,503  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.MasterDetailTest
+14:16:28,537  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:28,539  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/MasterDetail.hbm.xml
+14:16:28,544  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Custom.hbm.xml
+14:16:28,551  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Category.hbm.xml
+14:16:28,567  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Nameable.hbm.xml
+14:16:28,574  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/SingleSeveral.hbm.xml
+14:16:28,579  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/WZ.hbm.xml
+14:16:28,587  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/UpDown.hbm.xml
+14:16:28,593  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Eye.hbm.xml
+14:16:28,601  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.legacy.Single
+14:16:28,601  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.Single
+14:16:28,602  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.legacy.Several
+14:16:28,602  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.Several
+14:16:28,602  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:16:28,602  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:16:28,602  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:16:28,603  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:16:28,603  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:16:28,604  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:28,604  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:16:28,605  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:16:28,605  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:16:28,620  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:28,621 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:28,621 DEBUG SQL:104 - 
+    alter table Detail 
+        drop constraint CC
+14:16:28,621 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Detail drop constraint CC
+14:16:28,621 ERROR SchemaExport:426 - Table "DETAIL" not found; SQL statement:
+
+    alter table Detail 
+        drop constraint CC [42102-145]
+14:16:28,621 DEBUG SQL:104 - 
+    alter table Detail 
+        drop constraint FK79CF0471BAFC73FD
+14:16:28,622 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Detail drop constraint FK79CF0471BAFC73FD
+14:16:28,622 ERROR SchemaExport:426 - Table "DETAIL" not found; SQL statement:
+
+    alter table Detail 
+        drop constraint FK79CF0471BAFC73FD [42102-145]
+14:16:28,622 DEBUG SQL:104 - 
+    alter table Eye 
+        drop constraint FK11211DED2D335
+14:16:28,622 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Eye drop constraint FK11211DED2D335
+14:16:28,622 ERROR SchemaExport:426 - Table "EYE" not found; SQL statement:
+
+    alter table Eye 
+        drop constraint FK11211DED2D335 [42102-145]
+14:16:28,622 DEBUG SQL:104 - 
+    alter table Jay 
+        drop constraint FK12202DED2B353
+14:16:28,622 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Jay drop constraint FK12202DED2B353
+14:16:28,622 ERROR SchemaExport:426 - Table "JAY" not found; SQL statement:
+
+    alter table Jay 
+        drop constraint FK12202DED2B353 [42102-145]
+14:16:28,623 DEBUG SQL:104 - 
+    alter table Several 
+        drop constraint FKD9AD23DCB9B9D411
+14:16:28,623 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Several drop constraint FKD9AD23DCB9B9D411
+14:16:28,623 ERROR SchemaExport:426 - Table "SEVERAL" not found; SQL statement:
+
+    alter table Several 
+        drop constraint FKD9AD23DCB9B9D411 [42102-145]
+14:16:28,623 DEBUG SQL:104 - 
+    alter table SubDetail 
+        drop constraint FK460B329135BB9D31
+14:16:28,623 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table SubDetail drop constraint FK460B329135BB9D31
+14:16:28,623 ERROR SchemaExport:426 - Table "SUBDETAIL" not found; SQL statement:
+
+    alter table SubDetail 
+        drop constraint FK460B329135BB9D31 [42102-145]
+14:16:28,623 DEBUG SQL:104 - 
+    alter table Z 
+        drop constraint FK5A435CA81F
+14:16:28,624 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Z drop constraint FK5A435CA81F
+14:16:28,624 ERROR SchemaExport:426 - Table "Z" not found; SQL statement:
+
+    alter table Z 
+        drop constraint FK5A435CA81F [42102-145]
+14:16:28,624 DEBUG SQL:104 - 
+    alter table "master" 
+        drop constraint FKBF8D2A6248C67743
+14:16:28,624 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "master" drop constraint FKBF8D2A6248C67743
+14:16:28,624 ERROR SchemaExport:426 - Table "master" not found; SQL statement:
+
+    alter table "master" 
+        drop constraint FKBF8D2A6248C67743 [42102-145]
+14:16:28,624 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEE6C4D648
+14:16:28,624 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table category drop constraint FK302BCFEE6C4D648
+14:16:28,625 ERROR SchemaExport:426 - Table "CATEGORY" not found; SQL statement:
+
+    alter table category 
+        drop constraint FK302BCFEE6C4D648 [42102-145]
+14:16:28,625 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEB30D557
+14:16:28,625 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table category drop constraint FK302BCFEB30D557
+14:16:28,625 ERROR SchemaExport:426 - Table "CATEGORY" not found; SQL statement:
+
+    alter table category 
+        drop constraint FK302BCFEB30D557 [42102-145]
+14:16:28,625 DEBUG SQL:104 - 
+    alter table mtm 
+        drop constraint BB
+14:16:28,625 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table mtm drop constraint BB
+14:16:28,625 ERROR SchemaExport:426 - Table "MTM" not found; SQL statement:
+
+    alter table mtm 
+        drop constraint BB [42102-145]
+14:16:28,626 DEBUG SQL:104 - 
+    alter table mtm 
+        drop constraint AA
+14:16:28,626 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table mtm drop constraint AA
+14:16:28,626 ERROR SchemaExport:426 - Table "MTM" not found; SQL statement:
+
+    alter table mtm 
+        drop constraint AA [42102-145]
+14:16:28,626 DEBUG SQL:104 - 
+    drop table Custom if exists
+14:16:28,626 DEBUG SQL:104 - 
+    drop table Detail if exists
+14:16:28,627 DEBUG SQL:104 - 
+    drop table Eye if exists
+14:16:28,627 DEBUG SQL:104 - 
+    drop table Jay if exists
+14:16:28,627 DEBUG SQL:104 - 
+    drop table Nameable if exists
+14:16:28,627 DEBUG SQL:104 - 
+    drop table Several if exists
+14:16:28,627 DEBUG SQL:104 - 
+    drop table Single if exists
+14:16:28,627 DEBUG SQL:104 - 
+    drop table SubDetail if exists
+14:16:28,627 DEBUG SQL:104 - 
+    drop table Up if exists
+14:16:28,627 DEBUG SQL:104 - 
+    drop table W if exists
+14:16:28,628 DEBUG SQL:104 - 
+    drop table Z if exists
+14:16:28,628 DEBUG SQL:104 - 
+    drop table "assign-able" if exists
+14:16:28,628 DEBUG SQL:104 - 
+    drop table "master" if exists
+14:16:28,628 DEBUG SQL:104 - 
+    drop table category if exists
+14:16:28,628 DEBUG SQL:104 - 
+    drop table mtm if exists
+14:16:28,628 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:16:28,628 DEBUG SQL:104 - 
+    create table Custom (
+        id_ varchar(64) not null,
+        primary key (id_)
+    )
+14:16:28,629 DEBUG SQL:104 - 
+    create table Detail (
+        detail_key_column bigint generated by default as identity,
+        x integer not null,
+        i integer not null,
+        master_key bigint not null,
+        more_master_key bigint,
+        primary key (detail_key_column)
+    )
+14:16:28,639 DEBUG SQL:104 - 
+    create table Eye (
+        id bigint not null,
+        name varchar(255),
+        jay bigint,
+        primary key (id)
+    )
+14:16:28,640 DEBUG SQL:104 - 
+    create table Jay (
+        id bigint not null,
+        eye bigint,
+        primary key (id)
+    )
+14:16:28,640 DEBUG SQL:104 - 
+    create table Nameable (
+        key_ bigint generated by default as identity,
+        clazz varchar(255) not null,
+        name varchar(255),
+        primary key (key_)
+    )
+14:16:28,640 DEBUG SQL:104 - 
+    create table Several (
+        id varchar(32) not null,
+        string_ varchar(32) not null,
+        single_id varchar(32),
+        single_string varchar(32),
+        primary key (id, string_)
+    )
+14:16:28,641 DEBUG SQL:104 - 
+    create table Single (
+        id varchar(32) not null,
+        string_ varchar(32) not null,
+        prop varchar(255),
+        primary key (id, string_)
+    )
+14:16:28,641 DEBUG SQL:104 - 
+    create table SubDetail (
+        subdetail_key_col bigint generated by default as identity,
+        name varchar(255),
+        detail_key bigint,
+        primary key (subdetail_key_col)
+    )
+14:16:28,641 DEBUG SQL:104 - 
+    create table Up (
+        id1 varchar(255) not null,
+        id2 bigint not null,
+        value_ bigint,
+        primary key (id1, id2)
+    )
+14:16:28,665 DEBUG SQL:104 - 
+    create table W (
+        wid bigint not null,
+        primary key (wid)
+    )
+14:16:28,665 DEBUG SQL:104 - 
+    create table Z (
+        zid bigint not null,
+        w bigint not null,
+        primary key (zid)
+    )
+14:16:28,666 DEBUG SQL:104 - 
+    create table "assign-able" (
+        id varchar(255) not null,
+        primary key (id)
+    )
+14:16:28,666 DEBUG SQL:104 - 
+    create table "master" (
+        master_key_column bigint generated by default as identity,
+        version integer not null,
+        name varchar(255),
+        x integer,
+        big_dec decimal(7,3),
+        otherMaster bigint,
+        primary key (master_key_column)
+    )
+14:16:28,680 DEBUG SQL:104 - 
+    create table category (
+        category_key_col bigint generated by default as identity,
+        name varchar(255),
+        "assign-able-id" varchar(255),
+        parent bigint,
+        ord integer,
+        primary key (category_key_col)
+    )
+14:16:28,680 DEBUG SQL:104 - 
+    create table mtm (
+        outgoingabcdef bigint not null,
+        incomingabcdef bigint not null,
+        primary key (outgoingabcdef, incomingabcdef)
+    )
+14:16:28,681 DEBUG SQL:104 - 
+    alter table Detail 
+        add constraint uk unique (x, i, master_key)
+14:16:28,681 DEBUG SQL:104 - 
+    alter table Detail 
+        add constraint CC 
+        foreign key (master_key) 
+        references "master"
+14:16:28,681 DEBUG SQL:104 - 
+    alter table Detail 
+        add constraint FK79CF0471BAFC73FD 
+        foreign key (more_master_key) 
+        references "master"
+14:16:28,694 DEBUG SQL:104 - 
+    alter table Eye 
+        add constraint FK11211DED2D335 
+        foreign key (jay) 
+        references Jay
+14:16:28,695 DEBUG SQL:104 - 
+    alter table Jay 
+        add constraint FK12202DED2B353 
+        foreign key (eye) 
+        references Eye
+14:16:28,695 DEBUG SQL:104 - 
+    alter table Several 
+        add constraint FKD9AD23DCB9B9D411 
+        foreign key (single_id, single_string) 
+        references Single
+14:16:28,696 DEBUG SQL:104 - 
+    alter table SubDetail 
+        add constraint FK460B329135BB9D31 
+        foreign key (detail_key) 
+        references Detail
+14:16:28,696 DEBUG SQL:104 - 
+    alter table Z 
+        add constraint FK5A435CA81F 
+        foreign key (w) 
+        references W
+14:16:28,697 DEBUG SQL:104 - 
+    alter table "master" 
+        add constraint FKBF8D2A6248C67743 
+        foreign key (otherMaster) 
+        references "master"
+14:16:28,697 DEBUG SQL:104 - 
+    alter table category 
+        add constraint FK302BCFEE6C4D648 
+        foreign key ("assign-able-id") 
+        references "assign-able"
+14:16:28,711 DEBUG SQL:104 - 
+    alter table category 
+        add constraint FK302BCFEB30D557 
+        foreign key (parent) 
+        references category
+14:16:28,712 DEBUG SQL:104 - 
+    create index IBB on mtm (incomingabcdef)
+14:16:28,712 DEBUG SQL:104 - 
+    alter table mtm 
+        add constraint BB 
+        foreign key (incomingabcdef) 
+        references "master"
+14:16:28,713 DEBUG SQL:104 - 
+    alter table mtm 
+        add constraint AA 
+        foreign key (outgoingabcdef) 
+        references "master"
+14:16:28,713 DEBUG SQL:104 - 
+    create table hibernate_unique_key (
+         next_hi integer 
+    )
+14:16:28,713 DEBUG SQL:104 - 
+    insert into hibernate_unique_key values ( 0 )
+14:16:28,713  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:28,714  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:16:28,715  INFO CustomRunner:139 - Test: testCachedCollectionRefresh
+14:16:28,730 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:28,733 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:28,734 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:28,735 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_1_,
+        category0_.name as name13_1_,
+        category0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category category0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on category0_."assign-able-id"=assignable1_.id 
+    where
+        category0_.category_key_col=?
+14:16:28,735 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:28,736 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_1_,
+        category0_.name as name13_1_,
+        category0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category category0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on category0_."assign-able-id"=assignable1_.id 
+    where
+        category0_.category_key_col=?
+14:16:28,742 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:28,744 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_1_,
+        category0_.name as name13_1_,
+        category0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category category0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on category0_."assign-able-id"=assignable1_.id 
+    where
+        category0_.category_key_col=?
+14:16:28,759 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:28,760 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:28,761 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:28,761 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:28,788 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=?
+14:16:28,789 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:28,789 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_1_,
+        category0_.name as name13_1_,
+        category0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category category0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on category0_."assign-able-id"=assignable1_.id 
+    where
+        category0_.category_key_col=?
+14:16:28,803 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:28,803 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:28,816 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:28,817 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:28,817 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:28,817 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=?
+14:16:28,829 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:28,831 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_1_,
+        category0_.name as name13_1_,
+        category0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category category0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on category0_."assign-able-id"=assignable1_.id 
+    where
+        category0_.category_key_col=?
+14:16:28,845 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:28,846 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:28,859 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:28,859 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:28,860 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:28,860 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:28,860 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:28,869  INFO CustomRunner:139 - Test: testCascading
+14:16:28,870 DEBUG SQL:104 - 
+    insert 
+    into
+        "master"
+        (master_key_column, version, name, x, big_dec, otherMaster) 
+    values
+        (null, ?, ?, ?, ?, ?)
+14:16:28,871 DEBUG SQL:104 - 
+    insert 
+    into
+        "master"
+        (master_key_column, version, name, x, big_dec, otherMaster) 
+    values
+        (null, ?, ?, ?, ?, ?)
+14:16:28,878 DEBUG SQL:104 - 
+    insert 
+    into
+        Detail
+        (detail_key_column, x, i, master_key) 
+    values
+        (null, ?, ?, ?)
+14:16:28,879 DEBUG SQL:104 - 
+    insert 
+    into
+        Detail
+        (detail_key_column, x, i, master_key) 
+    values
+        (null, ?, ?, ?)
+14:16:28,880 DEBUG SQL:104 - 
+    update
+        "master" 
+    set
+        version=?,
+        name=?,
+        x=?,
+        big_dec=?,
+        otherMaster=? 
+    where
+        master_key_column=? 
+        and version=?
+14:16:28,880 DEBUG SQL:104 - 
+    update
+        Detail 
+    set
+        more_master_key=? 
+    where
+        detail_key_column=?
+14:16:28,895 DEBUG SQL:104 - 
+    update
+        Detail 
+    set
+        more_master_key=? 
+    where
+        detail_key_column=?
+14:16:28,896 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_1_,
+        master0_.version as version12_1_,
+        master0_.name as name12_1_,
+        master0_.x as x12_1_,
+        master0_.big_dec as big5_12_1_,
+        master0_.otherMaster as otherMas6_12_1_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" master0_ 
+    left outer join
+        "master" master1_ 
+            on master0_.otherMaster=master1_.master_key_column 
+    where
+        master0_.master_key_column=?
+14:16:28,897 DEBUG SQL:104 - 
+    select
+        moredetail0_.more_master_key as more5_12_3_,
+        moredetail0_.detail_key_column as detail1_1_3_,
+        moredetail0_.detail_key_column as detail1_1_2_,
+        moredetail0_.x as x1_2_,
+        moredetail0_.i as i1_2_,
+        moredetail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail moredetail0_ 
+    inner join
+        "master" master1_ 
+            on moredetail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        moredetail0_.more_master_key=? 
+    order by
+        moredetail0_.i desc
+14:16:28,932 DEBUG SQL:104 - 
+    select
+        details0_.master_key as master4_12_1_,
+        details0_.detail_key_column as detail1_1_1_,
+        details0_.detail_key_column as detail1_1_0_,
+        details0_.x as x1_0_,
+        details0_.i as i1_0_,
+        details0_.master_key as master4_1_0_ 
+    from
+        Detail details0_ 
+    where
+        details0_.master_key=? 
+    order by
+        details0_.i asc
+14:16:28,941 DEBUG SQL:104 - 
+    select
+        subdetails0_.detail_key as detail3_1_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_0_,
+        subdetails0_.name as name7_0_ 
+    from
+        SubDetail subdetails0_ 
+    where
+        subdetails0_.detail_key=?
+14:16:28,942 DEBUG SQL:104 - 
+    select
+        subdetails0_.detail_key as detail3_1_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_0_,
+        subdetails0_.name as name7_0_ 
+    from
+        SubDetail subdetails0_ 
+    where
+        subdetails0_.detail_key=?
+14:16:28,942 DEBUG SQL:104 - 
+    select
+        moredetail0_.more_master_key as more5_12_3_,
+        moredetail0_.detail_key_column as detail1_1_3_,
+        moredetail0_.detail_key_column as detail1_1_2_,
+        moredetail0_.x as x1_2_,
+        moredetail0_.i as i1_2_,
+        moredetail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail moredetail0_ 
+    inner join
+        "master" master1_ 
+            on moredetail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        moredetail0_.more_master_key=? 
+    order by
+        moredetail0_.i desc
+14:16:28,952 DEBUG SQL:104 - 
+    update
+        Detail 
+    set
+        more_master_key=null 
+    where
+        more_master_key=?
+14:16:28,964 DEBUG SQL:104 - 
+    delete 
+    from
+        mtm 
+    where
+        outgoingabcdef=?
+14:16:28,964 DEBUG SQL:104 - 
+    delete 
+    from
+        mtm 
+    where
+        outgoingabcdef=?
+14:16:28,965 DEBUG SQL:104 - 
+    delete 
+    from
+        Detail 
+    where
+        detail_key_column=?
+14:16:28,965 DEBUG SQL:104 - 
+    delete 
+    from
+        Detail 
+    where
+        detail_key_column=?
+14:16:28,985 DEBUG SQL:104 - 
+    delete 
+    from
+        "master" 
+    where
+        master_key_column=? 
+        and version=?
+14:16:28,986 DEBUG SQL:104 - 
+    delete 
+    from
+        "master" 
+    where
+        master_key_column=? 
+        and version=?
+14:16:28,986  INFO CustomRunner:139 - Test: testCategories
+14:16:28,988 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:28,988 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:28,989 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:28,989 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:28,989 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:28,990 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,000 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,001 DEBUG SQL:104 - 
+    select
+        category_key_col 
+    from
+        category 
+    where
+        category_key_col =? for update
+            
+14:16:29,002 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_1_,
+        category0_.name as name13_1_,
+        category0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category category0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on category0_."assign-able-id"=assignable1_.id 
+    where
+        category0_.category_key_col=?
+14:16:29,017 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,018 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_1_,
+        category0_.name as name13_1_,
+        category0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category category0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on category0_."assign-able-id"=assignable1_.id 
+    where
+        category0_.category_key_col=?
+14:16:29,019 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,141 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,144 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as col_0_0_ 
+    from
+        category category0_ 
+    where
+        (
+            category0_.name='/' 
+        )
+14:16:29,144 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,145 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,145 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,152 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,161 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,161 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,162 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,165 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,166  INFO CustomRunner:139 - Test: testCollectionQuery
+14:16:29,173 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as col_0_0_ 
+    from
+        "master" master0_ 
+    where
+        (
+            NOT EXISTS(
+                select
+                    details1_.detail_key_column 
+                from
+                    Detail details1_ 
+                where
+                    master0_.master_key_column=details1_.master_key 
+                    and (
+                        (
+                            details1_.i<>5 
+                        )
+                    )
+            )
+        )
+14:16:29,177 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as col_0_0_ 
+    from
+        "master" master0_ 
+    where
+        (
+            5 not in(
+                select
+                    details1_.i 
+                from
+                    Detail details1_ 
+                where
+                    master0_.master_key_column=details1_.master_key
+            )
+        )
+14:16:29,192 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as col_0_0_ 
+    from
+        "master" master0_ 
+    inner join
+        Detail details1_ 
+            on master0_.master_key_column=details1_.master_key 
+    where
+        (
+            details1_.i=5 
+        )
+14:16:29,192 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_,
+        master0_.version as version12_,
+        master0_.name as name12_,
+        master0_.x as x12_,
+        master0_.big_dec as big5_12_,
+        master0_.otherMaster as otherMas6_12_ 
+    from
+        "master" master0_ 
+    inner join
+        Detail details1_ 
+            on master0_.master_key_column=details1_.master_key 
+    where
+        (
+            details1_.i=5 
+        )
+14:16:29,207 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as col_0_0_ 
+    from
+        "master" master0_ 
+    inner join
+        Detail details1_ 
+            on master0_.master_key_column=details1_.master_key 
+    where
+        (
+            details1_.i=5 
+        )
+14:16:29,208  INFO CustomRunner:139 - Test: testCollectionRefresh
+14:16:29,209 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:29,209 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:29,210 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,220 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_1_,
+        category0_.name as name13_1_,
+        category0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category category0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on category0_."assign-able-id"=assignable1_.id 
+    where
+        category0_.category_key_col=?
+14:16:29,221 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=?
+14:16:29,221 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,235 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_1_,
+        category0_.name as name13_1_,
+        category0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category category0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on category0_."assign-able-id"=assignable1_.id 
+    where
+        category0_.category_key_col=?
+14:16:29,235 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,236 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,236 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,236 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,260 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,261  INFO CustomRunner:139 - Test: testCollectionReplace
+14:16:29,262 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:29,263 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:29,263 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,276 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=? for update
+            
+14:16:29,277 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        name=?,
+        "assign-able-id"=? 
+    where
+        category_key_col=?
+14:16:29,277 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,277 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,278 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=? for update
+            
+14:16:29,279 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=? for update
+            
+14:16:29,279 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=? for update
+            
+14:16:29,294 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,294 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,304 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,304 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,305 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,305  INFO CustomRunner:139 - Test: testCollectionReplace2
+14:16:29,306 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:29,306 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:29,307 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:29,326 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,327 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=? for update
+            
+14:16:29,328 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=? for update
+            
+14:16:29,336 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,336 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,336 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,345 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,346 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=? for update
+            
+14:16:29,346 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,357 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,357 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_1_,
+        category0_.name as name13_1_,
+        category0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category category0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on category0_."assign-able-id"=assignable1_.id 
+    where
+        category0_.category_key_col=?
+14:16:29,366 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,367 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,377 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,377 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,377 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,378  INFO CustomRunner:139 - Test: testCollectionReplaceOnUpdate
+14:16:29,379 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:29,380 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:29,388 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,388 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        name=?,
+        "assign-able-id"=? 
+    where
+        category_key_col=?
+14:16:29,389 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        name=?,
+        "assign-able-id"=? 
+    where
+        category_key_col=?
+14:16:29,389 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,398 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,399 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=? for update
+            
+14:16:29,400 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        name=?,
+        "assign-able-id"=? 
+    where
+        category_key_col=?
+14:16:29,400 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    where
+        category0_.category_key_col=? for update
+            
+14:16:29,400 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,401 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,413 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,413 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,413 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,423  INFO CustomRunner:139 - Test: testCopy
+14:16:29,424 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:29,425 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:29,425 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:29,425 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:29,425 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,426 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,450 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_1_,
+        category0_.name as name13_1_,
+        category0_."assign-able-id" as assign3_13_1_,
+        subcategor1_.parent as parent13_3_,
+        subcategor1_.category_key_col as category1_13_3_,
+        subcategor1_.ord as ord3_,
+        subcategor1_.category_key_col as category1_13_0_,
+        subcategor1_.name as name13_0_,
+        subcategor1_."assign-able-id" as assign3_13_0_ 
+    from
+        category category0_ 
+    left outer join
+        category subcategor1_ 
+            on category0_.category_key_col=subcategor1_.parent 
+    where
+        category0_.category_key_col=?
+14:16:29,451 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,462 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:29,462 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:29,463 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        name=? 
+    where
+        category_key_col=?
+14:16:29,463 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        name=? 
+    where
+        category_key_col=?
+14:16:29,477 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=? 
+        and category_key_col=?
+14:16:29,477 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,477 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=?,
+        ord=? 
+    where
+        category_key_col=?
+14:16:29,489 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_,
+        category0_.name as name13_,
+        category0_."assign-able-id" as assign3_13_ 
+    from
+        category category0_ 
+    where
+        (
+            category0_.name='new foo' 
+        )
+14:16:29,491 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_13_0_,
+        subcategor1_.category_key_col as category1_13_1_,
+        category0_.name as name13_0_,
+        category0_."assign-able-id" as assign3_13_0_,
+        subcategor1_.name as name13_1_,
+        subcategor1_."assign-able-id" as assign3_13_1_,
+        subcategor1_.parent as parent13___,
+        subcategor1_.category_key_col as category1_13___,
+        subcategor1_.ord as ord__ 
+    from
+        category category0_ 
+    left outer join
+        category subcategor1_ 
+            on category0_.category_key_col=subcategor1_.parent 
+    where
+        (
+            category0_.name='new sub' 
+        )
+14:16:29,504 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,504 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,516 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,517 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:29,517 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,518 DEBUG SQL:104 - 
+    update
+        category 
+    set
+        parent=null,
+        ord=null 
+    where
+        parent=?
+14:16:29,518 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,518 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,533 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,534 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,534 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,534 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:29,535  INFO CustomRunner:139 - Test: testCustomPersister
+14:16:29,537  INFO DefaultLoadEventListener:158 - HHH000327: Error performing load command : org.hibernate.ObjectNotFoundException: No row with the given identifier exists: [org.hibernate.test.legacy.Custom#8a8f50283d226cf4013d2272eb5f02f1]
+14:16:29,545  INFO CustomRunner:139 - Test: testExample
+14:16:29,547 DEBUG SQL:104 - 
+    insert 
+    into
+        "master"
+        (master_key_column, version, name, x, big_dec, otherMaster) 
+    values
+        (null, ?, ?, ?, ?, ?)
+14:16:29,548 DEBUG SQL:104 - 
+    update
+        "master" 
+    set
+        version=?,
+        name=?,
+        x=?,
+        big_dec=?,
+        otherMaster=? 
+    where
+        master_key_column=? 
+        and version=?
+14:16:29,550 DEBUG SQL:104 - 
+    select
+        this_.master_key_column as master1_12_1_,
+        this_.version as version12_1_,
+        this_.name as name12_1_,
+        this_.x as x12_1_,
+        this_.big_dec as big5_12_1_,
+        this_.otherMaster as otherMas6_12_1_,
+        master2_.master_key_column as master1_12_0_,
+        master2_.version as version12_0_,
+        master2_.name as name12_0_,
+        master2_.x as x12_0_,
+        master2_.big_dec as big5_12_0_,
+        master2_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" this_ 
+    left outer join
+        "master" master2_ 
+            on this_.otherMaster=master2_.master_key_column 
+    where
+        (
+            lower(this_.name) like ? 
+            and this_.x=?
+        )
+14:16:29,569 DEBUG SQL:104 - 
+    select
+        this_.master_key_column as master1_12_1_,
+        this_.version as version12_1_,
+        this_.name as name12_1_,
+        this_.x as x12_1_,
+        this_.big_dec as big5_12_1_,
+        this_.otherMaster as otherMas6_12_1_,
+        master2_.master_key_column as master1_12_0_,
+        master2_.version as version12_0_,
+        master2_.name as name12_0_,
+        master2_.x as x12_0_,
+        master2_.big_dec as big5_12_0_,
+        master2_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" this_ 
+    left outer join
+        "master" master2_ 
+            on this_.otherMaster=master2_.master_key_column 
+    where
+        this_.name=?
+14:16:29,571 DEBUG SQL:104 - 
+    select
+        this_.master_key_column as master1_12_2_,
+        this_.version as version12_2_,
+        this_.name as name12_2_,
+        this_.x as x12_2_,
+        this_.big_dec as big5_12_2_,
+        this_.otherMaster as otherMas6_12_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master4_.master_key_column as master1_12_1_,
+        master4_.version as version12_1_,
+        master4_.name as name12_1_,
+        master4_.x as x12_1_,
+        master4_.big_dec as big5_12_1_,
+        master4_.otherMaster as otherMas6_12_1_ 
+    from
+        "master" this_ 
+    inner join
+        "master" master1_ 
+            on this_.otherMaster=master1_.master_key_column 
+    left outer join
+        "master" master4_ 
+            on master1_.otherMaster=master4_.master_key_column 
+    where
+        (
+            this_.name=? 
+            and this_.x=?
+        ) 
+        and (
+            master1_.name=? 
+            and master1_.x=?
+        )
+14:16:29,583 DEBUG SQL:104 - 
+    select
+        this_.master_key_column as master1_12_1_,
+        this_.version as version12_1_,
+        this_.name as name12_1_,
+        this_.x as x12_1_,
+        this_.big_dec as big5_12_1_,
+        this_.otherMaster as otherMas6_12_1_,
+        master2_.master_key_column as master1_12_0_,
+        master2_.version as version12_0_,
+        master2_.name as name12_0_,
+        master2_.x as x12_0_,
+        master2_.big_dec as big5_12_0_,
+        master2_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" this_ 
+    left outer join
+        "master" master2_ 
+            on this_.otherMaster=master2_.master_key_column 
+    where
+        (
+            this_.name=? 
+            and this_.x=?
+        )
+14:16:29,592 DEBUG SQL:104 - 
+    select
+        this_.master_key_column as master1_12_1_,
+        this_.version as version12_1_,
+        this_.name as name12_1_,
+        this_.x as x12_1_,
+        this_.big_dec as big5_12_1_,
+        this_.otherMaster as otherMas6_12_1_,
+        master2_.master_key_column as master1_12_0_,
+        master2_.version as version12_0_,
+        master2_.name as name12_0_,
+        master2_.x as x12_0_,
+        master2_.big_dec as big5_12_0_,
+        master2_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" this_ 
+    left outer join
+        "master" master2_ 
+            on this_.otherMaster=master2_.master_key_column 
+    where
+        (
+            this_.name is null 
+            and this_.x=?
+        )
+14:16:29,603 DEBUG SQL:104 - 
+    select
+        moredetail0_.more_master_key as more5_12_3_,
+        moredetail0_.detail_key_column as detail1_1_3_,
+        moredetail0_.detail_key_column as detail1_1_2_,
+        moredetail0_.x as x1_2_,
+        moredetail0_.i as i1_2_,
+        moredetail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail moredetail0_ 
+    inner join
+        "master" master1_ 
+            on moredetail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        moredetail0_.more_master_key=? 
+    order by
+        moredetail0_.i desc
+14:16:29,613 DEBUG SQL:104 - 
+    delete 
+    from
+        mtm 
+    where
+        outgoingabcdef=?
+14:16:29,614 DEBUG SQL:104 - 
+    delete 
+    from
+        "master" 
+    where
+        master_key_column=? 
+        and version=?
+14:16:29,624  INFO CustomRunner:139 - Test: testIncomingOutgoing
+14:16:29,625 DEBUG SQL:104 - 
+    insert 
+    into
+        "master"
+        (master_key_column, version, name, x, big_dec, otherMaster) 
+    values
+        (null, ?, ?, ?, ?, ?)
+14:16:29,626 DEBUG SQL:104 - 
+    insert 
+    into
+        "master"
+        (master_key_column, version, name, x, big_dec, otherMaster) 
+    values
+        (null, ?, ?, ?, ?, ?)
+14:16:29,626 DEBUG SQL:104 - 
+    insert 
+    into
+        "master"
+        (master_key_column, version, name, x, big_dec, otherMaster) 
+    values
+        (null, ?, ?, ?, ?, ?)
+14:16:29,627 DEBUG SQL:104 - 
+    update
+        "master" 
+    set
+        version=?,
+        name=?,
+        x=?,
+        big_dec=?,
+        otherMaster=? 
+    where
+        master_key_column=? 
+        and version=?
+14:16:29,634 DEBUG SQL:104 - 
+    update
+        "master" 
+    set
+        version=?,
+        name=?,
+        x=?,
+        big_dec=?,
+        otherMaster=? 
+    where
+        master_key_column=? 
+        and version=?
+14:16:29,635 DEBUG SQL:104 - 
+    update
+        "master" 
+    set
+        version=?,
+        name=?,
+        x=?,
+        big_dec=?,
+        otherMaster=? 
+    where
+        master_key_column=? 
+        and version=?
+14:16:29,635 DEBUG SQL:104 - 
+    insert 
+    into
+        mtm
+        (outgoingabcdef, incomingabcdef) 
+    values
+        (?, ?)
+14:16:29,648 DEBUG SQL:104 - 
+    insert 
+    into
+        mtm
+        (outgoingabcdef, incomingabcdef) 
+    values
+        (?, ?)
+14:16:29,653 DEBUG SQL:104 - 
+    select
+        this.master_key_column as master1_12_,
+        this.version as version12_,
+        this.name as name12_,
+        this.x as x12_,
+        this.big_dec as big5_12_,
+        this.otherMaster as otherMas6_12_ 
+    from
+        mtm incoming0_ 
+    inner join
+        "master" this 
+            on incoming0_.incomingabcdef=this.master_key_column 
+    where
+        incoming0_.outgoingabcdef = ? 
+        and (
+            (
+                this.master_key_column>0 
+            )
+            and(
+                this.name is not null 
+            )
+        )
+14:16:29,654 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_1_,
+        master0_.version as version12_1_,
+        master0_.name as name12_1_,
+        master0_.x as x12_1_,
+        master0_.big_dec as big5_12_1_,
+        master0_.otherMaster as otherMas6_12_1_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" master0_ 
+    left outer join
+        "master" master1_ 
+            on master0_.otherMaster=master1_.master_key_column 
+    where
+        master0_.master_key_column=?
+14:16:29,654 DEBUG SQL:104 - 
+    select
+        incoming0_.outgoingabcdef as outgoing1_12_2_,
+        incoming0_.incomingabcdef as incoming2_14_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        mtm incoming0_ 
+    inner join
+        "master" master1_ 
+            on incoming0_.incomingabcdef=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        incoming0_.outgoingabcdef=?
+14:16:29,661 DEBUG SQL:104 - 
+    select
+        outgoing0_.incomingabcdef as incoming2_12_2_,
+        outgoing0_.outgoingabcdef as outgoing1_14_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        mtm outgoing0_ 
+    inner join
+        "master" master1_ 
+            on outgoing0_.outgoingabcdef=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        outgoing0_.incomingabcdef=?
+14:16:29,670 DEBUG SQL:104 - 
+    select
+        moredetail0_.more_master_key as more5_12_3_,
+        moredetail0_.detail_key_column as detail1_1_3_,
+        moredetail0_.detail_key_column as detail1_1_2_,
+        moredetail0_.x as x1_2_,
+        moredetail0_.i as i1_2_,
+        moredetail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail moredetail0_ 
+    inner join
+        "master" master1_ 
+            on moredetail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        moredetail0_.more_master_key=? 
+    order by
+        moredetail0_.i desc
+14:16:29,694 DEBUG SQL:104 - 
+    select
+        outgoing0_.incomingabcdef as incoming2_12_2_,
+        outgoing0_.outgoingabcdef as outgoing1_14_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        mtm outgoing0_ 
+    inner join
+        "master" master1_ 
+            on outgoing0_.outgoingabcdef=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        outgoing0_.incomingabcdef=?
+14:16:29,713 DEBUG SQL:104 - 
+    select
+        moredetail0_.more_master_key as more5_12_3_,
+        moredetail0_.detail_key_column as detail1_1_3_,
+        moredetail0_.detail_key_column as detail1_1_2_,
+        moredetail0_.x as x1_2_,
+        moredetail0_.i as i1_2_,
+        moredetail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail moredetail0_ 
+    inner join
+        "master" master1_ 
+            on moredetail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        moredetail0_.more_master_key=? 
+    order by
+        moredetail0_.i desc
+14:16:29,715 DEBUG SQL:104 - 
+    select
+        moredetail0_.more_master_key as more5_12_3_,
+        moredetail0_.detail_key_column as detail1_1_3_,
+        moredetail0_.detail_key_column as detail1_1_2_,
+        moredetail0_.x as x1_2_,
+        moredetail0_.i as i1_2_,
+        moredetail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail moredetail0_ 
+    inner join
+        "master" master1_ 
+            on moredetail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        moredetail0_.more_master_key=? 
+    order by
+        moredetail0_.i desc
+14:16:29,726 DEBUG SQL:104 - 
+    delete 
+    from
+        mtm 
+    where
+        outgoingabcdef=?
+14:16:29,727 DEBUG SQL:104 - 
+    delete 
+    from
+        mtm 
+    where
+        outgoingabcdef=?
+14:16:29,727 DEBUG SQL:104 - 
+    delete 
+    from
+        mtm 
+    where
+        outgoingabcdef=?
+14:16:29,727 DEBUG SQL:104 - 
+    delete 
+    from
+        "master" 
+    where
+        master_key_column=? 
+        and version=?
+14:16:29,727 DEBUG SQL:104 - 
+    delete 
+    from
+        "master" 
+    where
+        master_key_column=? 
+        and version=?
+14:16:29,735 DEBUG SQL:104 - 
+    delete 
+    from
+        "master" 
+    where
+        master_key_column=? 
+        and version=?
+14:16:29,736  INFO CustomRunner:139 - Test: testInterface
+14:16:29,737 DEBUG SQL:104 - 
+    insert 
+    into
+        Nameable
+        (key_, name, clazz) 
+    values
+        (null, ?, 'org.hibernate.test.legacy.BasicNameable')
+14:16:29,738 DEBUG SQL:104 - 
+    select
+        nameable0_.key_ as key1_4_0_,
+        nameable0_.name as name4_0_,
+        nameable0_.clazz as clazz4_0_ 
+    from
+        Nameable nameable0_ 
+    where
+        nameable0_.key_=?
+14:16:29,738 DEBUG SQL:104 - 
+    delete 
+    from
+        Nameable 
+    where
+        key_=?
+14:16:29,739  INFO CustomRunner:139 - Test: testMasterDetail
+14:16:29,740 DEBUG SQL:104 - 
+    insert 
+    into
+        "master"
+        (master_key_column, version, name, x, big_dec, otherMaster) 
+    values
+        (null, ?, ?, ?, ?, ?)
+14:16:29,741 DEBUG SQL:104 - 
+    insert 
+    into
+        Detail
+        (detail_key_column, x, i, master_key) 
+    values
+        (null, ?, ?, ?)
+14:16:29,741 DEBUG SQL:104 - 
+    insert 
+    into
+        Detail
+        (detail_key_column, x, i, master_key) 
+    values
+        (null, ?, ?, ?)
+14:16:29,744 DEBUG SQL:104 - 
+    update
+        "master" 
+    set
+        version=?,
+        name=?,
+        x=?,
+        big_dec=?,
+        otherMaster=? 
+    where
+        master_key_column=? 
+        and version=?
+14:16:29,744 DEBUG SQL:104 - 
+    select
+        detail0_.detail_key_column as detail1_1_0_,
+        master1_.master_key_column as master1_12_1_,
+        detail0_.x as x1_0_,
+        detail0_.i as i1_0_,
+        detail0_.master_key as master4_1_0_,
+        master1_.version as version12_1_,
+        master1_.name as name12_1_,
+        master1_.x as x12_1_,
+        master1_.big_dec as big5_12_1_,
+        master1_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail detail0_,
+        "master" master1_ 
+    where
+        (
+            master1_.master_key_column=detail0_.master_key 
+        )
+        and(
+            (
+                select
+                    count(outgoing2_.incomingabcdef) 
+                from
+                    mtm outgoing2_ 
+                where
+                    master1_.master_key_column=outgoing2_.incomingabcdef
+            )=0 
+        )
+        and(
+            (
+                select
+                    count(incoming3_.outgoingabcdef) 
+                from
+                    mtm incoming3_ 
+                where
+                    master1_.master_key_column=incoming3_.outgoingabcdef
+            )=0 
+        )
+14:16:29,772 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_1_,
+        master0_.version as version12_1_,
+        master0_.name as name12_1_,
+        master0_.x as x12_1_,
+        master0_.big_dec as big5_12_1_,
+        master0_.otherMaster as otherMas6_12_1_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" master0_ 
+    left outer join
+        "master" master1_ 
+            on master0_.otherMaster=master1_.master_key_column 
+    where
+        master0_.master_key_column=?
+14:16:29,773 DEBUG SQL:104 - 
+    select
+        details0_.master_key as master4_12_1_,
+        details0_.detail_key_column as detail1_1_1_,
+        details0_.detail_key_column as detail1_1_0_,
+        details0_.x as x1_0_,
+        details0_.i as i1_0_,
+        details0_.master_key as master4_1_0_ 
+    from
+        Detail details0_ 
+    where
+        details0_.master_key=? 
+    order by
+        details0_.i asc
+14:16:29,773 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_1_,
+        master0_.version as version12_1_,
+        master0_.name as name12_1_,
+        master0_.x as x12_1_,
+        master0_.big_dec as big5_12_1_,
+        master0_.otherMaster as otherMas6_12_1_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" master0_ 
+    left outer join
+        "master" master1_ 
+            on master0_.otherMaster=master1_.master_key_column 
+    where
+        master0_.master_key_column=?
+14:16:29,782 DEBUG SQL:104 - 
+    select
+        details0_.master_key as master4_12_1_,
+        details0_.detail_key_column as detail1_1_1_,
+        details0_.detail_key_column as detail1_1_0_,
+        details0_.x as x1_0_,
+        details0_.i as i1_0_,
+        details0_.master_key as master4_1_0_ 
+    from
+        Detail details0_ 
+    where
+        details0_.master_key=? 
+    order by
+        details0_.i asc
+14:16:29,783 DEBUG SQL:104 - 
+    select
+        details1_.detail_key_column as col_0_0_ 
+    from
+        "master" master0_,
+        Detail details1_ 
+    where
+        master0_.master_key_column=details1_.master_key
+14:16:29,784 DEBUG SQL:104 - 
+    select
+        detail0_.detail_key_column as detail1_1_2_,
+        detail0_.x as x1_2_,
+        detail0_.i as i1_2_,
+        detail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail detail0_ 
+    inner join
+        "master" master1_ 
+            on detail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        detail0_.detail_key_column=?
+14:16:29,794 DEBUG SQL:104 - 
+    select
+        detail0_.detail_key_column as detail1_1_2_,
+        detail0_.x as x1_2_,
+        detail0_.i as i1_2_,
+        detail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail detail0_ 
+    inner join
+        "master" master1_ 
+            on detail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        detail0_.detail_key_column=?
+14:16:29,815 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_0_,
+        details1_.detail_key_column as detail1_1_1_,
+        master0_.version as version12_0_,
+        master0_.name as name12_0_,
+        master0_.x as x12_0_,
+        master0_.big_dec as big5_12_0_,
+        master0_.otherMaster as otherMas6_12_0_,
+        details1_.x as x1_1_,
+        details1_.i as i1_1_,
+        details1_.master_key as master4_1_1_,
+        details1_.master_key as master4_12___,
+        details1_.detail_key_column as detail1_1___ 
+    from
+        "master" master0_ 
+    left outer join
+        Detail details1_ 
+            on master0_.master_key_column=details1_.master_key 
+    order by
+        details1_.i asc
+14:16:29,817 DEBUG SQL:104 - 
+    select
+        detail0_.detail_key_column as detail1_1_0_,
+        master1_.master_key_column as master1_12_1_,
+        detail0_.x as x1_0_,
+        detail0_.i as i1_0_,
+        detail0_.master_key as master4_1_0_,
+        master1_.version as version12_1_,
+        master1_.name as name12_1_,
+        master1_.x as x12_1_,
+        master1_.big_dec as big5_12_1_,
+        master1_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail detail0_ 
+    inner join
+        "master" master1_ 
+            on detail0_.master_key=master1_.master_key_column
+14:16:29,826 DEBUG SQL:104 - 
+    select
+        master1_.master_key_column as master1_12_0_,
+        details2_.detail_key_column as detail1_1_1_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        details2_.x as x1_1_,
+        details2_.i as i1_1_,
+        details2_.master_key as master4_1_1_,
+        details2_.master_key as master4_12___,
+        details2_.detail_key_column as detail1_1___ 
+    from
+        "master" master0_,
+        "master" master1_ 
+    left outer join
+        Detail details2_ 
+            on master1_.master_key_column=details2_.master_key 
+    where
+        (
+            master1_.name=master0_.name 
+        ) 
+    order by
+        details2_.i asc
+14:16:29,838 DEBUG SQL:104 - 
+    select
+        master1_.master_key_column as master1_12_0_,
+        details2_.detail_key_column as detail1_1_1_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        details2_.x as x1_1_,
+        details2_.i as i1_1_,
+        details2_.master_key as master4_1_1_,
+        details2_.master_key as master4_12___,
+        details2_.detail_key_column as detail1_1___,
+        master1_.master_key_column as col_0_0_,
+        master0_.name as col_1_0_ 
+    from
+        "master" master0_,
+        "master" master1_ 
+    left outer join
+        Detail details2_ 
+            on master1_.master_key_column=details2_.master_key 
+    where
+        (
+            master1_.name=master0_.name 
+        ) 
+    order by
+        details2_.i asc
+14:16:29,857 DEBUG SQL:104 - 
+    select
+        detail0_.detail_key_column as detail1_1_2_,
+        detail0_.x as x1_2_,
+        detail0_.i as i1_2_,
+        detail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail detail0_ 
+    inner join
+        "master" master1_ 
+            on detail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        detail0_.detail_key_column=?
+14:16:29,870 DEBUG SQL:104 - 
+    select
+        details0_.master_key as master4_12_1_,
+        details0_.detail_key_column as detail1_1_1_,
+        details0_.detail_key_column as detail1_1_0_,
+        details0_.x as x1_0_,
+        details0_.i as i1_0_,
+        details0_.master_key as master4_1_0_ 
+    from
+        Detail details0_ 
+    where
+        details0_.master_key=? 
+    order by
+        details0_.i asc
+14:16:29,872 DEBUG SQL:104 - 
+    select
+        this.detail_key_column as detail1_1_,
+        this.x as x1_,
+        this.i as i1_,
+        this.master_key as master4_1_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+    order by
+        this.i desc
+14:16:29,873 DEBUG SQL:104 - 
+    select
+        this.detail_key_column as detail1_1_,
+        this.x as x1_,
+        this.i as i1_,
+        this.master_key as master4_1_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.detail_key_column>-1 
+            )
+        )
+14:16:29,893 DEBUG SQL:104 - 
+    select
+        this.detail_key_column as detail1_1_,
+        this.x as x1_,
+        this.i as i1_,
+        this.master_key as master4_1_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.detail_key_column>? 
+            )
+        )
+14:16:29,911 DEBUG SQL:104 - 
+    select
+        this.detail_key_column as detail1_1_,
+        this.x as x1_,
+        this.i as i1_,
+        this.master_key as master4_1_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.detail_key_column>? 
+            )
+            and(
+                this.detail_key_column<? 
+            )
+        )
+14:16:29,912 DEBUG SQL:104 - 
+    select
+        this.detail_key_column as detail1_1_,
+        this.x as x1_,
+        this.i as i1_,
+        this.master_key as master4_1_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.detail_key_column>? 
+            )
+            and(
+                this.detail_key_column<? 
+            )
+        )
+14:16:29,915 DEBUG SQL:104 - 
+    select
+        this.detail_key_column as detail1_1_,
+        this.x as x1_,
+        this.i as i1_,
+        this.master_key as master4_1_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.detail_key_column in(
+                    ? , ?
+                )
+            )
+        )
+14:16:29,917 DEBUG SQL:104 - 
+    select
+        this.detail_key_column as col_0_0_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.detail_key_column in(
+                    ? , ?
+                )
+            )
+        )
+14:16:29,922 DEBUG SQL:104 - 
+    select
+        this.detail_key_column as detail1_1_,
+        this.x as x1_,
+        this.i as i1_,
+        this.master_key as master4_1_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.detail_key_column>-1 
+            )
+        )
+14:16:29,924 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_,
+        master0_.version as version12_,
+        master0_.name as name12_,
+        master0_.x as x12_,
+        master0_.big_dec as big5_12_,
+        master0_.otherMaster as otherMas6_12_ 
+    from
+        Detail this,
+        "master" master0_ 
+    where
+        this.master_key = ? 
+        and this.master_key=master0_.master_key_column 
+        and (
+            (
+                this.detail_key_column>-1 
+            )
+        )
+14:16:29,934 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_,
+        master0_.version as version12_,
+        master0_.name as name12_,
+        master0_.x as x12_,
+        master0_.big_dec as big5_12_,
+        master0_.otherMaster as otherMas6_12_ 
+    from
+        Detail this,
+        "master" master0_ 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.detail_key_column>-1 
+            )
+            and(
+                this.master_key=master0_.master_key_column 
+            )
+        )
+14:16:29,937 DEBUG SQL:104 - 
+    select
+        this.master_key_column as master1_12_,
+        this.version as version12_,
+        this.name as name12_,
+        this.x as x12_,
+        this.big_dec as big5_12_,
+        this.otherMaster as otherMas6_12_ 
+    from
+        mtm incoming0_ 
+    inner join
+        "master" this 
+            on incoming0_.incomingabcdef=this.master_key_column 
+    where
+        incoming0_.outgoingabcdef = ? 
+        and (
+            (
+                this.master_key_column>-1 
+            )
+            and(
+                this.name is not null 
+            )
+        )
+14:16:29,955 DEBUG SQL:104 - 
+    select
+        max(this.i) as col_0_0_ 
+    from
+        Detail this 
+    where
+        this.master_key = ?
+14:16:29,956 DEBUG SQL:104 - 
+    select
+        max(this.i) as col_0_0_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+    group by
+        this.detail_key_column
+14:16:29,957 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        Detail this 
+    where
+        this.master_key = ?
+14:16:29,966 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_,
+        master0_.version as version12_,
+        master0_.name as name12_,
+        master0_.x as x12_,
+        master0_.big_dec as big5_12_,
+        master0_.otherMaster as otherMas6_12_ 
+    from
+        Detail this,
+        "master" master0_ 
+    where
+        this.master_key = ? 
+        and this.master_key=master0_.master_key_column
+14:16:29,967 DEBUG SQL:104 - 
+    select
+        this.detail_key_column as detail1_1_,
+        this.x as x1_,
+        this.i as i1_,
+        this.master_key as master4_1_ 
+    from
+        Detail this 
+    where
+        this.more_master_key = ?
+14:16:29,967 DEBUG SQL:104 - 
+    select
+        this.master_key_column as master1_12_,
+        this.version as version12_,
+        this.name as name12_,
+        this.x as x12_,
+        this.big_dec as big5_12_,
+        this.otherMaster as otherMas6_12_ 
+    from
+        mtm incoming0_ 
+    inner join
+        "master" this 
+            on incoming0_.incomingabcdef=this.master_key_column 
+    where
+        incoming0_.outgoingabcdef = ?
+14:16:29,979 DEBUG SQL:104 - 
+    select
+        max(this.i) as col_0_0_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.i<? 
+            )
+            and(
+                this.i>=? 
+            )
+        )
+14:16:29,980 DEBUG SQL:104 - 
+    select
+        max(this.i) as col_0_0_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.i<? 
+            )
+            and(
+                this.i>=? 
+            )
+        )
+14:16:29,991 DEBUG SQL:104 - 
+    select
+        max(this.i) as col_0_0_ 
+    from
+        Detail this 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.i not in(
+                    ? , ? , ?
+                )
+            )
+        )
+14:16:29,996 DEBUG SQL:104 - 
+    select
+        max(this.i) as col_0_0_ 
+    from
+        Detail this,
+        "master" master0_ 
+    where
+        this.master_key = ? 
+        and (
+            (
+                this.i not in(
+                    ? , ? , ?
+                )
+            )
+            and(
+                master0_.name=?  
+                and this.master_key=master0_.master_key_column
+            )
+        )
+14:16:29,998 DEBUG SQL:104 - 
+    select
+        subdetails0_.detail_key as detail3_1_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_0_,
+        subdetails0_.name as name7_0_ 
+    from
+        SubDetail subdetails0_ 
+    where
+        subdetails0_.detail_key=?
+14:16:29,999 DEBUG SQL:104 - 
+    select
+        subdetails0_.detail_key as detail3_1_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_0_,
+        subdetails0_.name as name7_0_ 
+    from
+        SubDetail subdetails0_ 
+    where
+        subdetails0_.detail_key=?
+14:16:30,010 DEBUG SQL:104 - 
+    select
+        moredetail0_.more_master_key as more5_12_3_,
+        moredetail0_.detail_key_column as detail1_1_3_,
+        moredetail0_.detail_key_column as detail1_1_2_,
+        moredetail0_.x as x1_2_,
+        moredetail0_.i as i1_2_,
+        moredetail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail moredetail0_ 
+    inner join
+        "master" master1_ 
+            on moredetail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        moredetail0_.more_master_key=? 
+    order by
+        moredetail0_.i desc
+14:16:30,021 DEBUG SQL:104 - 
+    delete 
+    from
+        mtm 
+    where
+        outgoingabcdef=?
+14:16:30,021 DEBUG SQL:104 - 
+    delete 
+    from
+        Detail 
+    where
+        detail_key_column=?
+14:16:30,022 DEBUG SQL:104 - 
+    delete 
+    from
+        Detail 
+    where
+        detail_key_column=?
+14:16:30,022 DEBUG SQL:104 - 
+    delete 
+    from
+        "master" 
+    where
+        master_key_column=? 
+        and version=?
+14:16:30,033  INFO CustomRunner:139 - Test: testMeta
+14:16:30,034  INFO CustomRunner:139 - Test: testMixNativeAssigned
+14:16:30,035 DEBUG SQL:104 - 
+    insert 
+    into
+        "assign-able"
+        (id) 
+    values
+        (?)
+14:16:30,035 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, "assign-able-id", category_key_col) 
+    values
+        (?, ?, null)
+14:16:30,036 DEBUG SQL:104 - 
+    select
+        assignable_.id 
+    from
+        "assign-able" assignable_ 
+    where
+        assignable_.id=?
+14:16:30,036 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:30,036 DEBUG SQL:104 - 
+    delete 
+    from
+        "assign-able" 
+    where
+        id=?
+14:16:30,037  INFO CustomRunner:139 - Test: testMultiLevelCascade
+14:16:30,038 DEBUG SQL:104 - 
+    insert 
+    into
+        "master"
+        (master_key_column, version, name, x, big_dec, otherMaster) 
+    values
+        (null, ?, ?, ?, ?, ?)
+14:16:30,038 DEBUG SQL:104 - 
+    insert 
+    into
+        "master"
+        (master_key_column, version, name, x, big_dec, otherMaster) 
+    values
+        (null, ?, ?, ?, ?, ?)
+14:16:30,038 DEBUG SQL:104 - 
+    insert 
+    into
+        Detail
+        (detail_key_column, x, i, master_key) 
+    values
+        (null, ?, ?, ?)
+14:16:30,046 DEBUG SQL:104 - 
+    insert 
+    into
+        SubDetail
+        (subdetail_key_col, name) 
+    values
+        (null, ?)
+14:16:30,046 DEBUG SQL:104 - 
+    update
+        "master" 
+    set
+        version=?,
+        name=?,
+        x=?,
+        big_dec=?,
+        otherMaster=? 
+    where
+        master_key_column=? 
+        and version=?
+14:16:30,047 DEBUG SQL:104 - 
+    update
+        Detail 
+    set
+        more_master_key=? 
+    where
+        detail_key_column=?
+14:16:30,047 DEBUG SQL:104 - 
+    update
+        SubDetail 
+    set
+        detail_key=? 
+    where
+        subdetail_key_col=?
+14:16:30,058 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_1_,
+        master0_.version as version12_1_,
+        master0_.name as name12_1_,
+        master0_.x as x12_1_,
+        master0_.big_dec as big5_12_1_,
+        master0_.otherMaster as otherMas6_12_1_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" master0_ 
+    left outer join
+        "master" master1_ 
+            on master0_.otherMaster=master1_.master_key_column 
+    where
+        master0_.master_key_column=?
+14:16:30,058 DEBUG SQL:104 - 
+    select
+        moredetail0_.more_master_key as more5_12_3_,
+        moredetail0_.detail_key_column as detail1_1_3_,
+        moredetail0_.detail_key_column as detail1_1_2_,
+        moredetail0_.x as x1_2_,
+        moredetail0_.i as i1_2_,
+        moredetail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail moredetail0_ 
+    inner join
+        "master" master1_ 
+            on moredetail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        moredetail0_.more_master_key=? 
+    order by
+        moredetail0_.i desc
+14:16:30,085 DEBUG SQL:104 - 
+    select
+        subdetails0_.detail_key as detail3_1_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_0_,
+        subdetails0_.name as name7_0_ 
+    from
+        SubDetail subdetails0_ 
+    where
+        subdetails0_.detail_key=?
+14:16:30,087 DEBUG SQL:104 - 
+    update
+        Detail 
+    set
+        more_master_key=null 
+    where
+        more_master_key=?
+14:16:30,087 DEBUG SQL:104 - 
+    delete 
+    from
+        mtm 
+    where
+        outgoingabcdef=?
+14:16:30,099 DEBUG SQL:104 - 
+    update
+        SubDetail 
+    set
+        detail_key=null 
+    where
+        detail_key=?
+14:16:30,100 DEBUG SQL:104 - 
+    delete 
+    from
+        SubDetail 
+    where
+        subdetail_key_col=?
+14:16:30,100 DEBUG SQL:104 - 
+    delete 
+    from
+        Detail 
+    where
+        detail_key_column=?
+14:16:30,100 DEBUG SQL:104 - 
+    delete 
+    from
+        "master" 
+    where
+        master_key_column=? 
+        and version=?
+14:16:30,100 DEBUG SQL:104 - 
+    select
+        subdetail0_.subdetail_key_col as subdetail1_7_,
+        subdetail0_.name as name7_ 
+    from
+        SubDetail subdetail0_
+14:16:30,112 DEBUG SQL:104 - 
+    select
+        detail0_.detail_key_column as detail1_1_,
+        detail0_.x as x1_,
+        detail0_.i as i1_,
+        detail0_.master_key as master4_1_ 
+    from
+        Detail detail0_
+14:16:30,113 DEBUG SQL:104 - 
+    select
+        moredetail0_.more_master_key as more5_12_3_,
+        moredetail0_.detail_key_column as detail1_1_3_,
+        moredetail0_.detail_key_column as detail1_1_2_,
+        moredetail0_.x as x1_2_,
+        moredetail0_.i as i1_2_,
+        moredetail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail moredetail0_ 
+    inner join
+        "master" master1_ 
+            on moredetail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        moredetail0_.more_master_key=? 
+    order by
+        moredetail0_.i desc
+14:16:30,123 DEBUG SQL:104 - 
+    delete 
+    from
+        mtm 
+    where
+        outgoingabcdef=?
+14:16:30,124 DEBUG SQL:104 - 
+    delete 
+    from
+        "master" 
+    where
+        master_key_column=? 
+        and version=?
+14:16:30,124  INFO CustomRunner:139 - Test: testNamedQuery
+14:16:30,133 DEBUG SQL:104 - 
+    select
+        detail0_.detail_key_column as detail1_1_,
+        detail0_.x as x1_,
+        detail0_.i as i1_,
+        detail0_.master_key as master4_1_ 
+    from
+        Detail detail0_
+14:16:30,135  INFO CustomRunner:139 - Test: testNoUpdateManyToOne
+14:16:30,135 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:16:30,136 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:16:30,136 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:16:30,144 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:16:30,145 DEBUG SQL:104 - 
+    insert 
+    into
+        W
+        (wid) 
+    values
+        (?)
+14:16:30,145 DEBUG SQL:104 - 
+    insert 
+    into
+        Z
+        (w, zid) 
+    values
+        (?, ?)
+14:16:30,145 DEBUG SQL:104 - 
+    insert 
+    into
+        W
+        (wid) 
+    values
+        (?)
+14:16:30,146 DEBUG SQL:104 - 
+    select
+        w0_.wid as wid9_ 
+    from
+        W w0_
+14:16:30,155 DEBUG SQL:104 - 
+    delete 
+    from
+        Z 
+    where
+        zid=?
+14:16:30,155 DEBUG SQL:104 - 
+    delete 
+    from
+        W 
+    where
+        wid=?
+14:16:30,155 DEBUG SQL:104 - 
+    delete 
+    from
+        W 
+    where
+        wid=?
+14:16:30,156  INFO CustomRunner:139 - Test: testNonLazyBidirectional
+14:16:30,157 DEBUG SQL:104 - 
+    insert 
+    into
+        Single
+        (prop, id, string_) 
+    values
+        (?, ?, ?)
+14:16:30,165 DEBUG SQL:104 - 
+    insert 
+    into
+        Several
+        (single_id, single_string, id, string_) 
+    values
+        (?, ?, ?, ?)
+14:16:30,166 DEBUG SQL:104 - 
+    select
+        single0_.id as id6_0_,
+        single0_.string_ as string2_6_0_,
+        single0_.prop as prop6_0_ 
+    from
+        Single single0_ 
+    where
+        single0_.id=? 
+        and single0_.string_=?
+14:16:30,166 DEBUG SQL:104 - 
+    select
+        several0_.single_id as single3_6_1_,
+        several0_.single_string as single4_6_1_,
+        several0_.id as id5_1_,
+        several0_.string_ as string2_5_1_,
+        several0_.id as id5_0_,
+        several0_.string_ as string2_5_0_,
+        several0_.single_id as single3_5_0_,
+        several0_.single_string as single4_5_0_ 
+    from
+        Several several0_ 
+    where
+        several0_.single_id=? 
+        and several0_.single_string=?
+14:16:30,168 DEBUG SQL:104 - 
+    select
+        several0_.id as id5_1_,
+        several0_.string_ as string2_5_1_,
+        several0_.single_id as single3_5_1_,
+        several0_.single_string as single4_5_1_,
+        single1_.id as id6_0_,
+        single1_.string_ as string2_6_0_,
+        single1_.prop as prop6_0_ 
+    from
+        Several several0_ 
+    left outer join
+        Single single1_ 
+            on several0_.single_id=single1_.id 
+            and several0_.single_string=single1_.string_ 
+    where
+        several0_.id=? 
+        and several0_.string_=?
+14:16:30,168 DEBUG SQL:104 - 
+    select
+        several0_.single_id as single3_6_1_,
+        several0_.single_string as single4_6_1_,
+        several0_.id as id5_1_,
+        several0_.string_ as string2_5_1_,
+        several0_.id as id5_0_,
+        several0_.string_ as string2_5_0_,
+        several0_.single_id as single3_5_0_,
+        several0_.single_string as single4_5_0_ 
+    from
+        Several several0_ 
+    where
+        several0_.single_id=? 
+        and several0_.single_string=?
+14:16:30,178 DEBUG SQL:104 - 
+    select
+        several0_.id as id5_,
+        several0_.string_ as string2_5_,
+        several0_.single_id as single3_5_,
+        several0_.single_string as single4_5_ 
+    from
+        Several several0_
+14:16:30,179 DEBUG SQL:104 - 
+    select
+        single0_.id as id6_0_,
+        single0_.string_ as string2_6_0_,
+        single0_.prop as prop6_0_ 
+    from
+        Single single0_ 
+    where
+        single0_.id=? 
+        and single0_.string_=?
+14:16:30,179 DEBUG SQL:104 - 
+    select
+        several0_.single_id as single3_6_1_,
+        several0_.single_string as single4_6_1_,
+        several0_.id as id5_1_,
+        several0_.string_ as string2_5_1_,
+        several0_.id as id5_0_,
+        several0_.string_ as string2_5_0_,
+        several0_.single_id as single3_5_0_,
+        several0_.single_string as single4_5_0_ 
+    from
+        Several several0_ 
+    where
+        several0_.single_id=? 
+        and several0_.single_string=?
+14:16:30,189 DEBUG SQL:104 - 
+    select
+        single0_.id as id6_,
+        single0_.string_ as string2_6_,
+        single0_.prop as prop6_ 
+    from
+        Single single0_
+14:16:30,189 DEBUG SQL:104 - 
+    select
+        several0_.single_id as single3_6_1_,
+        several0_.single_string as single4_6_1_,
+        several0_.id as id5_1_,
+        several0_.string_ as string2_5_1_,
+        several0_.id as id5_0_,
+        several0_.string_ as string2_5_0_,
+        several0_.single_id as single3_5_0_,
+        several0_.single_string as single4_5_0_ 
+    from
+        Several several0_ 
+    where
+        several0_.single_id=? 
+        and several0_.single_string=?
+14:16:30,190 DEBUG SQL:104 - 
+    delete 
+    from
+        Several 
+    where
+        id=? 
+        and string_=?
+14:16:30,190 DEBUG SQL:104 - 
+    delete 
+    from
+        Single 
+    where
+        id=? 
+        and string_=?
+14:16:30,210  INFO CustomRunner:139 - Test: testNotNullDiscriminator
+14:16:30,211 DEBUG SQL:104 - 
+    insert 
+    into
+        Up
+        (id1, id2) 
+    values
+        (?, ?)
+14:16:30,212 DEBUG SQL:104 - 
+    insert 
+    into
+        Up
+        (value_, id1, id2) 
+    values
+        (?, ?, ?)
+14:16:30,213 DEBUG SQL:104 - 
+    select
+        up0_.id1 as id1_8_,
+        up0_.id2 as id2_8_,
+        up0_.value_ as value3_8_ 
+    from
+        Up up0_ 
+    order by
+        up0_.id2 asc
+14:16:30,213 DEBUG SQL:104 - 
+    select
+        down0_.id1 as id1_8_,
+        down0_.id2 as id2_8_,
+        down0_.value_ as value3_8_ 
+    from
+        Up down0_ 
+    where
+        down0_.value_ is not null
+14:16:30,222 DEBUG SQL:104 - 
+    select
+        up0_.id1 as id1_8_,
+        up0_.id2 as id2_8_,
+        up0_.value_ as value3_8_ 
+    from
+        Up up0_
+14:16:30,223 DEBUG SQL:104 - 
+    delete 
+    from
+        Up 
+    where
+        id1=? 
+        and id2=?
+14:16:30,223 DEBUG SQL:104 - 
+    delete 
+    from
+        Up 
+    where
+        id1=? 
+        and id2=?
+14:16:30,224  INFO CustomRunner:139 - Test: testOuterJoin
+14:16:30,225 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:16:30,233 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:16:30,233 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:16:30,234 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:16:30,234 DEBUG SQL:104 - 
+    insert 
+    into
+        Jay
+        (eye, id) 
+    values
+        (?, ?)
+14:16:30,243 DEBUG SQL:104 - 
+    insert 
+    into
+        Eye
+        (name, jay, id) 
+    values
+        (?, ?, ?)
+14:16:30,243 DEBUG SQL:104 - 
+    update
+        Jay 
+    set
+        eye=? 
+    where
+        id=?
+14:16:30,244 DEBUG SQL:104 - 
+    select
+        this_.id as id2_2_,
+        this_.name as name2_2_,
+        this_.jay as jay2_2_,
+        jays2_.eye as eye2_4_,
+        jays2_.id as id3_4_,
+        jays2_.id as id3_0_,
+        jays2_.eye as eye3_0_,
+        jay3_.id as id3_1_,
+        jay3_.eye as eye3_1_ 
+    from
+        Eye this_ 
+    left outer join
+        Jay jays2_ 
+            on this_.id=jays2_.eye 
+    left outer join
+        Jay jay3_ 
+            on this_.jay=jay3_.id
+14:16:30,263 DEBUG SQL:104 - 
+    select
+        eye0_.id as id2_,
+        eye0_.name as name2_,
+        eye0_.jay as jay2_ 
+    from
+        Eye eye0_
+14:16:30,264 DEBUG SQL:104 - 
+    select
+        jays0_.eye as eye2_1_,
+        jays0_.id as id3_1_,
+        jays0_.id as id3_0_,
+        jays0_.eye as eye3_0_ 
+    from
+        Jay jays0_ 
+    where
+        jays0_.eye=?
+14:16:30,265  INFO DefaultDeleteEventListener:202 - HHH000114: Handling transient entity in delete processing
+14:16:30,265 DEBUG SQL:104 - 
+    update
+        Eye 
+    set
+        name=?,
+        jay=? 
+    where
+        id=?
+14:16:30,265 DEBUG SQL:104 - 
+    delete 
+    from
+        Jay 
+    where
+        id=?
+14:16:30,266 DEBUG SQL:104 - 
+    delete 
+    from
+        Eye 
+    where
+        id=?
+14:16:30,266  INFO CustomRunner:139 - Test: testPolymorphicCriteria
+14:16:30,267 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (category_key_col) 
+    values
+        (null)
+14:16:30,269 DEBUG SQL:104 - 
+    insert 
+    into
+        Single
+        (prop, id, string_) 
+    values
+        (?, ?, ?)
+14:16:30,270 DEBUG SQL:104 - 
+    select
+        this_.id as id3_2_,
+        this_.eye as eye3_2_,
+        eye2_.id as id2_0_,
+        eye2_.name as name2_0_,
+        eye2_.jay as jay2_0_,
+        jay3_.id as id3_1_,
+        jay3_.eye as eye3_1_ 
+    from
+        Jay this_ 
+    left outer join
+        Eye eye2_ 
+            on this_.eye=eye2_.id 
+    left outer join
+        Jay jay3_ 
+            on eye2_.jay=jay3_.id
+14:16:30,291 DEBUG SQL:104 - 
+    select
+        this_.key_ as key1_4_0_,
+        this_.name as name4_0_,
+        this_.clazz as clazz4_0_ 
+    from
+        Nameable this_
+14:16:30,292 DEBUG SQL:104 - 
+    select
+        this_.subdetail_key_col as subdetail1_7_0_,
+        this_.name as name7_0_ 
+    from
+        SubDetail this_
+14:16:30,292 DEBUG SQL:104 - 
+    select
+        this_.master_key_column as master1_12_1_,
+        this_.version as version12_1_,
+        this_.name as name12_1_,
+        this_.x as x12_1_,
+        this_.big_dec as big5_12_1_,
+        this_.otherMaster as otherMas6_12_1_,
+        master2_.master_key_column as master1_12_0_,
+        master2_.version as version12_0_,
+        master2_.name as name12_0_,
+        master2_.x as x12_0_,
+        master2_.big_dec as big5_12_0_,
+        master2_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" this_ 
+    left outer join
+        "master" master2_ 
+            on this_.otherMaster=master2_.master_key_column
+14:16:30,292 DEBUG SQL:104 - 
+    select
+        this_.category_key_col as category1_13_1_,
+        this_.name as name13_1_,
+        this_."assign-able-id" as assign3_13_1_,
+        assignable2_.id as id11_0_ 
+    from
+        category this_ 
+    left outer join
+        "assign-able" assignable2_ 
+            on this_."assign-able-id"=assignable2_.id
+14:16:30,292 DEBUG SQL:104 - 
+    select
+        this_.id as id2_2_,
+        this_.name as name2_2_,
+        this_.jay as jay2_2_,
+        jays2_.eye as eye2_4_,
+        jays2_.id as id3_4_,
+        jays2_.id as id3_0_,
+        jays2_.eye as eye3_0_,
+        jay3_.id as id3_1_,
+        jay3_.eye as eye3_1_ 
+    from
+        Eye this_ 
+    left outer join
+        Jay jays2_ 
+            on this_.id=jays2_.eye 
+    left outer join
+        Jay jay3_ 
+            on this_.jay=jay3_.id
+14:16:30,304 DEBUG SQL:104 - 
+    select
+        this_.id as id6_0_,
+        this_.string_ as string2_6_0_,
+        this_.prop as prop6_0_ 
+    from
+        Single this_
+14:16:30,305 DEBUG SQL:104 - 
+    select
+        this_.detail_key_column as detail1_1_2_,
+        this_.x as x1_2_,
+        this_.i as i1_2_,
+        this_.master_key as master4_1_2_,
+        master2_.master_key_column as master1_12_0_,
+        master2_.version as version12_0_,
+        master2_.name as name12_0_,
+        master2_.x as x12_0_,
+        master2_.big_dec as big5_12_0_,
+        master2_.otherMaster as otherMas6_12_0_,
+        master3_.master_key_column as master1_12_1_,
+        master3_.version as version12_1_,
+        master3_.name as name12_1_,
+        master3_.x as x12_1_,
+        master3_.big_dec as big5_12_1_,
+        master3_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail this_ 
+    inner join
+        "master" master2_ 
+            on this_.master_key=master2_.master_key_column 
+    left outer join
+        "master" master3_ 
+            on master2_.otherMaster=master3_.master_key_column
+14:16:30,316 DEBUG SQL:104 - 
+    select
+        this_.id as id5_1_,
+        this_.string_ as string2_5_1_,
+        this_.single_id as single3_5_1_,
+        this_.single_string as single4_5_1_,
+        single2_.id as id6_0_,
+        single2_.string_ as string2_6_0_,
+        single2_.prop as prop6_0_ 
+    from
+        Several this_ 
+    left outer join
+        Single single2_ 
+            on this_.single_id=single2_.id 
+            and this_.single_string=single2_.string_
+14:16:30,316 DEBUG SQL:104 - 
+    select
+        this_.id as id11_0_ 
+    from
+        "assign-able" this_
+14:16:30,316 DEBUG SQL:104 - 
+    select
+        this_.id1 as id1_8_0_,
+        this_.id2 as id2_8_0_,
+        this_.value_ as value3_8_0_ 
+    from
+        Up this_
+14:16:30,316 DEBUG SQL:104 - 
+    select
+        this_.zid as zid10_0_,
+        this_.w as w10_0_ 
+    from
+        Z this_
+14:16:30,317 DEBUG SQL:104 - 
+    select
+        this_.wid as wid9_0_ 
+    from
+        W this_
+14:16:30,317 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:30,343 DEBUG SQL:104 - 
+    delete 
+    from
+        Single 
+    where
+        id=? 
+        and string_=?
+14:16:30,344  INFO CustomRunner:139 - Test: testQueuedBagAdds
+14:16:30,345 DEBUG SQL:104 - 
+    insert 
+    into
+        "assign-able"
+        (id) 
+    values
+        (?)
+14:16:30,345 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        ("assign-able-id", category_key_col) 
+    values
+        (?, null)
+14:16:30,346 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id11_0_ 
+    from
+        "assign-able" assignable0_ 
+    where
+        assignable0_.id=?
+14:16:30,353 DEBUG SQL:104 - 
+    select
+        categories0_."assign-able-id" as assign3_11_1_,
+        categories0_.category_key_col as category1_13_1_,
+        categories0_.category_key_col as category1_13_0_,
+        categories0_.name as name13_0_,
+        categories0_."assign-able-id" as assign3_13_0_ 
+    from
+        category categories0_ 
+    where
+        categories0_."assign-able-id"=?
+14:16:30,354 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        ("assign-able-id", category_key_col) 
+    values
+        (?, null)
+14:16:30,355 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id11_0_ 
+    from
+        "assign-able" assignable0_ 
+    where
+        assignable0_.id=?
+14:16:30,355 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        ("assign-able-id", category_key_col) 
+    values
+        (?, null)
+14:16:30,364 DEBUG SQL:104 - 
+    select
+        categories0_."assign-able-id" as assign3_11_1_,
+        categories0_.category_key_col as category1_13_1_,
+        categories0_.category_key_col as category1_13_0_,
+        categories0_.name as name13_0_,
+        categories0_."assign-able-id" as assign3_13_0_ 
+    from
+        category categories0_ 
+    where
+        categories0_."assign-able-id"=?
+14:16:30,365 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id11_0_ 
+    from
+        "assign-able" assignable0_ 
+    where
+        assignable0_.id=?
+14:16:30,365 DEBUG SQL:104 - 
+    select
+        categories0_."assign-able-id" as assign3_11_1_,
+        categories0_.category_key_col as category1_13_1_,
+        categories0_.category_key_col as category1_13_0_,
+        categories0_.name as name13_0_,
+        categories0_."assign-able-id" as assign3_13_0_ 
+    from
+        category categories0_ 
+    where
+        categories0_."assign-able-id"=?
+14:16:30,374 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:30,374 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:30,385 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent13_2_,
+        subcategor0_.category_key_col as category1_13_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_13_1_,
+        subcategor0_.name as name13_1_,
+        subcategor0_."assign-able-id" as assign3_13_1_,
+        assignable1_.id as id11_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:30,386 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:30,386 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:30,395 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:30,395 DEBUG SQL:104 - 
+    delete 
+    from
+        "assign-able" 
+    where
+        id=?
+14:16:30,396  INFO CustomRunner:139 - Test: testSelfManyToOne
+14:16:30,397 DEBUG SQL:104 - 
+    insert 
+    into
+        "master"
+        (master_key_column, version, name, x, big_dec, otherMaster) 
+    values
+        (null, ?, ?, ?, ?, ?)
+14:16:30,398 DEBUG SQL:104 - 
+    update
+        "master" 
+    set
+        version=?,
+        name=?,
+        x=?,
+        big_dec=?,
+        otherMaster=? 
+    where
+        master_key_column=? 
+        and version=?
+14:16:30,406 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as col_0_0_ 
+    from
+        "master" master0_
+14:16:30,407 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_1_,
+        master0_.version as version12_1_,
+        master0_.name as name12_1_,
+        master0_.x as x12_1_,
+        master0_.big_dec as big5_12_1_,
+        master0_.otherMaster as otherMas6_12_1_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" master0_ 
+    left outer join
+        "master" master1_ 
+            on master0_.otherMaster=master1_.master_key_column 
+    where
+        master0_.master_key_column=?
+14:16:30,417 DEBUG SQL:104 - 
+    select
+        moredetail0_.more_master_key as more5_12_3_,
+        moredetail0_.detail_key_column as detail1_1_3_,
+        moredetail0_.detail_key_column as detail1_1_2_,
+        moredetail0_.x as x1_2_,
+        moredetail0_.i as i1_2_,
+        moredetail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail moredetail0_ 
+    inner join
+        "master" master1_ 
+            on moredetail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        moredetail0_.more_master_key=? 
+    order by
+        moredetail0_.i desc
+14:16:30,418 DEBUG SQL:104 - 
+    delete 
+    from
+        mtm 
+    where
+        outgoingabcdef=?
+14:16:30,418 DEBUG SQL:104 - 
+    delete 
+    from
+        "master" 
+    where
+        master_key_column=? 
+        and version=?
+14:16:30,419  INFO CustomRunner:139 - Test: testUpdateLazyCollections
+14:16:30,420 DEBUG SQL:104 - 
+    insert 
+    into
+        "master"
+        (master_key_column, version, name, x, big_dec, otherMaster) 
+    values
+        (null, ?, ?, ?, ?, ?)
+14:16:30,420 DEBUG SQL:104 - 
+    insert 
+    into
+        Detail
+        (detail_key_column, x, i, master_key) 
+    values
+        (null, ?, ?, ?)
+14:16:30,430 DEBUG SQL:104 - 
+    insert 
+    into
+        Detail
+        (detail_key_column, x, i, master_key) 
+    values
+        (null, ?, ?, ?)
+14:16:30,431 DEBUG SQL:104 - 
+    update
+        "master" 
+    set
+        version=?,
+        name=?,
+        x=?,
+        big_dec=?,
+        otherMaster=? 
+    where
+        master_key_column=? 
+        and version=?
+14:16:30,431 DEBUG SQL:104 - 
+    select
+        master0_.master_key_column as master1_12_1_,
+        master0_.version as version12_1_,
+        master0_.name as name12_1_,
+        master0_.x as x12_1_,
+        master0_.big_dec as big5_12_1_,
+        master0_.otherMaster as otherMas6_12_1_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_ 
+    from
+        "master" master0_ 
+    left outer join
+        "master" master1_ 
+            on master0_.otherMaster=master1_.master_key_column 
+    where
+        master0_.master_key_column=?
+14:16:30,442 DEBUG SQL:104 - 
+    select
+        details0_.master_key as master4_12_1_,
+        details0_.detail_key_column as detail1_1_1_,
+        details0_.detail_key_column as detail1_1_0_,
+        details0_.x as x1_0_,
+        details0_.i as i1_0_,
+        details0_.master_key as master4_1_0_ 
+    from
+        Detail details0_ 
+    where
+        details0_.master_key=? 
+    order by
+        details0_.i asc
+14:16:30,443 DEBUG SQL:104 - 
+    select
+        subdetails0_.detail_key as detail3_1_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_0_,
+        subdetails0_.name as name7_0_ 
+    from
+        SubDetail subdetails0_ 
+    where
+        subdetails0_.detail_key=?
+14:16:30,443 DEBUG SQL:104 - 
+    select
+        subdetails0_.detail_key as detail3_1_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_1_,
+        subdetails0_.subdetail_key_col as subdetail1_7_0_,
+        subdetails0_.name as name7_0_ 
+    from
+        SubDetail subdetails0_ 
+    where
+        subdetails0_.detail_key=?
+14:16:30,464 DEBUG SQL:104 - 
+    select
+        moredetail0_.more_master_key as more5_12_3_,
+        moredetail0_.detail_key_column as detail1_1_3_,
+        moredetail0_.detail_key_column as detail1_1_2_,
+        moredetail0_.x as x1_2_,
+        moredetail0_.i as i1_2_,
+        moredetail0_.master_key as master4_1_2_,
+        master1_.master_key_column as master1_12_0_,
+        master1_.version as version12_0_,
+        master1_.name as name12_0_,
+        master1_.x as x12_0_,
+        master1_.big_dec as big5_12_0_,
+        master1_.otherMaster as otherMas6_12_0_,
+        master2_.master_key_column as master1_12_1_,
+        master2_.version as version12_1_,
+        master2_.name as name12_1_,
+        master2_.x as x12_1_,
+        master2_.big_dec as big5_12_1_,
+        master2_.otherMaster as otherMas6_12_1_ 
+    from
+        Detail moredetail0_ 
+    inner join
+        "master" master1_ 
+            on moredetail0_.master_key=master1_.master_key_column 
+    left outer join
+        "master" master2_ 
+            on master1_.otherMaster=master2_.master_key_column 
+    where
+        moredetail0_.more_master_key=? 
+    order by
+        moredetail0_.i desc
+14:16:30,475 DEBUG SQL:104 - 
+    update
+        "master" 
+    set
+        version=?,
+        name=?,
+        x=?,
+        big_dec=?,
+        otherMaster=? 
+    where
+        master_key_column=? 
+        and version=?
+14:16:30,475 DEBUG SQL:104 - 
+    delete 
+    from
+        mtm 
+    where
+        outgoingabcdef=?
+14:16:30,475 DEBUG SQL:104 - 
+    delete 
+    from
+        Detail 
+    where
+        detail_key_column=?
+14:16:30,476 DEBUG SQL:104 - 
+    delete 
+    from
+        Detail 
+    where
+        detail_key_column=?
+14:16:30,485 DEBUG SQL:104 - 
+    delete 
+    from
+        "master" 
+    where
+        master_key_column=? 
+        and version=?
+14:16:30,486  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:30,486 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:30,487 DEBUG SQL:104 - 
+    alter table Detail 
+        drop constraint CC
+14:16:30,487 DEBUG SQL:104 - 
+    alter table Detail 
+        drop constraint FK79CF0471BAFC73FD
+14:16:30,487 DEBUG SQL:104 - 
+    alter table Eye 
+        drop constraint FK11211DED2D335
+14:16:30,487 DEBUG SQL:104 - 
+    alter table Jay 
+        drop constraint FK12202DED2B353
+14:16:30,487 DEBUG SQL:104 - 
+    alter table Several 
+        drop constraint FKD9AD23DCB9B9D411
+14:16:30,488 DEBUG SQL:104 - 
+    alter table SubDetail 
+        drop constraint FK460B329135BB9D31
+14:16:30,496 DEBUG SQL:104 - 
+    alter table Z 
+        drop constraint FK5A435CA81F
+14:16:30,496 DEBUG SQL:104 - 
+    alter table "master" 
+        drop constraint FKBF8D2A6248C67743
+14:16:30,497 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEE6C4D648
+14:16:30,497 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEB30D557
+14:16:30,497 DEBUG SQL:104 - 
+    alter table mtm 
+        drop constraint BB
+14:16:30,497 DEBUG SQL:104 - 
+    alter table mtm 
+        drop constraint AA
+14:16:30,497 DEBUG SQL:104 - 
+    drop table Custom if exists
+14:16:30,498 DEBUG SQL:104 - 
+    drop table Detail if exists
+14:16:30,498 DEBUG SQL:104 - 
+    drop table Eye if exists
+14:16:30,498 DEBUG SQL:104 - 
+    drop table Jay if exists
+14:16:30,498 DEBUG SQL:104 - 
+    drop table Nameable if exists
+14:16:30,498 DEBUG SQL:104 - 
+    drop table Several if exists
+14:16:30,507 DEBUG SQL:104 - 
+    drop table Single if exists
+14:16:30,507 DEBUG SQL:104 - 
+    drop table SubDetail if exists
+14:16:30,508 DEBUG SQL:104 - 
+    drop table Up if exists
+14:16:30,508 DEBUG SQL:104 - 
+    drop table W if exists
+14:16:30,508 DEBUG SQL:104 - 
+    drop table Z if exists
+14:16:30,508 DEBUG SQL:104 - 
+    drop table "assign-able" if exists
+14:16:30,509 DEBUG SQL:104 - 
+    drop table "master" if exists
+14:16:30,509 DEBUG SQL:104 - 
+    drop table category if exists
+14:16:30,509 DEBUG SQL:104 - 
+    drop table mtm if exists
+14:16:30,510 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:16:30,510  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:30,510  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

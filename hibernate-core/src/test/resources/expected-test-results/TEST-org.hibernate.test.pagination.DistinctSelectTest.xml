@@ -1,0 +1,1490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.pagination.DistinctSelectTest" tests="1" time="0.58" timestamp="2013-02-28T20:17:44">
+  <properties />
+  <testcase classname="org.hibernate.test.pagination.DistinctSelectTest" name="testDistinctSelectWithJoin" time="0.524" />
+  <system-out><![CDATA[14:17:44,839  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.pagination.DistinctSelectTest
+14:17:44,841  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/pagination/EntryTag.hbm.xml
+14:17:44,849  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:44,850  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:44,850  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:44,850  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:44,850  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:44,851  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:44,852  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:44,852  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:44,852  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:44,853  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:44,860  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:44,861 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:44,861 DEBUG SQL:104 - 
+    alter table entry_tag 
+        drop constraint FKE3726E4DF2325ABC
+14:17:44,861 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table entry_tag drop constraint FKE3726E4DF2325ABC
+14:17:44,862 ERROR SchemaExport:426 - Table "ENTRY_TAG" not found; SQL statement:
+
+    alter table entry_tag 
+        drop constraint FKE3726E4DF2325ABC [42102-145]
+14:17:44,862 DEBUG SQL:104 - 
+    alter table entry_tag 
+        drop constraint FKE3726E4DDEFAC33C
+14:17:44,862 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table entry_tag drop constraint FKE3726E4DDEFAC33C
+14:17:44,862 ERROR SchemaExport:426 - Table "ENTRY_TAG" not found; SQL statement:
+
+    alter table entry_tag 
+        drop constraint FKE3726E4DDEFAC33C [42102-145]
+14:17:44,862 DEBUG SQL:104 - 
+    drop table Entry if exists
+14:17:44,862 DEBUG SQL:104 - 
+    drop table Tag if exists
+14:17:44,863 DEBUG SQL:104 - 
+    drop table entry_tag if exists
+14:17:44,863 DEBUG SQL:104 - 
+    create table Entry (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:17:44,863 DEBUG SQL:104 - 
+    create table Tag (
+        id integer not null,
+        surrogate varchar(255),
+        primary key (id)
+    )
+14:17:44,863 DEBUG SQL:104 - 
+    create table entry_tag (
+        entry_id integer not null,
+        tag_id integer not null,
+        primary key (entry_id, tag_id)
+    )
+14:17:44,864 DEBUG SQL:104 - 
+    alter table entry_tag 
+        add constraint FKE3726E4DF2325ABC 
+        foreign key (tag_id) 
+        references Tag
+14:17:44,864 DEBUG SQL:104 - 
+    alter table entry_tag 
+        add constraint FKE3726E4DDEFAC33C 
+        foreign key (entry_id) 
+        references Entry
+14:17:44,865  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:44,865  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:44,866  INFO CustomRunner:139 - Test: testDistinctSelectWithJoin
+14:17:44,866 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Tag
+14:17:44,867 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Entry
+14:17:44,872 DEBUG SQL:104 - 
+    insert 
+    into
+        Tag
+        (surrogate, id) 
+    values
+        (?, ?)
+14:17:44,872 DEBUG SQL:104 - 
+    insert 
+    into
+        Tag
+        (surrogate, id) 
+    values
+        (?, ?)
+14:17:44,872 DEBUG SQL:104 - 
+    insert 
+    into
+        Tag
+        (surrogate, id) 
+    values
+        (?, ?)
+14:17:44,872 DEBUG SQL:104 - 
+    insert 
+    into
+        Tag
+        (surrogate, id) 
+    values
+        (?, ?)
+14:17:44,872 DEBUG SQL:104 - 
+    insert 
+    into
+        Tag
+        (surrogate, id) 
+    values
+        (?, ?)
+14:17:44,873 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,873 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,873 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,873 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,875 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,875 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,876 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,876 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,876 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,885 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,886 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,886 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,886 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,896 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,896 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,897 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,897 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,907 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,907 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,908 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,908 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,908 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,921 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,921 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,921 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,922 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,931 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,932 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,933 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,933 DEBUG SQL:104 - 
+    insert 
+    into
+        Entry
+        (name, id) 
+    values
+        (?, ?)
+14:17:44,943 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,943 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,944 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,944 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,946 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,946 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,946 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,947 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,958 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,959 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,961 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,961 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:44,962 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,023 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,024 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,024 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,024 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,024 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,024 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,045 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,045 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,045 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,045 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,054 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,054 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,054 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,055 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,055 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,055 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,055 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,055 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,055 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,067 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,068 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,068 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,068 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,078 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,079 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,079 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,079 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,079 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,079 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,100 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,101 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,101 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,101 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,101 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,102 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,102 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,102 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,102 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,102 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,123 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,124 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,124 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,124 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,133 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,133 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,134 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,134 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,134 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,144 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,144 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,145 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,145 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,154 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,154 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,154 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,154 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,164 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,164 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,164 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,164 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,175 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,175 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,175 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,175 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,176 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,176 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,176 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,176 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,176 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,188 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,188 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,189 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,189 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,198 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,199 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,199 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,199 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,199 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,199 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,200 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,221 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,222 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,222 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,222 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,233 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,233 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,234 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,234 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,234 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,242 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,243 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,243 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,243 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,253 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,253 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,254 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,254 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,265 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,265 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,265 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,265 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,265 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,274 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,275 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,275 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,275 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,285 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,286 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,286 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,286 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,296 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,296 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,296 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,296 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,297 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,306 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,307 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,307 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,307 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,307 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,308 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,308 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,308 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,308 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,319 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,320 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,320 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,320 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,328 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,329 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,329 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,329 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,329 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,329 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,352 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,352 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,352 DEBUG SQL:104 - 
+    insert 
+    into
+        entry_tag
+        (entry_id, tag_id) 
+    values
+        (?, ?)
+14:17:45,353 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select distinct e from org.hibernate.test.pagination.Entry e join e.tags t where t.surrogate != null order by e.name
+14:17:45,355 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  +-[RANGE] Node: 'RANGE'
+    |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |  |  |  |  \-[IDENT] Node: 'pagination'
+    |  |  |  |  \-[IDENT] Node: 'Entry'
+    |  |  |  \-[ALIAS] Node: 'e'
+    |  |  \-[JOIN] Node: 'join'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[IDENT] Node: 'e'
+    |  |     |  \-[IDENT] Node: 'tags'
+    |  |     \-[ALIAS] Node: 't'
+    |  \-[SELECT] Node: 'select'
+    |     +-[DISTINCT] Node: 'distinct'
+    |     \-[IDENT] Node: 'e'
+    +-[WHERE] Node: 'where'
+    |  \-[IS_NOT_NULL] Node: 'is not null'
+    |     \-[DOT] Node: '.'
+    |        +-[IDENT] Node: 't'
+    |        \-[IDENT] Node: 'surrogate'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'e'
+          \-[IDENT] Node: 'name'
+
+14:17:45,362 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:45,362 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.pagination.Entry (e) -> entry0_
+14:17:45,362 DEBUG FromReferenceNode:74 - Resolved : e -> entry0_.id
+14:17:45,362 DEBUG DotNode:599 - getDataType() : tags -> org.hibernate.type.SetType(org.hibernate.test.pagination.Entry.tags)
+14:17:45,363 DEBUG FromElementFactory:385 - createManyToMany() : path = e.tags role = org.hibernate.test.pagination.Entry.tags associatedEntityName = org.hibernate.test.pagination.Tag
+14:17:45,363 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.pagination.Tag (t) -> tag2_
+14:17:45,363 DEBUG FromClause:282 - addJoinByPathMap() : e.tags -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=t,role=null,tableName=Tag,tableAlias=tag2_,origin=Entry entry0_,columns={entry0_.id ,className=org.hibernate.test.pagination.Tag}}
+14:17:45,374 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for e.tags : entry_tag tag2_
+14:17:45,374 DEBUG FromReferenceNode:74 - Resolved : e.tags -> .
+14:17:45,374 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'entry_tag tag2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=t,role=org.hibernate.test.pagination.Entry.tags,tableName=Tag,tableAlias=tag2_,origin=Entry entry0_,columns={entry0_.id ,className=org.hibernate.test.pagination.Tag}}
+
+14:17:45,374 DEBUG FromReferenceNode:74 - Resolved : e -> entry0_.id
+14:17:45,374 DEBUG FromReferenceNode:74 - Resolved : t -> tag2_.id
+14:17:45,374 DEBUG DotNode:599 - getDataType() : surrogate -> org.hibernate.type.StringType@2dc8de40
+14:17:45,374 DEBUG FromReferenceNode:74 - Resolved : t.surrogate -> tag2_.surrogate
+14:17:45,375 DEBUG FromReferenceNode:74 - Resolved : e -> entry0_.id
+14:17:45,375 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:17:45,375 DEBUG FromReferenceNode:74 - Resolved : e.name -> entry0_.name
+14:17:45,375 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} distinct entry0_.id ) ( FromClause{level=1} ( Entry entry0_ entry_tag tag2_ ) ) ( where ( is not null ( tag2_.surrogate tag2_.id surrogate ) ) ) ( order ( entry0_.name entry0_.id name ) ) )
+14:17:45,375 DEBUG JoinProcessor:175 - Using FROM fragment [Entry entry0_]
+14:17:45,375 DEBUG JoinProcessor:175 - Using FROM fragment [inner join entry_tag tags1_ on entry0_.id=tags1_.entry_id inner join Tag tag2_ on tags1_.tag_id=tag2_.id]
+14:17:45,376 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Entry,Tag,entry_tag)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DISTINCT] SqlNode: 'distinct'
+    |  +-[ALIAS_REF] IdentNode: 'entry0_.id as id0_' {alias=e, className=org.hibernate.test.pagination.Entry, tableAlias=entry0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'entry0_.name as name0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[t, e], fromElementByTableAlias=[tag2_, entry0_], fromElementsByPath=[e.tags], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Entry entry0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Entry,tableAlias=entry0_,origin=null,columns={,className=org.hibernate.test.pagination.Entry}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join entry_tag tags1_ on entry0_.id=tags1_.entry_id inner join Tag tag2_ on tags1_.tag_id=tag2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=t,role=org.hibernate.test.pagination.Entry.tags,tableName=Tag,tableAlias=tag2_,origin=Entry entry0_,columns={entry0_.id ,className=org.hibernate.test.pagination.Tag}}
+    +-[WHERE] SqlNode: 'where'
+    |  \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+    |     \-[DOT] DotNode: 'tag2_.surrogate' {propertyName=surrogate,dereferenceType=ALL,propertyPath=surrogate,path=t.surrogate,tableAlias=tag2_,className=org.hibernate.test.pagination.Tag,classAlias=t}
+    |        +-[ALIAS_REF] IdentNode: 'tag2_.id' {alias=t, className=org.hibernate.test.pagination.Tag, tableAlias=tag2_}
+    |        \-[IDENT] IdentNode: 'surrogate' {originalText=surrogate}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'entry0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=e.name,tableAlias=entry0_,className=org.hibernate.test.pagination.Entry,classAlias=e}
+          +-[ALIAS_REF] IdentNode: 'entry0_.id' {alias=e, className=org.hibernate.test.pagination.Entry, tableAlias=entry0_}
+          \-[IDENT] IdentNode: 'name' {originalText=name}
+
+14:17:45,386 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:45,387 DEBUG QueryTranslatorImpl:235 - HQL: select distinct e from org.hibernate.test.pagination.Entry e join e.tags t where t.surrogate != null order by e.name
+14:17:45,387 DEBUG QueryTranslatorImpl:236 - SQL: select distinct entry0_.id as id0_, entry0_.name as name0_ from Entry entry0_ inner join entry_tag tags1_ on entry0_.id=tags1_.entry_id inner join Tag tag2_ on tags1_.tag_id=tag2_.id where tag2_.surrogate is not null order by entry0_.name
+14:17:45,387 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:45,387 DEBUG SQL:104 - 
+    select
+        distinct entry0_.id as id0_,
+        entry0_.name as name0_ 
+    from
+        Entry entry0_ 
+    inner join
+        entry_tag tags1_ 
+            on entry0_.id=tags1_.entry_id 
+    inner join
+        Tag tag2_ 
+            on tags1_.tag_id=tag2_.id 
+    where
+        tag2_.surrogate is not null 
+    order by
+        entry0_.name limit ? offset ?
+14:17:45,390  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:45,391 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:45,391 DEBUG SQL:104 - 
+    alter table entry_tag 
+        drop constraint FKE3726E4DF2325ABC
+14:17:45,391 DEBUG SQL:104 - 
+    alter table entry_tag 
+        drop constraint FKE3726E4DDEFAC33C
+14:17:45,398 DEBUG SQL:104 - 
+    drop table Entry if exists
+14:17:45,398 DEBUG SQL:104 - 
+    drop table Tag if exists
+14:17:45,398 DEBUG SQL:104 - 
+    drop table entry_tag if exists
+14:17:45,399  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:45,399  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

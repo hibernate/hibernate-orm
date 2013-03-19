@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.SecuredBindingTest" tests="1" time="0.008" timestamp="2013-02-28T20:10:06">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.SecuredBindingTest" name="testConfigurationMethods" time="0.007" />
+  <system-out><![CDATA[14:10:06,960  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:06,961  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [null]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.compositeelement.CompositeElementTest" tests="2" time="0.282" timestamp="2013-02-28T20:12:01">
+  <properties />
+  <testcase classname="org.hibernate.test.compositeelement.CompositeElementTest" name="testCustomColumnReadAndWrite" time="0.136" />
+  <testcase classname="org.hibernate.test.compositeelement.CompositeElementTest" name="testHandSQL" time="0.109" />
+  <system-out><![CDATA[14:12:01,003  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.compositeelement.CompositeElementTest
+14:12:01,005  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/compositeelement/Parent.hbm.xml
+14:12:01,019  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:01,020  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:01,020  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:01,020  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:01,020  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:01,022  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:01,023  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:01,023  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:01,023  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:01,024  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:01,031  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:01,032 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:01,032 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E724A71641D
+14:12:01,032 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ParentChild drop constraint FK9E5C7E724A71641D
+14:12:01,032 ERROR SchemaExport:426 - Table "PARENTCHILD" not found; SQL statement:
+
+    alter table ParentChild 
+        drop constraint FK9E5C7E724A71641D [42102-145]
+14:12:01,032 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:12:01,033 DEBUG SQL:104 - 
+    drop table ParentChild if exists
+14:12:01,033 DEBUG SQL:104 - 
+    create table Parent (
+        parent_id bigint not null,
+        name varchar(255),
+        primary key (parent_id)
+    )
+14:12:01,033 DEBUG SQL:104 - 
+    create table ParentChild (
+        parent_id bigint not null,
+        name varchar(255) not null,
+        bio varchar(255),
+        child_position integer not null,
+        primary key (parent_id, name, child_position)
+    )
+14:12:01,033 DEBUG SQL:104 - 
+    alter table ParentChild 
+        add constraint FK9E5C7E724A71641D 
+        foreign key (parent_id) 
+        references Parent
+14:12:01,034  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:01,035  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:01,035  INFO CustomRunner:139 - Test: testCustomColumnReadAndWrite
+14:12:01,038 DEBUG SQL:104 - 
+    select
+        max(parent_id) 
+    from
+        Parent
+14:12:01,039 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name, parent_id) 
+    values
+        (?, ?)
+14:12:01,039 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parent_id, name, bio, child_position) 
+    values
+        (?, ?, ?, ? - 1)
+14:12:01,040 DEBUG SQL:104 - 
+    select
+        child_position 
+    from
+        ParentChild c 
+    where
+        c.name='Child One'
+14:12:01,041 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select c.position from org.hibernate.test.compositeelement.Parent p join p.children c where p.name='Parent'
+14:12:01,043 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  +-[RANGE] Node: 'RANGE'
+    |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |  |  |  |  \-[IDENT] Node: 'compositeelement'
+    |  |  |  |  \-[IDENT] Node: 'Parent'
+    |  |  |  \-[ALIAS] Node: 'p'
+    |  |  \-[JOIN] Node: 'join'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[IDENT] Node: 'p'
+    |  |     |  \-[IDENT] Node: 'children'
+    |  |     \-[ALIAS] Node: 'c'
+    |  \-[SELECT] Node: 'select'
+    |     \-[DOT] Node: '.'
+    |        +-[IDENT] Node: 'c'
+    |        \-[IDENT] Node: 'position'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Parent''
+
+14:12:01,059 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,060 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.compositeelement.Parent (p) -> parent0_
+14:12:01,060 DEBUG FromReferenceNode:74 - Resolved : p -> parent0_.parent_id
+14:12:01,060 DEBUG DotNode:599 - getDataType() : children -> org.hibernate.type.SetType(org.hibernate.test.compositeelement.Parent.children)
+14:12:01,061 DEBUG FromElement:157 - FromClause{level=1} : null (c) -> children1_
+14:12:01,061 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.children -> ParentChild
+14:12:01,061 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.children : ParentChild children1_
+14:12:01,061 DEBUG FromReferenceNode:74 - Resolved : p.children -> .
+14:12:01,061 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'ParentChild children1_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=org.hibernate.test.compositeelement.Parent.children,tableName={none},tableAlias=children1_,origin=null,columns={,className=null}}
+
+14:12:01,062 DEBUG FromReferenceNode:74 - Resolved : c -> children1_.parent_id
+14:12:01,062 DEBUG DotNode:599 - getDataType() : position -> org.hibernate.type.IntegerType@42252fee
+14:12:01,062 DEBUG FromReferenceNode:74 - Resolved : c.position -> children1_.child_position + 1
+14:12:01,062 DEBUG FromReferenceNode:74 - Resolved : p -> parent0_.parent_id
+14:12:01,062 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:12:01,063 DEBUG FromReferenceNode:74 - Resolved : p.name -> parent0_.name
+14:12:01,063 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( children1_.child_position + 1 children1_.parent_id position ) ) ( FromClause{level=1} (  ParentChild children1_ ) ) ( where ( = ( parent0_.name parent0_.parent_id name ) 'Parent' ) ) )
+14:12:01,063 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:12:01,063 DEBUG JoinProcessor:175 - Using FROM fragment [inner join ParentChild children1_ on parent0_.parent_id=children1_.parent_id]
+14:12:01,063 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ParentChild,Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'children1_.child_position + 1' {propertyName=position,dereferenceType=ALL,propertyPath=position,path=c.position,tableAlias=children1_,className=null,classAlias=c}
+    |  |  +-[ALIAS_REF] IdentNode: 'children1_.parent_id' {alias=c, className=null, tableAlias=children1_}
+    |  |  \-[IDENT] IdentNode: 'position' {originalText=position}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[c, p], fromElementByTableAlias=[parent0_, children1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.children], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.compositeelement.Parent}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join ParentChild children1_ on parent0_.parent_id=children1_.parent_id' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=org.hibernate.test.compositeelement.Parent.children,tableName={none},tableAlias=children1_,origin=Parent parent0_,columns={,className=null}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'parent0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=parent0_,className=org.hibernate.test.compositeelement.Parent,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'parent0_.parent_id' {alias=p, className=org.hibernate.test.compositeelement.Parent, tableAlias=parent0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Parent''
+
+14:12:01,064 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,064 DEBUG QueryTranslatorImpl:235 - HQL: select c.position from org.hibernate.test.compositeelement.Parent p join p.children c where p.name='Parent'
+14:12:01,064 DEBUG QueryTranslatorImpl:236 - SQL: select children1_.child_position + 1 as col_0_0_ from Parent parent0_ inner join ParentChild children1_ on parent0_.parent_id=children1_.parent_id where parent0_.name='Parent'
+14:12:01,064 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,064 DEBUG SQL:104 - 
+    select
+        children1_.child_position + 1 as col_0_0_ 
+    from
+        Parent parent0_ 
+    inner join
+        ParentChild children1_ 
+            on parent0_.parent_id=children1_.parent_id 
+    where
+        parent0_.name='Parent'
+14:12:01,100 DEBUG SQL:104 - 
+    select
+        this_.parent_id as parent1_0_0_,
+        this_.name as name0_0_ 
+    from
+        Parent this_ 
+    where
+        this_.name=?
+14:12:01,101 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.compositeelement.Parent p join p.children c where c.position = 1
+14:12:01,103 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'compositeelement'
+    |     |  |  \-[IDENT] Node: 'Parent'
+    |     |  \-[ALIAS] Node: 'p'
+    |     \-[JOIN] Node: 'join'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'p'
+    |        |  \-[IDENT] Node: 'children'
+    |        \-[ALIAS] Node: 'c'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'c'
+          |  \-[IDENT] Node: 'position'
+          \-[NUM_INT] Node: '1'
+
+14:12:01,113 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,114 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.compositeelement.Parent (p) -> parent0_
+14:12:01,114 DEBUG FromReferenceNode:74 - Resolved : p -> parent0_.parent_id
+14:12:01,114 DEBUG DotNode:599 - getDataType() : children -> org.hibernate.type.SetType(org.hibernate.test.compositeelement.Parent.children)
+14:12:01,114 DEBUG FromElement:157 - FromClause{level=1} : null (c) -> children1_
+14:12:01,115 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.children -> ParentChild
+14:12:01,115 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.children : ParentChild children1_
+14:12:01,115 DEBUG FromReferenceNode:74 - Resolved : p.children -> .
+14:12:01,115 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'ParentChild children1_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=org.hibernate.test.compositeelement.Parent.children,tableName={none},tableAlias=children1_,origin=null,columns={,className=null}}
+
+14:12:01,115 DEBUG FromReferenceNode:74 - Resolved : c -> children1_.parent_id
+14:12:01,116 DEBUG DotNode:599 - getDataType() : position -> org.hibernate.type.IntegerType@42252fee
+14:12:01,123 DEBUG FromReferenceNode:74 - Resolved : c.position -> children1_.child_position + 1
+14:12:01,123 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} (  ParentChild children1_ ) ) ( where ( = ( children1_.child_position + 1 children1_.parent_id position ) 1 ) ) )
+14:12:01,123 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:01,128 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:12:01,128 DEBUG JoinProcessor:175 - Using FROM fragment [inner join ParentChild children1_ on parent0_.parent_id=children1_.parent_id]
+14:12:01,128 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ParentChild,Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'parent0_.parent_id as parent1_0_' {FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.compositeelement.Parent}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'parent0_.name as name0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[c, p], fromElementByTableAlias=[parent0_, children1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.children], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.compositeelement.Parent}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join ParentChild children1_ on parent0_.parent_id=children1_.parent_id' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=org.hibernate.test.compositeelement.Parent.children,tableName={none},tableAlias=children1_,origin=Parent parent0_,columns={,className=null}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'children1_.child_position + 1' {propertyName=position,dereferenceType=ALL,propertyPath=position,path=c.position,tableAlias=children1_,className=null,classAlias=c}
+          |  +-[ALIAS_REF] IdentNode: 'children1_.parent_id' {alias=c, className=null, tableAlias=children1_}
+          |  \-[IDENT] IdentNode: 'position' {originalText=position}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:12:01,129 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,129 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.compositeelement.Parent p join p.children c where c.position = 1
+14:12:01,129 DEBUG QueryTranslatorImpl:236 - SQL: select parent0_.parent_id as parent1_0_, parent0_.name as name0_ from Parent parent0_ inner join ParentChild children1_ on parent0_.parent_id=children1_.parent_id where children1_.child_position + 1=1
+14:12:01,129 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,129 DEBUG SQL:104 - 
+    select
+        parent0_.parent_id as parent1_0_,
+        parent0_.name as name0_ 
+    from
+        Parent parent0_ 
+    inner join
+        ParentChild children1_ 
+            on parent0_.parent_id=children1_.parent_id 
+    where
+        children1_.child_position + 1=1
+14:12:01,130 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        parent_id=? 
+        and name=? 
+        and child_position=? - 1
+14:12:01,132 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parent_id, name, bio, child_position) 
+    values
+        (?, ?, ?, ? - 1)
+14:12:01,133 DEBUG SQL:104 - 
+    select
+        child_position 
+    from
+        ParentChild c 
+    where
+        c.name='Child One'
+14:12:01,133 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        parent_id=?
+14:12:01,170 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        parent_id=?
+14:12:01,171  INFO CustomRunner:139 - Test: testHandSQL
+14:12:01,174 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name, parent_id) 
+    values
+        (?, ?)
+14:12:01,175 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parent_id, name, bio, child_position) 
+    values
+        (?, ?, ?, ? - 1)
+14:12:01,175 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        parent_id=?
+14:12:01,179 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parent_id, name, bio, child_position) 
+    values
+        (?, ?, ?, ? - 1)
+14:12:01,190 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select distinct p from org.hibernate.test.compositeelement.Parent p join p.children c where c.name like 'Child%'
+14:12:01,193 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  +-[RANGE] Node: 'RANGE'
+    |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |  |  |  |  \-[IDENT] Node: 'compositeelement'
+    |  |  |  |  \-[IDENT] Node: 'Parent'
+    |  |  |  \-[ALIAS] Node: 'p'
+    |  |  \-[JOIN] Node: 'join'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[IDENT] Node: 'p'
+    |  |     |  \-[IDENT] Node: 'children'
+    |  |     \-[ALIAS] Node: 'c'
+    |  \-[SELECT] Node: 'select'
+    |     +-[DISTINCT] Node: 'distinct'
+    |     \-[IDENT] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'c'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Child%''
+
+14:12:01,193 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,193 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.compositeelement.Parent (p) -> parent0_
+14:12:01,193 DEBUG FromReferenceNode:74 - Resolved : p -> parent0_.parent_id
+14:12:01,208 DEBUG DotNode:599 - getDataType() : children -> org.hibernate.type.SetType(org.hibernate.test.compositeelement.Parent.children)
+14:12:01,208 DEBUG FromElement:157 - FromClause{level=1} : null (c) -> children1_
+14:12:01,208 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.children -> ParentChild
+14:12:01,208 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.children : ParentChild children1_
+14:12:01,208 DEBUG FromReferenceNode:74 - Resolved : p.children -> .
+14:12:01,209 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'ParentChild children1_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=org.hibernate.test.compositeelement.Parent.children,tableName={none},tableAlias=children1_,origin=null,columns={,className=null}}
+
+14:12:01,209 DEBUG FromReferenceNode:74 - Resolved : p -> parent0_.parent_id
+14:12:01,209 DEBUG FromReferenceNode:74 - Resolved : c -> children1_.parent_id
+14:12:01,209 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:12:01,210 DEBUG FromReferenceNode:74 - Resolved : c.name -> children1_.name
+14:12:01,210 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} distinct parent0_.parent_id ) ( FromClause{level=1} (  ParentChild children1_ ) ) ( where ( like ( children1_.name children1_.parent_id name ) 'Child%' ) ) )
+14:12:01,210 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:12:01,210 DEBUG JoinProcessor:175 - Using FROM fragment [inner join ParentChild children1_ on parent0_.parent_id=children1_.parent_id]
+14:12:01,211 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ParentChild,Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DISTINCT] SqlNode: 'distinct'
+    |  +-[ALIAS_REF] IdentNode: 'parent0_.parent_id as parent1_0_' {alias=p, className=org.hibernate.test.compositeelement.Parent, tableAlias=parent0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'parent0_.name as name0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[c, p], fromElementByTableAlias=[parent0_, children1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.children], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.compositeelement.Parent}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join ParentChild children1_ on parent0_.parent_id=children1_.parent_id' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=org.hibernate.test.compositeelement.Parent.children,tableName={none},tableAlias=children1_,origin=Parent parent0_,columns={,className=null}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'children1_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=c.name,tableAlias=children1_,className=null,classAlias=c}
+          |  +-[ALIAS_REF] IdentNode: 'children1_.parent_id' {alias=c, className=null, tableAlias=children1_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Child%''
+
+14:12:01,222 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,222 DEBUG QueryTranslatorImpl:235 - HQL: select distinct p from org.hibernate.test.compositeelement.Parent p join p.children c where c.name like 'Child%'
+14:12:01,222 DEBUG QueryTranslatorImpl:236 - SQL: select distinct parent0_.parent_id as parent1_0_, parent0_.name as name0_ from Parent parent0_ inner join ParentChild children1_ on parent0_.parent_id=children1_.parent_id where children1_.name like 'Child%'
+14:12:01,222 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,223 DEBUG SQL:104 - 
+    select
+        distinct parent0_.parent_id as parent1_0_,
+        parent0_.name as name0_ 
+    from
+        Parent parent0_ 
+    inner join
+        ParentChild children1_ 
+            on parent0_.parent_id=children1_.parent_id 
+    where
+        children1_.name like 'Child%'
+14:12:01,224 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select new Child(c.name) from org.hibernate.test.compositeelement.Parent p left outer join p.children c where c.name like 'Child%'
+14:12:01,226 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  +-[RANGE] Node: 'RANGE'
+    |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |  |  |  |  \-[IDENT] Node: 'compositeelement'
+    |  |  |  |  \-[IDENT] Node: 'Parent'
+    |  |  |  \-[ALIAS] Node: 'p'
+    |  |  \-[JOIN] Node: 'join'
+    |  |     +-[LEFT] Node: 'left'
+    |  |     +-[OUTER] Node: 'outer'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[IDENT] Node: 'p'
+    |  |     |  \-[IDENT] Node: 'children'
+    |  |     \-[ALIAS] Node: 'c'
+    |  \-[SELECT] Node: 'select'
+    |     \-[CONSTRUCTOR] Node: '('
+    |        +-[IDENT] Node: 'Child'
+    |        \-[DOT] Node: '.'
+    |           +-[IDENT] Node: 'c'
+    |           \-[IDENT] Node: 'name'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'c'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Child%''
+
+14:12:01,234 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,234 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.compositeelement.Parent (p) -> parent0_
+14:12:01,235 DEBUG FromReferenceNode:74 - Resolved : p -> parent0_.parent_id
+14:12:01,235 DEBUG DotNode:599 - getDataType() : children -> org.hibernate.type.SetType(org.hibernate.test.compositeelement.Parent.children)
+14:12:01,235 DEBUG FromElement:157 - FromClause{level=1} : null (c) -> children1_
+14:12:01,235 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.children -> ParentChild
+14:12:01,235 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.children : ParentChild children1_
+14:12:01,235 DEBUG FromReferenceNode:74 - Resolved : p.children -> .
+14:12:01,236 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'ParentChild children1_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=org.hibernate.test.compositeelement.Parent.children,tableName={none},tableAlias=children1_,origin=null,columns={,className=null}}
+
+14:12:01,247 DEBUG FromReferenceNode:74 - Resolved : c -> children1_.parent_id
+14:12:01,247 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:12:01,248 DEBUG FromReferenceNode:74 - Resolved : c.name -> children1_.name
+14:12:01,248 DEBUG FromReferenceNode:74 - Resolved : c -> children1_.parent_id
+14:12:01,248 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:12:01,248 DEBUG FromReferenceNode:74 - Resolved : c.name -> children1_.name
+14:12:01,248 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( ( Child ( children1_.name children1_.parent_id name ) ) ) ( FromClause{level=1} (  ParentChild children1_ ) ) ( where ( like ( children1_.name children1_.parent_id name ) 'Child%' ) ) )
+14:12:01,249 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:12:01,249 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join ParentChild children1_ on parent0_.parent_id=children1_.parent_id]
+14:12:01,249 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ParentChild,Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[CONSTRUCTOR] ConstructorNode: '('
+    |     +-[IDENT] IdentNode: 'Child' {originalText=Child}
+    |     +-[DOT] DotNode: 'children1_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=c.name,tableAlias=children1_,className=null,classAlias=c}
+    |     |  +-[ALIAS_REF] IdentNode: 'children1_.parent_id' {alias=c, className=null, tableAlias=children1_}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[c, p], fromElementByTableAlias=[parent0_, children1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.children], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.compositeelement.Parent}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join ParentChild children1_ on parent0_.parent_id=children1_.parent_id' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=org.hibernate.test.compositeelement.Parent.children,tableName={none},tableAlias=children1_,origin=Parent parent0_,columns={,className=null}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'children1_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=c.name,tableAlias=children1_,className=null,classAlias=c}
+          |  +-[ALIAS_REF] IdentNode: 'children1_.parent_id' {alias=c, className=null, tableAlias=children1_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Child%''
+
+14:12:01,250 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,250 DEBUG QueryTranslatorImpl:235 - HQL: select new Child(c.name) from org.hibernate.test.compositeelement.Parent p left outer join p.children c where c.name like 'Child%'
+14:12:01,250 DEBUG QueryTranslatorImpl:236 - SQL: select children1_.name as col_0_0_ from Parent parent0_ left outer join ParentChild children1_ on parent0_.parent_id=children1_.parent_id where children1_.name like 'Child%'
+14:12:01,250 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,258 DEBUG SQL:104 - 
+    select
+        children1_.name as col_0_0_ 
+    from
+        Parent parent0_ 
+    left outer join
+        ParentChild children1_ 
+            on parent0_.parent_id=children1_.parent_id 
+    where
+        children1_.name like 'Child%'
+14:12:01,259 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.compositeelement.Parent p left join fetch p.children
+14:12:01,260 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'compositeelement'
+          |  |  \-[IDENT] Node: 'Parent'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'children'
+
+14:12:01,265 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,265 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.compositeelement.Parent (p) -> parent0_
+14:12:01,265 DEBUG FromReferenceNode:74 - Resolved : p -> parent0_.parent_id
+14:12:01,265 DEBUG DotNode:599 - getDataType() : children -> org.hibernate.type.SetType(org.hibernate.test.compositeelement.Parent.children)
+14:12:01,265 DEBUG FromElement:157 - FromClause{level=1} : null (<no alias>) -> children1_
+14:12:01,265 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.children -> ParentChild
+14:12:01,266 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.children : ParentChild children1_
+14:12:01,266 DEBUG FromReferenceNode:74 - Resolved : p.children -> .
+14:12:01,266 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'ParentChild children1_' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.compositeelement.Parent.children,tableName={none},tableAlias=children1_,origin=null,columns={,className=null}}
+
+14:12:01,266 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} (  ParentChild children1_ ) ) )
+14:12:01,266 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:01,266 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:12:01,266 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join ParentChild children1_ on parent0_.parent_id=children1_.parent_id]
+14:12:01,267 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ParentChild,Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'parent0_.parent_id as parent1_0_' {FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.compositeelement.Parent}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'parent0_.name as name0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'children1_.parent_id as parent1_0_0__, children1_.name as name1_0__, children1_.bio as bio1_0__, length(children1_.bio) as formula46_0__, children1_.child_position + 1 as child4_1_0__'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[parent0_, children1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.children], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.compositeelement.Parent}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join ParentChild children1_ on parent0_.parent_id=children1_.parent_id' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.compositeelement.Parent.children,tableName={none},tableAlias=children1_,origin=Parent parent0_,columns={,className=null}}
+
+14:12:01,277 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,277 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.compositeelement.Parent p left join fetch p.children
+14:12:01,277 DEBUG QueryTranslatorImpl:236 - SQL: select parent0_.parent_id as parent1_0_, parent0_.name as name0_, children1_.parent_id as parent1_0_0__, children1_.name as name1_0__, children1_.bio as bio1_0__, length(children1_.bio) as formula46_0__, children1_.child_position + 1 as child4_1_0__ from Parent parent0_ left outer join ParentChild children1_ on parent0_.parent_id=children1_.parent_id
+14:12:01,277 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:01,278 DEBUG SQL:104 - 
+    select
+        parent0_.parent_id as parent1_0_,
+        parent0_.name as name0_,
+        children1_.parent_id as parent1_0_0__,
+        children1_.name as name1_0__,
+        children1_.bio as bio1_0__,
+        length(children1_.bio) as formula46_0__,
+        children1_.child_position + 1 as child4_1_0__ 
+    from
+        Parent parent0_ 
+    left outer join
+        ParentChild children1_ 
+            on parent0_.parent_id=children1_.parent_id
+14:12:01,279 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        parent_id=?
+14:12:01,279 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        parent_id=?
+14:12:01,280  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:01,281 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:01,281 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E724A71641D
+14:12:01,281 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:12:01,281 DEBUG SQL:104 - 
+    drop table ParentChild if exists
+14:12:01,282  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:01,282  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

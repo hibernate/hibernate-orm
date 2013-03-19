@@ -67,9 +67,7 @@ public class EntityMapTest extends BaseCoreFunctionalTestCase {
 			Session session = openSession();
 			session.beginTransaction();
 			MapHolder mapHolder = getMapHolder( session );
-			System.out.println( "Got MapHolder; checking map size -----" );
 			Assert.assertEquals( 3, mapHolder.getMap().size() );
-			System.out.println( "Got MapHolder; checked map size -----" );
 			addMapEntry( session, mapHolder, "D", "4" );
 			// Verify there are 4 entries in the map
 			Assert.assertEquals( 4, mapHolder.getMap().size() );
@@ -90,7 +88,6 @@ public class EntityMapTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private void addMapEntry(Session session, MapHolder mapHolder, String key, String value) {
-		System.out.println( "Inserting (" + key + "," + value + ") into map" );
 		MapValue entityValue = new MapValue( value );
 		session.save( entityValue );
 		MapKey entityKey = new MapKey( key, entityValue );

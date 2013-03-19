@@ -1,0 +1,612 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.ABCTest" tests="4" time="0.216" timestamp="2013-02-28T20:14:53">
+  <properties />
+  <testcase classname="org.hibernate.test.legacy.ABCTest" name="testFormulaAssociation" time="0.044" />
+  <testcase classname="org.hibernate.test.legacy.ABCTest" name="testGetSave" time="0.01" />
+  <testcase classname="org.hibernate.test.legacy.ABCTest" name="testHigherLevelIndexDefinition" time="0.001" />
+  <testcase classname="org.hibernate.test.legacy.ABCTest" name="testSubclassing" time="0.089" />
+  <system-out><![CDATA[14:14:53,473  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.ABCTest
+14:14:53,474  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:53,475  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/ABC.hbm.xml
+14:14:53,481  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/ABCExtends.hbm.xml
+14:14:53,487  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:53,487  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:53,487  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:53,487  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:53,487  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:53,488  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:53,489  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:53,489  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:53,490  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:53,499  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:53,499 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:53,500 DEBUG SQL:104 - 
+    alter table B2 
+        drop constraint FK830435E2490
+14:14:53,500 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table B2 drop constraint FK830435E2490
+14:14:53,500 ERROR SchemaExport:426 - Table "B2" not found; SQL statement:
+
+    alter table B2 
+        drop constraint FK830435E2490 [42102-145]
+14:14:53,500 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA70333C1F67
+14:14:53,500 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TD drop constraint FKA70333C1F67
+14:14:53,500 ERROR SchemaExport:426 - Table "TD" not found; SQL statement:
+
+    alter table TD 
+        drop constraint FKA70333C1F67 [42102-145]
+14:14:53,500 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA706869A0D9
+14:14:53,501 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TD drop constraint FKA706869A0D9
+14:14:53,501 ERROR SchemaExport:426 - Table "TD" not found; SQL statement:
+
+    alter table TD 
+        drop constraint FKA706869A0D9 [42102-145]
+14:14:53,501 DEBUG SQL:104 - 
+    alter table c2more 
+        drop constraint FKABE398042838574D
+14:14:53,501 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table c2more drop constraint FKABE398042838574D
+14:14:53,501 ERROR SchemaExport:426 - Table "C2MORE" not found; SQL statement:
+
+    alter table c2more 
+        drop constraint FKABE398042838574D [42102-145]
+14:14:53,501 DEBUG SQL:104 - 
+    alter table cmore 
+        drop constraint FK5A652382838574B
+14:14:53,502 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table cmore drop constraint FK5A652382838574B
+14:14:53,503 ERROR SchemaExport:426 - Table "CMORE" not found; SQL statement:
+
+    alter table cmore 
+        drop constraint FK5A652382838574B [42102-145]
+14:14:53,503 DEBUG SQL:104 - 
+    drop table B2 if exists
+14:14:53,503 DEBUG SQL:104 - 
+    drop table TA if exists
+14:14:53,503 DEBUG SQL:104 - 
+    drop table TD if exists
+14:14:53,503 DEBUG SQL:104 - 
+    drop table c2more if exists
+14:14:53,503 DEBUG SQL:104 - 
+    drop table cmore if exists
+14:14:53,503 DEBUG SQL:104 - 
+    create table B2 (
+        bid bigint not null,
+        BName varchar(255) not null,
+        primary key (bid)
+    )
+14:14:53,504 DEBUG SQL:104 - 
+    create table TA (
+        identifier_column bigint not null,
+        clazz_discriminata integer,
+        name varchar(255),
+        count_ integer,
+        c1 varchar(255),
+        c2 varchar(255),
+        primary key (identifier_column)
+    )
+14:14:53,504 DEBUG SQL:104 - 
+    create table TD (
+        id bigint not null,
+        amount float,
+        rev_a_id bigint,
+        inv_a_id bigint,
+        primary key (id)
+    )
+14:14:53,504 DEBUG SQL:104 - 
+    create table c2more (
+        c2 bigint not null,
+        C2Name varchar(255),
+        primary key (c2)
+    )
+14:14:53,505 DEBUG SQL:104 - 
+    create table cmore (
+        c1 bigint not null,
+        C1Name varchar(255),
+        primary key (c1)
+    )
+14:14:53,514 DEBUG SQL:104 - 
+    alter table B2 
+        add constraint FK830435E2490 
+        foreign key (bid) 
+        references TA
+14:14:53,515 DEBUG SQL:104 - 
+    create index indx_a_name2 on TA (name)
+14:14:53,515 DEBUG SQL:104 - 
+    create index indx_a_name on TA (name)
+14:14:53,516 DEBUG SQL:104 - 
+    alter table TD 
+        add constraint FKA70333C1F67 
+        foreign key (rev_a_id) 
+        references TA
+14:14:53,516 DEBUG SQL:104 - 
+    alter table TD 
+        add constraint FKA706869A0D9 
+        foreign key (inv_a_id) 
+        references TA
+14:14:53,516 DEBUG SQL:104 - 
+    alter table c2more 
+        add constraint FKABE398042838574D 
+        foreign key (c2) 
+        references TA
+14:14:53,517 DEBUG SQL:104 - 
+    alter table cmore 
+        add constraint FK5A652382838574B 
+        foreign key (c1) 
+        references TA 
+        on delete cascade
+14:14:53,517  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:53,518  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:53,518  INFO CustomRunner:139 - Test: testFormulaAssociation
+14:14:53,520 DEBUG SQL:104 - 
+    select
+        max(identifier_column) 
+    from
+        TA
+14:14:53,522 DEBUG SQL:104 - 
+    insert 
+    into
+        TD
+        (amount, rev_a_id, inv_a_id, id) 
+    values
+        (?, ?, ?, ?)
+14:14:53,522 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, clazz_discriminata, identifier_column) 
+    values
+        (?, 0, ?)
+14:14:53,522 DEBUG SQL:104 - 
+    update
+        TD 
+    set
+        amount=?,
+        rev_a_id=?,
+        inv_a_id=? 
+    where
+        id=?
+14:14:53,523 DEBUG SQL:104 - 
+    select
+        d0_.id as id2_2_,
+        d0_.amount as amount2_2_,
+        d0_.rev_a_id as rev3_2_2_,
+        d0_.inv_a_id as inv4_2_2_,
+        a1_.identifier_column as identifier1_1_0_,
+        a1_.name as name1_0_,
+        a1_.count_ as count4_1_0_,
+        a1_.c1 as c5_1_0_,
+        a1_.c2 as c6_1_0_,
+        a1_.clazz_discriminata as clazz2_1_0_,
+        a2_.identifier_column as identifier1_1_1_,
+        a2_.name as name1_1_,
+        a2_.count_ as count4_1_1_,
+        a2_.c1 as c5_1_1_,
+        a2_.c2 as c6_1_1_,
+        a2_.clazz_discriminata as clazz2_1_1_ 
+    from
+        TD d0_ 
+    left outer join
+        TA a1_ 
+            on d0_.rev_a_id=a1_.identifier_column 
+    left outer join
+        TA a2_ 
+            on d0_.inv_a_id=a2_.identifier_column 
+    where
+        d0_.id=?
+14:14:53,541 DEBUG SQL:104 - 
+    select
+        d0_.id as id2_2_,
+        d0_.amount as amount2_2_,
+        d0_.rev_a_id as rev3_2_2_,
+        d0_.inv_a_id as inv4_2_2_,
+        a1_.identifier_column as identifier1_1_0_,
+        a1_.name as name1_0_,
+        a1_.count_ as count4_1_0_,
+        a1_.c1 as c5_1_0_,
+        a1_.c2 as c6_1_0_,
+        a1_.clazz_discriminata as clazz2_1_0_,
+        a2_.identifier_column as identifier1_1_1_,
+        a2_.name as name1_1_,
+        a2_.count_ as count4_1_1_,
+        a2_.c1 as c5_1_1_,
+        a2_.c2 as c6_1_1_,
+        a2_.clazz_discriminata as clazz2_1_1_ 
+    from
+        TD d0_ 
+    left outer join
+        TA a1_ 
+            on d0_.rev_a_id=a1_.identifier_column 
+    left outer join
+        TA a2_ 
+            on d0_.inv_a_id=a2_.identifier_column 
+    where
+        d0_.id=?
+14:14:53,553 DEBUG SQL:104 - 
+    select
+        d0_.id as id2_0_,
+        a1_.identifier_column as identifier1_1_1_,
+        a2_.identifier_column as identifier1_1_2_,
+        d0_.amount as amount2_0_,
+        d0_.rev_a_id as rev3_2_0_,
+        d0_.inv_a_id as inv4_2_0_,
+        a1_.name as name1_1_,
+        a1_.count_ as count4_1_1_,
+        a1_.c1 as c5_1_1_,
+        a1_.c2 as c6_1_1_,
+        a1_.clazz_discriminata as clazz2_1_1_,
+        a2_.name as name1_2_,
+        a2_.count_ as count4_1_2_,
+        a2_.c1 as c5_1_2_,
+        a2_.c2 as c6_1_2_,
+        a2_.clazz_discriminata as clazz2_1_2_ 
+    from
+        TD d0_ 
+    inner join
+        TA a1_ 
+            on d0_.rev_a_id=a1_.identifier_column 
+    inner join
+        TA a2_ 
+            on d0_.inv_a_id=a2_.identifier_column 
+    where
+        (
+            a2_.identifier_column=a1_.identifier_column 
+        )
+14:14:53,562  INFO CustomRunner:139 - Test: testGetSave
+14:14:53,564 DEBUG SQL:104 - 
+    select
+        d0_.id as id2_2_,
+        d0_.amount as amount2_2_,
+        d0_.rev_a_id as rev3_2_2_,
+        d0_.inv_a_id as inv4_2_2_,
+        a1_.identifier_column as identifier1_1_0_,
+        a1_.name as name1_0_,
+        a1_.count_ as count4_1_0_,
+        a1_.c1 as c5_1_0_,
+        a1_.c2 as c6_1_0_,
+        a1_.clazz_discriminata as clazz2_1_0_,
+        a2_.identifier_column as identifier1_1_1_,
+        a2_.name as name1_1_,
+        a2_.count_ as count4_1_1_,
+        a2_.c1 as c5_1_1_,
+        a2_.c2 as c6_1_1_,
+        a2_.clazz_discriminata as clazz2_1_1_ 
+    from
+        TD d0_ 
+    left outer join
+        TA a1_ 
+            on d0_.rev_a_id=a1_.identifier_column 
+    left outer join
+        TA a2_ 
+            on d0_.inv_a_id=a2_.identifier_column 
+    where
+        d0_.id=?
+14:14:53,572 DEBUG SQL:104 - 
+    insert 
+    into
+        TD
+        (amount, rev_a_id, inv_a_id, id) 
+    values
+        (?, ?, ?, ?)
+14:14:53,573 DEBUG SQL:104 - 
+    delete 
+    from
+        TD 
+    where
+        id=?
+14:14:53,573  INFO CustomRunner:139 - Test: testHigherLevelIndexDefinition
+Checking command : create table B2 (bid bigint not null, BName varchar(255) not null, primary key (bid))
+Checking command : create table TA (identifier_column bigint not null, clazz_discriminata integer, name varchar(255), count_ integer, c1 varchar(255), c2 varchar(255), primary key (identifier_column))
+Checking command : create table TD (id bigint not null, amount float, rev_a_id bigint, inv_a_id bigint, primary key (id))
+Checking command : create table c2more (c2 bigint not null, C2Name varchar(255), primary key (c2))
+Checking command : create table cmore (c1 bigint not null, C1Name varchar(255), primary key (c1))
+Checking command : alter table B2 add constraint FK830435E2490 foreign key (bid) references TA
+Checking command : create index indx_a_name2 on TA (name)
+14:14:53,585  INFO CustomRunner:139 - Test: testSubclassing
+14:14:53,589 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, count_, c1, identifier_column) 
+    values
+        (?, ?, ?, ?)
+14:14:53,589 DEBUG SQL:104 - 
+    insert 
+    into
+        B2
+        (BName, bid) 
+    values
+        (?, ?)
+14:14:53,589 DEBUG SQL:104 - 
+    insert 
+    into
+        cmore
+        (C1Name, c1) 
+    values
+        (?, ?)
+14:14:53,589 DEBUG SQL:104 - 
+    insert 
+    into
+        TD
+        (amount, rev_a_id, inv_a_id, id) 
+    values
+        (?, ?, ?, ?)
+14:14:53,590 DEBUG SQL:104 - 
+    select
+        c2x0_.identifier_column as identifier1_1_,
+        c2x0_.name as name1_,
+        c2x0_.count_ as count4_1_,
+        c2x0_1_.BName as BName0_,
+        c2x0_.c2 as c6_1_,
+        c2x0_2_.C2Name as C2_3_ 
+    from
+        TA c2x0_ 
+    inner join
+        B2 c2x0_1_ 
+            on c2x0_.identifier_column=c2x0_1_.bid 
+    inner join
+        c2more c2x0_2_ 
+            on c2x0_.identifier_column=c2x0_2_.c2 
+    where
+        c2x0_.clazz_discriminata=2 
+        and (
+            (
+                1=1 
+            )
+            or(
+                1=1 
+            )
+        )
+14:14:53,596 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_1_3_,
+        a0_.name as name1_3_,
+        a0_.count_ as count4_1_3_,
+        a0_.c1 as c5_1_3_,
+        a0_.c2 as c6_1_3_,
+        a0_.clazz_discriminata as clazz2_1_3_,
+        d1_.id as id2_0_,
+        d1_.amount as amount2_0_,
+        d1_.rev_a_id as rev3_2_0_,
+        d1_.inv_a_id as inv4_2_0_,
+        a2_.identifier_column as identifier1_1_1_,
+        a2_.name as name1_1_,
+        a2_.count_ as count4_1_1_,
+        a2_.c1 as c5_1_1_,
+        a2_.c2 as c6_1_1_,
+        a2_.clazz_discriminata as clazz2_1_1_,
+        a3_.identifier_column as identifier1_1_2_,
+        a3_.name as name1_2_,
+        a3_.count_ as count4_1_2_,
+        a3_.c1 as c5_1_2_,
+        a3_.c2 as c6_1_2_,
+        a3_.clazz_discriminata as clazz2_1_2_ 
+    from
+        TA a0_ 
+    left outer join
+        TD d1_ 
+            on a0_.identifier_column=d1_.id 
+    left outer join
+        TA a2_ 
+            on d1_.rev_a_id=a2_.identifier_column 
+    left outer join
+        TA a3_ 
+            on d1_.inv_a_id=a3_.identifier_column 
+    where
+        a0_.identifier_column=?
+14:14:53,606 DEBUG SQL:104 - 
+    select
+        a_1_.BName as BName0_,
+        a_2_.C1Name as C2_4_ 
+    from
+        B2 a_1_ 
+    inner join
+        cmore a_2_ 
+            on a_1_.bid=a_2_.c1 
+    where
+        a_1_.bid=?
+14:14:53,608 DEBUG SQL:104 - 
+    select
+        b0_.identifier_column as identifier1_1_3_,
+        b0_.name as name1_3_,
+        b0_.count_ as count4_1_3_,
+        b0_1_.BName as BName0_3_,
+        b0_.c1 as c5_1_3_,
+        b0_.c2 as c6_1_3_,
+        b0_.clazz_discriminata as clazz2_1_3_,
+        d1_.id as id2_0_,
+        d1_.amount as amount2_0_,
+        d1_.rev_a_id as rev3_2_0_,
+        d1_.inv_a_id as inv4_2_0_,
+        a2_.identifier_column as identifier1_1_1_,
+        a2_.name as name1_1_,
+        a2_.count_ as count4_1_1_,
+        a2_.c1 as c5_1_1_,
+        a2_.c2 as c6_1_1_,
+        a2_.clazz_discriminata as clazz2_1_1_,
+        a3_.identifier_column as identifier1_1_2_,
+        a3_.name as name1_2_,
+        a3_.count_ as count4_1_2_,
+        a3_.c1 as c5_1_2_,
+        a3_.c2 as c6_1_2_,
+        a3_.clazz_discriminata as clazz2_1_2_ 
+    from
+        TA b0_ 
+    inner join
+        B2 b0_1_ 
+            on b0_.identifier_column=b0_1_.bid 
+    left outer join
+        TD d1_ 
+            on b0_.identifier_column=d1_.id 
+    left outer join
+        TA a2_ 
+            on d1_.rev_a_id=a2_.identifier_column 
+    left outer join
+        TA a3_ 
+            on d1_.inv_a_id=a3_.identifier_column 
+    where
+        b0_.identifier_column=? 
+        and (
+            b0_.clazz_discriminata is null 
+            or b0_.clazz_discriminata in (
+                -1, 2
+            )
+        )
+14:14:53,629 DEBUG SQL:104 - 
+    select
+        b_2_.C1Name as C2_4_ 
+    from
+        cmore b_2_ 
+    where
+        b_2_.c1=?
+14:14:53,640 DEBUG SQL:104 - 
+    select
+        c1x0_.identifier_column as identifier1_1_3_,
+        c1x0_.name as name1_3_,
+        c1x0_.count_ as count4_1_3_,
+        c1x0_1_.BName as BName0_3_,
+        c1x0_.c1 as c5_1_3_,
+        c1x0_2_.C1Name as C2_4_3_,
+        d1_.id as id2_0_,
+        d1_.amount as amount2_0_,
+        d1_.rev_a_id as rev3_2_0_,
+        d1_.inv_a_id as inv4_2_0_,
+        a2_.identifier_column as identifier1_1_1_,
+        a2_.name as name1_1_,
+        a2_.count_ as count4_1_1_,
+        a2_.c1 as c5_1_1_,
+        a2_.c2 as c6_1_1_,
+        a2_.clazz_discriminata as clazz2_1_1_,
+        a3_.identifier_column as identifier1_1_2_,
+        a3_.name as name1_2_,
+        a3_.count_ as count4_1_2_,
+        a3_.c1 as c5_1_2_,
+        a3_.c2 as c6_1_2_,
+        a3_.clazz_discriminata as clazz2_1_2_ 
+    from
+        TA c1x0_ 
+    inner join
+        B2 c1x0_1_ 
+            on c1x0_.identifier_column=c1x0_1_.bid 
+    inner join
+        cmore c1x0_2_ 
+            on c1x0_.identifier_column=c1x0_2_.c1 
+    left outer join
+        TD d1_ 
+            on c1x0_.identifier_column=d1_.id 
+    left outer join
+        TA a2_ 
+            on d1_.rev_a_id=a2_.identifier_column 
+    left outer join
+        TA a3_ 
+            on d1_.inv_a_id=a3_.identifier_column 
+    where
+        c1x0_.identifier_column=? 
+        and c1x0_.clazz_discriminata is null
+14:14:53,651 DEBUG SQL:104 - 
+    select
+        b0_.identifier_column as identifier1_1_,
+        b0_.name as name1_,
+        b0_.count_ as count4_1_,
+        b0_1_.BName as BName0_,
+        b0_.c1 as c5_1_,
+        b0_.c2 as c6_1_,
+        b0_.clazz_discriminata as clazz2_1_ 
+    from
+        TA b0_ 
+    inner join
+        B2 b0_1_ 
+            on b0_.identifier_column=b0_1_.bid 
+    where
+        (
+            b0_.clazz_discriminata is null 
+            or b0_.clazz_discriminata in (
+                -1, 2
+            )
+        )
+14:14:53,662 DEBUG SQL:104 - 
+    select
+        b_2_.C1Name as C2_4_ 
+    from
+        cmore b_2_ 
+    where
+        b_2_.c1=?
+14:14:53,662 DEBUG SQL:104 - 
+    select
+        d0_.id as id2_2_,
+        d0_.amount as amount2_2_,
+        d0_.rev_a_id as rev3_2_2_,
+        d0_.inv_a_id as inv4_2_2_,
+        a1_.identifier_column as identifier1_1_0_,
+        a1_.name as name1_0_,
+        a1_.count_ as count4_1_0_,
+        a1_.c1 as c5_1_0_,
+        a1_.c2 as c6_1_0_,
+        a1_.clazz_discriminata as clazz2_1_0_,
+        a2_.identifier_column as identifier1_1_1_,
+        a2_.name as name1_1_,
+        a2_.count_ as count4_1_1_,
+        a2_.c1 as c5_1_1_,
+        a2_.c2 as c6_1_1_,
+        a2_.clazz_discriminata as clazz2_1_1_ 
+    from
+        TD d0_ 
+    left outer join
+        TA a1_ 
+            on d0_.rev_a_id=a1_.identifier_column 
+    left outer join
+        TA a2_ 
+            on d0_.inv_a_id=a2_.identifier_column 
+    where
+        d0_.id=?
+14:14:53,673 DEBUG SQL:104 - 
+    delete 
+    from
+        B2 
+    where
+        bid=?
+14:14:53,673 DEBUG SQL:104 - 
+    delete 
+    from
+        TA 
+    where
+        identifier_column=?
+14:14:53,673 DEBUG SQL:104 - 
+    delete 
+    from
+        TD 
+    where
+        id=?
+14:14:53,674  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:53,675 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:53,675 DEBUG SQL:104 - 
+    alter table B2 
+        drop constraint FK830435E2490
+14:14:53,684 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA70333C1F67
+14:14:53,684 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA706869A0D9
+14:14:53,684 DEBUG SQL:104 - 
+    alter table c2more 
+        drop constraint FKABE398042838574D
+14:14:53,684 DEBUG SQL:104 - 
+    alter table cmore 
+        drop constraint FK5A652382838574B
+14:14:53,684 DEBUG SQL:104 - 
+    drop table B2 if exists
+14:14:53,685 DEBUG SQL:104 - 
+    drop table TA if exists
+14:14:53,685 DEBUG SQL:104 - 
+    drop table TD if exists
+14:14:53,685 DEBUG SQL:104 - 
+    drop table c2more if exists
+14:14:53,685 DEBUG SQL:104 - 
+    drop table cmore if exists
+14:14:53,686  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:53,686  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

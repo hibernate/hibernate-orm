@@ -1,0 +1,1444 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.referencedcolumnname.ReferencedColumnNameTest" tests="6" time="0.593" timestamp="2013-02-28T20:10:43">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.referencedcolumnname.ReferencedColumnNameTest" name="testManyToMany" time="0.061" />
+  <testcase classname="org.hibernate.test.annotations.referencedcolumnname.ReferencedColumnNameTest" name="testManyToOne" time="0.012" />
+  <testcase classname="org.hibernate.test.annotations.referencedcolumnname.ReferencedColumnNameTest" name="testManyToOneInsideComponentReferencedColumn" time="0.168" />
+  <testcase classname="org.hibernate.test.annotations.referencedcolumnname.ReferencedColumnNameTest" name="testManyToOneReferenceManyToOne" time="0.032" />
+  <testcase classname="org.hibernate.test.annotations.referencedcolumnname.ReferencedColumnNameTest" name="testOneToMany" time="0.064" />
+  <testcase classname="org.hibernate.test.annotations.referencedcolumnname.ReferencedColumnNameTest" name="testUnidirectionalOneToMany" time="0.035" />
+  <system-out><![CDATA[14:10:43,502  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.referencedcolumnname.ReferencedColumnNameTest
+14:10:43,525  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:43,526  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:43,526  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:43,526  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:43,526  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:43,527  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:43,528  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:43,528  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:43,529  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:43,529  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:43,577  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:43,577 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:43,578 DEBUG SQL:104 - 
+    alter table Bag 
+        drop constraint FK103E8ADCBF439
+14:10:43,578 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Bag drop constraint FK103E8ADCBF439
+14:10:43,578 ERROR SchemaExport:426 - Table "BAG" not found; SQL statement:
+
+    alter table Bag 
+        drop constraint FK103E8ADCBF439 [42102-145]
+14:10:43,578 DEBUG SQL:104 - 
+    alter table House 
+        drop constraint FK42AD7002EBA9A76
+14:10:43,578 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table House drop constraint FK42AD7002EBA9A76
+14:10:43,578 ERROR SchemaExport:426 - Table "HOUSE" not found; SQL statement:
+
+    alter table House 
+        drop constraint FK42AD7002EBA9A76 [42102-145]
+14:10:43,578 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        drop constraint FKA710CB6C2BFDD455
+14:10:43,579 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table HousePlaces drop constraint FKA710CB6C2BFDD455
+14:10:43,579 ERROR SchemaExport:426 - Table "HOUSEPLACES" not found; SQL statement:
+
+    alter table HousePlaces 
+        drop constraint FKA710CB6C2BFDD455 [42102-145]
+14:10:43,579 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        drop constraint FKA710CB6CEF9E78D3
+14:10:43,579 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table HousePlaces drop constraint FKA710CB6CEF9E78D3
+14:10:43,579 ERROR SchemaExport:426 - Table "HOUSEPLACES" not found; SQL statement:
+
+    alter table HousePlaces 
+        drop constraint FKA710CB6CEF9E78D3 [42102-145]
+14:10:43,579 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        drop constraint FKA710CB6C2A39F677
+14:10:43,579 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table HousePlaces drop constraint FKA710CB6C2A39F677
+14:10:43,582 ERROR SchemaExport:426 - Table "HOUSEPLACES" not found; SQL statement:
+
+    alter table HousePlaces 
+        drop constraint FKA710CB6C2A39F677 [42102-145]
+14:10:43,582 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        drop constraint FKA710CB6C769ADD29
+14:10:43,583 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table HousePlaces drop constraint FKA710CB6C769ADD29
+14:10:43,583 ERROR SchemaExport:426 - Table "HOUSEPLACES" not found; SQL statement:
+
+    alter table HousePlaces 
+        drop constraint FKA710CB6C769ADD29 [42102-145]
+14:10:43,583 DEBUG SQL:104 - 
+    alter table ItemCost 
+        drop constraint FK4A0241A0CB2A058E
+14:10:43,583 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ItemCost drop constraint FK4A0241A0CB2A058E
+14:10:43,583 ERROR SchemaExport:426 - Table "ITEMCOST" not found; SQL statement:
+
+    alter table ItemCost 
+        drop constraint FK4A0241A0CB2A058E [42102-145]
+14:10:43,583 DEBUG SQL:104 - 
+    alter table ItemCost 
+        drop constraint FK4A0241A0FD08806E
+14:10:43,583 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ItemCost drop constraint FK4A0241A0FD08806E
+14:10:43,583 ERROR SchemaExport:426 - Table "ITEMCOST" not found; SQL statement:
+
+    alter table ItemCost 
+        drop constraint FK4A0241A0FD08806E [42102-145]
+14:10:43,584 DEBUG SQL:104 - 
+    alter table WarehouseItem 
+        drop constraint FKE5404056DAE6556D
+14:10:43,584 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table WarehouseItem drop constraint FKE5404056DAE6556D
+14:10:43,584 ERROR SchemaExport:426 - Table "WAREHOUSEITEM" not found; SQL statement:
+
+    alter table WarehouseItem 
+        drop constraint FKE5404056DAE6556D [42102-145]
+14:10:43,584 DEBUG SQL:104 - 
+    alter table WarehouseItem 
+        drop constraint FKE5404056CB2A058E
+14:10:43,584 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table WarehouseItem drop constraint FKE5404056CB2A058E
+14:10:43,584 ERROR SchemaExport:426 - Table "WAREHOUSEITEM" not found; SQL statement:
+
+    alter table WarehouseItem 
+        drop constraint FKE5404056CB2A058E [42102-145]
+14:10:43,584 DEBUG SQL:104 - 
+    alter table WarehouseItem 
+        drop constraint FKE5404056FD08806E
+14:10:43,584 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table WarehouseItem drop constraint FKE5404056FD08806E
+14:10:43,585 ERROR SchemaExport:426 - Table "WAREHOUSEITEM" not found; SQL statement:
+
+    alter table WarehouseItem 
+        drop constraint FKE5404056FD08806E [42102-145]
+14:10:43,585 DEBUG SQL:104 - 
+    drop table Bag if exists
+14:10:43,585 DEBUG SQL:104 - 
+    drop table Clothes if exists
+14:10:43,585 DEBUG SQL:104 - 
+    drop table House if exists
+14:10:43,585 DEBUG SQL:104 - 
+    drop table HousePlaces if exists
+14:10:43,585 DEBUG SQL:104 - 
+    drop table House_Inhabitant if exists
+14:10:43,585 DEBUG SQL:104 - 
+    drop table Inhabitant if exists
+14:10:43,586 DEBUG SQL:104 - 
+    drop table Item if exists
+14:10:43,586 DEBUG SQL:104 - 
+    drop table ItemCost if exists
+14:10:43,586 DEBUG SQL:104 - 
+    drop table Luggage if exists
+14:10:43,586 DEBUG SQL:104 - 
+    drop table Place if exists
+14:10:43,586 DEBUG SQL:104 - 
+    drop table Postman if exists
+14:10:43,586 DEBUG SQL:104 - 
+    drop table Rambler if exists
+14:10:43,586 DEBUG SQL:104 - 
+    drop table Vendor if exists
+14:10:43,587 DEBUG SQL:104 - 
+    drop table WarehouseItem if exists
+14:10:43,587 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:43,587 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:43,587 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:43,587 DEBUG SQL:104 - 
+    create table Bag (
+        id integer not null,
+        serial varchar(255),
+        owner_fld_name varchar(255),
+        primary key (id)
+    )
+14:10:43,587 DEBUG SQL:104 - 
+    create table Clothes (
+        id integer not null,
+        flavor varchar(255),
+        type varchar(255),
+        lug_type varchar(255),
+        lug_owner varchar(255),
+        primary key (id)
+    )
+14:10:43,588 DEBUG SQL:104 - 
+    create table House (
+        id integer not null,
+        address varchar(255),
+        postman_name varchar(255),
+        primary key (id)
+    )
+14:10:43,588 DEBUG SQL:104 - 
+    create table HousePlaces (
+        id integer not null,
+        NEIGHBOUR_KITCHEN varchar(255),
+        NEIGHBOUR_LIVINGROOM varchar(255),
+        NEIGHBOUR_LIVINGROOM_OWNER varchar(255),
+        KITCHEN varchar(255),
+        LIVING_ROOM varchar(255),
+        LIVING_ROOM_OWNER varchar(255),
+        primary key (id)
+    )
+14:10:43,600 DEBUG SQL:104 - 
+    create table House_Inhabitant (
+        livesIn_address varchar(255) not null,
+        hasInhabitants_name varchar(255) not null,
+        primary key (livesIn_address, hasInhabitants_name)
+    )
+14:10:43,601 DEBUG SQL:104 - 
+    create table Inhabitant (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:43,601 DEBUG SQL:104 - 
+    create table Item (
+        id integer not null,
+        primary key (id)
+    )
+14:10:43,601 DEBUG SQL:104 - 
+    create table ItemCost (
+        id integer not null,
+        cost decimal(19,2),
+        item_id integer,
+        vendor_id integer,
+        primary key (id)
+    )
+14:10:43,614 DEBUG SQL:104 - 
+    create table Luggage (
+        id integer not null,
+        owner varchar(255),
+        type varchar(255),
+        primary key (id)
+    )
+14:10:43,614 DEBUG SQL:104 - 
+    create table Place (
+        id integer not null,
+        NAME varchar(255),
+        OWNER varchar(255),
+        primary key (id)
+    )
+14:10:43,614 DEBUG SQL:104 - 
+    create table Postman (
+        id varchar(255) not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:43,615 DEBUG SQL:104 - 
+    create table Rambler (
+        id integer not null,
+        fld_name varchar(255),
+        primary key (id)
+    )
+14:10:43,615 DEBUG SQL:104 - 
+    create table Vendor (
+        id integer not null,
+        primary key (id)
+    )
+14:10:43,615 DEBUG SQL:104 - 
+    create table WarehouseItem (
+        id integer not null,
+        qtyInStock decimal(19,2),
+        vendor_id integer,
+        item_id integer,
+        primary key (id)
+    )
+14:10:43,615 DEBUG SQL:104 - 
+    alter table Bag 
+        add constraint uc_Bag_1 unique (serial)
+14:10:43,616 DEBUG SQL:104 - 
+    alter table Bag 
+        add constraint FK103E8ADCBF439 
+        foreign key (owner_fld_name) 
+        references Rambler (fld_name)
+14:10:43,616 DEBUG SQL:104 - 
+    alter table House 
+        add constraint UK_42AD700BB979BF4 unique (address)
+14:10:43,616 DEBUG SQL:104 - 
+    alter table House 
+        add constraint FK42AD7002EBA9A76 
+        foreign key (postman_name) 
+        references Postman (name)
+14:10:43,617 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        add constraint FKA710CB6C2BFDD455 
+        foreign key (NEIGHBOUR_KITCHEN) 
+        references Place (NAME)
+14:10:43,618 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        add constraint FKA710CB6CEF9E78D3 
+        foreign key (NEIGHBOUR_LIVINGROOM, NEIGHBOUR_LIVINGROOM_OWNER) 
+        references Place (NAME, OWNER)
+14:10:43,618 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        add constraint FKA710CB6C2A39F677 
+        foreign key (KITCHEN) 
+        references Place (NAME)
+14:10:43,661 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        add constraint FKA710CB6C769ADD29 
+        foreign key (LIVING_ROOM, LIVING_ROOM_OWNER) 
+        references Place (NAME, OWNER)
+14:10:43,662 DEBUG SQL:104 - 
+    alter table Inhabitant 
+        add constraint UK_4A486838337A8B unique (name)
+14:10:43,662 DEBUG SQL:104 - 
+    alter table ItemCost 
+        add constraint UK_4A0241A03D682139 unique (vendor_id, item_id)
+14:10:43,662 DEBUG SQL:104 - 
+    alter table ItemCost 
+        add constraint FK4A0241A0CB2A058E 
+        foreign key (item_id) 
+        references Item
+14:10:43,663 DEBUG SQL:104 - 
+    alter table ItemCost 
+        add constraint FK4A0241A0FD08806E 
+        foreign key (vendor_id) 
+        references Vendor
+14:10:43,664 DEBUG SQL:104 - 
+    alter table Luggage 
+        add constraint UK_81DC581668A81ED unique (type, owner)
+14:10:43,664 DEBUG SQL:104 - 
+    alter table Place 
+        add constraint UK_499E8E7337A8B unique (NAME)
+14:10:43,674 DEBUG SQL:104 - 
+    alter table Place 
+        add constraint UK_499E8E76876D3E unique (NAME, OWNER)
+14:10:43,674 DEBUG SQL:104 - 
+    alter table Postman 
+        add constraint UK_4BE7609A337A8B unique (name)
+14:10:43,674 DEBUG SQL:104 - 
+    alter table Rambler 
+        add constraint UK_9D733F7564EBB1CC unique (fld_name)
+14:10:43,675 DEBUG SQL:104 - 
+    alter table WarehouseItem 
+        add constraint FKE5404056DAE6556D 
+        foreign key (vendor_id, item_id) 
+        references ItemCost (vendor_id, item_id)
+14:10:43,675 DEBUG SQL:104 - 
+    alter table WarehouseItem 
+        add constraint FKE5404056CB2A058E 
+        foreign key (item_id) 
+        references Item
+14:10:43,676 DEBUG SQL:104 - 
+    alter table WarehouseItem 
+        add constraint FKE5404056FD08806E 
+        foreign key (vendor_id) 
+        references Vendor
+14:10:43,676 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:43,677  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:43,678  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:43,684  INFO CustomRunner:139 - Test: testManyToMany
+14:10:43,685 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,686 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,686 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,687 DEBUG SQL:104 - 
+    insert 
+    into
+        Inhabitant
+        (name, id) 
+    values
+        (?, ?)
+14:10:43,688 DEBUG SQL:104 - 
+    insert 
+    into
+        Inhabitant
+        (name, id) 
+    values
+        (?, ?)
+14:10:43,688 DEBUG SQL:104 - 
+    insert 
+    into
+        House
+        (address, postman_name, id) 
+    values
+        (?, ?, ?)
+14:10:43,689 DEBUG SQL:104 - 
+    insert 
+    into
+        House_Inhabitant
+        (livesIn_address, hasInhabitants_name) 
+    values
+        (?, ?)
+14:10:43,689 DEBUG SQL:104 - 
+    insert 
+    into
+        House_Inhabitant
+        (livesIn_address, hasInhabitants_name) 
+    values
+        (?, ?)
+14:10:43,691 DEBUG SQL:104 - 
+    select
+        house0_.id as id2_1_,
+        house0_.address as address2_1_,
+        house0_.postman_name as postman3_2_1_,
+        postman1_.id as id10_0_,
+        postman1_.name as name10_0_ 
+    from
+        House house0_ 
+    left outer join
+        Postman postman1_ 
+            on house0_.postman_name=postman1_.name 
+    where
+        house0_.id=?
+14:10:43,707 DEBUG SQL:104 - 
+    select
+        hasinhabit0_.livesIn_address as livesIn1_2_1_,
+        hasinhabit0_.hasInhabitants_name as hasInhab2_4_1_,
+        inhabitant1_.id as id5_0_,
+        inhabitant1_.name as name5_0_ 
+    from
+        House_Inhabitant hasinhabit0_ 
+    inner join
+        Inhabitant inhabitant1_ 
+            on hasinhabit0_.hasInhabitants_name=inhabitant1_.name 
+    where
+        hasinhabit0_.livesIn_address=?
+14:10:43,710 DEBUG SQL:104 - 
+    select
+        inhabitant0_.id as id5_0_,
+        inhabitant0_.name as name5_0_ 
+    from
+        Inhabitant inhabitant0_ 
+    where
+        inhabitant0_.id=?
+14:10:43,716 DEBUG SQL:104 - 
+    select
+        livesin0_.hasInhabitants_name as hasInhab2_5_2_,
+        livesin0_.livesIn_address as livesIn1_4_2_,
+        house1_.id as id2_0_,
+        house1_.address as address2_0_,
+        house1_.postman_name as postman3_2_0_,
+        postman2_.id as id10_1_,
+        postman2_.name as name10_1_ 
+    from
+        House_Inhabitant livesin0_ 
+    inner join
+        House house1_ 
+            on livesin0_.livesIn_address=house1_.address 
+    left outer join
+        Postman postman2_ 
+            on house1_.postman_name=postman2_.name 
+    where
+        livesin0_.hasInhabitants_name=?
+14:10:43,718 DEBUG SQL:104 - 
+    select
+        hasinhabit0_.livesIn_address as livesIn1_2_1_,
+        hasinhabit0_.hasInhabitants_name as hasInhab2_4_1_,
+        inhabitant1_.id as id5_0_,
+        inhabitant1_.name as name5_0_ 
+    from
+        House_Inhabitant hasinhabit0_ 
+    inner join
+        Inhabitant inhabitant1_ 
+            on hasinhabit0_.hasInhabitants_name=inhabitant1_.name 
+    where
+        hasinhabit0_.livesIn_address=?
+14:10:43,729 DEBUG SQL:104 - 
+    select
+        inhabitant0_.id as id5_0_,
+        inhabitant0_.name as name5_0_ 
+    from
+        Inhabitant inhabitant0_ 
+    where
+        inhabitant0_.name=?
+14:10:43,730 DEBUG SQL:104 - 
+    delete 
+    from
+        House_Inhabitant 
+    where
+        livesIn_address=?
+14:10:43,731 DEBUG SQL:104 - 
+    delete 
+    from
+        House 
+    where
+        id=?
+14:10:43,731 DEBUG SQL:104 - 
+    delete 
+    from
+        Inhabitant 
+    where
+        id=?
+14:10:43,745 DEBUG SQL:104 - 
+    delete 
+    from
+        Inhabitant 
+    where
+        id=?
+14:10:43,746  INFO CustomRunner:139 - Test: testManyToOne
+14:10:43,747 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,748 DEBUG SQL:104 - 
+    insert 
+    into
+        Postman
+        (name, id) 
+    values
+        (?, ?)
+14:10:43,748 DEBUG SQL:104 - 
+    insert 
+    into
+        House
+        (address, postman_name, id) 
+    values
+        (?, ?, ?)
+14:10:43,749 DEBUG SQL:104 - 
+    select
+        house0_.id as id2_1_,
+        house0_.address as address2_1_,
+        house0_.postman_name as postman3_2_1_,
+        postman1_.id as id10_0_,
+        postman1_.name as name10_0_ 
+    from
+        House house0_ 
+    left outer join
+        Postman postman1_ 
+            on house0_.postman_name=postman1_.name 
+    where
+        house0_.id=?
+14:10:43,756 DEBUG SQL:104 - 
+    delete 
+    from
+        House_Inhabitant 
+    where
+        livesIn_address=?
+14:10:43,757 DEBUG SQL:104 - 
+    delete 
+    from
+        House 
+    where
+        id=?
+14:10:43,757 DEBUG SQL:104 - 
+    delete 
+    from
+        Postman 
+    where
+        id=?
+14:10:43,766  INFO CustomRunner:139 - Test: testManyToOneInsideComponentReferencedColumn
+14:10:43,767 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,767 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,767 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,768 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,768 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,769 DEBUG SQL:104 - 
+    insert 
+    into
+        Place
+        (NAME, OWNER, id) 
+    values
+        (?, ?, ?)
+14:10:43,769 DEBUG SQL:104 - 
+    insert 
+    into
+        Place
+        (NAME, OWNER, id) 
+    values
+        (?, ?, ?)
+14:10:43,770 DEBUG SQL:104 - 
+    insert 
+    into
+        Place
+        (NAME, OWNER, id) 
+    values
+        (?, ?, ?)
+14:10:43,805 DEBUG SQL:104 - 
+    insert 
+    into
+        Place
+        (NAME, OWNER, id) 
+    values
+        (?, ?, ?)
+14:10:43,806 DEBUG SQL:104 - 
+    insert 
+    into
+        HousePlaces
+        (NEIGHBOUR_KITCHEN, NEIGHBOUR_LIVINGROOM, NEIGHBOUR_LIVINGROOM_OWNER, KITCHEN, LIVING_ROOM, LIVING_ROOM_OWNER, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:10:43,807 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.referencedcolumnname.HousePlaces h where h.places.livingRoom.name='First'
+14:10:43,808 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  \-[IDENT] Node: 'referencedcolumnname'
+    |        |  \-[IDENT] Node: 'HousePlaces'
+    |        \-[ALIAS] Node: 'h'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[IDENT] Node: 'h'
+          |  |  |  \-[IDENT] Node: 'places'
+          |  |  \-[IDENT] Node: 'livingRoom'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''First''
+
+14:10:43,808 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,809 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.HousePlaces (h) -> houseplace0_
+14:10:43,809 DEBUG FromReferenceNode:74 - Resolved : h -> houseplace0_.id
+14:10:43,809 DEBUG DotNode:599 - getDataType() : places -> org.hibernate.type.ComponentType@588dcb5a
+14:10:43,809 DEBUG DotNode:585 - Unresolved property path is now 'places.livingRoom'
+14:10:43,809 DEBUG FromReferenceNode:74 - Resolved : h.places -> (houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER)
+14:10:43,809 DEBUG DotNode:599 - getDataType() : places.livingRoom -> org.hibernate.type.ManyToOneType(org.hibernate.test.annotations.referencedcolumnname.Place)
+14:10:43,810 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for livingRoom in org.hibernate.test.annotations.referencedcolumnname.HousePlaces (<no alias>) parent = [  ( . ( . ( (houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER) houseplace0_.id places ) livingRoom ) name ) ]
+14:10:43,810 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.Place (<no alias>) -> place1_
+14:10:43,810 DEBUG FromClause:282 - addJoinByPathMap() : h.places.livingRoom -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Place,tableAlias=place1_,origin=HousePlaces houseplace0_,columns={houseplace0_.LIVING_ROOM houseplace0_.LIVING_ROOM_OWNER ,className=org.hibernate.test.annotations.referencedcolumnname.Place}}
+14:10:43,810 DEBUG FromReferenceNode:74 - Resolved : h.places.livingRoom -> (houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER)
+14:10:43,810 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:10:43,810 DEBUG FromReferenceNode:74 - Resolved : h.places.livingRoom.name -> place1_.NAME
+14:10:43,810 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} HousePlaces houseplace0_ Place place1_ ) ( where ( = ( place1_.NAME ( (houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER) ( (houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER) houseplace0_.id places ) livingRoom ) name ) 'First' ) ) )
+14:10:43,811 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:43,811 DEBUG JoinProcessor:175 - Using FROM fragment [HousePlaces houseplace0_]
+14:10:43,811 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [houseplace0_.LIVING_ROOM=place1_.NAME and houseplace0_.LIVING_ROOM_OWNER=place1_.OWNER]
+14:10:43,811 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [houseplace0_.LIVING_ROOM=place1_.NAME and houseplace0_.LIVING_ROOM_OWNER=place1_.OWNER]
+14:10:43,811 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (HousePlaces,Place)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'houseplace0_.id as id3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=HousePlaces,tableAlias=houseplace0_,origin=null,columns={,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_, houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_, houseplace0_.KITCHEN as KITCHEN3_, houseplace0_.LIVING_ROOM as LIVING6_3_, houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[h], fromElementByTableAlias=[houseplace0_, place1_], fromElementsByPath=[h.places.livingRoom], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'HousePlaces houseplace0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=HousePlaces,tableAlias=houseplace0_,origin=null,columns={,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: 'Place place1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Place,tableAlias=place1_,origin=HousePlaces houseplace0_,columns={houseplace0_.LIVING_ROOM houseplace0_.LIVING_ROOM_OWNER ,className=org.hibernate.test.annotations.referencedcolumnname.Place}}
+    \-[WHERE] SqlNode: 'where'
+       +-[THETA_JOINS] SqlNode: '{theta joins}'
+       |  \-[SQL_TOKEN] SqlFragment: 'houseplace0_.LIVING_ROOM=place1_.NAME and houseplace0_.LIVING_ROOM_OWNER=place1_.OWNER'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'place1_.NAME' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=h.places.livingRoom.name,tableAlias=place1_,className=org.hibernate.test.annotations.referencedcolumnname.Place,classAlias=null}
+          |  +-[DOT] DotNode: '(houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER)' {propertyName=livingRoom,dereferenceType=EOF,propertyPath=places.livingRoom,path=h.places.livingRoom,tableAlias=place1_,className=org.hibernate.test.annotations.referencedcolumnname.Place,classAlias=null}
+          |  |  +-[DOT] DotNode: '(houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER)' {propertyName=livingRoom,dereferenceType=2,propertyPath=places.livingRoom,path=h.places,tableAlias=houseplace0_,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces,classAlias=h}
+          |  |  |  +-[ALIAS_REF] IdentNode: 'houseplace0_.id' {alias=h, className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces, tableAlias=houseplace0_}
+          |  |  |  \-[IDENT] IdentNode: 'places' {originalText=places}
+          |  |  \-[IDENT] IdentNode: 'livingRoom' {originalText=livingRoom}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''First''
+
+14:10:43,811 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,811 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.referencedcolumnname.HousePlaces h where h.places.livingRoom.name='First'
+14:10:43,811 DEBUG QueryTranslatorImpl:236 - SQL: select houseplace0_.id as id3_, houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_, houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_, houseplace0_.KITCHEN as KITCHEN3_, houseplace0_.LIVING_ROOM as LIVING6_3_, houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_ from HousePlaces houseplace0_ cross join Place place1_ where houseplace0_.LIVING_ROOM=place1_.NAME and houseplace0_.LIVING_ROOM_OWNER=place1_.OWNER and place1_.NAME='First'
+14:10:43,812 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,812 DEBUG SQL:104 - 
+    select
+        houseplace0_.id as id3_,
+        houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_,
+        houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_,
+        houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_,
+        houseplace0_.KITCHEN as KITCHEN3_,
+        houseplace0_.LIVING_ROOM as LIVING6_3_,
+        houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_ 
+    from
+        HousePlaces houseplace0_ cross 
+    join
+        Place place1_ 
+    where
+        houseplace0_.LIVING_ROOM=place1_.NAME 
+        and houseplace0_.LIVING_ROOM_OWNER=place1_.OWNER 
+        and place1_.NAME='First'
+14:10:43,813 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.referencedcolumnname.HousePlaces h where h.places.livingRoom.owner=:owner
+14:10:43,814 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  \-[IDENT] Node: 'referencedcolumnname'
+    |        |  \-[IDENT] Node: 'HousePlaces'
+    |        \-[ALIAS] Node: 'h'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[IDENT] Node: 'h'
+          |  |  |  \-[IDENT] Node: 'places'
+          |  |  \-[IDENT] Node: 'livingRoom'
+          |  \-[IDENT] Node: 'owner'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'owner'
+
+14:10:43,814 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,814 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.HousePlaces (h) -> houseplace0_
+14:10:43,815 DEBUG FromReferenceNode:74 - Resolved : h -> houseplace0_.id
+14:10:43,815 DEBUG DotNode:599 - getDataType() : places -> org.hibernate.type.ComponentType@588dcb5a
+14:10:43,815 DEBUG DotNode:585 - Unresolved property path is now 'places.livingRoom'
+14:10:43,815 DEBUG FromReferenceNode:74 - Resolved : h.places -> (houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER)
+14:10:43,815 DEBUG DotNode:599 - getDataType() : places.livingRoom -> org.hibernate.type.ManyToOneType(org.hibernate.test.annotations.referencedcolumnname.Place)
+14:10:43,815 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for livingRoom in org.hibernate.test.annotations.referencedcolumnname.HousePlaces (<no alias>) parent = [  ( . ( . ( (houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER) houseplace0_.id places ) livingRoom ) owner ) ]
+14:10:43,815 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.Place (<no alias>) -> place1_
+14:10:43,815 DEBUG FromClause:282 - addJoinByPathMap() : h.places.livingRoom -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Place,tableAlias=place1_,origin=HousePlaces houseplace0_,columns={houseplace0_.LIVING_ROOM houseplace0_.LIVING_ROOM_OWNER ,className=org.hibernate.test.annotations.referencedcolumnname.Place}}
+14:10:43,816 DEBUG FromReferenceNode:74 - Resolved : h.places.livingRoom -> (houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER)
+14:10:43,816 DEBUG DotNode:599 - getDataType() : owner -> org.hibernate.type.StringType@2dc8de40
+14:10:43,816 DEBUG FromReferenceNode:74 - Resolved : h.places.livingRoom.owner -> place1_.OWNER
+14:10:43,816 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} HousePlaces houseplace0_ Place place1_ ) ( where ( = ( place1_.OWNER ( (houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER) ( (houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER) houseplace0_.id places ) livingRoom ) owner ) ? ) ) )
+14:10:43,816 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:43,822 DEBUG JoinProcessor:175 - Using FROM fragment [HousePlaces houseplace0_]
+14:10:43,822 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [houseplace0_.LIVING_ROOM=place1_.NAME and houseplace0_.LIVING_ROOM_OWNER=place1_.OWNER]
+14:10:43,822 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [houseplace0_.LIVING_ROOM=place1_.NAME and houseplace0_.LIVING_ROOM_OWNER=place1_.OWNER]
+14:10:43,822 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (HousePlaces,Place)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'houseplace0_.id as id3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=HousePlaces,tableAlias=houseplace0_,origin=null,columns={,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_, houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_, houseplace0_.KITCHEN as KITCHEN3_, houseplace0_.LIVING_ROOM as LIVING6_3_, houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[h], fromElementByTableAlias=[houseplace0_, place1_], fromElementsByPath=[h.places.livingRoom], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'HousePlaces houseplace0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=HousePlaces,tableAlias=houseplace0_,origin=null,columns={,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: 'Place place1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Place,tableAlias=place1_,origin=HousePlaces houseplace0_,columns={houseplace0_.LIVING_ROOM houseplace0_.LIVING_ROOM_OWNER ,className=org.hibernate.test.annotations.referencedcolumnname.Place}}
+    \-[WHERE] SqlNode: 'where'
+       +-[THETA_JOINS] SqlNode: '{theta joins}'
+       |  \-[SQL_TOKEN] SqlFragment: 'houseplace0_.LIVING_ROOM=place1_.NAME and houseplace0_.LIVING_ROOM_OWNER=place1_.OWNER'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'place1_.OWNER' {propertyName=owner,dereferenceType=ALL,propertyPath=owner,path=h.places.livingRoom.owner,tableAlias=place1_,className=org.hibernate.test.annotations.referencedcolumnname.Place,classAlias=null}
+          |  +-[DOT] DotNode: '(houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER)' {propertyName=livingRoom,dereferenceType=EOF,propertyPath=places.livingRoom,path=h.places.livingRoom,tableAlias=place1_,className=org.hibernate.test.annotations.referencedcolumnname.Place,classAlias=null}
+          |  |  +-[DOT] DotNode: '(houseplace0_.LIVING_ROOM, houseplace0_.LIVING_ROOM_OWNER)' {propertyName=livingRoom,dereferenceType=2,propertyPath=places.livingRoom,path=h.places,tableAlias=houseplace0_,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces,classAlias=h}
+          |  |  |  +-[ALIAS_REF] IdentNode: 'houseplace0_.id' {alias=h, className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces, tableAlias=houseplace0_}
+          |  |  |  \-[IDENT] IdentNode: 'places' {originalText=places}
+          |  |  \-[IDENT] IdentNode: 'livingRoom' {originalText=livingRoom}
+          |  \-[IDENT] IdentNode: 'owner' {originalText=owner}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=owner, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:10:43,822 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,823 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.referencedcolumnname.HousePlaces h where h.places.livingRoom.owner=:owner
+14:10:43,823 DEBUG QueryTranslatorImpl:236 - SQL: select houseplace0_.id as id3_, houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_, houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_, houseplace0_.KITCHEN as KITCHEN3_, houseplace0_.LIVING_ROOM as LIVING6_3_, houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_ from HousePlaces houseplace0_ cross join Place place1_ where houseplace0_.LIVING_ROOM=place1_.NAME and houseplace0_.LIVING_ROOM_OWNER=place1_.OWNER and place1_.OWNER=?
+14:10:43,823 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,823 DEBUG SQL:104 - 
+    select
+        houseplace0_.id as id3_,
+        houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_,
+        houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_,
+        houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_,
+        houseplace0_.KITCHEN as KITCHEN3_,
+        houseplace0_.LIVING_ROOM as LIVING6_3_,
+        houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_ 
+    from
+        HousePlaces houseplace0_ cross 
+    join
+        Place place1_ 
+    where
+        houseplace0_.LIVING_ROOM=place1_.NAME 
+        and houseplace0_.LIVING_ROOM_OWNER=place1_.OWNER 
+        and place1_.OWNER=?
+14:10:43,847 DEBUG SQL:104 - 
+    select
+        this_.id as id3_4_,
+        this_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_4_,
+        this_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_4_,
+        this_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_4_,
+        this_.KITCHEN as KITCHEN3_4_,
+        this_.LIVING_ROOM as LIVING6_3_4_,
+        this_.LIVING_ROOM_OWNER as LIVING7_3_4_,
+        place2_.id as id9_0_,
+        place2_.NAME as NAME9_0_,
+        place2_.OWNER as OWNER9_0_,
+        place3_.id as id9_1_,
+        place3_.NAME as NAME9_1_,
+        place3_.OWNER as OWNER9_1_,
+        place4_.id as id9_2_,
+        place4_.NAME as NAME9_2_,
+        place4_.OWNER as OWNER9_2_,
+        place5_.id as id9_3_,
+        place5_.NAME as NAME9_3_,
+        place5_.OWNER as OWNER9_3_ 
+    from
+        HousePlaces this_ 
+    left outer join
+        Place place2_ 
+            on this_.NEIGHBOUR_KITCHEN=place2_.NAME 
+    left outer join
+        Place place3_ 
+            on this_.NEIGHBOUR_LIVINGROOM=place3_.NAME 
+            and this_.NEIGHBOUR_LIVINGROOM_OWNER=place3_.OWNER 
+    left outer join
+        Place place4_ 
+            on this_.KITCHEN=place4_.NAME 
+    left outer join
+        Place place5_ 
+            on this_.LIVING_ROOM=place5_.NAME 
+            and this_.LIVING_ROOM_OWNER=place5_.OWNER 
+    where
+        this_.LIVING_ROOM_OWNER=?
+14:10:43,848 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.referencedcolumnname.HousePlaces h where h.neighbourPlaces.livingRoom.owner='his'
+14:10:43,850 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  \-[IDENT] Node: 'referencedcolumnname'
+    |        |  \-[IDENT] Node: 'HousePlaces'
+    |        \-[ALIAS] Node: 'h'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[IDENT] Node: 'h'
+          |  |  |  \-[IDENT] Node: 'neighbourPlaces'
+          |  |  \-[IDENT] Node: 'livingRoom'
+          |  \-[IDENT] Node: 'owner'
+          \-[QUOTED_STRING] Node: ''his''
+
+14:10:43,871 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,871 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.HousePlaces (h) -> houseplace0_
+14:10:43,871 DEBUG FromReferenceNode:74 - Resolved : h -> houseplace0_.id
+14:10:43,871 DEBUG DotNode:599 - getDataType() : neighbourPlaces -> org.hibernate.type.ComponentType@a4ed781
+14:10:43,871 DEBUG DotNode:585 - Unresolved property path is now 'neighbourPlaces.livingRoom'
+14:10:43,871 DEBUG FromReferenceNode:74 - Resolved : h.neighbourPlaces -> (houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER)
+14:10:43,872 DEBUG DotNode:599 - getDataType() : neighbourPlaces.livingRoom -> org.hibernate.type.ManyToOneType(org.hibernate.test.annotations.referencedcolumnname.Place)
+14:10:43,872 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for livingRoom in org.hibernate.test.annotations.referencedcolumnname.HousePlaces (<no alias>) parent = [  ( . ( . ( (houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER) houseplace0_.id neighbourPlaces ) livingRoom ) owner ) ]
+14:10:43,872 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.Place (<no alias>) -> place1_
+14:10:43,872 DEBUG FromClause:282 - addJoinByPathMap() : h.neighbourPlaces.livingRoom -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Place,tableAlias=place1_,origin=HousePlaces houseplace0_,columns={houseplace0_.NEIGHBOUR_LIVINGROOM houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER ,className=org.hibernate.test.annotations.referencedcolumnname.Place}}
+14:10:43,872 DEBUG FromReferenceNode:74 - Resolved : h.neighbourPlaces.livingRoom -> (houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER)
+14:10:43,872 DEBUG DotNode:599 - getDataType() : owner -> org.hibernate.type.StringType@2dc8de40
+14:10:43,872 DEBUG FromReferenceNode:74 - Resolved : h.neighbourPlaces.livingRoom.owner -> place1_.OWNER
+14:10:43,872 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} HousePlaces houseplace0_ Place place1_ ) ( where ( = ( place1_.OWNER ( (houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER) ( (houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER) houseplace0_.id neighbourPlaces ) livingRoom ) owner ) 'his' ) ) )
+14:10:43,873 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:43,873 DEBUG JoinProcessor:175 - Using FROM fragment [HousePlaces houseplace0_]
+14:10:43,873 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [houseplace0_.NEIGHBOUR_LIVINGROOM=place1_.NAME and houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER=place1_.OWNER]
+14:10:43,873 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [houseplace0_.NEIGHBOUR_LIVINGROOM=place1_.NAME and houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER=place1_.OWNER]
+14:10:43,873 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (HousePlaces,Place)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'houseplace0_.id as id3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=HousePlaces,tableAlias=houseplace0_,origin=null,columns={,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_, houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_, houseplace0_.KITCHEN as KITCHEN3_, houseplace0_.LIVING_ROOM as LIVING6_3_, houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[h], fromElementByTableAlias=[houseplace0_, place1_], fromElementsByPath=[h.neighbourPlaces.livingRoom], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'HousePlaces houseplace0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=HousePlaces,tableAlias=houseplace0_,origin=null,columns={,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: 'Place place1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Place,tableAlias=place1_,origin=HousePlaces houseplace0_,columns={houseplace0_.NEIGHBOUR_LIVINGROOM houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER ,className=org.hibernate.test.annotations.referencedcolumnname.Place}}
+    \-[WHERE] SqlNode: 'where'
+       +-[THETA_JOINS] SqlNode: '{theta joins}'
+       |  \-[SQL_TOKEN] SqlFragment: 'houseplace0_.NEIGHBOUR_LIVINGROOM=place1_.NAME and houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER=place1_.OWNER'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'place1_.OWNER' {propertyName=owner,dereferenceType=ALL,propertyPath=owner,path=h.neighbourPlaces.livingRoom.owner,tableAlias=place1_,className=org.hibernate.test.annotations.referencedcolumnname.Place,classAlias=null}
+          |  +-[DOT] DotNode: '(houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER)' {propertyName=livingRoom,dereferenceType=EOF,propertyPath=neighbourPlaces.livingRoom,path=h.neighbourPlaces.livingRoom,tableAlias=place1_,className=org.hibernate.test.annotations.referencedcolumnname.Place,classAlias=null}
+          |  |  +-[DOT] DotNode: '(houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER)' {propertyName=livingRoom,dereferenceType=2,propertyPath=neighbourPlaces.livingRoom,path=h.neighbourPlaces,tableAlias=houseplace0_,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces,classAlias=h}
+          |  |  |  +-[ALIAS_REF] IdentNode: 'houseplace0_.id' {alias=h, className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces, tableAlias=houseplace0_}
+          |  |  |  \-[IDENT] IdentNode: 'neighbourPlaces' {originalText=neighbourPlaces}
+          |  |  \-[IDENT] IdentNode: 'livingRoom' {originalText=livingRoom}
+          |  \-[IDENT] IdentNode: 'owner' {originalText=owner}
+          \-[QUOTED_STRING] LiteralNode: ''his''
+
+14:10:43,880 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,880 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.referencedcolumnname.HousePlaces h where h.neighbourPlaces.livingRoom.owner='his'
+14:10:43,881 DEBUG QueryTranslatorImpl:236 - SQL: select houseplace0_.id as id3_, houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_, houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_, houseplace0_.KITCHEN as KITCHEN3_, houseplace0_.LIVING_ROOM as LIVING6_3_, houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_ from HousePlaces houseplace0_ cross join Place place1_ where houseplace0_.NEIGHBOUR_LIVINGROOM=place1_.NAME and houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER=place1_.OWNER and place1_.OWNER='his'
+14:10:43,881 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,881 DEBUG SQL:104 - 
+    select
+        houseplace0_.id as id3_,
+        houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_,
+        houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_,
+        houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_,
+        houseplace0_.KITCHEN as KITCHEN3_,
+        houseplace0_.LIVING_ROOM as LIVING6_3_,
+        houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_ 
+    from
+        HousePlaces houseplace0_ cross 
+    join
+        Place place1_ 
+    where
+        houseplace0_.NEIGHBOUR_LIVINGROOM=place1_.NAME 
+        and houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER=place1_.OWNER 
+        and place1_.OWNER='his'
+14:10:43,892 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.referencedcolumnname.HousePlaces h where h.neighbourPlaces.livingRoom.name=:name
+14:10:43,893 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  \-[IDENT] Node: 'referencedcolumnname'
+    |        |  \-[IDENT] Node: 'HousePlaces'
+    |        \-[ALIAS] Node: 'h'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[IDENT] Node: 'h'
+          |  |  |  \-[IDENT] Node: 'neighbourPlaces'
+          |  |  \-[IDENT] Node: 'livingRoom'
+          |  \-[IDENT] Node: 'name'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'name'
+
+14:10:43,902 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,902 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.HousePlaces (h) -> houseplace0_
+14:10:43,903 DEBUG FromReferenceNode:74 - Resolved : h -> houseplace0_.id
+14:10:43,903 DEBUG DotNode:599 - getDataType() : neighbourPlaces -> org.hibernate.type.ComponentType@a4ed781
+14:10:43,903 DEBUG DotNode:585 - Unresolved property path is now 'neighbourPlaces.livingRoom'
+14:10:43,903 DEBUG FromReferenceNode:74 - Resolved : h.neighbourPlaces -> (houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER)
+14:10:43,903 DEBUG DotNode:599 - getDataType() : neighbourPlaces.livingRoom -> org.hibernate.type.ManyToOneType(org.hibernate.test.annotations.referencedcolumnname.Place)
+14:10:43,903 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for livingRoom in org.hibernate.test.annotations.referencedcolumnname.HousePlaces (<no alias>) parent = [  ( . ( . ( (houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER) houseplace0_.id neighbourPlaces ) livingRoom ) name ) ]
+14:10:43,903 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.Place (<no alias>) -> place1_
+14:10:43,903 DEBUG FromClause:282 - addJoinByPathMap() : h.neighbourPlaces.livingRoom -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Place,tableAlias=place1_,origin=HousePlaces houseplace0_,columns={houseplace0_.NEIGHBOUR_LIVINGROOM houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER ,className=org.hibernate.test.annotations.referencedcolumnname.Place}}
+14:10:43,904 DEBUG FromReferenceNode:74 - Resolved : h.neighbourPlaces.livingRoom -> (houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER)
+14:10:43,904 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:10:43,904 DEBUG FromReferenceNode:74 - Resolved : h.neighbourPlaces.livingRoom.name -> place1_.NAME
+14:10:43,904 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} HousePlaces houseplace0_ Place place1_ ) ( where ( = ( place1_.NAME ( (houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER) ( (houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER) houseplace0_.id neighbourPlaces ) livingRoom ) name ) ? ) ) )
+14:10:43,904 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:43,904 DEBUG JoinProcessor:175 - Using FROM fragment [HousePlaces houseplace0_]
+14:10:43,904 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [houseplace0_.NEIGHBOUR_LIVINGROOM=place1_.NAME and houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER=place1_.OWNER]
+14:10:43,904 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [houseplace0_.NEIGHBOUR_LIVINGROOM=place1_.NAME and houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER=place1_.OWNER]
+14:10:43,905 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (HousePlaces,Place)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'houseplace0_.id as id3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=HousePlaces,tableAlias=houseplace0_,origin=null,columns={,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_, houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_, houseplace0_.KITCHEN as KITCHEN3_, houseplace0_.LIVING_ROOM as LIVING6_3_, houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[h], fromElementByTableAlias=[houseplace0_, place1_], fromElementsByPath=[h.neighbourPlaces.livingRoom], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'HousePlaces houseplace0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=HousePlaces,tableAlias=houseplace0_,origin=null,columns={,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: 'Place place1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Place,tableAlias=place1_,origin=HousePlaces houseplace0_,columns={houseplace0_.NEIGHBOUR_LIVINGROOM houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER ,className=org.hibernate.test.annotations.referencedcolumnname.Place}}
+    \-[WHERE] SqlNode: 'where'
+       +-[THETA_JOINS] SqlNode: '{theta joins}'
+       |  \-[SQL_TOKEN] SqlFragment: 'houseplace0_.NEIGHBOUR_LIVINGROOM=place1_.NAME and houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER=place1_.OWNER'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'place1_.NAME' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=h.neighbourPlaces.livingRoom.name,tableAlias=place1_,className=org.hibernate.test.annotations.referencedcolumnname.Place,classAlias=null}
+          |  +-[DOT] DotNode: '(houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER)' {propertyName=livingRoom,dereferenceType=EOF,propertyPath=neighbourPlaces.livingRoom,path=h.neighbourPlaces.livingRoom,tableAlias=place1_,className=org.hibernate.test.annotations.referencedcolumnname.Place,classAlias=null}
+          |  |  +-[DOT] DotNode: '(houseplace0_.NEIGHBOUR_LIVINGROOM, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER)' {propertyName=livingRoom,dereferenceType=2,propertyPath=neighbourPlaces.livingRoom,path=h.neighbourPlaces,tableAlias=houseplace0_,className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces,classAlias=h}
+          |  |  |  +-[ALIAS_REF] IdentNode: 'houseplace0_.id' {alias=h, className=org.hibernate.test.annotations.referencedcolumnname.HousePlaces, tableAlias=houseplace0_}
+          |  |  |  \-[IDENT] IdentNode: 'neighbourPlaces' {originalText=neighbourPlaces}
+          |  |  \-[IDENT] IdentNode: 'livingRoom' {originalText=livingRoom}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:10:43,912 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,912 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.referencedcolumnname.HousePlaces h where h.neighbourPlaces.livingRoom.name=:name
+14:10:43,912 DEBUG QueryTranslatorImpl:236 - SQL: select houseplace0_.id as id3_, houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_, houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_, houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_, houseplace0_.KITCHEN as KITCHEN3_, houseplace0_.LIVING_ROOM as LIVING6_3_, houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_ from HousePlaces houseplace0_ cross join Place place1_ where houseplace0_.NEIGHBOUR_LIVINGROOM=place1_.NAME and houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER=place1_.OWNER and place1_.NAME=?
+14:10:43,912 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,913 DEBUG SQL:104 - 
+    select
+        houseplace0_.id as id3_,
+        houseplace0_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_,
+        houseplace0_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_,
+        houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_,
+        houseplace0_.KITCHEN as KITCHEN3_,
+        houseplace0_.LIVING_ROOM as LIVING6_3_,
+        houseplace0_.LIVING_ROOM_OWNER as LIVING7_3_ 
+    from
+        HousePlaces houseplace0_ cross 
+    join
+        Place place1_ 
+    where
+        houseplace0_.NEIGHBOUR_LIVINGROOM=place1_.NAME 
+        and houseplace0_.NEIGHBOUR_LIVINGROOM_OWNER=place1_.OWNER 
+        and place1_.NAME=?
+14:10:43,924 DEBUG SQL:104 - 
+    select
+        this_.id as id3_4_,
+        this_.NEIGHBOUR_KITCHEN as NEIGHBOUR2_3_4_,
+        this_.NEIGHBOUR_LIVINGROOM as NEIGHBOUR3_3_4_,
+        this_.NEIGHBOUR_LIVINGROOM_OWNER as NEIGHBOUR4_3_4_,
+        this_.KITCHEN as KITCHEN3_4_,
+        this_.LIVING_ROOM as LIVING6_3_4_,
+        this_.LIVING_ROOM_OWNER as LIVING7_3_4_,
+        place2_.id as id9_0_,
+        place2_.NAME as NAME9_0_,
+        place2_.OWNER as OWNER9_0_,
+        place3_.id as id9_1_,
+        place3_.NAME as NAME9_1_,
+        place3_.OWNER as OWNER9_1_,
+        place4_.id as id9_2_,
+        place4_.NAME as NAME9_2_,
+        place4_.OWNER as OWNER9_2_,
+        place5_.id as id9_3_,
+        place5_.NAME as NAME9_3_,
+        place5_.OWNER as OWNER9_3_ 
+    from
+        HousePlaces this_ 
+    left outer join
+        Place place2_ 
+            on this_.NEIGHBOUR_KITCHEN=place2_.NAME 
+    left outer join
+        Place place3_ 
+            on this_.NEIGHBOUR_LIVINGROOM=place3_.NAME 
+            and this_.NEIGHBOUR_LIVINGROOM_OWNER=place3_.OWNER 
+    left outer join
+        Place place4_ 
+            on this_.KITCHEN=place4_.NAME 
+    left outer join
+        Place place5_ 
+            on this_.LIVING_ROOM=place5_.NAME 
+            and this_.LIVING_ROOM_OWNER=place5_.OWNER 
+    where
+        this_.NEIGHBOUR_LIVINGROOM_OWNER=?
+14:10:43,935  INFO CustomRunner:139 - Test: testManyToOneReferenceManyToOne
+14:10:43,938 DEBUG SQL:104 - 
+    insert 
+    into
+        Item
+        (id) 
+    values
+        (?)
+14:10:43,938 DEBUG SQL:104 - 
+    insert 
+    into
+        Vendor
+        (id) 
+    values
+        (?)
+14:10:43,939 DEBUG SQL:104 - 
+    insert 
+    into
+        ItemCost
+        (cost, item_id, vendor_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:43,939 DEBUG SQL:104 - 
+    insert 
+    into
+        WarehouseItem
+        (item_id, qtyInStock, vendor_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:43,940 DEBUG SQL:104 - 
+    select
+        warehousei0_.id as id13_5_,
+        warehousei0_.vendor_id as vendor3_13_5_,
+        warehousei0_.item_id as item4_13_5_,
+        warehousei0_.qtyInStock as qtyInStock13_5_,
+        itemcost1_.id as id7_0_,
+        itemcost1_.cost as cost7_0_,
+        itemcost1_.item_id as item3_7_0_,
+        itemcost1_.vendor_id as vendor4_7_0_,
+        item2_.id as id6_1_,
+        vendor3_.id as id12_2_,
+        item4_.id as id6_3_,
+        vendor5_.id as id12_4_ 
+    from
+        WarehouseItem warehousei0_ 
+    left outer join
+        ItemCost itemcost1_ 
+            on warehousei0_.vendor_id=itemcost1_.vendor_id 
+            and warehousei0_.item_id=itemcost1_.item_id 
+    left outer join
+        Item item2_ 
+            on itemcost1_.item_id=item2_.id 
+    left outer join
+        Vendor vendor3_ 
+            on itemcost1_.vendor_id=vendor3_.id 
+    left outer join
+        Item item4_ 
+            on warehousei0_.item_id=item4_.id 
+    left outer join
+        Vendor vendor5_ 
+            on warehousei0_.vendor_id=vendor5_.id 
+    where
+        warehousei0_.id=?
+14:10:43,955 DEBUG SQL:104 - 
+    select
+        vendor0_.id as id12_0_ 
+    from
+        Vendor vendor0_ 
+    where
+        vendor0_.id=?
+14:10:43,966 DEBUG SQL:104 - 
+    select
+        item0_.id as id6_0_ 
+    from
+        Item item0_ 
+    where
+        item0_.id=?
+14:10:43,967  INFO CustomRunner:139 - Test: testOneToMany
+14:10:43,968 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,968 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,969 DEBUG SQL:104 - 
+    insert 
+    into
+        Rambler
+        (fld_name, id) 
+    values
+        (?, ?)
+14:10:43,970 DEBUG SQL:104 - 
+    insert 
+    into
+        Bag
+        (owner_fld_name, serial, id) 
+    values
+        (?, ?, ?)
+14:10:43,971 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select b from org.hibernate.test.annotations.referencedcolumnname.Bag b left join fetch b.owner
+14:10:43,972 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  +-[RANGE] Node: 'RANGE'
+       |  |  +-[DOT] Node: '.'
+       |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |  |  |  |  \-[IDENT] Node: 'referencedcolumnname'
+       |  |  |  \-[IDENT] Node: 'Bag'
+       |  |  \-[ALIAS] Node: 'b'
+       |  \-[JOIN] Node: 'join'
+       |     +-[LEFT] Node: 'left'
+       |     +-[FETCH] Node: 'fetch'
+       |     \-[DOT] Node: '.'
+       |        +-[IDENT] Node: 'b'
+       |        \-[IDENT] Node: 'owner'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'b'
+
+14:10:43,988 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,988 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.Bag (b) -> bag0_
+14:10:43,988 DEBUG FromReferenceNode:74 - Resolved : b -> bag0_.id
+14:10:43,989 DEBUG DotNode:599 - getDataType() : owner -> org.hibernate.type.ManyToOneType(org.hibernate.test.annotations.referencedcolumnname.Rambler)
+14:10:43,989 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for owner in org.hibernate.test.annotations.referencedcolumnname.Bag (<no alias>) parent = [ {null} ]
+14:10:43,989 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.Rambler (<no alias>) -> rambler1_
+14:10:43,989 DEBUG FromClause:282 - addJoinByPathMap() : b.owner -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Rambler,tableAlias=rambler1_,origin=Bag bag0_,columns={bag0_.owner_fld_name ,className=org.hibernate.test.annotations.referencedcolumnname.Rambler}}
+14:10:43,989 DEBUG FromReferenceNode:74 - Resolved : b.owner -> bag0_.owner_fld_name
+14:10:43,989 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Rambler rambler1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Rambler,tableAlias=rambler1_,origin=Bag bag0_,columns={bag0_.owner_fld_name ,className=org.hibernate.test.annotations.referencedcolumnname.Rambler}}
+
+14:10:43,989 DEBUG FromReferenceNode:74 - Resolved : b -> bag0_.id
+14:10:43,989 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} bag0_.id ) ( FromClause{level=1} ( Bag bag0_ Rambler rambler1_ ) ) )
+14:10:43,990 DEBUG JoinProcessor:175 - Using FROM fragment [Bag bag0_]
+14:10:43,990 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Rambler rambler1_ on bag0_.owner_fld_name=rambler1_.fld_name]
+14:10:43,990 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Bag,Rambler)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'bag0_.id as id0_0_' {alias=b, className=org.hibernate.test.annotations.referencedcolumnname.Bag, tableAlias=bag0_}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'rambler1_.id as id11_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Rambler,tableAlias=rambler1_,origin=Bag bag0_,columns={bag0_.owner_fld_name ,className=org.hibernate.test.annotations.referencedcolumnname.Rambler}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'bag0_.owner_fld_name as owner3_0_0_, bag0_.serial as serial0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'rambler1_.fld_name as fld2_11_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[b], fromElementByTableAlias=[bag0_, rambler1_], fromElementsByPath=[b.owner], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Bag bag0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=Bag,tableAlias=bag0_,origin=null,columns={,className=org.hibernate.test.annotations.referencedcolumnname.Bag}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join Rambler rambler1_ on bag0_.owner_fld_name=rambler1_.fld_name' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Rambler,tableAlias=rambler1_,origin=Bag bag0_,columns={bag0_.owner_fld_name ,className=org.hibernate.test.annotations.referencedcolumnname.Rambler}}
+
+14:10:43,997 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,997 DEBUG QueryTranslatorImpl:235 - HQL: select b from org.hibernate.test.annotations.referencedcolumnname.Bag b left join fetch b.owner
+14:10:43,998 DEBUG QueryTranslatorImpl:236 - SQL: select bag0_.id as id0_0_, rambler1_.id as id11_1_, bag0_.owner_fld_name as owner3_0_0_, bag0_.serial as serial0_0_, rambler1_.fld_name as fld2_11_1_ from Bag bag0_ left outer join Rambler rambler1_ on bag0_.owner_fld_name=rambler1_.fld_name
+14:10:43,998 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,998 DEBUG SQL:104 - 
+    select
+        bag0_.id as id0_0_,
+        rambler1_.id as id11_1_,
+        bag0_.owner_fld_name as owner3_0_0_,
+        bag0_.serial as serial0_0_,
+        rambler1_.fld_name as fld2_11_1_ 
+    from
+        Bag bag0_ 
+    left outer join
+        Rambler rambler1_ 
+            on bag0_.owner_fld_name=rambler1_.fld_name
+14:10:43,999 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select r from org.hibernate.test.annotations.referencedcolumnname.Rambler r left join fetch r.bags
+14:10:44,001 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  +-[RANGE] Node: 'RANGE'
+       |  |  +-[DOT] Node: '.'
+       |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |  |  |  |  \-[IDENT] Node: 'referencedcolumnname'
+       |  |  |  \-[IDENT] Node: 'Rambler'
+       |  |  \-[ALIAS] Node: 'r'
+       |  \-[JOIN] Node: 'join'
+       |     +-[LEFT] Node: 'left'
+       |     +-[FETCH] Node: 'fetch'
+       |     \-[DOT] Node: '.'
+       |        +-[IDENT] Node: 'r'
+       |        \-[IDENT] Node: 'bags'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'r'
+
+14:10:44,009 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:44,009 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.Rambler (r) -> rambler0_
+14:10:44,009 DEBUG FromReferenceNode:74 - Resolved : r -> rambler0_.id
+14:10:44,009 DEBUG DotNode:599 - getDataType() : bags -> org.hibernate.type.SetType(org.hibernate.test.annotations.referencedcolumnname.Rambler.bags)
+14:10:44,009 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = r.bags role = org.hibernate.test.annotations.referencedcolumnname.Rambler.bags associatedEntityName = org.hibernate.test.annotations.referencedcolumnname.Bag
+14:10:44,010 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.Bag (<no alias>) -> bags1_
+14:10:44,010 DEBUG FromClause:282 - addJoinByPathMap() : r.bags -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Bag,tableAlias=bags1_,origin=Rambler rambler0_,columns={rambler0_.fld_name ,className=org.hibernate.test.annotations.referencedcolumnname.Bag}}
+14:10:44,010 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for r.bags : Bag bags1_
+14:10:44,010 DEBUG FromReferenceNode:74 - Resolved : r.bags -> .
+14:10:44,010 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Bag bags1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.referencedcolumnname.Rambler.bags,tableName=Bag,tableAlias=bags1_,origin=Rambler rambler0_,columns={rambler0_.fld_name ,className=org.hibernate.test.annotations.referencedcolumnname.Bag}}
+
+14:10:44,019 DEBUG FromReferenceNode:74 - Resolved : r -> rambler0_.id
+14:10:44,019 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} rambler0_.id ) ( FromClause{level=1} ( Rambler rambler0_ Bag bags1_ ) ) )
+14:10:44,019 DEBUG JoinProcessor:175 - Using FROM fragment [Rambler rambler0_]
+14:10:44,019 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Bag bags1_ on rambler0_.fld_name=bags1_.owner_fld_name]
+14:10:44,020 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Bag,Rambler)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'rambler0_.id as id11_0_' {alias=r, className=org.hibernate.test.annotations.referencedcolumnname.Rambler, tableAlias=rambler0_}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'bags1_.id as id0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.referencedcolumnname.Rambler.bags,tableName=Bag,tableAlias=bags1_,origin=Rambler rambler0_,columns={rambler0_.fld_name ,className=org.hibernate.test.annotations.referencedcolumnname.Bag}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'rambler0_.fld_name as fld2_11_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'bags1_.owner_fld_name as owner3_0_1_, bags1_.serial as serial0_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'bags1_.owner_fld_name as owner3_11_0__, bags1_.id as id0_0__'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[r], fromElementByTableAlias=[bags1_, rambler0_], fromElementsByPath=[r.bags], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Rambler rambler0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=r,role=null,tableName=Rambler,tableAlias=rambler0_,origin=null,columns={,className=org.hibernate.test.annotations.referencedcolumnname.Rambler}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join Bag bags1_ on rambler0_.fld_name=bags1_.owner_fld_name' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.referencedcolumnname.Rambler.bags,tableName=Bag,tableAlias=bags1_,origin=Rambler rambler0_,columns={rambler0_.fld_name ,className=org.hibernate.test.annotations.referencedcolumnname.Bag}}
+
+14:10:44,020 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:44,020 DEBUG QueryTranslatorImpl:235 - HQL: select r from org.hibernate.test.annotations.referencedcolumnname.Rambler r left join fetch r.bags
+14:10:44,020 DEBUG QueryTranslatorImpl:236 - SQL: select rambler0_.id as id11_0_, bags1_.id as id0_1_, rambler0_.fld_name as fld2_11_0_, bags1_.owner_fld_name as owner3_0_1_, bags1_.serial as serial0_1_, bags1_.owner_fld_name as owner3_11_0__, bags1_.id as id0_0__ from Rambler rambler0_ left outer join Bag bags1_ on rambler0_.fld_name=bags1_.owner_fld_name
+14:10:44,020 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:44,021 DEBUG SQL:104 - 
+    select
+        rambler0_.id as id11_0_,
+        bags1_.id as id0_1_,
+        rambler0_.fld_name as fld2_11_0_,
+        bags1_.owner_fld_name as owner3_0_1_,
+        bags1_.serial as serial0_1_,
+        bags1_.owner_fld_name as owner3_11_0__,
+        bags1_.id as id0_0__ 
+    from
+        Rambler rambler0_ 
+    left outer join
+        Bag bags1_ 
+            on rambler0_.fld_name=bags1_.owner_fld_name
+14:10:44,030 DEBUG SQL:104 - 
+    delete 
+    from
+        Bag 
+    where
+        id=?
+14:10:44,031 DEBUG SQL:104 - 
+    delete 
+    from
+        Rambler 
+    where
+        id=?
+14:10:44,031  INFO CustomRunner:139 - Test: testUnidirectionalOneToMany
+14:10:44,032 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:44,033 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:44,034 DEBUG SQL:104 - 
+    insert 
+    into
+        Luggage
+        (owner, type, id) 
+    values
+        (?, ?, ?)
+14:10:44,042 DEBUG SQL:104 - 
+    insert 
+    into
+        Clothes
+        (flavor, type, id) 
+    values
+        (?, ?, ?)
+14:10:44,043 DEBUG SQL:104 - 
+    update
+        Clothes 
+    set
+        lug_type=?,
+        lug_owner=? 
+    where
+        id=?
+14:10:44,043 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select l from org.hibernate.test.annotations.referencedcolumnname.Luggage l left join fetch l.hasInside
+14:10:44,045 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  +-[RANGE] Node: 'RANGE'
+       |  |  +-[DOT] Node: '.'
+       |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |  |  |  |  \-[IDENT] Node: 'referencedcolumnname'
+       |  |  |  \-[IDENT] Node: 'Luggage'
+       |  |  \-[ALIAS] Node: 'l'
+       |  \-[JOIN] Node: 'join'
+       |     +-[LEFT] Node: 'left'
+       |     +-[FETCH] Node: 'fetch'
+       |     \-[DOT] Node: '.'
+       |        +-[IDENT] Node: 'l'
+       |        \-[IDENT] Node: 'hasInside'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'l'
+
+14:10:44,052 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:44,052 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.Luggage (l) -> luggage0_
+14:10:44,053 DEBUG FromReferenceNode:74 - Resolved : l -> luggage0_.id
+14:10:44,053 DEBUG DotNode:599 - getDataType() : hasInside -> org.hibernate.type.SetType(org.hibernate.test.annotations.referencedcolumnname.Luggage.hasInside)
+14:10:44,053 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = l.hasInside role = org.hibernate.test.annotations.referencedcolumnname.Luggage.hasInside associatedEntityName = org.hibernate.test.annotations.referencedcolumnname.Clothes
+14:10:44,053 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.referencedcolumnname.Clothes (<no alias>) -> hasinside1_
+14:10:44,053 DEBUG FromClause:282 - addJoinByPathMap() : l.hasInside -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Clothes,tableAlias=hasinside1_,origin=Luggage luggage0_,columns={luggage0_.type luggage0_.owner ,className=org.hibernate.test.annotations.referencedcolumnname.Clothes}}
+14:10:44,053 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for l.hasInside : Clothes hasinside1_
+14:10:44,053 DEBUG FromReferenceNode:74 - Resolved : l.hasInside -> .
+14:10:44,053 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Clothes hasinside1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.referencedcolumnname.Luggage.hasInside,tableName=Clothes,tableAlias=hasinside1_,origin=Luggage luggage0_,columns={luggage0_.type luggage0_.owner ,className=org.hibernate.test.annotations.referencedcolumnname.Clothes}}
+
+14:10:44,053 DEBUG FromReferenceNode:74 - Resolved : l -> luggage0_.id
+14:10:44,054 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} luggage0_.id ) ( FromClause{level=1} ( Luggage luggage0_ Clothes hasinside1_ ) ) )
+14:10:44,054 DEBUG JoinProcessor:175 - Using FROM fragment [Luggage luggage0_]
+14:10:44,054 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Clothes hasinside1_ on luggage0_.type=hasinside1_.lug_type and luggage0_.owner=hasinside1_.lug_owner]
+14:10:44,054 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Clothes,Luggage)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'luggage0_.id as id8_0_' {alias=l, className=org.hibernate.test.annotations.referencedcolumnname.Luggage, tableAlias=luggage0_}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'hasinside1_.id as id1_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.referencedcolumnname.Luggage.hasInside,tableName=Clothes,tableAlias=hasinside1_,origin=Luggage luggage0_,columns={luggage0_.type luggage0_.owner ,className=org.hibernate.test.annotations.referencedcolumnname.Clothes}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'luggage0_.owner as owner8_0_, luggage0_.type as type8_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'hasinside1_.flavor as flavor1_1_, hasinside1_.type as type1_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'hasinside1_.lug_type as lug4_8_0__, hasinside1_.lug_owner as lug5_8_0__, hasinside1_.id as id1_0__'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[l], fromElementByTableAlias=[hasinside1_, luggage0_], fromElementsByPath=[l.hasInside], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Luggage luggage0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=l,role=null,tableName=Luggage,tableAlias=luggage0_,origin=null,columns={,className=org.hibernate.test.annotations.referencedcolumnname.Luggage}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join Clothes hasinside1_ on luggage0_.type=hasinside1_.lug_type and luggage0_.owner=hasinside1_.lug_owner' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.referencedcolumnname.Luggage.hasInside,tableName=Clothes,tableAlias=hasinside1_,origin=Luggage luggage0_,columns={luggage0_.type luggage0_.owner ,className=org.hibernate.test.annotations.referencedcolumnname.Clothes}}
+
+14:10:44,063 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:44,063 DEBUG QueryTranslatorImpl:235 - HQL: select l from org.hibernate.test.annotations.referencedcolumnname.Luggage l left join fetch l.hasInside
+14:10:44,064 DEBUG QueryTranslatorImpl:236 - SQL: select luggage0_.id as id8_0_, hasinside1_.id as id1_1_, luggage0_.owner as owner8_0_, luggage0_.type as type8_0_, hasinside1_.flavor as flavor1_1_, hasinside1_.type as type1_1_, hasinside1_.lug_type as lug4_8_0__, hasinside1_.lug_owner as lug5_8_0__, hasinside1_.id as id1_0__ from Luggage luggage0_ left outer join Clothes hasinside1_ on luggage0_.type=hasinside1_.lug_type and luggage0_.owner=hasinside1_.lug_owner
+14:10:44,064 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:44,064 DEBUG SQL:104 - 
+    select
+        luggage0_.id as id8_0_,
+        hasinside1_.id as id1_1_,
+        luggage0_.owner as owner8_0_,
+        luggage0_.type as type8_0_,
+        hasinside1_.flavor as flavor1_1_,
+        hasinside1_.type as type1_1_,
+        hasinside1_.lug_type as lug4_8_0__,
+        hasinside1_.lug_owner as lug5_8_0__,
+        hasinside1_.id as id1_0__ 
+    from
+        Luggage luggage0_ 
+    left outer join
+        Clothes hasinside1_ 
+            on luggage0_.type=hasinside1_.lug_type 
+            and luggage0_.owner=hasinside1_.lug_owner
+14:10:44,066 DEBUG SQL:104 - 
+    update
+        Clothes 
+    set
+        lug_type=null,
+        lug_owner=null 
+    where
+        lug_type=? 
+        and lug_owner=?
+14:10:44,066 DEBUG SQL:104 - 
+    delete 
+    from
+        Clothes 
+    where
+        id=?
+14:10:44,066 DEBUG SQL:104 - 
+    delete 
+    from
+        Luggage 
+    where
+        id=?
+14:10:44,067  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:44,068 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:44,068 DEBUG SQL:104 - 
+    alter table Bag 
+        drop constraint FK103E8ADCBF439
+14:10:44,068 DEBUG SQL:104 - 
+    alter table House 
+        drop constraint FK42AD7002EBA9A76
+14:10:44,068 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        drop constraint FKA710CB6C2BFDD455
+14:10:44,078 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        drop constraint FKA710CB6CEF9E78D3
+14:10:44,078 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        drop constraint FKA710CB6C2A39F677
+14:10:44,078 DEBUG SQL:104 - 
+    alter table HousePlaces 
+        drop constraint FKA710CB6C769ADD29
+14:10:44,079 DEBUG SQL:104 - 
+    alter table ItemCost 
+        drop constraint FK4A0241A0CB2A058E
+14:10:44,079 DEBUG SQL:104 - 
+    alter table ItemCost 
+        drop constraint FK4A0241A0FD08806E
+14:10:44,079 DEBUG SQL:104 - 
+    alter table WarehouseItem 
+        drop constraint FKE5404056DAE6556D
+14:10:44,079 DEBUG SQL:104 - 
+    alter table WarehouseItem 
+        drop constraint FKE5404056CB2A058E
+14:10:44,079 DEBUG SQL:104 - 
+    alter table WarehouseItem 
+        drop constraint FKE5404056FD08806E
+14:10:44,080 DEBUG SQL:104 - 
+    drop table Bag if exists
+14:10:44,089 DEBUG SQL:104 - 
+    drop table Clothes if exists
+14:10:44,089 DEBUG SQL:104 - 
+    drop table House if exists
+14:10:44,089 DEBUG SQL:104 - 
+    drop table HousePlaces if exists
+14:10:44,089 DEBUG SQL:104 - 
+    drop table House_Inhabitant if exists
+14:10:44,090 DEBUG SQL:104 - 
+    drop table Inhabitant if exists
+14:10:44,090 DEBUG SQL:104 - 
+    drop table Item if exists
+14:10:44,090 DEBUG SQL:104 - 
+    drop table ItemCost if exists
+14:10:44,090 DEBUG SQL:104 - 
+    drop table Luggage if exists
+14:10:44,090 DEBUG SQL:104 - 
+    drop table Place if exists
+14:10:44,091 DEBUG SQL:104 - 
+    drop table Postman if exists
+14:10:44,092 DEBUG SQL:104 - 
+    drop table Rambler if exists
+14:10:44,092 DEBUG SQL:104 - 
+    drop table Vendor if exists
+14:10:44,092 DEBUG SQL:104 - 
+    drop table WarehouseItem if exists
+14:10:44,092 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:44,092  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:44,093  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.reflection.JPAOverriddenAnnotationReaderTest" tests="9" time="0.33" timestamp="2013-02-28T20:10:44">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.reflection.JPAOverriddenAnnotationReaderTest" name="testAssociationRelatedAnnotations" time="0.137" />
+  <testcase classname="org.hibernate.test.annotations.reflection.JPAOverriddenAnnotationReaderTest" name="testBasicRelatedAnnotations" time="0.018" />
+  <testcase classname="org.hibernate.test.annotations.reflection.JPAOverriddenAnnotationReaderTest" name="testEntityListeners" time="0.024" />
+  <testcase classname="org.hibernate.test.annotations.reflection.JPAOverriddenAnnotationReaderTest" name="testEntityRelatedAnnotations" time="0.028" />
+  <testcase classname="org.hibernate.test.annotations.reflection.JPAOverriddenAnnotationReaderTest" name="testEntityRelatedAnnotationsMetadataComplete" time="0.027" />
+  <testcase classname="org.hibernate.test.annotations.reflection.JPAOverriddenAnnotationReaderTest" name="testIdRelatedAnnotations" time="0.037" />
+  <testcase classname="org.hibernate.test.annotations.reflection.JPAOverriddenAnnotationReaderTest" name="testMappedSuperclassAnnotations" time="0.016" />
+  <testcase classname="org.hibernate.test.annotations.reflection.JPAOverriddenAnnotationReaderTest" name="testTransientAndEmbeddedRelatedAnnotations" time="0.017" />
+  <testcase classname="org.hibernate.test.annotations.reflection.JPAOverriddenAnnotationReaderTest" name="testVersionRelatedAnnotations" time="0.018" />
+  <system-out><![CDATA[14:10:44,101  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.reflection.JPAOverriddenAnnotationReaderTest
+14:10:44,101  INFO CustomRunner:139 - Test: testAssociationRelatedAnnotations
+14:10:44,170  INFO XMLContext:174 - HHH000073: entity-listener duplication, first event definition will be used: org.hibernate.test.annotations.reflection.LogListener
+14:10:44,238  INFO CustomRunner:139 - Test: testBasicRelatedAnnotations
+14:10:44,257  INFO CustomRunner:139 - Test: testEntityListeners
+14:10:44,275  INFO XMLContext:174 - HHH000073: entity-listener duplication, first event definition will be used: org.hibernate.test.annotations.reflection.LogListener
+14:10:44,279  WARN JPAOverriddenAnnotationReader:449 - HHH000207: Property org.hibernate.test.annotations.reflection.Administration.defaultBusTrip not found in class but described in <mapping-file/> (possible typo error)
+14:10:44,279  WARN JPAOverriddenAnnotationReader:449 - HHH000207: Property org.hibernate.test.annotations.reflection.Administration.transientField not found in class but described in <mapping-file/> (possible typo error)
+14:10:44,281  INFO CustomRunner:139 - Test: testEntityRelatedAnnotations
+14:10:44,300  INFO XMLContext:174 - HHH000073: entity-listener duplication, first event definition will be used: org.hibernate.test.annotations.reflection.LogListener
+14:10:44,301  WARN JPAOverriddenAnnotationReader:449 - HHH000207: Property org.hibernate.test.annotations.reflection.Administration.defaultBusTrip not found in class but described in <mapping-file/> (possible typo error)
+14:10:44,302  WARN JPAOverriddenAnnotationReader:449 - HHH000207: Property org.hibernate.test.annotations.reflection.Administration.transientField not found in class but described in <mapping-file/> (possible typo error)
+14:10:44,309  INFO CustomRunner:139 - Test: testEntityRelatedAnnotationsMetadataComplete
+14:10:44,337  INFO CustomRunner:139 - Test: testIdRelatedAnnotations
+14:10:44,354  INFO XMLContext:174 - HHH000073: entity-listener duplication, first event definition will be used: org.hibernate.test.annotations.reflection.LogListener
+14:10:44,374  INFO CustomRunner:139 - Test: testMappedSuperclassAnnotations
+14:10:44,392  INFO CustomRunner:139 - Test: testTransientAndEmbeddedRelatedAnnotations
+14:10:44,408  INFO XMLContext:174 - HHH000073: entity-listener duplication, first event definition will be used: org.hibernate.test.annotations.reflection.LogListener
+14:10:44,409  INFO CustomRunner:139 - Test: testVersionRelatedAnnotations
+14:10:44,426  INFO XMLContext:174 - HHH000073: entity-listener duplication, first event definition will be used: org.hibernate.test.annotations.reflection.LogListener
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

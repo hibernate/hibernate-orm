@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.type.AttributeConverterTest" tests="2" time="0.152" timestamp="2013-02-28T20:19:33">
+  <properties />
+  <testcase classname="org.hibernate.type.AttributeConverterTest" name="testBasicOperation" time="0.133" />
+  <testcase classname="org.hibernate.type.AttributeConverterTest" name="testNormalOperation" time="0.008" />
+  <system-out><![CDATA[14:19:33,289  INFO CustomRunner:132 - BeforeClass: org.hibernate.type.AttributeConverterTest
+14:19:33,289  INFO CustomRunner:139 - Test: testBasicOperation
+14:19:33,424  INFO CustomRunner:139 - Test: testNormalOperation
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

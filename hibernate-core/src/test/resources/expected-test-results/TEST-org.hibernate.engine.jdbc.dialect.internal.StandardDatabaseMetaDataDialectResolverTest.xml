@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" tests="12" time="0.145" timestamp="2013-02-28T20:09:53">
+  <properties />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForPostgres81" time="0.077" />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForPostgres82" time="0.004" />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForPostgres83" time="0.009" />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForPostgres84" time="0.002" />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForPostgres9" time="0.005" />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForPostgres91" time="0.007" />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForPostgres92" time="0.003" />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForSQLServer2000" time="0.003" />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForSQLServer2005" time="0.003" />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForSQLServer2008" time="0.002" />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForSQLServer2012" time="0.004" />
+  <testcase classname="org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest" name="testResolveDialectInternalForUnknownSQLServerVersion" time="0.003" />
+  <system-out><![CDATA[14:09:53,246  INFO CustomRunner:132 - BeforeClass: org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolverTest
+14:09:53,247  INFO CustomRunner:139 - Test: testResolveDialectInternalForPostgres81
+14:09:53,322  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL81Dialect
+14:09:53,325  INFO CustomRunner:139 - Test: testResolveDialectInternalForPostgres82
+14:09:53,330  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL82Dialect
+14:09:53,332  INFO CustomRunner:139 - Test: testResolveDialectInternalForPostgres83
+14:09:53,339  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL82Dialect
+14:09:53,342  INFO CustomRunner:139 - Test: testResolveDialectInternalForPostgres84
+14:09:53,344  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL82Dialect
+14:09:53,345  INFO CustomRunner:139 - Test: testResolveDialectInternalForPostgres9
+14:09:53,349  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL82Dialect
+14:09:53,351  INFO CustomRunner:139 - Test: testResolveDialectInternalForPostgres91
+14:09:53,353  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL82Dialect
+14:09:53,360  INFO CustomRunner:139 - Test: testResolveDialectInternalForPostgres92
+14:09:53,363  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL82Dialect
+14:09:53,365  INFO CustomRunner:139 - Test: testResolveDialectInternalForSQLServer2000
+14:09:53,367  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServerDialect
+14:09:53,370  INFO CustomRunner:139 - Test: testResolveDialectInternalForSQLServer2005
+14:09:53,371  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2005Dialect
+14:09:53,373  INFO CustomRunner:139 - Test: testResolveDialectInternalForSQLServer2008
+14:09:53,375  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2008Dialect
+14:09:53,377  INFO CustomRunner:139 - Test: testResolveDialectInternalForSQLServer2012
+14:09:53,379  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2008Dialect
+14:09:53,382  INFO CustomRunner:139 - Test: testResolveDialectInternalForUnknownSQLServerVersion
+14:09:53,384  WARN StandardDatabaseInfoDialectResolver:145 - HHH000385: Unknown Microsoft SQL Server major version [7] using SQL Server 2000 dialect
+14:09:53,385  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServerDialect
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

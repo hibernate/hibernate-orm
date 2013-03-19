@@ -1,0 +1,2407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" tests="18" time="1.429" timestamp="2013-02-28T20:10:34">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testAssociationTableAndOrderBy" time="0.074" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testAssociationTableAndOrderByWithSet" time="0.04" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testAssociationTableUniqueConstraints" time="0.04" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testBasic" time="0.066" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testCanUseCriteriaQuery" time="0.027" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testCompositePk" time="0.07" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testDefault" time="0.04" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testDefaultCompositePk" time="0.04" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testJoinedSubclassManyToMany" time="0.041" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testJoinedSubclassManyToManyWithNonPkReference" time="0.029" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testManyToManyEmbeddableBiDirectionalDotNotationInMappedBy" time="0.03" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testMappedBy" time="0.047" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testOneToManyEmbeddableBiDirectionalDotNotationInMappedBy" time="0.032" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testOrderByContractor" time="0.024" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testOrderByEmployee" time="0.049" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testReferencedColumnNameToSuperclass" time="0.025" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testRemoveInBetween" time="0.144" />
+  <testcase classname="org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test" name="testSelf" time="0.032" />
+  <system-out><![CDATA[14:10:34,110  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.manytomany.ManyToManyMaxFetchDepth0Test
+14:10:34,185  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:34,186  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:34,186  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:34,186  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:34,186  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:34,187  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:34,188  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:34,188  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:34,189  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:34,189  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:34,295  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:34,296 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:34,296 DEBUG SQL:104 - 
+    alter table Building 
+        drop constraint FKAE9476D46ABD6871
+14:10:34,296 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Building drop constraint FKAE9476D46ABD6871
+14:10:34,296 ERROR SchemaExport:426 - Table "BUILDING" not found; SQL statement:
+
+    alter table Building 
+        drop constraint FKAE9476D46ABD6871 [42102-145]
+14:10:34,296 DEBUG SQL:104 - 
+    alter table Contractor 
+        drop constraint FK9C06FE9519D84CFE
+14:10:34,297 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Contractor drop constraint FK9C06FE9519D84CFE
+14:10:34,297 ERROR SchemaExport:426 - Table "CONTRACTOR" not found; SQL statement:
+
+    alter table Contractor 
+        drop constraint FK9C06FE9519D84CFE [42102-145]
+14:10:34,297 DEBUG SQL:104 - 
+    alter table EMPLOYER_CONTRACTOR 
+        drop constraint FK3F369A7924F418F
+14:10:34,297 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMPLOYER_CONTRACTOR drop constraint FK3F369A7924F418F
+14:10:34,297 ERROR SchemaExport:426 - Table "EMPLOYER_CONTRACTOR" not found; SQL statement:
+
+    alter table EMPLOYER_CONTRACTOR 
+        drop constraint FK3F369A7924F418F [42102-145]
+14:10:34,297 DEBUG SQL:104 - 
+    alter table EMPLOYER_CONTRACTOR 
+        drop constraint FK3F369A79505A0D0F
+14:10:34,298 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMPLOYER_CONTRACTOR drop constraint FK3F369A79505A0D0F
+14:10:34,298 ERROR SchemaExport:426 - Table "EMPLOYER_CONTRACTOR" not found; SQL statement:
+
+    alter table EMPLOYER_CONTRACTOR 
+        drop constraint FK3F369A79505A0D0F [42102-145]
+14:10:34,298 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B260939535
+14:10:34,298 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMPLOYER_EMPLOYEE drop constraint FKDC9B93B260939535
+14:10:34,298 ERROR SchemaExport:426 - Table "EMPLOYER_EMPLOYEE" not found; SQL statement:
+
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B260939535 [42102-145]
+14:10:34,298 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B260997E15
+14:10:34,299 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMPLOYER_EMPLOYEE drop constraint FKDC9B93B260997E15
+14:10:34,299 ERROR SchemaExport:426 - Table "EMPLOYER_EMPLOYEE" not found; SQL statement:
+
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B260997E15 [42102-145]
+14:10:34,299 DEBUG SQL:104 - 
+    alter table Employee 
+        drop constraint FK4AFD4ACE4786109B
+14:10:34,299 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Employee drop constraint FK4AFD4ACE4786109B
+14:10:34,299 ERROR SchemaExport:426 - Table "EMPLOYEE" not found; SQL statement:
+
+    alter table Employee 
+        drop constraint FK4AFD4ACE4786109B [42102-145]
+14:10:34,299 DEBUG SQL:104 - 
+    alter table Employee_PhoneNumber 
+        drop constraint FK7C0846466D1D2006
+14:10:34,299 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Employee_PhoneNumber drop constraint FK7C0846466D1D2006
+14:10:34,300 ERROR SchemaExport:426 - Table "EMPLOYEE_PHONENUMBER" not found; SQL statement:
+
+    alter table Employee_PhoneNumber 
+        drop constraint FK7C0846466D1D2006 [42102-145]
+14:10:34,300 DEBUG SQL:104 - 
+    alter table Employee_PhoneNumber 
+        drop constraint FK7C084646B2E1D7F8
+14:10:34,302 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Employee_PhoneNumber drop constraint FK7C084646B2E1D7F8
+14:10:34,302 ERROR SchemaExport:426 - Table "EMPLOYEE_PHONENUMBER" not found; SQL statement:
+
+    alter table Employee_PhoneNumber 
+        drop constraint FK7C084646B2E1D7F8 [42102-145]
+14:10:34,302 DEBUG SQL:104 - 
+    alter table FRIEND2FRIEND 
+        drop constraint FK917784F28A50BA23
+14:10:34,302 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FRIEND2FRIEND drop constraint FK917784F28A50BA23
+14:10:34,303 ERROR SchemaExport:426 - Table "FRIEND2FRIEND" not found; SQL statement:
+
+    alter table FRIEND2FRIEND 
+        drop constraint FK917784F28A50BA23 [42102-145]
+14:10:34,303 DEBUG SQL:104 - 
+    alter table FRIEND2FRIEND 
+        drop constraint FK917784F2604D6E94
+14:10:34,303 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FRIEND2FRIEND drop constraint FK917784F2604D6E94
+14:10:34,303 ERROR SchemaExport:426 - Table "FRIEND2FRIEND" not found; SQL statement:
+
+    alter table FRIEND2FRIEND 
+        drop constraint FK917784F2604D6E94 [42102-145]
+14:10:34,303 DEBUG SQL:104 - 
+    alter table InspectorPrefixes 
+        drop constraint FK501A5AB7794547C5
+14:10:34,303 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table InspectorPrefixes drop constraint FK501A5AB7794547C5
+14:10:34,304 ERROR SchemaExport:426 - Table "INSPECTORPREFIXES" not found; SQL statement:
+
+    alter table InspectorPrefixes 
+        drop constraint FK501A5AB7794547C5 [42102-145]
+14:10:34,304 DEBUG SQL:104 - 
+    alter table Man_Woman 
+        drop constraint WM_M_FK
+14:10:34,304 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Man_Woman drop constraint WM_M_FK
+14:10:34,304 ERROR SchemaExport:426 - Table "MAN_WOMAN" not found; SQL statement:
+
+    alter table Man_Woman 
+        drop constraint WM_M_FK [42102-145]
+14:10:34,305 DEBUG SQL:104 - 
+    alter table Man_Woman 
+        drop constraint WM_W_FK
+14:10:34,305 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Man_Woman drop constraint WM_W_FK
+14:10:34,305 ERROR SchemaExport:426 - Table "MAN_WOMAN" not found; SQL statement:
+
+    alter table Man_Woman 
+        drop constraint WM_W_FK [42102-145]
+14:10:34,306 DEBUG SQL:104 - 
+    alter table StoreSupplier 
+        drop constraint FK488E15ADC6D4CCD
+14:10:34,306 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table StoreSupplier drop constraint FK488E15ADC6D4CCD
+14:10:34,306 ERROR SchemaExport:426 - Table "STORESUPPLIER" not found; SQL statement:
+
+    alter table StoreSupplier 
+        drop constraint FK488E15ADC6D4CCD [42102-145]
+14:10:34,306 DEBUG SQL:104 - 
+    alter table StoreSupplier 
+        drop constraint FK488E15AD24492CAD
+14:10:34,306 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table StoreSupplier drop constraint FK488E15AD24492CAD
+14:10:34,306 ERROR SchemaExport:426 - Table "STORESUPPLIER" not found; SQL statement:
+
+    alter table StoreSupplier 
+        drop constraint FK488E15AD24492CAD [42102-145]
+14:10:34,306 DEBUG SQL:104 - 
+    alter table Store_KnownClient 
+        drop constraint FK39FC9A508D52DCDE
+14:10:34,307 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Store_KnownClient drop constraint FK39FC9A508D52DCDE
+14:10:34,307 ERROR SchemaExport:426 - Table "STORE_KNOWNCLIENT" not found; SQL statement:
+
+    alter table Store_KnownClient 
+        drop constraint FK39FC9A508D52DCDE [42102-145]
+14:10:34,307 DEBUG SQL:104 - 
+    alter table Store_KnownClient 
+        drop constraint FK39FC9A5082A58C94
+14:10:34,307 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Store_KnownClient drop constraint FK39FC9A5082A58C94
+14:10:34,308 ERROR SchemaExport:426 - Table "STORE_KNOWNCLIENT" not found; SQL statement:
+
+    alter table Store_KnownClient 
+        drop constraint FK39FC9A5082A58C94 [42102-145]
+14:10:34,308 DEBUG SQL:104 - 
+    alter table Store_tbl_city 
+        drop constraint FK68642B0A9A3108AF
+14:10:34,308 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Store_tbl_city drop constraint FK68642B0A9A3108AF
+14:10:34,308 ERROR SchemaExport:426 - Table "STORE_TBL_CITY" not found; SQL statement:
+
+    alter table Store_tbl_city 
+        drop constraint FK68642B0A9A3108AF [42102-145]
+14:10:34,308 DEBUG SQL:104 - 
+    alter table Store_tbl_city 
+        drop constraint FK68642B0A8417F505
+14:10:34,309 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Store_tbl_city drop constraint FK68642B0A8417F505
+14:10:34,309 ERROR SchemaExport:426 - Table "STORE_TBL_CITY" not found; SQL statement:
+
+    alter table Store_tbl_city 
+        drop constraint FK68642B0A8417F505 [42102-145]
+14:10:34,309 DEBUG SQL:104 - 
+    alter table TT 
+        drop constraint FKA805DBC25A9
+14:10:34,309 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TT drop constraint FKA805DBC25A9
+14:10:34,309 ERROR SchemaExport:426 - Table "TT" not found; SQL statement:
+
+    alter table TT 
+        drop constraint FKA805DBC25A9 [42102-145]
+14:10:34,334 DEBUG SQL:104 - 
+    alter table TT 
+        drop constraint FKA8016B65C5D
+14:10:34,335 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TT drop constraint FKA8016B65C5D
+14:10:34,335 ERROR SchemaExport:426 - Table "TT" not found; SQL statement:
+
+    alter table TT 
+        drop constraint FKA8016B65C5D [42102-145]
+14:10:34,335 DEBUG SQL:104 - 
+    alter table deserted_area 
+        drop constraint FK1F5F0278270F196E
+14:10:34,335 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table deserted_area drop constraint FK1F5F0278270F196E
+14:10:34,335 ERROR SchemaExport:426 - Table "DESERTED_AREA" not found; SQL statement:
+
+    alter table deserted_area 
+        drop constraint FK1F5F0278270F196E [42102-145]
+14:10:34,335 DEBUG SQL:104 - 
+    alter table inspector_prefixes_areas 
+        drop constraint FK6E87FD8F270F196E
+14:10:34,335 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table inspector_prefixes_areas drop constraint FK6E87FD8F270F196E
+14:10:34,335 ERROR SchemaExport:426 - Table "INSPECTOR_PREFIXES_AREAS" not found; SQL statement:
+
+    alter table inspector_prefixes_areas 
+        drop constraint FK6E87FD8F270F196E [42102-145]
+14:10:34,336 DEBUG SQL:104 - 
+    alter table inspector_prefixes_areas 
+        drop constraint FK6E87FD8FE3FC8CA5
+14:10:34,336 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table inspector_prefixes_areas drop constraint FK6E87FD8FE3FC8CA5
+14:10:34,336 ERROR SchemaExport:426 - Table "INSPECTOR_PREFIXES_AREAS" not found; SQL statement:
+
+    alter table inspector_prefixes_areas 
+        drop constraint FK6E87FD8FE3FC8CA5 [42102-145]
+14:10:34,336 DEBUG SQL:104 - 
+    alter table tbl_group_Permission 
+        drop constraint FK3A23A2107453922E
+14:10:34,336 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table tbl_group_Permission drop constraint FK3A23A2107453922E
+14:10:34,336 ERROR SchemaExport:426 - Table "TBL_GROUP_PERMISSION" not found; SQL statement:
+
+    alter table tbl_group_Permission 
+        drop constraint FK3A23A2107453922E [42102-145]
+14:10:34,336 DEBUG SQL:104 - 
+    alter table tbl_group_Permission 
+        drop constraint FK3A23A21043D82F2E
+14:10:34,337 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table tbl_group_Permission drop constraint FK3A23A21043D82F2E
+14:10:34,337 ERROR SchemaExport:426 - Table "TBL_GROUP_PERMISSION" not found; SQL statement:
+
+    alter table tbl_group_Permission 
+        drop constraint FK3A23A21043D82F2E [42102-145]
+14:10:34,337 DEBUG SQL:104 - 
+    alter table tbl_group_Permission 
+        drop constraint FK3A23A210CBAEEFA6
+14:10:34,337 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table tbl_group_Permission drop constraint FK3A23A210CBAEEFA6
+14:10:34,337 ERROR SchemaExport:426 - Table "TBL_GROUP_PERMISSION" not found; SQL statement:
+
+    alter table tbl_group_Permission 
+        drop constraint FK3A23A210CBAEEFA6 [42102-145]
+14:10:34,337 DEBUG SQL:104 - 
+    drop table Building if exists
+14:10:34,337 DEBUG SQL:104 - 
+    drop table BuildingCompany if exists
+14:10:34,338 DEBUG SQL:104 - 
+    drop table Contractor if exists
+14:10:34,338 DEBUG SQL:104 - 
+    drop table EMPLOYER_CONTRACTOR if exists
+14:10:34,338 DEBUG SQL:104 - 
+    drop table EMPLOYER_EMPLOYEE if exists
+14:10:34,338 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:10:34,338 DEBUG SQL:104 - 
+    drop table Employee_PhoneNumber if exists
+14:10:34,338 DEBUG SQL:104 - 
+    drop table FRIEND2FRIEND if exists
+14:10:34,338 DEBUG SQL:104 - 
+    drop table Friend if exists
+14:10:34,338 DEBUG SQL:104 - 
+    drop table Inspector if exists
+14:10:34,339 DEBUG SQL:104 - 
+    drop table InspectorPrefixes if exists
+14:10:34,339 DEBUG SQL:104 - 
+    drop table KnownClient if exists
+14:10:34,339 DEBUG SQL:104 - 
+    drop table Man if exists
+14:10:34,339 DEBUG SQL:104 - 
+    drop table Man_Woman if exists
+14:10:34,358 DEBUG SQL:104 - 
+    drop table Permission if exists
+14:10:34,359 DEBUG SQL:104 - 
+    drop table PhoneNumber if exists
+14:10:34,359 DEBUG SQL:104 - 
+    drop table ProgramManager if exists
+14:10:34,359 DEBUG SQL:104 - 
+    drop table Store if exists
+14:10:34,360 DEBUG SQL:104 - 
+    drop table StoreSupplier if exists
+14:10:34,360 DEBUG SQL:104 - 
+    drop table Store_KnownClient if exists
+14:10:34,360 DEBUG SQL:104 - 
+    drop table Store_tbl_city if exists
+14:10:34,360 DEBUG SQL:104 - 
+    drop table Supplier if exists
+14:10:34,360 DEBUG SQL:104 - 
+    drop table TT if exists
+14:10:34,361 DEBUG SQL:104 - 
+    drop table Woman if exists
+14:10:34,361 DEBUG SQL:104 - 
+    drop table "Employer" if exists
+14:10:34,361 DEBUG SQL:104 - 
+    drop table "Zone" if exists
+14:10:34,361 DEBUG SQL:104 - 
+    drop table deserted_area if exists
+14:10:34,361 DEBUG SQL:104 - 
+    drop table inspector_prefixes_areas if exists
+14:10:34,361 DEBUG SQL:104 - 
+    drop table tbl_cat if exists
+14:10:34,361 DEBUG SQL:104 - 
+    drop table tbl_city if exists
+14:10:34,361 DEBUG SQL:104 - 
+    drop table tbl_group if exists
+14:10:34,362 DEBUG SQL:104 - 
+    drop table tbl_group_Permission if exists
+14:10:34,362 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:34,362 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:34,362 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:34,362 DEBUG SQL:104 - 
+    create table Building (
+        id bigint not null,
+        company_id varchar(255),
+        primary key (id)
+    )
+14:10:34,363 DEBUG SQL:104 - 
+    create table BuildingCompany (
+        id bigint not null,
+        name varchar(255),
+        foundedIn timestamp,
+        primary key (id)
+    )
+14:10:34,363 DEBUG SQL:104 - 
+    create table Contractor (
+        hourlyRate float not null,
+        id integer not null,
+        primary key (id)
+    )
+14:10:34,363 DEBUG SQL:104 - 
+    create table EMPLOYER_CONTRACTOR (
+        EMPLOYER_ID integer not null,
+        CONTRACTOR_ID integer not null
+    )
+14:10:34,363 DEBUG SQL:104 - 
+    create table EMPLOYER_EMPLOYEE (
+        EMPER_ID integer not null,
+        EMPEE_ID integer not null
+    )
+14:10:34,364 DEBUG SQL:104 - 
+    create table Employee (
+        id integer not null,
+        jobDescription varchar(255),
+        fld_name varchar(255),
+        pm_id integer,
+        primary key (id)
+    )
+14:10:34,398 DEBUG SQL:104 - 
+    create table Employee_PhoneNumber (
+        employees_id integer not null,
+        phoneNumbers_phNumber integer not null
+    )
+14:10:34,398 DEBUG SQL:104 - 
+    create table FRIEND2FRIEND (
+        FROM_FR integer not null,
+        TO_FR integer not null,
+        primary key (FROM_FR, TO_FR)
+    )
+14:10:34,399 DEBUG SQL:104 - 
+    create table Friend (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:34,399 DEBUG SQL:104 - 
+    create table Inspector (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:34,424 DEBUG SQL:104 - 
+    create table InspectorPrefixes (
+        prefixes varchar(255) not null,
+        inspector_id bigint not null,
+        primary key (inspector_id)
+    )
+14:10:34,425 DEBUG SQL:104 - 
+    create table KnownClient (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:34,425 DEBUG SQL:104 - 
+    create table Man (
+        elder boolean not null,
+        firstName varchar(128) not null,
+        lastName varchar(128) not null,
+        carName varchar(255),
+        primary key (elder, firstName, lastName)
+    )
+14:10:34,425 DEBUG SQL:104 - 
+    create table Man_Woman (
+        womanFirstName varchar(128) not null,
+        womanLastName varchar(128) not null,
+        manIsElder boolean not null,
+        manFirstName varchar(128) not null,
+        manLastName varchar(128) not null,
+        primary key (womanFirstName, womanLastName, manIsElder, manFirstName, manLastName)
+    )
+14:10:34,426 DEBUG SQL:104 - 
+    create table Permission (
+        permission varchar(255) not null,
+        expirationDate timestamp,
+        primary key (permission)
+    )
+14:10:34,439 DEBUG SQL:104 - 
+    create table PhoneNumber (
+        phNumber integer not null,
+        primary key (phNumber)
+    )
+14:10:34,440 DEBUG SQL:104 - 
+    create table ProgramManager (
+        id integer not null,
+        primary key (id)
+    )
+14:10:34,440 DEBUG SQL:104 - 
+    create table Store (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:34,440 DEBUG SQL:104 - 
+    create table StoreSupplier (
+        store integer not null,
+        supplier integer not null,
+        primary key (store, supplier)
+    )
+14:10:34,440 DEBUG SQL:104 - 
+    create table Store_KnownClient (
+        stores_id integer not null,
+        customers_id integer not null,
+        primary key (stores_id, customers_id)
+    )
+14:10:34,441 DEBUG SQL:104 - 
+    create table Store_tbl_city (
+        Store_id integer not null,
+        implantedIn_id integer not null,
+        primary key (Store_id, implantedIn_id)
+    )
+14:10:34,441 DEBUG SQL:104 - 
+    create table Supplier (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:34,466 DEBUG SQL:104 - 
+    create table TT (
+        cats_name varchar(128) not null,
+        cats_thoroughbred varchar(128) not null,
+        humanContacts_firstName varchar(128) not null,
+        humanContacts_lastName varchar(128) not null,
+        primary key (cats_name, cats_thoroughbred, humanContacts_firstName, humanContacts_lastName)
+    )
+14:10:34,466 DEBUG SQL:104 - 
+    create table Woman (
+        firstName varchar(128) not null,
+        lastName varchar(128) not null,
+        carName varchar(255),
+        primary key (firstName, lastName)
+    )
+14:10:34,466 DEBUG SQL:104 - 
+    create table "Employer" (
+        id integer not null,
+        primary key (id)
+    )
+14:10:34,467 DEBUG SQL:104 - 
+    create table "Zone" (
+        id integer not null,
+        primary key (id)
+    )
+14:10:34,467 DEBUG SQL:104 - 
+    create table deserted_area (
+        inspector_name varchar(255) not null,
+        area_id integer not null
+    )
+14:10:34,478 DEBUG SQL:104 - 
+    create table inspector_prefixes_areas (
+        inspector_id bigint not null,
+        area_id integer not null
+    )
+14:10:34,478 DEBUG SQL:104 - 
+    create table tbl_cat (
+        name varchar(128) not null,
+        thoroughbred varchar(128) not null,
+        age integer not null,
+        primary key (name, thoroughbred)
+    )
+14:10:34,479 DEBUG SQL:104 - 
+    create table tbl_city (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:34,479 DEBUG SQL:104 - 
+    create table tbl_group (
+        id integer not null,
+        primary key (id)
+    )
+14:10:34,479 DEBUG SQL:104 - 
+    create table tbl_group_Permission (
+        tbl_group_id integer not null,
+        permissions_permission varchar(255) not null,
+        primary key (tbl_group_id, permissions_permission)
+    )
+14:10:34,480 DEBUG SQL:104 - 
+    alter table Building 
+        add constraint FKAE9476D46ABD6871 
+        foreign key (company_id) 
+        references BuildingCompany (name)
+14:10:34,493 DEBUG SQL:104 - 
+    alter table BuildingCompany 
+        add constraint UK_EFF3C709337A8B unique (name)
+14:10:34,494 DEBUG SQL:104 - 
+    alter table Contractor 
+        add constraint FK9C06FE9519D84CFE 
+        foreign key (id) 
+        references Employee
+14:10:34,494 DEBUG SQL:104 - 
+    alter table EMPLOYER_CONTRACTOR 
+        add constraint FK3F369A7924F418F 
+        foreign key (CONTRACTOR_ID) 
+        references Contractor
+14:10:34,495 DEBUG SQL:104 - 
+    alter table EMPLOYER_CONTRACTOR 
+        add constraint FK3F369A79505A0D0F 
+        foreign key (EMPLOYER_ID) 
+        references "Employer"
+14:10:34,496 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        add constraint FKDC9B93B260939535 
+        foreign key (EMPEE_ID) 
+        references Employee
+14:10:34,496 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        add constraint FKDC9B93B260997E15 
+        foreign key (EMPER_ID) 
+        references "Employer"
+14:10:34,517 DEBUG SQL:104 - 
+    alter table Employee 
+        add constraint FK4AFD4ACE4786109B 
+        foreign key (pm_id) 
+        references ProgramManager
+14:10:34,518 DEBUG SQL:104 - 
+    alter table Employee_PhoneNumber 
+        add constraint FK7C0846466D1D2006 
+        foreign key (phoneNumbers_phNumber) 
+        references PhoneNumber
+14:10:34,518 DEBUG SQL:104 - 
+    alter table Employee_PhoneNumber 
+        add constraint FK7C084646B2E1D7F8 
+        foreign key (employees_id) 
+        references Employee
+14:10:34,519 DEBUG SQL:104 - 
+    alter table FRIEND2FRIEND 
+        add constraint FK917784F28A50BA23 
+        foreign key (TO_FR) 
+        references Friend
+14:10:34,520 DEBUG SQL:104 - 
+    alter table FRIEND2FRIEND 
+        add constraint FK917784F2604D6E94 
+        foreign key (FROM_FR) 
+        references Friend
+14:10:34,520 DEBUG SQL:104 - 
+    alter table Inspector 
+        add constraint UK_728E5AD7337A8B unique (name)
+14:10:34,521 DEBUG SQL:104 - 
+    alter table InspectorPrefixes 
+        add constraint FK501A5AB7794547C5 
+        foreign key (inspector_id) 
+        references Inspector
+14:10:34,521 DEBUG SQL:104 - 
+    alter table Man_Woman 
+        add constraint WM_M_FK 
+        foreign key (manIsElder, manFirstName, manLastName) 
+        references Man
+14:10:34,522 DEBUG SQL:104 - 
+    alter table Man_Woman 
+        add constraint WM_W_FK 
+        foreign key (womanFirstName, womanLastName) 
+        references Woman
+14:10:34,523 DEBUG SQL:104 - 
+    alter table StoreSupplier 
+        add constraint FK488E15ADC6D4CCD 
+        foreign key (supplier) 
+        references Supplier
+14:10:34,524 DEBUG SQL:104 - 
+    alter table StoreSupplier 
+        add constraint FK488E15AD24492CAD 
+        foreign key (store) 
+        references Store
+14:10:34,524 DEBUG SQL:104 - 
+    alter table Store_KnownClient 
+        add constraint FK39FC9A508D52DCDE 
+        foreign key (customers_id) 
+        references KnownClient
+14:10:34,525 DEBUG SQL:104 - 
+    alter table Store_KnownClient 
+        add constraint FK39FC9A5082A58C94 
+        foreign key (stores_id) 
+        references Store
+14:10:34,536 DEBUG SQL:104 - 
+    alter table Store_tbl_city 
+        add constraint FK68642B0A9A3108AF 
+        foreign key (implantedIn_id) 
+        references tbl_city
+14:10:34,537 DEBUG SQL:104 - 
+    alter table Store_tbl_city 
+        add constraint FK68642B0A8417F505 
+        foreign key (Store_id) 
+        references Store
+14:10:34,537 DEBUG SQL:104 - 
+    alter table TT 
+        add constraint FKA805DBC25A9 
+        foreign key (humanContacts_firstName, humanContacts_lastName) 
+        references Woman
+14:10:34,538 DEBUG SQL:104 - 
+    alter table TT 
+        add constraint FKA8016B65C5D 
+        foreign key (cats_name, cats_thoroughbred) 
+        references tbl_cat
+14:10:34,539 DEBUG SQL:104 - 
+    alter table deserted_area 
+        add constraint FK1F5F0278270F196E 
+        foreign key (area_id) 
+        references "Zone"
+14:10:34,539 DEBUG SQL:104 - 
+    alter table inspector_prefixes_areas 
+        add constraint FK6E87FD8F270F196E 
+        foreign key (area_id) 
+        references "Zone"
+14:10:34,560 DEBUG SQL:104 - 
+    alter table inspector_prefixes_areas 
+        add constraint FK6E87FD8FE3FC8CA5 
+        foreign key (inspector_id) 
+        references InspectorPrefixes
+14:10:34,560 DEBUG SQL:104 - 
+    alter table tbl_group_Permission 
+        add constraint FK3A23A2107453922E 
+        foreign key (permissions_permission) 
+        references Permission
+14:10:34,561 DEBUG SQL:104 - 
+    alter table tbl_group_Permission 
+        add constraint FK3A23A21043D82F2E 
+        foreign key (tbl_group_id) 
+        references tbl_group
+14:10:34,562 DEBUG SQL:104 - 
+    alter table tbl_group_Permission 
+        add constraint FK3A23A210CBAEEFA6 
+        foreign key (tbl_group_id) 
+        references tbl_group
+14:10:34,562 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:34,562  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:34,565  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:34,565  INFO CustomRunner:139 - Test: testAssociationTableAndOrderBy
+14:10:34,567 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_group
+        (id) 
+    values
+        (?)
+14:10:34,569 DEBUG SQL:104 - 
+    insert 
+    into
+        Permission
+        (expirationDate, permission) 
+    values
+        (?, ?)
+14:10:34,600 DEBUG SQL:104 - 
+    insert 
+    into
+        Permission
+        (expirationDate, permission) 
+    values
+        (?, ?)
+14:10:34,601 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_group_Permission
+        (tbl_group_id, permissions_permission) 
+    values
+        (?, ?)
+14:10:34,601 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_group_Permission
+        (tbl_group_id, permissions_permission) 
+    values
+        (?, ?)
+14:10:34,601 DEBUG SQL:104 - 
+    select
+        group0_.id as id30_0_ 
+    from
+        tbl_group group0_ 
+    where
+        group0_.id=?
+14:10:34,602 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select g from org.hibernate.test.annotations.manytomany.Group g join fetch g.permissions
+14:10:34,602 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Group",<108> previously: <24>,line=1,col=57,possibleID=true]
+14:10:34,604 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  +-[RANGE] Node: 'RANGE'
+       |  |  +-[DOT] Node: '.'
+       |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |  |  |  |  \-[IDENT] Node: 'manytomany'
+       |  |  |  \-[IDENT] Node: 'Group'
+       |  |  \-[ALIAS] Node: 'g'
+       |  \-[JOIN] Node: 'join'
+       |     +-[FETCH] Node: 'fetch'
+       |     \-[DOT] Node: '.'
+       |        +-[IDENT] Node: 'g'
+       |        \-[IDENT] Node: 'permissions'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'g'
+
+14:10:34,612 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:34,612 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.manytomany.Group (g) -> group0_
+14:10:34,612 DEBUG FromReferenceNode:74 - Resolved : g -> group0_.id
+14:10:34,612 DEBUG DotNode:599 - getDataType() : permissions -> org.hibernate.type.BagType(org.hibernate.test.annotations.manytomany.Group.permissions)
+14:10:34,613 DEBUG FromElementFactory:385 - createManyToMany() : path = g.permissions role = org.hibernate.test.annotations.manytomany.Group.permissions associatedEntityName = org.hibernate.test.annotations.manytomany.Permission
+14:10:34,613 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.manytomany.Permission (<no alias>) -> permission2_
+14:10:34,622 DEBUG FromClause:282 - addJoinByPathMap() : g.permissions -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Permission,tableAlias=permission2_,origin=tbl_group group0_,columns={group0_.id ,className=org.hibernate.test.annotations.manytomany.Permission}}
+14:10:34,622 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for g.permissions : tbl_group_Permission permission2_
+14:10:34,622 DEBUG FromReferenceNode:74 - Resolved : g.permissions -> .
+14:10:34,623 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'tbl_group_Permission permission2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.manytomany.Group.permissions,tableName=Permission,tableAlias=permission2_,origin=tbl_group group0_,columns={group0_.id ,className=org.hibernate.test.annotations.manytomany.Permission}}
+
+14:10:34,623 DEBUG FromReferenceNode:74 - Resolved : g -> group0_.id
+14:10:34,623 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} group0_.id ) ( FromClause{level=1} ( tbl_group group0_ tbl_group_Permission permission2_ ) ) )
+14:10:34,623 DEBUG JoinProcessor:175 - Using FROM fragment [tbl_group group0_]
+14:10:34,623 DEBUG JoinProcessor:175 - Using FROM fragment [inner join tbl_group_Permission permission1_ on group0_.id=permission1_.tbl_group_id and 4=4 and ( 2=2)  inner join Permission permission2_ on permission1_.permissions_permission=permission2_.permission and 3=3 and ( 1=1)]
+14:10:34,623 DEBUG QueryNode:101 - getOrderByClause() : Creating a new ORDER BY clause
+14:10:34,624 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (tbl_group,Permission,tbl_group_Permission)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'group0_.id as id30_0_' {alias=g, className=org.hibernate.test.annotations.manytomany.Group, tableAlias=group0_}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'permission2_.permission as permission14_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.manytomany.Group.permissions,tableName=Permission,tableAlias=permission2_,origin=tbl_group group0_,columns={group0_.id ,className=org.hibernate.test.annotations.manytomany.Permission}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'permission2_.expirationDate as expirati2_14_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'permission1_.tbl_group_id as tbl1_30_0__, permission1_.permissions_permission as permissi2_31_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[g], fromElementByTableAlias=[group0_, permission2_], fromElementsByPath=[g.permissions], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'tbl_group group0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=g,role=null,tableName=tbl_group,tableAlias=group0_,origin=null,columns={,className=org.hibernate.test.annotations.manytomany.Group}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join tbl_group_Permission permission1_ on group0_.id=permission1_.tbl_group_id and 4=4 and ( 2=2)  inner join Permission permission2_ on permission1_.permissions_permission=permission2_.permission and 3=3 and ( 1=1)' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.manytomany.Group.permissions,tableName=Permission,tableAlias=permission2_,origin=tbl_group group0_,columns={group0_.id ,className=org.hibernate.test.annotations.manytomany.Permission}}
+    \-[ORDER] OrderByClause: 'ORDER'
+       \-[SQL_TOKEN] SqlFragment: 'permission2_.expirationDate'
+
+14:10:34,624 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:34,624 DEBUG QueryTranslatorImpl:235 - HQL: select g from org.hibernate.test.annotations.manytomany.Group g join fetch g.permissions
+14:10:34,624 DEBUG QueryTranslatorImpl:236 - SQL: select group0_.id as id30_0_, permission2_.permission as permission14_1_, permission2_.expirationDate as expirati2_14_1_, permission1_.tbl_group_id as tbl1_30_0__, permission1_.permissions_permission as permissi2_31_0__ from tbl_group group0_ inner join tbl_group_Permission permission1_ on group0_.id=permission1_.tbl_group_id and 4=4 and ( 2=2)  inner join Permission permission2_ on permission1_.permissions_permission=permission2_.permission and 3=3 and ( 1=1) order by permission2_.expirationDate
+14:10:34,624 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:34,625 DEBUG SQL:104 - 
+    select
+        group0_.id as id30_0_,
+        permission2_.permission as permission14_1_,
+        permission2_.expirationDate as expirati2_14_1_,
+        permission1_.tbl_group_id as tbl1_30_0__,
+        permission1_.permissions_permission as permissi2_31_0__ 
+    from
+        tbl_group group0_ 
+    inner join
+        tbl_group_Permission permission1_ 
+            on group0_.id=permission1_.tbl_group_id 
+            and 4=4 
+            and (
+                2=2
+            )  
+    inner join
+        Permission permission2_ 
+            on permission1_.permissions_permission=permission2_.permission 
+            and 3=3 
+            and (
+                1=1
+            ) 
+    order by
+        permission2_.expirationDate
+14:10:34,639  INFO CustomRunner:139 - Test: testAssociationTableAndOrderByWithSet
+14:10:34,641 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_group
+        (id) 
+    values
+        (?)
+14:10:34,642 DEBUG SQL:104 - 
+    insert 
+    into
+        Permission
+        (expirationDate, permission) 
+    values
+        (?, ?)
+14:10:34,642 DEBUG SQL:104 - 
+    insert 
+    into
+        Permission
+        (expirationDate, permission) 
+    values
+        (?, ?)
+14:10:34,642 DEBUG SQL:104 - 
+    insert 
+    into
+        Permission
+        (expirationDate, permission) 
+    values
+        (?, ?)
+14:10:34,643 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_group_Permission
+        (tbl_group_id, permissions_permission) 
+    values
+        (?, ?)
+14:10:34,658 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_group_Permission
+        (tbl_group_id, permissions_permission) 
+    values
+        (?, ?)
+14:10:34,658 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_group_Permission
+        (tbl_group_id, permissions_permission) 
+    values
+        (?, ?)
+14:10:34,659 DEBUG SQL:104 - 
+    select
+        groupwiths0_.id as id30_0_ 
+    from
+        tbl_group groupwiths0_ 
+    where
+        groupwiths0_.id=?
+14:10:34,659 DEBUG SQL:104 - 
+    select
+        group0_.id as id30_0_,
+        permission2_.permission as permission14_1_,
+        permission2_.expirationDate as expirati2_14_1_,
+        permission1_.tbl_group_id as tbl1_30_0__,
+        permission1_.permissions_permission as permissi2_31_0__ 
+    from
+        tbl_group group0_ 
+    inner join
+        tbl_group_Permission permission1_ 
+            on group0_.id=permission1_.tbl_group_id 
+            and 4=4 
+            and (
+                2=2
+            )  
+    inner join
+        Permission permission2_ 
+            on permission1_.permissions_permission=permission2_.permission 
+            and 3=3 
+            and (
+                1=1
+            ) 
+    order by
+        permission2_.expirationDate
+14:10:34,679 DEBUG SQL:104 - 
+    select
+        permission0_.tbl_group_id as tbl1_30_1_,
+        permission0_.permissions_permission as permissi2_31_1_,
+        permission1_.permission as permission14_0_,
+        permission1_.expirationDate as expirati2_14_0_ 
+    from
+        tbl_group_Permission permission0_ 
+    inner join
+        Permission permission1_ 
+            on permission0_.permissions_permission=permission1_.permission 
+    where
+        4=4 
+        and (
+            2=2
+        )  
+        and 3=3 
+        and (
+            1=1
+        ) 
+        and permission0_.tbl_group_id=? 
+    order by
+        permission1_.expirationDate
+14:10:34,681  INFO CustomRunner:139 - Test: testAssociationTableUniqueConstraints
+14:10:34,682 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_group
+        (id) 
+    values
+        (?)
+14:10:34,709 DEBUG SQL:104 - 
+    insert 
+    into
+        Permission
+        (expirationDate, permission) 
+    values
+        (?, ?)
+14:10:34,710 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_group_Permission
+        (tbl_group_id, permissions_permission) 
+    values
+        (?, ?)
+14:10:34,710 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_group_Permission
+        (tbl_group_id, permissions_permission) 
+    values
+        (?, ?)
+14:10:34,710  WARN SqlExceptionHelper:143 - SQL Error: 23001, SQLState: 23001
+14:10:34,710 ERROR SqlExceptionHelper:144 - Unique index or primary key violation: "PRIMARY_KEY_3 ON PUBLIC.TBL_GROUP_PERMISSION(TBL_GROUP_ID, PERMISSIONS_PERMISSION)"; SQL statement:
+insert into tbl_group_Permission (tbl_group_id, permissions_permission) values (?, ?) [23001-145]
+14:10:34,720  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:34,721  INFO CustomRunner:139 - Test: testBasic
+14:10:34,722 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,722 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,724 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (jobDescription, pm_id, fld_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:34,724 DEBUG SQL:104 - 
+    insert 
+    into
+        "Employer"
+        (id) 
+    values
+        (?)
+14:10:34,725 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYER_EMPLOYEE
+        (EMPER_ID, EMPEE_ID) 
+    values
+        (?, ?)
+14:10:34,752 DEBUG SQL:104 - 
+    select
+        employer0_.id as id24_0_ 
+    from
+        "Employer" employer0_ 
+    where
+        employer0_.id=?
+14:10:34,753 DEBUG SQL:104 - 
+    select
+        employees0_.EMPER_ID as EMPER1_24_1_,
+        employees0_.EMPEE_ID as EMPEE2_4_1_,
+        employee1_.id as id5_0_,
+        employee1_.jobDescription as jobDescr2_5_0_,
+        employee1_.pm_id as pm4_5_0_,
+        employee1_.fld_name as fld3_5_0_,
+        employee1_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when employee1_1_.id is not null then 1 
+            when employee1_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        EMPLOYER_EMPLOYEE employees0_ 
+    inner join
+        Employee employee1_ 
+            on employees0_.EMPEE_ID=employee1_.id 
+    left outer join
+        Contractor employee1_1_ 
+            on employee1_.id=employee1_1_.id 
+    where
+        employees0_.EMPER_ID=? 
+    order by
+        employee1_.fld_name asc
+14:10:34,767 DEBUG SQL:104 - 
+    select
+        employee0_.id as id5_0_,
+        employee0_.jobDescription as jobDescr2_5_0_,
+        employee0_.pm_id as pm4_5_0_,
+        employee0_.fld_name as fld3_5_0_,
+        employee0_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when employee0_1_.id is not null then 1 
+            when employee0_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        Employee employee0_ 
+    left outer join
+        Contractor employee0_1_ 
+            on employee0_.id=employee0_1_.id 
+    where
+        employee0_.id=?
+14:10:34,768 DEBUG SQL:104 - 
+    select
+        employee0_.id as id5_0_,
+        employee0_.jobDescription as jobDescr2_5_0_,
+        employee0_.pm_id as pm4_5_0_,
+        employee0_.fld_name as fld3_5_0_,
+        employee0_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when employee0_1_.id is not null then 1 
+            when employee0_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        Employee employee0_ 
+    left outer join
+        Contractor employee0_1_ 
+            on employee0_.id=employee0_1_.id 
+    where
+        employee0_.id=?
+14:10:34,769 DEBUG SQL:104 - 
+    select
+        employers0_.EMPEE_ID as EMPEE2_5_1_,
+        employers0_.EMPER_ID as EMPER1_4_1_,
+        employer1_.id as id24_0_ 
+    from
+        EMPLOYER_EMPLOYEE employers0_ 
+    inner join
+        "Employer" employer1_ 
+            on employers0_.EMPER_ID=employer1_.id 
+    where
+        employers0_.EMPEE_ID=?
+14:10:34,770 DEBUG SQL:104 - 
+    select
+        phonenumbe0_.employees_id as employees1_5_1_,
+        phonenumbe0_.phoneNumbers_phNumber as phoneNum2_6_1_,
+        phonenumbe1_.phNumber as phNumber15_0_ 
+    from
+        Employee_PhoneNumber phonenumbe0_ 
+    inner join
+        PhoneNumber phonenumbe1_ 
+            on phonenumbe0_.phoneNumbers_phNumber=phonenumbe1_.phNumber 
+    where
+        phonenumbe0_.employees_id=?
+14:10:34,785 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYER_CONTRACTOR 
+    where
+        EMPLOYER_ID=?
+14:10:34,785 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYER_EMPLOYEE 
+    where
+        EMPER_ID=?
+14:10:34,786 DEBUG SQL:104 - 
+    delete 
+    from
+        "Employer" 
+    where
+        id=?
+14:10:34,786 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        id=?
+14:10:34,787  INFO CustomRunner:139 - Test: testCanUseCriteriaQuery
+14:10:34,798 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,799 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,800 DEBUG SQL:104 - 
+    insert 
+    into
+        Store
+        (name, id) 
+    values
+        (?, ?)
+14:10:34,801 DEBUG SQL:104 - 
+    insert 
+    into
+        Supplier
+        (name, id) 
+    values
+        (?, ?)
+14:10:34,801 DEBUG SQL:104 - 
+    insert 
+    into
+        StoreSupplier
+        (store, supplier) 
+    values
+        (?, ?)
+14:10:34,813 DEBUG SQL:104 - 
+    select
+        this_.id as id21_1_,
+        this_.name as name21_1_,
+        suppstores3_.supplier as supplier21_,
+        s1_.id as store18_,
+        s1_.id as id17_0_,
+        s1_.name as name17_0_ 
+    from
+        Supplier this_ 
+    inner join
+        StoreSupplier suppstores3_ 
+            on this_.id=suppstores3_.supplier 
+    inner join
+        Store s1_ 
+            on suppstores3_.store=s1_.id 
+    where
+        s1_.name=?
+14:10:34,814  INFO CustomRunner:139 - Test: testCompositePk
+14:10:34,841 DEBUG SQL:104 - 
+    insert 
+    into
+        Man
+        (carName, elder, firstName, lastName) 
+    values
+        (?, ?, ?, ?)
+14:10:34,842 DEBUG SQL:104 - 
+    insert 
+    into
+        Woman
+        (carName, firstName, lastName) 
+    values
+        (?, ?, ?)
+14:10:34,843 DEBUG SQL:104 - 
+    insert 
+    into
+        Man
+        (carName, elder, firstName, lastName) 
+    values
+        (?, ?, ?, ?)
+14:10:34,843 DEBUG SQL:104 - 
+    insert 
+    into
+        Woman
+        (carName, firstName, lastName) 
+    values
+        (?, ?, ?)
+14:10:34,843 DEBUG SQL:104 - 
+    insert 
+    into
+        Man_Woman
+        (womanFirstName, womanLastName, manIsElder, manFirstName, manLastName) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:34,856 DEBUG SQL:104 - 
+    insert 
+    into
+        Man_Woman
+        (womanFirstName, womanLastName, manIsElder, manFirstName, manLastName) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:34,856 DEBUG SQL:104 - 
+    insert 
+    into
+        Man_Woman
+        (womanFirstName, womanLastName, manIsElder, manFirstName, manLastName) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:34,857 DEBUG SQL:104 - 
+    select
+        man0_.elder as elder12_0_,
+        man0_.firstName as firstName12_0_,
+        man0_.lastName as lastName12_0_,
+        man0_.carName as carName12_0_ 
+    from
+        Man man0_ 
+    where
+        man0_.elder=? 
+        and man0_.firstName=? 
+        and man0_.lastName=?
+14:10:34,870 DEBUG SQL:104 - 
+    select
+        womens0_.manIsElder as manIsElder12_1_,
+        womens0_.manFirstName as manFirst4_12_1_,
+        womens0_.manLastName as manLastN5_12_1_,
+        womens0_.womanFirstName as womanFir1_13_1_,
+        womens0_.womanLastName as womanLas2_13_1_,
+        woman1_.firstName as firstName23_0_,
+        woman1_.lastName as lastName23_0_,
+        woman1_.carName as carName23_0_ 
+    from
+        Man_Woman womens0_ 
+    inner join
+        Woman woman1_ 
+            on womens0_.womanFirstName=woman1_.firstName 
+            and womens0_.womanLastName=woman1_.lastName 
+    where
+        womens0_.manIsElder=? 
+        and womens0_.manFirstName=? 
+        and womens0_.manLastName=?
+14:10:34,872 DEBUG SQL:104 - 
+    select
+        mens0_.womanFirstName as womanFir1_23_1_,
+        mens0_.womanLastName as womanLas2_23_1_,
+        mens0_.manIsElder as manIsElder13_1_,
+        mens0_.manFirstName as manFirst4_13_1_,
+        mens0_.manLastName as manLastN5_13_1_,
+        man1_.elder as elder12_0_,
+        man1_.firstName as firstName12_0_,
+        man1_.lastName as lastName12_0_,
+        man1_.carName as carName12_0_ 
+    from
+        Man_Woman mens0_ 
+    inner join
+        Man man1_ 
+            on mens0_.manIsElder=man1_.elder 
+            and mens0_.manFirstName=man1_.firstName 
+            and mens0_.manLastName=man1_.lastName 
+    where
+        mens0_.womanFirstName=? 
+        and mens0_.womanLastName=?
+14:10:34,886  INFO CustomRunner:139 - Test: testDefault
+14:10:34,887 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,887 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,888 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,890 DEBUG SQL:104 - 
+    insert 
+    into
+        Store
+        (name, id) 
+    values
+        (?, ?)
+14:10:34,890 DEBUG SQL:104 - 
+    insert 
+    into
+        KnownClient
+        (name, id) 
+    values
+        (?, ?)
+14:10:34,900 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_city
+        (name, id) 
+    values
+        (?, ?)
+14:10:34,901 DEBUG SQL:104 - 
+    insert 
+    into
+        Store_KnownClient
+        (stores_id, customers_id) 
+    values
+        (?, ?)
+14:10:34,902 DEBUG SQL:104 - 
+    insert 
+    into
+        Store_tbl_city
+        (Store_id, implantedIn_id) 
+    values
+        (?, ?)
+14:10:34,903 DEBUG SQL:104 - 
+    select
+        store0_.id as id17_0_,
+        store0_.name as name17_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.id=?
+14:10:34,904 DEBUG SQL:104 - 
+    select
+        customers0_.stores_id as stores1_17_1_,
+        customers0_.customers_id as customers2_19_1_,
+        knownclien1_.id as id11_0_,
+        knownclien1_.name as name11_0_ 
+    from
+        Store_KnownClient customers0_ 
+    inner join
+        KnownClient knownclien1_ 
+            on customers0_.customers_id=knownclien1_.id 
+    where
+        customers0_.stores_id=?
+14:10:34,905 DEBUG SQL:104 - 
+    select
+        implantedi0_.Store_id as Store1_17_1_,
+        implantedi0_.implantedIn_id as implante2_20_1_,
+        city1_.id as id29_0_,
+        city1_.name as name29_0_ 
+    from
+        Store_tbl_city implantedi0_ 
+    inner join
+        tbl_city city1_ 
+            on implantedi0_.implantedIn_id=city1_.id 
+    where
+        implantedi0_.Store_id=?
+14:10:34,906 DEBUG SQL:104 - 
+    select
+        knownclien0_.id as id11_0_,
+        knownclien0_.name as name11_0_ 
+    from
+        KnownClient knownclien0_ 
+    where
+        knownclien0_.id=?
+14:10:34,924 DEBUG SQL:104 - 
+    select
+        stores0_.customers_id as customers2_11_1_,
+        stores0_.stores_id as stores1_19_1_,
+        store1_.id as id17_0_,
+        store1_.name as name17_0_ 
+    from
+        Store_KnownClient stores0_ 
+    inner join
+        Store store1_ 
+            on stores0_.stores_id=store1_.id 
+    where
+        stores0_.customers_id=?
+14:10:34,926  INFO CustomRunner:139 - Test: testDefaultCompositePk
+14:10:34,927 DEBUG SQL:104 - 
+    insert 
+    into
+        Woman
+        (carName, firstName, lastName) 
+    values
+        (?, ?, ?)
+14:10:34,931 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_cat
+        (age, name, thoroughbred) 
+    values
+        (?, ?, ?)
+14:10:34,932 DEBUG SQL:104 - 
+    insert 
+    into
+        TT
+        (cats_name, cats_thoroughbred, humanContacts_firstName, humanContacts_lastName) 
+    values
+        (?, ?, ?, ?)
+14:10:34,933 DEBUG SQL:104 - 
+    select
+        cat0_.name as name28_0_,
+        cat0_.thoroughbred as thorough2_28_0_,
+        cat0_.age as age28_0_ 
+    from
+        tbl_cat cat0_ 
+    where
+        cat0_.name=? 
+        and cat0_.thoroughbred=?
+14:10:34,933 DEBUG SQL:104 - 
+    select
+        humanconta0_.cats_name as cats1_28_1_,
+        humanconta0_.cats_thoroughbred as cats2_28_1_,
+        humanconta0_.humanContacts_firstName as humanCon3_22_1_,
+        humanconta0_.humanContacts_lastName as humanCon4_22_1_,
+        woman1_.firstName as firstName23_0_,
+        woman1_.lastName as lastName23_0_,
+        woman1_.carName as carName23_0_ 
+    from
+        TT humanconta0_ 
+    inner join
+        Woman woman1_ 
+            on humanconta0_.humanContacts_firstName=woman1_.firstName 
+            and humanconta0_.humanContacts_lastName=woman1_.lastName 
+    where
+        humanconta0_.cats_name=? 
+        and humanconta0_.cats_thoroughbred=?
+14:10:34,935 DEBUG SQL:104 - 
+    select
+        woman0_.firstName as firstName23_0_,
+        woman0_.lastName as lastName23_0_,
+        woman0_.carName as carName23_0_ 
+    from
+        Woman woman0_ 
+    where
+        woman0_.firstName=? 
+        and woman0_.lastName=?
+14:10:34,964 DEBUG SQL:104 - 
+    select
+        cats0_.humanContacts_firstName as humanCon3_23_1_,
+        cats0_.humanContacts_lastName as humanCon4_23_1_,
+        cats0_.cats_name as cats1_22_1_,
+        cats0_.cats_thoroughbred as cats2_22_1_,
+        cat1_.name as name28_0_,
+        cat1_.thoroughbred as thorough2_28_0_,
+        cat1_.age as age28_0_ 
+    from
+        TT cats0_ 
+    inner join
+        tbl_cat cat1_ 
+            on cats0_.cats_name=cat1_.name 
+            and cats0_.cats_thoroughbred=cat1_.thoroughbred 
+    where
+        cats0_.humanContacts_firstName=? 
+        and cats0_.humanContacts_lastName=?
+14:10:34,966  INFO CustomRunner:139 - Test: testJoinedSubclassManyToMany
+14:10:34,967 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,967 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,978 DEBUG SQL:104 - 
+    insert 
+    into
+        "Zone"
+        (id) 
+    values
+        (?)
+14:10:34,979 DEBUG SQL:104 - 
+    insert 
+    into
+        Inspector
+        (name, id) 
+    values
+        (?, ?)
+14:10:34,979 DEBUG SQL:104 - 
+    insert 
+    into
+        InspectorPrefixes
+        (prefixes, inspector_id) 
+    values
+        (?, ?)
+14:10:34,980 DEBUG SQL:104 - 
+    insert 
+    into
+        inspector_prefixes_areas
+        (inspector_id, area_id) 
+    values
+        (?, ?)
+14:10:34,980 DEBUG SQL:104 - 
+    select
+        inspectorp0_.inspector_id as id9_0_,
+        inspectorp0_1_.name as name9_0_,
+        inspectorp0_.prefixes as prefixes10_0_ 
+    from
+        InspectorPrefixes inspectorp0_ 
+    inner join
+        Inspector inspectorp0_1_ 
+            on inspectorp0_.inspector_id=inspectorp0_1_.id 
+    where
+        inspectorp0_.inspector_id=?
+14:10:34,993 DEBUG SQL:104 - 
+    select
+        areas0_.inspector_id as inspector1_9_1_,
+        areas0_.area_id as area2_27_1_,
+        zone1_.id as id25_0_ 
+    from
+        inspector_prefixes_areas areas0_ 
+    inner join
+        "Zone" zone1_ 
+            on areas0_.area_id=zone1_.id 
+    where
+        areas0_.inspector_id=?
+14:10:34,994 DEBUG SQL:104 - 
+    delete 
+    from
+        inspector_prefixes_areas 
+    where
+        inspector_id=?
+14:10:34,994 DEBUG SQL:104 - 
+    delete 
+    from
+        InspectorPrefixes 
+    where
+        inspector_id=?
+14:10:35,006 DEBUG SQL:104 - 
+    delete 
+    from
+        Inspector 
+    where
+        id=?
+14:10:35,006 DEBUG SQL:104 - 
+    delete 
+    from
+        "Zone" 
+    where
+        id=?
+14:10:35,007  INFO CustomRunner:139 - Test: testJoinedSubclassManyToManyWithNonPkReference
+14:10:35,008 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,008 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,009 DEBUG SQL:104 - 
+    insert 
+    into
+        "Zone"
+        (id) 
+    values
+        (?)
+14:10:35,021 DEBUG SQL:104 - 
+    insert 
+    into
+        Inspector
+        (name, id) 
+    values
+        (?, ?)
+14:10:35,021 DEBUG SQL:104 - 
+    insert 
+    into
+        InspectorPrefixes
+        (prefixes, inspector_id) 
+    values
+        (?, ?)
+14:10:35,022 DEBUG SQL:104 - 
+    insert 
+    into
+        deserted_area
+        (inspector_name, area_id) 
+    values
+        (?, ?)
+14:10:35,022 DEBUG SQL:104 - 
+    select
+        inspectorp0_.inspector_id as id9_0_,
+        inspectorp0_1_.name as name9_0_,
+        inspectorp0_.prefixes as prefixes10_0_ 
+    from
+        InspectorPrefixes inspectorp0_ 
+    inner join
+        Inspector inspectorp0_1_ 
+            on inspectorp0_.inspector_id=inspectorp0_1_.id 
+    where
+        inspectorp0_.inspector_id=?
+14:10:35,023 DEBUG SQL:104 - 
+    select
+        desertedar0_.inspector_name as inspector1_9_1_,
+        desertedar0_.area_id as area2_26_1_,
+        zone1_.id as id25_0_ 
+    from
+        deserted_area desertedar0_ 
+    inner join
+        "Zone" zone1_ 
+            on desertedar0_.area_id=zone1_.id 
+    where
+        desertedar0_.inspector_name=?
+14:10:35,024 DEBUG SQL:104 - 
+    select
+        inspectorp_.inspector_id as id9_ 
+    from
+        InspectorPrefixes inspectorp_ 
+    inner join
+        Inspector inspectorp_1_ 
+            on inspectorp_.inspector_id=inspectorp_1_.id 
+    where
+        inspectorp_1_.name=?
+14:10:35,025 DEBUG SQL:104 - 
+    delete 
+    from
+        inspector_prefixes_areas 
+    where
+        inspector_id=?
+14:10:35,025 DEBUG SQL:104 - 
+    delete 
+    from
+        deserted_area 
+    where
+        inspector_name=?
+14:10:35,025 DEBUG SQL:104 - 
+    delete 
+    from
+        InspectorPrefixes 
+    where
+        inspector_id=?
+14:10:35,034 DEBUG SQL:104 - 
+    delete 
+    from
+        Inspector 
+    where
+        id=?
+14:10:35,035 DEBUG SQL:104 - 
+    delete 
+    from
+        "Zone" 
+    where
+        id=?
+14:10:35,036  INFO CustomRunner:139 - Test: testManyToManyEmbeddableBiDirectionalDotNotationInMappedBy
+14:10:35,037 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,039 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (jobDescription, pm_id, fld_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:35,039 DEBUG SQL:104 - 
+    insert 
+    into
+        PhoneNumber
+        (phNumber) 
+    values
+        (?)
+14:10:35,051 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee_PhoneNumber
+        (employees_id, phoneNumbers_phNumber) 
+    values
+        (?, ?)
+14:10:35,052 DEBUG SQL:104 - 
+    select
+        employee0_.id as id5_0_,
+        employee0_.jobDescription as jobDescr2_5_0_,
+        employee0_.pm_id as pm4_5_0_,
+        employee0_.fld_name as fld3_5_0_,
+        employee0_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when employee0_1_.id is not null then 1 
+            when employee0_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        Employee employee0_ 
+    left outer join
+        Contractor employee0_1_ 
+            on employee0_.id=employee0_1_.id 
+    where
+        employee0_.id=?
+14:10:35,065 DEBUG SQL:104 - 
+    select
+        phonenumbe0_.employees_id as employees1_5_1_,
+        phonenumbe0_.phoneNumbers_phNumber as phoneNum2_6_1_,
+        phonenumbe1_.phNumber as phNumber15_0_ 
+    from
+        Employee_PhoneNumber phonenumbe0_ 
+    inner join
+        PhoneNumber phonenumbe1_ 
+            on phonenumbe0_.phoneNumbers_phNumber=phonenumbe1_.phNumber 
+    where
+        phonenumbe0_.employees_id=?
+14:10:35,066 DEBUG SQL:104 - 
+    select
+        employees0_.phoneNumbers_phNumber as phoneNum2_15_1_,
+        employees0_.employees_id as employees1_6_1_,
+        employee1_.id as id5_0_,
+        employee1_.jobDescription as jobDescr2_5_0_,
+        employee1_.pm_id as pm4_5_0_,
+        employee1_.fld_name as fld3_5_0_,
+        employee1_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when employee1_1_.id is not null then 1 
+            when employee1_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        Employee_PhoneNumber employees0_ 
+    inner join
+        Employee employee1_ 
+            on employees0_.employees_id=employee1_.id 
+    left outer join
+        Contractor employee1_1_ 
+            on employee1_.id=employee1_1_.id 
+    where
+        employees0_.phoneNumbers_phNumber=?
+14:10:35,067  INFO CustomRunner:139 - Test: testMappedBy
+14:10:35,068 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,069 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,069 DEBUG SQL:104 - 
+    insert 
+    into
+        Store
+        (name, id) 
+    values
+        (?, ?)
+14:10:35,092 DEBUG SQL:104 - 
+    insert 
+    into
+        Supplier
+        (name, id) 
+    values
+        (?, ?)
+14:10:35,092 DEBUG SQL:104 - 
+    insert 
+    into
+        StoreSupplier
+        (store, supplier) 
+    values
+        (?, ?)
+14:10:35,093 DEBUG SQL:104 - 
+    select
+        store0_.id as id17_0_,
+        store0_.name as name17_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.id=?
+14:10:35,094 DEBUG SQL:104 - 
+    select
+        suppliers0_.store as store17_1_,
+        suppliers0_.supplier as supplier18_1_,
+        supplier1_.id as id21_0_,
+        supplier1_.name as name21_0_ 
+    from
+        StoreSupplier suppliers0_ 
+    inner join
+        Supplier supplier1_ 
+            on suppliers0_.supplier=supplier1_.id 
+    where
+        suppliers0_.store=?
+14:10:35,112 DEBUG SQL:104 - 
+    select
+        supplier0_.id as id21_0_,
+        supplier0_.name as name21_0_ 
+    from
+        Supplier supplier0_ 
+    where
+        supplier0_.id=?
+14:10:35,113 DEBUG SQL:104 - 
+    select
+        suppstores0_.supplier as supplier21_1_,
+        suppstores0_.store as store18_1_,
+        store1_.id as id17_0_,
+        store1_.name as name17_0_ 
+    from
+        StoreSupplier suppstores0_ 
+    inner join
+        Store store1_ 
+            on suppstores0_.store=store1_.id 
+    where
+        suppstores0_.supplier=?
+14:10:35,114  INFO CustomRunner:139 - Test: testOneToManyEmbeddableBiDirectionalDotNotationInMappedBy
+14:10:35,128 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,130 DEBUG SQL:104 - 
+    insert 
+    into
+        ProgramManager
+        (id) 
+    values
+        (?)
+14:10:35,130 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (jobDescription, pm_id, fld_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:35,131 DEBUG SQL:104 - 
+    select
+        employee0_.id as id5_0_,
+        employee0_.jobDescription as jobDescr2_5_0_,
+        employee0_.pm_id as pm4_5_0_,
+        employee0_.fld_name as fld3_5_0_,
+        employee0_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when employee0_1_.id is not null then 1 
+            when employee0_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        Employee employee0_ 
+    left outer join
+        Contractor employee0_1_ 
+            on employee0_.id=employee0_1_.id 
+    where
+        employee0_.id=?
+14:10:35,147 DEBUG SQL:104 - 
+    select
+        programman0_.id as id16_0_ 
+    from
+        ProgramManager programman0_ 
+    where
+        programman0_.id=?
+14:10:35,148 DEBUG SQL:104 - 
+    select
+        manages0_.pm_id as pm4_16_1_,
+        manages0_.id as id5_1_,
+        manages0_.id as id5_0_,
+        manages0_.jobDescription as jobDescr2_5_0_,
+        manages0_.pm_id as pm4_5_0_,
+        manages0_.fld_name as fld3_5_0_,
+        manages0_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when manages0_1_.id is not null then 1 
+            when manages0_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        Employee manages0_ 
+    left outer join
+        Contractor manages0_1_ 
+            on manages0_.id=manages0_1_.id 
+    where
+        manages0_.pm_id=?
+14:10:35,160  INFO CustomRunner:139 - Test: testOrderByContractor
+14:10:35,161 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,161 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,162 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,163 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (jobDescription, pm_id, fld_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:35,163 DEBUG SQL:104 - 
+    insert 
+    into
+        Contractor
+        (hourlyRate, id) 
+    values
+        (?, ?)
+14:10:35,164 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (jobDescription, pm_id, fld_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:35,164 DEBUG SQL:104 - 
+    insert 
+    into
+        Contractor
+        (hourlyRate, id) 
+    values
+        (?, ?)
+14:10:35,164 DEBUG SQL:104 - 
+    insert 
+    into
+        "Employer"
+        (id) 
+    values
+        (?)
+14:10:35,165 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYER_CONTRACTOR
+        (EMPLOYER_ID, CONTRACTOR_ID) 
+    values
+        (?, ?)
+14:10:35,165 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYER_CONTRACTOR
+        (EMPLOYER_ID, CONTRACTOR_ID) 
+    values
+        (?, ?)
+14:10:35,166 DEBUG SQL:104 - 
+    select
+        employer0_.id as id24_0_ 
+    from
+        "Employer" employer0_ 
+    where
+        employer0_.id=?
+14:10:35,182 DEBUG SQL:104 - 
+    select
+        contractor0_.EMPLOYER_ID as EMPLOYER1_24_1_,
+        contractor0_.CONTRACTOR_ID as CONTRACTOR2_3_1_,
+        contractor1_.id as id5_0_,
+        contractor1_1_.jobDescription as jobDescr2_5_0_,
+        contractor1_1_.pm_id as pm4_5_0_,
+        contractor1_1_.fld_name as fld3_5_0_,
+        contractor1_.hourlyRate as hourlyRate2_0_ 
+    from
+        EMPLOYER_CONTRACTOR contractor0_ 
+    inner join
+        Contractor contractor1_ 
+            on contractor0_.CONTRACTOR_ID=contractor1_.id 
+    left outer join
+        Employee contractor1_1_ 
+            on contractor1_.id=contractor1_1_.id 
+    where
+        contractor0_.EMPLOYER_ID=? 
+    order by
+        contractor1_1_.fld_name desc
+14:10:35,184  INFO CustomRunner:139 - Test: testOrderByEmployee
+14:10:35,196 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,197 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,206 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,207 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (jobDescription, pm_id, fld_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:35,208 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (jobDescription, pm_id, fld_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:35,208 DEBUG SQL:104 - 
+    insert 
+    into
+        "Employer"
+        (id) 
+    values
+        (?)
+14:10:35,208 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYER_EMPLOYEE
+        (EMPER_ID, EMPEE_ID) 
+    values
+        (?, ?)
+14:10:35,208 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYER_EMPLOYEE
+        (EMPER_ID, EMPEE_ID) 
+    values
+        (?, ?)
+14:10:35,209 DEBUG SQL:104 - 
+    select
+        employer0_.id as id24_0_ 
+    from
+        "Employer" employer0_ 
+    where
+        employer0_.id=?
+14:10:35,230 DEBUG SQL:104 - 
+    select
+        employees0_.EMPER_ID as EMPER1_24_1_,
+        employees0_.EMPEE_ID as EMPEE2_4_1_,
+        employee1_.id as id5_0_,
+        employee1_.jobDescription as jobDescr2_5_0_,
+        employee1_.pm_id as pm4_5_0_,
+        employee1_.fld_name as fld3_5_0_,
+        employee1_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when employee1_1_.id is not null then 1 
+            when employee1_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        EMPLOYER_EMPLOYEE employees0_ 
+    inner join
+        Employee employee1_ 
+            on employees0_.EMPEE_ID=employee1_.id 
+    left outer join
+        Contractor employee1_1_ 
+            on employee1_.id=employee1_1_.id 
+    where
+        employees0_.EMPER_ID=? 
+    order by
+        employee1_.fld_name asc
+14:10:35,234  INFO CustomRunner:139 - Test: testReferencedColumnNameToSuperclass
+14:10:35,249 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,250 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,251 DEBUG SQL:104 - 
+    insert 
+    into
+        BuildingCompany
+        (name, foundedIn, id) 
+    values
+        (?, ?, ?)
+14:10:35,252 DEBUG SQL:104 - 
+    insert 
+    into
+        Building
+        (company_id, id) 
+    values
+        (?, ?)
+14:10:35,252 DEBUG SQL:104 - 
+    select
+        building0_.id as id0_0_,
+        building0_.company_id as company2_0_0_ 
+    from
+        Building building0_ 
+    where
+        building0_.id=?
+14:10:35,252 DEBUG SQL:104 - 
+    select
+        buildingco0_.id as id1_0_,
+        buildingco0_.name as name1_0_,
+        buildingco0_.foundedIn as foundedIn1_0_ 
+    from
+        BuildingCompany buildingco0_ 
+    where
+        buildingco0_.name=?
+14:10:35,259  INFO CustomRunner:139 - Test: testRemoveInBetween
+14:10:35,260 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,261 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,261 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,262 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (jobDescription, pm_id, fld_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:35,262 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (jobDescription, pm_id, fld_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:35,263 DEBUG SQL:104 - 
+    insert 
+    into
+        "Employer"
+        (id) 
+    values
+        (?)
+14:10:35,275 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYER_EMPLOYEE
+        (EMPER_ID, EMPEE_ID) 
+    values
+        (?, ?)
+14:10:35,275 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYER_EMPLOYEE
+        (EMPER_ID, EMPEE_ID) 
+    values
+        (?, ?)
+14:10:35,276 DEBUG SQL:104 - 
+    select
+        employer0_.id as id24_0_ 
+    from
+        "Employer" employer0_ 
+    where
+        employer0_.id=?
+14:10:35,276 DEBUG SQL:104 - 
+    select
+        employees0_.EMPER_ID as EMPER1_24_1_,
+        employees0_.EMPEE_ID as EMPEE2_4_1_,
+        employee1_.id as id5_0_,
+        employee1_.jobDescription as jobDescr2_5_0_,
+        employee1_.pm_id as pm4_5_0_,
+        employee1_.fld_name as fld3_5_0_,
+        employee1_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when employee1_1_.id is not null then 1 
+            when employee1_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        EMPLOYER_EMPLOYEE employees0_ 
+    inner join
+        Employee employee1_ 
+            on employees0_.EMPEE_ID=employee1_.id 
+    left outer join
+        Contractor employee1_1_ 
+            on employee1_.id=employee1_1_.id 
+    where
+        employees0_.EMPER_ID=? 
+    order by
+        employee1_.fld_name asc
+14:10:35,298 DEBUG SQL:104 - 
+    select
+        employers0_.EMPEE_ID as EMPEE2_5_1_,
+        employers0_.EMPER_ID as EMPER1_4_1_,
+        employer1_.id as id24_0_ 
+    from
+        EMPLOYER_EMPLOYEE employers0_ 
+    inner join
+        "Employer" employer1_ 
+            on employers0_.EMPER_ID=employer1_.id 
+    where
+        employers0_.EMPEE_ID=?
+14:10:35,299 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYER_EMPLOYEE 
+    where
+        EMPER_ID=?
+14:10:35,300 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYER_EMPLOYEE
+        (EMPER_ID, EMPEE_ID) 
+    values
+        (?, ?)
+14:10:35,300 DEBUG SQL:104 - 
+    select
+        employee0_.id as id5_0_,
+        employee0_.jobDescription as jobDescr2_5_0_,
+        employee0_.pm_id as pm4_5_0_,
+        employee0_.fld_name as fld3_5_0_,
+        employee0_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when employee0_1_.id is not null then 1 
+            when employee0_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        Employee employee0_ 
+    left outer join
+        Contractor employee0_1_ 
+            on employee0_.id=employee0_1_.id 
+    where
+        employee0_.id=?
+14:10:35,310 DEBUG SQL:104 - 
+    select
+        employee0_.id as id5_0_,
+        employee0_.jobDescription as jobDescr2_5_0_,
+        employee0_.pm_id as pm4_5_0_,
+        employee0_.fld_name as fld3_5_0_,
+        employee0_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when employee0_1_.id is not null then 1 
+            when employee0_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        Employee employee0_ 
+    left outer join
+        Contractor employee0_1_ 
+            on employee0_.id=employee0_1_.id 
+    where
+        employee0_.id=?
+14:10:35,311 DEBUG SQL:104 - 
+    select
+        employers0_.EMPEE_ID as EMPEE2_5_1_,
+        employers0_.EMPER_ID as EMPER1_4_1_,
+        employer1_.id as id24_0_ 
+    from
+        EMPLOYER_EMPLOYEE employers0_ 
+    inner join
+        "Employer" employer1_ 
+            on employers0_.EMPER_ID=employer1_.id 
+    where
+        employers0_.EMPEE_ID=?
+14:10:35,331 DEBUG SQL:104 - 
+    select
+        employees0_.EMPER_ID as EMPER1_24_1_,
+        employees0_.EMPEE_ID as EMPEE2_4_1_,
+        employee1_.id as id5_0_,
+        employee1_.jobDescription as jobDescr2_5_0_,
+        employee1_.pm_id as pm4_5_0_,
+        employee1_.fld_name as fld3_5_0_,
+        employee1_1_.hourlyRate as hourlyRate2_0_,
+        case 
+            when employee1_1_.id is not null then 1 
+            when employee1_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        EMPLOYER_EMPLOYEE employees0_ 
+    inner join
+        Employee employee1_ 
+            on employees0_.EMPEE_ID=employee1_.id 
+    left outer join
+        Contractor employee1_1_ 
+            on employee1_.id=employee1_1_.id 
+    where
+        employees0_.EMPER_ID=? 
+    order by
+        employee1_.fld_name asc
+14:10:35,333 DEBUG SQL:104 - 
+    select
+        phonenumbe0_.employees_id as employees1_5_1_,
+        phonenumbe0_.phoneNumbers_phNumber as phoneNum2_6_1_,
+        phonenumbe1_.phNumber as phNumber15_0_ 
+    from
+        Employee_PhoneNumber phonenumbe0_ 
+    inner join
+        PhoneNumber phonenumbe1_ 
+            on phonenumbe0_.phoneNumbers_phNumber=phonenumbe1_.phNumber 
+    where
+        phonenumbe0_.employees_id=?
+14:10:35,334 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYER_CONTRACTOR 
+    where
+        EMPLOYER_ID=?
+14:10:35,334 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYER_EMPLOYEE 
+    where
+        EMPER_ID=?
+14:10:35,403 DEBUG SQL:104 - 
+    delete 
+    from
+        "Employer" 
+    where
+        id=?
+14:10:35,404 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        id=?
+14:10:35,405  INFO CustomRunner:139 - Test: testSelf
+14:10:35,405 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,406 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:35,407 DEBUG SQL:104 - 
+    insert 
+    into
+        Friend
+        (name, id) 
+    values
+        (?, ?)
+14:10:35,421 DEBUG SQL:104 - 
+    insert 
+    into
+        Friend
+        (name, id) 
+    values
+        (?, ?)
+14:10:35,421 DEBUG SQL:104 - 
+    insert 
+    into
+        FRIEND2FRIEND
+        (FROM_FR, TO_FR) 
+    values
+        (?, ?)
+14:10:35,422 DEBUG SQL:104 - 
+    select
+        friend0_.id as id8_0_,
+        friend0_.name as name8_0_ 
+    from
+        Friend friend0_ 
+    where
+        friend0_.id=?
+14:10:35,423 DEBUG SQL:104 - 
+    select
+        friends0_.FROM_FR as FROM1_8_1_,
+        friends0_.TO_FR as TO2_7_1_,
+        friend1_.id as id8_0_,
+        friend1_.name as name8_0_ 
+    from
+        FRIEND2FRIEND friends0_ 
+    inner join
+        Friend friend1_ 
+            on friends0_.TO_FR=friend1_.id 
+    where
+        friends0_.FROM_FR=?
+14:10:35,436 DEBUG SQL:104 - 
+    select
+        friends0_.FROM_FR as FROM1_8_1_,
+        friends0_.TO_FR as TO2_7_1_,
+        friend1_.id as id8_0_,
+        friend1_.name as name8_0_ 
+    from
+        FRIEND2FRIEND friends0_ 
+    inner join
+        Friend friend1_ 
+            on friends0_.TO_FR=friend1_.id 
+    where
+        friends0_.FROM_FR=?
+14:10:35,437  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:35,438 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:35,438 DEBUG SQL:104 - 
+    alter table Building 
+        drop constraint FKAE9476D46ABD6871
+14:10:35,439 DEBUG SQL:104 - 
+    alter table Contractor 
+        drop constraint FK9C06FE9519D84CFE
+14:10:35,439 DEBUG SQL:104 - 
+    alter table EMPLOYER_CONTRACTOR 
+        drop constraint FK3F369A7924F418F
+14:10:35,439 DEBUG SQL:104 - 
+    alter table EMPLOYER_CONTRACTOR 
+        drop constraint FK3F369A79505A0D0F
+14:10:35,439 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B260939535
+14:10:35,439 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B260997E15
+14:10:35,439 DEBUG SQL:104 - 
+    alter table Employee 
+        drop constraint FK4AFD4ACE4786109B
+14:10:35,440 DEBUG SQL:104 - 
+    alter table Employee_PhoneNumber 
+        drop constraint FK7C0846466D1D2006
+14:10:35,468 DEBUG SQL:104 - 
+    alter table Employee_PhoneNumber 
+        drop constraint FK7C084646B2E1D7F8
+14:10:35,468 DEBUG SQL:104 - 
+    alter table FRIEND2FRIEND 
+        drop constraint FK917784F28A50BA23
+14:10:35,468 DEBUG SQL:104 - 
+    alter table FRIEND2FRIEND 
+        drop constraint FK917784F2604D6E94
+14:10:35,469 DEBUG SQL:104 - 
+    alter table InspectorPrefixes 
+        drop constraint FK501A5AB7794547C5
+14:10:35,469 DEBUG SQL:104 - 
+    alter table Man_Woman 
+        drop constraint WM_M_FK
+14:10:35,469 DEBUG SQL:104 - 
+    alter table Man_Woman 
+        drop constraint WM_W_FK
+14:10:35,469 DEBUG SQL:104 - 
+    alter table StoreSupplier 
+        drop constraint FK488E15ADC6D4CCD
+14:10:35,469 DEBUG SQL:104 - 
+    alter table StoreSupplier 
+        drop constraint FK488E15AD24492CAD
+14:10:35,469 DEBUG SQL:104 - 
+    alter table Store_KnownClient 
+        drop constraint FK39FC9A508D52DCDE
+14:10:35,470 DEBUG SQL:104 - 
+    alter table Store_KnownClient 
+        drop constraint FK39FC9A5082A58C94
+14:10:35,478 DEBUG SQL:104 - 
+    alter table Store_tbl_city 
+        drop constraint FK68642B0A9A3108AF
+14:10:35,479 DEBUG SQL:104 - 
+    alter table Store_tbl_city 
+        drop constraint FK68642B0A8417F505
+14:10:35,479 DEBUG SQL:104 - 
+    alter table TT 
+        drop constraint FKA805DBC25A9
+14:10:35,479 DEBUG SQL:104 - 
+    alter table TT 
+        drop constraint FKA8016B65C5D
+14:10:35,480 DEBUG SQL:104 - 
+    alter table deserted_area 
+        drop constraint FK1F5F0278270F196E
+14:10:35,480 DEBUG SQL:104 - 
+    alter table inspector_prefixes_areas 
+        drop constraint FK6E87FD8F270F196E
+14:10:35,481 DEBUG SQL:104 - 
+    alter table inspector_prefixes_areas 
+        drop constraint FK6E87FD8FE3FC8CA5
+14:10:35,481 DEBUG SQL:104 - 
+    alter table tbl_group_Permission 
+        drop constraint FK3A23A2107453922E
+14:10:35,481 DEBUG SQL:104 - 
+    alter table tbl_group_Permission 
+        drop constraint FK3A23A21043D82F2E
+14:10:35,482 DEBUG SQL:104 - 
+    alter table tbl_group_Permission 
+        drop constraint FK3A23A210CBAEEFA6
+14:10:35,482 DEBUG SQL:104 - 
+    drop table Building if exists
+14:10:35,498 DEBUG SQL:104 - 
+    drop table BuildingCompany if exists
+14:10:35,499 DEBUG SQL:104 - 
+    drop table Contractor if exists
+14:10:35,499 DEBUG SQL:104 - 
+    drop table EMPLOYER_CONTRACTOR if exists
+14:10:35,500 DEBUG SQL:104 - 
+    drop table EMPLOYER_EMPLOYEE if exists
+14:10:35,500 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:10:35,500 DEBUG SQL:104 - 
+    drop table Employee_PhoneNumber if exists
+14:10:35,501 DEBUG SQL:104 - 
+    drop table FRIEND2FRIEND if exists
+14:10:35,501 DEBUG SQL:104 - 
+    drop table Friend if exists
+14:10:35,503 DEBUG SQL:104 - 
+    drop table Inspector if exists
+14:10:35,504 DEBUG SQL:104 - 
+    drop table InspectorPrefixes if exists
+14:10:35,504 DEBUG SQL:104 - 
+    drop table KnownClient if exists
+14:10:35,504 DEBUG SQL:104 - 
+    drop table Man if exists
+14:10:35,505 DEBUG SQL:104 - 
+    drop table Man_Woman if exists
+14:10:35,505 DEBUG SQL:104 - 
+    drop table Permission if exists
+14:10:35,505 DEBUG SQL:104 - 
+    drop table PhoneNumber if exists
+14:10:35,521 DEBUG SQL:104 - 
+    drop table ProgramManager if exists
+14:10:35,521 DEBUG SQL:104 - 
+    drop table Store if exists
+14:10:35,521 DEBUG SQL:104 - 
+    drop table StoreSupplier if exists
+14:10:35,521 DEBUG SQL:104 - 
+    drop table Store_KnownClient if exists
+14:10:35,522 DEBUG SQL:104 - 
+    drop table Store_tbl_city if exists
+14:10:35,522 DEBUG SQL:104 - 
+    drop table Supplier if exists
+14:10:35,522 DEBUG SQL:104 - 
+    drop table TT if exists
+14:10:35,522 DEBUG SQL:104 - 
+    drop table Woman if exists
+14:10:35,522 DEBUG SQL:104 - 
+    drop table "Employer" if exists
+14:10:35,523 DEBUG SQL:104 - 
+    drop table "Zone" if exists
+14:10:35,523 DEBUG SQL:104 - 
+    drop table deserted_area if exists
+14:10:35,523 DEBUG SQL:104 - 
+    drop table inspector_prefixes_areas if exists
+14:10:35,523 DEBUG SQL:104 - 
+    drop table tbl_cat if exists
+14:10:35,523 DEBUG SQL:104 - 
+    drop table tbl_city if exists
+14:10:35,523 DEBUG SQL:104 - 
+    drop table tbl_group if exists
+14:10:35,535 DEBUG SQL:104 - 
+    drop table tbl_group_Permission if exists
+14:10:35,536 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:35,536  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:35,536  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

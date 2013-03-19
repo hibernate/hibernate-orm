@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.collection.list.PersistentListTest" tests="2" time="0.165" timestamp="2013-02-28T20:11:56">
+  <properties />
+  <testcase classname="org.hibernate.test.collection.list.PersistentListTest" name="testInverseListIndexColumnWritten" time="0.047" />
+  <testcase classname="org.hibernate.test.collection.list.PersistentListTest" name="testWriteMethodDirtying" time="0.05" />
+  <system-out><![CDATA[14:11:56,180  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.collection.list.PersistentListTest
+14:11:56,182  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/collection/list/Mappings.hbm.xml
+14:11:56,191  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:56,191  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:56,191  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:56,192  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:56,192  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:56,216  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:56,217  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:56,218  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:56,218  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:56,218  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:56,228  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:56,229 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:56,229 DEBUG SQL:104 - 
+    alter table ListOwner 
+        drop constraint FK2D9C24952490D3C9
+14:11:56,229 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ListOwner drop constraint FK2D9C24952490D3C9
+14:11:56,229 ERROR SchemaExport:426 - Table "LISTOWNER" not found; SQL statement:
+
+    alter table ListOwner 
+        drop constraint FK2D9C24952490D3C9 [42102-145]
+14:11:56,239 DEBUG SQL:104 - 
+    drop table ListOwner if exists
+14:11:56,240 DEBUG SQL:104 - 
+    create table ListOwner (
+        NAME varchar(255) not null,
+        parent varchar(255),
+        LIST_INDEX integer,
+        primary key (NAME)
+    )
+14:11:56,240 DEBUG SQL:104 - 
+    alter table ListOwner 
+        add constraint FK2D9C24952490D3C9 
+        foreign key (parent) 
+        references ListOwner
+14:11:56,241  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:56,241  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:56,242  INFO CustomRunner:139 - Test: testInverseListIndexColumnWritten
+14:11:56,244 DEBUG SQL:104 - 
+    select
+        listowner_.NAME,
+        listowner_.parent as parent0_ 
+    from
+        ListOwner listowner_ 
+    where
+        listowner_.NAME=?
+14:11:56,245 DEBUG SQL:104 - 
+    select
+        listowner_.NAME,
+        listowner_.parent as parent0_ 
+    from
+        ListOwner listowner_ 
+    where
+        listowner_.NAME=?
+14:11:56,258 DEBUG SQL:104 - 
+    insert 
+    into
+        ListOwner
+        (parent, NAME) 
+    values
+        (?, ?)
+14:11:56,259 DEBUG SQL:104 - 
+    insert 
+    into
+        ListOwner
+        (parent, NAME) 
+    values
+        (?, ?)
+14:11:56,259 DEBUG SQL:104 - 
+    insert 
+    into
+        ListOwner
+        (parent, NAME) 
+    values
+        (?, ?)
+14:11:56,261 DEBUG SQL:104 - 
+    select
+        NAME,
+        LIST_INDEX 
+    from
+        ListOwner 
+    where
+        NAME <> ?
+14:11:56,261  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:11:56,264  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/collection/list/Mappings.hbm.xml
+14:11:56,272  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:56,272  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:56,273  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:56,273  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:56,273  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:56,274  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:56,275  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:56,276  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:56,276  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:56,277  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:56,285  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:56,286 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:56,286 DEBUG SQL:104 - 
+    alter table ListOwner 
+        drop constraint FK2D9C24952490D3C9
+14:11:56,286 DEBUG SQL:104 - 
+    drop table ListOwner if exists
+14:11:56,286 DEBUG SQL:104 - 
+    create table ListOwner (
+        NAME varchar(255) not null,
+        parent varchar(255),
+        LIST_INDEX integer,
+        primary key (NAME)
+    )
+14:11:56,287 DEBUG SQL:104 - 
+    alter table ListOwner 
+        add constraint FK2D9C24952490D3C9 
+        foreign key (parent) 
+        references ListOwner
+14:11:56,288  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:56,289  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:56,289  INFO CustomRunner:139 - Test: testWriteMethodDirtying
+14:11:56,291 DEBUG SQL:104 - 
+    select
+        listowner_.NAME,
+        listowner_.parent as parent0_ 
+    from
+        ListOwner listowner_ 
+    where
+        listowner_.NAME=?
+14:11:56,293 DEBUG SQL:104 - 
+    insert 
+    into
+        ListOwner
+        (parent, NAME) 
+    values
+        (?, ?)
+14:11:56,294 DEBUG SQL:104 - 
+    insert 
+    into
+        ListOwner
+        (parent, NAME) 
+    values
+        (?, ?)
+14:11:56,338 DEBUG SQL:104 - 
+    delete 
+    from
+        ListOwner 
+    where
+        NAME=?
+14:11:56,338 DEBUG SQL:104 - 
+    delete 
+    from
+        ListOwner 
+    where
+        NAME=?
+14:11:56,339  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:56,340 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:56,340 DEBUG SQL:104 - 
+    alter table ListOwner 
+        drop constraint FK2D9C24952490D3C9
+14:11:56,340 DEBUG SQL:104 - 
+    drop table ListOwner if exists
+14:11:56,340  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:56,341  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

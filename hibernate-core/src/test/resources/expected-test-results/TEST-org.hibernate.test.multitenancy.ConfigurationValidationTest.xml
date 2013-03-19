@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.multitenancy.ConfigurationValidationTest" tests="2" time="0.09" timestamp="2013-02-28T20:17:30">
+  <properties />
+  <testcase classname="org.hibernate.test.multitenancy.ConfigurationValidationTest" name="testInvalidConnectionProvider" time="0.003" />
+  <testcase classname="org.hibernate.test.multitenancy.ConfigurationValidationTest" name="testReleaseMode" time="0.085" />
+  <system-out><![CDATA[14:17:30,516  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.multitenancy.ConfigurationValidationTest
+14:17:30,517  INFO CustomRunner:139 - Test: testInvalidConnectionProvider
+14:17:30,519  WARN MultiTenantConnectionProviderInitiator:87 - Unable to locate specified class [class.not.present.in.classpath]
+org.hibernate.boot.registry.classloading.spi.ClassLoadingException: Unable to load class [class.not.present.in.classpath]
+	at org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl.classForName(ClassLoaderServiceImpl.java:203)
+	at org.hibernate.engine.jdbc.connections.internal.MultiTenantConnectionProviderInitiator.initiateService(MultiTenantConnectionProviderInitiator.java:84)
+	at org.hibernate.engine.jdbc.connections.internal.MultiTenantConnectionProviderInitiator.initiateService(MultiTenantConnectionProviderInitiator.java:43)
+	at org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.initiateService(StandardServiceRegistryImpl.java:71)
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.createService(AbstractServiceRegistryImpl.java:176)
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:150)
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:131)
+	at org.hibernate.engine.jdbc.internal.JdbcServicesImpl.buildJdbcConnectionAccess(JdbcServicesImpl.java:235)
+	at org.hibernate.engine.jdbc.internal.JdbcServicesImpl.configure(JdbcServicesImpl.java:90)
+	at org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.configureService(StandardServiceRegistryImpl.java:77)
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:159)
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:131)
+	at org.hibernate.cfg.SettingsFactory.buildSettings(SettingsFactory.java:79)
+	at org.hibernate.cfg.Configuration.buildSettingsInternal(Configuration.java:2322)
+	at org.hibernate.cfg.Configuration.buildSettings(Configuration.java:2318)
+	at org.hibernate.cfg.Configuration.buildSessionFactory(Configuration.java:1787)
+	at org.hibernate.test.multitenancy.ConfigurationValidationTest.testInvalidConnectionProvider(ConfigurationValidationTest.java:30)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:45)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:42)
+	at org.hibernate.testing.junit4.ExtendedFrameworkMethod.invokeExplosively(ExtendedFrameworkMethod.java:63)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:20)
+	at org.junit.internal.runners.statements.ExpectException.evaluate(ExpectException.java:22)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:30)
+	at org.junit.internal.runners.statements.FailOnTimeout$StatementThread.run(FailOnTimeout.java:62)
+Caused by: java.lang.ClassNotFoundException: Could not load requested class : class.not.present.in.classpath
+	at org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl$AggregatedClassLoader.findClass(ClassLoaderServiceImpl.java:192)
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:423)
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:356)
+	at java.lang.Class.forName0(Native Method)
+	at java.lang.Class.forName(Class.java:264)
+	at org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl.classForName(ClassLoaderServiceImpl.java:200)
+	... 28 more
+14:17:30,520  INFO CustomRunner:139 - Test: testReleaseMode
+14:17:30,556  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:30,557  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 20
+14:17:30,557  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:30,557  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:acme;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:30,557  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa, password=****}
+14:17:30,601  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:30,601  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:30,602  WARN SettingsFactory:197 - HHH000390: Overriding release mode as connection provider does not support 'after_statement'
+14:17:30,602  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:30,602  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:30,604  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:30,605  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

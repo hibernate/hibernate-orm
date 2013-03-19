@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.property.BasicPropertyAccessorTest" tests="1" time="0.003" timestamp="2013-02-28T20:10:03">
+  <properties />
+  <testcase classname="org.hibernate.property.BasicPropertyAccessorTest" name="testBridgeMethodDisregarded" time="0.002" />
+  <system-out><![CDATA[14:10:03,600  INFO CustomRunner:132 - BeforeClass: org.hibernate.property.BasicPropertyAccessorTest
+14:10:03,600  INFO CustomRunner:139 - Test: testBridgeMethodDisregarded
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

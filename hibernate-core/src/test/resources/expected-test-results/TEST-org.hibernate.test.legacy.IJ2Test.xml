@@ -1,0 +1,778 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.IJ2Test" tests="1" time="0.389" timestamp="2013-02-28T20:16:27">
+  <properties />
+  <testcase classname="org.hibernate.test.legacy.IJ2Test" name="testUnionSubclass" time="0.268" />
+  <system-out><![CDATA[14:16:27,639  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.IJ2Test
+14:16:27,640  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:27,641  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/IJ2.hbm.xml
+14:16:27,648  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:16:27,649  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:16:27,649  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:16:27,649  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:16:27,650  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:16:27,651  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:27,651  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:16:27,652  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:16:27,652  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:16:27,669  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:27,670 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:27,670 DEBUG SQL:104 - 
+    alter table I 
+        drop constraint FK49807B046
+14:16:27,670 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table I drop constraint FK49807B046
+14:16:27,670 ERROR SchemaExport:426 - Table "I" not found; SQL statement:
+
+    alter table I 
+        drop constraint FK49807B046 [42102-145]
+14:16:27,670 DEBUG SQL:104 - 
+    alter table J 
+        drop constraint FK49807B0464a
+14:16:27,671 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table J drop constraint FK49807B0464a
+14:16:27,671 ERROR SchemaExport:426 - Table "J" not found; SQL statement:
+
+    alter table J 
+        drop constraint FK49807B0464a [42102-145]
+14:16:27,671 DEBUG SQL:104 - 
+    drop table I if exists
+14:16:27,671 DEBUG SQL:104 - 
+    drop table J if exists
+14:16:27,671 DEBUG SQL:104 - 
+    drop table K if exists
+14:16:27,672 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:16:27,672 DEBUG SQL:104 - 
+    create table I (
+        id bigint not null,
+        name varchar(255) not null,
+        type_ char(255),
+        parent bigint,
+        primary key (id)
+    )
+14:16:27,672 DEBUG SQL:104 - 
+    create table J (
+        id bigint not null,
+        name varchar(255) not null,
+        type_ char(255),
+        parent bigint,
+        amount float,
+        primary key (id)
+    )
+14:16:27,673 DEBUG SQL:104 - 
+    create table K (
+        id bigint not null,
+        primary key (id)
+    )
+14:16:27,673 DEBUG SQL:104 - 
+    alter table I 
+        add constraint uc_I_1 unique (name)
+14:16:27,673 DEBUG SQL:104 - 
+    alter table I 
+        add constraint FK49807B046 
+        foreign key (parent) 
+        references K
+14:16:27,674 DEBUG SQL:104 - 
+    alter table I 
+        add constraint uc_I_1 unique (name)
+14:16:27,674 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table I add constraint uc_I_1 unique (name)
+14:16:27,674 ERROR SchemaExport:426 - Constraint "UC_I_1" already exists; SQL statement:
+
+    alter table I 
+        add constraint uc_I_1 unique (name) [90045-145]
+14:16:27,674 DEBUG SQL:104 - 
+    alter table J 
+        add constraint uc_J_1 unique (name)
+14:16:27,675 DEBUG SQL:104 - 
+    alter table J 
+        add constraint FK49807B0464a 
+        foreign key (parent) 
+        references K
+14:16:27,675 DEBUG SQL:104 - 
+    create table hibernate_unique_key (
+         next_hi integer 
+    )
+14:16:27,675 DEBUG SQL:104 - 
+    insert into hibernate_unique_key values ( 0 )
+14:16:27,676  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:27,676  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:16:27,676  INFO CustomRunner:139 - Test: testUnionSubclass
+14:16:27,678 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:16:27,678 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:16:27,679 DEBUG SQL:104 - 
+    insert 
+    into
+        I
+        (name, type_, parent, id) 
+    values
+        (?, ?, ?, ?)
+14:16:27,680 DEBUG SQL:104 - 
+    insert 
+    into
+        J
+        (name, type_, parent, amount, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:16:27,680 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_1_,
+        i0_.name as name0_1_,
+        i0_.type_ as type3_0_1_,
+        i0_.parent as parent0_1_,
+        i0_.amount as amount1_1_,
+        i0_.clazz_ as clazz_1_,
+        k1_.id as id2_0_ 
+    from
+        ( select
+            id,
+            name,
+            type_,
+            parent,
+            null as amount,
+            0 as clazz_ 
+        from
+            I 
+        union
+        all select
+            id,
+            name,
+            type_,
+            parent,
+            amount,
+            1 as clazz_ 
+        from
+            J 
+    ) i0_ 
+left outer join
+    K k1_ 
+        on i0_.parent=k1_.id 
+where
+    i0_.id=?
+14:16:27,681 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_1_,
+        i0_.name as name0_1_,
+        i0_.type_ as type3_0_1_,
+        i0_.parent as parent0_1_,
+        i0_.amount as amount1_1_,
+        i0_.clazz_ as clazz_1_,
+        k1_.id as id2_0_ 
+    from
+        ( select
+            id,
+            name,
+            type_,
+            parent,
+            null as amount,
+            0 as clazz_ 
+        from
+            I 
+        union
+        all select
+            id,
+            name,
+            type_,
+            parent,
+            amount,
+            1 as clazz_ 
+        from
+            J 
+    ) i0_ 
+left outer join
+    K k1_ 
+        on i0_.parent=k1_.id 
+where
+    i0_.id=?
+14:16:27,682 DEBUG SQL:104 - 
+    select
+        id 
+    from
+        I 
+    where
+        id =? for update
+            
+14:16:27,682 DEBUG SQL:104 - 
+    update
+        J 
+    set
+        name=?,
+        type_=?,
+        parent=?,
+        amount=? 
+    where
+        id=?
+14:16:27,683 DEBUG SQL:104 - 
+    select
+        j0_.id as id0_1_,
+        j0_.name as name0_1_,
+        j0_.type_ as type3_0_1_,
+        j0_.parent as parent0_1_,
+        j0_.amount as amount1_1_,
+        k1_.id as id2_0_ 
+    from
+        J j0_ 
+    left outer join
+        K k1_ 
+            on j0_.parent=k1_.id 
+    where
+        j0_.id=?
+14:16:27,683 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_1_,
+        i0_.name as name0_1_,
+        i0_.type_ as type3_0_1_,
+        i0_.parent as parent0_1_,
+        i0_.amount as amount1_1_,
+        i0_.clazz_ as clazz_1_,
+        k1_.id as id2_0_ 
+    from
+        ( select
+            id,
+            name,
+            type_,
+            parent,
+            null as amount,
+            0 as clazz_ 
+        from
+            I 
+        union
+        all select
+            id,
+            name,
+            type_,
+            parent,
+            amount,
+            1 as clazz_ 
+        from
+            J 
+    ) i0_ 
+left outer join
+    K k1_ 
+        on i0_.parent=k1_.id 
+where
+    i0_.id=?
+14:16:27,684 DEBUG SQL:104 - 
+    select
+        id 
+    from
+        I 
+    where
+        id =? for update
+            
+14:16:27,685 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_,
+        i0_.name as name0_,
+        i0_.type_ as type3_0_,
+        i0_.parent as parent0_,
+        i0_.amount as amount1_,
+        i0_.clazz_ as clazz_ 
+    from
+        ( select
+            id,
+            name,
+            type_,
+            parent,
+            null as amount,
+            0 as clazz_ 
+        from
+            I 
+        union
+        all select
+            id,
+            name,
+            type_,
+            parent,
+            amount,
+            1 as clazz_ 
+        from
+            J 
+    ) i0_
+14:16:27,686 DEBUG SQL:104 - 
+    select
+        j0_.id as id0_,
+        j0_.name as name0_,
+        j0_.type_ as type3_0_,
+        j0_.parent as parent0_,
+        j0_.amount as amount1_ 
+    from
+        J j0_
+14:16:27,690 DEBUG SQL:104 - 
+    select
+        j0_.id as id0_,
+        j0_.name as name0_,
+        j0_.type_ as type3_0_,
+        j0_.parent as parent0_,
+        j0_.amount as amount1_ 
+    from
+        J j0_ 
+    where
+        (
+            j0_.amount>0 
+        )
+        and(
+            j0_.name is not null 
+        )
+14:16:27,691 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_,
+        i0_.name as name0_,
+        i0_.type_ as type3_0_,
+        i0_.parent as parent0_,
+        i0_.amount as amount1_,
+        i0_.clazz_ as clazz_ 
+    from
+        ( select
+            id,
+            name,
+            type_,
+            parent,
+            null as amount,
+            0 as clazz_ 
+        from
+            I 
+        union
+        all select
+            id,
+            name,
+            type_,
+            parent,
+            amount,
+            1 as clazz_ 
+        from
+            J 
+    ) i0_ 
+where
+    (
+        clazz_=0 
+    )
+14:16:27,705 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_,
+        i0_.name as name0_,
+        i0_.type_ as type3_0_,
+        i0_.parent as parent0_,
+        i0_.amount as amount1_,
+        i0_.clazz_ as clazz_ 
+    from
+        ( select
+            id,
+            name,
+            type_,
+            parent,
+            null as amount,
+            0 as clazz_ 
+        from
+            I 
+        union
+        all select
+            id,
+            name,
+            type_,
+            parent,
+            amount,
+            1 as clazz_ 
+        from
+            J 
+    ) i0_ 
+where
+    (
+        clazz_=1 
+    )
+14:16:27,719 DEBUG SQL:104 - 
+    select
+        j0_.id as id0_1_,
+        j0_.name as name0_1_,
+        j0_.type_ as type3_0_1_,
+        j0_.parent as parent0_1_,
+        j0_.amount as amount1_1_,
+        k1_.id as id2_0_ 
+    from
+        J j0_ 
+    left outer join
+        K k1_ 
+            on j0_.parent=k1_.id 
+    where
+        j0_.id=?
+14:16:27,737 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_1_,
+        i0_.name as name0_1_,
+        i0_.type_ as type3_0_1_,
+        i0_.parent as parent0_1_,
+        i0_.amount as amount1_1_,
+        i0_.clazz_ as clazz_1_,
+        k1_.id as id2_0_ 
+    from
+        ( select
+            id,
+            name,
+            type_,
+            parent,
+            null as amount,
+            0 as clazz_ 
+        from
+            I 
+        union
+        all select
+            id,
+            name,
+            type_,
+            parent,
+            amount,
+            1 as clazz_ 
+        from
+            J 
+    ) i0_ 
+left outer join
+    K k1_ 
+        on i0_.parent=k1_.id 
+where
+    i0_.id=?
+14:16:27,738 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:16:27,738 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:16:27,739 DEBUG SQL:104 - 
+    insert 
+    into
+        K
+        (id) 
+    values
+        (?)
+14:16:27,754 DEBUG SQL:104 - 
+    update
+        J 
+    set
+        name=?,
+        type_=?,
+        parent=?,
+        amount=? 
+    where
+        id=?
+14:16:27,755 DEBUG SQL:104 - 
+    update
+        I 
+    set
+        name=?,
+        type_=?,
+        parent=? 
+    where
+        id=?
+14:16:27,756 DEBUG SQL:104 - 
+    select
+        j0_.id as id0_1_,
+        j0_.name as name0_1_,
+        j0_.type_ as type3_0_1_,
+        j0_.parent as parent0_1_,
+        j0_.amount as amount1_1_,
+        k1_.id as id2_0_ 
+    from
+        J j0_ 
+    left outer join
+        K k1_ 
+            on j0_.parent=k1_.id 
+    where
+        j0_.id=?
+14:16:27,763 DEBUG SQL:104 - 
+    select
+        is0_.parent as parent2_1_,
+        is0_.id as id0_1_,
+        is0_.id as id0_0_,
+        is0_.name as name0_0_,
+        is0_.type_ as type3_0_0_,
+        is0_.parent as parent0_0_,
+        is0_.amount as amount1_0_,
+        is0_.clazz_ as clazz_0_ 
+    from
+        ( select
+            id,
+            name,
+            type_,
+            parent,
+            null as amount,
+            0 as clazz_ 
+        from
+            I 
+        union
+        all select
+            id,
+            name,
+            type_,
+            parent,
+            amount,
+            1 as clazz_ 
+        from
+            J 
+    ) is0_ 
+where
+    is0_.parent=?
+14:16:27,766 DEBUG SQL:104 - 
+    select
+        k0_.id as id2_0_,
+        is1_.id as id0_1_,
+        is1_.name as name0_1_,
+        is1_.type_ as type3_0_1_,
+        is1_.parent as parent0_1_,
+        is1_.amount as amount1_1_,
+        is1_.clazz_ as clazz_1_ 
+    from
+        K k0_ 
+    inner join
+        (
+            select
+                id,
+                name,
+                type_,
+                parent,
+                null as amount,
+                0 as clazz_ 
+            from
+                I 
+            union
+            all select
+                id,
+                name,
+                type_,
+                parent,
+                amount,
+                1 as clazz_ 
+            from
+                J 
+        ) is1_ 
+            on k0_.id=is1_.parent 
+    where
+        (
+            is1_.name='j' 
+        )
+14:16:27,798 DEBUG SQL:104 - 
+    select
+        is0_.parent as parent2_1_,
+        is0_.id as id0_1_,
+        is0_.id as id0_0_,
+        is0_.name as name0_0_,
+        is0_.type_ as type3_0_0_,
+        is0_.parent as parent0_0_,
+        is0_.amount as amount1_0_,
+        is0_.clazz_ as clazz_0_ 
+    from
+        ( select
+            id,
+            name,
+            type_,
+            parent,
+            null as amount,
+            0 as clazz_ 
+        from
+            I 
+        union
+        all select
+            id,
+            name,
+            type_,
+            parent,
+            amount,
+            1 as clazz_ 
+        from
+            J 
+    ) is0_ 
+where
+    is0_.parent=?
+14:16:27,802 DEBUG SQL:104 - 
+    select
+        k0_.id as id2_0_,
+        is1_.id as id0_1_,
+        is1_.name as name0_1_,
+        is1_.type_ as type3_0_1_,
+        is1_.parent as parent0_1_,
+        is1_.amount as amount1_1_,
+        is1_.clazz_ as clazz_1_ 
+    from
+        K k0_ 
+    inner join
+        (
+            select
+                id,
+                name,
+                type_,
+                parent,
+                null as amount,
+                0 as clazz_ 
+            from
+                I 
+            union
+            all select
+                id,
+                name,
+                type_,
+                parent,
+                amount,
+                1 as clazz_ 
+            from
+                J 
+        ) is1_ 
+            on k0_.id=is1_.parent 
+    where
+        (
+            is1_.name='i' 
+        )
+14:16:27,909 DEBUG SQL:104 - 
+    select
+        k0_.id as id2_0_,
+        is1_.id as id0_1_,
+        is1_.name as name0_1_,
+        is1_.type_ as type3_0_1_,
+        is1_.parent as parent0_1_,
+        is1_.amount as amount1_1_,
+        is1_.clazz_ as clazz_1_,
+        is1_.parent as parent2___,
+        is1_.id as id0___ 
+    from
+        K k0_ 
+    left outer join
+        (
+            select
+                id,
+                name,
+                type_,
+                parent,
+                null as amount,
+                0 as clazz_ 
+            from
+                I 
+            union
+            all select
+                id,
+                name,
+                type_,
+                parent,
+                amount,
+                1 as clazz_ 
+            from
+                J 
+        ) is1_ 
+            on k0_.id=is1_.parent
+14:16:27,910 DEBUG SQL:104 - 
+    select
+        j0_.id as id0_1_,
+        j0_.name as name0_1_,
+        j0_.type_ as type3_0_1_,
+        j0_.parent as parent0_1_,
+        j0_.amount as amount1_1_,
+        k1_.id as id2_0_ 
+    from
+        J j0_ 
+    left outer join
+        K k1_ 
+            on j0_.parent=k1_.id 
+    where
+        j0_.id=?
+14:16:27,911 DEBUG SQL:104 - 
+    select
+        is0_.parent as parent2_1_,
+        is0_.id as id0_1_,
+        is0_.id as id0_0_,
+        is0_.name as name0_0_,
+        is0_.type_ as type3_0_0_,
+        is0_.parent as parent0_0_,
+        is0_.amount as amount1_0_,
+        is0_.clazz_ as clazz_0_ 
+    from
+        ( select
+            id,
+            name,
+            type_,
+            parent,
+            null as amount,
+            0 as clazz_ 
+        from
+            I 
+        union
+        all select
+            id,
+            name,
+            type_,
+            parent,
+            amount,
+            1 as clazz_ 
+        from
+            J 
+    ) is0_ 
+where
+    is0_.parent=?
+14:16:27,929 DEBUG SQL:104 - 
+    update
+        J 
+    set
+        name=?,
+        type_=?,
+        parent=?,
+        amount=? 
+    where
+        id=?
+14:16:27,943 DEBUG SQL:104 - 
+    update
+        I 
+    set
+        name=?,
+        type_=?,
+        parent=? 
+    where
+        id=?
+14:16:27,943 DEBUG SQL:104 - 
+    delete 
+    from
+        K 
+    where
+        id=?
+14:16:27,943 DEBUG SQL:104 - 
+    delete 
+    from
+        J 
+    where
+        id=?
+14:16:27,944 DEBUG SQL:104 - 
+    delete 
+    from
+        I 
+    where
+        id=?
+14:16:27,948  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:27,949 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:27,949 DEBUG SQL:104 - 
+    alter table I 
+        drop constraint FK49807B046
+14:16:27,949 DEBUG SQL:104 - 
+    alter table J 
+        drop constraint FK49807B0464a
+14:16:27,949 DEBUG SQL:104 - 
+    drop table I if exists
+14:16:27,949 DEBUG SQL:104 - 
+    drop table J if exists
+14:16:27,982 DEBUG SQL:104 - 
+    drop table K if exists
+14:16:27,983 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:16:27,983  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:27,984  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

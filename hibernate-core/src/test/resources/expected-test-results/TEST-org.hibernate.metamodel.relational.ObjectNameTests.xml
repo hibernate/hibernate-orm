@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.metamodel.relational.ObjectNameTests" tests="2" time="0.003" timestamp="2013-02-28T20:09:58">
+  <properties />
+  <testcase classname="org.hibernate.metamodel.relational.ObjectNameTests" name="testIdentifierBuilding" time="0.001" />
+  <testcase classname="org.hibernate.metamodel.relational.ObjectNameTests" name="testMissingName" time="0.0" />
+  <system-out><![CDATA[14:09:58,144  INFO CustomRunner:132 - BeforeClass: org.hibernate.metamodel.relational.ObjectNameTests
+14:09:58,144  INFO CustomRunner:139 - Test: testIdentifierBuilding
+14:09:58,145  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,146  INFO CustomRunner:139 - Test: testMissingName
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

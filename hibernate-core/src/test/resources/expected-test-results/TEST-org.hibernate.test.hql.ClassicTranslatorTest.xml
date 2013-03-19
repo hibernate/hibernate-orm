@@ -1,0 +1,5052 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.hql.ClassicTranslatorTest" tests="1" time="3.222" timestamp="2013-02-28T20:13:17">
+  <properties />
+  <testcase classname="org.hibernate.test.hql.ClassicTranslatorTest" name="testQueries" time="0.309" />
+  <system-out><![CDATA[14:13:17,542  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.hql.ClassicTranslatorTest
+14:13:17,545  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/Animal.hbm.xml
+14:13:17,553  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/EntityWithCrazyCompositeKey.hbm.xml
+14:13:17,558  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/CrazyIdFieldNames.hbm.xml
+14:13:17,583  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/SimpleEntityWithAssociation.hbm.xml
+14:13:17,590  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/ComponentContainer.hbm.xml
+14:13:17,595  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/batchfetch/ProductLine.hbm.xml
+14:13:17,604  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Customer.hbm.xml
+14:13:17,609  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Order.hbm.xml
+14:13:17,614  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/LineItem.hbm.xml
+14:13:17,619  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Product.hbm.xml
+14:13:17,623  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Baz.hbm.xml
+14:13:17,641  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Category.hbm.xml
+14:13:17,647  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Commento.hbm.xml
+14:13:17,652  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Container.hbm.xml
+14:13:17,658  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Custom.hbm.xml
+14:13:17,664  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Eye.hbm.xml
+14:13:17,669  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Fee.hbm.xml
+14:13:17,675  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/FooBar.hbm.xml
+14:13:17,682  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Fum.hbm.xml
+14:13:17,689  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Glarch.hbm.xml
+14:13:17,695  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Holder.hbm.xml
+14:13:17,701  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Many.hbm.xml
+14:13:17,706  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Marelo.hbm.xml
+14:13:17,711  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/MasterDetail.hbm.xml
+14:13:17,717  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Middle.hbm.xml
+14:13:17,723  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Multi.hbm.xml
+14:13:17,730  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Nameable.hbm.xml
+14:13:17,735  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/One.hbm.xml
+14:13:17,740  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Qux.hbm.xml
+14:13:17,745  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Simple.hbm.xml
+14:13:17,750  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/SingleSeveral.hbm.xml
+14:13:17,756  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/WZ.hbm.xml
+14:13:17,779  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/UpDown.hbm.xml
+14:13:17,784  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/compositeelement/Parent.hbm.xml
+14:13:17,789  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/onetoone/joined/Person.hbm.xml
+14:13:17,794  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/any/Properties.hbm.xml
+14:13:17,847  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.legacy.Several
+14:13:17,847  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.Several
+14:13:17,848  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.legacy.Single
+14:13:17,848  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.Single
+14:13:17,853  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:13:17,853  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:13:17,853  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:13:17,854  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:13:17,854  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:13:17,855  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:13:17,855  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:13:17,856  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:13:17,856  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:13:18,259  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:13:18,270 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:13:18,271 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4
+14:13:18,271 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C1F3964B4
+14:13:18,271 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4 [42102-145]
+14:13:18,273 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B
+14:13:18,274 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C6309E77B
+14:13:18,274 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B [42102-145]
+14:13:18,275 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79
+14:13:18,275 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C4B485C79
+14:13:18,276 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79 [42102-145]
+14:13:18,276 DEBUG SQL:104 - 
+    alter table CCBAG 
+        drop constraint FK3CF9B8894011F0B
+14:13:18,276 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CCBAG drop constraint FK3CF9B8894011F0B
+14:13:18,276 ERROR SchemaExport:426 - Table "CCBAG" not found; SQL statement:
+
+    alter table CCBAG 
+        drop constraint FK3CF9B8894011F0B [42102-145]
+14:13:18,276 DEBUG SQL:104 - 
+    alter table CCBAG 
+        drop constraint FK3CF9B8894077C4B
+14:13:18,277 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CCBAG drop constraint FK3CF9B8894077C4B
+14:13:18,277 ERROR SchemaExport:426 - Table "CCBAG" not found; SQL statement:
+
+    alter table CCBAG 
+        drop constraint FK3CF9B8894077C4B [42102-145]
+14:13:18,277 DEBUG SQL:104 - 
+    alter table CID_IN 
+        drop constraint FK7679BC667E2D2D9A
+14:13:18,277 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CID_IN drop constraint FK7679BC667E2D2D9A
+14:13:18,278 ERROR SchemaExport:426 - Table "CID_IN" not found; SQL statement:
+
+    alter table CID_IN 
+        drop constraint FK7679BC667E2D2D9A [42102-145]
+14:13:18,278 DEBUG SQL:104 - 
+    alter table CID_MID 
+        drop constraint FK58BDDF076FBAD622
+14:13:18,278 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CID_MID drop constraint FK58BDDF076FBAD622
+14:13:18,278 ERROR SchemaExport:426 - Table "CID_MID" not found; SQL statement:
+
+    alter table CID_MID 
+        drop constraint FK58BDDF076FBAD622 [42102-145]
+14:13:18,278 DEBUG SQL:104 - 
+    alter table CID_OUT 
+        drop constraint FK58BDE80D83675AD1
+14:13:18,279 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CID_OUT drop constraint FK58BDE80D83675AD1
+14:13:18,279 ERROR SchemaExport:426 - Table "CID_OUT" not found; SQL statement:
+
+    alter table CID_OUT 
+        drop constraint FK58BDE80D83675AD1 [42102-145]
+14:13:18,279 DEBUG SQL:104 - 
+    alter table CRAZY_ID_TOP 
+        drop constraint FK1AA9579F73113F33
+14:13:18,279 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CRAZY_ID_TOP drop constraint FK1AA9579F73113F33
+14:13:18,279 ERROR SchemaExport:426 - Table "CRAZY_ID_TOP" not found; SQL statement:
+
+    alter table CRAZY_ID_TOP 
+        drop constraint FK1AA9579F73113F33 [42102-145]
+14:13:18,281 DEBUG SQL:104 - 
+    alter table Cat 
+        drop constraint FK107B66D384BBA
+14:13:18,283 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Cat drop constraint FK107B66D384BBA
+14:13:18,283 ERROR SchemaExport:426 - Table "CAT" not found; SQL statement:
+
+    alter table Cat 
+        drop constraint FK107B66D384BBA [42102-145]
+14:13:18,284 DEBUG SQL:104 - 
+    alter table Container_components 
+        drop constraint FKDD7395B4578192D3
+14:13:18,285 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_components drop constraint FKDD7395B4578192D3
+14:13:18,285 ERROR SchemaExport:426 - Table "CONTAINER_COMPONENTS" not found; SQL statement:
+
+    alter table Container_components 
+        drop constraint FKDD7395B4578192D3 [42102-145]
+14:13:18,286 DEBUG SQL:104 - 
+    alter table Container_components 
+        drop constraint FKDD7395B4DED2FBBD
+14:13:18,287 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_components drop constraint FKDD7395B4DED2FBBD
+14:13:18,288 ERROR SchemaExport:426 - Table "CONTAINER_COMPONENTS" not found; SQL statement:
+
+    alter table Container_components 
+        drop constraint FKDD7395B4DED2FBBD [42102-145]
+14:13:18,288 DEBUG SQL:104 - 
+    alter table Container_components 
+        drop constraint FKDD7395B4FB8A4BED
+14:13:18,289 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_components drop constraint FKDD7395B4FB8A4BED
+14:13:18,289 ERROR SchemaExport:426 - Table "CONTAINER_COMPONENTS" not found; SQL statement:
+
+    alter table Container_components 
+        drop constraint FKDD7395B4FB8A4BED [42102-145]
+14:13:18,289 DEBUG SQL:104 - 
+    alter table Container_components 
+        drop constraint FKDD7395B494077C4B
+14:13:18,290 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_components drop constraint FKDD7395B494077C4B
+14:13:18,290 ERROR SchemaExport:426 - Table "CONTAINER_COMPONENTS" not found; SQL statement:
+
+    alter table Container_components 
+        drop constraint FKDD7395B494077C4B [42102-145]
+14:13:18,291 DEBUG SQL:104 - 
+    alter table Container_composites 
+        drop constraint FKDDBBF16A578192D3
+14:13:18,291 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_composites drop constraint FKDDBBF16A578192D3
+14:13:18,291 ERROR SchemaExport:426 - Table "CONTAINER_COMPOSITES" not found; SQL statement:
+
+    alter table Container_composites 
+        drop constraint FKDDBBF16A578192D3 [42102-145]
+14:13:18,292 DEBUG SQL:104 - 
+    alter table Container_composites 
+        drop constraint FKDDBBF16ADED2FBBD
+14:13:18,292 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_composites drop constraint FKDDBBF16ADED2FBBD
+14:13:18,292 ERROR SchemaExport:426 - Table "CONTAINER_COMPOSITES" not found; SQL statement:
+
+    alter table Container_composites 
+        drop constraint FKDDBBF16ADED2FBBD [42102-145]
+14:13:18,293 DEBUG SQL:104 - 
+    alter table Container_composites 
+        drop constraint FKDDBBF16AFB8A4BED
+14:13:18,293 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_composites drop constraint FKDDBBF16AFB8A4BED
+14:13:18,293 ERROR SchemaExport:426 - Table "CONTAINER_COMPOSITES" not found; SQL statement:
+
+    alter table Container_composites 
+        drop constraint FKDDBBF16AFB8A4BED [42102-145]
+14:13:18,294 DEBUG SQL:104 - 
+    alter table Container_composites 
+        drop constraint FKDDBBF16A94077C4B
+14:13:18,294 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_composites drop constraint FKDDBBF16A94077C4B
+14:13:18,294 ERROR SchemaExport:426 - Table "CONTAINER_COMPOSITES" not found; SQL statement:
+
+    alter table Container_composites 
+        drop constraint FKDDBBF16A94077C4B [42102-145]
+14:13:18,295 DEBUG SQL:104 - 
+    alter table Container_manyToMany 
+        drop constraint FK627D55578D4AE9CE
+14:13:18,295 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_manyToMany drop constraint FK627D55578D4AE9CE
+14:13:18,295 ERROR SchemaExport:426 - Table "CONTAINER_MANYTOMANY" not found; SQL statement:
+
+    alter table Container_manyToMany 
+        drop constraint FK627D55578D4AE9CE [42102-145]
+14:13:18,296 DEBUG SQL:104 - 
+    alter table Container_manyToMany 
+        drop constraint FK627D555789A21C6B
+14:13:18,296 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_manyToMany drop constraint FK627D555789A21C6B
+14:13:18,296 ERROR SchemaExport:426 - Table "CONTAINER_MANYTOMANY" not found; SQL statement:
+
+    alter table Container_manyToMany 
+        drop constraint FK627D555789A21C6B [42102-145]
+14:13:18,297 DEBUG SQL:104 - 
+    alter table Container_ternaryMap 
+        drop constraint FKD19E4B1FDED2B87D
+14:13:18,297 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_ternaryMap drop constraint FKD19E4B1FDED2B87D
+14:13:18,297 ERROR SchemaExport:426 - Table "CONTAINER_TERNARYMAP" not found; SQL statement:
+
+    alter table Container_ternaryMap 
+        drop constraint FKD19E4B1FDED2B87D [42102-145]
+14:13:18,298 DEBUG SQL:104 - 
+    alter table Container_ternaryMap 
+        drop constraint FKD19E4B1F2ED6F4E5
+14:13:18,298 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_ternaryMap drop constraint FKD19E4B1F2ED6F4E5
+14:13:18,298 ERROR SchemaExport:426 - Table "CONTAINER_TERNARYMAP" not found; SQL statement:
+
+    alter table Container_ternaryMap 
+        drop constraint FKD19E4B1F2ED6F4E5 [42102-145]
+14:13:18,299 DEBUG SQL:104 - 
+    alter table Container_ternaryMap 
+        drop constraint FKD19E4B1F94077C4B
+14:13:18,299 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_ternaryMap drop constraint FKD19E4B1F94077C4B
+14:13:18,299 ERROR SchemaExport:426 - Table "CONTAINER_TERNARYMAP" not found; SQL statement:
+
+    alter table Container_ternaryMap 
+        drop constraint FKD19E4B1F94077C4B [42102-145]
+14:13:18,300 DEBUG SQL:104 - 
+    alter table Container_ternarySet 
+        drop constraint FKD19E6225DED2B87D
+14:13:18,300 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_ternarySet drop constraint FKD19E6225DED2B87D
+14:13:18,301 ERROR SchemaExport:426 - Table "CONTAINER_TERNARYSET" not found; SQL statement:
+
+    alter table Container_ternarySet 
+        drop constraint FKD19E6225DED2B87D [42102-145]
+14:13:18,301 DEBUG SQL:104 - 
+    alter table Container_ternarySet 
+        drop constraint FKD19E62252ED6F4E5
+14:13:18,301 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_ternarySet drop constraint FKD19E62252ED6F4E5
+14:13:18,301 ERROR SchemaExport:426 - Table "CONTAINER_TERNARYSET" not found; SQL statement:
+
+    alter table Container_ternarySet 
+        drop constraint FKD19E62252ED6F4E5 [42102-145]
+14:13:18,302 DEBUG SQL:104 - 
+    alter table Container_ternarySet 
+        drop constraint FKD19E622594077C4B
+14:13:18,302 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container_ternarySet drop constraint FKD19E622594077C4B
+14:13:18,302 ERROR SchemaExport:426 - Table "CONTAINER_TERNARYSET" not found; SQL statement:
+
+    alter table Container_ternarySet 
+        drop constraint FKD19E622594077C4B [42102-145]
+14:13:18,302 DEBUG SQL:104 - 
+    alter table CustomerOrder 
+        drop constraint FKAEF781F06153C9DD
+14:13:18,303 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CustomerOrder drop constraint FKAEF781F06153C9DD
+14:13:18,303 ERROR SchemaExport:426 - Table "CUSTOMERORDER" not found; SQL statement:
+
+    alter table CustomerOrder 
+        drop constraint FKAEF781F06153C9DD [42102-145]
+14:13:18,303 DEBUG SQL:104 - 
+    alter table Detail 
+        drop constraint CC
+14:13:18,303 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Detail drop constraint CC
+14:13:18,303 ERROR SchemaExport:426 - Table "DETAIL" not found; SQL statement:
+
+    alter table Detail 
+        drop constraint CC [42102-145]
+14:13:18,304 DEBUG SQL:104 - 
+    alter table Detail 
+        drop constraint FK79CF0471BAFC73FD
+14:13:18,304 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Detail drop constraint FK79CF0471BAFC73FD
+14:13:18,304 ERROR SchemaExport:426 - Table "DETAIL" not found; SQL statement:
+
+    alter table Detail 
+        drop constraint FK79CF0471BAFC73FD [42102-145]
+14:13:18,304 DEBUG SQL:104 - 
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA
+14:13:18,304 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Dog drop constraint FK10D1C6D384BBA
+14:13:18,304 ERROR SchemaExport:426 - Table "DOG" not found; SQL statement:
+
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA [42102-145]
+14:13:18,304 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F
+14:13:18,304 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DomesticAnimal drop constraint FKE02638DA1733655F
+14:13:18,305 ERROR SchemaExport:426 - Table "DOMESTICANIMAL" not found; SQL statement:
+
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F [42102-145]
+14:13:18,305 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F
+14:13:18,305 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DomesticAnimal drop constraint FKE02638DA6C03411F
+14:13:18,305 ERROR SchemaExport:426 - Table "DOMESTICANIMAL" not found; SQL statement:
+
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F [42102-145]
+14:13:18,305 DEBUG SQL:104 - 
+    alter table Eye 
+        drop constraint FK11211DED2D335
+14:13:18,305 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Eye drop constraint FK11211DED2D335
+14:13:18,305 ERROR SchemaExport:426 - Table "EYE" not found; SQL statement:
+
+    alter table Eye 
+        drop constraint FK11211DED2D335 [42102-145]
+14:13:18,306 DEBUG SQL:104 - 
+    alter table FOO_ARRAY 
+        drop constraint FK92165960DED2B87D
+14:13:18,306 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FOO_ARRAY drop constraint FK92165960DED2B87D
+14:13:18,306 ERROR SchemaExport:426 - Table "FOO_ARRAY" not found; SQL statement:
+
+    alter table FOO_ARRAY 
+        drop constraint FK92165960DED2B87D [42102-145]
+14:13:18,306 DEBUG SQL:104 - 
+    alter table FOO_ARRAY 
+        drop constraint FK92165960DED2B1B0
+14:13:18,306 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FOO_ARRAY drop constraint FK92165960DED2B1B0
+14:13:18,306 ERROR SchemaExport:426 - Table "FOO_ARRAY" not found; SQL statement:
+
+    alter table FOO_ARRAY 
+        drop constraint FK92165960DED2B1B0 [42102-145]
+14:13:18,306 DEBUG SQL:104 - 
+    alter table Fum 
+        drop constraint FK1155E3BB9E3A0
+14:13:18,307 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Fum drop constraint FK1155E3BB9E3A0
+14:13:18,307 ERROR SchemaExport:426 - Table "FUM" not found; SQL statement:
+
+    alter table Fum 
+        drop constraint FK1155E3BB9E3A0 [42102-145]
+14:13:18,307 DEBUG SQL:104 - 
+    alter table Fum 
+        drop constraint FK1155EB222E1DE
+14:13:18,307 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Fum drop constraint FK1155EB222E1DE
+14:13:18,307 ERROR SchemaExport:426 - Table "FUM" not found; SQL statement:
+
+    alter table Fum 
+        drop constraint FK1155EB222E1DE [42102-145]
+14:13:18,307 DEBUG SQL:104 - 
+    alter table Fum 
+        drop constraint FK1155ECFEFBDAD
+14:13:18,307 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Fum drop constraint FK1155ECFEFBDAD
+14:13:18,308 ERROR SchemaExport:426 - Table "FUM" not found; SQL statement:
+
+    alter table Fum 
+        drop constraint FK1155ECFEFBDAD [42102-145]
+14:13:18,308 DEBUG SQL:104 - 
+    alter table Fum 
+        drop constraint FK1155EA64DB02B
+14:13:18,308 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Fum drop constraint FK1155EA64DB02B
+14:13:18,308 ERROR SchemaExport:426 - Table "FUM" not found; SQL statement:
+
+    alter table Fum 
+        drop constraint FK1155EA64DB02B [42102-145]
+14:13:18,308 DEBUG SQL:104 - 
+    alter table Fum_stringmap 
+        drop constraint FKBD5D720ACFEFBDAD
+14:13:18,308 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Fum_stringmap drop constraint FKBD5D720ACFEFBDAD
+14:13:18,308 ERROR SchemaExport:426 - Table "FUM_STRINGMAP" not found; SQL statement:
+
+    alter table Fum_stringmap 
+        drop constraint FKBD5D720ACFEFBDAD [42102-145]
+14:13:18,311 DEBUG SQL:104 - 
+    alter table Holder 
+        drop constraint FK812BB9CC3939BDD7
+14:13:18,311 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Holder drop constraint FK812BB9CC3939BDD7
+14:13:18,311 ERROR SchemaExport:426 - Table "HOLDER" not found; SQL statement:
+
+    alter table Holder 
+        drop constraint FK812BB9CC3939BDD7 [42102-145]
+14:13:18,312 DEBUG SQL:104 - 
+    alter table Human 
+        drop constraint FK42D710D1733655F
+14:13:18,312 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human drop constraint FK42D710D1733655F
+14:13:18,312 ERROR SchemaExport:426 - Table "HUMAN" not found; SQL statement:
+
+    alter table Human 
+        drop constraint FK42D710D1733655F [42102-145]
+14:13:18,312 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311
+14:13:18,312 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_family drop constraint FK5F790ED61DCB1311
+14:13:18,313 ERROR SchemaExport:426 - Table "HUMAN_FAMILY" not found; SQL statement:
+
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311 [42102-145]
+14:13:18,313 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310
+14:13:18,313 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_family drop constraint FK5F790ED61DCB1310
+14:13:18,313 ERROR SchemaExport:426 - Table "HUMAN_FAMILY" not found; SQL statement:
+
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310 [42102-145]
+14:13:18,317 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311
+14:13:18,317 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_friends drop constraint FKAC7104631DCB1311
+14:13:18,317 ERROR SchemaExport:426 - Table "HUMAN_FRIENDS" not found; SQL statement:
+
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311 [42102-145]
+14:13:18,318 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310
+14:13:18,318 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_friends drop constraint FKAC7104631DCB1310
+14:13:18,318 ERROR SchemaExport:426 - Table "HUMAN_FRIENDS" not found; SQL statement:
+
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310 [42102-145]
+14:13:18,318 DEBUG SQL:104 - 
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13
+14:13:18,319 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table JOINED drop constraint FK82C23B49534E0F13
+14:13:18,319 ERROR SchemaExport:426 - Table "JOINED" not found; SQL statement:
+
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13 [42102-145]
+14:13:18,319 DEBUG SQL:104 - 
+    alter table Jay 
+        drop constraint FK12202DED2B353
+14:13:18,319 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Jay drop constraint FK12202DED2B353
+14:13:18,319 ERROR SchemaExport:426 - Table "JAY" not found; SQL statement:
+
+    alter table Jay 
+        drop constraint FK12202DED2B353 [42102-145]
+14:13:18,345 DEBUG SQL:104 - 
+    alter table LCCBAG 
+        drop constraint FK857FEABC94011F0B
+14:13:18,346 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table LCCBAG drop constraint FK857FEABC94011F0B
+14:13:18,346 ERROR SchemaExport:426 - Table "LCCBAG" not found; SQL statement:
+
+    alter table LCCBAG 
+        drop constraint FK857FEABC94011F0B [42102-145]
+14:13:18,346 DEBUG SQL:104 - 
+    alter table LCCBAG 
+        drop constraint FK857FEABC94077C4B
+14:13:18,346 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table LCCBAG drop constraint FK857FEABC94077C4B
+14:13:18,346 ERROR SchemaExport:426 - Table "LCCBAG" not found; SQL statement:
+
+    alter table LCCBAG 
+        drop constraint FK857FEABC94077C4B [42102-145]
+14:13:18,347 DEBUG SQL:104 - 
+    alter table LineItem 
+        drop constraint FK4AAEE947CB8F4618
+14:13:18,348 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table LineItem drop constraint FK4AAEE947CB8F4618
+14:13:18,348 ERROR SchemaExport:426 - Table "LINEITEM" not found; SQL statement:
+
+    alter table LineItem 
+        drop constraint FK4AAEE947CB8F4618 [42102-145]
+14:13:18,353 DEBUG SQL:104 - 
+    alter table LineItem 
+        drop constraint FK4AAEE947EDAE41F3
+14:13:18,405 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table LineItem drop constraint FK4AAEE947EDAE41F3
+14:13:18,406 ERROR SchemaExport:426 - Table "LINEITEM" not found; SQL statement:
+
+    alter table LineItem 
+        drop constraint FK4AAEE947EDAE41F3 [42102-145]
+14:13:18,406 DEBUG SQL:104 - 
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315
+14:13:18,406 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Lizard drop constraint FK87B0E2B6EE398315
+14:13:18,407 ERROR SchemaExport:426 - Table "LIZARD" not found; SQL statement:
+
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315 [42102-145]
+14:13:18,407 DEBUG SQL:104 - 
+    alter table MANY_TO_MANY 
+        drop constraint FK8CF3D7C3E0DF2A91
+14:13:18,407 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table MANY_TO_MANY drop constraint FK8CF3D7C3E0DF2A91
+14:13:18,407 ERROR SchemaExport:426 - Table "MANY_TO_MANY" not found; SQL statement:
+
+    alter table MANY_TO_MANY 
+        drop constraint FK8CF3D7C3E0DF2A91 [42102-145]
+14:13:18,407 DEBUG SQL:104 - 
+    alter table MANY_TO_MANY 
+        drop constraint FK8CF3D7C322C9695A
+14:13:18,408 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table MANY_TO_MANY drop constraint FK8CF3D7C322C9695A
+14:13:18,408 ERROR SchemaExport:426 - Table "MANY_TO_MANY" not found; SQL statement:
+
+    alter table MANY_TO_MANY 
+        drop constraint FK8CF3D7C322C9695A [42102-145]
+14:13:18,408 DEBUG SQL:104 - 
+    alter table MARELO 
+        drop constraint FK871F728AE624DD92
+14:13:18,408 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table MARELO drop constraint FK871F728AE624DD92
+14:13:18,408 ERROR SchemaExport:426 - Table "MARELO" not found; SQL statement:
+
+    alter table MARELO 
+        drop constraint FK871F728AE624DD92 [42102-145]
+14:13:18,409 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699
+14:13:18,409 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Mammal drop constraint FK88EF417FEFA9D699
+14:13:18,409 ERROR SchemaExport:426 - Table "MAMMAL" not found; SQL statement:
+
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699 [42102-145]
+14:13:18,409 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98
+14:13:18,409 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Mammal drop constraint FK88EF417FCE6EEE98
+14:13:18,410 ERROR SchemaExport:426 - Table "MAMMAL" not found; SQL statement:
+
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98 [42102-145]
+14:13:18,410 DEBUG SQL:104 - 
+    alter table Model 
+        drop constraint FK4710B0921C08435
+14:13:18,410 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Model drop constraint FK4710B0921C08435
+14:13:18,410 ERROR SchemaExport:426 - Table "MODEL" not found; SQL statement:
+
+    alter table Model 
+        drop constraint FK4710B0921C08435 [42102-145]
+14:13:18,410 DEBUG SQL:104 - 
+    alter table Org 
+        drop constraint FK136C49423C623
+14:13:18,411 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Org drop constraint FK136C49423C623
+14:13:18,411 ERROR SchemaExport:426 - Table "ORG" not found; SQL statement:
+
+    alter table Org 
+        drop constraint FK136C49423C623 [42102-145]
+14:13:18,411 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E724A71641D
+14:13:18,411 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ParentChild drop constraint FK9E5C7E724A71641D
+14:13:18,411 ERROR SchemaExport:426 - Table "PARENTCHILD" not found; SQL statement:
+
+    alter table ParentChild 
+        drop constraint FK9E5C7E724A71641D [42102-145]
+14:13:18,412 DEBUG SQL:104 - 
+    alter table Part 
+        drop constraint FK25D813DED29727
+14:13:18,412 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Part drop constraint FK25D813DED29727
+14:13:18,412 ERROR SchemaExport:426 - Table "PART" not found; SQL statement:
+
+    alter table Part 
+        drop constraint FK25D813DED29727 [42102-145]
+14:13:18,415 DEBUG SQL:104 - 
+    alter table Person 
+        drop constraint FK8E4887759423C623
+14:13:18,415 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Person drop constraint FK8E4887759423C623
+14:13:18,415 ERROR SchemaExport:426 - Table "PERSON" not found; SQL statement:
+
+    alter table Person 
+        drop constraint FK8E4887759423C623 [42102-145]
+14:13:18,416 DEBUG SQL:104 - 
+    alter table Person 
+        drop constraint FK8E4887756544CDD0
+14:13:18,416 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Person drop constraint FK8E4887756544CDD0
+14:13:18,416 ERROR SchemaExport:426 - Table "PERSON" not found; SQL statement:
+
+    alter table Person 
+        drop constraint FK8E4887756544CDD0 [42102-145]
+14:13:18,416 DEBUG SQL:104 - 
+    alter table Po 
+        drop constraint FKA1FDED16EBE
+14:13:18,416 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Po drop constraint FKA1FDED16EBE
+14:13:18,417 ERROR SchemaExport:426 - Table "PO" not found; SQL statement:
+
+    alter table Po 
+        drop constraint FKA1FDED16EBE [42102-145]
+14:13:18,417 DEBUG SQL:104 - 
+    alter table Po 
+        drop constraint FKA1F6F89E02A
+14:13:18,417 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Po drop constraint FKA1F6F89E02A
+14:13:18,417 ERROR SchemaExport:426 - Table "PO" not found; SQL statement:
+
+    alter table Po 
+        drop constraint FKA1F6F89E02A [42102-145]
+14:13:18,417 DEBUG SQL:104 - 
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699
+14:13:18,418 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Reptile drop constraint FKA4790CABEFA9D699
+14:13:18,418 ERROR SchemaExport:426 - Table "REPTILE" not found; SQL statement:
+
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699 [42102-145]
+14:13:18,418 DEBUG SQL:104 - 
+    alter table SIMPLE_2 
+        drop constraint FK4B988CE5C81DD13B
+14:13:18,418 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table SIMPLE_2 drop constraint FK4B988CE5C81DD13B
+14:13:18,418 ERROR SchemaExport:426 - Table "SIMPLE_2" not found; SQL statement:
+
+    alter table SIMPLE_2 
+        drop constraint FK4B988CE5C81DD13B [42102-145]
+14:13:18,419 DEBUG SQL:104 - 
+    alter table Several 
+        drop constraint FKD9AD23DCB9B9D411
+14:13:18,419 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Several drop constraint FKD9AD23DCB9B9D411
+14:13:18,419 ERROR SchemaExport:426 - Table "SEVERAL" not found; SQL statement:
+
+    alter table Several 
+        drop constraint FKD9AD23DCB9B9D411 [42102-145]
+14:13:18,419 DEBUG SQL:104 - 
+    alter table Simple 
+        drop constraint FK939D1DD2939BE031
+14:13:18,419 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Simple drop constraint FK939D1DD2939BE031
+14:13:18,419 ERROR SchemaExport:426 - Table "SIMPLE" not found; SQL statement:
+
+    alter table Simple 
+        drop constraint FK939D1DD2939BE031 [42102-145]
+14:13:18,419 DEBUG SQL:104 - 
+    alter table Simple 
+        drop constraint FK939D1DD289A21C6A
+14:13:18,420 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Simple drop constraint FK939D1DD289A21C6A
+14:13:18,420 ERROR SchemaExport:426 - Table "SIMPLE" not found; SQL statement:
+
+    alter table Simple 
+        drop constraint FK939D1DD289A21C6A [42102-145]
+14:13:18,420 DEBUG SQL:104 - 
+    alter table Sortable 
+        drop constraint FK66EDF018DED29727
+14:13:18,420 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Sortable drop constraint FK66EDF018DED29727
+14:13:18,420 ERROR SchemaExport:426 - Table "SORTABLE" not found; SQL statement:
+
+    alter table Sortable 
+        drop constraint FK66EDF018DED29727 [42102-145]
+14:13:18,420 DEBUG SQL:104 - 
+    alter table SubDetail 
+        drop constraint FK460B329135BB9D31
+14:13:18,420 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table SubDetail drop constraint FK460B329135BB9D31
+14:13:18,421 ERROR SchemaExport:426 - Table "SUBDETAIL" not found; SQL statement:
+
+    alter table SubDetail 
+        drop constraint FK460B329135BB9D31 [42102-145]
+14:13:18,421 DEBUG SQL:104 - 
+    alter table T_COMPLEX_SUB_PROPS 
+        drop constraint FK5470D25725D7CC5B
+14:13:18,421 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_COMPLEX_SUB_PROPS drop constraint FK5470D25725D7CC5B
+14:13:18,421 ERROR SchemaExport:426 - Table "T_COMPLEX_SUB_PROPS" not found; SQL statement:
+
+    alter table T_COMPLEX_SUB_PROPS 
+        drop constraint FK5470D25725D7CC5B [42102-145]
+14:13:18,421 DEBUG SQL:104 - 
+    alter table T_GEN_PROPS 
+        drop constraint FK65C7C556AA2002A9
+14:13:18,421 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_GEN_PROPS drop constraint FK65C7C556AA2002A9
+14:13:18,421 ERROR SchemaExport:426 - Table "T_GEN_PROPS" not found; SQL statement:
+
+    alter table T_GEN_PROPS 
+        drop constraint FK65C7C556AA2002A9 [42102-145]
+14:13:18,422 DEBUG SQL:104 - 
+    alter table TrivialClass 
+        drop constraint FKC09264CFDF079C10
+14:13:18,422 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TrivialClass drop constraint FKC09264CFDF079C10
+14:13:18,422 ERROR SchemaExport:426 - Table "TRIVIALCLASS" not found; SQL statement:
+
+    alter table TrivialClass 
+        drop constraint FKC09264CFDF079C10 [42102-145]
+14:13:18,422 DEBUG SQL:104 - 
+    alter table Z 
+        drop constraint FK5A435CA81F
+14:13:18,422 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Z drop constraint FK5A435CA81F
+14:13:18,422 ERROR SchemaExport:426 - Table "Z" not found; SQL statement:
+
+    alter table Z 
+        drop constraint FK5A435CA81F [42102-145]
+14:13:18,422 DEBUG SQL:104 - 
+    alter table Zoo 
+        drop constraint FK15FBA55106523
+14:13:18,423 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo drop constraint FK15FBA55106523
+14:13:18,423 ERROR SchemaExport:426 - Table "ZOO" not found; SQL statement:
+
+    alter table Zoo 
+        drop constraint FK15FBA55106523 [42102-145]
+14:13:18,423 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719
+14:13:18,423 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo_directors drop constraint FK2D21982265B0D719
+14:13:18,423 ERROR SchemaExport:426 - Table "ZOO_DIRECTORS" not found; SQL statement:
+
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719 [42102-145]
+14:13:18,423 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705
+14:13:18,423 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo_directors drop constraint FK2D219822C590D705
+14:13:18,423 ERROR SchemaExport:426 - Table "ZOO_DIRECTORS" not found; SQL statement:
+
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705 [42102-145]
+14:13:18,424 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2
+14:13:18,424 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "User_permissions" drop constraint FKB4582A30F2810CD2
+14:13:18,424 ERROR SchemaExport:426 - Table "User_permissions" not found; SQL statement:
+
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2 [42102-145]
+14:13:18,424 DEBUG SQL:104 - 
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87
+14:13:18,424 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "User" drop constraint FK285FEB65AF5B87
+14:13:18,424 ERROR SchemaExport:426 - Table "User" not found; SQL statement:
+
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87 [42102-145]
+14:13:18,424 DEBUG SQL:104 - 
+    alter table "bxaxg" 
+        drop constraint FK59D06FACB5DD78C
+14:13:18,425 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "bxaxg" drop constraint FK59D06FACB5DD78C
+14:13:18,425 ERROR SchemaExport:426 - Table "bxaxg" not found; SQL statement:
+
+    alter table "bxaxg" 
+        drop constraint FK59D06FACB5DD78C [42102-145]
+14:13:18,425 DEBUG SQL:104 - 
+    alter table "foos_importantDates" 
+        drop constraint FKCB360D95DED1281F
+14:13:18,425 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos_importantDates" drop constraint FKCB360D95DED1281F
+14:13:18,425 ERROR SchemaExport:426 - Table "foos_importantDates" not found; SQL statement:
+
+    alter table "foos_importantDates" 
+        drop constraint FKCB360D95DED1281F [42102-145]
+14:13:18,425 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DDED2B87D
+14:13:18,425 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos" drop constraint FK300C6DDED2B87D
+14:13:18,426 ERROR SchemaExport:426 - Table "foos" not found; SQL statement:
+
+    alter table "foos" 
+        drop constraint FK300C6DDED2B87D [42102-145]
+14:13:18,426 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6D78F5A0B1
+14:13:18,426 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos" drop constraint FK300C6D78F5A0B1
+14:13:18,426 ERROR SchemaExport:426 - Table "foos" not found; SQL statement:
+
+    alter table "foos" 
+        drop constraint FK300C6D78F5A0B1 [42102-145]
+14:13:18,426 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DA4A2707E
+14:13:18,426 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos" drop constraint FK300C6DA4A2707E
+14:13:18,426 ERROR SchemaExport:426 - Table "foos" not found; SQL statement:
+
+    alter table "foos" 
+        drop constraint FK300C6DA4A2707E [42102-145]
+14:13:18,427 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DDED29727
+14:13:18,427 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos" drop constraint FK300C6DDED29727
+14:13:18,427 ERROR SchemaExport:426 - Table "foos" not found; SQL statement:
+
+    alter table "foos" 
+        drop constraint FK300C6DDED29727 [42102-145]
+14:13:18,427 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6D8B9BD6CB
+14:13:18,427 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos" drop constraint FK300C6D8B9BD6CB
+14:13:18,427 ERROR SchemaExport:426 - Table "foos" not found; SQL statement:
+
+    alter table "foos" 
+        drop constraint FK300C6D8B9BD6CB [42102-145]
+14:13:18,427 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DF05E6685
+14:13:18,428 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos" drop constraint FK300C6DF05E6685
+14:13:18,428 ERROR SchemaExport:426 - Table "foos" not found; SQL statement:
+
+    alter table "foos" 
+        drop constraint FK300C6DF05E6685 [42102-145]
+14:13:18,428 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6D423011B5
+14:13:18,428 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos" drop constraint FK300C6D423011B5
+14:13:18,428 ERROR SchemaExport:426 - Table "foos" not found; SQL statement:
+
+    alter table "foos" 
+        drop constraint FK300C6D423011B5 [42102-145]
+14:13:18,428 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6D601671B4
+14:13:18,428 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos" drop constraint FK300C6D601671B4
+14:13:18,429 ERROR SchemaExport:426 - Table "foos" not found; SQL statement:
+
+    alter table "foos" 
+        drop constraint FK300C6D601671B4 [42102-145]
+14:13:18,429 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6D800DF629
+14:13:18,429 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos" drop constraint FK300C6D800DF629
+14:13:18,429 ERROR SchemaExport:426 - Table "foos" not found; SQL statement:
+
+    alter table "foos" 
+        drop constraint FK300C6D800DF629 [42102-145]
+14:13:18,429 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DBBEAE520
+14:13:18,429 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos" drop constraint FK300C6DBBEAE520
+14:13:18,429 ERROR SchemaExport:426 - Table "foos" not found; SQL statement:
+
+    alter table "foos" 
+        drop constraint FK300C6DBBEAE520 [42102-145]
+14:13:18,429 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DBBEAE521
+14:13:18,430 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "foos" drop constraint FK300C6DBBEAE521
+14:13:18,430 ERROR SchemaExport:426 - Table "foos" not found; SQL statement:
+
+    alter table "foos" 
+        drop constraint FK300C6DBBEAE521 [42102-145]
+14:13:18,430 DEBUG SQL:104 - 
+    alter table "glarchez_fooComponents" 
+        drop constraint FK7FEA372DDED2B5FD
+14:13:18,430 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "glarchez_fooComponents" drop constraint FK7FEA372DDED2B5FD
+14:13:18,430 ERROR SchemaExport:426 - Table "glarchez_fooComponents" not found; SQL statement:
+
+    alter table "glarchez_fooComponents" 
+        drop constraint FK7FEA372DDED2B5FD [42102-145]
+14:13:18,430 DEBUG SQL:104 - 
+    alter table "glarchez_fooComponents" 
+        drop constraint FK7FEA372DE90DED05
+14:13:18,431 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "glarchez_fooComponents" drop constraint FK7FEA372DE90DED05
+14:13:18,431 ERROR SchemaExport:426 - Table "glarchez_fooComponents" not found; SQL statement:
+
+    alter table "glarchez_fooComponents" 
+        drop constraint FK7FEA372DE90DED05 [42102-145]
+14:13:18,431 DEBUG SQL:104 - 
+    alter table "glarchez_strings" 
+        drop constraint FK123BC5F3E90DED05
+14:13:18,431 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "glarchez_strings" drop constraint FK123BC5F3E90DED05
+14:13:18,431 ERROR SchemaExport:426 - Table "glarchez_strings" not found; SQL statement:
+
+    alter table "glarchez_strings" 
+        drop constraint FK123BC5F3E90DED05 [42102-145]
+14:13:18,431 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB07F31E5F6
+14:13:18,431 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "glarchez" drop constraint FKC8B52CB07F31E5F6
+14:13:18,431 ERROR SchemaExport:426 - Table "glarchez" not found; SQL statement:
+
+    alter table "glarchez" 
+        drop constraint FKC8B52CB07F31E5F6 [42102-145]
+14:13:18,432 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB095284B1
+14:13:18,432 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "glarchez" drop constraint FKC8B52CB095284B1
+14:13:18,432 ERROR SchemaExport:426 - Table "glarchez" not found; SQL statement:
+
+    alter table "glarchez" 
+        drop constraint FKC8B52CB095284B1 [42102-145]
+14:13:18,432 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB010E640D1
+14:13:18,432 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "glarchez" drop constraint FKC8B52CB010E640D1
+14:13:18,432 ERROR SchemaExport:426 - Table "glarchez" not found; SQL statement:
+
+    alter table "glarchez" 
+        drop constraint FKC8B52CB010E640D1 [42102-145]
+14:13:18,432 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB071902CA1
+14:13:18,433 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "glarchez" drop constraint FKC8B52CB071902CA1
+14:13:18,433 ERROR SchemaExport:426 - Table "glarchez" not found; SQL statement:
+
+    alter table "glarchez" 
+        drop constraint FKC8B52CB071902CA1 [42102-145]
+14:13:18,433 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB07327568E
+14:13:18,433 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "glarchez" drop constraint FKC8B52CB07327568E
+14:13:18,434 ERROR SchemaExport:426 - Table "glarchez" not found; SQL statement:
+
+    alter table "glarchez" 
+        drop constraint FKC8B52CB07327568E [42102-145]
+14:13:18,434 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB0240A7DA3
+14:13:18,434 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "glarchez" drop constraint FKC8B52CB0240A7DA3
+14:13:18,435 ERROR SchemaExport:426 - Table "glarchez" not found; SQL statement:
+
+    alter table "glarchez" 
+        drop constraint FKC8B52CB0240A7DA3 [42102-145]
+14:13:18,435 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB0EF499B2C
+14:13:18,435 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "glarchez" drop constraint FKC8B52CB0EF499B2C
+14:13:18,435 ERROR SchemaExport:426 - Table "glarchez" not found; SQL statement:
+
+    alter table "glarchez" 
+        drop constraint FKC8B52CB0EF499B2C [42102-145]
+14:13:18,435 DEBUG SQL:104 - 
+    alter table "master" 
+        drop constraint FKBF8D2A6248C67743
+14:13:18,436 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "master" drop constraint FKBF8D2A6248C67743
+14:13:18,436 ERROR SchemaExport:426 - Table "master" not found; SQL statement:
+
+    alter table "master" 
+        drop constraint FKBF8D2A6248C67743 [42102-145]
+14:13:18,436 DEBUG SQL:104 - 
+    alter table "the fees_fees" 
+        drop constraint FK328B0810929E1AEB
+14:13:18,438 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "the fees_fees" drop constraint FK328B0810929E1AEB
+14:13:18,438 ERROR SchemaExport:426 - Table "the fees_fees" not found; SQL statement:
+
+    alter table "the fees_fees" 
+        drop constraint FK328B0810929E1AEB [42102-145]
+14:13:18,438 DEBUG SQL:104 - 
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCDED2B5FD
+14:13:18,438 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "the fees" drop constraint FK3DDCB3FCDED2B5FD
+14:13:18,439 ERROR SchemaExport:426 - Table "the fees" not found; SQL statement:
+
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCDED2B5FD [42102-145]
+14:13:18,439 DEBUG SQL:104 - 
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCDE3EAC1A
+14:13:18,439 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "the fees" drop constraint FK3DDCB3FCDE3EAC1A
+14:13:18,439 ERROR SchemaExport:426 - Table "the fees" not found; SQL statement:
+
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCDE3EAC1A [42102-145]
+14:13:18,439 DEBUG SQL:104 - 
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCDED30C99
+14:13:18,439 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "the fees" drop constraint FK3DDCB3FCDED30C99
+14:13:18,440 ERROR SchemaExport:426 - Table "the fees" not found; SQL statement:
+
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCDED30C99 [42102-145]
+14:13:18,440 DEBUG SQL:104 - 
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCE4640982
+14:13:18,440 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "the fees" drop constraint FK3DDCB3FCE4640982
+14:13:18,440 ERROR SchemaExport:426 - Table "the fees" not found; SQL statement:
+
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCE4640982 [42102-145]
+14:13:18,440 DEBUG SQL:104 - 
+    alter table abcd 
+        drop constraint FK2D9442578192D3
+14:13:18,440 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table abcd drop constraint FK2D9442578192D3
+14:13:18,441 ERROR SchemaExport:426 - Table "ABCD" not found; SQL statement:
+
+    alter table abcd 
+        drop constraint FK2D9442578192D3 [42102-145]
+14:13:18,441 DEBUG SQL:104 - 
+    alter table abcd 
+        drop constraint FK2D9442DED2FBBD
+14:13:18,441 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table abcd drop constraint FK2D9442DED2FBBD
+14:13:18,441 ERROR SchemaExport:426 - Table "ABCD" not found; SQL statement:
+
+    alter table abcd 
+        drop constraint FK2D9442DED2FBBD [42102-145]
+14:13:18,441 DEBUG SQL:104 - 
+    alter table abcd 
+        drop constraint FK2D9442FB8A4BED
+14:13:18,441 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table abcd drop constraint FK2D9442FB8A4BED
+14:13:18,442 ERROR SchemaExport:426 - Table "ABCD" not found; SQL statement:
+
+    alter table abcd 
+        drop constraint FK2D9442FB8A4BED [42102-145]
+14:13:18,442 DEBUG SQL:104 - 
+    alter table abcd 
+        drop constraint FK2D944294077C4B
+14:13:18,443 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table abcd drop constraint FK2D944294077C4B
+14:13:18,443 ERROR SchemaExport:426 - Table "ABCD" not found; SQL statement:
+
+    alter table abcd 
+        drop constraint FK2D944294077C4B [42102-145]
+14:13:18,443 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA255106523
+14:13:18,443 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table addresses drop constraint FK34207BA255106523
+14:13:18,443 ERROR SchemaExport:426 - Table "ADDRESSES" not found; SQL statement:
+
+    alter table addresses 
+        drop constraint FK34207BA255106523 [42102-145]
+14:13:18,443 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99
+14:13:18,444 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table addresses drop constraint FK34207BA26B9FAF99
+14:13:18,444 ERROR SchemaExport:426 - Table "ADDRESSES" not found; SQL statement:
+
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99 [42102-145]
+14:13:18,444 DEBUG SQL:104 - 
+    alter table bar_join_table 
+        drop constraint FKF39114258B9833CB
+14:13:18,444 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table bar_join_table drop constraint FKF39114258B9833CB
+14:13:18,444 ERROR SchemaExport:426 - Table "BAR_JOIN_TABLE" not found; SQL statement:
+
+    alter table bar_join_table 
+        drop constraint FKF39114258B9833CB [42102-145]
+14:13:18,444 DEBUG SQL:104 - 
+    alter table baz 
+        drop constraint FK17C1BDED2B87D
+14:13:18,445 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz drop constraint FK17C1BDED2B87D
+14:13:18,445 ERROR SchemaExport:426 - Table "BAZ" not found; SQL statement:
+
+    alter table baz 
+        drop constraint FK17C1BDED2B87D [42102-145]
+14:13:18,445 DEBUG SQL:104 - 
+    alter table baz 
+        drop constraint FK17C1B7B14B1CC
+14:13:18,445 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz drop constraint FK17C1B7B14B1CC
+14:13:18,445 ERROR SchemaExport:426 - Table "BAZ" not found; SQL statement:
+
+    alter table baz 
+        drop constraint FK17C1B7B14B1CC [42102-145]
+14:13:18,446 DEBUG SQL:104 - 
+    alter table baz 
+        drop constraint FK17C1B8B9B1B19
+14:13:18,446 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz drop constraint FK17C1B8B9B1B19
+14:13:18,446 ERROR SchemaExport:426 - Table "BAZ" not found; SQL statement:
+
+    alter table baz 
+        drop constraint FK17C1B8B9B1B19 [42102-145]
+14:13:18,446 DEBUG SQL:104 - 
+    alter table baz_anyToAny 
+        drop constraint FKB79B2A89DED29727
+14:13:18,446 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_anyToAny drop constraint FKB79B2A89DED29727
+14:13:18,446 ERROR SchemaExport:426 - Table "BAZ_ANYTOANY" not found; SQL statement:
+
+    alter table baz_anyToAny 
+        drop constraint FKB79B2A89DED29727 [42102-145]
+14:13:18,447 DEBUG SQL:104 - 
+    alter table baz_byte_bag 
+        drop constraint FK5DC16BF5DED29727
+14:13:18,447 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_byte_bag drop constraint FK5DC16BF5DED29727
+14:13:18,447 ERROR SchemaExport:426 - Table "BAZ_BYTE_BAG" not found; SQL statement:
+
+    alter table baz_byte_bag 
+        drop constraint FK5DC16BF5DED29727 [42102-145]
+14:13:18,447 DEBUG SQL:104 - 
+    alter table baz_customs 
+        drop constraint FK7C7BAFEDED2B1B0
+14:13:18,447 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_customs drop constraint FK7C7BAFEDED2B1B0
+14:13:18,448 ERROR SchemaExport:426 - Table "BAZ_CUSTOMS" not found; SQL statement:
+
+    alter table baz_customs 
+        drop constraint FK7C7BAFEDED2B1B0 [42102-145]
+14:13:18,448 DEBUG SQL:104 - 
+    alter table baz_floats_bag 
+        drop constraint FK8687FC04601671B4
+14:13:18,448 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_floats_bag drop constraint FK8687FC04601671B4
+14:13:18,448 ERROR SchemaExport:426 - Table "BAZ_FLOATS_BAG" not found; SQL statement:
+
+    alter table baz_floats_bag 
+        drop constraint FK8687FC04601671B4 [42102-145]
+14:13:18,448 DEBUG SQL:104 - 
+    alter table baz_foo 
+        drop constraint FKEC8CB2A2DED2B87D
+14:13:18,448 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_foo drop constraint FKEC8CB2A2DED2B87D
+14:13:18,449 ERROR SchemaExport:426 - Table "BAZ_FOO" not found; SQL statement:
+
+    alter table baz_foo 
+        drop constraint FKEC8CB2A2DED2B87D [42102-145]
+14:13:18,449 DEBUG SQL:104 - 
+    alter table baz_foo 
+        drop constraint FKEC8CB2A2DED29727
+14:13:18,449 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_foo drop constraint FKEC8CB2A2DED29727
+14:13:18,449 ERROR SchemaExport:426 - Table "BAZ_FOO" not found; SQL statement:
+
+    alter table baz_foo 
+        drop constraint FKEC8CB2A2DED29727 [42102-145]
+14:13:18,449 DEBUG SQL:104 - 
+    alter table baz_fooComponentToFoo 
+        drop constraint FK899CF490932F92EB
+14:13:18,449 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_fooComponentToFoo drop constraint FK899CF490932F92EB
+14:13:18,450 ERROR SchemaExport:426 - Table "BAZ_FOOCOMPONENTTOFOO" not found; SQL statement:
+
+    alter table baz_fooComponentToFoo 
+        drop constraint FK899CF490932F92EB [42102-145]
+14:13:18,450 DEBUG SQL:104 - 
+    alter table baz_fooComponentToFoo 
+        drop constraint FK899CF4908B9BD6CB
+14:13:18,450 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_fooComponentToFoo drop constraint FK899CF4908B9BD6CB
+14:13:18,450 ERROR SchemaExport:426 - Table "BAZ_FOOCOMPONENTTOFOO" not found; SQL statement:
+
+    alter table baz_fooComponentToFoo 
+        drop constraint FK899CF4908B9BD6CB [42102-145]
+14:13:18,450 DEBUG SQL:104 - 
+    alter table baz_fooToGlarch 
+        drop constraint FK8E0729D8C6E46349
+14:13:18,451 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_fooToGlarch drop constraint FK8E0729D8C6E46349
+14:13:18,451 ERROR SchemaExport:426 - Table "BAZ_FOOTOGLARCH" not found; SQL statement:
+
+    alter table baz_fooToGlarch 
+        drop constraint FK8E0729D8C6E46349 [42102-145]
+14:13:18,451 DEBUG SQL:104 - 
+    alter table baz_fooToGlarch 
+        drop constraint FK8E0729D88B9BD6CB
+14:13:18,451 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_fooToGlarch drop constraint FK8E0729D88B9BD6CB
+14:13:18,451 ERROR SchemaExport:426 - Table "BAZ_FOOTOGLARCH" not found; SQL statement:
+
+    alter table baz_fooToGlarch 
+        drop constraint FK8E0729D88B9BD6CB [42102-145]
+14:13:18,451 DEBUG SQL:104 - 
+    alter table baz_fooToGlarch 
+        drop constraint FK8E0729D8932F92EB
+14:13:18,452 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_fooToGlarch drop constraint FK8E0729D8932F92EB
+14:13:18,452 ERROR SchemaExport:426 - Table "BAZ_FOOTOGLARCH" not found; SQL statement:
+
+    alter table baz_fooToGlarch 
+        drop constraint FK8E0729D8932F92EB [42102-145]
+14:13:18,452 DEBUG SQL:104 - 
+    alter table baz_id_foo 
+        drop constraint FK8DA58046DED2B87D
+14:13:18,452 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_id_foo drop constraint FK8DA58046DED2B87D
+14:13:18,452 ERROR SchemaExport:426 - Table "BAZ_ID_FOO" not found; SQL statement:
+
+    alter table baz_id_foo 
+        drop constraint FK8DA58046DED2B87D [42102-145]
+14:13:18,452 DEBUG SQL:104 - 
+    alter table baz_id_foo 
+        drop constraint FK8DA58046DED29727
+14:13:18,452 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_id_foo drop constraint FK8DA58046DED29727
+14:13:18,453 ERROR SchemaExport:426 - Table "BAZ_ID_FOO" not found; SQL statement:
+
+    alter table baz_id_foo 
+        drop constraint FK8DA58046DED29727 [42102-145]
+14:13:18,453 DEBUG SQL:104 - 
+    alter table baz_manyToAny 
+        drop constraint FKE0669B2EDED29727
+14:13:18,453 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_manyToAny drop constraint FKE0669B2EDED29727
+14:13:18,453 ERROR SchemaExport:426 - Table "BAZ_MANYTOANY" not found; SQL statement:
+
+    alter table baz_manyToAny 
+        drop constraint FKE0669B2EDED29727 [42102-145]
+14:13:18,453 DEBUG SQL:104 - 
+    alter table baz_moreParts 
+        drop constraint FK3FF10D67FB8D0715
+14:13:18,453 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_moreParts drop constraint FK3FF10D67FB8D0715
+14:13:18,453 ERROR SchemaExport:426 - Table "BAZ_MOREPARTS" not found; SQL statement:
+
+    alter table baz_moreParts 
+        drop constraint FK3FF10D67FB8D0715 [42102-145]
+14:13:18,454 DEBUG SQL:104 - 
+    alter table baz_moreParts 
+        drop constraint FK3FF10D67DED29727
+14:13:18,454 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_moreParts drop constraint FK3FF10D67DED29727
+14:13:18,454 ERROR SchemaExport:426 - Table "BAZ_MOREPARTS" not found; SQL statement:
+
+    alter table baz_moreParts 
+        drop constraint FK3FF10D67DED29727 [42102-145]
+14:13:18,454 DEBUG SQL:104 - 
+    alter table baz_stringArray 
+        drop constraint FK24B80EA4DED2B1B0
+14:13:18,454 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_stringArray drop constraint FK24B80EA4DED2B1B0
+14:13:18,454 ERROR SchemaExport:426 - Table "BAZ_STRINGARRAY" not found; SQL statement:
+
+    alter table baz_stringArray 
+        drop constraint FK24B80EA4DED2B1B0 [42102-145]
+14:13:18,454 DEBUG SQL:104 - 
+    alter table baz_stringDateMap 
+        drop constraint FK58BCAC59DED2B1B0
+14:13:18,454 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_stringDateMap drop constraint FK58BCAC59DED2B1B0
+14:13:18,455 ERROR SchemaExport:426 - Table "BAZ_STRINGDATEMAP" not found; SQL statement:
+
+    alter table baz_stringDateMap 
+        drop constraint FK58BCAC59DED2B1B0 [42102-145]
+14:13:18,455 DEBUG SQL:104 - 
+    alter table baz_stringSet 
+        drop constraint FKC96DEF6DDED2B1B0
+14:13:18,455 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_stringSet drop constraint FKC96DEF6DDED2B1B0
+14:13:18,455 ERROR SchemaExport:426 - Table "BAZ_STRINGSET" not found; SQL statement:
+
+    alter table baz_stringSet 
+        drop constraint FKC96DEF6DDED2B1B0 [42102-145]
+14:13:18,455 DEBUG SQL:104 - 
+    alter table baz_timeArray 
+        drop constraint FKD53E38688B9BD6CB
+14:13:18,455 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table baz_timeArray drop constraint FKD53E38688B9BD6CB
+14:13:18,456 ERROR SchemaExport:426 - Table "BAZ_TIMEARRAY" not found; SQL statement:
+
+    alter table baz_timeArray 
+        drop constraint FKD53E38688B9BD6CB [42102-145]
+14:13:18,456 DEBUG SQL:104 - 
+    alter table bazcomponents 
+        drop constraint FK12C9D9718B9BD6CB
+14:13:18,456 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table bazcomponents drop constraint FK12C9D9718B9BD6CB
+14:13:18,456 ERROR SchemaExport:426 - Table "BAZCOMPONENTS" not found; SQL statement:
+
+    alter table bazcomponents 
+        drop constraint FK12C9D9718B9BD6CB [42102-145]
+14:13:18,456 DEBUG SQL:104 - 
+    alter table cached_map 
+        drop constraint FK1F8B4BFDED29727
+14:13:18,456 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table cached_map drop constraint FK1F8B4BFDED29727
+14:13:18,456 ERROR SchemaExport:426 - Table "CACHED_MAP" not found; SQL statement:
+
+    alter table cached_map 
+        drop constraint FK1F8B4BFDED29727 [42102-145]
+14:13:18,456 DEBUG SQL:104 - 
+    alter table cached_map 
+        drop constraint FK1F8B4BFCD1093EB
+14:13:18,457 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table cached_map drop constraint FK1F8B4BFCD1093EB
+14:13:18,457 ERROR SchemaExport:426 - Table "CACHED_MAP" not found; SQL statement:
+
+    alter table cached_map 
+        drop constraint FK1F8B4BFCD1093EB [42102-145]
+14:13:18,457 DEBUG SQL:104 - 
+    alter table cached_set 
+        drop constraint FK1F8CBC5DED29727
+14:13:18,457 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table cached_set drop constraint FK1F8CBC5DED29727
+14:13:18,457 ERROR SchemaExport:426 - Table "CACHED_SET" not found; SQL statement:
+
+    alter table cached_set 
+        drop constraint FK1F8CBC5DED29727 [42102-145]
+14:13:18,457 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEE6C4D648
+14:13:18,457 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table category drop constraint FK302BCFEE6C4D648
+14:13:18,458 ERROR SchemaExport:426 - Table "CATEGORY" not found; SQL statement:
+
+    alter table category 
+        drop constraint FK302BCFEE6C4D648 [42102-145]
+14:13:18,458 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEB30D557
+14:13:18,458 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table category drop constraint FK302BCFEB30D557
+14:13:18,458 ERROR SchemaExport:426 - Table "CATEGORY" not found; SQL statement:
+
+    alter table category 
+        drop constraint FK302BCFEB30D557 [42102-145]
+14:13:18,458 DEBUG SQL:104 - 
+    alter table foo_dates 
+        drop constraint FKB585C9CC932F92EB
+14:13:18,458 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table foo_dates drop constraint FKB585C9CC932F92EB
+14:13:18,458 ERROR SchemaExport:426 - Table "FOO_DATES" not found; SQL statement:
+
+    alter table foo_dates 
+        drop constraint FKB585C9CC932F92EB [42102-145]
+14:13:18,459 DEBUG SQL:104 - 
+    alter table foo_dep_table 
+        drop constraint FK489E6365E4A2AC18
+14:13:18,459 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table foo_dep_table drop constraint FK489E6365E4A2AC18
+14:13:18,459 ERROR SchemaExport:426 - Table "FOO_DEP_TABLE" not found; SQL statement:
+
+    alter table foo_dep_table 
+        drop constraint FK489E6365E4A2AC18 [42102-145]
+14:13:18,459 DEBUG SQL:104 - 
+    alter table foo_dep_table 
+        drop constraint FK489E63659CB3B576
+14:13:18,459 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table foo_dep_table drop constraint FK489E63659CB3B576
+14:13:18,460 ERROR SchemaExport:426 - Table "FOO_DEP_TABLE" not found; SQL statement:
+
+    alter table foo_dep_table 
+        drop constraint FK489E63659CB3B576 [42102-145]
+14:13:18,460 DEBUG SQL:104 - 
+    alter table foo_times 
+        drop constraint FKB66ACA8D932F92EB
+14:13:18,460 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table foo_times drop constraint FKB66ACA8D932F92EB
+14:13:18,460 ERROR SchemaExport:426 - Table "FOO_TIMES" not found; SQL statement:
+
+    alter table foo_times 
+        drop constraint FKB66ACA8D932F92EB [42102-145]
+14:13:18,460 DEBUG SQL:104 - 
+    alter table foobytes 
+        drop constraint FK16933F65DED138D2
+14:13:18,460 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table foobytes drop constraint FK16933F65DED138D2
+14:13:18,460 ERROR SchemaExport:426 - Table "FOOBYTES" not found; SQL statement:
+
+    alter table foobytes 
+        drop constraint FK16933F65DED138D2 [42102-145]
+14:13:18,461 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99
+14:13:18,461 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table human_nick_names drop constraint FK8718E1BE6B9FAF99
+14:13:18,461 ERROR SchemaExport:426 - Table "HUMAN_NICK_NAMES" not found; SQL statement:
+
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99 [42102-145]
+14:13:18,461 DEBUG SQL:104 - 
+    alter table int_array 
+        drop constraint FK12CE7E09DED12827
+14:13:18,461 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table int_array drop constraint FK12CE7E09DED12827
+14:13:18,462 ERROR SchemaExport:426 - Table "INT_ARRAY" not found; SQL statement:
+
+    alter table int_array 
+        drop constraint FK12CE7E09DED12827 [42102-145]
+14:13:18,462 DEBUG SQL:104 - 
+    alter table jointable 
+        drop constraint FKE3AC08E4E4A2AC18
+14:13:18,473 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table jointable drop constraint FKE3AC08E4E4A2AC18
+14:13:18,473 ERROR SchemaExport:426 - Table "JOINTABLE" not found; SQL statement:
+
+    alter table jointable 
+        drop constraint FKE3AC08E4E4A2AC18 [42102-145]
+14:13:18,473 DEBUG SQL:104 - 
+    alter table leafsubclass 
+        drop constraint FK24853496DF029E81
+14:13:18,474 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table leafsubclass drop constraint FK24853496DF029E81
+14:13:18,474 ERROR SchemaExport:426 - Table "LEAFSUBCLASS" not found; SQL statement:
+
+    alter table leafsubclass 
+        drop constraint FK24853496DF029E81 [42102-145]
+14:13:18,496 DEBUG SQL:104 - 
+    alter table leafsubclass 
+        drop constraint FK24853496A2CEC367
+14:13:18,497 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table leafsubclass drop constraint FK24853496A2CEC367
+14:13:18,497 ERROR SchemaExport:426 - Table "LEAFSUBCLASS" not found; SQL statement:
+
+    alter table leafsubclass 
+        drop constraint FK24853496A2CEC367 [42102-145]
+14:13:18,497 DEBUG SQL:104 - 
+    alter table leafsubclass 
+        drop constraint FK24853496338734D5
+14:13:18,498 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table leafsubclass drop constraint FK24853496338734D5
+14:13:18,498 ERROR SchemaExport:426 - Table "LEAFSUBCLASS" not found; SQL statement:
+
+    alter table leafsubclass 
+        drop constraint FK24853496338734D5 [42102-145]
+14:13:18,498 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5A6F9C38B8
+14:13:18,498 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table leafsubsubclass drop constraint FK443F0B5A6F9C38B8
+14:13:18,498 ERROR SchemaExport:426 - Table "LEAFSUBSUBCLASS" not found; SQL statement:
+
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5A6F9C38B8 [42102-145]
+14:13:18,498 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5A8B3D2732
+14:13:18,498 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table leafsubsubclass drop constraint FK443F0B5A8B3D2732
+14:13:18,499 ERROR SchemaExport:426 - Table "LEAFSUBSUBCLASS" not found; SQL statement:
+
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5A8B3D2732 [42102-145]
+14:13:18,499 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5AAC6C3EE
+14:13:18,499 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table leafsubsubclass drop constraint FK443F0B5AAC6C3EE
+14:13:18,499 ERROR SchemaExport:426 - Table "LEAFSUBSUBCLASS" not found; SQL statement:
+
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5AAC6C3EE [42102-145]
+14:13:18,499 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5A3310E22E
+14:13:18,499 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table leafsubsubclass drop constraint FK443F0B5A3310E22E
+14:13:18,500 ERROR SchemaExport:426 - Table "LEAFSUBSUBCLASS" not found; SQL statement:
+
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5A3310E22E [42102-145]
+14:13:18,500 DEBUG SQL:104 - 
+    alter table many 
+        drop constraint FK33065F9016265D
+14:13:18,500 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table many drop constraint FK33065F9016265D
+14:13:18,500 ERROR SchemaExport:426 - Table "MANY" not found; SQL statement:
+
+    alter table many 
+        drop constraint FK33065F9016265D [42102-145]
+14:13:18,500 DEBUG SQL:104 - 
+    alter table mtm 
+        drop constraint BB
+14:13:18,523 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table mtm drop constraint BB
+14:13:18,523 ERROR SchemaExport:426 - Table "MTM" not found; SQL statement:
+
+    alter table mtm 
+        drop constraint BB [42102-145]
+14:13:18,523 DEBUG SQL:104 - 
+    alter table mtm 
+        drop constraint AA
+14:13:18,524 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table mtm drop constraint AA
+14:13:18,524 ERROR SchemaExport:426 - Table "MTM" not found; SQL statement:
+
+    alter table mtm 
+        drop constraint AA [42102-145]
+14:13:18,524 DEBUG SQL:104 - 
+    alter table nonleafsubclass 
+        drop constraint FK2C4413E3DED31D14
+14:13:18,524 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table nonleafsubclass drop constraint FK2C4413E3DED31D14
+14:13:18,525 ERROR SchemaExport:426 - Table "NONLEAFSUBCLASS" not found; SQL statement:
+
+    alter table nonleafsubclass 
+        drop constraint FK2C4413E3DED31D14 [42102-145]
+14:13:18,525 DEBUG SQL:104 - 
+    alter table nonleafsubclass 
+        drop constraint FK2C4413E33397DF0C
+14:13:18,525 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table nonleafsubclass drop constraint FK2C4413E33397DF0C
+14:13:18,525 ERROR SchemaExport:426 - Table "NONLEAFSUBCLASS" not found; SQL statement:
+
+    alter table nonleafsubclass 
+        drop constraint FK2C4413E33397DF0C [42102-145]
+14:13:18,525 DEBUG SQL:104 - 
+    alter table nonleafsubclass 
+        drop constraint FK2C4413E328385AED
+14:13:18,525 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table nonleafsubclass drop constraint FK2C4413E328385AED
+14:13:18,525 ERROR SchemaExport:426 - Table "NONLEAFSUBCLASS" not found; SQL statement:
+
+    alter table nonleafsubclass 
+        drop constraint FK2C4413E328385AED [42102-145]
+14:13:18,525 DEBUG SQL:104 - 
+    alter table one 
+        drop constraint FK1AE66329ECAC7
+14:13:18,526 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table one drop constraint FK1AE66329ECAC7
+14:13:18,526 ERROR SchemaExport:426 - Table "ONE" not found; SQL statement:
+
+    alter table one 
+        drop constraint FK1AE66329ECAC7 [42102-145]
+14:13:18,526 DEBUG SQL:104 - 
+    alter table quux 
+        drop constraint FK3523C7DED2B87D
+14:13:18,526 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table quux drop constraint FK3523C7DED2B87D
+14:13:18,526 ERROR SchemaExport:426 - Table "QUUX" not found; SQL statement:
+
+    alter table quux 
+        drop constraint FK3523C7DED2B87D [42102-145]
+14:13:18,526 DEBUG SQL:104 - 
+    alter table quux 
+        drop constraint FK3523C7CFEFBDAD
+14:13:18,526 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table quux drop constraint FK3523C7CFEFBDAD
+14:13:18,527 ERROR SchemaExport:426 - Table "QUUX" not found; SQL statement:
+
+    alter table quux 
+        drop constraint FK3523C7CFEFBDAD [42102-145]
+14:13:18,527 DEBUG SQL:104 - 
+    alter table quux 
+        drop constraint FK3523C7AB390E59
+14:13:18,527 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table quux drop constraint FK3523C7AB390E59
+14:13:18,527 ERROR SchemaExport:426 - Table "QUUX" not found; SQL statement:
+
+    alter table quux 
+        drop constraint FK3523C7AB390E59 [42102-145]
+14:13:18,527 DEBUG SQL:104 - 
+    alter table quux_fums 
+        drop constraint FKEB87FC2DAAB22AAB
+14:13:18,528 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table quux_fums drop constraint FKEB87FC2DAAB22AAB
+14:13:18,528 ERROR SchemaExport:426 - Table "QUUX_FUMS" not found; SQL statement:
+
+    alter table quux_fums 
+        drop constraint FKEB87FC2DAAB22AAB [42102-145]
+14:13:18,528 DEBUG SQL:104 - 
+    alter table quux_fums 
+        drop constraint FKEB87FC2DA64DB02B
+14:13:18,528 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table quux_fums drop constraint FKEB87FC2DA64DB02B
+14:13:18,528 ERROR SchemaExport:426 - Table "QUUX_FUMS" not found; SQL statement:
+
+    alter table quux_fums 
+        drop constraint FKEB87FC2DA64DB02B [42102-145]
+14:13:18,528 DEBUG SQL:104 - 
+    alter table rootclass 
+        drop constraint FKCC8765D6DF07C9F0
+14:13:18,528 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table rootclass drop constraint FKCC8765D6DF07C9F0
+14:13:18,574 ERROR SchemaExport:426 - Table "ROOTCLASS" not found; SQL statement:
+
+    alter table rootclass 
+        drop constraint FKCC8765D6DF07C9F0 [42102-145]
+14:13:18,574 DEBUG SQL:104 - 
+    alter table rootclass 
+        drop constraint FKCC8765D63434DA5C
+14:13:18,574 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table rootclass drop constraint FKCC8765D63434DA5C
+14:13:18,575 ERROR SchemaExport:426 - Table "ROOTCLASS" not found; SQL statement:
+
+    alter table rootclass 
+        drop constraint FKCC8765D63434DA5C [42102-145]
+14:13:18,575 DEBUG SQL:104 - 
+    alter table simple_simple 
+        drop constraint FK869810DF5B9F6506
+14:13:18,575 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table simple_simple drop constraint FK869810DF5B9F6506
+14:13:18,575 ERROR SchemaExport:426 - Table "SIMPLE_SIMPLE" not found; SQL statement:
+
+    alter table simple_simple 
+        drop constraint FK869810DF5B9F6506 [42102-145]
+14:13:18,576 DEBUG SQL:104 - 
+    alter table simple_simple 
+        drop constraint FK869810DFEC57D671
+14:13:18,576 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table simple_simple drop constraint FK869810DFEC57D671
+14:13:18,576 ERROR SchemaExport:426 - Table "SIMPLE_SIMPLE" not found; SQL statement:
+
+    alter table simple_simple 
+        drop constraint FK869810DFEC57D671 [42102-145]
+14:13:18,576 DEBUG SQL:104 - 
+    alter table string_list 
+        drop constraint FKA5F66C0CDED12827
+14:13:18,576 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table string_list drop constraint FKA5F66C0CDED12827
+14:13:18,576 ERROR SchemaExport:426 - Table "STRING_LIST" not found; SQL statement:
+
+    alter table string_list 
+        drop constraint FKA5F66C0CDED12827 [42102-145]
+14:13:18,576 DEBUG SQL:104 - 
+    alter table topcomponents 
+        drop constraint FK72C85E2BDED2B1B0
+14:13:18,577 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table topcomponents drop constraint FK72C85E2BDED2B1B0
+14:13:18,577 ERROR SchemaExport:426 - Table "TOPCOMPONENTS" not found; SQL statement:
+
+    alter table topcomponents 
+        drop constraint FK72C85E2BDED2B1B0 [42102-145]
+14:13:18,577 DEBUG SQL:104 - 
+    drop table Address if exists
+14:13:18,645 DEBUG SQL:104 - 
+    drop table Animal if exists
+14:13:18,646 DEBUG SQL:104 - 
+    drop table CCBAG if exists
+14:13:18,646 DEBUG SQL:104 - 
+    drop table CID_IN if exists
+14:13:18,646 DEBUG SQL:104 - 
+    drop table CID_MID if exists
+14:13:18,646 DEBUG SQL:104 - 
+    drop table CID_OUT if exists
+14:13:18,646 DEBUG SQL:104 - 
+    drop table CRAZY_ID_NODE if exists
+14:13:18,646 DEBUG SQL:104 - 
+    drop table CRAZY_ID_TOP if exists
+14:13:18,647 DEBUG SQL:104 - 
+    drop table Cat if exists
+14:13:18,647 DEBUG SQL:104 - 
+    drop table Contained if exists
+14:13:18,647 DEBUG SQL:104 - 
+    drop table Container if exists
+14:13:18,647 DEBUG SQL:104 - 
+    drop table Container_components if exists
+14:13:18,647 DEBUG SQL:104 - 
+    drop table Container_composites if exists
+14:13:18,647 DEBUG SQL:104 - 
+    drop table Container_manyToMany if exists
+14:13:18,648 DEBUG SQL:104 - 
+    drop table Container_ternaryMap if exists
+14:13:18,648 DEBUG SQL:104 - 
+    drop table Container_ternarySet if exists
+14:13:18,648 DEBUG SQL:104 - 
+    drop table Custom if exists
+14:13:18,648 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:13:18,648 DEBUG SQL:104 - 
+    drop table CustomerOrder if exists
+14:13:18,648 DEBUG SQL:104 - 
+    drop table Detail if exists
+14:13:18,648 DEBUG SQL:104 - 
+    drop table Dog if exists
+14:13:18,649 DEBUG SQL:104 - 
+    drop table DomesticAnimal if exists
+14:13:18,649 DEBUG SQL:104 - 
+    drop table Entity if exists
+14:13:18,649 DEBUG SQL:104 - 
+    drop table EntityWithCrazyCompositeKey if exists
+14:13:18,649 DEBUG SQL:104 - 
+    drop table Eye if exists
+14:13:18,649 DEBUG SQL:104 - 
+    drop table FOO_ARRAY if exists
+14:13:18,649 DEBUG SQL:104 - 
+    drop table Fum if exists
+14:13:18,649 DEBUG SQL:104 - 
+    drop table Fum_stringmap if exists
+14:13:18,650 DEBUG SQL:104 - 
+    drop table HQL_COMP_CONT if exists
+14:13:18,650 DEBUG SQL:104 - 
+    drop table Holder if exists
+14:13:18,650 DEBUG SQL:104 - 
+    drop table Human if exists
+14:13:18,658 DEBUG SQL:104 - 
+    drop table Human_family if exists
+14:13:18,658 DEBUG SQL:104 - 
+    drop table Human_friends if exists
+14:13:18,658 DEBUG SQL:104 - 
+    drop table JOINED if exists
+14:13:18,659 DEBUG SQL:104 - 
+    drop table Jay if exists
+14:13:18,659 DEBUG SQL:104 - 
+    drop table Joiner if exists
+14:13:18,659 DEBUG SQL:104 - 
+    drop table LCCBAG if exists
+14:13:18,659 DEBUG SQL:104 - 
+    drop table LineItem if exists
+14:13:18,659 DEBUG SQL:104 - 
+    drop table Lizard if exists
+14:13:18,659 DEBUG SQL:104 - 
+    drop table MANY_TO_MANY if exists
+14:13:18,660 DEBUG SQL:104 - 
+    drop table MARECM if exists
+14:13:18,660 DEBUG SQL:104 - 
+    drop table MARELO if exists
+14:13:18,660 DEBUG SQL:104 - 
+    drop table MailingAddress if exists
+14:13:18,660 DEBUG SQL:104 - 
+    drop table Mammal if exists
+14:13:18,660 DEBUG SQL:104 - 
+    drop table Model if exists
+14:13:18,671 DEBUG SQL:104 - 
+    drop table Nameable if exists
+14:13:18,672 DEBUG SQL:104 - 
+    drop table Org if exists
+14:13:18,672 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:13:18,672 DEBUG SQL:104 - 
+    drop table ParentChild if exists
+14:13:18,672 DEBUG SQL:104 - 
+    drop table Part if exists
+14:13:18,672 DEBUG SQL:104 - 
+    drop table Person if exists
+14:13:18,672 DEBUG SQL:104 - 
+    drop table Po if exists
+14:13:18,672 DEBUG SQL:104 - 
+    drop table Product if exists
+14:13:18,672 DEBUG SQL:104 - 
+    drop table ProductLine if exists
+14:13:18,673 DEBUG SQL:104 - 
+    drop table Reptile if exists
+14:13:18,673 DEBUG SQL:104 - 
+    drop table SIMPLE_1 if exists
+14:13:18,673 DEBUG SQL:104 - 
+    drop table SIMPLE_2 if exists
+14:13:18,673 DEBUG SQL:104 - 
+    drop table Several if exists
+14:13:18,673 DEBUG SQL:104 - 
+    drop table Simple if exists
+14:13:18,673 DEBUG SQL:104 - 
+    drop table Single if exists
+14:13:18,673 DEBUG SQL:104 - 
+    drop table Sortable if exists
+14:13:18,673 DEBUG SQL:104 - 
+    drop table StateProvince if exists
+14:13:18,674 DEBUG SQL:104 - 
+    drop table SubDetail if exists
+14:13:18,674 DEBUG SQL:104 - 
+    drop table T_CHAR_PROP if exists
+14:13:18,674 DEBUG SQL:104 - 
+    drop table T_COMPLEX_PROP if exists
+14:13:18,674 DEBUG SQL:104 - 
+    drop table T_COMPLEX_SUB_PROPS if exists
+14:13:18,674 DEBUG SQL:104 - 
+    drop table T_GEN_PROPS if exists
+14:13:18,674 DEBUG SQL:104 - 
+    drop table T_NUM_PROP if exists
+14:13:18,707 DEBUG SQL:104 - 
+    drop table T_PROP_SET if exists
+14:13:18,708 DEBUG SQL:104 - 
+    drop table TrivialClass if exists
+14:13:18,708 DEBUG SQL:104 - 
+    drop table Up if exists
+14:13:18,708 DEBUG SQL:104 - 
+    drop table W if exists
+14:13:18,708 DEBUG SQL:104 - 
+    drop table Z if exists
+14:13:18,708 DEBUG SQL:104 - 
+    drop table Zoo if exists
+14:13:18,708 DEBUG SQL:104 - 
+    drop table Zoo_directors if exists
+14:13:18,708 DEBUG SQL:104 - 
+    drop table "User_permissions" if exists
+14:13:18,708 DEBUG SQL:104 - 
+    drop table "User" if exists
+14:13:18,709 DEBUG SQL:104 - 
+    drop table "assign-able" if exists
+14:13:18,709 DEBUG SQL:104 - 
+    drop table "bxaxg" if exists
+14:13:18,709 DEBUG SQL:104 - 
+    drop table "foos_importantDates" if exists
+14:13:18,709 DEBUG SQL:104 - 
+    drop table "foos" if exists
+14:13:18,709 DEBUG SQL:104 - 
+    drop table "glarchez_fooComponents" if exists
+14:13:18,709 DEBUG SQL:104 - 
+    drop table "glarchez_strings" if exists
+14:13:18,728 DEBUG SQL:104 - 
+    drop table "glarchez" if exists
+14:13:18,728 DEBUG SQL:104 - 
+    drop table "master" if exists
+14:13:18,728 DEBUG SQL:104 - 
+    drop table "the fees_fees" if exists
+14:13:18,729 DEBUG SQL:104 - 
+    drop table "the fees" if exists
+14:13:18,729 DEBUG SQL:104 - 
+    drop table abcd if exists
+14:13:18,729 DEBUG SQL:104 - 
+    drop table addresses if exists
+14:13:18,729 DEBUG SQL:104 - 
+    drop table bar_join_table if exists
+14:13:18,729 DEBUG SQL:104 - 
+    drop table baz if exists
+14:13:18,729 DEBUG SQL:104 - 
+    drop table baz_anyToAny if exists
+14:13:18,729 DEBUG SQL:104 - 
+    drop table baz_byte_bag if exists
+14:13:18,729 DEBUG SQL:104 - 
+    drop table baz_customs if exists
+14:13:18,730 DEBUG SQL:104 - 
+    drop table baz_floats_bag if exists
+14:13:18,730 DEBUG SQL:104 - 
+    drop table baz_foo if exists
+14:13:18,730 DEBUG SQL:104 - 
+    drop table baz_fooComponentToFoo if exists
+14:13:18,748 DEBUG SQL:104 - 
+    drop table baz_fooToGlarch if exists
+14:13:18,749 DEBUG SQL:104 - 
+    drop table baz_id_foo if exists
+14:13:18,749 DEBUG SQL:104 - 
+    drop table baz_manyToAny if exists
+14:13:18,749 DEBUG SQL:104 - 
+    drop table baz_moreParts if exists
+14:13:18,750 DEBUG SQL:104 - 
+    drop table baz_stringArray if exists
+14:13:18,750 DEBUG SQL:104 - 
+    drop table baz_stringDateMap if exists
+14:13:18,750 DEBUG SQL:104 - 
+    drop table baz_stringSet if exists
+14:13:18,750 DEBUG SQL:104 - 
+    drop table baz_timeArray if exists
+14:13:18,750 DEBUG SQL:104 - 
+    drop table bazcomponents if exists
+14:13:18,750 DEBUG SQL:104 - 
+    drop table cached_map if exists
+14:13:18,750 DEBUG SQL:104 - 
+    drop table cached_set if exists
+14:13:18,750 DEBUG SQL:104 - 
+    drop table category if exists
+14:13:18,751 DEBUG SQL:104 - 
+    drop table foo_dates if exists
+14:13:18,751 DEBUG SQL:104 - 
+    drop table foo_dep_table if exists
+14:13:18,751 DEBUG SQL:104 - 
+    drop table foo_times if exists
+14:13:18,762 DEBUG SQL:104 - 
+    drop table foobytes if exists
+14:13:18,763 DEBUG SQL:104 - 
+    drop table human_nick_names if exists
+14:13:18,764 DEBUG SQL:104 - 
+    drop table int_array if exists
+14:13:18,764 DEBUG SQL:104 - 
+    drop table jointable if exists
+14:13:18,764 DEBUG SQL:104 - 
+    drop table leafsubclass if exists
+14:13:18,764 DEBUG SQL:104 - 
+    drop table leafsubsubclass if exists
+14:13:18,764 DEBUG SQL:104 - 
+    drop table many if exists
+14:13:18,764 DEBUG SQL:104 - 
+    drop table mtm if exists
+14:13:18,764 DEBUG SQL:104 - 
+    drop table nonleafsubclass if exists
+14:13:18,765 DEBUG SQL:104 - 
+    drop table one if exists
+14:13:18,765 DEBUG SQL:104 - 
+    drop table quux if exists
+14:13:18,765 DEBUG SQL:104 - 
+    drop table quux_fums if exists
+14:13:18,765 DEBUG SQL:104 - 
+    drop table rootclass if exists
+14:13:18,765 DEBUG SQL:104 - 
+    drop table simple_simple if exists
+14:13:18,765 DEBUG SQL:104 - 
+    drop table string_list if exists
+14:13:18,765 DEBUG SQL:104 - 
+    drop table topcomponents if exists
+14:13:18,766 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:13:18,766 DEBUG SQL:104 - 
+    create table Address (
+        entityName varchar(255) not null,
+        street varchar(255),
+        state varchar(255),
+        zip varchar(255),
+        primary key (entityName)
+    )
+14:13:18,766 DEBUG SQL:104 - 
+    create table Animal (
+        id bigint generated by default as identity,
+        description varchar(255),
+        body_weight float,
+        mother_id bigint,
+        father_id bigint,
+        zoo_id bigint,
+        serialNumber varchar(255),
+        primary key (id)
+    )
+14:13:18,767 DEBUG SQL:104 - 
+    create table CCBAG (
+        container_id bigint not null,
+        contained_id bigint not null
+    )
+14:13:18,767 DEBUG SQL:104 - 
+    create table CID_IN (
+        AKEY varchar(10) not null,
+        BKEY varchar(10) not null,
+        DUDU varchar(10) not null,
+        BO_AKEY varchar(10),
+        BO_BKEY varchar(10),
+        BO_ONE varchar(10),
+        BO_TWO varchar(10),
+        BO_DET varchar(10),
+        primary key (AKEY, BKEY)
+    )
+14:13:18,779 DEBUG SQL:104 - 
+    create table CID_MID (
+        AKEY varchar(10) not null,
+        BKEY varchar(10) not null,
+        ONE varchar(10) not null,
+        TWO varchar(10) not null,
+        BLA varchar(10) not null,
+        primary key (AKEY, BKEY, ONE, TWO)
+    )
+14:13:18,779 DEBUG SQL:104 - 
+    create table CID_OUT (
+        AKEY varchar(10) not null,
+        BKEY varchar(10) not null,
+        ONE varchar(10) not null,
+        TWO varchar(10) not null,
+        ID varchar(10) not null,
+        BUBU varchar(10),
+        primary key (AKEY, BKEY, ONE, TWO, ID)
+    )
+14:13:18,789 DEBUG SQL:104 - 
+    create table CRAZY_ID_NODE (
+        ID bigint not null,
+        name varchar(255),
+        primary key (ID)
+    )
+14:13:18,790 DEBUG SQL:104 - 
+    create table CRAZY_ID_TOP (
+        ID bigint not null,
+        name varchar(255),
+        heresAnotherCrazyIdFieldName bigint,
+        primary key (ID)
+    )
+14:13:18,790 DEBUG SQL:104 - 
+    create table Cat (
+        mammal bigint not null,
+        primary key (mammal)
+    )
+14:13:18,791 DEBUG SQL:104 - 
+    create table Contained (
+        container_id bigint generated by default as identity,
+        primary key (container_id)
+    )
+14:13:18,791 DEBUG SQL:104 - 
+    create table Container (
+        container_id bigint generated by default as identity,
+        primary key (container_id)
+    )
+14:13:18,791 DEBUG SQL:104 - 
+    create table Container_components (
+        container_id bigint not null,
+        name varchar(255),
+        count_ integer,
+        simple bigint,
+        one bigint,
+        many bigint,
+        list_index integer not null,
+        primary key (container_id, list_index)
+    )
+14:13:18,792 DEBUG SQL:104 - 
+    create table Container_composites (
+        container_id bigint not null,
+        name varchar(255),
+        simple bigint,
+        one bigint,
+        many bigint
+    )
+14:13:18,812 DEBUG SQL:104 - 
+    create table Container_manyToMany (
+        container_id2 bigint not null,
+        elt bigint not null,
+        list_index integer not null,
+        primary key (container_id2, list_index)
+    )
+14:13:18,813 DEBUG SQL:104 - 
+    create table Container_ternaryMap (
+        container_id bigint not null,
+        name varchar(255),
+        foo varchar(36),
+        glarch varchar(32),
+        idx varchar(32) not null,
+        primary key (container_id, idx)
+    )
+14:13:18,813 DEBUG SQL:104 - 
+    create table Container_ternarySet (
+        container_id bigint not null,
+        name varchar(255) not null,
+        foo varchar(36) not null,
+        glarch varchar(32) not null,
+        primary key (container_id, name, foo, glarch)
+    )
+14:13:18,813 DEBUG SQL:104 - 
+    create table Custom (
+        id_ varchar(64) not null,
+        primary key (id_)
+    )
+14:13:18,823 DEBUG SQL:104 - 
+    create table Customer (
+        customerId varchar(10) not null,
+        name varchar(100) not null,
+        address varchar(200) not null,
+        primary key (customerId)
+    )
+14:13:18,824 DEBUG SQL:104 - 
+    create table CustomerOrder (
+        customerId varchar(10) not null,
+        orderNumber integer not null,
+        orderDate date not null,
+        primary key (customerId, orderNumber)
+    )
+14:13:18,824 DEBUG SQL:104 - 
+    create table Detail (
+        detail_key_column bigint generated by default as identity,
+        x integer not null,
+        i integer not null,
+        master_key bigint not null,
+        more_master_key bigint,
+        primary key (detail_key_column)
+    )
+14:13:18,824 DEBUG SQL:104 - 
+    create table Dog (
+        mammal bigint not null,
+        primary key (mammal)
+    )
+14:13:18,838 DEBUG SQL:104 - 
+    create table DomesticAnimal (
+        mammal bigint not null,
+        owner bigint,
+        primary key (mammal)
+    )
+14:13:18,838 DEBUG SQL:104 - 
+    create table Entity (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:13:18,839 DEBUG SQL:104 - 
+    create table EntityWithCrazyCompositeKey (
+        id bigint not null,
+        other_id bigint not null,
+        name varchar(255),
+        primary key (id, other_id)
+    )
+14:13:18,839 DEBUG SQL:104 - 
+    create table Eye (
+        id bigint not null,
+        name varchar(255),
+        jay bigint,
+        primary key (id)
+    )
+14:13:18,839 DEBUG SQL:104 - 
+    create table FOO_ARRAY (
+        id_ varchar(32) not null,
+        foo varchar(36) not null,
+        i integer not null,
+        primary key (id_, i),
+        check (i>=0)
+    )
+14:13:18,851 DEBUG SQL:104 - 
+    create table Fum (
+        string_ varchar(10) not null,
+        short_ smallint not null,
+        date_ date not null,
+        vid smallint not null,
+        fum varchar(255) not null,
+        TString varchar(255),
+        fo_string varchar(10),
+        fo_short smallint,
+        fo_date date,
+        count_ integer,
+        fr_string_ varchar(10),
+        fr_short_ smallint,
+        fr_date_ date,
+        fum_str_ varchar(10),
+        fum_sho_ smallint,
+        fum_dat_ date,
+        fummapindex varchar(255),
+        qux_id bigint,
+        posn integer,
+        primary key (string_, short_, date_)
+    )
+14:13:18,852 DEBUG SQL:104 - 
+    create table Fum_stringmap (
+        fum_str_ varchar(10) not null,
+        fum_sho_ smallint not null,
+        fum_dat_ date not null,
+        mapelement varchar(255),
+        mapindex varchar(255) not null,
+        primary key (fum_str_, fum_sho_, fum_dat_, mapindex)
+    )
+14:13:18,862 DEBUG SQL:104 - 
+    create table HQL_COMP_CONT (
+        ID bigint not null,
+        STREET_ADDR varchar(255),
+        CITY_ADDR varchar(255),
+        STATE_ADDR varchar(255),
+        ZIP_CODE_ADDR integer,
+        ZIP_PLUS4_ADDR integer,
+        primary key (ID)
+    )
+14:13:18,862 DEBUG SQL:104 - 
+    create table Holder (
+        id_ varchar(32) not null,
+        name varchar(36) not null,
+        otherHolder varchar(255),
+        primary key (id_)
+    )
+14:13:18,863 DEBUG SQL:104 - 
+    create table Human (
+        mammal bigint not null,
+        name_first varchar(255),
+        name_initial char(255),
+        name_last varchar(255),
+        nickName varchar(255),
+        height_centimeters double not null,
+        intValue integer,
+        floatValue float,
+        bigDecimalValue decimal(19,2),
+        bigIntegerValue decimal(19,2),
+        primary key (mammal)
+    )
+14:13:18,873 DEBUG SQL:104 - 
+    create table Human_family (
+        human1 bigint not null,
+        human2 bigint not null,
+        relationship varchar(255) not null,
+        primary key (human1, relationship)
+    )
+14:13:18,873 DEBUG SQL:104 - 
+    create table Human_friends (
+        human1 bigint not null,
+        human2 bigint not null
+    )
+14:13:18,873 DEBUG SQL:104 - 
+    create table JOINED (
+        ID bigint not null,
+        joinedName varchar(255),
+        primary key (ID)
+    )
+14:13:18,874 DEBUG SQL:104 - 
+    create table Jay (
+        id bigint not null,
+        eye bigint,
+        primary key (id)
+    )
+14:13:18,887 DEBUG SQL:104 - 
+    create table Joiner (
+        id bigint generated by default as identity,
+        name varchar(255),
+        primary key (id)
+    )
+14:13:18,888 DEBUG SQL:104 - 
+    create table LCCBAG (
+        container_id bigint not null,
+        contained_id bigint not null
+    )
+14:13:18,888 DEBUG SQL:104 - 
+    create table LineItem (
+        customerId varchar(10) not null,
+        orderNumber integer not null,
+        productId varchar(10) not null,
+        quantity integer,
+        primary key (customerId, orderNumber, productId)
+    )
+14:13:18,888 DEBUG SQL:104 - 
+    create table Lizard (
+        reptile bigint not null,
+        primary key (reptile)
+    )
+14:13:18,889 DEBUG SQL:104 - 
+    create table MANY_TO_MANY (
+        IN_ID bigint not null,
+        OUT_ID bigint not null,
+        primary key (IN_ID, OUT_ID)
+    )
+14:13:18,889 DEBUG SQL:104 - 
+    create table MARECM (
+        MCLINK bigint not null,
+        MCOMPR varchar(1),
+        MCOMME varchar(30),
+        primary key (MCLINK)
+    )
+14:13:18,889 DEBUG SQL:104 - 
+    create table MARELO (
+        MLMAG integer not null,
+        MLOCA varchar(11) not null,
+        MLINK bigint,
+        MLART varchar(13),
+        MLIDO bigint,
+        MLDTC timestamp,
+        MLTOP varchar(10),
+        MLRAG varchar(2),
+        MLROP smallint,
+        MLCOM bigint,
+        MATRI varchar(14),
+        SOCOD varchar(10),
+        primary key (MLMAG, MLOCA)
+    )
+14:13:18,889 DEBUG SQL:104 - 
+    create table MailingAddress (
+        entityName varchar(255) not null,
+        street varchar(255),
+        state varchar(255),
+        zip varchar(255),
+        primary key (entityName)
+    )
+14:13:18,908 DEBUG SQL:104 - 
+    create table Mammal (
+        animal bigint not null,
+        pregnant boolean,
+        birthdate date,
+        mammalZoo_id bigint,
+        name varchar(255),
+        primary key (animal)
+    )
+14:13:18,908 DEBUG SQL:104 - 
+    create table Model (
+        modelId varchar(32) not null,
+        name varchar(25) not null,
+        description varchar(200) not null,
+        productId varchar(32) not null,
+        primary key (modelId)
+    )
+14:13:18,908 DEBUG SQL:104 - 
+    create table Nameable (
+        key_ bigint generated by default as identity,
+        clazz varchar(255) not null,
+        name varchar(255),
+        primary key (key_)
+    )
+14:13:18,909 DEBUG SQL:104 - 
+    create table Org (
+        entityName varchar(255) not null,
+        primary key (entityName)
+    )
+14:13:18,921 DEBUG SQL:104 - 
+    create table Parent (
+        parent_id bigint not null,
+        name varchar(255),
+        primary key (parent_id)
+    )
+14:13:18,921 DEBUG SQL:104 - 
+    create table ParentChild (
+        parent_id bigint not null,
+        name varchar(255) not null,
+        bio varchar(255),
+        child_position integer not null,
+        primary key (parent_id, name, child_position)
+    )
+14:13:18,922 DEBUG SQL:104 - 
+    create table Part (
+        id bigint generated by default as identity,
+        clazz varchar(255) not null,
+        description varchar(255),
+        baz varchar(32),
+        primary key (id)
+    )
+14:13:18,922 DEBUG SQL:104 - 
+    create table Person (
+        entityName varchar(255) not null,
+        primary key (entityName)
+    )
+14:13:18,923 DEBUG SQL:104 - 
+    create table Po (
+        id_ bigint generated by default as identity,
+        value_ varchar(255),
+        tl bigint,
+        primary key (id_)
+    )
+14:13:18,923 DEBUG SQL:104 - 
+    create table Product (
+        productId varchar(10) not null,
+        description varchar(200) not null,
+        cost decimal(19,2),
+        numberAvailable integer,
+        primary key (productId)
+    )
+14:13:18,923 DEBUG SQL:104 - 
+    create table ProductLine (
+        productId varchar(32) not null,
+        description varchar(200) not null,
+        primary key (productId)
+    )
+14:13:18,947 DEBUG SQL:104 - 
+    create table Reptile (
+        animal bigint not null,
+        bodyTemperature float,
+        primary key (animal)
+    )
+14:13:18,948 DEBUG SQL:104 - 
+    create table SIMPLE_1 (
+        ID bigint generated by default as identity,
+        NAME varchar(255),
+        negated_num integer,
+        primary key (ID)
+    )
+14:13:18,948 DEBUG SQL:104 - 
+    create table SIMPLE_2 (
+        ID bigint generated by default as identity,
+        NAME varchar(255),
+        SIMPLE_1_ID bigint,
+        primary key (ID)
+    )
+14:13:18,948 DEBUG SQL:104 - 
+    create table Several (
+        id varchar(32) not null,
+        string_ varchar(32) not null,
+        single_id varchar(32),
+        single_string varchar(32),
+        primary key (id, string_)
+    )
+14:13:18,960 DEBUG SQL:104 - 
+    create table Simple (
+        id_ bigint not null,
+        name varchar(255),
+        address varchar(255),
+        count_ integer not null,
+        date_ timestamp,
+        pay float,
+        other bigint,
+        container_id1 bigint,
+        list_index integer,
+        primary key (id_)
+    )
+14:13:18,961 DEBUG SQL:104 - 
+    create table Single (
+        id varchar(32) not null,
+        string_ varchar(32) not null,
+        prop varchar(255),
+        primary key (id, string_)
+    )
+14:13:18,961 DEBUG SQL:104 - 
+    create table Sortable (
+        id integer generated by default as identity,
+        name varchar(255),
+        baz varchar(32),
+        primary key (id)
+    )
+14:13:18,974 DEBUG SQL:104 - 
+    create table StateProvince (
+        id bigint generated by default as identity,
+        name varchar(255),
+        isoCode varchar(255),
+        primary key (id)
+    )
+14:13:18,974 DEBUG SQL:104 - 
+    create table SubDetail (
+        subdetail_key_col bigint generated by default as identity,
+        name varchar(255),
+        detail_key bigint,
+        primary key (subdetail_key_col)
+    )
+14:13:18,975 DEBUG SQL:104 - 
+    create table T_CHAR_PROP (
+        ID bigint not null,
+        VAL varchar(255) not null,
+        primary key (ID)
+    )
+14:13:18,975 DEBUG SQL:104 - 
+    create table T_COMPLEX_PROP (
+        ID bigint not null,
+        primary key (ID)
+    )
+14:13:18,975 DEBUG SQL:104 - 
+    create table T_COMPLEX_SUB_PROPS (
+        PROP_ID bigint not null,
+        SUB_PROP_VAL varchar(255),
+        SUB_PROP_NAME varchar(255) not null,
+        primary key (PROP_ID, SUB_PROP_NAME)
+    )
+14:13:18,975 DEBUG SQL:104 - 
+    create table T_GEN_PROPS (
+        PROP_SET_ID bigint not null,
+        PROP_TYPE varchar(255),
+        PROP_ID bigint,
+        GEN_PROP_NAME varchar(255) not null,
+        primary key (PROP_SET_ID, GEN_PROP_NAME)
+    )
+14:13:18,976 DEBUG SQL:104 - 
+    create table T_NUM_PROP (
+        ID bigint not null,
+        VAL integer not null,
+        primary key (ID)
+    )
+14:13:18,976 DEBUG SQL:104 - 
+    create table T_PROP_SET (
+        ID bigint not null,
+        NAME varchar(255),
+        S_S_PROP_TYPE varchar(255),
+        S_S_PROP_ID bigint,
+        primary key (ID)
+    )
+14:13:18,976 DEBUG SQL:104 - 
+    create table TrivialClass (
+        tcid bigint not null,
+        primary key (tcid)
+    )
+14:13:18,976 DEBUG SQL:104 - 
+    create table Up (
+        id1 varchar(255) not null,
+        id2 bigint not null,
+        value_ bigint,
+        primary key (id1, id2)
+    )
+14:13:18,977 DEBUG SQL:104 - 
+    create table W (
+        wid bigint not null,
+        primary key (wid)
+    )
+14:13:18,977 DEBUG SQL:104 - 
+    create table Z (
+        zid bigint not null,
+        w bigint not null,
+        primary key (zid)
+    )
+14:13:19,004 DEBUG SQL:104 - 
+    create table Zoo (
+        id bigint generated by default as identity,
+        zooType char(255) not null,
+        name varchar(255),
+        classification tinyint,
+        street varchar(255),
+        city varchar(255),
+        postalCode varchar(255),
+        country varchar(255),
+        state_prov_id bigint,
+        primary key (id)
+    )
+14:13:19,004 DEBUG SQL:104 - 
+    create table Zoo_directors (
+        directorZoo_id bigint not null,
+        elt bigint not null,
+        title varchar(255) not null,
+        primary key (directorZoo_id, title)
+    )
+14:13:19,005 DEBUG SQL:104 - 
+    create table "User_permissions" (
+        userId bigint not null,
+        permissionName varchar(255),
+        permissionId integer not null,
+        primary key (userId, permissionId)
+    )
+14:13:19,015 DEBUG SQL:104 - 
+    create table "User" (
+        id bigint not null,
+        userName varchar(255),
+        primary key (id)
+    )
+14:13:19,016 DEBUG SQL:104 - 
+    create table "assign-able" (
+        id varchar(255) not null,
+        primary key (id)
+    )
+14:13:19,016 DEBUG SQL:104 - 
+    create table "bxaxg" (
+        "baz_id_" varchar(32) not null,
+        "name_" varchar(255)
+    )
+14:13:19,016 DEBUG SQL:104 - 
+    create table "foos_importantDates" (
+        id varchar(36) not null,
+        date_ date,
+        i integer not null,
+        primary key (id, i)
+    )
+14:13:19,017 DEBUG SQL:104 - 
+    create table "foos" (
+        "foo_idcolumnname123" varchar(36) not null,
+        "foo_subclass_1234" char(255) not null,
+        version integer not null,
+        foo varchar(36),
+        long_ bigint not null,
+        "integer__" integer not null,
+        float_ float not null check (float_ > 0.0),
+        x integer,
+        double_ double,
+        date_ date,
+        timestamp_ timestamp,
+        boolean_ boolean,
+        bool_ boolean,
+        null_ integer,
+        short_ smallint,
+        char_ char(255),
+        zero_ float,
+        int_ integer,
+        string_ varchar(48),
+        byte_ tinyint,
+        yesno char(255),
+        blobb_ binary(255),
+        nullBlob binary(255),
+        bin_ binary(255),
+        "localeayzabc123" varchar(255),
+        first_name varchar(66),
+        surname varchar(66),
+        count_ integer not null,
+        name_ varchar(32) not null,
+        g__ varchar(32),
+        cmpnt_null_ varchar(255),
+        subname varchar(255),
+        fee_sub varchar(64),
+        null_cmpnt_ varchar(255),
+        the_time time,
+        baz varchar(32),
+        bar_string varchar(24),
+        bar_count integer,
+        name varchar(64),
+        clazz char(100),
+        gen_id bigint,
+        baz_id varchar(32),
+        idtopbar varchar(32),
+        idofbaz varchar(32),
+        baz_compon_id varchar(32),
+        abstract_id varchar(36),
+        holder1 varchar(32),
+        j1 integer,
+        holder2 varchar(32),
+        primary key ("foo_idcolumnname123")
+    )
+14:13:19,028 DEBUG SQL:104 - 
+    create table "glarchez_fooComponents" (
+        glarch_key varchar(32) not null,
+        name_ varchar(255),
+        count_ integer,
+        x_ varchar(255),
+        y_ integer,
+        fee varchar(64),
+        tha_indecks integer not null,
+        primary key (glarch_key, tha_indecks)
+    )
+14:13:19,028 DEBUG SQL:104 - 
+    create table "glarchez_strings" (
+        glarch_key varchar(32) not null,
+        "tha_stryng" varchar(255),
+        "indx_" integer not null,
+        primary key (glarch_key, "indx_")
+    )
+14:13:19,043 DEBUG SQL:104 - 
+    create table "glarchez" (
+        tha_key varchar(32) not null,
+        version integer not null,
+        namecvbnmasdf varchar(255),
+        next_ varchar(32),
+        order_ smallint,
+        foo varchar(255),
+        bar integer,
+        x integer,
+        immutable varchar(255) not null,
+        "any_id_of_object" varchar(255),
+        "any_class_of_object" binary(255),
+        count_ integer,
+        glarch_ varchar(255),
+        gtf_baz_id varchar(32),
+        gtf_foo_id varchar(36),
+        idtopglarch varchar(32),
+        mapkey char(1),
+        baz_map_id varchar(32),
+        baz_map_index varchar(255),
+        array_key varchar(32),
+        array_indecks integer,
+        set_key varchar(32),
+        primary key (tha_key)
+    )
+14:13:19,056 DEBUG SQL:104 - 
+    create table "master" (
+        master_key_column bigint generated by default as identity,
+        version integer not null,
+        name varchar(255),
+        x integer,
+        big_dec decimal(7,3),
+        otherMaster bigint,
+        primary key (master_key_column)
+    )
+14:13:19,056 DEBUG SQL:104 - 
+    create table "the fees_fees" (
+        fee_id varchar(64) not null,
+        str_ varchar(255) not null,
+        primary key (fee_id, str_)
+    )
+14:13:19,056 DEBUG SQL:104 - 
+    create table "the fees" (
+        id_ varchar(64) not null,
+        fi varchar(255),
+        fee varchar(64),
+        anotherFee varchar(64),
+        qux bigint,
+        count_ integer,
+        name varchar(255),
+        null_prop varchar(255),
+        bazid varchar(32),
+        bazind integer,
+        primary key (id_),
+        check (bazind is null or (bazind>=0 and bazind<10))
+    )
+14:13:19,057 DEBUG SQL:104 - 
+    create table abcd (
+        container_id bigint not null,
+        name varchar(255),
+        simple bigint,
+        one bigint not null,
+        many bigint not null
+    )
+14:13:19,057 DEBUG SQL:104 - 
+    create table addresses (
+        human bigint not null,
+        street varchar(255),
+        city varchar(255),
+        postalCode varchar(255),
+        country varchar(255),
+        state_prov_id bigint,
+        "type" varchar(255) not null,
+        primary key (human, "type")
+    )
+14:13:19,183 DEBUG SQL:104 - 
+    create table bar_join_table (
+        bar_id varchar(36) not null,
+        name_name varchar(255),
+        primary key (bar_id)
+    )
+14:13:19,184 DEBUG SQL:104 - 
+    create table baz (
+        baz_id_column_ varchar(32) not null,
+        count_count integer,
+        name_b varchar(255),
+        foo varchar(36),
+        superBaz varchar(32),
+        "str" varchar(255),
+        "baz-id" varchar(32),
+        primary key (baz_id_column_),
+        check (count_count > -666)
+    )
+14:13:19,185 DEBUG SQL:104 - 
+    create table baz_anyToAny (
+        baz varchar(32) not null,
+        el_clazz_ varchar(255),
+        el_id_ bigint,
+        ind_clazz_ varchar(255) not null,
+        ind_id_ bigint not null,
+        primary key (baz, ind_clazz_, ind_id_)
+    )
+14:13:19,185 DEBUG SQL:104 - 
+    create table baz_byte_bag (
+        baz varchar(32) not null,
+        bytez binary(255) not null,
+        pkid bigint not null,
+        primary key (pkid)
+    )
+14:13:19,185 DEBUG SQL:104 - 
+    create table baz_customs (
+        id_ varchar(32) not null,
+        first_ varchar(255),
+        second_ varchar(255),
+        indx integer not null,
+        primary key (id_, indx)
+    )
+14:13:19,186 DEBUG SQL:104 - 
+    create table baz_floats_bag (
+        baz_compon_id varchar(32) not null,
+        float_value float
+    )
+14:13:19,186 DEBUG SQL:104 - 
+    create table baz_foo (
+        baz varchar(32) not null,
+        foo varchar(36) not null
+    )
+14:13:19,186 DEBUG SQL:104 - 
+    create table baz_fooComponentToFoo (
+        baz_id varchar(32) not null,
+        foo_id varchar(36) not null,
+        name varchar(32) not null,
+        count_ integer not null,
+        primary key (baz_id, name, count_)
+    )
+14:13:19,198 DEBUG SQL:104 - 
+    create table baz_fooToGlarch (
+        baz_id varchar(32) not null,
+        glarch_id varchar(32) not null,
+        foo_id varchar(36) not null,
+        primary key (baz_id, foo_id)
+    )
+14:13:19,198 DEBUG SQL:104 - 
+    create table baz_id_foo (
+        baz varchar(32) not null,
+        foo varchar(36) not null,
+        pkid bigint not null,
+        primary key (pkid)
+    )
+14:13:19,198 DEBUG SQL:104 - 
+    create table baz_manyToAny (
+        baz varchar(32) not null,
+        el_clazz_ varchar(255),
+        el_id_ varchar(255),
+        ind integer not null,
+        primary key (baz, ind)
+    )
+14:13:19,199 DEBUG SQL:104 - 
+    create table baz_moreParts (
+        baz varchar(32) not null,
+        part bigint not null
+    )
+14:13:19,211 DEBUG SQL:104 - 
+    create table baz_stringArray (
+        id_ varchar(32) not null,
+        name varchar(255),
+        i integer not null,
+        primary key (id_, i)
+    )
+14:13:19,212 DEBUG SQL:104 - 
+    create table baz_stringDateMap (
+        id_ varchar(32) not null,
+        map_value date,
+        map_key varchar(32) not null,
+        primary key (id_, map_key)
+    )
+14:13:19,213 DEBUG SQL:104 - 
+    create table baz_stringSet (
+        id_ varchar(32) not null,
+        element varchar(32) not null,
+        primary key (id_, element)
+    )
+14:13:19,213 DEBUG SQL:104 - 
+    create table baz_timeArray (
+        baz_id varchar(32) not null,
+        the_time time,
+        j integer not null,
+        primary key (baz_id, j)
+    )
+14:13:19,213 DEBUG SQL:104 - 
+    create table bazcomponents (
+        baz_id varchar(32) not null,
+        name varchar(56),
+        count_ integer,
+        x_ varchar(255),
+        y_ integer,
+        i integer not null,
+        primary key (baz_id, i)
+    )
+14:13:19,213 DEBUG SQL:104 - 
+    create table cached_map (
+        baz varchar(32) not null,
+        foo varchar(255),
+        bar varchar(255),
+        another_baz varchar(32) not null,
+        primary key (baz, another_baz)
+    )
+14:13:19,322 DEBUG SQL:104 - 
+    create table cached_set (
+        baz varchar(32) not null,
+        foo varchar(255) not null,
+        bar varchar(255) not null,
+        primary key (baz, foo, bar)
+    )
+14:13:19,323 DEBUG SQL:104 - 
+    create table category (
+        category_key_col bigint generated by default as identity,
+        name varchar(255),
+        "assign-able-id" varchar(255),
+        parent bigint,
+        ord integer,
+        primary key (category_key_col)
+    )
+14:13:19,324 DEBUG SQL:104 - 
+    create table foo_dates (
+        foo_id varchar(36) not null,
+        date_ date,
+        i integer not null,
+        primary key (foo_id, i)
+    )
+14:13:19,324 DEBUG SQL:104 - 
+    create table foo_dep_table (
+        fooid varchar(36) not null,
+        dependent varchar(64) not null,
+        primary key (fooid)
+    )
+14:13:19,325 DEBUG SQL:104 - 
+    create table foo_times (
+        foo_id varchar(36) not null,
+        date_ time,
+        i integer not null,
+        primary key (foo_id, i)
+    )
+14:13:19,325 DEBUG SQL:104 - 
+    create table foobytes (
+        id varchar(36) not null,
+        byte_ tinyint,
+        i integer not null,
+        primary key (id, i)
+    )
+14:13:19,325 DEBUG SQL:104 - 
+    create table human_nick_names (
+        human bigint not null,
+        nick_name varchar(255) not null,
+        primary key (human, nick_name)
+    )
+14:13:19,325 DEBUG SQL:104 - 
+    create table int_array (
+        id varchar(32) not null,
+        j integer,
+        i integer not null,
+        primary key (id, i)
+    )
+14:13:19,326 DEBUG SQL:104 - 
+    create table jointable (
+        fooid varchar(36) not null,
+        joinedProp varchar(255),
+        primary key (fooid)
+    )
+14:13:19,326 DEBUG SQL:104 - 
+    create table leafsubclass (
+        id__ bigint not null,
+        intprop integer not null,
+        other1 bigint,
+        other3 bigint,
+        foo varchar(255),
+        primary key (id__)
+    )
+14:13:19,326 DEBUG SQL:104 - 
+    create table leafsubsubclass (
+        sid bigint not null,
+        dupe float,
+        parent bigint,
+        another_parent bigint,
+        list_ind integer,
+        list_po bigint,
+        i integer,
+        primary key (sid)
+    )
+14:13:19,327 DEBUG SQL:104 - 
+    create table many (
+        many_key bigint generated by default as identity,
+        x integer,
+        one_key bigint,
+        primary key (many_key)
+    )
+14:13:19,340 DEBUG SQL:104 - 
+    create table mtm (
+        outgoingabcdef bigint not null,
+        incomingabcdef bigint not null,
+        primary key (outgoingabcdef, incomingabcdef)
+    )
+14:13:19,341 DEBUG SQL:104 - 
+    create table nonleafsubclass (
+        sid bigint not null,
+        dupe varchar(255),
+        other2 bigint,
+        po bigint,
+        cal timestamp,
+        floaty float,
+        primary key (sid)
+    )
+14:13:19,341 DEBUG SQL:104 - 
+    create table one (
+        one_key bigint generated by default as identity,
+        x integer,
+        one_value varchar(255),
+        holder varchar(32),
+        i integer,
+        primary key (one_key)
+    )
+14:13:19,342 DEBUG SQL:104 - 
+    create table quux (
+        qux_key bigint not null,
+        foo varchar(36),
+        deleted boolean,
+        loaded boolean,
+        stored boolean,
+        created boolean,
+        childKey bigint,
+        stuff varchar(255),
+        HOLDER_NAME varchar(255),
+        fum_str_ varchar(10),
+        fum_sho_ smallint,
+        fum_dat_ date,
+        i integer,
+        primary key (qux_key)
+    )
+14:13:19,354 DEBUG SQL:104 - 
+    create table quux_fums (
+        qux_id bigint not null,
+        fum_string varchar(10) not null,
+        fum_short smallint not null,
+        fum_date date not null,
+        primary key (qux_id, fum_string, fum_short, fum_date)
+    )
+14:13:19,354 DEBUG SQL:104 - 
+    create table rootclass (
+        id1_ bigint generated by default as identity,
+        count_ integer not null,
+        name varchar(255),
+        address varchar(255),
+        date_ timestamp,
+        top_ bigint,
+        parent bigint,
+        primary key (id1_)
+    )
+14:13:19,359 DEBUG SQL:104 - 
+    create table simple_simple (
+        simple1 bigint not null,
+        simple2 bigint not null
+    )
+14:13:19,360 DEBUG SQL:104 - 
+    create table string_list (
+        id varchar(32) not null,
+        element varchar(255),
+        "i" integer not null,
+        primary key (id, "i")
+    )
+14:13:19,360 DEBUG SQL:104 - 
+    create table topcomponents (
+        id_ varchar(32) not null,
+        name varchar(255),
+        count_ integer,
+        i integer not null,
+        primary key (id_, i)
+    )
+14:13:19,380 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C1F3964B4 
+        foreign key (mother_id) 
+        references Animal
+14:13:19,381 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C6309E77B 
+        foreign key (father_id) 
+        references Animal
+14:13:19,382 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C4B485C79 
+        foreign key (zoo_id) 
+        references Zoo
+14:13:19,382 DEBUG SQL:104 - 
+    alter table CCBAG 
+        add constraint FK3CF9B8894011F0B 
+        foreign key (contained_id) 
+        references Contained
+14:13:19,382 DEBUG SQL:104 - 
+    alter table CCBAG 
+        add constraint FK3CF9B8894077C4B 
+        foreign key (container_id) 
+        references Container
+14:13:19,394 DEBUG SQL:104 - 
+    alter table CID_IN 
+        add constraint FK7679BC667E2D2D9A 
+        foreign key (BO_AKEY, BO_BKEY, BO_ONE, BO_TWO, BO_DET) 
+        references CID_OUT
+14:13:19,395 DEBUG SQL:104 - 
+    alter table CID_MID 
+        add constraint FK58BDDF076FBAD622 
+        foreign key (AKEY, BKEY) 
+        references CID_IN
+14:13:19,395 DEBUG SQL:104 - 
+    alter table CID_OUT 
+        add constraint FK58BDE80D83675AD1 
+        foreign key (AKEY, BKEY, ONE, TWO) 
+        references CID_MID
+14:13:19,396 DEBUG SQL:104 - 
+    alter table CRAZY_ID_TOP 
+        add constraint FK1AA9579F73113F33 
+        foreign key (heresAnotherCrazyIdFieldName) 
+        references CRAZY_ID_NODE
+14:13:19,396 DEBUG SQL:104 - 
+    alter table Cat 
+        add constraint FK107B66D384BBA 
+        foreign key (mammal) 
+        references DomesticAnimal
+14:13:19,397 DEBUG SQL:104 - 
+    alter table Container_components 
+        add constraint FKDD7395B4578192D3 
+        foreign key (simple) 
+        references Simple
+14:13:19,407 DEBUG SQL:104 - 
+    alter table Container_components 
+        add constraint FKDD7395B4DED2FBBD 
+        foreign key (one) 
+        references one
+14:13:19,408 DEBUG SQL:104 - 
+    alter table Container_components 
+        add constraint FKDD7395B4FB8A4BED 
+        foreign key (many) 
+        references many
+14:13:19,408 DEBUG SQL:104 - 
+    alter table Container_components 
+        add constraint FKDD7395B494077C4B 
+        foreign key (container_id) 
+        references Container
+14:13:19,408 DEBUG SQL:104 - 
+    alter table Container_composites 
+        add constraint FKDDBBF16A578192D3 
+        foreign key (simple) 
+        references Simple
+14:13:19,409 DEBUG SQL:104 - 
+    alter table Container_composites 
+        add constraint FKDDBBF16ADED2FBBD 
+        foreign key (one) 
+        references one
+14:13:19,409 DEBUG SQL:104 - 
+    alter table Container_composites 
+        add constraint FKDDBBF16AFB8A4BED 
+        foreign key (many) 
+        references many
+14:13:19,422 DEBUG SQL:104 - 
+    alter table Container_composites 
+        add constraint FKDDBBF16A94077C4B 
+        foreign key (container_id) 
+        references Container
+14:13:19,423 DEBUG SQL:104 - 
+    alter table Container_manyToMany 
+        add constraint FK627D55578D4AE9CE 
+        foreign key (elt) 
+        references Simple
+14:13:19,423 DEBUG SQL:104 - 
+    alter table Container_manyToMany 
+        add constraint FK627D555789A21C6B 
+        foreign key (container_id2) 
+        references Container
+14:13:19,423 DEBUG SQL:104 - 
+    alter table Container_ternaryMap 
+        add constraint FKD19E4B1FDED2B87D 
+        foreign key (foo) 
+        references "foos"
+14:13:19,424 DEBUG SQL:104 - 
+    alter table Container_ternaryMap 
+        add constraint FKD19E4B1F2ED6F4E5 
+        foreign key (glarch) 
+        references "glarchez"
+14:13:19,424 DEBUG SQL:104 - 
+    alter table Container_ternaryMap 
+        add constraint FKD19E4B1F94077C4B 
+        foreign key (container_id) 
+        references Container
+14:13:19,425 DEBUG SQL:104 - 
+    alter table Container_ternarySet 
+        add constraint FKD19E6225DED2B87D 
+        foreign key (foo) 
+        references "foos"
+14:13:19,436 DEBUG SQL:104 - 
+    alter table Container_ternarySet 
+        add constraint FKD19E62252ED6F4E5 
+        foreign key (glarch) 
+        references "glarchez"
+14:13:19,436 DEBUG SQL:104 - 
+    alter table Container_ternarySet 
+        add constraint FKD19E622594077C4B 
+        foreign key (container_id) 
+        references Container
+14:13:19,437 DEBUG SQL:104 - 
+    alter table CustomerOrder 
+        add constraint FKAEF781F06153C9DD 
+        foreign key (customerId) 
+        references Customer
+14:13:19,437 DEBUG SQL:104 - 
+    alter table Detail 
+        add constraint uk unique (x, i, master_key)
+14:13:19,437 DEBUG SQL:104 - 
+    alter table Detail 
+        add constraint CC 
+        foreign key (master_key) 
+        references "master"
+14:13:19,438 DEBUG SQL:104 - 
+    alter table Detail 
+        add constraint FK79CF0471BAFC73FD 
+        foreign key (more_master_key) 
+        references "master"
+14:13:19,449 DEBUG SQL:104 - 
+    alter table Dog 
+        add constraint FK10D1C6D384BBA 
+        foreign key (mammal) 
+        references DomesticAnimal
+14:13:19,450 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        add constraint FKE02638DA1733655F 
+        foreign key (mammal) 
+        references Mammal
+14:13:19,450 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        add constraint FKE02638DA6C03411F 
+        foreign key (owner) 
+        references Human
+14:13:19,450 DEBUG SQL:104 - 
+    alter table Eye 
+        add constraint FK11211DED2D335 
+        foreign key (jay) 
+        references Jay
+14:13:19,451 DEBUG SQL:104 - 
+    alter table FOO_ARRAY 
+        add constraint FK92165960DED2B87D 
+        foreign key (foo) 
+        references "foos"
+14:13:19,451 DEBUG SQL:104 - 
+    alter table FOO_ARRAY 
+        add constraint FK92165960DED2B1B0 
+        foreign key (id_) 
+        references baz
+14:13:19,464 DEBUG SQL:104 - 
+    alter table Fum 
+        add constraint FK1155E3BB9E3A0 
+        foreign key (fo_string, fo_short, fo_date) 
+        references Fum
+14:13:19,465 DEBUG SQL:104 - 
+    alter table Fum 
+        add constraint FK1155EB222E1DE 
+        foreign key (fr_string_, fr_short_, fr_date_) 
+        references Fum
+14:13:19,465 DEBUG SQL:104 - 
+    alter table Fum 
+        add constraint FK1155ECFEFBDAD 
+        foreign key (fum_str_, fum_sho_, fum_dat_) 
+        references Fum
+14:13:19,466 DEBUG SQL:104 - 
+    alter table Fum 
+        add constraint FK1155EA64DB02B 
+        foreign key (qux_id) 
+        references quux
+14:13:19,466 DEBUG SQL:104 - 
+    alter table Fum_stringmap 
+        add constraint FKBD5D720ACFEFBDAD 
+        foreign key (fum_str_, fum_sho_, fum_dat_) 
+        references Fum
+14:13:19,467 DEBUG SQL:104 - 
+    alter table Holder 
+        add constraint uc_Holder_1 unique (name)
+14:13:19,467 DEBUG SQL:104 - 
+    alter table Holder 
+        add constraint FK812BB9CC3939BDD7 
+        foreign key (otherHolder) 
+        references Holder (name)
+14:13:19,467 DEBUG SQL:104 - 
+    alter table Human 
+        add constraint FK42D710D1733655F 
+        foreign key (mammal) 
+        references Mammal
+14:13:19,468 DEBUG SQL:104 - 
+    alter table Human_family 
+        add constraint FK5F790ED61DCB1311 
+        foreign key (human2) 
+        references Human
+14:13:19,468 DEBUG SQL:104 - 
+    alter table Human_family 
+        add constraint FK5F790ED61DCB1310 
+        foreign key (human1) 
+        references Human
+14:13:19,469 DEBUG SQL:104 - 
+    alter table Human_friends 
+        add constraint FKAC7104631DCB1311 
+        foreign key (human2) 
+        references Human
+14:13:19,469 DEBUG SQL:104 - 
+    alter table Human_friends 
+        add constraint FKAC7104631DCB1310 
+        foreign key (human1) 
+        references Human
+14:13:19,470 DEBUG SQL:104 - 
+    alter table JOINED 
+        add constraint FK82C23B49534E0F13 
+        foreign key (ID) 
+        references Joiner
+14:13:19,483 DEBUG SQL:104 - 
+    alter table Jay 
+        add constraint FK12202DED2B353 
+        foreign key (eye) 
+        references Eye
+14:13:19,484 DEBUG SQL:104 - 
+    alter table LCCBAG 
+        add constraint FK857FEABC94011F0B 
+        foreign key (contained_id) 
+        references Contained
+14:13:19,484 DEBUG SQL:104 - 
+    alter table LCCBAG 
+        add constraint FK857FEABC94077C4B 
+        foreign key (container_id) 
+        references Container
+14:13:19,485 DEBUG SQL:104 - 
+    alter table LineItem 
+        add constraint FK4AAEE947CB8F4618 
+        foreign key (customerId, orderNumber) 
+        references CustomerOrder
+14:13:19,485 DEBUG SQL:104 - 
+    alter table LineItem 
+        add constraint FK4AAEE947EDAE41F3 
+        foreign key (productId) 
+        references Product
+14:13:19,486 DEBUG SQL:104 - 
+    alter table Lizard 
+        add constraint FK87B0E2B6EE398315 
+        foreign key (reptile) 
+        references Reptile
+14:13:19,498 DEBUG SQL:104 - 
+    alter table MANY_TO_MANY 
+        add constraint FK8CF3D7C3E0DF2A91 
+        foreign key (OUT_ID) 
+        references SIMPLE_1
+14:13:19,499 DEBUG SQL:104 - 
+    alter table MANY_TO_MANY 
+        add constraint FK8CF3D7C322C9695A 
+        foreign key (IN_ID) 
+        references SIMPLE_1
+14:13:19,499 DEBUG SQL:104 - 
+    alter table MARELO 
+        add constraint FK871F728AE624DD92 
+        foreign key (MLCOM) 
+        references MARECM
+14:13:19,500 DEBUG SQL:104 - 
+    alter table Mammal 
+        add constraint FK88EF417FEFA9D699 
+        foreign key (animal) 
+        references Animal
+14:13:19,500 DEBUG SQL:104 - 
+    alter table Mammal 
+        add constraint FK88EF417FCE6EEE98 
+        foreign key (mammalZoo_id) 
+        references Zoo
+14:13:19,501 DEBUG SQL:104 - 
+    alter table Model 
+        add constraint FK4710B0921C08435 
+        foreign key (productId) 
+        references ProductLine
+14:13:19,501 DEBUG SQL:104 - 
+    alter table Org 
+        add constraint FK136C49423C623 
+        foreign key (entityName) 
+        references Entity
+14:13:19,501 DEBUG SQL:104 - 
+    alter table ParentChild 
+        add constraint FK9E5C7E724A71641D 
+        foreign key (parent_id) 
+        references Parent
+14:13:19,502 DEBUG SQL:104 - 
+    alter table Part 
+        add constraint FK25D813DED29727 
+        foreign key (baz) 
+        references baz
+14:13:19,527 DEBUG SQL:104 - 
+    alter table Person 
+        add constraint FK8E4887759423C623 
+        foreign key (entityName) 
+        references Entity
+14:13:19,528 DEBUG SQL:104 - 
+    alter table Person 
+        add constraint FK8E4887756544CDD0 
+        foreign key (entityName) 
+        references Address
+14:13:19,528 DEBUG SQL:104 - 
+    alter table Po 
+        add constraint FKA1FDED16EBE 
+        foreign key (tl) 
+        references rootclass
+14:13:19,529 DEBUG SQL:104 - 
+    alter table Po 
+        add constraint FKA1F6F89E02A 
+        foreign key (tl) 
+        references leafsubclass
+14:13:19,529 DEBUG SQL:104 - 
+    alter table Reptile 
+        add constraint FKA4790CABEFA9D699 
+        foreign key (animal) 
+        references Animal
+14:13:19,530 DEBUG SQL:104 - 
+    alter table SIMPLE_2 
+        add constraint FK4B988CE5C81DD13B 
+        foreign key (SIMPLE_1_ID) 
+        references SIMPLE_1
+14:13:19,544 DEBUG SQL:104 - 
+    alter table Several 
+        add constraint FKD9AD23DCB9B9D411 
+        foreign key (single_id, single_string) 
+        references Single
+14:13:19,545 DEBUG SQL:104 - 
+    alter table Simple 
+        add constraint uc_Simple_1 unique (count_)
+14:13:19,545 DEBUG SQL:104 - 
+    alter table Simple 
+        add constraint FK939D1DD2939BE031 
+        foreign key (other) 
+        references Simple
+14:13:19,546 DEBUG SQL:104 - 
+    alter table Simple 
+        add constraint FK939D1DD289A21C6A 
+        foreign key (container_id1) 
+        references Container
+14:13:19,546 DEBUG SQL:104 - 
+    alter table Sortable 
+        add constraint FK66EDF018DED29727 
+        foreign key (baz) 
+        references baz
+14:13:19,547 DEBUG SQL:104 - 
+    alter table SubDetail 
+        add constraint FK460B329135BB9D31 
+        foreign key (detail_key) 
+        references Detail
+14:13:19,556 DEBUG SQL:104 - 
+    alter table T_COMPLEX_SUB_PROPS 
+        add constraint FK5470D25725D7CC5B 
+        foreign key (PROP_ID) 
+        references T_COMPLEX_PROP
+14:13:19,557 DEBUG SQL:104 - 
+    alter table T_GEN_PROPS 
+        add constraint FK65C7C556AA2002A9 
+        foreign key (PROP_SET_ID) 
+        references T_PROP_SET
+14:13:19,557 DEBUG SQL:104 - 
+    alter table TrivialClass 
+        add constraint FKC09264CFDF079C10 
+        foreign key (tcid) 
+        references rootclass
+14:13:19,558 DEBUG SQL:104 - 
+    alter table Z 
+        add constraint FK5A435CA81F 
+        foreign key (w) 
+        references W
+14:13:19,558 DEBUG SQL:104 - 
+    alter table Zoo 
+        add constraint FK15FBA55106523 
+        foreign key (state_prov_id) 
+        references StateProvince
+14:13:19,558 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        add constraint FK2D21982265B0D719 
+        foreign key (elt) 
+        references Human
+14:13:19,567 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        add constraint FK2D219822C590D705 
+        foreign key (directorZoo_id) 
+        references Zoo
+14:13:19,568 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        add constraint FKB4582A30F2810CD2 
+        foreign key (userId) 
+        references "User"
+14:13:19,568 DEBUG SQL:104 - 
+    alter table "User" 
+        add constraint FK285FEB65AF5B87 
+        foreign key (id) 
+        references Human
+14:13:19,569 DEBUG SQL:104 - 
+    alter table "bxaxg" 
+        add constraint FK59D06FACB5DD78C 
+        foreign key ("baz_id_") 
+        references baz
+14:13:19,569 DEBUG SQL:104 - 
+    alter table "foos_importantDates" 
+        add constraint FKCB360D95DED1281F 
+        foreign key (id) 
+        references "foos"
+14:13:19,569 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint abc unique (long_, "integer__", float_)
+14:13:19,570 DEBUG SQL:104 - 
+    create index fbmtoidx on "foos" (foo, long_)
+14:13:19,579 DEBUG SQL:104 - 
+    create index fbstridx on "foos" (string_)
+14:13:19,579 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint FK300C6DDED2B87D 
+        foreign key (foo) 
+        references "foos"
+14:13:19,580 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint FK300C6D78F5A0B1 
+        foreign key (g__) 
+        references "glarchez"
+14:13:19,580 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint FK300C6DA4A2707E 
+        foreign key (fee_sub) 
+        references "the fees"
+14:13:19,581 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint FK300C6DDED29727 
+        foreign key (baz) 
+        references baz
+14:13:19,582 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint FK300C6D8B9BD6CB 
+        foreign key (baz_id) 
+        references baz
+14:13:19,582 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint FK300C6DF05E6685 
+        foreign key (idtopbar) 
+        references baz
+14:13:19,592 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint FK300C6D423011B5 
+        foreign key (idofbaz) 
+        references baz
+14:13:19,593 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint FK300C6D601671B4 
+        foreign key (baz_compon_id) 
+        references baz
+14:13:19,594 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint FK300C6D800DF629 
+        foreign key (abstract_id) 
+        references "foos"
+14:13:19,594 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint FK300C6DBBEAE520 
+        foreign key (holder1) 
+        references Holder
+14:13:19,595 DEBUG SQL:104 - 
+    alter table "foos" 
+        add constraint FK300C6DBBEAE521 
+        foreign key (holder2) 
+        references Holder
+14:13:19,595 DEBUG SQL:104 - 
+    alter table "glarchez_fooComponents" 
+        add constraint FK7FEA372DDED2B5FD 
+        foreign key (fee) 
+        references "the fees"
+14:13:19,596 DEBUG SQL:104 - 
+    alter table "glarchez_fooComponents" 
+        add constraint FK7FEA372DE90DED05 
+        foreign key (glarch_key) 
+        references "glarchez"
+14:13:19,596 DEBUG SQL:104 - 
+    alter table "glarchez_strings" 
+        add constraint FK123BC5F3E90DED05 
+        foreign key (glarch_key) 
+        references "glarchez"
+14:13:19,597 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        add constraint FKC8B52CB07F31E5F6 
+        foreign key (next_) 
+        references "glarchez"
+14:13:19,597 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        add constraint FKC8B52CB095284B1 
+        foreign key (gtf_baz_id) 
+        references baz
+14:13:19,597 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        add constraint FKC8B52CB010E640D1 
+        foreign key (gtf_foo_id) 
+        references "foos"
+14:13:19,598 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        add constraint FKC8B52CB071902CA1 
+        foreign key (idtopglarch) 
+        references baz
+14:13:19,606 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        add constraint FKC8B52CB07327568E 
+        foreign key (baz_map_id) 
+        references baz
+14:13:19,607 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        add constraint FKC8B52CB0240A7DA3 
+        foreign key (array_key) 
+        references "glarchez"
+14:13:19,608 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        add constraint FKC8B52CB0EF499B2C 
+        foreign key (set_key) 
+        references "glarchez"
+14:13:19,608 DEBUG SQL:104 - 
+    alter table "master" 
+        add constraint FKBF8D2A6248C67743 
+        foreign key (otherMaster) 
+        references "master"
+14:13:19,609 DEBUG SQL:104 - 
+    alter table "the fees_fees" 
+        add constraint FK328B0810929E1AEB 
+        foreign key (fee_id) 
+        references "the fees"
+14:13:19,609 DEBUG SQL:104 - 
+    alter table "the fees" 
+        add constraint FK3DDCB3FCDED2B5FD 
+        foreign key (fee) 
+        references "the fees"
+14:13:19,634 DEBUG SQL:104 - 
+    alter table "the fees" 
+        add constraint FK3DDCB3FCDE3EAC1A 
+        foreign key (anotherFee) 
+        references "the fees"
+14:13:19,634 DEBUG SQL:104 - 
+    alter table "the fees" 
+        add constraint FK3DDCB3FCDED30C99 
+        foreign key (qux) 
+        references quux
+14:13:19,635 DEBUG SQL:104 - 
+    alter table "the fees" 
+        add constraint FK3DDCB3FCE4640982 
+        foreign key (bazid) 
+        references baz
+14:13:19,635 DEBUG SQL:104 - 
+    alter table abcd 
+        add constraint FK2D9442578192D3 
+        foreign key (simple) 
+        references Simple
+14:13:19,636 DEBUG SQL:104 - 
+    alter table abcd 
+        add constraint FK2D9442DED2FBBD 
+        foreign key (one) 
+        references one
+14:13:19,636 DEBUG SQL:104 - 
+    alter table abcd 
+        add constraint FK2D9442FB8A4BED 
+        foreign key (many) 
+        references many
+14:13:19,637 DEBUG SQL:104 - 
+    alter table abcd 
+        add constraint FK2D944294077C4B 
+        foreign key (container_id) 
+        references Container
+14:13:19,637 DEBUG SQL:104 - 
+    alter table addresses 
+        add constraint FK34207BA255106523 
+        foreign key (state_prov_id) 
+        references StateProvince
+14:13:19,638 DEBUG SQL:104 - 
+    alter table addresses 
+        add constraint FK34207BA26B9FAF99 
+        foreign key (human) 
+        references Human
+14:13:19,663 DEBUG SQL:104 - 
+    alter table bar_join_table 
+        add constraint FKF39114258B9833CB 
+        foreign key (bar_id) 
+        references "foos"
+14:13:19,664 DEBUG SQL:104 - 
+    alter table baz 
+        add constraint FK17C1BDED2B87D 
+        foreign key (foo) 
+        references "foos"
+14:13:19,665 DEBUG SQL:104 - 
+    alter table baz 
+        add constraint FK17C1B7B14B1CC 
+        foreign key (superBaz) 
+        references baz 
+        on delete cascade
+14:13:19,665 DEBUG SQL:104 - 
+    alter table baz 
+        add constraint FK17C1B8B9B1B19 
+        foreign key ("baz-id") 
+        references baz
+14:13:19,666 DEBUG SQL:104 - 
+    alter table baz_anyToAny 
+        add constraint FKB79B2A89DED29727 
+        foreign key (baz) 
+        references baz
+14:13:19,666 DEBUG SQL:104 - 
+    alter table baz_byte_bag 
+        add constraint FK5DC16BF5DED29727 
+        foreign key (baz) 
+        references baz
+14:13:19,675 DEBUG SQL:104 - 
+    alter table baz_customs 
+        add constraint FK7C7BAFEDED2B1B0 
+        foreign key (id_) 
+        references baz
+14:13:19,676 DEBUG SQL:104 - 
+    alter table baz_floats_bag 
+        add constraint FK8687FC04601671B4 
+        foreign key (baz_compon_id) 
+        references baz
+14:13:19,676 DEBUG SQL:104 - 
+    alter table baz_foo 
+        add constraint FKEC8CB2A2DED2B87D 
+        foreign key (foo) 
+        references "foos"
+14:13:19,677 DEBUG SQL:104 - 
+    alter table baz_foo 
+        add constraint FKEC8CB2A2DED29727 
+        foreign key (baz) 
+        references baz
+14:13:19,677 DEBUG SQL:104 - 
+    alter table baz_fooComponentToFoo 
+        add constraint FK899CF490932F92EB 
+        foreign key (foo_id) 
+        references "foos"
+14:13:19,677 DEBUG SQL:104 - 
+    alter table baz_fooComponentToFoo 
+        add constraint FK899CF4908B9BD6CB 
+        foreign key (baz_id) 
+        references baz
+14:13:19,686 DEBUG SQL:104 - 
+    alter table baz_fooToGlarch 
+        add constraint FK8E0729D8C6E46349 
+        foreign key (glarch_id) 
+        references "glarchez"
+14:13:19,687 DEBUG SQL:104 - 
+    alter table baz_fooToGlarch 
+        add constraint FK8E0729D88B9BD6CB 
+        foreign key (baz_id) 
+        references baz
+14:13:19,688 DEBUG SQL:104 - 
+    alter table baz_fooToGlarch 
+        add constraint FK8E0729D8932F92EB 
+        foreign key (foo_id) 
+        references "foos"
+14:13:19,688 DEBUG SQL:104 - 
+    alter table baz_id_foo 
+        add constraint FK8DA58046DED2B87D 
+        foreign key (foo) 
+        references "foos"
+14:13:19,688 DEBUG SQL:104 - 
+    alter table baz_id_foo 
+        add constraint FK8DA58046DED29727 
+        foreign key (baz) 
+        references baz
+14:13:19,689 DEBUG SQL:104 - 
+    alter table baz_manyToAny 
+        add constraint FKE0669B2EDED29727 
+        foreign key (baz) 
+        references baz
+14:13:19,698 DEBUG SQL:104 - 
+    alter table baz_moreParts 
+        add constraint FK3FF10D67FB8D0715 
+        foreign key (part) 
+        references Part
+14:13:19,699 DEBUG SQL:104 - 
+    alter table baz_moreParts 
+        add constraint FK3FF10D67DED29727 
+        foreign key (baz) 
+        references baz
+14:13:19,699 DEBUG SQL:104 - 
+    alter table baz_stringArray 
+        add constraint FK24B80EA4DED2B1B0 
+        foreign key (id_) 
+        references baz
+14:13:19,700 DEBUG SQL:104 - 
+    alter table baz_stringDateMap 
+        add constraint FK58BCAC59DED2B1B0 
+        foreign key (id_) 
+        references baz
+14:13:19,700 DEBUG SQL:104 - 
+    alter table baz_stringSet 
+        add constraint FKC96DEF6DDED2B1B0 
+        foreign key (id_) 
+        references baz
+14:13:19,700 DEBUG SQL:104 - 
+    alter table baz_timeArray 
+        add constraint FKD53E38688B9BD6CB 
+        foreign key (baz_id) 
+        references baz
+14:13:19,718 DEBUG SQL:104 - 
+    alter table bazcomponents 
+        add constraint FK12C9D9718B9BD6CB 
+        foreign key (baz_id) 
+        references baz
+14:13:19,719 DEBUG SQL:104 - 
+    alter table cached_map 
+        add constraint FK1F8B4BFDED29727 
+        foreign key (baz) 
+        references baz
+14:13:19,719 DEBUG SQL:104 - 
+    alter table cached_map 
+        add constraint FK1F8B4BFCD1093EB 
+        foreign key (another_baz) 
+        references baz
+14:13:19,720 DEBUG SQL:104 - 
+    alter table cached_set 
+        add constraint FK1F8CBC5DED29727 
+        foreign key (baz) 
+        references baz
+14:13:19,720 DEBUG SQL:104 - 
+    alter table category 
+        add constraint FK302BCFEE6C4D648 
+        foreign key ("assign-able-id") 
+        references "assign-able"
+14:13:19,721 DEBUG SQL:104 - 
+    alter table category 
+        add constraint FK302BCFEB30D557 
+        foreign key (parent) 
+        references category
+14:13:19,721 DEBUG SQL:104 - 
+    alter table foo_dates 
+        add constraint FKB585C9CC932F92EB 
+        foreign key (foo_id) 
+        references "foos"
+14:13:19,721 DEBUG SQL:104 - 
+    alter table foo_dep_table 
+        add constraint FK489E6365E4A2AC18 
+        foreign key (fooid) 
+        references "foos"
+14:13:19,722 DEBUG SQL:104 - 
+    alter table foo_dep_table 
+        add constraint FK489E63659CB3B576 
+        foreign key (dependent) 
+        references "the fees"
+14:13:19,722 DEBUG SQL:104 - 
+    alter table foo_times 
+        add constraint FKB66ACA8D932F92EB 
+        foreign key (foo_id) 
+        references "foos"
+14:13:19,723 DEBUG SQL:104 - 
+    alter table foobytes 
+        add constraint FK16933F65DED138D2 
+        foreign key (id) 
+        references "foos"
+14:13:19,723 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        add constraint FK8718E1BE6B9FAF99 
+        foreign key (human) 
+        references Human
+14:13:19,739 DEBUG SQL:104 - 
+    alter table int_array 
+        add constraint FK12CE7E09DED12827 
+        foreign key (id) 
+        references baz
+14:13:19,740 DEBUG SQL:104 - 
+    alter table jointable 
+        add constraint FKE3AC08E4E4A2AC18 
+        foreign key (fooid) 
+        references "foos" 
+        on delete cascade
+14:13:19,740 DEBUG SQL:104 - 
+    alter table leafsubclass 
+        add constraint FK24853496DF029E81 
+        foreign key (id__) 
+        references rootclass
+14:13:19,740 DEBUG SQL:104 - 
+    alter table leafsubclass 
+        add constraint FK24853496A2CEC367 
+        foreign key (other1) 
+        references rootclass
+14:13:19,741 DEBUG SQL:104 - 
+    alter table leafsubclass 
+        add constraint FK24853496338734D5 
+        foreign key (other3) 
+        references leafsubclass
+14:13:19,741 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        add constraint FK443F0B5A6F9C38B8 
+        foreign key (sid) 
+        references nonleafsubclass
+14:13:19,754 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        add constraint FK443F0B5A8B3D2732 
+        foreign key (parent) 
+        references leafsubsubclass
+14:13:19,755 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        add constraint FK443F0B5AAC6C3EE 
+        foreign key (another_parent) 
+        references leafsubsubclass
+14:13:19,755 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        add constraint FK443F0B5A3310E22E 
+        foreign key (list_po) 
+        references Po
+14:13:19,756 DEBUG SQL:104 - 
+    alter table many 
+        add constraint FK33065F9016265D 
+        foreign key (one_key) 
+        references one
+14:13:19,756 DEBUG SQL:104 - 
+    create index IBB on mtm (incomingabcdef)
+14:13:19,756 DEBUG SQL:104 - 
+    alter table mtm 
+        add constraint BB 
+        foreign key (incomingabcdef) 
+        references "master"
+14:13:19,757 DEBUG SQL:104 - 
+    alter table mtm 
+        add constraint AA 
+        foreign key (outgoingabcdef) 
+        references "master"
+14:13:19,757 DEBUG SQL:104 - 
+    alter table nonleafsubclass 
+        add constraint FK2C4413E3DED31D14 
+        foreign key (sid) 
+        references rootclass 
+        on delete cascade
+14:13:19,758 DEBUG SQL:104 - 
+    alter table nonleafsubclass 
+        add constraint FK2C4413E33397DF0C 
+        foreign key (other2) 
+        references nonleafsubclass
+14:13:19,758 DEBUG SQL:104 - 
+    alter table nonleafsubclass 
+        add constraint FK2C4413E328385AED 
+        foreign key (po) 
+        references Po
+14:13:19,784 DEBUG SQL:104 - 
+    alter table one 
+        add constraint FK1AE66329ECAC7 
+        foreign key (holder) 
+        references Holder
+14:13:19,786 DEBUG SQL:104 - 
+    alter table quux 
+        add constraint FK3523C7DED2B87D 
+        foreign key (foo) 
+        references "foos"
+14:13:19,786 DEBUG SQL:104 - 
+    alter table quux 
+        add constraint FK3523C7CFEFBDAD 
+        foreign key (fum_str_, fum_sho_, fum_dat_) 
+        references Fum
+14:13:19,787 DEBUG SQL:104 - 
+    alter table quux 
+        add constraint FK3523C7AB390E59 
+        foreign key (HOLDER_NAME) 
+        references Holder (name)
+14:13:19,787 DEBUG SQL:104 - 
+    alter table quux_fums 
+        add constraint FKEB87FC2DAAB22AAB 
+        foreign key (fum_string, fum_short, fum_date) 
+        references Fum
+14:13:19,788 DEBUG SQL:104 - 
+    alter table quux_fums 
+        add constraint FKEB87FC2DA64DB02B 
+        foreign key (qux_id) 
+        references quux
+14:13:19,788 DEBUG SQL:104 - 
+    alter table rootclass 
+        add constraint FKCC8765D6DF07C9F0 
+        foreign key (top_) 
+        references rootclass
+14:13:19,789 DEBUG SQL:104 - 
+    alter table rootclass 
+        add constraint FKCC8765D63434DA5C 
+        foreign key (parent) 
+        references leafsubclass
+14:13:19,789 DEBUG SQL:104 - 
+    alter table simple_simple 
+        add constraint FK869810DF5B9F6506 
+        foreign key (simple2) 
+        references rootclass
+14:13:19,790 DEBUG SQL:104 - 
+    alter table simple_simple 
+        add constraint FK869810DFEC57D671 
+        foreign key (simple1) 
+        references leafsubclass
+14:13:19,790 DEBUG SQL:104 - 
+    alter table string_list 
+        add constraint FKA5F66C0CDED12827 
+        foreign key (id) 
+        references baz
+14:13:19,790 DEBUG SQL:104 - 
+    alter table topcomponents 
+        add constraint FK72C85E2BDED2B1B0 
+        foreign key (id_) 
+        references baz
+14:13:19,791 DEBUG SQL:104 - 
+    create table hibernate_unique_key (
+         next_hi integer 
+    )
+14:13:19,791 DEBUG SQL:104 - 
+    insert into hibernate_unique_key values ( 0 )
+14:13:19,791  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:13:19,801  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:13:19,855  INFO CustomRunner:139 - Test: testQueries
+14:13:19,857 DEBUG SQL:104 - 
+    select
+        animal0_.id as id1_,
+        animal0_.description as descript2_1_,
+        animal0_.body_weight as body3_1_,
+        animal0_.mother_id as mother4_1_,
+        animal0_.father_id as father5_1_,
+        animal0_.zoo_id as zoo6_1_,
+        animal0_.serialNumber as serialNu7_1_,
+        animal0_1_.bodyTemperature as bodyTemp2_54_,
+        animal0_3_.pregnant as pregnant43_,
+        animal0_3_.birthdate as birthdate43_,
+        animal0_4_.owner as owner21_,
+        animal0_7_.name_first as name2_30_,
+        animal0_7_.name_initial as name3_30_,
+        animal0_7_.name_last as name4_30_,
+        animal0_7_.nickName as nickName30_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_30_,
+        animal0_7_.intValue as intValue30_,
+        animal0_7_.floatValue as floatValue30_,
+        animal0_7_.bigDecimalValue as bigDecim9_30_,
+        animal0_7_.bigIntegerValue as bigInte10_30_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal
+14:13:19,860 DEBUG SQL:104 - 
+    select
+        animal0_.id as id1_,
+        animal0_.description as descript2_1_,
+        animal0_.body_weight as body3_1_,
+        animal0_.mother_id as mother4_1_,
+        animal0_.father_id as father5_1_,
+        animal0_.zoo_id as zoo6_1_,
+        animal0_.serialNumber as serialNu7_1_,
+        animal0_1_.bodyTemperature as bodyTemp2_54_,
+        animal0_3_.pregnant as pregnant43_,
+        animal0_3_.birthdate as birthdate43_,
+        animal0_4_.owner as owner21_,
+        animal0_7_.name_first as name2_30_,
+        animal0_7_.name_initial as name3_30_,
+        animal0_7_.name_last as name4_30_,
+        animal0_7_.nickName as nickName30_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_30_,
+        animal0_7_.intValue as intValue30_,
+        animal0_7_.floatValue as floatValue30_,
+        animal0_7_.bigDecimalValue as bigDecim9_30_,
+        animal0_7_.bigIntegerValue as bigInte10_30_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal
+14:13:19,897 DEBUG SQL:104 - 
+    select
+        animal1_.id as id1_,
+        animal1_.description as descript2_1_,
+        animal1_.body_weight as body3_1_,
+        animal1_.mother_id as mother4_1_,
+        animal1_.father_id as father5_1_,
+        animal1_.zoo_id as zoo6_1_,
+        animal1_.serialNumber as serialNu7_1_,
+        animal1_1_.bodyTemperature as bodyTemp2_54_,
+        animal1_3_.pregnant as pregnant43_,
+        animal1_3_.birthdate as birthdate43_,
+        animal1_4_.owner as owner21_,
+        animal1_7_.name_first as name2_30_,
+        animal1_7_.name_initial as name3_30_,
+        animal1_7_.name_last as name4_30_,
+        animal1_7_.nickName as nickName30_,
+        animal1_7_.height_centimeters / 2.54E0 as height6_30_,
+        animal1_7_.intValue as intValue30_,
+        animal1_7_.floatValue as floatValue30_,
+        animal1_7_.bigDecimalValue as bigDecim9_30_,
+        animal1_7_.bigIntegerValue as bigInte10_30_,
+        case 
+            when animal1_2_.reptile is not null then 2 
+            when animal1_5_.mammal is not null then 5 
+            when animal1_6_.mammal is not null then 6 
+            when animal1_4_.mammal is not null then 4 
+            when animal1_7_.mammal is not null then 7 
+            when animal1_1_.animal is not null then 1 
+            when animal1_3_.animal is not null then 3 
+            when animal1_.id is not null then 0 
+        end as clazz_ 
+    from
+        Animal animal0_,
+        Animal animal1_ 
+    left outer join
+        Reptile animal1_1_ 
+            on animal1_.id=animal1_1_.animal 
+    left outer join
+        Lizard animal1_2_ 
+            on animal1_.id=animal1_2_.reptile 
+    left outer join
+        Mammal animal1_3_ 
+            on animal1_.id=animal1_3_.animal 
+    left outer join
+        DomesticAnimal animal1_4_ 
+            on animal1_.id=animal1_4_.mammal 
+    left outer join
+        Cat animal1_5_ 
+            on animal1_.id=animal1_5_.mammal 
+    left outer join
+        Dog animal1_6_ 
+            on animal1_.id=animal1_6_.mammal 
+    left outer join
+        Human animal1_7_ 
+            on animal1_.id=animal1_7_.mammal 
+    where
+        animal0_.mother_id=animal1_.id
+14:13:19,989 DEBUG SQL:104 - 
+    select
+        animal1_.id as id1_,
+        animal1_.description as descript2_1_,
+        animal1_.body_weight as body3_1_,
+        animal1_.mother_id as mother4_1_,
+        animal1_.father_id as father5_1_,
+        animal1_.zoo_id as zoo6_1_,
+        animal1_.serialNumber as serialNu7_1_,
+        animal1_1_.bodyTemperature as bodyTemp2_54_,
+        animal1_3_.pregnant as pregnant43_,
+        animal1_3_.birthdate as birthdate43_,
+        animal1_4_.owner as owner21_,
+        animal1_7_.name_first as name2_30_,
+        animal1_7_.name_initial as name3_30_,
+        animal1_7_.name_last as name4_30_,
+        animal1_7_.nickName as nickName30_,
+        animal1_7_.height_centimeters / 2.54E0 as height6_30_,
+        animal1_7_.intValue as intValue30_,
+        animal1_7_.floatValue as floatValue30_,
+        animal1_7_.bigDecimalValue as bigDecim9_30_,
+        animal1_7_.bigIntegerValue as bigInte10_30_,
+        case 
+            when animal1_2_.reptile is not null then 2 
+            when animal1_5_.mammal is not null then 5 
+            when animal1_6_.mammal is not null then 6 
+            when animal1_4_.mammal is not null then 4 
+            when animal1_7_.mammal is not null then 7 
+            when animal1_1_.animal is not null then 1 
+            when animal1_3_.animal is not null then 3 
+            when animal1_.id is not null then 0 
+        end as clazz_ 
+    from
+        Animal animal0_ 
+    inner join
+        Animal animal1_ 
+            on animal0_.mother_id=animal1_.id 
+    left outer join
+        Reptile animal1_1_ 
+            on animal1_.id=animal1_1_.animal 
+    left outer join
+        Lizard animal1_2_ 
+            on animal1_.id=animal1_2_.reptile 
+    left outer join
+        Mammal animal1_3_ 
+            on animal1_.id=animal1_3_.animal 
+    left outer join
+        DomesticAnimal animal1_4_ 
+            on animal1_.id=animal1_4_.mammal 
+    left outer join
+        Cat animal1_5_ 
+            on animal1_.id=animal1_5_.mammal 
+    left outer join
+        Dog animal1_6_ 
+            on animal1_.id=animal1_6_.mammal 
+    left outer join
+        Human animal1_7_ 
+            on animal1_.id=animal1_7_.mammal
+14:13:20,004 DEBUG SQL:104 - 
+    select
+        animal0_.id as id1_0_,
+        animal1_.id as id1_1_,
+        animal0_.description as descript2_1_0_,
+        animal0_.body_weight as body3_1_0_,
+        animal0_.mother_id as mother4_1_0_,
+        animal0_.father_id as father5_1_0_,
+        animal0_.zoo_id as zoo6_1_0_,
+        animal0_.serialNumber as serialNu7_1_0_,
+        animal0_1_.bodyTemperature as bodyTemp2_54_0_,
+        animal0_3_.pregnant as pregnant43_0_,
+        animal0_3_.birthdate as birthdate43_0_,
+        animal0_4_.owner as owner21_0_,
+        animal0_7_.name_first as name2_30_0_,
+        animal0_7_.name_initial as name3_30_0_,
+        animal0_7_.name_last as name4_30_0_,
+        animal0_7_.nickName as nickName30_0_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_30_0_,
+        animal0_7_.intValue as intValue30_0_,
+        animal0_7_.floatValue as floatValue30_0_,
+        animal0_7_.bigDecimalValue as bigDecim9_30_0_,
+        animal0_7_.bigIntegerValue as bigInte10_30_0_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_0_,
+        animal1_.description as descript2_1_1_,
+        animal1_.body_weight as body3_1_1_,
+        animal1_.mother_id as mother4_1_1_,
+        animal1_.father_id as father5_1_1_,
+        animal1_.zoo_id as zoo6_1_1_,
+        animal1_.serialNumber as serialNu7_1_1_,
+        animal1_1_.bodyTemperature as bodyTemp2_54_1_,
+        animal1_3_.pregnant as pregnant43_1_,
+        animal1_3_.birthdate as birthdate43_1_,
+        animal1_4_.owner as owner21_1_,
+        animal1_7_.name_first as name2_30_1_,
+        animal1_7_.name_initial as name3_30_1_,
+        animal1_7_.name_last as name4_30_1_,
+        animal1_7_.nickName as nickName30_1_,
+        animal1_7_.height_centimeters / 2.54E0 as height6_30_1_,
+        animal1_7_.intValue as intValue30_1_,
+        animal1_7_.floatValue as floatValue30_1_,
+        animal1_7_.bigDecimalValue as bigDecim9_30_1_,
+        animal1_7_.bigIntegerValue as bigInte10_30_1_,
+        case 
+            when animal1_2_.reptile is not null then 2 
+            when animal1_5_.mammal is not null then 5 
+            when animal1_6_.mammal is not null then 6 
+            when animal1_4_.mammal is not null then 4 
+            when animal1_7_.mammal is not null then 7 
+            when animal1_1_.animal is not null then 1 
+            when animal1_3_.animal is not null then 3 
+            when animal1_.id is not null then 0 
+        end as clazz_1_ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    inner join
+        Animal animal1_ 
+            on animal0_.mother_id=animal1_.id 
+    left outer join
+        Reptile animal1_1_ 
+            on animal1_.id=animal1_1_.animal 
+    left outer join
+        Lizard animal1_2_ 
+            on animal1_.id=animal1_2_.reptile 
+    left outer join
+        Mammal animal1_3_ 
+            on animal1_.id=animal1_3_.animal 
+    left outer join
+        DomesticAnimal animal1_4_ 
+            on animal1_.id=animal1_4_.mammal 
+    left outer join
+        Cat animal1_5_ 
+            on animal1_.id=animal1_5_.mammal 
+    left outer join
+        Dog animal1_6_ 
+            on animal1_.id=animal1_6_.mammal 
+    left outer join
+        Human animal1_7_ 
+            on animal1_.id=animal1_7_.mammal
+14:13:20,086 DEBUG SQL:104 - 
+    select
+        animal0_.id as id1_,
+        animal0_.description as descript2_1_,
+        animal0_.body_weight as body3_1_,
+        animal0_.mother_id as mother4_1_,
+        animal0_.father_id as father5_1_,
+        animal0_.zoo_id as zoo6_1_,
+        animal0_.serialNumber as serialNu7_1_,
+        animal0_1_.bodyTemperature as bodyTemp2_54_,
+        animal0_3_.pregnant as pregnant43_,
+        animal0_3_.birthdate as birthdate43_,
+        animal0_4_.owner as owner21_,
+        animal0_7_.name_first as name2_30_,
+        animal0_7_.name_initial as name3_30_,
+        animal0_7_.name_last as name4_30_,
+        animal0_7_.nickName as nickName30_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_30_,
+        animal0_7_.intValue as intValue30_,
+        animal0_7_.floatValue as floatValue30_,
+        animal0_7_.bigDecimalValue as bigDecim9_30_,
+        animal0_7_.bigIntegerValue as bigInte10_30_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    where
+        (
+            animal0_.description=? 
+        )
+14:13:20,115 DEBUG SQL:104 - 
+    select
+        animal0_.id as id1_,
+        animal0_.description as descript2_1_,
+        animal0_.body_weight as body3_1_,
+        animal0_.mother_id as mother4_1_,
+        animal0_.father_id as father5_1_,
+        animal0_.zoo_id as zoo6_1_,
+        animal0_.serialNumber as serialNu7_1_,
+        animal0_1_.bodyTemperature as bodyTemp2_54_,
+        animal0_3_.pregnant as pregnant43_,
+        animal0_3_.birthdate as birthdate43_,
+        animal0_4_.owner as owner21_,
+        animal0_7_.name_first as name2_30_,
+        animal0_7_.name_initial as name3_30_,
+        animal0_7_.name_last as name4_30_,
+        animal0_7_.nickName as nickName30_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_30_,
+        animal0_7_.intValue as intValue30_,
+        animal0_7_.floatValue as floatValue30_,
+        animal0_7_.bigDecimalValue as bigDecim9_30_,
+        animal0_7_.bigIntegerValue as bigInte10_30_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    where
+        (
+            animal0_.description=? 
+        )
+14:13:20,130 DEBUG SQL:104 - 
+    select
+        animal0_.id as id1_,
+        animal0_.description as descript2_1_,
+        animal0_.body_weight as body3_1_,
+        animal0_.mother_id as mother4_1_,
+        animal0_.father_id as father5_1_,
+        animal0_.zoo_id as zoo6_1_,
+        animal0_.serialNumber as serialNu7_1_,
+        animal0_1_.bodyTemperature as bodyTemp2_54_,
+        animal0_3_.pregnant as pregnant43_,
+        animal0_3_.birthdate as birthdate43_,
+        animal0_4_.owner as owner21_,
+        animal0_7_.name_first as name2_30_,
+        animal0_7_.name_initial as name3_30_,
+        animal0_7_.name_last as name4_30_,
+        animal0_7_.nickName as nickName30_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_30_,
+        animal0_7_.intValue as intValue30_,
+        animal0_7_.floatValue as floatValue30_,
+        animal0_7_.bigDecimalValue as bigDecim9_30_,
+        animal0_7_.bigIntegerValue as bigInte10_30_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    where
+        (
+            animal0_.description=? 
+        )
+        or(
+            animal0_.description=? 
+        )
+14:13:20,164  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:13:20,165 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:13:20,165 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4
+14:13:20,165 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B
+14:13:20,165 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79
+14:13:20,166 DEBUG SQL:104 - 
+    alter table CCBAG 
+        drop constraint FK3CF9B8894011F0B
+14:13:20,191 DEBUG SQL:104 - 
+    alter table CCBAG 
+        drop constraint FK3CF9B8894077C4B
+14:13:20,191 DEBUG SQL:104 - 
+    alter table CID_IN 
+        drop constraint FK7679BC667E2D2D9A
+14:13:20,192 DEBUG SQL:104 - 
+    alter table CID_MID 
+        drop constraint FK58BDDF076FBAD622
+14:13:20,192 DEBUG SQL:104 - 
+    alter table CID_OUT 
+        drop constraint FK58BDE80D83675AD1
+14:13:20,192 DEBUG SQL:104 - 
+    alter table CRAZY_ID_TOP 
+        drop constraint FK1AA9579F73113F33
+14:13:20,192 DEBUG SQL:104 - 
+    alter table Cat 
+        drop constraint FK107B66D384BBA
+14:13:20,192 DEBUG SQL:104 - 
+    alter table Container_components 
+        drop constraint FKDD7395B4578192D3
+14:13:20,192 DEBUG SQL:104 - 
+    alter table Container_components 
+        drop constraint FKDD7395B4DED2FBBD
+14:13:20,193 DEBUG SQL:104 - 
+    alter table Container_components 
+        drop constraint FKDD7395B4FB8A4BED
+14:13:20,193 DEBUG SQL:104 - 
+    alter table Container_components 
+        drop constraint FKDD7395B494077C4B
+14:13:20,204 DEBUG SQL:104 - 
+    alter table Container_composites 
+        drop constraint FKDDBBF16A578192D3
+14:13:20,204 DEBUG SQL:104 - 
+    alter table Container_composites 
+        drop constraint FKDDBBF16ADED2FBBD
+14:13:20,204 DEBUG SQL:104 - 
+    alter table Container_composites 
+        drop constraint FKDDBBF16AFB8A4BED
+14:13:20,204 DEBUG SQL:104 - 
+    alter table Container_composites 
+        drop constraint FKDDBBF16A94077C4B
+14:13:20,205 DEBUG SQL:104 - 
+    alter table Container_manyToMany 
+        drop constraint FK627D55578D4AE9CE
+14:13:20,205 DEBUG SQL:104 - 
+    alter table Container_manyToMany 
+        drop constraint FK627D555789A21C6B
+14:13:20,205 DEBUG SQL:104 - 
+    alter table Container_ternaryMap 
+        drop constraint FKD19E4B1FDED2B87D
+14:13:20,205 DEBUG SQL:104 - 
+    alter table Container_ternaryMap 
+        drop constraint FKD19E4B1F2ED6F4E5
+14:13:20,205 DEBUG SQL:104 - 
+    alter table Container_ternaryMap 
+        drop constraint FKD19E4B1F94077C4B
+14:13:20,206 DEBUG SQL:104 - 
+    alter table Container_ternarySet 
+        drop constraint FKD19E6225DED2B87D
+14:13:20,218 DEBUG SQL:104 - 
+    alter table Container_ternarySet 
+        drop constraint FKD19E62252ED6F4E5
+14:13:20,218 DEBUG SQL:104 - 
+    alter table Container_ternarySet 
+        drop constraint FKD19E622594077C4B
+14:13:20,218 DEBUG SQL:104 - 
+    alter table CustomerOrder 
+        drop constraint FKAEF781F06153C9DD
+14:13:20,218 DEBUG SQL:104 - 
+    alter table Detail 
+        drop constraint CC
+14:13:20,219 DEBUG SQL:104 - 
+    alter table Detail 
+        drop constraint FK79CF0471BAFC73FD
+14:13:20,219 DEBUG SQL:104 - 
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA
+14:13:20,219 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F
+14:13:20,220 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F
+14:13:20,220 DEBUG SQL:104 - 
+    alter table Eye 
+        drop constraint FK11211DED2D335
+14:13:20,220 DEBUG SQL:104 - 
+    alter table FOO_ARRAY 
+        drop constraint FK92165960DED2B87D
+14:13:20,259 DEBUG SQL:104 - 
+    alter table FOO_ARRAY 
+        drop constraint FK92165960DED2B1B0
+14:13:20,259 DEBUG SQL:104 - 
+    alter table Fum 
+        drop constraint FK1155E3BB9E3A0
+14:13:20,259 DEBUG SQL:104 - 
+    alter table Fum 
+        drop constraint FK1155EB222E1DE
+14:13:20,259 DEBUG SQL:104 - 
+    alter table Fum 
+        drop constraint FK1155ECFEFBDAD
+14:13:20,260 DEBUG SQL:104 - 
+    alter table Fum 
+        drop constraint FK1155EA64DB02B
+14:13:20,260 DEBUG SQL:104 - 
+    alter table Fum_stringmap 
+        drop constraint FKBD5D720ACFEFBDAD
+14:13:20,260 DEBUG SQL:104 - 
+    alter table Holder 
+        drop constraint FK812BB9CC3939BDD7
+14:13:20,260 DEBUG SQL:104 - 
+    alter table Human 
+        drop constraint FK42D710D1733655F
+14:13:20,260 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311
+14:13:20,260 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310
+14:13:20,261 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311
+14:13:20,261 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310
+14:13:20,261 DEBUG SQL:104 - 
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13
+14:13:20,261 DEBUG SQL:104 - 
+    alter table Jay 
+        drop constraint FK12202DED2B353
+14:13:20,261 DEBUG SQL:104 - 
+    alter table LCCBAG 
+        drop constraint FK857FEABC94011F0B
+14:13:20,261 DEBUG SQL:104 - 
+    alter table LCCBAG 
+        drop constraint FK857FEABC94077C4B
+14:13:20,262 DEBUG SQL:104 - 
+    alter table LineItem 
+        drop constraint FK4AAEE947CB8F4618
+14:13:20,262 DEBUG SQL:104 - 
+    alter table LineItem 
+        drop constraint FK4AAEE947EDAE41F3
+14:13:20,262 DEBUG SQL:104 - 
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315
+14:13:20,262 DEBUG SQL:104 - 
+    alter table MANY_TO_MANY 
+        drop constraint FK8CF3D7C3E0DF2A91
+14:13:20,279 DEBUG SQL:104 - 
+    alter table MANY_TO_MANY 
+        drop constraint FK8CF3D7C322C9695A
+14:13:20,280 DEBUG SQL:104 - 
+    alter table MARELO 
+        drop constraint FK871F728AE624DD92
+14:13:20,280 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699
+14:13:20,280 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98
+14:13:20,280 DEBUG SQL:104 - 
+    alter table Model 
+        drop constraint FK4710B0921C08435
+14:13:20,280 DEBUG SQL:104 - 
+    alter table Org 
+        drop constraint FK136C49423C623
+14:13:20,280 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E724A71641D
+14:13:20,281 DEBUG SQL:104 - 
+    alter table Part 
+        drop constraint FK25D813DED29727
+14:13:20,281 DEBUG SQL:104 - 
+    alter table Person 
+        drop constraint FK8E4887759423C623
+14:13:20,281 DEBUG SQL:104 - 
+    alter table Person 
+        drop constraint FK8E4887756544CDD0
+14:13:20,298 DEBUG SQL:104 - 
+    alter table Po 
+        drop constraint FKA1FDED16EBE
+14:13:20,298 DEBUG SQL:104 - 
+    alter table Po 
+        drop constraint FKA1F6F89E02A
+14:13:20,298 DEBUG SQL:104 - 
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699
+14:13:20,298 DEBUG SQL:104 - 
+    alter table SIMPLE_2 
+        drop constraint FK4B988CE5C81DD13B
+14:13:20,299 DEBUG SQL:104 - 
+    alter table Several 
+        drop constraint FKD9AD23DCB9B9D411
+14:13:20,299 DEBUG SQL:104 - 
+    alter table Simple 
+        drop constraint FK939D1DD2939BE031
+14:13:20,299 DEBUG SQL:104 - 
+    alter table Simple 
+        drop constraint FK939D1DD289A21C6A
+14:13:20,299 DEBUG SQL:104 - 
+    alter table Sortable 
+        drop constraint FK66EDF018DED29727
+14:13:20,299 DEBUG SQL:104 - 
+    alter table SubDetail 
+        drop constraint FK460B329135BB9D31
+14:13:20,299 DEBUG SQL:104 - 
+    alter table T_COMPLEX_SUB_PROPS 
+        drop constraint FK5470D25725D7CC5B
+14:13:20,299 DEBUG SQL:104 - 
+    alter table T_GEN_PROPS 
+        drop constraint FK65C7C556AA2002A9
+14:13:20,300 DEBUG SQL:104 - 
+    alter table TrivialClass 
+        drop constraint FKC09264CFDF079C10
+14:13:20,300 DEBUG SQL:104 - 
+    alter table Z 
+        drop constraint FK5A435CA81F
+14:13:20,300 DEBUG SQL:104 - 
+    alter table Zoo 
+        drop constraint FK15FBA55106523
+14:13:20,300 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719
+14:13:20,320 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705
+14:13:20,321 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2
+14:13:20,321 DEBUG SQL:104 - 
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87
+14:13:20,321 DEBUG SQL:104 - 
+    alter table "bxaxg" 
+        drop constraint FK59D06FACB5DD78C
+14:13:20,321 DEBUG SQL:104 - 
+    alter table "foos_importantDates" 
+        drop constraint FKCB360D95DED1281F
+14:13:20,321 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DDED2B87D
+14:13:20,321 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6D78F5A0B1
+14:13:20,322 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DA4A2707E
+14:13:20,322 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DDED29727
+14:13:20,322 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6D8B9BD6CB
+14:13:20,343 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DF05E6685
+14:13:20,344 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6D423011B5
+14:13:20,344 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6D601671B4
+14:13:20,344 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6D800DF629
+14:13:20,344 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DBBEAE520
+14:13:20,344 DEBUG SQL:104 - 
+    alter table "foos" 
+        drop constraint FK300C6DBBEAE521
+14:13:20,345 DEBUG SQL:104 - 
+    alter table "glarchez_fooComponents" 
+        drop constraint FK7FEA372DDED2B5FD
+14:13:20,345 DEBUG SQL:104 - 
+    alter table "glarchez_fooComponents" 
+        drop constraint FK7FEA372DE90DED05
+14:13:20,345 DEBUG SQL:104 - 
+    alter table "glarchez_strings" 
+        drop constraint FK123BC5F3E90DED05
+14:13:20,345 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB07F31E5F6
+14:13:20,360 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB095284B1
+14:13:20,360 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB010E640D1
+14:13:20,360 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB071902CA1
+14:13:20,361 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB07327568E
+14:13:20,361 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB0240A7DA3
+14:13:20,361 DEBUG SQL:104 - 
+    alter table "glarchez" 
+        drop constraint FKC8B52CB0EF499B2C
+14:13:20,361 DEBUG SQL:104 - 
+    alter table "master" 
+        drop constraint FKBF8D2A6248C67743
+14:13:20,361 DEBUG SQL:104 - 
+    alter table "the fees_fees" 
+        drop constraint FK328B0810929E1AEB
+14:13:20,361 DEBUG SQL:104 - 
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCDED2B5FD
+14:13:20,362 DEBUG SQL:104 - 
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCDE3EAC1A
+14:13:20,394 DEBUG SQL:104 - 
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCDED30C99
+14:13:20,394 DEBUG SQL:104 - 
+    alter table "the fees" 
+        drop constraint FK3DDCB3FCE4640982
+14:13:20,395 DEBUG SQL:104 - 
+    alter table abcd 
+        drop constraint FK2D9442578192D3
+14:13:20,395 DEBUG SQL:104 - 
+    alter table abcd 
+        drop constraint FK2D9442DED2FBBD
+14:13:20,395 DEBUG SQL:104 - 
+    alter table abcd 
+        drop constraint FK2D9442FB8A4BED
+14:13:20,395 DEBUG SQL:104 - 
+    alter table abcd 
+        drop constraint FK2D944294077C4B
+14:13:20,396 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA255106523
+14:13:20,396 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99
+14:13:20,396 DEBUG SQL:104 - 
+    alter table bar_join_table 
+        drop constraint FKF39114258B9833CB
+14:13:20,396 DEBUG SQL:104 - 
+    alter table baz 
+        drop constraint FK17C1BDED2B87D
+14:13:20,396 DEBUG SQL:104 - 
+    alter table baz 
+        drop constraint FK17C1B7B14B1CC
+14:13:20,396 DEBUG SQL:104 - 
+    alter table baz 
+        drop constraint FK17C1B8B9B1B19
+14:13:20,397 DEBUG SQL:104 - 
+    alter table baz_anyToAny 
+        drop constraint FKB79B2A89DED29727
+14:13:20,397 DEBUG SQL:104 - 
+    alter table baz_byte_bag 
+        drop constraint FK5DC16BF5DED29727
+14:13:20,397 DEBUG SQL:104 - 
+    alter table baz_customs 
+        drop constraint FK7C7BAFEDED2B1B0
+14:13:20,397 DEBUG SQL:104 - 
+    alter table baz_floats_bag 
+        drop constraint FK8687FC04601671B4
+14:13:20,397 DEBUG SQL:104 - 
+    alter table baz_foo 
+        drop constraint FKEC8CB2A2DED2B87D
+14:13:20,397 DEBUG SQL:104 - 
+    alter table baz_foo 
+        drop constraint FKEC8CB2A2DED29727
+14:13:20,398 DEBUG SQL:104 - 
+    alter table baz_fooComponentToFoo 
+        drop constraint FK899CF490932F92EB
+14:13:20,398 DEBUG SQL:104 - 
+    alter table baz_fooComponentToFoo 
+        drop constraint FK899CF4908B9BD6CB
+14:13:20,426 DEBUG SQL:104 - 
+    alter table baz_fooToGlarch 
+        drop constraint FK8E0729D8C6E46349
+14:13:20,427 DEBUG SQL:104 - 
+    alter table baz_fooToGlarch 
+        drop constraint FK8E0729D88B9BD6CB
+14:13:20,427 DEBUG SQL:104 - 
+    alter table baz_fooToGlarch 
+        drop constraint FK8E0729D8932F92EB
+14:13:20,427 DEBUG SQL:104 - 
+    alter table baz_id_foo 
+        drop constraint FK8DA58046DED2B87D
+14:13:20,427 DEBUG SQL:104 - 
+    alter table baz_id_foo 
+        drop constraint FK8DA58046DED29727
+14:13:20,427 DEBUG SQL:104 - 
+    alter table baz_manyToAny 
+        drop constraint FKE0669B2EDED29727
+14:13:20,428 DEBUG SQL:104 - 
+    alter table baz_moreParts 
+        drop constraint FK3FF10D67FB8D0715
+14:13:20,428 DEBUG SQL:104 - 
+    alter table baz_moreParts 
+        drop constraint FK3FF10D67DED29727
+14:13:20,428 DEBUG SQL:104 - 
+    alter table baz_stringArray 
+        drop constraint FK24B80EA4DED2B1B0
+14:13:20,428 DEBUG SQL:104 - 
+    alter table baz_stringDateMap 
+        drop constraint FK58BCAC59DED2B1B0
+14:13:20,437 DEBUG SQL:104 - 
+    alter table baz_stringSet 
+        drop constraint FKC96DEF6DDED2B1B0
+14:13:20,438 DEBUG SQL:104 - 
+    alter table baz_timeArray 
+        drop constraint FKD53E38688B9BD6CB
+14:13:20,438 DEBUG SQL:104 - 
+    alter table bazcomponents 
+        drop constraint FK12C9D9718B9BD6CB
+14:13:20,438 DEBUG SQL:104 - 
+    alter table cached_map 
+        drop constraint FK1F8B4BFDED29727
+14:13:20,438 DEBUG SQL:104 - 
+    alter table cached_map 
+        drop constraint FK1F8B4BFCD1093EB
+14:13:20,438 DEBUG SQL:104 - 
+    alter table cached_set 
+        drop constraint FK1F8CBC5DED29727
+14:13:20,438 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEE6C4D648
+14:13:20,439 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEB30D557
+14:13:20,439 DEBUG SQL:104 - 
+    alter table foo_dates 
+        drop constraint FKB585C9CC932F92EB
+14:13:20,439 DEBUG SQL:104 - 
+    alter table foo_dep_table 
+        drop constraint FK489E6365E4A2AC18
+14:13:20,439 DEBUG SQL:104 - 
+    alter table foo_dep_table 
+        drop constraint FK489E63659CB3B576
+14:13:20,439 DEBUG SQL:104 - 
+    alter table foo_times 
+        drop constraint FKB66ACA8D932F92EB
+14:13:20,440 DEBUG SQL:104 - 
+    alter table foobytes 
+        drop constraint FK16933F65DED138D2
+14:13:20,440 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99
+14:13:20,440 DEBUG SQL:104 - 
+    alter table int_array 
+        drop constraint FK12CE7E09DED12827
+14:13:20,484 DEBUG SQL:104 - 
+    alter table jointable 
+        drop constraint FKE3AC08E4E4A2AC18
+14:13:20,484 DEBUG SQL:104 - 
+    alter table leafsubclass 
+        drop constraint FK24853496DF029E81
+14:13:20,484 DEBUG SQL:104 - 
+    alter table leafsubclass 
+        drop constraint FK24853496A2CEC367
+14:13:20,484 DEBUG SQL:104 - 
+    alter table leafsubclass 
+        drop constraint FK24853496338734D5
+14:13:20,485 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5A6F9C38B8
+14:13:20,485 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5A8B3D2732
+14:13:20,485 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5AAC6C3EE
+14:13:20,485 DEBUG SQL:104 - 
+    alter table leafsubsubclass 
+        drop constraint FK443F0B5A3310E22E
+14:13:20,485 DEBUG SQL:104 - 
+    alter table many 
+        drop constraint FK33065F9016265D
+14:13:20,485 DEBUG SQL:104 - 
+    alter table mtm 
+        drop constraint BB
+14:13:20,505 DEBUG SQL:104 - 
+    alter table mtm 
+        drop constraint AA
+14:13:20,506 DEBUG SQL:104 - 
+    alter table nonleafsubclass 
+        drop constraint FK2C4413E3DED31D14
+14:13:20,506 DEBUG SQL:104 - 
+    alter table nonleafsubclass 
+        drop constraint FK2C4413E33397DF0C
+14:13:20,506 DEBUG SQL:104 - 
+    alter table nonleafsubclass 
+        drop constraint FK2C4413E328385AED
+14:13:20,506 DEBUG SQL:104 - 
+    alter table one 
+        drop constraint FK1AE66329ECAC7
+14:13:20,507 DEBUG SQL:104 - 
+    alter table quux 
+        drop constraint FK3523C7DED2B87D
+14:13:20,507 DEBUG SQL:104 - 
+    alter table quux 
+        drop constraint FK3523C7CFEFBDAD
+14:13:20,507 DEBUG SQL:104 - 
+    alter table quux 
+        drop constraint FK3523C7AB390E59
+14:13:20,507 DEBUG SQL:104 - 
+    alter table quux_fums 
+        drop constraint FKEB87FC2DAAB22AAB
+14:13:20,507 DEBUG SQL:104 - 
+    alter table quux_fums 
+        drop constraint FKEB87FC2DA64DB02B
+14:13:20,525 DEBUG SQL:104 - 
+    alter table rootclass 
+        drop constraint FKCC8765D6DF07C9F0
+14:13:20,525 DEBUG SQL:104 - 
+    alter table rootclass 
+        drop constraint FKCC8765D63434DA5C
+14:13:20,526 DEBUG SQL:104 - 
+    alter table simple_simple 
+        drop constraint FK869810DF5B9F6506
+14:13:20,526 DEBUG SQL:104 - 
+    alter table simple_simple 
+        drop constraint FK869810DFEC57D671
+14:13:20,526 DEBUG SQL:104 - 
+    alter table string_list 
+        drop constraint FKA5F66C0CDED12827
+14:13:20,526 DEBUG SQL:104 - 
+    alter table topcomponents 
+        drop constraint FK72C85E2BDED2B1B0
+14:13:20,526 DEBUG SQL:104 - 
+    drop table Address if exists
+14:13:20,527 DEBUG SQL:104 - 
+    drop table Animal if exists
+14:13:20,527 DEBUG SQL:104 - 
+    drop table CCBAG if exists
+14:13:20,527 DEBUG SQL:104 - 
+    drop table CID_IN if exists
+14:13:20,527 DEBUG SQL:104 - 
+    drop table CID_MID if exists
+14:13:20,527 DEBUG SQL:104 - 
+    drop table CID_OUT if exists
+14:13:20,528 DEBUG SQL:104 - 
+    drop table CRAZY_ID_NODE if exists
+14:13:20,528 DEBUG SQL:104 - 
+    drop table CRAZY_ID_TOP if exists
+14:13:20,528 DEBUG SQL:104 - 
+    drop table Cat if exists
+14:13:20,528 DEBUG SQL:104 - 
+    drop table Contained if exists
+14:13:20,529 DEBUG SQL:104 - 
+    drop table Container if exists
+14:13:20,529 DEBUG SQL:104 - 
+    drop table Container_components if exists
+14:13:20,529 DEBUG SQL:104 - 
+    drop table Container_composites if exists
+14:13:20,529 DEBUG SQL:104 - 
+    drop table Container_manyToMany if exists
+14:13:20,529 DEBUG SQL:104 - 
+    drop table Container_ternaryMap if exists
+14:13:20,530 DEBUG SQL:104 - 
+    drop table Container_ternarySet if exists
+14:13:20,530 DEBUG SQL:104 - 
+    drop table Custom if exists
+14:13:20,530 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:13:20,530 DEBUG SQL:104 - 
+    drop table CustomerOrder if exists
+14:13:20,531 DEBUG SQL:104 - 
+    drop table Detail if exists
+14:13:20,531 DEBUG SQL:104 - 
+    drop table Dog if exists
+14:13:20,553 DEBUG SQL:104 - 
+    drop table DomesticAnimal if exists
+14:13:20,554 DEBUG SQL:104 - 
+    drop table Entity if exists
+14:13:20,554 DEBUG SQL:104 - 
+    drop table EntityWithCrazyCompositeKey if exists
+14:13:20,555 DEBUG SQL:104 - 
+    drop table Eye if exists
+14:13:20,555 DEBUG SQL:104 - 
+    drop table FOO_ARRAY if exists
+14:13:20,555 DEBUG SQL:104 - 
+    drop table Fum if exists
+14:13:20,555 DEBUG SQL:104 - 
+    drop table Fum_stringmap if exists
+14:13:20,555 DEBUG SQL:104 - 
+    drop table HQL_COMP_CONT if exists
+14:13:20,556 DEBUG SQL:104 - 
+    drop table Holder if exists
+14:13:20,556 DEBUG SQL:104 - 
+    drop table Human if exists
+14:13:20,556 DEBUG SQL:104 - 
+    drop table Human_family if exists
+14:13:20,556 DEBUG SQL:104 - 
+    drop table Human_friends if exists
+14:13:20,557 DEBUG SQL:104 - 
+    drop table JOINED if exists
+14:13:20,557 DEBUG SQL:104 - 
+    drop table Jay if exists
+14:13:20,557 DEBUG SQL:104 - 
+    drop table Joiner if exists
+14:13:20,574 DEBUG SQL:104 - 
+    drop table LCCBAG if exists
+14:13:20,574 DEBUG SQL:104 - 
+    drop table LineItem if exists
+14:13:20,574 DEBUG SQL:104 - 
+    drop table Lizard if exists
+14:13:20,575 DEBUG SQL:104 - 
+    drop table MANY_TO_MANY if exists
+14:13:20,575 DEBUG SQL:104 - 
+    drop table MARECM if exists
+14:13:20,575 DEBUG SQL:104 - 
+    drop table MARELO if exists
+14:13:20,575 DEBUG SQL:104 - 
+    drop table MailingAddress if exists
+14:13:20,575 DEBUG SQL:104 - 
+    drop table Mammal if exists
+14:13:20,576 DEBUG SQL:104 - 
+    drop table Model if exists
+14:13:20,576 DEBUG SQL:104 - 
+    drop table Nameable if exists
+14:13:20,576 DEBUG SQL:104 - 
+    drop table Org if exists
+14:13:20,576 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:13:20,576 DEBUG SQL:104 - 
+    drop table ParentChild if exists
+14:13:20,577 DEBUG SQL:104 - 
+    drop table Part if exists
+14:13:20,577 DEBUG SQL:104 - 
+    drop table Person if exists
+14:13:20,577 DEBUG SQL:104 - 
+    drop table Po if exists
+14:13:20,577 DEBUG SQL:104 - 
+    drop table Product if exists
+14:13:20,578 DEBUG SQL:104 - 
+    drop table ProductLine if exists
+14:13:20,578 DEBUG SQL:104 - 
+    drop table Reptile if exists
+14:13:20,578 DEBUG SQL:104 - 
+    drop table SIMPLE_1 if exists
+14:13:20,578 DEBUG SQL:104 - 
+    drop table SIMPLE_2 if exists
+14:13:20,578 DEBUG SQL:104 - 
+    drop table Several if exists
+14:13:20,579 DEBUG SQL:104 - 
+    drop table Simple if exists
+14:13:20,641 DEBUG SQL:104 - 
+    drop table Single if exists
+14:13:20,641 DEBUG SQL:104 - 
+    drop table Sortable if exists
+14:13:20,641 DEBUG SQL:104 - 
+    drop table StateProvince if exists
+14:13:20,642 DEBUG SQL:104 - 
+    drop table SubDetail if exists
+14:13:20,642 DEBUG SQL:104 - 
+    drop table T_CHAR_PROP if exists
+14:13:20,642 DEBUG SQL:104 - 
+    drop table T_COMPLEX_PROP if exists
+14:13:20,642 DEBUG SQL:104 - 
+    drop table T_COMPLEX_SUB_PROPS if exists
+14:13:20,643 DEBUG SQL:104 - 
+    drop table T_GEN_PROPS if exists
+14:13:20,643 DEBUG SQL:104 - 
+    drop table T_NUM_PROP if exists
+14:13:20,643 DEBUG SQL:104 - 
+    drop table T_PROP_SET if exists
+14:13:20,643 DEBUG SQL:104 - 
+    drop table TrivialClass if exists
+14:13:20,643 DEBUG SQL:104 - 
+    drop table Up if exists
+14:13:20,644 DEBUG SQL:104 - 
+    drop table W if exists
+14:13:20,644 DEBUG SQL:104 - 
+    drop table Z if exists
+14:13:20,644 DEBUG SQL:104 - 
+    drop table Zoo if exists
+14:13:20,644 DEBUG SQL:104 - 
+    drop table Zoo_directors if exists
+14:13:20,645 DEBUG SQL:104 - 
+    drop table "User_permissions" if exists
+14:13:20,645 DEBUG SQL:104 - 
+    drop table "User" if exists
+14:13:20,645 DEBUG SQL:104 - 
+    drop table "assign-able" if exists
+14:13:20,645 DEBUG SQL:104 - 
+    drop table "bxaxg" if exists
+14:13:20,646 DEBUG SQL:104 - 
+    drop table "foos_importantDates" if exists
+14:13:20,646 DEBUG SQL:104 - 
+    drop table "foos" if exists
+14:13:20,646 DEBUG SQL:104 - 
+    drop table "glarchez_fooComponents" if exists
+14:13:20,646 DEBUG SQL:104 - 
+    drop table "glarchez_strings" if exists
+14:13:20,646 DEBUG SQL:104 - 
+    drop table "glarchez" if exists
+14:13:20,647 DEBUG SQL:104 - 
+    drop table "master" if exists
+14:13:20,647 DEBUG SQL:104 - 
+    drop table "the fees_fees" if exists
+14:13:20,647 DEBUG SQL:104 - 
+    drop table "the fees" if exists
+14:13:20,647 DEBUG SQL:104 - 
+    drop table abcd if exists
+14:13:20,648 DEBUG SQL:104 - 
+    drop table addresses if exists
+14:13:20,654 DEBUG SQL:104 - 
+    drop table bar_join_table if exists
+14:13:20,654 DEBUG SQL:104 - 
+    drop table baz if exists
+14:13:20,655 DEBUG SQL:104 - 
+    drop table baz_anyToAny if exists
+14:13:20,655 DEBUG SQL:104 - 
+    drop table baz_byte_bag if exists
+14:13:20,655 DEBUG SQL:104 - 
+    drop table baz_customs if exists
+14:13:20,655 DEBUG SQL:104 - 
+    drop table baz_floats_bag if exists
+14:13:20,655 DEBUG SQL:104 - 
+    drop table baz_foo if exists
+14:13:20,656 DEBUG SQL:104 - 
+    drop table baz_fooComponentToFoo if exists
+14:13:20,656 DEBUG SQL:104 - 
+    drop table baz_fooToGlarch if exists
+14:13:20,656 DEBUG SQL:104 - 
+    drop table baz_id_foo if exists
+14:13:20,656 DEBUG SQL:104 - 
+    drop table baz_manyToAny if exists
+14:13:20,656 DEBUG SQL:104 - 
+    drop table baz_moreParts if exists
+14:13:20,657 DEBUG SQL:104 - 
+    drop table baz_stringArray if exists
+14:13:20,657 DEBUG SQL:104 - 
+    drop table baz_stringDateMap if exists
+14:13:20,657 DEBUG SQL:104 - 
+    drop table baz_stringSet if exists
+14:13:20,678 DEBUG SQL:104 - 
+    drop table baz_timeArray if exists
+14:13:20,679 DEBUG SQL:104 - 
+    drop table bazcomponents if exists
+14:13:20,679 DEBUG SQL:104 - 
+    drop table cached_map if exists
+14:13:20,679 DEBUG SQL:104 - 
+    drop table cached_set if exists
+14:13:20,680 DEBUG SQL:104 - 
+    drop table category if exists
+14:13:20,680 DEBUG SQL:104 - 
+    drop table foo_dates if exists
+14:13:20,680 DEBUG SQL:104 - 
+    drop table foo_dep_table if exists
+14:13:20,680 DEBUG SQL:104 - 
+    drop table foo_times if exists
+14:13:20,680 DEBUG SQL:104 - 
+    drop table foobytes if exists
+14:13:20,681 DEBUG SQL:104 - 
+    drop table human_nick_names if exists
+14:13:20,681 DEBUG SQL:104 - 
+    drop table int_array if exists
+14:13:20,681 DEBUG SQL:104 - 
+    drop table jointable if exists
+14:13:20,681 DEBUG SQL:104 - 
+    drop table leafsubclass if exists
+14:13:20,681 DEBUG SQL:104 - 
+    drop table leafsubsubclass if exists
+14:13:20,681 DEBUG SQL:104 - 
+    drop table many if exists
+14:13:20,682 DEBUG SQL:104 - 
+    drop table mtm if exists
+14:13:20,682 DEBUG SQL:104 - 
+    drop table nonleafsubclass if exists
+14:13:20,682 DEBUG SQL:104 - 
+    drop table one if exists
+14:13:20,682 DEBUG SQL:104 - 
+    drop table quux if exists
+14:13:20,683 DEBUG SQL:104 - 
+    drop table quux_fums if exists
+14:13:20,683 DEBUG SQL:104 - 
+    drop table rootclass if exists
+14:13:20,683 DEBUG SQL:104 - 
+    drop table simple_simple if exists
+14:13:20,709 DEBUG SQL:104 - 
+    drop table string_list if exists
+14:13:20,710 DEBUG SQL:104 - 
+    drop table topcomponents if exists
+14:13:20,710 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:13:20,711  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:13:20,711  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

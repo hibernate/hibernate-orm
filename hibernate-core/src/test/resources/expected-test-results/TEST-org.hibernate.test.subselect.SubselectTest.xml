@@ -1,0 +1,714 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.subselect.SubselectTest" tests="2" time="0.294" timestamp="2013-02-28T20:19:22">
+  <properties />
+  <testcase classname="org.hibernate.test.subselect.SubselectTest" name="testCustomColumnReadAndWrite" time="0.144" />
+  <testcase classname="org.hibernate.test.subselect.SubselectTest" name="testEntitySubselect" time="0.112" />
+  <system-out><![CDATA[14:19:22,175  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.subselect.SubselectTest
+14:19:22,177  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/subselect/Beings.hbm.xml
+14:19:22,185  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:22,186  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:22,186  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:22,186  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:22,186  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:22,187  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:22,188  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:22,188  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:22,189  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:22,189  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:22,198  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:22,199 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:22,199 DEBUG SQL:104 - 
+    drop table aliens if exists
+14:19:22,199 DEBUG SQL:104 - 
+    drop table humans if exists
+14:19:22,199 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:19:22,199 DEBUG SQL:104 - 
+    create table aliens (
+        bid bigint not null,
+        ident varchar(255) not null,
+        planet varchar(255),
+        species varchar(255) not null,
+        height_centimeters double not null,
+        primary key (bid)
+    )
+14:19:22,200 DEBUG SQL:104 - 
+    create table humans (
+        bid bigint not null,
+        name varchar(255) not null,
+        sex char(255) not null,
+        address varchar(255),
+        height_centimeters double not null,
+        primary key (bid)
+    )
+14:19:22,200 DEBUG SQL:104 - 
+    create table hibernate_unique_key (
+         next_hi integer 
+    )
+14:19:22,200 DEBUG SQL:104 - 
+    insert into hibernate_unique_key values ( 0 )
+14:19:22,200  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:22,201  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:22,201  INFO CustomRunner:139 - Test: testCustomColumnReadAndWrite
+14:19:22,205 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:19:22,212 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:19:22,213 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:19:22,213 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:19:22,213 DEBUG SQL:104 - 
+    insert 
+    into
+        humans
+        (name, sex, address, height_centimeters, bid) 
+    values
+        (?, ?, ?, ? * 2.54E0, ?)
+14:19:22,214 DEBUG SQL:104 - 
+    insert 
+    into
+        aliens
+        (ident, planet, species, height_centimeters, bid) 
+    values
+        (?, ?, ?, ? * 2.54E0, ?)
+14:19:22,222 DEBUG SQL:104 - 
+    select
+        height_centimeters 
+    from
+        humans
+14:19:22,223 DEBUG SQL:104 - 
+    select
+        height_centimeters 
+    from
+        aliens
+14:19:22,223 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select heightInches from org.hibernate.test.subselect.Being b where b.identity = 'gavin'
+14:19:22,224 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'subselect'
+    |  |     |  \-[IDENT] Node: 'Being'
+    |  |     \-[ALIAS] Node: 'b'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'heightInches'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'b'
+          |  \-[IDENT] Node: 'identity'
+          \-[QUOTED_STRING] Node: ''gavin''
+
+14:19:22,225 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,225 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.subselect.Being (b) -> being0_
+14:19:22,225 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:22,225 DEBUG DotNode:599 - getDataType() : heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:19:22,225 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.heightInches -> being0_.height_centimeters / 2.54E0
+14:19:22,225 DEBUG FromReferenceNode:74 - Resolved : b -> being0_.bid
+14:19:22,226 DEBUG DotNode:599 - getDataType() : identity -> org.hibernate.type.StringType@2dc8de40
+14:19:22,226 DEBUG FromReferenceNode:74 - Resolved : b.identity -> being0_.ident
+14:19:22,226 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( being0_.height_centimeters / 2.54E0 {synthetic-alias} heightInches ) ) ( FromClause{level=1} ( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_ ) ( where ( = ( being0_.ident being0_.bid identity ) 'gavin' ) ) )
+14:19:22,226 DEBUG JoinProcessor:175 - Using FROM fragment [( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_]
+14:19:22,293 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ),humans,aliens)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'being0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=heightInches,path={synthetic-alias}.heightInches,tableAlias=being0_,className=org.hibernate.test.subselect.Being,classAlias=b}
+    |  |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+    |  |  \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[b], fromElementByTableAlias=[being0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ),tableAlias=being0_,origin=null,columns={,className=org.hibernate.test.subselect.Being}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'being0_.ident' {propertyName=identity,dereferenceType=ALL,propertyPath=identity,path=b.identity,tableAlias=being0_,className=org.hibernate.test.subselect.Being,classAlias=b}
+          |  +-[ALIAS_REF] IdentNode: 'being0_.bid' {alias=b, className=org.hibernate.test.subselect.Being, tableAlias=being0_}
+          |  \-[IDENT] IdentNode: 'identity' {originalText=identity}
+          \-[QUOTED_STRING] LiteralNode: ''gavin''
+
+14:19:22,294 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,294 DEBUG QueryTranslatorImpl:235 - HQL: select heightInches from org.hibernate.test.subselect.Being b where b.identity = 'gavin'
+14:19:22,294 DEBUG QueryTranslatorImpl:236 - SQL: select being0_.height_centimeters / 2.54E0 as col_0_0_ from ( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_ where being0_.ident='gavin'
+14:19:22,294 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,294 DEBUG SQL:104 - 
+    select
+        being0_.height_centimeters / 2.54E0 as col_0_0_ 
+    from
+        (     select
+            bid,
+            name as ident,
+            address as loc,
+            'human' as species,
+            height_centimeters    
+        from
+            humans     
+        union
+        select
+            bid,
+            ident,
+            planet as loc,
+            species,
+            height_centimeters    
+        from
+            aliens    
+    ) being0_ 
+where
+    being0_.ident='gavin'
+14:19:22,309 DEBUG SQL:104 - 
+    select
+        this_.bid as bid0_0_,
+        this_.ident as ident0_0_,
+        this_.loc as loc0_0_,
+        this_.species as species0_0_,
+        this_.height_centimeters / 2.54E0 as height5_0_0_ 
+    from
+        (     select
+            bid,
+            name as ident,
+            address as loc,
+            'human' as species,
+            height_centimeters    
+        from
+            humans     
+        union
+        select
+            bid,
+            ident,
+            planet as loc,
+            species,
+            height_centimeters    
+        from
+            aliens    
+    ) this_ 
+where
+    this_.height_centimeters / 2.54E0 between ? and ?
+14:19:22,310 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.subselect.Being b where b.heightInches between ? and ?
+14:19:22,311 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'subselect'
+    |        |  \-[IDENT] Node: 'Being'
+    |        \-[ALIAS] Node: 'b'
+    \-[WHERE] Node: 'where'
+       \-[BETWEEN] Node: 'between'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'b'
+          |  \-[IDENT] Node: 'heightInches'
+          +-[PARAM] Node: '?'
+          \-[PARAM] Node: '?'
+
+14:19:22,311 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,311 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.subselect.Being (b) -> being0_
+14:19:22,312 DEBUG FromReferenceNode:74 - Resolved : b -> being0_.bid
+14:19:22,312 DEBUG DotNode:599 - getDataType() : heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:19:22,312 DEBUG FromReferenceNode:74 - Resolved : b.heightInches -> being0_.height_centimeters / 2.54E0
+14:19:22,312  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 72.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:19:22,312  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 78.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:19:22,312 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_ ) ( where ( between ( being0_.height_centimeters / 2.54E0 being0_.bid heightInches ) ? ? ) ) )
+14:19:22,312 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:22,312 DEBUG JoinProcessor:175 - Using FROM fragment [( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_]
+14:19:22,313 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ),humans,aliens)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'being0_.bid as bid0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ),tableAlias=being0_,origin=null,columns={,className=org.hibernate.test.subselect.Being}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'being0_.ident as ident0_, being0_.loc as loc0_, being0_.species as species0_, being0_.height_centimeters / 2.54E0 as height5_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[b], fromElementByTableAlias=[being0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ),tableAlias=being0_,origin=null,columns={,className=org.hibernate.test.subselect.Being}}
+    \-[WHERE] SqlNode: 'where'
+       \-[BETWEEN] BetweenOperatorNode: 'between'
+          +-[DOT] DotNode: 'being0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=heightInches,path=b.heightInches,tableAlias=being0_,className=org.hibernate.test.subselect.Being,classAlias=b}
+          |  +-[ALIAS_REF] IdentNode: 'being0_.bid' {alias=b, className=org.hibernate.test.subselect.Being, tableAlias=being0_}
+          |  \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+          +-[PARAM] ParameterNode: '?' {ordinal=0, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+          \-[PARAM] ParameterNode: '?' {ordinal=1, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+
+14:19:22,333 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,334 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.subselect.Being b where b.heightInches between ? and ?
+14:19:22,334 DEBUG QueryTranslatorImpl:236 - SQL: select being0_.bid as bid0_, being0_.ident as ident0_, being0_.loc as loc0_, being0_.species as species0_, being0_.height_centimeters / 2.54E0 as height5_0_ from ( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_ where being0_.height_centimeters / 2.54E0 between ? and ?
+14:19:22,334 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,334 DEBUG SQL:104 - 
+    select
+        being0_.bid as bid0_,
+        being0_.ident as ident0_,
+        being0_.loc as loc0_,
+        being0_.species as species0_,
+        being0_.height_centimeters / 2.54E0 as height5_0_ 
+    from
+        (     select
+            bid,
+            name as ident,
+            address as loc,
+            'human' as species,
+            height_centimeters    
+        from
+            humans     
+        union
+        select
+            bid,
+            ident,
+            planet as loc,
+            species,
+            height_centimeters    
+        from
+            aliens    
+    ) being0_ 
+where
+    being0_.height_centimeters / 2.54E0 between ? and ?
+14:19:22,345 DEBUG SQL:104 - 
+    delete 
+    from
+        humans 
+    where
+        bid=?
+14:19:22,345 DEBUG SQL:104 - 
+    delete 
+    from
+        aliens 
+    where
+        bid=?
+14:19:22,346  INFO CustomRunner:139 - Test: testEntitySubselect
+14:19:22,347 DEBUG SQL:104 - 
+    insert 
+    into
+        humans
+        (name, sex, address, height_centimeters, bid) 
+    values
+        (?, ?, ?, ? * 2.54E0, ?)
+14:19:22,352 DEBUG SQL:104 - 
+    insert 
+    into
+        aliens
+        (ident, planet, species, height_centimeters, bid) 
+    values
+        (?, ?, ?, ? * 2.54E0, ?)
+14:19:22,353 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.subselect.Being
+14:19:22,354 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'subselect'
+                \-[IDENT] Node: 'Being'
+
+14:19:22,354 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,354 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.subselect.Being (<no alias>) -> being0_
+14:19:22,354 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_ ) )
+14:19:22,354 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:22,354 DEBUG JoinProcessor:175 - Using FROM fragment [( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_]
+14:19:22,355 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ),humans,aliens)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'being0_.bid as bid0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ),tableAlias=being0_,origin=null,columns={,className=org.hibernate.test.subselect.Being}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'being0_.ident as ident0_, being0_.loc as loc0_, being0_.species as species0_, being0_.height_centimeters / 2.54E0 as height5_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[being0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: '( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ),tableAlias=being0_,origin=null,columns={,className=org.hibernate.test.subselect.Being}}
+
+14:19:22,366 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,366 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.subselect.Being
+14:19:22,366 DEBUG QueryTranslatorImpl:236 - SQL: select being0_.bid as bid0_, being0_.ident as ident0_, being0_.loc as loc0_, being0_.species as species0_, being0_.height_centimeters / 2.54E0 as height5_0_ from ( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_
+14:19:22,376 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,376 DEBUG SQL:104 - 
+    select
+        being0_.bid as bid0_,
+        being0_.ident as ident0_,
+        being0_.loc as loc0_,
+        being0_.species as species0_,
+        being0_.height_centimeters / 2.54E0 as height5_0_ 
+    from
+        (     select
+            bid,
+            name as ident,
+            address as loc,
+            'human' as species,
+            height_centimeters    
+        from
+            humans     
+        union
+        select
+            bid,
+            ident,
+            planet as loc,
+            species,
+            height_centimeters    
+        from
+            aliens    
+    ) being0_
+14:19:22,378 DEBUG SQL:104 - 
+    select
+        being0_.bid as bid0_0_,
+        being0_.ident as ident0_0_,
+        being0_.loc as loc0_0_,
+        being0_.species as species0_0_,
+        being0_.height_centimeters / 2.54E0 as height5_0_0_ 
+    from
+        (     select
+            bid,
+            name as ident,
+            address as loc,
+            'human' as species,
+            height_centimeters    
+        from
+            humans     
+        union
+        select
+            bid,
+            ident,
+            planet as loc,
+            species,
+            height_centimeters    
+        from
+            aliens    
+    ) being0_ 
+where
+    being0_.bid=?
+14:19:22,399 DEBUG SQL:104 - 
+    select
+        human0_.bid as bid2_0_,
+        human0_.name as name2_0_,
+        human0_.sex as sex2_0_,
+        human0_.address as address2_0_,
+        human0_.height_centimeters / 2.54E0 as height5_2_0_ 
+    from
+        humans human0_ 
+    where
+        human0_.bid=?
+14:19:22,399 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.subselect.Being b where b.location like '%GA%'
+14:19:22,401 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'subselect'
+    |        |  \-[IDENT] Node: 'Being'
+    |        \-[ALIAS] Node: 'b'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'b'
+          |  \-[IDENT] Node: 'location'
+          \-[QUOTED_STRING] Node: ''%GA%''
+
+14:19:22,407 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,407 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.subselect.Being (b) -> being0_
+14:19:22,407 DEBUG FromReferenceNode:74 - Resolved : b -> being0_.bid
+14:19:22,407 DEBUG DotNode:599 - getDataType() : location -> org.hibernate.type.StringType@2dc8de40
+14:19:22,407 DEBUG FromReferenceNode:74 - Resolved : b.location -> being0_.loc
+14:19:22,407 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_ ) ( where ( like ( being0_.loc being0_.bid location ) '%GA%' ) ) )
+14:19:22,417 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:22,417 DEBUG JoinProcessor:175 - Using FROM fragment [( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_]
+14:19:22,417 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ),humans,aliens)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'being0_.bid as bid0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ),tableAlias=being0_,origin=null,columns={,className=org.hibernate.test.subselect.Being}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'being0_.ident as ident0_, being0_.loc as loc0_, being0_.species as species0_, being0_.height_centimeters / 2.54E0 as height5_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[b], fromElementByTableAlias=[being0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ),tableAlias=being0_,origin=null,columns={,className=org.hibernate.test.subselect.Being}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'being0_.loc' {propertyName=location,dereferenceType=ALL,propertyPath=location,path=b.location,tableAlias=being0_,className=org.hibernate.test.subselect.Being,classAlias=b}
+          |  +-[ALIAS_REF] IdentNode: 'being0_.bid' {alias=b, className=org.hibernate.test.subselect.Being, tableAlias=being0_}
+          |  \-[IDENT] IdentNode: 'location' {originalText=location}
+          \-[QUOTED_STRING] LiteralNode: ''%GA%''
+
+14:19:22,427 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,427 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.subselect.Being b where b.location like '%GA%'
+14:19:22,427 DEBUG QueryTranslatorImpl:236 - SQL: select being0_.bid as bid0_, being0_.ident as ident0_, being0_.loc as loc0_, being0_.species as species0_, being0_.height_centimeters / 2.54E0 as height5_0_ from ( 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
+			from humans 
+			union 
+			select bid, ident, planet as loc, species, height_centimeters
+			from aliens
+		 ) being0_ where being0_.loc like '%GA%'
+14:19:22,437 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,438 DEBUG SQL:104 - 
+    update
+        humans 
+    set
+        name=?,
+        address=?,
+        height_centimeters=? * 2.54E0 
+    where
+        bid=?
+14:19:22,438 DEBUG SQL:104 - 
+    select
+        being0_.bid as bid0_,
+        being0_.ident as ident0_,
+        being0_.loc as loc0_,
+        being0_.species as species0_,
+        being0_.height_centimeters / 2.54E0 as height5_0_ 
+    from
+        (     select
+            bid,
+            name as ident,
+            address as loc,
+            'human' as species,
+            height_centimeters    
+        from
+            humans     
+        union
+        select
+            bid,
+            ident,
+            planet as loc,
+            species,
+            height_centimeters    
+        from
+            aliens    
+    ) being0_ 
+where
+    being0_.loc like '%GA%'
+14:19:22,448 DEBUG SQL:104 - 
+    delete 
+    from
+        humans 
+    where
+        bid=?
+14:19:22,449 DEBUG SQL:104 - 
+    delete 
+    from
+        aliens 
+    where
+        bid=?
+14:19:22,449 DEBUG SQL:104 - 
+    select
+        being0_.bid as bid0_,
+        being0_.ident as ident0_,
+        being0_.loc as loc0_,
+        being0_.species as species0_,
+        being0_.height_centimeters / 2.54E0 as height5_0_ 
+    from
+        (     select
+            bid,
+            name as ident,
+            address as loc,
+            'human' as species,
+            height_centimeters    
+        from
+            humans     
+        union
+        select
+            bid,
+            ident,
+            planet as loc,
+            species,
+            height_centimeters    
+        from
+            aliens    
+    ) being0_
+14:19:22,458  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:22,459 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:22,459 DEBUG SQL:104 - 
+    drop table aliens if exists
+14:19:22,459 DEBUG SQL:104 - 
+    drop table humans if exists
+14:19:22,460 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:19:22,460  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:22,460  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

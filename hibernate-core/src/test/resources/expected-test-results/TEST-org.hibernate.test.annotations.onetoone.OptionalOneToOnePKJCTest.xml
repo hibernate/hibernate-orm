@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.onetoone.OptionalOneToOnePKJCTest" tests="4" time="0.138" timestamp="2013-02-28T20:10:40">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OptionalOneToOnePKJCTest" name="testNotFoundBidirAssignedId" time="0.038" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OptionalOneToOnePKJCTest" name="testNotFoundBidirDefaultIdGenerator" time="0.029" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OptionalOneToOnePKJCTest" name="testNotFoundBidirForeignIdGenerator" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OptionalOneToOnePKJCTest" name="testNullBidirForeignIdGenerator" time="0.001" />
+  <system-out><![CDATA[14:10:40,950  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.onetoone.OptionalOneToOnePKJCTest
+14:10:40,988  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:40,988  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:40,988  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:40,988  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:40,988  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:40,990  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:40,990  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:40,990  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:40,991  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:40,991  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:41,004  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:41,004 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:41,004 DEBUG SQL:104 - 
+    alter table father_son 
+        drop constraint FKC58E642FB40B8978
+14:10:41,005 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table father_son drop constraint FKC58E642FB40B8978
+14:10:41,005 ERROR SchemaExport:426 - Table "FATHER_SON" not found; SQL statement:
+
+    alter table father_son 
+        drop constraint FKC58E642FB40B8978 [42102-145]
+14:10:41,005 DEBUG SQL:104 - 
+    alter table father_son 
+        drop constraint FKC58E642FCEC3E6EF
+14:10:41,005 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table father_son drop constraint FKC58E642FCEC3E6EF
+14:10:41,005 ERROR SchemaExport:426 - Table "FATHER_SON" not found; SQL statement:
+
+    alter table father_son 
+        drop constraint FKC58E642FCEC3E6EF [42102-145]
+14:10:41,005 DEBUG SQL:104 - 
+    drop table Father if exists
+14:10:41,005 DEBUG SQL:104 - 
+    drop table Owner if exists
+14:10:41,005 DEBUG SQL:104 - 
+    drop table OwnerAddress if exists
+14:10:41,006 DEBUG SQL:104 - 
+    drop table Party if exists
+14:10:41,006 DEBUG SQL:104 - 
+    drop table PartyAffiliate if exists
+14:10:41,006 DEBUG SQL:104 - 
+    drop table Person if exists
+14:10:41,006 DEBUG SQL:104 - 
+    drop table PersonAddress if exists
+14:10:41,006 DEBUG SQL:104 - 
+    drop table Son if exists
+14:10:41,006 DEBUG SQL:104 - 
+    drop table father_son if exists
+14:10:41,006 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:41,006 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:41,007 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:41,007 DEBUG SQL:104 - 
+    create table Father (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:41,007 DEBUG SQL:104 - 
+    create table Owner (
+        id integer not null,
+        primary key (id)
+    )
+14:10:41,007 DEBUG SQL:104 - 
+    create table OwnerAddress (
+        id integer not null,
+        primary key (id)
+    )
+14:10:41,008 DEBUG SQL:104 - 
+    create table Party (
+        partyId varchar(255) not null,
+        primary key (partyId)
+    )
+14:10:41,008 DEBUG SQL:104 - 
+    create table PartyAffiliate (
+        partyId varchar(255) not null,
+        affiliateName varchar(255),
+        primary key (partyId)
+    )
+14:10:41,008 DEBUG SQL:104 - 
+    create table Person (
+        id integer not null,
+        primary key (id)
+    )
+14:10:41,008 DEBUG SQL:104 - 
+    create table PersonAddress (
+        id integer not null,
+        primary key (id)
+    )
+14:10:41,009 DEBUG SQL:104 - 
+    create table Son (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:41,009 DEBUG SQL:104 - 
+    create table father_son (
+        bar integer,
+        foo integer not null,
+        primary key (foo)
+    )
+14:10:41,009 DEBUG SQL:104 - 
+    alter table father_son 
+        add constraint FKC58E642FB40B8978 
+        foreign key (bar) 
+        references Father
+14:10:41,010 DEBUG SQL:104 - 
+    alter table father_son 
+        add constraint FKC58E642FCEC3E6EF 
+        foreign key (foo) 
+        references Son
+14:10:41,010 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:41,011  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:41,012  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:41,012  INFO CustomRunner:139 - Test: testNotFoundBidirAssignedId
+14:10:41,024 DEBUG SQL:104 - 
+    insert 
+    into
+        Party
+        (partyId) 
+    values
+        (?)
+14:10:41,025 DEBUG SQL:104 - 
+    select
+        party0_.partyId as partyId3_1_,
+        partyaffil1_.partyId as partyId4_0_,
+        partyaffil1_.affiliateName as affiliat2_4_0_ 
+    from
+        Party party0_ 
+    left outer join
+        PartyAffiliate partyaffil1_ 
+            on party0_.partyId=partyaffil1_.partyId 
+    where
+        party0_.partyId=?
+14:10:41,048 DEBUG SQL:104 - 
+    select
+        this_.partyId as partyId3_1_,
+        partyaffil2_.partyId as partyId4_0_,
+        partyaffil2_.affiliateName as affiliat2_4_0_ 
+    from
+        Party this_ 
+    left outer join
+        PartyAffiliate partyaffil2_ 
+            on this_.partyId=partyaffil2_.partyId 
+    where
+        this_.partyId = ?
+14:10:41,049 DEBUG SQL:104 - 
+    delete 
+    from
+        Party 
+    where
+        partyId=?
+14:10:41,050  INFO CustomRunner:139 - Test: testNotFoundBidirDefaultIdGenerator
+14:10:41,051 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:41,065 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (id) 
+    values
+        (?)
+14:10:41,066 DEBUG SQL:104 - 
+    select
+        owner0_.id as id1_1_,
+        owneraddre1_.id as id2_0_ 
+    from
+        Owner owner0_ 
+    left outer join
+        OwnerAddress owneraddre1_ 
+            on owner0_.id=owneraddre1_.id 
+    where
+        owner0_.id=?
+14:10:41,068 DEBUG SQL:104 - 
+    select
+        this_.id as id1_1_,
+        owneraddre2_.id as id2_0_ 
+    from
+        Owner this_ 
+    left outer join
+        OwnerAddress owneraddre2_ 
+            on this_.id=owneraddre2_.id 
+    where
+        this_.id = ?
+14:10:41,069 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner 
+    where
+        id=?
+14:10:41,080  INFO CustomRunner:139 - Test: testNotFoundBidirForeignIdGenerator
+14:10:41,082  INFO CustomRunner:139 - Test: testNullBidirForeignIdGenerator
+14:10:41,083  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:41,083 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:41,083 DEBUG SQL:104 - 
+    alter table father_son 
+        drop constraint FKC58E642FB40B8978
+14:10:41,084 DEBUG SQL:104 - 
+    alter table father_son 
+        drop constraint FKC58E642FCEC3E6EF
+14:10:41,084 DEBUG SQL:104 - 
+    drop table Father if exists
+14:10:41,084 DEBUG SQL:104 - 
+    drop table Owner if exists
+14:10:41,084 DEBUG SQL:104 - 
+    drop table OwnerAddress if exists
+14:10:41,085 DEBUG SQL:104 - 
+    drop table Party if exists
+14:10:41,085 DEBUG SQL:104 - 
+    drop table PartyAffiliate if exists
+14:10:41,085 DEBUG SQL:104 - 
+    drop table Person if exists
+14:10:41,085 DEBUG SQL:104 - 
+    drop table PersonAddress if exists
+14:10:41,085 DEBUG SQL:104 - 
+    drop table Son if exists
+14:10:41,086 DEBUG SQL:104 - 
+    drop table father_son if exists
+14:10:41,086 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:41,086  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:41,086  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

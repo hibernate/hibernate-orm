@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest" tests="9" time="0.033" timestamp="2013-02-28T20:10:45">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest" name="testAllAttributes" time="0.004" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest" name="testCascadeAll" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest" name="testCascadeAllPlusMore" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest" name="testCascadeSomeWithDefaultPersist" time="0.004" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest" name="testJoinTableAllChildren" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest" name="testJoinTableNoChildren" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest" name="testMultipleJoinColumns" time="0.004" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest" name="testNoJoins" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest" name="testSingleJoinColumn" time="0.003" />
+  <system-out><![CDATA[14:10:45,403  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToOneTest
+14:10:45,403  INFO CustomRunner:139 - Test: testAllAttributes
+14:10:45,408  INFO CustomRunner:139 - Test: testCascadeAll
+14:10:45,411  INFO CustomRunner:139 - Test: testCascadeAllPlusMore
+14:10:45,413  INFO CustomRunner:139 - Test: testCascadeSomeWithDefaultPersist
+14:10:45,418  INFO CustomRunner:139 - Test: testJoinTableAllChildren
+14:10:45,421  INFO CustomRunner:139 - Test: testJoinTableNoChildren
+14:10:45,424  INFO CustomRunner:139 - Test: testMultipleJoinColumns
+14:10:45,428  INFO CustomRunner:139 - Test: testNoJoins
+14:10:45,431  INFO CustomRunner:139 - Test: testSingleJoinColumn
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

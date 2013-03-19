@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.dialect.SQLServer2005DialectTestCase" tests="9" time="0.06" timestamp="2013-02-28T20:09:52">
+  <properties />
+  <testcase classname="org.hibernate.dialect.SQLServer2005DialectTestCase" name="testGetLimitString" time="0.007" />
+  <testcase classname="org.hibernate.dialect.SQLServer2005DialectTestCase" name="testGetLimitStringCaseSensitive" time="0.005" />
+  <testcase classname="org.hibernate.dialect.SQLServer2005DialectTestCase" name="testGetLimitStringDistinctWithinAggregation" time="0.003" />
+  <testcase classname="org.hibernate.dialect.SQLServer2005DialectTestCase" name="testGetLimitStringSelectingAllColumns" time="0.002" />
+  <testcase classname="org.hibernate.dialect.SQLServer2005DialectTestCase" name="testGetLimitStringSelectingMultipleColumnsFromSeveralTables" time="0.003" />
+  <testcase classname="org.hibernate.dialect.SQLServer2005DialectTestCase" name="testGetLimitStringWithCastOperator" time="0.005" />
+  <testcase classname="org.hibernate.dialect.SQLServer2005DialectTestCase" name="testGetLimitStringWithFromColumnName" time="0.003" />
+  <testcase classname="org.hibernate.dialect.SQLServer2005DialectTestCase" name="testGetLimitStringWithMaxOnly" time="0.003" />
+  <testcase classname="org.hibernate.dialect.SQLServer2005DialectTestCase" name="testGetLimitStringWithSubselect" time="0.002" />
+  <system-out><![CDATA[14:09:52,867  INFO CustomRunner:132 - BeforeClass: org.hibernate.dialect.SQLServer2005DialectTestCase
+14:09:52,869  INFO CustomRunner:139 - Test: testGetLimitString
+14:09:52,871  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2005Dialect
+14:09:52,878  INFO CustomRunner:139 - Test: testGetLimitStringCaseSensitive
+14:09:52,880  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2005Dialect
+14:09:52,884  INFO CustomRunner:139 - Test: testGetLimitStringDistinctWithinAggregation
+14:09:52,886  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2005Dialect
+14:09:52,888  INFO CustomRunner:139 - Test: testGetLimitStringSelectingAllColumns
+14:09:52,889  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2005Dialect
+14:09:52,891  INFO CustomRunner:139 - Test: testGetLimitStringSelectingMultipleColumnsFromSeveralTables
+14:09:52,893  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2005Dialect
+14:09:52,895  INFO CustomRunner:139 - Test: testGetLimitStringWithCastOperator
+14:09:52,901  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2005Dialect
+14:09:52,904  INFO CustomRunner:139 - Test: testGetLimitStringWithFromColumnName
+14:09:52,907  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2005Dialect
+14:09:52,910  INFO CustomRunner:139 - Test: testGetLimitStringWithMaxOnly
+14:09:52,912  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2005Dialect
+14:09:52,914  INFO CustomRunner:139 - Test: testGetLimitStringWithSubselect
+14:09:52,915  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServer2005Dialect
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

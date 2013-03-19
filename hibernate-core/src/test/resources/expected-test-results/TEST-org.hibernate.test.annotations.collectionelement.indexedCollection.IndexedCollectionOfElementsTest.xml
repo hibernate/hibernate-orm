@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.collectionelement.indexedCollection.IndexedCollectionOfElementsTest" tests="1" time="0.045" timestamp="2013-02-28T20:10:17">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.collectionelement.indexedCollection.IndexedCollectionOfElementsTest" name="testIndexedCollectionOfElements" time="0.007" />
+  <system-out><![CDATA[14:10:17,347  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.collectionelement.indexedCollection.IndexedCollectionOfElementsTest
+14:10:17,353  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:17,354  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:17,354  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:17,354  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:17,354  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:17,356  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:17,356  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:17,357  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:17,357  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:17,357  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:17,365  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:17,365 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:17,366 DEBUG SQL:104 - 
+    alter table contact 
+        drop constraint FK38B724204F97763C
+14:10:17,366 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table contact drop constraint FK38B724204F97763C
+14:10:17,367 ERROR SchemaExport:426 - Table "CONTACT" not found; SQL statement:
+
+    alter table contact 
+        drop constraint FK38B724204F97763C [42102-145]
+14:10:17,367 DEBUG SQL:104 - 
+    drop table Sale if exists
+14:10:17,367 DEBUG SQL:104 - 
+    drop table contact if exists
+14:10:17,367 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:17,367 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:17,367 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:17,368 DEBUG SQL:104 - 
+    create table Sale (
+        id integer not null,
+        primary key (id)
+    )
+14:10:17,368 DEBUG SQL:104 - 
+    create table contact (
+        n_key_person integer not null,
+        name varchar(255),
+        n_key_contact bigint not null,
+        primary key (n_key_contact)
+    )
+14:10:17,380 DEBUG SQL:104 - 
+    alter table contact 
+        add constraint FK38B724204F97763C 
+        foreign key (n_key_person) 
+        references Sale
+14:10:17,381 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:17,381  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:17,381  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:17,382  INFO CustomRunner:139 - Test: testIndexedCollectionOfElements
+14:10:17,382 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:17,386 DEBUG SQL:104 - 
+    insert 
+    into
+        Sale
+        (id) 
+    values
+        (?)
+14:10:17,386 DEBUG SQL:104 - 
+    select
+        max(n_key_contact) 
+    from
+        contact
+14:10:17,386 DEBUG SQL:104 - 
+    insert 
+    into
+        contact
+        (n_key_person, n_key_contact, name) 
+    values
+        (?, ?, ?)
+14:10:17,389  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:17,390 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:17,390 DEBUG SQL:104 - 
+    alter table contact 
+        drop constraint FK38B724204F97763C
+14:10:17,390 DEBUG SQL:104 - 
+    drop table Sale if exists
+14:10:17,391 DEBUG SQL:104 - 
+    drop table contact if exists
+14:10:17,391 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:17,391  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:17,391  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.jdbc.internal.BasicConnectionTest" tests="2" time="0.019" timestamp="2013-02-28T20:14:48">
+  <properties />
+  <testcase classname="org.hibernate.test.jdbc.internal.BasicConnectionTest" name="testBasicJdbcUsage" time="0.005" />
+  <testcase classname="org.hibernate.test.jdbc.internal.BasicConnectionTest" name="testExceptionHandling" time="0.001" />
+  <system-out><![CDATA[14:14:48,544  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.jdbc.internal.BasicConnectionTest
+14:14:48,545  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:48,546  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:48,546  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:48,546  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:48,546  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:48,547  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:48,547  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:48,548  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:48,548  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:48,548  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:48,551  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:48,551 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:48,551  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:48,552  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:48,552  INFO CustomRunner:139 - Test: testBasicJdbcUsage
+14:14:48,553 DEBUG SQL:104 - 
+    drop table SANDBOX_JDBC_TST if exists
+14:14:48,553 DEBUG SQL:104 - 
+    create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )
+14:14:48,553 DEBUG SQL:104 - 
+    insert 
+    into
+        SANDBOX_JDBC_TST
+        ( ID, NAME ) 
+    values
+        ( ?, ? )
+14:14:48,554 DEBUG SQL:104 - 
+    select
+        * 
+    from
+        SANDBOX_JDBC_TST
+14:14:48,558  INFO CustomRunner:139 - Test: testExceptionHandling
+14:14:48,559 DEBUG SQL:104 - 
+    select
+        count(*) 
+    from
+        NON_EXISTENT
+14:14:48,559  WARN SqlExceptionHelper:143 - SQL Error: 42102, SQLState: 42S02
+14:14:48,559 ERROR SqlExceptionHelper:144 - Table "NON_EXISTENT" not found; SQL statement:
+select count(*) from NON_EXISTENT [42102-145]
+14:14:48,560  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:48,560 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:48,560  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:48,561  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

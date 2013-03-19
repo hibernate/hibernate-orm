@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.jdbc.LobCreatorTest" tests="4" time="0.05" timestamp="2013-02-28T20:09:54">
+  <properties />
+  <testcase classname="org.hibernate.jdbc.LobCreatorTest" name="testConfiguredNonContextualLobCreator" time="0.03" />
+  <testcase classname="org.hibernate.jdbc.LobCreatorTest" name="testConnectedLobCreator" time="0.005" />
+  <testcase classname="org.hibernate.jdbc.LobCreatorTest" name="testJdbc3LobCreator" time="0.004" />
+  <testcase classname="org.hibernate.jdbc.LobCreatorTest" name="testJdbc4UnsupportedLobCreator" time="0.005" />
+  <system-out><![CDATA[14:09:54,255  INFO CustomRunner:132 - BeforeClass: org.hibernate.jdbc.LobCreatorTest
+14:09:54,255  INFO CustomRunner:139 - Test: testConfiguredNonContextualLobCreator
+14:09:54,257  INFO LobCreatorBuilder:81 - HHH000421: Disabling contextual LOB creation as hibernate.jdbc.lob.non_contextual_creation is true
+14:09:54,285  INFO CustomRunner:139 - Test: testConnectedLobCreator
+14:09:54,291  INFO CustomRunner:139 - Test: testJdbc3LobCreator
+14:09:54,295  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:54,296  INFO CustomRunner:139 - Test: testJdbc4UnsupportedLobCreator
+14:09:54,300  INFO LobCreatorBuilder:120 - HHH000424: Disabling contextual LOB creation as createClob() method threw error : java.lang.reflect.InvocationTargetException
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

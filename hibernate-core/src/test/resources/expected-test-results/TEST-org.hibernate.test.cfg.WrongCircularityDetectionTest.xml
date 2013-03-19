@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.cfg.WrongCircularityDetectionTest" tests="1" time="0.078" timestamp="2013-02-28T20:11:53">
+  <properties />
+  <testcase classname="org.hibernate.test.cfg.WrongCircularityDetectionTest" name="testNoCircularityDetection" time="0.038" />
+  <system-out><![CDATA[14:11:53,849  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.cfg.WrongCircularityDetectionTest
+14:11:53,850  INFO CustomRunner:139 - Test: testNoCircularityDetection
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

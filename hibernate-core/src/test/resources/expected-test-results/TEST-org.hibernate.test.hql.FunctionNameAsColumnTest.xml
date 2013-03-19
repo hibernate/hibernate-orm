@@ -1,0 +1,703 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.hql.FunctionNameAsColumnTest" tests="7" time="0.401" timestamp="2013-02-28T20:13:23">
+  <properties />
+  <testcase classname="org.hibernate.test.hql.FunctionNameAsColumnTest" name="testGetMultiColumnSameNameAsArgFunctionCriteria" time="0.03" />
+  <testcase classname="org.hibernate.test.hql.FunctionNameAsColumnTest" name="testGetMultiColumnSameNameAsArgFunctionHQL" time="0.085" />
+  <testcase classname="org.hibernate.test.hql.FunctionNameAsColumnTest" name="testGetMultiColumnSameNameAsNoArgFunctionCriteria" time="0.01" />
+  <testcase classname="org.hibernate.test.hql.FunctionNameAsColumnTest" name="testGetMultiColumnSameNameAsNoArgFunctionHQL" time="0.012" />
+  <testcase classname="org.hibernate.test.hql.FunctionNameAsColumnTest" name="testGetOneColumnSameNameAsArgFunctionCriteria" time="0.076" />
+  <testcase classname="org.hibernate.test.hql.FunctionNameAsColumnTest" name="testGetOneColumnSameNameAsArgFunctionHQL" time="0.023" />
+  <testcase classname="org.hibernate.test.hql.FunctionNameAsColumnTest" name="testNoArgFcnAndColumnSameNameAsNoArgFunctionHQL" time="0.001" />
+  <system-out><![CDATA[14:13:23,698  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.hql.FunctionNameAsColumnTest
+14:13:23,700  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/FunctionNamesAsColumns.hbm.xml
+14:13:23,775  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:13:23,775  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:13:23,776  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:13:23,776  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:13:23,776  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:13:23,777  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:13:23,778  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:13:23,778  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:13:23,779  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,779  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:13:23,799  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:13:23,800 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:13:23,800 DEBUG SQL:104 - 
+    alter table ENTITY_WITH_ARG_FN_AS_COL 
+        drop constraint FK41BED284AAA37684
+14:13:23,801 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ENTITY_WITH_ARG_FN_AS_COL drop constraint FK41BED284AAA37684
+14:13:23,801 ERROR SchemaExport:426 - Table "ENTITY_WITH_ARG_FN_AS_COL" not found; SQL statement:
+
+    alter table ENTITY_WITH_ARG_FN_AS_COL 
+        drop constraint FK41BED284AAA37684 [42102-145]
+14:13:23,801 DEBUG SQL:104 - 
+    alter table ENTITY_WITH_FN_AS_COL_HOLDER 
+        drop constraint FKF35BBF5E3ADED855
+14:13:23,801 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ENTITY_WITH_FN_AS_COL_HOLDER drop constraint FKF35BBF5E3ADED855
+14:13:23,801 ERROR SchemaExport:426 - Table "ENTITY_WITH_FN_AS_COL_HOLDER" not found; SQL statement:
+
+    alter table ENTITY_WITH_FN_AS_COL_HOLDER 
+        drop constraint FKF35BBF5E3ADED855 [42102-145]
+14:13:23,802 DEBUG SQL:104 - 
+    alter table ENTITY_WITH_NOARG_FN_AS_COL 
+        drop constraint FK9ECF6DA3AAA37684
+14:13:23,802 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ENTITY_WITH_NOARG_FN_AS_COL drop constraint FK9ECF6DA3AAA37684
+14:13:23,802 ERROR SchemaExport:426 - Table "ENTITY_WITH_NOARG_FN_AS_COL" not found; SQL statement:
+
+    alter table ENTITY_WITH_NOARG_FN_AS_COL 
+        drop constraint FK9ECF6DA3AAA37684 [42102-145]
+14:13:23,802 DEBUG SQL:104 - 
+    drop table ENTITY_WITH_ARG_FN_AS_COL if exists
+14:13:23,802 DEBUG SQL:104 - 
+    drop table ENTITY_WITH_FN_AS_COL_HOLDER if exists
+14:13:23,802 DEBUG SQL:104 - 
+    drop table ENTITY_WITH_NOARG_FN_AS_COL if exists
+14:13:23,803 DEBUG SQL:104 - 
+    create table ENTITY_WITH_ARG_FN_AS_COL (
+        ID bigint not null,
+        lower integer,
+        upper varchar(255),
+        HOLDER_ID bigint,
+        primary key (ID)
+    )
+14:13:23,803 DEBUG SQL:104 - 
+    create table ENTITY_WITH_FN_AS_COL_HOLDER (
+        ID bigint not null,
+        nextHolder bigint,
+        primary key (ID)
+    )
+14:13:23,803 DEBUG SQL:104 - 
+    create table ENTITY_WITH_NOARG_FN_AS_COL (
+        ID bigint not null,
+        "current_date" varchar(255),
+        HOLDER_ID bigint,
+        primary key (ID)
+    )
+14:13:23,804 DEBUG SQL:104 - 
+    alter table ENTITY_WITH_ARG_FN_AS_COL 
+        add constraint FK41BED284AAA37684 
+        foreign key (HOLDER_ID) 
+        references ENTITY_WITH_FN_AS_COL_HOLDER
+14:13:23,805 DEBUG SQL:104 - 
+    alter table ENTITY_WITH_FN_AS_COL_HOLDER 
+        add constraint FKF35BBF5E3ADED855 
+        foreign key (nextHolder) 
+        references ENTITY_WITH_FN_AS_COL_HOLDER
+14:13:23,805 DEBUG SQL:104 - 
+    alter table ENTITY_WITH_NOARG_FN_AS_COL 
+        add constraint FK9ECF6DA3AAA37684 
+        foreign key (HOLDER_ID) 
+        references ENTITY_WITH_FN_AS_COL_HOLDER
+14:13:23,806  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:13:23,807  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:13:23,807  INFO CustomRunner:139 - Test: testGetMultiColumnSameNameAsArgFunctionCriteria
+14:13:23,808 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        ENTITY_WITH_FN_AS_COL_HOLDER
+14:13:23,809 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        ENTITY_WITH_ARG_FN_AS_COL
+14:13:23,810 DEBUG SQL:104 - 
+    insert 
+    into
+        ENTITY_WITH_FN_AS_COL_HOLDER
+        (nextHolder, ID) 
+    values
+        (?, ?)
+14:13:23,810 DEBUG SQL:104 - 
+    insert 
+    into
+        ENTITY_WITH_ARG_FN_AS_COL
+        (lower, upper, ID) 
+    values
+        (?, ?, ?)
+14:13:23,810 DEBUG SQL:104 - 
+    insert 
+    into
+        ENTITY_WITH_FN_AS_COL_HOLDER
+        (nextHolder, ID) 
+    values
+        (?, ?)
+14:13:23,811 DEBUG SQL:104 - 
+    insert 
+    into
+        ENTITY_WITH_ARG_FN_AS_COL
+        (lower, upper, ID) 
+    values
+        (?, ?, ?)
+14:13:23,811 DEBUG SQL:104 - 
+    update
+        ENTITY_WITH_ARG_FN_AS_COL 
+    set
+        HOLDER_ID=? 
+    where
+        ID=?
+14:13:23,811 DEBUG SQL:104 - 
+    update
+        ENTITY_WITH_ARG_FN_AS_COL 
+    set
+        HOLDER_ID=? 
+    where
+        ID=?
+14:13:23,826 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_3_,
+        this_.nextHolder as nextHolder1_3_,
+        entitywith2_.ID as ID1_0_,
+        entitywith2_.nextHolder as nextHolder1_0_,
+        entitywith3_.HOLDER_ID as HOLDER4_1_5_,
+        entitywith3_.ID as ID0_5_,
+        entitywith3_.ID as ID0_1_,
+        entitywith3_.lower as lower0_1_,
+        entitywith3_.upper as upper0_1_,
+        entitywith4_.HOLDER_ID as HOLDER4_1_6_,
+        entitywith4_.ID as ID0_6_,
+        entitywith4_.ID as ID0_2_,
+        entitywith4_.lower as lower0_2_,
+        entitywith4_.upper as upper0_2_ 
+    from
+        ENTITY_WITH_FN_AS_COL_HOLDER this_ 
+    left outer join
+        ENTITY_WITH_FN_AS_COL_HOLDER entitywith2_ 
+            on this_.nextHolder=entitywith2_.ID 
+    left outer join
+        ENTITY_WITH_ARG_FN_AS_COL entitywith3_ 
+            on entitywith2_.ID=entitywith3_.HOLDER_ID 
+    left outer join
+        ENTITY_WITH_ARG_FN_AS_COL entitywith4_ 
+            on this_.ID=entitywith4_.HOLDER_ID 
+    where
+        this_.nextHolder is not null 
+    order by
+        entitywith3_.lower,
+        lower(entitywith3_.upper),
+        entitywith4_.lower,
+        lower(entitywith4_.upper)
+14:13:23,828 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.EntityWithArgFunctionAsColumn
+14:13:23,828 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'hql'
+             \-[IDENT] Node: 'EntityWithArgFunctionAsColumn'
+
+14:13:23,828 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,829 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.EntityWithArgFunctionAsColumn (<no alias>) -> entitywith0_
+14:13:23,829 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (ENTITY_WITH_ARG_FN_AS_COL)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[entitywith0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ENTITY_WITH_ARG_FN_AS_COL' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_ARG_FN_AS_COL,tableAlias=entitywith0_,origin=null,columns={,className=org.hibernate.test.hql.EntityWithArgFunctionAsColumn}}
+
+14:13:23,829 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,829 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,829 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_ARG_FN_AS_COL
+14:13:23,830 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.EntityWithNoArgFunctionAsColumn
+14:13:23,830 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'hql'
+             \-[IDENT] Node: 'EntityWithNoArgFunctionAsColumn'
+
+14:13:23,831 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,831 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.EntityWithNoArgFunctionAsColumn (<no alias>) -> entitywith0_
+14:13:23,831 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (ENTITY_WITH_NOARG_FN_AS_COL)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[entitywith0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ENTITY_WITH_NOARG_FN_AS_COL' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_NOARG_FN_AS_COL,tableAlias=entitywith0_,origin=null,columns={,className=org.hibernate.test.hql.EntityWithNoArgFunctionAsColumn}}
+
+14:13:23,831 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,831 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,831 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_NOARG_FN_AS_COL
+14:13:23,832 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.EntityWithFunctionAsColumnHolder where nextHolder is not null
+14:13:23,832 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'hql'
+    |        \-[IDENT] Node: 'EntityWithFunctionAsColumnHolder'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[IDENT] Node: 'nextHolder'
+
+14:13:23,832 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,833 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.EntityWithFunctionAsColumnHolder (<no alias>) -> entitywith0_
+14:13:23,833 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:23,833 DEBUG DotNode:599 - getDataType() : nextHolder -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.EntityWithFunctionAsColumnHolder)
+14:13:23,833 DEBUG DotNode:562 - dereferenceShortcut() : property nextHolder in org.hibernate.test.hql.EntityWithFunctionAsColumnHolder does not require a join.
+14:13:23,833 DEBUG DotNode:588 - Terminal propertyPath = [nextHolder]
+14:13:23,833 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.nextHolder -> nextHolder
+14:13:23,833 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (ENTITY_WITH_FN_AS_COL_HOLDER)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[entitywith0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'ENTITY_WITH_FN_AS_COL_HOLDER' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_FN_AS_COL_HOLDER,tableAlias=entitywith0_,origin=null,columns={,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[DOT] DotNode: 'nextHolder' {propertyName=nextHolder,dereferenceType=0,propertyPath=nextHolder,path={synthetic-alias}.nextHolder,tableAlias=entitywith0_,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder,classAlias=null}
+             +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             \-[IDENT] IdentNode: 'nextHolder' {originalText=nextHolder}
+
+14:13:23,833 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,834 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,834 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_FN_AS_COL_HOLDER 
+    where
+        nextHolder is not null
+14:13:23,834 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.EntityWithFunctionAsColumnHolder
+14:13:23,835 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'hql'
+             \-[IDENT] Node: 'EntityWithFunctionAsColumnHolder'
+
+14:13:23,835 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,835 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.EntityWithFunctionAsColumnHolder (<no alias>) -> entitywith0_
+14:13:23,836 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (ENTITY_WITH_FN_AS_COL_HOLDER)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[entitywith0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ENTITY_WITH_FN_AS_COL_HOLDER' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_FN_AS_COL_HOLDER,tableAlias=entitywith0_,origin=null,columns={,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder}}
+
+14:13:23,836 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,836 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,836 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_FN_AS_COL_HOLDER
+14:13:23,837  INFO CustomRunner:139 - Test: testGetMultiColumnSameNameAsArgFunctionHQL
+14:13:23,842 DEBUG SQL:104 - 
+    insert 
+    into
+        ENTITY_WITH_FN_AS_COL_HOLDER
+        (nextHolder, ID) 
+    values
+        (?, ?)
+14:13:23,843 DEBUG SQL:104 - 
+    insert 
+    into
+        ENTITY_WITH_ARG_FN_AS_COL
+        (lower, upper, ID) 
+    values
+        (?, ?, ?)
+14:13:23,843 DEBUG SQL:104 - 
+    insert 
+    into
+        ENTITY_WITH_FN_AS_COL_HOLDER
+        (nextHolder, ID) 
+    values
+        (?, ?)
+14:13:23,843 DEBUG SQL:104 - 
+    insert 
+    into
+        ENTITY_WITH_ARG_FN_AS_COL
+        (lower, upper, ID) 
+    values
+        (?, ?, ?)
+14:13:23,843 DEBUG SQL:104 - 
+    update
+        ENTITY_WITH_ARG_FN_AS_COL 
+    set
+        HOLDER_ID=? 
+    where
+        ID=?
+14:13:23,844 DEBUG SQL:104 - 
+    update
+        ENTITY_WITH_ARG_FN_AS_COL 
+    set
+        HOLDER_ID=? 
+    where
+        ID=?
+14:13:23,844 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.EntityWithFunctionAsColumnHolder h left join fetch h.entityWithArgFunctionAsColumns left join fetch h.nextHolder left join fetch h.nextHolder.entityWithArgFunctionAsColumns where h.nextHolder is not null
+14:13:23,846 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'hql'
+    |     |  |  \-[IDENT] Node: 'EntityWithFunctionAsColumnHolder'
+    |     |  \-[ALIAS] Node: 'h'
+    |     +-[JOIN] Node: 'join'
+    |     |  +-[LEFT] Node: 'left'
+    |     |  +-[FETCH] Node: 'fetch'
+    |     |  \-[DOT] Node: '.'
+    |     |     +-[IDENT] Node: 'h'
+    |     |     \-[IDENT] Node: 'entityWithArgFunctionAsColumns'
+    |     +-[JOIN] Node: 'join'
+    |     |  +-[LEFT] Node: 'left'
+    |     |  +-[FETCH] Node: 'fetch'
+    |     |  \-[DOT] Node: '.'
+    |     |     +-[IDENT] Node: 'h'
+    |     |     \-[IDENT] Node: 'nextHolder'
+    |     \-[JOIN] Node: 'join'
+    |        +-[LEFT] Node: 'left'
+    |        +-[FETCH] Node: 'fetch'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[IDENT] Node: 'h'
+    |           |  \-[IDENT] Node: 'nextHolder'
+    |           \-[IDENT] Node: 'entityWithArgFunctionAsColumns'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[DOT] Node: '.'
+             +-[IDENT] Node: 'h'
+             \-[IDENT] Node: 'nextHolder'
+
+14:13:23,852 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,852 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.EntityWithFunctionAsColumnHolder (h) -> entitywith0_
+14:13:23,852 DEBUG FromReferenceNode:74 - Resolved : h -> entitywith0_.ID
+14:13:23,852 DEBUG DotNode:599 - getDataType() : entityWithArgFunctionAsColumns -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.EntityWithFunctionAsColumnHolder.entityWithArgFunctionAsColumns)
+14:13:23,852 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = h.entityWithArgFunctionAsColumns role = org.hibernate.test.hql.EntityWithFunctionAsColumnHolder.entityWithArgFunctionAsColumns associatedEntityName = org.hibernate.test.hql.EntityWithArgFunctionAsColumn
+14:13:23,853 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.EntityWithArgFunctionAsColumn (<no alias>) -> entitywith1_
+14:13:23,853 DEBUG FromClause:282 - addJoinByPathMap() : h.entityWithArgFunctionAsColumns -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_ARG_FN_AS_COL,tableAlias=entitywith1_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_,columns={entitywith0_.ID ,className=org.hibernate.test.hql.EntityWithArgFunctionAsColumn}}
+14:13:23,853 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for h.entityWithArgFunctionAsColumns : ENTITY_WITH_ARG_FN_AS_COL entitywith1_
+14:13:23,865 DEBUG FromReferenceNode:74 - Resolved : h.entityWithArgFunctionAsColumns -> .
+14:13:23,865 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'ENTITY_WITH_ARG_FN_AS_COL entitywith1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder.entityWithArgFunctionAsColumns,tableName=ENTITY_WITH_ARG_FN_AS_COL,tableAlias=entitywith1_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_,columns={entitywith0_.ID ,className=org.hibernate.test.hql.EntityWithArgFunctionAsColumn}}
+
+14:13:23,866 DEBUG FromReferenceNode:74 - Resolved : h -> entitywith0_.ID
+14:13:23,866 DEBUG DotNode:599 - getDataType() : nextHolder -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.EntityWithFunctionAsColumnHolder)
+14:13:23,866 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for nextHolder in org.hibernate.test.hql.EntityWithFunctionAsColumnHolder (<no alias>) parent = [ {null} ]
+14:13:23,866 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.EntityWithFunctionAsColumnHolder (<no alias>) -> entitywith2_
+14:13:23,866 DEBUG FromClause:282 - addJoinByPathMap() : h.nextHolder -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_FN_AS_COL_HOLDER,tableAlias=entitywith2_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_,columns={entitywith0_.nextHolder ,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder}}
+14:13:23,866 DEBUG FromReferenceNode:74 - Resolved : h.nextHolder -> entitywith0_.nextHolder
+14:13:23,866 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'ENTITY_WITH_FN_AS_COL_HOLDER entitywith2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_FN_AS_COL_HOLDER,tableAlias=entitywith2_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_,columns={entitywith0_.nextHolder ,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder}}
+
+14:13:23,867 DEBUG FromReferenceNode:74 - Resolved : h -> entitywith0_.ID
+14:13:23,867 DEBUG DotNode:599 - getDataType() : nextHolder -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.EntityWithFunctionAsColumnHolder)
+14:13:23,867 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for nextHolder in org.hibernate.test.hql.EntityWithFunctionAsColumnHolder (<no alias>) parent = [  ( . ( . entitywith0_.ID nextHolder ) entityWithArgFunctionAsColumns ) ]
+14:13:23,867 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.EntityWithFunctionAsColumnHolder (<no alias>) -> entitywith3_
+14:13:23,867 DEBUG FromClause:282 - addJoinByPathMap() : h.nextHolder -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_FN_AS_COL_HOLDER,tableAlias=entitywith3_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_,columns={entitywith0_.nextHolder ,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder}}
+14:13:23,867 DEBUG FromReferenceNode:74 - Resolved : h.nextHolder -> entitywith0_.nextHolder
+14:13:23,867 DEBUG DotNode:599 - getDataType() : entityWithArgFunctionAsColumns -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.EntityWithFunctionAsColumnHolder.entityWithArgFunctionAsColumns)
+14:13:23,867 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = h.nextHolder.entityWithArgFunctionAsColumns role = org.hibernate.test.hql.EntityWithFunctionAsColumnHolder.entityWithArgFunctionAsColumns associatedEntityName = org.hibernate.test.hql.EntityWithArgFunctionAsColumn
+14:13:23,868 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.EntityWithArgFunctionAsColumn (<no alias>) -> entitywith4_
+14:13:23,868 DEBUG FromClause:282 - addJoinByPathMap() : h.nextHolder.entityWithArgFunctionAsColumns -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_ARG_FN_AS_COL,tableAlias=entitywith4_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith3_,columns={entitywith3_.ID ,className=org.hibernate.test.hql.EntityWithArgFunctionAsColumn}}
+14:13:23,868 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for h.nextHolder.entityWithArgFunctionAsColumns : ENTITY_WITH_ARG_FN_AS_COL entitywith4_
+14:13:23,868 DEBUG FromReferenceNode:74 - Resolved : h.nextHolder.entityWithArgFunctionAsColumns -> .
+14:13:23,868 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] ImpliedFromElement: 'ENTITY_WITH_FN_AS_COL_HOLDER entitywith3_' ImpliedFromElement{implied in FROM clause,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_FN_AS_COL_HOLDER,tableAlias=entitywith3_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_,columns={entitywith0_.nextHolder ,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder}}
+    \-[JOIN_FRAGMENT] FromElement: 'ENTITY_WITH_ARG_FN_AS_COL entitywith4_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder.entityWithArgFunctionAsColumns,tableName=ENTITY_WITH_ARG_FN_AS_COL,tableAlias=entitywith4_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith3_,columns={entitywith3_.ID ,className=org.hibernate.test.hql.EntityWithArgFunctionAsColumn}}
+
+14:13:23,888 DEBUG FromReferenceNode:74 - Resolved : h -> entitywith0_.ID
+14:13:23,888 DEBUG DotNode:599 - getDataType() : nextHolder -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.EntityWithFunctionAsColumnHolder)
+14:13:23,888 DEBUG DotNode:562 - dereferenceShortcut() : property nextHolder in org.hibernate.test.hql.EntityWithFunctionAsColumnHolder does not require a join.
+14:13:23,888 DEBUG DotNode:588 - Terminal propertyPath = [nextHolder]
+14:13:23,888 DEBUG FromReferenceNode:74 - Resolved : h.nextHolder -> entitywith0_.nextHolder
+14:13:23,888 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_ ENTITY_WITH_ARG_FN_AS_COL entitywith1_ ENTITY_WITH_FN_AS_COL_HOLDER entitywith2_ ( ENTITY_WITH_FN_AS_COL_HOLDER entitywith3_ ENTITY_WITH_ARG_FN_AS_COL entitywith4_ ) ) ) ( where ( is not null ( entitywith0_.nextHolder entitywith0_.ID nextHolder ) ) ) )
+14:13:23,889 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,889 DEBUG JoinProcessor:175 - Using FROM fragment [ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_]
+14:13:23,889 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join ENTITY_WITH_ARG_FN_AS_COL entitywith1_ on entitywith0_.ID=entitywith1_.HOLDER_ID]
+14:13:23,889 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join ENTITY_WITH_FN_AS_COL_HOLDER entitywith2_ on entitywith0_.nextHolder=entitywith2_.ID]
+14:13:23,889 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join ENTITY_WITH_FN_AS_COL_HOLDER entitywith3_ on entitywith0_.nextHolder=entitywith3_.ID]
+14:13:23,889 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join ENTITY_WITH_ARG_FN_AS_COL entitywith4_ on entitywith3_.ID=entitywith4_.HOLDER_ID]
+14:13:23,889 DEBUG QueryNode:101 - getOrderByClause() : Creating a new ORDER BY clause
+14:13:23,890 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ENTITY_WITH_FN_AS_COL_HOLDER,ENTITY_WITH_ARG_FN_AS_COL)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'entitywith0_.ID as ID1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=ENTITY_WITH_FN_AS_COL_HOLDER,tableAlias=entitywith0_,origin=null,columns={,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'entitywith1_.ID as ID0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder.entityWithArgFunctionAsColumns,tableName=ENTITY_WITH_ARG_FN_AS_COL,tableAlias=entitywith1_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_,columns={entitywith0_.ID ,className=org.hibernate.test.hql.EntityWithArgFunctionAsColumn}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'entitywith2_.ID as ID1_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_FN_AS_COL_HOLDER,tableAlias=entitywith2_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_,columns={entitywith0_.nextHolder ,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'entitywith4_.ID as ID0_3_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder.entityWithArgFunctionAsColumns,tableName=ENTITY_WITH_ARG_FN_AS_COL,tableAlias=entitywith4_,origin=left outer join ENTITY_WITH_FN_AS_COL_HOLDER entitywith3_ on entitywith0_.nextHolder=entitywith3_.ID,columns={entitywith3_.ID ,className=org.hibernate.test.hql.EntityWithArgFunctionAsColumn}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'entitywith0_.nextHolder as nextHolder1_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'entitywith1_.lower as lower0_1_, entitywith1_.upper as upper0_1_'
+    |  +-[SQL_TOKEN] SqlFragment: 'entitywith1_.HOLDER_ID as HOLDER4_1_0__, entitywith1_.ID as ID0_0__'
+    |  +-[SQL_TOKEN] SqlFragment: 'entitywith2_.nextHolder as nextHolder1_2_'
+    |  +-[SQL_TOKEN] SqlFragment: 'entitywith4_.lower as lower0_3_, entitywith4_.upper as upper0_3_'
+    |  \-[SQL_TOKEN] SqlFragment: 'entitywith4_.HOLDER_ID as HOLDER4_1_1__, entitywith4_.ID as ID0_1__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=5, fromElements=5, fromElementByClassAlias=[h], fromElementByTableAlias=[entitywith0_, entitywith4_, entitywith2_, entitywith3_, entitywith1_], fromElementsByPath=[h.nextHolder.entityWithArgFunctionAsColumns, h.nextHolder, h.entityWithArgFunctionAsColumns], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=ENTITY_WITH_FN_AS_COL_HOLDER,tableAlias=entitywith0_,origin=null,columns={,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder}}
+    |     +-[JOIN_FRAGMENT] FromElement: 'left outer join ENTITY_WITH_ARG_FN_AS_COL entitywith1_ on entitywith0_.ID=entitywith1_.HOLDER_ID' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder.entityWithArgFunctionAsColumns,tableName=ENTITY_WITH_ARG_FN_AS_COL,tableAlias=entitywith1_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_,columns={entitywith0_.ID ,className=org.hibernate.test.hql.EntityWithArgFunctionAsColumn}}
+    |     +-[JOIN_FRAGMENT] FromElement: 'left outer join ENTITY_WITH_FN_AS_COL_HOLDER entitywith2_ on entitywith0_.nextHolder=entitywith2_.ID' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_FN_AS_COL_HOLDER,tableAlias=entitywith2_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_,columns={entitywith0_.nextHolder ,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder}}
+    |     \-[JOIN_FRAGMENT] ImpliedFromElement: 'left outer join ENTITY_WITH_FN_AS_COL_HOLDER entitywith3_ on entitywith0_.nextHolder=entitywith3_.ID' ImpliedFromElement{implied in FROM clause,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_FN_AS_COL_HOLDER,tableAlias=entitywith3_,origin=ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_,columns={entitywith0_.nextHolder ,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder}}
+    |        \-[JOIN_FRAGMENT] FromElement: 'left outer join ENTITY_WITH_ARG_FN_AS_COL entitywith4_ on entitywith3_.ID=entitywith4_.HOLDER_ID' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder.entityWithArgFunctionAsColumns,tableName=ENTITY_WITH_ARG_FN_AS_COL,tableAlias=entitywith4_,origin=left outer join ENTITY_WITH_FN_AS_COL_HOLDER entitywith3_ on entitywith0_.nextHolder=entitywith3_.ID,columns={entitywith3_.ID ,className=org.hibernate.test.hql.EntityWithArgFunctionAsColumn}}
+    +-[WHERE] SqlNode: 'where'
+    |  \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+    |     \-[DOT] DotNode: 'entitywith0_.nextHolder' {propertyName=nextHolder,dereferenceType=0,propertyPath=nextHolder,path=h.nextHolder,tableAlias=entitywith0_,className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder,classAlias=h}
+    |        +-[ALIAS_REF] IdentNode: 'entitywith0_.ID' {alias=h, className=org.hibernate.test.hql.EntityWithFunctionAsColumnHolder, tableAlias=entitywith0_}
+    |        \-[IDENT] IdentNode: 'nextHolder' {originalText=nextHolder}
+    \-[ORDER] OrderByClause: 'ORDER'
+       +-[SQL_TOKEN] SqlFragment: 'entitywith1_.lower, lower(entitywith1_.upper)'
+       \-[SQL_TOKEN] SqlFragment: 'entitywith4_.lower, lower(entitywith4_.upper)'
+
+14:13:23,890 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,890 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.EntityWithFunctionAsColumnHolder h left join fetch h.entityWithArgFunctionAsColumns left join fetch h.nextHolder left join fetch h.nextHolder.entityWithArgFunctionAsColumns where h.nextHolder is not null
+14:13:23,890 DEBUG QueryTranslatorImpl:236 - SQL: select entitywith0_.ID as ID1_0_, entitywith1_.ID as ID0_1_, entitywith2_.ID as ID1_2_, entitywith4_.ID as ID0_3_, entitywith0_.nextHolder as nextHolder1_0_, entitywith1_.lower as lower0_1_, entitywith1_.upper as upper0_1_, entitywith1_.HOLDER_ID as HOLDER4_1_0__, entitywith1_.ID as ID0_0__, entitywith2_.nextHolder as nextHolder1_2_, entitywith4_.lower as lower0_3_, entitywith4_.upper as upper0_3_, entitywith4_.HOLDER_ID as HOLDER4_1_1__, entitywith4_.ID as ID0_1__ from ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_ left outer join ENTITY_WITH_ARG_FN_AS_COL entitywith1_ on entitywith0_.ID=entitywith1_.HOLDER_ID left outer join ENTITY_WITH_FN_AS_COL_HOLDER entitywith2_ on entitywith0_.nextHolder=entitywith2_.ID left outer join ENTITY_WITH_FN_AS_COL_HOLDER entitywith3_ on entitywith0_.nextHolder=entitywith3_.ID left outer join ENTITY_WITH_ARG_FN_AS_COL entitywith4_ on entitywith3_.ID=entitywith4_.HOLDER_ID where entitywith0_.nextHolder is not null order by entitywith1_.lower, lower(entitywith1_.upper), entitywith4_.lower, lower(entitywith4_.upper)
+14:13:23,890 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,891 DEBUG SQL:104 - 
+    select
+        entitywith0_.ID as ID1_0_,
+        entitywith1_.ID as ID0_1_,
+        entitywith2_.ID as ID1_2_,
+        entitywith4_.ID as ID0_3_,
+        entitywith0_.nextHolder as nextHolder1_0_,
+        entitywith1_.lower as lower0_1_,
+        entitywith1_.upper as upper0_1_,
+        entitywith1_.HOLDER_ID as HOLDER4_1_0__,
+        entitywith1_.ID as ID0_0__,
+        entitywith2_.nextHolder as nextHolder1_2_,
+        entitywith4_.lower as lower0_3_,
+        entitywith4_.upper as upper0_3_,
+        entitywith4_.HOLDER_ID as HOLDER4_1_1__,
+        entitywith4_.ID as ID0_1__ 
+    from
+        ENTITY_WITH_FN_AS_COL_HOLDER entitywith0_ 
+    left outer join
+        ENTITY_WITH_ARG_FN_AS_COL entitywith1_ 
+            on entitywith0_.ID=entitywith1_.HOLDER_ID 
+    left outer join
+        ENTITY_WITH_FN_AS_COL_HOLDER entitywith2_ 
+            on entitywith0_.nextHolder=entitywith2_.ID 
+    left outer join
+        ENTITY_WITH_FN_AS_COL_HOLDER entitywith3_ 
+            on entitywith0_.nextHolder=entitywith3_.ID 
+    left outer join
+        ENTITY_WITH_ARG_FN_AS_COL entitywith4_ 
+            on entitywith3_.ID=entitywith4_.HOLDER_ID 
+    where
+        entitywith0_.nextHolder is not null 
+    order by
+        entitywith1_.lower,
+        lower(entitywith1_.upper),
+        entitywith4_.lower,
+        lower(entitywith4_.upper)
+14:13:23,907 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_ARG_FN_AS_COL
+14:13:23,922 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_NOARG_FN_AS_COL
+14:13:23,922 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_FN_AS_COL_HOLDER 
+    where
+        nextHolder is not null
+14:13:23,922 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_FN_AS_COL_HOLDER
+14:13:23,923  INFO CustomRunner:139 - Test: testGetMultiColumnSameNameAsNoArgFunctionCriteria
+14:13:23,924  INFO SkipLog:37 - *** skipping test - tests noarg function that does not require () : current_date reuires ()
+java.lang.Exception
+	at org.hibernate.testing.SkipLog.reportSkip(SkipLog.java:37)
+	at org.hibernate.testing.SkipLog.reportSkip(SkipLog.java:41)
+	at org.hibernate.test.hql.FunctionNameAsColumnTest.testGetMultiColumnSameNameAsNoArgFunctionCriteria(FunctionNameAsColumnTest.java:248)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:45)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:42)
+	at org.hibernate.testing.junit4.ExtendedFrameworkMethod.invokeExplosively(ExtendedFrameworkMethod.java:63)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:20)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:28)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:30)
+	at org.junit.internal.runners.statements.FailOnTimeout$StatementThread.run(FailOnTimeout.java:62)
+14:13:23,933  INFO CustomRunner:139 - Test: testGetMultiColumnSameNameAsNoArgFunctionHQL
+14:13:23,934  INFO SkipLog:37 - *** skipping test - tests noarg function that does not require () : current_date reuires ()
+java.lang.Exception
+	at org.hibernate.testing.SkipLog.reportSkip(SkipLog.java:37)
+	at org.hibernate.testing.SkipLog.reportSkip(SkipLog.java:41)
+	at org.hibernate.test.hql.FunctionNameAsColumnTest.testGetMultiColumnSameNameAsNoArgFunctionHQL(FunctionNameAsColumnTest.java:202)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:45)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:42)
+	at org.hibernate.testing.junit4.ExtendedFrameworkMethod.invokeExplosively(ExtendedFrameworkMethod.java:63)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:20)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:28)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:30)
+	at org.junit.internal.runners.statements.FailOnTimeout$StatementThread.run(FailOnTimeout.java:62)
+14:13:23,946  INFO CustomRunner:139 - Test: testGetOneColumnSameNameAsArgFunctionCriteria
+14:13:23,947 DEBUG SQL:104 - 
+    insert 
+    into
+        ENTITY_WITH_ARG_FN_AS_COL
+        (lower, upper, ID) 
+    values
+        (?, ?, ?)
+14:13:23,948 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.lower as lower0_0_,
+        this_.upper as upper0_0_ 
+    from
+        ENTITY_WITH_ARG_FN_AS_COL this_
+14:13:23,949 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_ARG_FN_AS_COL
+14:13:24,022 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_NOARG_FN_AS_COL
+14:13:24,022 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_FN_AS_COL_HOLDER 
+    where
+        nextHolder is not null
+14:13:24,023 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_FN_AS_COL_HOLDER
+14:13:24,023  INFO CustomRunner:139 - Test: testGetOneColumnSameNameAsArgFunctionHQL
+14:13:24,025 DEBUG SQL:104 - 
+    insert 
+    into
+        ENTITY_WITH_ARG_FN_AS_COL
+        (lower, upper, ID) 
+    values
+        (?, ?, ?)
+14:13:24,026 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.EntityWithArgFunctionAsColumn
+14:13:24,026 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'hql'
+                \-[IDENT] Node: 'EntityWithArgFunctionAsColumn'
+
+14:13:24,027 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:24,027 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.EntityWithArgFunctionAsColumn (<no alias>) -> entitywith0_
+14:13:24,027 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ENTITY_WITH_ARG_FN_AS_COL entitywith0_ ) )
+14:13:24,027 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:24,027 DEBUG JoinProcessor:175 - Using FROM fragment [ENTITY_WITH_ARG_FN_AS_COL entitywith0_]
+14:13:24,027 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ENTITY_WITH_ARG_FN_AS_COL)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'entitywith0_.ID as ID0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_ARG_FN_AS_COL,tableAlias=entitywith0_,origin=null,columns={,className=org.hibernate.test.hql.EntityWithArgFunctionAsColumn}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'entitywith0_.lower as lower0_, entitywith0_.upper as upper0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[entitywith0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ENTITY_WITH_ARG_FN_AS_COL entitywith0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ENTITY_WITH_ARG_FN_AS_COL,tableAlias=entitywith0_,origin=null,columns={,className=org.hibernate.test.hql.EntityWithArgFunctionAsColumn}}
+
+14:13:24,027 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:24,045 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.EntityWithArgFunctionAsColumn
+14:13:24,045 DEBUG QueryTranslatorImpl:236 - SQL: select entitywith0_.ID as ID0_, entitywith0_.lower as lower0_, entitywith0_.upper as upper0_ from ENTITY_WITH_ARG_FN_AS_COL entitywith0_
+14:13:24,045 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:24,046 DEBUG SQL:104 - 
+    select
+        entitywith0_.ID as ID0_,
+        entitywith0_.lower as lower0_,
+        entitywith0_.upper as upper0_ 
+    from
+        ENTITY_WITH_ARG_FN_AS_COL entitywith0_
+14:13:24,046 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_ARG_FN_AS_COL
+14:13:24,047 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_NOARG_FN_AS_COL
+14:13:24,047 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_FN_AS_COL_HOLDER 
+    where
+        nextHolder is not null
+14:13:24,047 DEBUG SQL:104 - 
+    delete 
+    from
+        ENTITY_WITH_FN_AS_COL_HOLDER
+14:13:24,058  INFO CustomRunner:139 - Test: testNoArgFcnAndColumnSameNameAsNoArgFunctionHQL
+14:13:24,059  INFO SkipLog:37 - *** skipping test - tests noarg function that does not require () : current_date reuires ()
+java.lang.Exception
+	at org.hibernate.testing.SkipLog.reportSkip(SkipLog.java:37)
+	at org.hibernate.testing.SkipLog.reportSkip(SkipLog.java:41)
+	at org.hibernate.test.hql.FunctionNameAsColumnTest.testNoArgFcnAndColumnSameNameAsNoArgFunctionHQL(FunctionNameAsColumnTest.java:294)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:45)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:42)
+	at org.hibernate.testing.junit4.ExtendedFrameworkMethod.invokeExplosively(ExtendedFrameworkMethod.java:63)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:20)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:28)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:30)
+	at org.junit.internal.runners.statements.FailOnTimeout$StatementThread.run(FailOnTimeout.java:62)
+14:13:24,060  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:13:24,060 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:13:24,061 DEBUG SQL:104 - 
+    alter table ENTITY_WITH_ARG_FN_AS_COL 
+        drop constraint FK41BED284AAA37684
+14:13:24,061 DEBUG SQL:104 - 
+    alter table ENTITY_WITH_FN_AS_COL_HOLDER 
+        drop constraint FKF35BBF5E3ADED855
+14:13:24,061 DEBUG SQL:104 - 
+    alter table ENTITY_WITH_NOARG_FN_AS_COL 
+        drop constraint FK9ECF6DA3AAA37684
+14:13:24,094 DEBUG SQL:104 - 
+    drop table ENTITY_WITH_ARG_FN_AS_COL if exists
+14:13:24,094 DEBUG SQL:104 - 
+    drop table ENTITY_WITH_FN_AS_COL_HOLDER if exists
+14:13:24,094 DEBUG SQL:104 - 
+    drop table ENTITY_WITH_NOARG_FN_AS_COL if exists
+14:13:24,095  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:13:24,095  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

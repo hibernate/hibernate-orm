@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.any.AnyTypeTest" tests="1" time="0.492" timestamp="2013-02-28T20:10:49">
+  <properties />
+  <testcase classname="org.hibernate.test.any.AnyTypeTest" name="testFlushProcessing" time="0.058" />
+  <system-out><![CDATA[14:10:49,883  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.any.AnyTypeTest
+14:10:49,936  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/any/Person.hbm.xml
+14:10:50,028  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:50,033  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:50,034  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:50,035  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:50,040  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:50,069  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:50,071  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:50,073  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:50,074  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:50,075  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:50,251  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:50,254 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:50,255 DEBUG SQL:104 - 
+    alter table LINE 
+        drop constraint FK23A7F47B443DD0
+14:10:50,255 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table LINE drop constraint FK23A7F47B443DD0
+14:10:50,256 ERROR SchemaExport:426 - Table "LINE" not found; SQL statement:
+
+    alter table LINE 
+        drop constraint FK23A7F47B443DD0 [42102-145]
+14:10:50,256 DEBUG SQL:104 - 
+    drop table LINE if exists
+14:10:50,257 DEBUG SQL:104 - 
+    drop table T_ANY_ADDRESS if exists
+14:10:50,257 DEBUG SQL:104 - 
+    drop table T_ANY_PERSON if exists
+14:10:50,259 DEBUG SQL:104 - 
+    create table LINE (
+        ADDRESS bigint not null,
+        elt varchar(255)
+    )
+14:10:50,271 DEBUG SQL:104 - 
+    create table T_ANY_ADDRESS (
+        ID_ bigint not null,
+        primary key (ID_)
+    )
+14:10:50,274 DEBUG SQL:104 - 
+    create table T_ANY_PERSON (
+        ID_ bigint not null,
+        name varchar(255),
+        DATATYPE_ varchar(255),
+        DATAID_ bigint,
+        primary key (ID_)
+    )
+14:10:50,277 DEBUG SQL:104 - 
+    alter table LINE 
+        add constraint FK23A7F47B443DD0 
+        foreign key (ADDRESS) 
+        references T_ANY_ADDRESS
+14:10:50,281  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:50,289  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:50,290  INFO CustomRunner:139 - Test: testFlushProcessing
+14:10:50,292 DEBUG SQL:104 - 
+    select
+        max(ID_) 
+    from
+        T_ANY_PERSON
+14:10:50,296 DEBUG SQL:104 - 
+    select
+        max(ID_) 
+    from
+        T_ANY_ADDRESS
+14:10:50,305 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ANY_PERSON
+        (name, DATATYPE_, DATAID_, ID_) 
+    values
+        (?, ?, ?, ?)
+14:10:50,311 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ANY_ADDRESS
+        (ID_) 
+    values
+        (?)
+14:10:50,316 DEBUG SQL:104 - 
+    update
+        T_ANY_PERSON 
+    set
+        name=?,
+        DATATYPE_=?,
+        DATAID_=? 
+    where
+        ID_=?
+14:10:50,323 DEBUG SQL:104 - 
+    select
+        person0_.ID_ as ID1_2_0_,
+        person0_.name as name2_0_,
+        person0_.DATATYPE_ as DATATYPE3_2_0_,
+        person0_.DATAID_ as DATAID4_2_0_ 
+    from
+        T_ANY_PERSON person0_ 
+    where
+        person0_.ID_=?
+14:10:50,329 DEBUG SQL:104 - 
+    update
+        T_ANY_PERSON 
+    set
+        name=?,
+        DATATYPE_=?,
+        DATAID_=? 
+    where
+        ID_=?
+14:10:50,334 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ANY_PERSON 
+    where
+        ID_=?
+14:10:50,351  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:50,360 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:50,361 DEBUG SQL:104 - 
+    alter table LINE 
+        drop constraint FK23A7F47B443DD0
+14:10:50,362 DEBUG SQL:104 - 
+    drop table LINE if exists
+14:10:50,363 DEBUG SQL:104 - 
+    drop table T_ANY_ADDRESS if exists
+14:10:50,365 DEBUG SQL:104 - 
+    drop table T_ANY_PERSON if exists
+14:10:50,367  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:50,369  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

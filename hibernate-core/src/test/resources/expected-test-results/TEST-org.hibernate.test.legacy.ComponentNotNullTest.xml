@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.ComponentNotNullTest" tests="2" time="0.106" timestamp="2013-02-28T20:14:53">
+  <properties />
+  <testcase classname="org.hibernate.test.legacy.ComponentNotNullTest" name="testComponentNotNull" time="0.003" />
+  <testcase classname="org.hibernate.test.legacy.ComponentNotNullTest" name="testCompositeElement" time="0.007" />
+  <system-out><![CDATA[14:14:53,717  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.ComponentNotNullTest
+14:14:53,718  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:53,720  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/ComponentNotNullMaster.hbm.xml
+14:14:53,725  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/One.hbm.xml
+14:14:53,731  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Many.hbm.xml
+14:14:53,736  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Simple.hbm.xml
+14:14:53,744  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:53,744  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:53,744  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:53,745  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:53,745  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:53,746  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:53,746  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:53,747  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:53,747  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:53,755  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:53,756 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:53,756 DEBUG SQL:104 - 
+    alter table Simple 
+        drop constraint FK939D1DD2939BE031
+14:14:53,756 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Simple drop constraint FK939D1DD2939BE031
+14:14:53,756 ERROR SchemaExport:426 - Table "SIMPLE" not found; SQL statement:
+
+    alter table Simple 
+        drop constraint FK939D1DD2939BE031 [42102-145]
+14:14:53,757 DEBUG SQL:104 - 
+    alter table components 
+        drop constraint FKE5548316578192D3
+14:14:53,757 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table components drop constraint FKE5548316578192D3
+14:14:53,757 ERROR SchemaExport:426 - Table "COMPONENTS" not found; SQL statement:
+
+    alter table components 
+        drop constraint FKE5548316578192D3 [42102-145]
+14:14:53,757 DEBUG SQL:104 - 
+    alter table components 
+        drop constraint FKE5548316DED2FBBD
+14:14:53,757 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table components drop constraint FKE5548316DED2FBBD
+14:14:53,757 ERROR SchemaExport:426 - Table "COMPONENTS" not found; SQL statement:
+
+    alter table components 
+        drop constraint FKE5548316DED2FBBD [42102-145]
+14:14:53,757 DEBUG SQL:104 - 
+    alter table components 
+        drop constraint FKE5548316FB8A4BED
+14:14:53,758 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table components drop constraint FKE5548316FB8A4BED
+14:14:53,758 ERROR SchemaExport:426 - Table "COMPONENTS" not found; SQL statement:
+
+    alter table components 
+        drop constraint FKE5548316FB8A4BED [42102-145]
+14:14:53,758 DEBUG SQL:104 - 
+    alter table components 
+        drop constraint FKE5548316707D4707
+14:14:53,758 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table components drop constraint FKE5548316707D4707
+14:14:53,758 ERROR SchemaExport:426 - Table "COMPONENTS" not found; SQL statement:
+
+    alter table components 
+        drop constraint FKE5548316707D4707 [42102-145]
+14:14:53,758 DEBUG SQL:104 - 
+    alter table componentsImplicit 
+        drop constraint FKFE81FF1B578192D3
+14:14:53,758 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table componentsImplicit drop constraint FKFE81FF1B578192D3
+14:14:53,758 ERROR SchemaExport:426 - Table "COMPONENTSIMPLICIT" not found; SQL statement:
+
+    alter table componentsImplicit 
+        drop constraint FKFE81FF1B578192D3 [42102-145]
+14:14:53,759 DEBUG SQL:104 - 
+    alter table componentsImplicit 
+        drop constraint FKFE81FF1BDED2FBBD
+14:14:53,759 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table componentsImplicit drop constraint FKFE81FF1BDED2FBBD
+14:14:53,759 ERROR SchemaExport:426 - Table "COMPONENTSIMPLICIT" not found; SQL statement:
+
+    alter table componentsImplicit 
+        drop constraint FKFE81FF1BDED2FBBD [42102-145]
+14:14:53,759 DEBUG SQL:104 - 
+    alter table componentsImplicit 
+        drop constraint FKFE81FF1B707D4707
+14:14:53,759 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table componentsImplicit drop constraint FKFE81FF1B707D4707
+14:14:53,759 ERROR SchemaExport:426 - Table "COMPONENTSIMPLICIT" not found; SQL statement:
+
+    alter table componentsImplicit 
+        drop constraint FKFE81FF1B707D4707 [42102-145]
+14:14:53,759 DEBUG SQL:104 - 
+    alter table many 
+        drop constraint FK33065F9016265D
+14:14:53,760 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table many drop constraint FK33065F9016265D
+14:14:53,760 ERROR SchemaExport:426 - Table "MANY" not found; SQL statement:
+
+    alter table many 
+        drop constraint FK33065F9016265D [42102-145]
+14:14:53,760 DEBUG SQL:104 - 
+    drop table ComponentNotNullMaster if exists
+14:14:53,760 DEBUG SQL:104 - 
+    drop table Simple if exists
+14:14:53,760 DEBUG SQL:104 - 
+    drop table components if exists
+14:14:53,760 DEBUG SQL:104 - 
+    drop table componentsImplicit if exists
+14:14:53,760 DEBUG SQL:104 - 
+    drop table many if exists
+14:14:53,761 DEBUG SQL:104 - 
+    drop table one if exists
+14:14:53,761 DEBUG SQL:104 - 
+    create table ComponentNotNullMaster (
+        container_id integer generated by default as identity,
+        test varchar(255),
+        prop1Nullable varchar(255),
+        prop2Nullable varchar(255),
+        prop1Subcomp varchar(255) not null,
+        primary key (container_id)
+    )
+14:14:53,761 DEBUG SQL:104 - 
+    create table Simple (
+        id_ bigint not null,
+        name varchar(255),
+        address varchar(255),
+        count_ integer not null,
+        date_ timestamp,
+        pay float,
+        other bigint,
+        primary key (id_)
+    )
+14:14:53,761 DEBUG SQL:104 - 
+    create table components (
+        container_id integer not null,
+        name varchar(255),
+        count_ integer,
+        simple bigint not null,
+        one bigint,
+        many bigint,
+        list_index integer not null,
+        primary key (container_id, list_index)
+    )
+14:14:53,762 DEBUG SQL:104 - 
+    create table componentsImplicit (
+        container_id integer not null,
+        name varchar(255),
+        count_ integer,
+        simple bigint,
+        one bigint,
+        nestedproperty varchar(255) not null,
+        list_index3 integer not null,
+        primary key (container_id, list_index3)
+    )
+14:14:53,762 DEBUG SQL:104 - 
+    create table many (
+        many_key bigint generated by default as identity,
+        x integer,
+        one_key bigint,
+        primary key (many_key)
+    )
+14:14:53,762 DEBUG SQL:104 - 
+    create table one (
+        one_key bigint generated by default as identity,
+        x integer,
+        one_value varchar(255),
+        primary key (one_key)
+    )
+14:14:53,763 DEBUG SQL:104 - 
+    alter table Simple 
+        add constraint uc_Simple_1 unique (count_)
+14:14:53,763 DEBUG SQL:104 - 
+    alter table Simple 
+        add constraint FK939D1DD2939BE031 
+        foreign key (other) 
+        references Simple
+14:14:53,763 DEBUG SQL:104 - 
+    alter table components 
+        add constraint FKE5548316578192D3 
+        foreign key (simple) 
+        references Simple
+14:14:53,764 DEBUG SQL:104 - 
+    alter table components 
+        add constraint FKE5548316DED2FBBD 
+        foreign key (one) 
+        references one
+14:14:53,764 DEBUG SQL:104 - 
+    alter table components 
+        add constraint FKE5548316FB8A4BED 
+        foreign key (many) 
+        references many
+14:14:53,765 DEBUG SQL:104 - 
+    alter table components 
+        add constraint FKE5548316707D4707 
+        foreign key (container_id) 
+        references ComponentNotNullMaster
+14:14:53,765 DEBUG SQL:104 - 
+    alter table componentsImplicit 
+        add constraint FKFE81FF1B578192D3 
+        foreign key (simple) 
+        references Simple
+14:14:53,765 DEBUG SQL:104 - 
+    alter table componentsImplicit 
+        add constraint FKFE81FF1BDED2FBBD 
+        foreign key (one) 
+        references one
+14:14:53,766 DEBUG SQL:104 - 
+    alter table componentsImplicit 
+        add constraint FKFE81FF1B707D4707 
+        foreign key (container_id) 
+        references ComponentNotNullMaster
+14:14:53,767 DEBUG SQL:104 - 
+    alter table many 
+        add constraint FK33065F9016265D 
+        foreign key (one_key) 
+        references one
+14:14:53,767  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:53,768  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:53,768  INFO CustomRunner:139 - Test: testComponentNotNull
+14:14:53,769 DEBUG SQL:104 - 
+    insert 
+    into
+        ComponentNotNullMaster
+        (container_id, test, prop1Nullable, prop2Nullable, prop1Subcomp) 
+    values
+        (null, ?, ?, ?, ?)
+14:14:53,772  INFO CustomRunner:139 - Test: testCompositeElement
+14:14:53,774 DEBUG SQL:104 - 
+    insert 
+    into
+        ComponentNotNullMaster
+        (container_id, test, prop1Nullable, prop2Nullable, prop1Subcomp) 
+    values
+        (null, ?, ?, ?, ?)
+14:14:53,775 DEBUG SQL:104 - 
+    insert 
+    into
+        componentsImplicit
+        (container_id, list_index3, name, count_, simple, one, nestedproperty) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:14:53,779  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:53,780 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:53,780 DEBUG SQL:104 - 
+    alter table Simple 
+        drop constraint FK939D1DD2939BE031
+14:14:53,780 DEBUG SQL:104 - 
+    alter table components 
+        drop constraint FKE5548316578192D3
+14:14:53,780 DEBUG SQL:104 - 
+    alter table components 
+        drop constraint FKE5548316DED2FBBD
+14:14:53,781 DEBUG SQL:104 - 
+    alter table components 
+        drop constraint FKE5548316FB8A4BED
+14:14:53,781 DEBUG SQL:104 - 
+    alter table components 
+        drop constraint FKE5548316707D4707
+14:14:53,781 DEBUG SQL:104 - 
+    alter table componentsImplicit 
+        drop constraint FKFE81FF1B578192D3
+14:14:53,781 DEBUG SQL:104 - 
+    alter table componentsImplicit 
+        drop constraint FKFE81FF1BDED2FBBD
+14:14:53,781 DEBUG SQL:104 - 
+    alter table componentsImplicit 
+        drop constraint FKFE81FF1B707D4707
+14:14:53,789 DEBUG SQL:104 - 
+    alter table many 
+        drop constraint FK33065F9016265D
+14:14:53,792 DEBUG SQL:104 - 
+    drop table ComponentNotNullMaster if exists
+14:14:53,792 DEBUG SQL:104 - 
+    drop table Simple if exists
+14:14:53,793 DEBUG SQL:104 - 
+    drop table components if exists
+14:14:53,793 DEBUG SQL:104 - 
+    drop table componentsImplicit if exists
+14:14:53,793 DEBUG SQL:104 - 
+    drop table many if exists
+14:14:53,793 DEBUG SQL:104 - 
+    drop table one if exists
+14:14:53,793  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:53,794  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

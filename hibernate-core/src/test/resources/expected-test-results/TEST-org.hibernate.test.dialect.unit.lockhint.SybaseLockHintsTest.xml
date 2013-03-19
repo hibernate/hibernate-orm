@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.dialect.unit.lockhint.SybaseLockHintsTest" tests="1" time="0.003" timestamp="2013-02-28T20:12:13">
+  <properties />
+  <testcase classname="org.hibernate.test.dialect.unit.lockhint.SybaseLockHintsTest" name="testBasicLocking" time="0.001" />
+  <system-out><![CDATA[14:12:13,029  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SybaseDialect
+14:12:13,030  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.dialect.unit.lockhint.SybaseLockHintsTest
+14:12:13,030  INFO CustomRunner:139 - Test: testBasicLocking
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

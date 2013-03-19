@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.cid.CompositeIdWithGeneratorTest" tests="9" time="0.404" timestamp="2013-02-28T20:11:54">
+  <properties />
+  <testcase classname="org.hibernate.test.cid.CompositeIdWithGeneratorTest" name="testCompositeIdSimple" time="0.08" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdWithGeneratorTest" name="testDelete" time="0.004" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdWithGeneratorTest" name="testDetachedId" time="0.061" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdWithGeneratorTest" name="testDetachedProperty" time="0.064" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdWithGeneratorTest" name="testEvict" time="0.031" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdWithGeneratorTest" name="testGeneratedIdsWithChildren" time="0.039" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdWithGeneratorTest" name="testLoad" time="0.003" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdWithGeneratorTest" name="testMerge" time="0.049" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdWithGeneratorTest" name="testSaveOrUpdate" time="0.006" />
+  <system-out><![CDATA[14:11:54,594  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.cid.CompositeIdWithGeneratorTest
+14:11:54,598  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/PurchaseRecord.hbm.xml
+14:11:54,623  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:54,624  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:54,624  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:54,624  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:54,624  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:54,627  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:54,628  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:54,628  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:54,629  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:54,629  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:54,643  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:54,644 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:54,644 DEBUG SQL:104 - 
+    alter table PurchaseDetail 
+        drop constraint FK74D50D2B9536004
+14:11:54,644 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PurchaseDetail drop constraint FK74D50D2B9536004
+14:11:54,644 ERROR SchemaExport:426 - Table "PURCHASEDETAIL" not found; SQL statement:
+
+    alter table PurchaseDetail 
+        drop constraint FK74D50D2B9536004 [42102-145]
+14:11:54,644 DEBUG SQL:104 - 
+    drop table PurchaseDetail if exists
+14:11:54,644 DEBUG SQL:104 - 
+    drop table PurchaseRecord if exists
+14:11:54,645 DEBUG SQL:104 - 
+    create table PurchaseDetail (
+        productId varchar(255) not null,
+        quantity integer,
+        purchaseNumber integer,
+        purchaseSequence varchar(255),
+        primary key (productId)
+    )
+14:11:54,645 DEBUG SQL:104 - 
+    create table PurchaseRecord (
+        purchaseNumber integer not null,
+        purchaseSequence varchar(255) not null,
+        "timestamp" timestamp,
+        primary key (purchaseNumber, purchaseSequence)
+    )
+14:11:54,645 DEBUG SQL:104 - 
+    alter table PurchaseDetail 
+        add constraint FK74D50D2B9536004 
+        foreign key (purchaseNumber, purchaseSequence) 
+        references PurchaseRecord
+14:11:54,646  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:54,647  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:54,647  INFO CustomRunner:139 - Test: testCompositeIdSimple
+14:11:54,648 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseRecord
+        ("timestamp", purchaseNumber, purchaseSequence) 
+    values
+        (?, ?, ?)
+14:11:54,649 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,690 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,693 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseRecord
+        ("timestamp", purchaseNumber, purchaseSequence) 
+    values
+        (?, ?, ?)
+14:11:54,694 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,725 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,728  INFO CustomRunner:139 - Test: testDelete
+14:11:54,729 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseRecord
+        ("timestamp", purchaseNumber, purchaseSequence) 
+    values
+        (?, ?, ?)
+14:11:54,730 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,731 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,731 DEBUG SQL:104 - 
+    delete 
+    from
+        PurchaseRecord 
+    where
+        purchaseNumber=? 
+        and purchaseSequence=?
+14:11:54,732 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,732  INFO CustomRunner:139 - Test: testDetachedId
+14:11:54,733 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseRecord
+        ("timestamp", purchaseNumber, purchaseSequence) 
+    values
+        (?, ?, ?)
+14:11:54,755 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseRecord
+        ("timestamp", purchaseNumber, purchaseSequence) 
+    values
+        (?, ?, ?)
+14:11:54,756 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,758 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,773 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,775 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,777 DEBUG SQL:104 - 
+    update
+        PurchaseRecord 
+    set
+        "timestamp"=? 
+    where
+        purchaseNumber=? 
+        and purchaseSequence=?
+14:11:54,792 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,793 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,794  INFO CustomRunner:139 - Test: testDetachedProperty
+14:11:54,795 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseRecord
+        ("timestamp", purchaseNumber, purchaseSequence) 
+    values
+        (?, ?, ?)
+14:11:54,796 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,839 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,840 DEBUG SQL:104 - 
+    update
+        PurchaseRecord 
+    set
+        "timestamp"=? 
+    where
+        purchaseNumber=? 
+        and purchaseSequence=?
+14:11:54,841 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,857 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,859  INFO CustomRunner:139 - Test: testEvict
+14:11:54,860 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseRecord
+        ("timestamp", purchaseNumber, purchaseSequence) 
+    values
+        (?, ?, ?)
+14:11:54,887 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,889 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,891  INFO CustomRunner:139 - Test: testGeneratedIdsWithChildren
+14:11:54,892 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseRecord
+        ("timestamp", purchaseNumber, purchaseSequence) 
+    values
+        (?, ?, ?)
+14:11:54,893 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseDetail
+        (quantity, purchaseNumber, purchaseSequence, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,894 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseDetail
+        (quantity, purchaseNumber, purchaseSequence, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,894 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,895 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,931  INFO CustomRunner:139 - Test: testLoad
+14:11:54,932 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseRecord
+        ("timestamp", purchaseNumber, purchaseSequence) 
+    values
+        (?, ?, ?)
+14:11:54,933 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,933 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,935  INFO CustomRunner:139 - Test: testMerge
+14:11:54,936 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseRecord
+        ("timestamp", purchaseNumber, purchaseSequence) 
+    values
+        (?, ?, ?)
+14:11:54,936 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,937 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,970 DEBUG SQL:104 - 
+    update
+        PurchaseRecord 
+    set
+        "timestamp"=? 
+    where
+        purchaseNumber=? 
+        and purchaseSequence=?
+14:11:54,971 DEBUG SQL:104 - 
+    select
+        purchasere0_.purchaseNumber as purchase1_1_0_,
+        purchasere0_.purchaseSequence as purchase2_1_0_,
+        purchasere0_."timestamp" as timestamp3_1_0_ 
+    from
+        PurchaseRecord purchasere0_ 
+    where
+        purchasere0_.purchaseNumber=? 
+        and purchasere0_.purchaseSequence=?
+14:11:54,972 DEBUG SQL:104 - 
+    select
+        details0_.purchaseNumber as purchase3_1_1_,
+        details0_.purchaseSequence as purchase4_1_1_,
+        details0_.productId as productId0_1_,
+        details0_.productId as productId0_0_,
+        details0_.quantity as quantity0_0_,
+        details0_.purchaseNumber as purchase3_0_0_,
+        details0_.purchaseSequence as purchase4_0_0_ 
+    from
+        PurchaseDetail details0_ 
+    where
+        details0_.purchaseNumber=? 
+        and details0_.purchaseSequence=?
+14:11:54,984  INFO CustomRunner:139 - Test: testSaveOrUpdate
+14:11:54,986 DEBUG SQL:104 - 
+    insert 
+    into
+        PurchaseRecord
+        ("timestamp", purchaseNumber, purchaseSequence) 
+    values
+        (?, ?, ?)
+14:11:54,986 DEBUG SQL:104 - 
+    select
+        purchasere_.purchaseNumber,
+        purchasere_.purchaseSequence,
+        purchasere_."timestamp" as timestamp3_1_ 
+    from
+        PurchaseRecord purchasere_ 
+    where
+        purchasere_.purchaseNumber=? 
+        and purchasere_.purchaseSequence=?
+14:11:54,987 DEBUG SQL:104 - 
+    update
+        PurchaseRecord 
+    set
+        "timestamp"=? 
+    where
+        purchaseNumber=? 
+        and purchaseSequence=?
+14:11:54,992  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:54,993 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:54,993 DEBUG SQL:104 - 
+    alter table PurchaseDetail 
+        drop constraint FK74D50D2B9536004
+14:11:54,993 DEBUG SQL:104 - 
+    drop table PurchaseDetail if exists
+14:11:54,994 DEBUG SQL:104 - 
+    drop table PurchaseRecord if exists
+14:11:54,994  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:54,994  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

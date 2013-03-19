@@ -1,0 +1,705 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.naturalid.mutable.cached.CachedMutableNaturalIdStrictReadWriteTest" tests="9" time="0.27" timestamp="2013-02-28T20:17:32">
+  <properties />
+  <testcase classname="org.hibernate.test.naturalid.mutable.cached.CachedMutableNaturalIdStrictReadWriteTest" name="testChangedNaturalIdCachedAfterTransactionSuccess" time="0.033" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.cached.CachedMutableNaturalIdStrictReadWriteTest" name="testChangedNaturalIdNotCachedAfterTransactionFailure" time="0.027" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.cached.CachedMutableNaturalIdStrictReadWriteTest" name="testInsertUpdateEntity_NaturalIdCachedAfterTransactionSuccess" time="0.009" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.cached.CachedMutableNaturalIdStrictReadWriteTest" name="testInsertedNaturalIdCachedAfterTransactionSuccess" time="0.003" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.cached.CachedMutableNaturalIdStrictReadWriteTest" name="testInsertedNaturalIdNotCachedAfterTransactionFailure" time="0.003" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.cached.CachedMutableNaturalIdStrictReadWriteTest" name="testNaturalIdChangeAfterResolveEntityFrom2LCache" time="0.016" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.cached.CachedMutableNaturalIdStrictReadWriteTest" name="testNaturalIdChangedWhileAttached" time="0.023" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.cached.CachedMutableNaturalIdStrictReadWriteTest" name="testNaturalIdChangedWhileDetached" time="0.041" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.cached.CachedMutableNaturalIdStrictReadWriteTest" name="testNaturalIdRecachingWhenNeeded" time="0.045" />
+  <system-out><![CDATA[14:17:32,020  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.naturalid.mutable.cached.CachedMutableNaturalIdStrictReadWriteTest
+14:17:32,025  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:32,026  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:32,026  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:32,026  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:32,026  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:32,027  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:32,028  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:32,028  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:32,029  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:32,029  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:32,040  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:32,040 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:32,041 DEBUG SQL:104 - 
+    drop table AllCached if exists
+14:17:32,041 DEBUG SQL:104 - 
+    drop table Another if exists
+14:17:32,041 DEBUG SQL:104 - 
+    create table AllCached (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:17:32,041 DEBUG SQL:104 - 
+    create table Another (
+        id integer not null,
+        name varchar(255),
+        surname varchar(255),
+        primary key (id)
+    )
+14:17:32,042 DEBUG SQL:104 - 
+    alter table AllCached 
+        add constraint _UniqueKey unique (name)
+14:17:32,042 DEBUG SQL:104 - 
+    alter table Another 
+        add constraint _UniqueKey unique (name)
+14:17:32,042 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Another add constraint _UniqueKey unique (name)
+14:17:32,042 ERROR SchemaExport:426 - Constraint "_UNIQUEKEY" already exists; SQL statement:
+
+    alter table Another 
+        add constraint _UniqueKey unique (name) [90045-145]
+14:17:32,042  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:32,043  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:32,043  INFO CustomRunner:139 - Test: testChangedNaturalIdCachedAfterTransactionSuccess
+14:17:32,044 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Another
+14:17:32,045 DEBUG SQL:104 - 
+    insert 
+    into
+        Another
+        (name, surname, id) 
+    values
+        (?, ?, ?)
+14:17:32,045 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,045 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@10ae9d15]
+14:17:32,046 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,046 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,046 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,046 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,046 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,047 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,064 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,064 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,064 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,064 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:0]
+14:17:32,064 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,064 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]]
+14:17:32,064 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:1]
+14:17:32,065 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,065 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,065 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,065 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:0]
+14:17:32,065 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]]
+14:17:32,065 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]
+14:17:32,065 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@93aa25f]
+14:17:32,065 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,066 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]]
+14:17:32,066 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]
+14:17:32,066 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,066 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,066 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]
+14:17:32,067 DEBUG SQL:104 - 
+    delete 
+    from
+        Another 
+    where
+        id=?
+14:17:32,075 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]
+14:17:32,076  INFO CustomRunner:139 - Test: testChangedNaturalIdNotCachedAfterTransactionFailure
+14:17:32,077 DEBUG SQL:104 - 
+    insert 
+    into
+        Another
+        (name, surname, id) 
+    values
+        (?, ?, ?)
+14:17:32,077 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,077 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,078 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,078 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,078 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,078 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId], but it is unreadable
+14:17:32,078 DEBUG SQL:104 - 
+    select
+        another_.id as id1_ 
+    from
+        Another another_ 
+    where
+        another_.name=?
+14:17:32,078 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,085 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,086 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,086 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId], but it is unreadable
+14:17:32,086 DEBUG AbstractReadWriteAccessStrategy:68 - putting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> value[2] into region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,086 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,086 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,086 DEBUG AbstractReadWriteAccessStrategy:73 - putting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> value[2] into region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] success
+14:17:32,086 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@5fbadaf8]
+14:17:32,087 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,089 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,090 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,090 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,090 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,090 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:2]
+14:17:32,090 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,098 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]]
+14:17:32,098 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:3]
+14:17:32,098 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,098 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,099 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,099 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:2]
+14:17:32,099 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,099 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]]
+14:17:32,099 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]
+14:17:32,099 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:3]
+14:17:32,099 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,099 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]]
+14:17:32,099 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]
+14:17:32,100 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[modified]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId], but it is unreadable
+14:17:32,100 DEBUG SQL:104 - 
+    select
+        another_.id as id1_ 
+    from
+        Another another_ 
+    where
+        another_.name=?
+14:17:32,100 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,100 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,100 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,100 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId], but it is unreadable
+14:17:32,100 DEBUG SQL:104 - 
+    select
+        another_.id as id1_ 
+    from
+        Another another_ 
+    where
+        another_.name=?
+14:17:32,101 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,101 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,101 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,101 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId], but it is unreadable
+14:17:32,101 DEBUG AbstractReadWriteAccessStrategy:68 - putting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> value[2] into region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,101 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,101 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,101 DEBUG AbstractReadWriteAccessStrategy:73 - putting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> value[2] into region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] success
+14:17:32,101 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@25b42d77]
+14:17:32,101 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,102 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,102 DEBUG SQL:104 - 
+    delete 
+    from
+        Another 
+    where
+        id=?
+14:17:32,102 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,103  INFO CustomRunner:139 - Test: testInsertUpdateEntity_NaturalIdCachedAfterTransactionSuccess
+14:17:32,115 DEBUG SQL:104 - 
+    insert 
+    into
+        Another
+        (name, surname, id) 
+    values
+        (?, ?, ?)
+14:17:32,116 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,116 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,116 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@7c2e1826]
+14:17:32,116 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,116 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,116 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,116 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,117 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,122 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,123 DEBUG SQL:104 - 
+    delete 
+    from
+        Another 
+    where
+        id=?
+14:17:32,123 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,124  INFO CustomRunner:139 - Test: testInsertedNaturalIdCachedAfterTransactionSuccess
+14:17:32,125 DEBUG SQL:104 - 
+    insert 
+    into
+        Another
+        (name, surname, id) 
+    values
+        (?, ?, ?)
+14:17:32,126 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,126 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@388f2305]
+14:17:32,126 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,126 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,126 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,126 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,127 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,127 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,127 DEBUG SQL:104 - 
+    delete 
+    from
+        Another 
+    where
+        id=?
+14:17:32,127 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,143  INFO CustomRunner:139 - Test: testInsertedNaturalIdNotCachedAfterTransactionFailure
+14:17:32,144 DEBUG SQL:104 - 
+    insert 
+    into
+        Another
+        (name, surname, id) 
+    values
+        (?, ?, ?)
+14:17:32,145 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,145 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,145 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,145 DEBUG SQL:104 - 
+    select
+        another_.id as id1_ 
+    from
+        Another another_ 
+    where
+        another_.name=?
+14:17:32,146  INFO CustomRunner:139 - Test: testNaturalIdChangeAfterResolveEntityFrom2LCache
+14:17:32,146 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        AllCached
+14:17:32,147 DEBUG SQL:104 - 
+    insert 
+    into
+        AllCached
+        (name, id) 
+    values
+        (?, ?)
+14:17:32,152 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId[it]]
+14:17:32,152 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId[it]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@5ef3ea65]
+14:17:32,152 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached] lookup : key[org.hibernate.test.naturalid.mutable.cached.AllCached#1]
+14:17:32,153 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached] : [org.hibernate.test.naturalid.mutable.cached.AllCached#1] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@5fa1bd96]
+14:17:32,153 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.AllCached#1] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached]
+14:17:32,153 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached] lookup : key[org.hibernate.test.naturalid.mutable.cached.AllCached#1]
+14:17:32,153 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached] hit: org.hibernate.test.naturalid.mutable.cached.AllCached#1
+14:17:32,153 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.mutable.cached.AllCached#1] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached]
+14:17:32,153 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId]
+14:17:32,153 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId[it]]
+14:17:32,153 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId[it]
+14:17:32,153 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId]
+14:17:32,154 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId]: org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId[it]
+14:17:32,154 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId]: org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId[it]
+14:17:32,154 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId]: org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId[it2]
+14:17:32,154 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.naturalid.mutable.cached.AllCached#1] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached]
+14:17:32,154 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached] lookup : key[org.hibernate.test.naturalid.mutable.cached.AllCached#1]
+14:17:32,154 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached] hit: org.hibernate.test.naturalid.mutable.cached.AllCached#1
+14:17:32,154 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached] : [org.hibernate.test.naturalid.mutable.cached.AllCached#1] -> [Lock Source-UUID:798ac497-953d-4b64-b384-55e9d2df1354 Lock-ID:0]
+14:17:32,154 DEBUG SQL:104 - 
+    delete 
+    from
+        AllCached 
+    where
+        id=?
+14:17:32,155 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId]: org.hibernate.test.naturalid.mutable.cached.AllCached##NaturalId[it2]
+14:17:32,161 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.naturalid.mutable.cached.AllCached#1] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached]
+14:17:32,161 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached] lookup : key[org.hibernate.test.naturalid.mutable.cached.AllCached#1]
+14:17:32,161 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached] hit: org.hibernate.test.naturalid.mutable.cached.AllCached#1
+14:17:32,161 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.AllCached] : [org.hibernate.test.naturalid.mutable.cached.AllCached#1] -> [Lock Source-UUID:798ac497-953d-4b64-b384-55e9d2df1354 Lock-ID:0]
+14:17:32,162  INFO CustomRunner:139 - Test: testNaturalIdChangedWhileAttached
+14:17:32,163 DEBUG SQL:104 - 
+    insert 
+    into
+        Another
+        (name, surname, id) 
+    values
+        (?, ?, ?)
+14:17:32,164 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,164 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@1d2c9750]
+14:17:32,164 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,164 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,164 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,165 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,165 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,165 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,173 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,173 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,173 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,173 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:4]
+14:17:32,174 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,174 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]]
+14:17:32,174 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:5]
+14:17:32,174 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,174 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,174 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,174 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:4]
+14:17:32,174 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]]
+14:17:32,174 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]
+14:17:32,174 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@7c7f136d]
+14:17:32,175 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,175 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,175 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,175 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId], but it is unreadable
+14:17:32,175 DEBUG SQL:104 - 
+    select
+        another_.id as id1_ 
+    from
+        Another another_ 
+    where
+        another_.name=?
+14:17:32,183 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,183 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]]
+14:17:32,183 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]
+14:17:32,183 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,183 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,184 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]
+14:17:32,184 DEBUG SQL:104 - 
+    delete 
+    from
+        Another 
+    where
+        id=?
+14:17:32,184 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]
+14:17:32,185  INFO CustomRunner:139 - Test: testNaturalIdChangedWhileDetached
+14:17:32,186 DEBUG SQL:104 - 
+    insert 
+    into
+        Another
+        (name, surname, id) 
+    values
+        (?, ?, ?)
+14:17:32,193 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,194 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,194 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,194 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,194 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,194 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId], but it is unreadable
+14:17:32,194 DEBUG SQL:104 - 
+    select
+        another_.id as id1_ 
+    from
+        Another another_ 
+    where
+        another_.name=?
+14:17:32,194 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,194 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,195 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,195 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId], but it is unreadable
+14:17:32,195 DEBUG AbstractReadWriteAccessStrategy:68 - putting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> value[7] into region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,195 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,195 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,195 DEBUG AbstractReadWriteAccessStrategy:73 - putting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> value[7] into region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] success
+14:17:32,195 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@5984655a]
+14:17:32,195 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,205 DEBUG SQL:104 - 
+    select
+        another_.id,
+        another_.name as name1_,
+        another_.surname as surname1_ 
+    from
+        Another another_ 
+    where
+        another_.id=?
+14:17:32,205 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,205 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,206 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,206 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,206 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,206 DEBUG SQL:104 - 
+    select
+        another_.id as id1_ 
+    from
+        Another another_ 
+    where
+        another_.name=?
+14:17:32,214 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,214 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]]
+14:17:32,214 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,214 DEBUG SQL:104 - 
+    select
+        another_.id as id1_ 
+    from
+        Another another_ 
+    where
+        another_.name=?
+14:17:32,215 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,215 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]]
+14:17:32,215 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,215 DEBUG AbstractReadWriteAccessStrategy:68 - putting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] -> value[7] into region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,215 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]]
+14:17:32,215 DEBUG AbstractReadWriteAccessStrategy:73 - putting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] -> value[7] into region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] success
+14:17:32,215 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@3d14697a]
+14:17:32,215 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,225 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]
+14:17:32,226 DEBUG SQL:104 - 
+    delete 
+    from
+        Another 
+    where
+        id=?
+14:17:32,226 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it2]
+14:17:32,226  INFO CustomRunner:139 - Test: testNaturalIdRecachingWhenNeeded
+14:17:32,227 DEBUG SQL:104 - 
+    insert 
+    into
+        Another
+        (name, surname, id) 
+    values
+        (?, ?, ?)
+14:17:32,228 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,228 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@2e519e16]
+14:17:32,228 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,228 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,229 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,229 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,229 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,229 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,229 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,230 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,239 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,240 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,240 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,255 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,255 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,255 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,256 DEBUG SQL:104 - 
+    update
+        Another 
+    set
+        name=?,
+        surname=? 
+    where
+        id=?
+14:17:32,256 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,256 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,256 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,256 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:6]
+14:17:32,256 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,256 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]]
+14:17:32,257 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:7]
+14:17:32,257 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,257 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,257 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,257 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] -> [Lock Source-UUID:1780aa3a-76e5-420b-8207-2a56b9be05e2 Lock-ID:6]
+14:17:32,257 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]]
+14:17:32,257 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]
+14:17:32,257 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] : [org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@21e913ca]
+14:17:32,258 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,258 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]]
+14:17:32,258 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]
+14:17:32,258 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[it]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId], but it is unreadable
+14:17:32,258 DEBUG SQL:104 - 
+    select
+        another_.id as id1_ 
+    from
+        Another another_ 
+    where
+        another_.name=?
+14:17:32,270 DEBUG SQL:104 - 
+    select
+        another0_.id as id1_0_,
+        another0_.name as name1_0_,
+        another0_.surname as surname1_0_ 
+    from
+        Another another0_ 
+    where
+        another0_.id=?
+14:17:32,271 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]] from region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,271 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] lookup : key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]]
+14:17:32,271 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId] hit: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]
+14:17:32,271 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]] in region[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]
+14:17:32,271 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]
+14:17:32,271 DEBUG SQL:104 - 
+    delete 
+    from
+        Another 
+    where
+        id=?
+14:17:32,272 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId]: org.hibernate.test.naturalid.mutable.cached.Another##NaturalId[name9]
+14:17:32,272  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:32,273 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:32,282 DEBUG SQL:104 - 
+    drop table AllCached if exists
+14:17:32,282 DEBUG SQL:104 - 
+    drop table Another if exists
+14:17:32,283  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:32,283  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

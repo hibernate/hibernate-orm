@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.component.cascading.toone.CascadeToComponentAssociationTest" tests="1" time="0.161" timestamp="2013-02-28T20:12:00">
+  <properties />
+  <testcase classname="org.hibernate.test.component.cascading.toone.CascadeToComponentAssociationTest" name="testMerging" time="0.065" />
+  <system-out><![CDATA[14:12:00,840  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.component.cascading.toone.CascadeToComponentAssociationTest
+14:12:00,842  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/component/cascading/toone/Mappings.hbm.xml
+14:12:00,858  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:00,858  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:00,858  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:00,858  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:00,859  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:00,860  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:00,860  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:00,861  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:00,861  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:00,861  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:00,890  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:00,891 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:00,891 DEBUG SQL:104 - 
+    alter table COMP_CASC_TO1_DOC 
+        drop constraint FK1C77018E2AA12845
+14:12:00,892 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table COMP_CASC_TO1_DOC drop constraint FK1C77018E2AA12845
+14:12:00,892 ERROR SchemaExport:426 - Table "COMP_CASC_TO1_DOC" not found; SQL statement:
+
+    alter table COMP_CASC_TO1_DOC 
+        drop constraint FK1C77018E2AA12845 [42102-145]
+14:12:00,892 DEBUG SQL:104 - 
+    alter table COMP_CASC_TO1_USER 
+        drop constraint FK7270FA157A9D6702
+14:12:00,892 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table COMP_CASC_TO1_USER drop constraint FK7270FA157A9D6702
+14:12:00,892 ERROR SchemaExport:426 - Table "COMP_CASC_TO1_USER" not found; SQL statement:
+
+    alter table COMP_CASC_TO1_USER 
+        drop constraint FK7270FA157A9D6702 [42102-145]
+14:12:00,892 DEBUG SQL:104 - 
+    drop table COMP_CASC_TO1_ADDR if exists
+14:12:00,893 DEBUG SQL:104 - 
+    drop table COMP_CASC_TO1_DOC if exists
+14:12:00,893 DEBUG SQL:104 - 
+    drop table COMP_CASC_TO1_USER if exists
+14:12:00,893 DEBUG SQL:104 - 
+    create table COMP_CASC_TO1_ADDR (
+        ID bigint not null,
+        STREET1 varchar(255),
+        STREET2 varchar(255),
+        CITY varchar(255),
+        STATE varchar(255),
+        ZIP_CODE varchar(255),
+        primary key (ID)
+    )
+14:12:00,893 DEBUG SQL:104 - 
+    create table COMP_CASC_TO1_DOC (
+        ID bigint not null,
+        owner bigint,
+        primary key (ID)
+    )
+14:12:00,894 DEBUG SQL:104 - 
+    create table COMP_CASC_TO1_USER (
+        ID bigint not null,
+        homeAddress bigint,
+        primary key (ID)
+    )
+14:12:00,894 DEBUG SQL:104 - 
+    alter table COMP_CASC_TO1_DOC 
+        add constraint FK1C77018E2AA12845 
+        foreign key (owner) 
+        references COMP_CASC_TO1_USER
+14:12:00,894 DEBUG SQL:104 - 
+    alter table COMP_CASC_TO1_USER 
+        add constraint FK7270FA157A9D6702 
+        foreign key (homeAddress) 
+        references COMP_CASC_TO1_ADDR
+14:12:00,895  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:00,896  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:00,896  INFO CustomRunner:139 - Test: testMerging
+14:12:00,897 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        COMP_CASC_TO1_DOC
+14:12:00,908 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        COMP_CASC_TO1_USER
+14:12:00,909 DEBUG SQL:104 - 
+    insert 
+    into
+        COMP_CASC_TO1_USER
+        (homeAddress, ID) 
+    values
+        (?, ?)
+14:12:00,910 DEBUG SQL:104 - 
+    insert 
+    into
+        COMP_CASC_TO1_DOC
+        (owner, ID) 
+    values
+        (?, ?)
+14:12:00,910 DEBUG SQL:104 - 
+    select
+        document0_.ID as ID1_0_,
+        document0_.owner as owner1_0_ 
+    from
+        COMP_CASC_TO1_DOC document0_ 
+    where
+        document0_.ID=?
+14:12:00,911 DEBUG SQL:104 - 
+    select
+        user0_.ID as ID2_0_,
+        user0_.homeAddress as homeAddr2_2_0_ 
+    from
+        COMP_CASC_TO1_USER user0_ 
+    where
+        user0_.ID=?
+14:12:00,922 DEBUG SQL:104 - 
+    select
+        document0_.ID as ID1_2_,
+        document0_.owner as owner1_2_,
+        user1_.ID as ID2_0_,
+        user1_.homeAddress as homeAddr2_2_0_,
+        address2_.ID as ID0_1_,
+        address2_.STREET1 as STREET2_0_1_,
+        address2_.STREET2 as STREET3_0_1_,
+        address2_.CITY as CITY0_1_,
+        address2_.STATE as STATE0_1_,
+        address2_.ZIP_CODE as ZIP6_0_1_ 
+    from
+        COMP_CASC_TO1_DOC document0_ 
+    left outer join
+        COMP_CASC_TO1_USER user1_ 
+            on document0_.owner=user1_.ID 
+    left outer join
+        COMP_CASC_TO1_ADDR address2_ 
+            on user1_.homeAddress=address2_.ID 
+    where
+        document0_.ID=?
+14:12:00,924 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        COMP_CASC_TO1_ADDR
+14:12:00,924 DEBUG SQL:104 - 
+    insert 
+    into
+        COMP_CASC_TO1_ADDR
+        (STREET1, STREET2, CITY, STATE, ZIP_CODE, ID) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:12:00,925 DEBUG SQL:104 - 
+    update
+        COMP_CASC_TO1_USER 
+    set
+        homeAddress=? 
+    where
+        ID=?
+14:12:00,959 DEBUG SQL:104 - 
+    select
+        document0_.ID as ID1_0_,
+        document0_.owner as owner1_0_ 
+    from
+        COMP_CASC_TO1_DOC document0_ 
+    where
+        document0_.ID=?
+14:12:00,960 DEBUG SQL:104 - 
+    select
+        user0_.ID as ID2_0_,
+        user0_.homeAddress as homeAddr2_2_0_ 
+    from
+        COMP_CASC_TO1_USER user0_ 
+    where
+        user0_.ID=?
+14:12:00,961  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:00,962 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:00,962 DEBUG SQL:104 - 
+    alter table COMP_CASC_TO1_DOC 
+        drop constraint FK1C77018E2AA12845
+14:12:00,962 DEBUG SQL:104 - 
+    alter table COMP_CASC_TO1_USER 
+        drop constraint FK7270FA157A9D6702
+14:12:00,991 DEBUG SQL:104 - 
+    drop table COMP_CASC_TO1_ADDR if exists
+14:12:00,998 DEBUG SQL:104 - 
+    drop table COMP_CASC_TO1_DOC if exists
+14:12:00,998 DEBUG SQL:104 - 
+    drop table COMP_CASC_TO1_USER if exists
+14:12:00,999  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:00,999  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

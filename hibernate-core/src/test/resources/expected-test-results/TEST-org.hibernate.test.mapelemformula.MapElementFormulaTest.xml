@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.mapelemformula.MapElementFormulaTest" tests="1" time="0.071" timestamp="2013-02-28T20:17:29">
+  <properties />
+  <testcase classname="org.hibernate.test.mapelemformula.MapElementFormulaTest" name="testManyToManyFormula" time="0.006" />
+  <system-out><![CDATA[14:17:29,117  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.mapelemformula.MapElementFormulaTest
+14:17:29,118  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/mapelemformula/UserGroup.hbm.xml
+14:17:29,143  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:29,144  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:29,144  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:29,144  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:29,144  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:29,145  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:29,146  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:29,147  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:29,147  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:29,151  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:29,173  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:29,173 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:29,174 DEBUG SQL:104 - 
+    alter table group_user 
+        drop constraint FK4C71E58BB07F478C
+14:17:29,174 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table group_user drop constraint FK4C71E58BB07F478C
+14:17:29,174 ERROR SchemaExport:426 - Table "GROUP_USER" not found; SQL statement:
+
+    alter table group_user 
+        drop constraint FK4C71E58BB07F478C [42102-145]
+14:17:29,174 DEBUG SQL:104 - 
+    drop table group_user if exists
+14:17:29,174 DEBUG SQL:104 - 
+    drop table groups if exists
+14:17:29,175 DEBUG SQL:104 - 
+    drop table users if exists
+14:17:29,175 DEBUG SQL:104 - 
+    create table group_user (
+        groupName varchar(255) not null,
+        personName varchar(255) not null,
+        primary key (groupName, personName)
+    )
+14:17:29,175 DEBUG SQL:104 - 
+    create table groups (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:17:29,175 DEBUG SQL:104 - 
+    create table users (
+        name varchar(255) not null,
+        "password" varchar(255),
+        primary key (name)
+    )
+14:17:29,176 DEBUG SQL:104 - 
+    alter table group_user 
+        add constraint FK4C71E58BB07F478C 
+        foreign key (groupName) 
+        references groups
+14:17:29,176  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:29,176  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:29,177  INFO CustomRunner:139 - Test: testManyToManyFormula
+14:17:29,179 DEBUG SQL:104 - 
+    insert 
+    into
+        groups
+        (name) 
+    values
+        (?)
+14:17:29,179 DEBUG SQL:104 - 
+    insert 
+    into
+        users
+        ("password", name) 
+    values
+        (?, ?)
+14:17:29,179 DEBUG SQL:104 - 
+    insert 
+    into
+        users
+        ("password", name) 
+    values
+        (?, ?)
+14:17:29,179 DEBUG SQL:104 - 
+    insert 
+    into
+        group_user
+        (groupName, personName) 
+    values
+        (?, ?)
+14:17:29,180 DEBUG SQL:104 - 
+    insert 
+    into
+        group_user
+        (groupName, personName) 
+    values
+        (?, ?)
+14:17:29,180 DEBUG SQL:104 - 
+    select
+        group0_.name as name1_0_ 
+    from
+        groups group0_ 
+    where
+        group0_.name=?
+14:17:29,180 DEBUG SQL:104 - 
+    select
+        users0_.groupName as groupName1_0_,
+        lower(users0_.personName) as formula99_0_,
+        users0_.personName as personName0_ 
+    from
+        group_user users0_ 
+    where
+        users0_.groupName=?
+14:17:29,181 DEBUG SQL:104 - 
+    delete 
+    from
+        group_user 
+    where
+        groupName=? 
+        and personName=?
+14:17:29,181 DEBUG SQL:104 - 
+    select
+        group0_.name as name1_0_ 
+    from
+        groups group0_ 
+    where
+        group0_.name=?
+14:17:29,181 DEBUG SQL:104 - 
+    select
+        users0_.groupName as groupName1_0_,
+        lower(users0_.personName) as formula99_0_,
+        users0_.personName as personName0_ 
+    from
+        group_user users0_ 
+    where
+        users0_.groupName=?
+14:17:29,182 DEBUG SQL:104 - 
+    select
+        user0_.name as name2_0_,
+        user0_."password" as password2_2_0_ 
+    from
+        users user0_ 
+    where
+        user0_.name=?
+14:17:29,182 DEBUG SQL:104 - 
+    select
+        user0_.name as name2_0_,
+        user0_."password" as password2_2_0_ 
+    from
+        users user0_ 
+    where
+        user0_.name=?
+14:17:29,182 DEBUG SQL:104 - 
+    delete 
+    from
+        group_user 
+    where
+        groupName=?
+14:17:29,183 DEBUG SQL:104 - 
+    delete 
+    from
+        groups 
+    where
+        name=?
+14:17:29,183 DEBUG SQL:104 - 
+    delete 
+    from
+        users 
+    where
+        name=?
+14:17:29,183 DEBUG SQL:104 - 
+    delete 
+    from
+        users 
+    where
+        name=?
+14:17:29,183  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:29,184 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:29,184 DEBUG SQL:104 - 
+    alter table group_user 
+        drop constraint FK4C71E58BB07F478C
+14:17:29,184 DEBUG SQL:104 - 
+    drop table group_user if exists
+14:17:29,184 DEBUG SQL:104 - 
+    drop table groups if exists
+14:17:29,185 DEBUG SQL:104 - 
+    drop table users if exists
+14:17:29,185  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:29,185  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

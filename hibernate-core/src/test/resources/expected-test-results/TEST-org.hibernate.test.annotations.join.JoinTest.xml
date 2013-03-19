@@ -1,0 +1,801 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.join.JoinTest" tests="9" time="0.445" timestamp="2013-02-28T20:10:33">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.join.JoinTest" name="testCompositePK" time="0.018" />
+  <testcase classname="org.hibernate.test.annotations.join.JoinTest" name="testCustomSQL" time="0.02" />
+  <testcase classname="org.hibernate.test.annotations.join.JoinTest" name="testDefaultValue" time="0.047" />
+  <testcase classname="org.hibernate.test.annotations.join.JoinTest" name="testExplicitValue" time="0.03" />
+  <testcase classname="org.hibernate.test.annotations.join.JoinTest" name="testFetchModeOnSecondaryTable" time="0.012" />
+  <testcase classname="org.hibernate.test.annotations.join.JoinTest" name="testManyToOne" time="0.038" />
+  <testcase classname="org.hibernate.test.annotations.join.JoinTest" name="testMappedSuperclassAndSecondaryTable" time="0.017" />
+  <testcase classname="org.hibernate.test.annotations.join.JoinTest" name="testReferenceColumnWithBacktics" time="0.029" />
+  <testcase classname="org.hibernate.test.annotations.join.JoinTest" name="testUniqueConstaintOnSecondaryTable" time="0.026" />
+  <system-out><![CDATA[14:10:33,024  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.join.JoinTest
+14:10:33,040  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:33,041  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:33,041  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:33,041  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:33,041  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:33,042  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:33,043  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:33,043  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:33,043  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:33,043  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:33,070  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:33,071 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:33,071 DEBUG SQL:104 - 
+    alter table C 
+        drop constraint FK43DDCC985A
+14:10:33,071 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table C drop constraint FK43DDCC985A
+14:10:33,071 ERROR SchemaExport:426 - Table "C" not found; SQL statement:
+
+    alter table C 
+        drop constraint FK43DDCC985A [42102-145]
+14:10:33,071 DEBUG SQL:104 - 
+    alter table Cat2 
+        drop constraint FK_CAT2_CAT
+14:10:33,072 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Cat2 drop constraint FK_CAT2_CAT
+14:10:33,080 ERROR SchemaExport:426 - Table "CAT2" not found; SQL statement:
+
+    alter table Cat2 
+        drop constraint FK_CAT2_CAT [42102-145]
+14:10:33,081 DEBUG SQL:104 - 
+    alter table DogThoroughbred 
+        drop constraint FKA7352249BE3F3C3A
+14:10:33,081 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DogThoroughbred drop constraint FKA7352249BE3F3C3A
+14:10:33,081 ERROR SchemaExport:426 - Table "DOGTHOROUGHBRED" not found; SQL statement:
+
+    alter table DogThoroughbred 
+        drop constraint FKA7352249BE3F3C3A [42102-145]
+14:10:33,081 DEBUG SQL:104 - 
+    alter table ExtendedDeath 
+        drop constraint FK93F5C09BE128AA16
+14:10:33,081 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ExtendedDeath drop constraint FK93F5C09BE128AA16
+14:10:33,081 ERROR SchemaExport:426 - Table "EXTENDEDDEATH" not found; SQL statement:
+
+    alter table ExtendedDeath 
+        drop constraint FK93F5C09BE128AA16 [42102-145]
+14:10:33,081 DEBUG SQL:104 - 
+    alter table ExtendedLife 
+        drop constraint FKD0B9FF54B539DD6
+14:10:33,082 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ExtendedLife drop constraint FKD0B9FF54B539DD6
+14:10:33,082 ERROR SchemaExport:426 - Table "EXTENDEDLIFE" not found; SQL statement:
+
+    alter table ExtendedLife 
+        drop constraint FKD0B9FF54B539DD6 [42102-145]
+14:10:33,082 DEBUG SQL:104 - 
+    alter table ExtendedLife 
+        drop constraint FKD0B9FF582077DE
+14:10:33,082 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ExtendedLife drop constraint FKD0B9FF582077DE
+14:10:33,082 ERROR SchemaExport:426 - Table "EXTENDEDLIFE" not found; SQL statement:
+
+    alter table ExtendedLife 
+        drop constraint FKD0B9FF582077DE [42102-145]
+14:10:33,082 DEBUG SQL:104 - 
+    alter table SYS_GROUPS_USERS 
+        drop constraint FKD1F7C00FECFF87A7
+14:10:33,083 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table SYS_GROUPS_USERS drop constraint FKD1F7C00FECFF87A7
+14:10:33,083 ERROR SchemaExport:426 - Table "SYS_GROUPS_USERS" not found; SQL statement:
+
+    alter table SYS_GROUPS_USERS 
+        drop constraint FKD1F7C00FECFF87A7 [42102-145]
+14:10:33,083 DEBUG SQL:104 - 
+    alter table SYS_GROUPS_USERS 
+        drop constraint FKD1F7C00F11E7DA5C
+14:10:33,083 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table SYS_GROUPS_USERS drop constraint FKD1F7C00F11E7DA5C
+14:10:33,083 ERROR SchemaExport:426 - Table "SYS_GROUPS_USERS" not found; SQL statement:
+
+    alter table SYS_GROUPS_USERS 
+        drop constraint FKD1F7C00F11E7DA5C [42102-145]
+14:10:33,083 DEBUG SQL:104 - 
+    alter table "Cat nbr1" 
+        drop constraint FK313C8DD9CD6D0CD
+14:10:33,083 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "Cat nbr1" drop constraint FK313C8DD9CD6D0CD
+14:10:33,084 ERROR SchemaExport:426 - Table "Cat nbr1" not found; SQL statement:
+
+    alter table "Cat nbr1" 
+        drop constraint FK313C8DD9CD6D0CD [42102-145]
+14:10:33,092 DEBUG SQL:104 - 
+    drop table B if exists
+14:10:33,092 DEBUG SQL:104 - 
+    drop table C if exists
+14:10:33,092 DEBUG SQL:104 - 
+    drop table Cat if exists
+14:10:33,092 DEBUG SQL:104 - 
+    drop table Cat2 if exists
+14:10:33,092 DEBUG SQL:104 - 
+    drop table Death if exists
+14:10:33,092 DEBUG SQL:104 - 
+    drop table Dog if exists
+14:10:33,093 DEBUG SQL:104 - 
+    drop table DogThoroughbred if exists
+14:10:33,093 DEBUG SQL:104 - 
+    drop table ExtendedDeath if exists
+14:10:33,093 DEBUG SQL:104 - 
+    drop table ExtendedLife if exists
+14:10:33,093 DEBUG SQL:104 - 
+    drop table Life if exists
+14:10:33,093 DEBUG SQL:104 - 
+    drop table SYS_GROUPS if exists
+14:10:33,093 DEBUG SQL:104 - 
+    drop table SYS_GROUPS_USERS if exists
+14:10:33,093 DEBUG SQL:104 - 
+    drop table "Cat nbr1" if exists
+14:10:33,093 DEBUG SQL:104 - 
+    drop table "SYS_USER" if exists
+14:10:33,094 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:33,094 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:33,106 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:33,106 DEBUG SQL:104 - 
+    create table B (
+        DTYPE varchar(31) not null,
+        id integer not null,
+        createDate timestamp not null,
+        name varchar(255) not null,
+        primary key (id)
+    )
+14:10:33,107 DEBUG SQL:104 - 
+    create table C (
+        age integer,
+        id integer not null,
+        primary key (id)
+    )
+14:10:33,107 DEBUG SQL:104 - 
+    create table Cat (
+        id integer not null,
+        name varchar(255),
+        secondName varchar(255),
+        primary key (id)
+    )
+14:10:33,107 DEBUG SQL:104 - 
+    create table Cat2 (
+        storyPart2 varchar(255) not null,
+        id integer not null,
+        primary key (id)
+    )
+14:10:33,122 DEBUG SQL:104 - 
+    create table Death (
+        id integer not null,
+        death_date timestamp,
+        primary key (id)
+    )
+14:10:33,122 DEBUG SQL:104 - 
+    create table Dog (
+        name varchar(255) not null,
+        ownerName varchar(255) not null,
+        weight integer not null,
+        primary key (name, ownerName)
+    )
+14:10:33,123 DEBUG SQL:104 - 
+    create table DogThoroughbred (
+        thoroughbredName varchar(255),
+        NAME varchar(255) not null,
+        OWNER_NAME varchar(255) not null,
+        primary key (NAME, OWNER_NAME)
+    )
+14:10:33,154 DEBUG SQL:104 - 
+    create table ExtendedDeath (
+        howDoesItHappen varchar(255),
+        DEATH_ID integer not null,
+        primary key (DEATH_ID)
+    )
+14:10:33,154 DEBUG SQL:104 - 
+    create table ExtendedLife (
+        fullDescription varchar(255),
+        CAT_ID integer,
+        LIFE_ID integer not null,
+        primary key (LIFE_ID)
+    )
+14:10:33,154 DEBUG SQL:104 - 
+    create table Life (
+        LIFE_ID integer not null,
+        duration integer not null,
+        primary key (LIFE_ID)
+    )
+14:10:33,155 DEBUG SQL:104 - 
+    create table SYS_GROUPS (
+        GROUPID bigint not null,
+        primary key (GROUPID)
+    )
+14:10:33,155 DEBUG SQL:104 - 
+    create table SYS_GROUPS_USERS (
+        USERID bigint not null,
+        GROUPID bigint not null
+    )
+14:10:33,166 DEBUG SQL:104 - 
+    create table "Cat nbr1" (
+        storyPart1 varchar(255),
+        id integer not null,
+        primary key (id)
+    )
+14:10:33,167 DEBUG SQL:104 - 
+    create table "SYS_USER" (
+        "auid" bigint not null,
+        primary key ("auid")
+    )
+14:10:33,167 DEBUG SQL:104 - 
+    alter table C 
+        add constraint FK43DDCC985A 
+        foreign key (id) 
+        references B
+14:10:33,168 DEBUG SQL:104 - 
+    create index nameindex on Cat (name)
+14:10:33,168 DEBUG SQL:104 - 
+    create index secondname on Cat (secondName)
+14:10:33,168 DEBUG SQL:104 - 
+    alter table Cat2 
+        add constraint UK_Cat2_1 unique (storyPart2)
+14:10:33,168 DEBUG SQL:104 - 
+    alter table Cat2 
+        add constraint FK_CAT2_CAT 
+        foreign key (id) 
+        references Cat
+14:10:33,181 DEBUG SQL:104 - 
+    alter table DogThoroughbred 
+        add constraint FKA7352249BE3F3C3A 
+        foreign key (NAME, OWNER_NAME) 
+        references Dog
+14:10:33,182 DEBUG SQL:104 - 
+    alter table ExtendedDeath 
+        add constraint FK93F5C09BE128AA16 
+        foreign key (DEATH_ID) 
+        references Death
+14:10:33,183 DEBUG SQL:104 - 
+    alter table ExtendedLife 
+        add constraint FKD0B9FF54B539DD6 
+        foreign key (CAT_ID) 
+        references Cat
+14:10:33,183 DEBUG SQL:104 - 
+    alter table ExtendedLife 
+        add constraint FKD0B9FF582077DE 
+        foreign key (LIFE_ID) 
+        references Life
+14:10:33,184 DEBUG SQL:104 - 
+    alter table SYS_GROUPS_USERS 
+        add constraint FKD1F7C00FECFF87A7 
+        foreign key (GROUPID) 
+        references SYS_GROUPS
+14:10:33,185 DEBUG SQL:104 - 
+    alter table SYS_GROUPS_USERS 
+        add constraint FKD1F7C00F11E7DA5C 
+        foreign key (USERID) 
+        references "SYS_USER"
+14:10:33,197 DEBUG SQL:104 - 
+    create index story1index on "Cat nbr1" (storyPart1)
+14:10:33,197 DEBUG SQL:104 - 
+    alter table "Cat nbr1" 
+        add constraint FK313C8DD9CD6D0CD 
+        foreign key (id) 
+        references Cat
+14:10:33,198 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:33,198  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:33,200  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:33,200  INFO CustomRunner:139 - Test: testCompositePK
+14:10:33,202 DEBUG SQL:104 - 
+    insert 
+    into
+        Dog
+        (weight, name, ownerName) 
+    values
+        (?, ?, ?)
+14:10:33,203 DEBUG SQL:104 - 
+    insert 
+    into
+        DogThoroughbred
+        (thoroughbredName, NAME, OWNER_NAME) 
+    values
+        (?, ?, ?)
+14:10:33,204 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.join.Dog
+14:10:33,214 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:10:33,215 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[WEIRD_IDENT] Node: 'join'
+                \-[IDENT] Node: 'Dog'
+
+14:10:33,215 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:33,215 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.join.Dog (<no alias>) -> dog0_
+14:10:33,215 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Dog dog0_ ) )
+14:10:33,215 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:33,215 DEBUG JoinProcessor:175 - Using FROM fragment [Dog dog0_ left outer join DogThoroughbred dog0_1_ on dog0_.name=dog0_1_.NAME and dog0_.ownerName=dog0_1_.OWNER_NAME]
+14:10:33,216 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Dog,DogThoroughbred)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'dog0_.name as name5_, dog0_.ownerName as ownerName5_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Dog,tableAlias=dog0_,origin=null,columns={,className=org.hibernate.test.annotations.join.Dog}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'dog0_.weight as weight5_, dog0_1_.thoroughbredName as thorough1_6_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[dog0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Dog dog0_ left outer join DogThoroughbred dog0_1_ on dog0_.name=dog0_1_.NAME and dog0_.ownerName=dog0_1_.OWNER_NAME' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Dog,tableAlias=dog0_,origin=null,columns={,className=org.hibernate.test.annotations.join.Dog}}
+
+14:10:33,216 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:33,216 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.join.Dog
+14:10:33,216 DEBUG QueryTranslatorImpl:236 - SQL: select dog0_.name as name5_, dog0_.ownerName as ownerName5_, dog0_.weight as weight5_, dog0_1_.thoroughbredName as thorough1_6_ from Dog dog0_ left outer join DogThoroughbred dog0_1_ on dog0_.name=dog0_1_.NAME and dog0_.ownerName=dog0_1_.OWNER_NAME
+14:10:33,216 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:33,216 DEBUG SQL:104 - 
+    select
+        dog0_.name as name5_,
+        dog0_.ownerName as ownerName5_,
+        dog0_.weight as weight5_,
+        dog0_1_.thoroughbredName as thorough1_6_ 
+    from
+        Dog dog0_ 
+    left outer join
+        DogThoroughbred dog0_1_ 
+            on dog0_.name=dog0_1_.NAME 
+            and dog0_.ownerName=dog0_1_.OWNER_NAME
+14:10:33,218  INFO CustomRunner:139 - Test: testCustomSQL
+14:10:33,219 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,220 DEBUG SQL:104 - 
+    insert 
+    into
+        Cat
+        (name, secondName, id) 
+    values
+        (?, ?, ?)
+14:10:33,220 DEBUG SQL:104 - 
+    insert 
+    into
+        Cat2
+        (storyPart2, id) 
+    values
+        (upper(?), ?)
+14:10:33,234 DEBUG SQL:104 - 
+    select
+        cat0_.id as id2_0_,
+        cat0_.name as name2_0_,
+        cat0_.secondName as secondName2_0_,
+        cat0_1_.storyPart1 as storyPart1_12_0_,
+        cat0_2_.storyPart2 as storyPart1_3_0_ 
+    from
+        Cat cat0_ 
+    left outer join
+        "Cat nbr1" cat0_1_ 
+            on cat0_.id=cat0_1_.id 
+    left outer join
+        Cat2 cat0_2_ 
+            on cat0_.id=cat0_2_.id 
+    where
+        cat0_.id=?
+14:10:33,238  INFO CustomRunner:139 - Test: testDefaultValue
+14:10:33,248 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,249 DEBUG SQL:104 - 
+    insert 
+    into
+        Life
+        (duration, LIFE_ID) 
+    values
+        (?, ?)
+14:10:33,261 DEBUG SQL:104 - 
+    insert 
+    into
+        ExtendedLife
+        (fullDescription, CAT_ID, LIFE_ID) 
+    values
+        (?, ?, ?)
+14:10:33,262 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.join.Life
+14:10:33,262 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:10:33,263 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[WEIRD_IDENT] Node: 'join'
+                \-[IDENT] Node: 'Life'
+
+14:10:33,271 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:33,271 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.join.Life (<no alias>) -> life0_
+14:10:33,272 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Life life0_ ) )
+14:10:33,272 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:33,272 DEBUG JoinProcessor:175 - Using FROM fragment [Life life0_ left outer join ExtendedLife life0_1_ on life0_.LIFE_ID=life0_1_.LIFE_ID]
+14:10:33,272 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ExtendedLife,Life)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'life0_.LIFE_ID as LIFE1_9_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Life,tableAlias=life0_,origin=null,columns={,className=org.hibernate.test.annotations.join.Life}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'life0_.duration as duration9_, life0_1_.fullDescription as fullDesc1_8_, life0_1_.CAT_ID as CAT2_8_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[life0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Life life0_ left outer join ExtendedLife life0_1_ on life0_.LIFE_ID=life0_1_.LIFE_ID' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Life,tableAlias=life0_,origin=null,columns={,className=org.hibernate.test.annotations.join.Life}}
+
+14:10:33,273 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:33,283 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.join.Life
+14:10:33,283 DEBUG QueryTranslatorImpl:236 - SQL: select life0_.LIFE_ID as LIFE1_9_, life0_.duration as duration9_, life0_1_.fullDescription as fullDesc1_8_, life0_1_.CAT_ID as CAT2_8_ from Life life0_ left outer join ExtendedLife life0_1_ on life0_.LIFE_ID=life0_1_.LIFE_ID
+14:10:33,283 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:33,283 DEBUG SQL:104 - 
+    select
+        life0_.LIFE_ID as LIFE1_9_,
+        life0_.duration as duration9_,
+        life0_1_.fullDescription as fullDesc1_8_,
+        life0_1_.CAT_ID as CAT2_8_ 
+    from
+        Life life0_ 
+    left outer join
+        ExtendedLife life0_1_ 
+            on life0_.LIFE_ID=life0_1_.LIFE_ID
+14:10:33,286  INFO CustomRunner:139 - Test: testExplicitValue
+14:10:33,287 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,288 DEBUG SQL:104 - 
+    insert 
+    into
+        Death
+        (death_date, id) 
+    values
+        (?, ?)
+14:10:33,288 DEBUG SQL:104 - 
+    insert 
+    into
+        ExtendedDeath
+        (howDoesItHappen, DEATH_ID) 
+    values
+        (?, ?)
+14:10:33,295 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.join.Death
+14:10:33,295 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:10:33,296 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[WEIRD_IDENT] Node: 'join'
+                \-[IDENT] Node: 'Death'
+
+14:10:33,296 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:33,296 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.join.Death (<no alias>) -> death0_
+14:10:33,296 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Death death0_ ) )
+14:10:33,296 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:33,297 DEBUG JoinProcessor:175 - Using FROM fragment [Death death0_ left outer join ExtendedDeath death0_1_ on death0_.id=death0_1_.DEATH_ID]
+14:10:33,297 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Death,ExtendedDeath)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'death0_.id as id4_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Death,tableAlias=death0_,origin=null,columns={,className=org.hibernate.test.annotations.join.Death}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'death0_.death_date as death2_4_, death0_1_.howDoesItHappen as howDoesI1_7_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[death0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Death death0_ left outer join ExtendedDeath death0_1_ on death0_.id=death0_1_.DEATH_ID' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Death,tableAlias=death0_,origin=null,columns={,className=org.hibernate.test.annotations.join.Death}}
+
+14:10:33,305 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:33,305 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.join.Death
+14:10:33,305 DEBUG QueryTranslatorImpl:236 - SQL: select death0_.id as id4_, death0_.death_date as death2_4_, death0_1_.howDoesItHappen as howDoesI1_7_ from Death death0_ left outer join ExtendedDeath death0_1_ on death0_.id=death0_1_.DEATH_ID
+14:10:33,305 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:33,305 DEBUG SQL:104 - 
+    select
+        death0_.id as id4_,
+        death0_.death_date as death2_4_,
+        death0_1_.howDoesItHappen as howDoesI1_7_ 
+    from
+        Death death0_ 
+    left outer join
+        ExtendedDeath death0_1_ 
+            on death0_.id=death0_1_.DEATH_ID
+14:10:33,306 DEBUG SQL:104 - 
+    delete 
+    from
+        ExtendedDeath 
+    where
+        DEATH_ID=?
+14:10:33,306 DEBUG SQL:104 - 
+    delete 
+    from
+        Death 
+    where
+        id=?
+14:10:33,316  INFO CustomRunner:139 - Test: testFetchModeOnSecondaryTable
+14:10:33,317 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,318 DEBUG SQL:104 - 
+    insert 
+    into
+        Cat
+        (name, secondName, id) 
+    values
+        (?, ?, ?)
+14:10:33,318 DEBUG SQL:104 - 
+    insert 
+    into
+        Cat2
+        (storyPart2, id) 
+    values
+        (upper(?), ?)
+14:10:33,318 DEBUG SQL:104 - 
+    select
+        cat0_.id as id2_0_,
+        cat0_.name as name2_0_,
+        cat0_.secondName as secondName2_0_,
+        cat0_1_.storyPart1 as storyPart1_12_0_,
+        cat0_2_.storyPart2 as storyPart1_3_0_ 
+    from
+        Cat cat0_ 
+    left outer join
+        "Cat nbr1" cat0_1_ 
+            on cat0_.id=cat0_1_.id 
+    left outer join
+        Cat2 cat0_2_ 
+            on cat0_.id=cat0_2_.id 
+    where
+        cat0_.id=?
+14:10:33,329  INFO CustomRunner:139 - Test: testManyToOne
+14:10:33,330 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,330 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,331 DEBUG SQL:104 - 
+    insert 
+    into
+        Cat
+        (name, secondName, id) 
+    values
+        (?, ?, ?)
+14:10:33,331 DEBUG SQL:104 - 
+    insert 
+    into
+        Cat2
+        (storyPart2, id) 
+    values
+        (upper(?), ?)
+14:10:33,331 DEBUG SQL:104 - 
+    insert 
+    into
+        Life
+        (duration, LIFE_ID) 
+    values
+        (?, ?)
+14:10:33,340 DEBUG SQL:104 - 
+    insert 
+    into
+        ExtendedLife
+        (fullDescription, CAT_ID, LIFE_ID) 
+    values
+        (?, ?, ?)
+14:10:33,341 DEBUG SQL:104 - 
+    select
+        this_.LIFE_ID as LIFE1_9_1_,
+        this_.duration as duration9_1_,
+        this_1_.fullDescription as fullDesc1_8_1_,
+        this_1_.CAT_ID as CAT2_8_1_,
+        cat1_.id as id2_0_,
+        cat1_.name as name2_0_,
+        cat1_.secondName as secondName2_0_,
+        cat1_1_.storyPart1 as storyPart1_12_0_,
+        cat1_2_.storyPart2 as storyPart1_3_0_ 
+    from
+        Life this_ 
+    left outer join
+        ExtendedLife this_1_ 
+            on this_.LIFE_ID=this_1_.LIFE_ID 
+    inner join
+        Cat cat1_ 
+            on this_1_.CAT_ID=cat1_.id 
+    left outer join
+        "Cat nbr1" cat1_1_ 
+            on cat1_.id=cat1_1_.id 
+    left outer join
+        Cat2 cat1_2_ 
+            on cat1_.id=cat1_2_.id 
+    where
+        cat1_.name=?
+14:10:33,343 DEBUG SQL:104 - 
+    update
+        ExtendedLife 
+    set
+        fullDescription=?,
+        CAT_ID=? 
+    where
+        LIFE_ID=?
+14:10:33,343 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat2 
+    where
+        id=?
+14:10:33,343 DEBUG SQL:104 - 
+    delete 
+    from
+        "Cat nbr1" 
+    where
+        id=?
+14:10:33,343 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        id=?
+14:10:33,363 DEBUG SQL:104 - 
+    delete 
+    from
+        ExtendedLife 
+    where
+        LIFE_ID=?
+14:10:33,364 DEBUG SQL:104 - 
+    delete 
+    from
+        Life 
+    where
+        LIFE_ID=?
+14:10:33,367  INFO CustomRunner:139 - Test: testMappedSuperclassAndSecondaryTable
+14:10:33,372 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,375 DEBUG SQL:104 - 
+    insert 
+    into
+        B
+        (createDate, name, DTYPE, id) 
+    values
+        (?, ?, 'C', ?)
+14:10:33,376 DEBUG SQL:104 - 
+    insert 
+    into
+        C
+        (age, id) 
+    values
+        (?, ?)
+14:10:33,383 DEBUG SQL:104 - 
+    select
+        c0_.id as id0_0_,
+        c0_.createDate as createDate0_0_,
+        c0_.name as name0_0_,
+        c0_1_.age as age1_0_ 
+    from
+        B c0_ 
+    left outer join
+        C c0_1_ 
+            on c0_.id=c0_1_.id 
+    where
+        c0_.id=? 
+        and c0_.DTYPE='C'
+14:10:33,384  INFO CustomRunner:139 - Test: testReferenceColumnWithBacktics
+14:10:33,385 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,386 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,386 DEBUG SQL:104 - 
+    insert 
+    into
+        SYS_GROUPS
+        (GROUPID) 
+    values
+        (?)
+14:10:33,387 DEBUG SQL:104 - 
+    insert 
+    into
+        "SYS_USER"
+        ("auid") 
+    values
+        (?)
+14:10:33,387 DEBUG SQL:104 - 
+    insert 
+    into
+        SYS_GROUPS_USERS
+        (USERID, GROUPID) 
+    values
+        (?, ?)
+14:10:33,414  INFO CustomRunner:139 - Test: testUniqueConstaintOnSecondaryTable
+14:10:33,415 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,416 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,416 DEBUG SQL:104 - 
+    insert 
+    into
+        Cat
+        (name, secondName, id) 
+    values
+        (?, ?, ?)
+14:10:33,416 DEBUG SQL:104 - 
+    insert 
+    into
+        Cat2
+        (storyPart2, id) 
+    values
+        (upper(?), ?)
+14:10:33,417 DEBUG SQL:104 - 
+    insert 
+    into
+        Cat
+        (name, secondName, id) 
+    values
+        (?, ?, ?)
+14:10:33,437 DEBUG SQL:104 - 
+    insert 
+    into
+        Cat2
+        (storyPart2, id) 
+    values
+        (upper(?), ?)
+14:10:33,437  WARN SqlExceptionHelper:143 - SQL Error: 23001, SQLState: 23001
+14:10:33,437 ERROR SqlExceptionHelper:144 - Unique index or primary key violation: "UK_CAT2_1_INDEX_1 ON PUBLIC.CAT2(STORYPART2)"; SQL statement:
+insert into Cat2(storyPart2, id) values(upper(?), ?) [23001-145]
+14:10:33,442  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:33,442 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:33,442 DEBUG SQL:104 - 
+    alter table C 
+        drop constraint FK43DDCC985A
+14:10:33,442 DEBUG SQL:104 - 
+    alter table Cat2 
+        drop constraint FK_CAT2_CAT
+14:10:33,443 DEBUG SQL:104 - 
+    alter table DogThoroughbred 
+        drop constraint FKA7352249BE3F3C3A
+14:10:33,443 DEBUG SQL:104 - 
+    alter table ExtendedDeath 
+        drop constraint FK93F5C09BE128AA16
+14:10:33,443 DEBUG SQL:104 - 
+    alter table ExtendedLife 
+        drop constraint FKD0B9FF54B539DD6
+14:10:33,443 DEBUG SQL:104 - 
+    alter table ExtendedLife 
+        drop constraint FKD0B9FF582077DE
+14:10:33,457 DEBUG SQL:104 - 
+    alter table SYS_GROUPS_USERS 
+        drop constraint FKD1F7C00FECFF87A7
+14:10:33,457 DEBUG SQL:104 - 
+    alter table SYS_GROUPS_USERS 
+        drop constraint FKD1F7C00F11E7DA5C
+14:10:33,458 DEBUG SQL:104 - 
+    alter table "Cat nbr1" 
+        drop constraint FK313C8DD9CD6D0CD
+14:10:33,458 DEBUG SQL:104 - 
+    drop table B if exists
+14:10:33,458 DEBUG SQL:104 - 
+    drop table C if exists
+14:10:33,458 DEBUG SQL:104 - 
+    drop table Cat if exists
+14:10:33,458 DEBUG SQL:104 - 
+    drop table Cat2 if exists
+14:10:33,459 DEBUG SQL:104 - 
+    drop table Death if exists
+14:10:33,459 DEBUG SQL:104 - 
+    drop table Dog if exists
+14:10:33,459 DEBUG SQL:104 - 
+    drop table DogThoroughbred if exists
+14:10:33,459 DEBUG SQL:104 - 
+    drop table ExtendedDeath if exists
+14:10:33,460 DEBUG SQL:104 - 
+    drop table ExtendedLife if exists
+14:10:33,460 DEBUG SQL:104 - 
+    drop table Life if exists
+14:10:33,465 DEBUG SQL:104 - 
+    drop table SYS_GROUPS if exists
+14:10:33,466 DEBUG SQL:104 - 
+    drop table SYS_GROUPS_USERS if exists
+14:10:33,466 DEBUG SQL:104 - 
+    drop table "Cat nbr1" if exists
+14:10:33,466 DEBUG SQL:104 - 
+    drop table "SYS_USER" if exists
+14:10:33,467 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:33,467  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:33,467  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

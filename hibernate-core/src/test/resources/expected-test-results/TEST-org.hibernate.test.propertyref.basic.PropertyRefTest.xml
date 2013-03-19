@@ -1,0 +1,1247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.propertyref.basic.PropertyRefTest" tests="5" time="0.42" timestamp="2013-02-28T20:17:46">
+  <properties />
+  <testcase classname="org.hibernate.test.propertyref.basic.PropertyRefTest" name="testForeignKeyCreation" time="0.001" />
+  <testcase classname="org.hibernate.test.propertyref.basic.PropertyRefTest" name="testJoinFetchPropertyRef" time="0.026" />
+  <testcase classname="org.hibernate.test.propertyref.basic.PropertyRefTest" name="testManyToManyPropertyRef" time="0.067" />
+  <testcase classname="org.hibernate.test.propertyref.basic.PropertyRefTest" name="testNonLazyBagKeyPropertyRef" time="0.049" />
+  <testcase classname="org.hibernate.test.propertyref.basic.PropertyRefTest" name="testOneToOnePropertyRef" time="0.223" />
+  <system-out><![CDATA[14:17:46,331  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.propertyref.basic.PropertyRefTest
+14:17:46,333  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/propertyref/basic/Person.hbm.xml
+14:17:46,344  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:46,344  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:46,344  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:46,344  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:46,344  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:46,345  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:46,346  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:46,346  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:46,346  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:46,347  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:46,361  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:46,362 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:46,362 DEBUG SQL:104 - 
+    alter table PROPREF_ACCT 
+        drop constraint FKD5CC64C2CA7438E1
+14:17:46,362 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PROPREF_ACCT drop constraint FKD5CC64C2CA7438E1
+14:17:46,362 ERROR SchemaExport:426 - Table "PROPREF_ACCT" not found; SQL statement:
+
+    alter table PROPREF_ACCT 
+        drop constraint FKD5CC64C2CA7438E1 [42102-145]
+14:17:46,362 DEBUG SQL:104 - 
+    alter table PROPREF_ADDR 
+        drop constraint FKD5CC68A0C12CA210
+14:17:46,362 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PROPREF_ADDR drop constraint FKD5CC68A0C12CA210
+14:17:46,363 ERROR SchemaExport:426 - Table "PROPREF_ADDR" not found; SQL statement:
+
+    alter table PROPREF_ADDR 
+        drop constraint FKD5CC68A0C12CA210 [42102-145]
+14:17:46,363 DEBUG SQL:104 - 
+    alter table PROPREF_USERGROUP 
+        drop constraint FK573B82253BB49FE3
+14:17:46,363 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PROPREF_USERGROUP drop constraint FK573B82253BB49FE3
+14:17:46,363 ERROR SchemaExport:426 - Table "PROPREF_USERGROUP" not found; SQL statement:
+
+    alter table PROPREF_USERGROUP 
+        drop constraint FK573B82253BB49FE3 [42102-145]
+14:17:46,363 DEBUG SQL:104 - 
+    drop table PROPREF_ACCT if exists
+14:17:46,363 DEBUG SQL:104 - 
+    drop table PROPREF_ADDR if exists
+14:17:46,363 DEBUG SQL:104 - 
+    drop table PROPREF_GRP if exists
+14:17:46,364 DEBUG SQL:104 - 
+    drop table PROPREF_PERS if exists
+14:17:46,364 DEBUG SQL:104 - 
+    drop table PROPREF_USERGROUP if exists
+14:17:46,364 DEBUG SQL:104 - 
+    drop table USER_SYSTEM if exists
+14:17:46,364 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:17:46,364 DEBUG SQL:104 - 
+    create table PROPREF_ACCT (
+        accountId varchar(32) not null,
+        userId varchar(255),
+        "type" char(255) not null,
+        primary key (accountId)
+    )
+14:17:46,365 DEBUG SQL:104 - 
+    create table PROPREF_ADDR (
+        id bigint not null,
+        address varchar(300),
+        zip varchar(5),
+        country varchar(25),
+        person bigint not null,
+        primary key (id)
+    )
+14:17:46,365 DEBUG SQL:104 - 
+    create table PROPREF_GRP (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:17:46,365 DEBUG SQL:104 - 
+    create table PROPREF_PERS (
+        id bigint not null,
+        name varchar(100),
+        person_userid varchar(8) not null,
+        primary key (id)
+    )
+14:17:46,365 DEBUG SQL:104 - 
+    create table PROPREF_USERGROUP (
+        groupName varchar(255) not null,
+        userId varchar(255) not null,
+        primary key (groupName, userId)
+    )
+14:17:46,366 DEBUG SQL:104 - 
+    create table USER_SYSTEM (
+        USER_ID varchar(255) not null,
+        SYSTEM varchar(255)
+    )
+14:17:46,366 DEBUG SQL:104 - 
+    alter table PROPREF_ACCT 
+        add constraint FKD5CC64C2CA7438E1 
+        foreign key (userId) 
+        references PROPREF_PERS (person_userid)
+14:17:46,366 DEBUG SQL:104 - 
+    alter table PROPREF_ADDR 
+        add constraint uc_PROPREF_ADDR_1 unique (person)
+14:17:46,367 DEBUG SQL:104 - 
+    alter table PROPREF_ADDR 
+        add constraint FKD5CC68A0C12CA210 
+        foreign key (person) 
+        references PROPREF_PERS
+14:17:46,367 DEBUG SQL:104 - 
+    alter table PROPREF_PERS 
+        add constraint uc_PROPREF_PERS_1 unique (person_userid)
+14:17:46,367 DEBUG SQL:104 - 
+    alter table PROPREF_USERGROUP 
+        add constraint FK573B82253BB49FE3 
+        foreign key (groupName) 
+        references PROPREF_GRP
+14:17:46,367 DEBUG SQL:104 - 
+    create table hibernate_unique_key (
+         next_hi integer 
+    )
+14:17:46,368 DEBUG SQL:104 - 
+    insert into hibernate_unique_key values ( 0 )
+14:17:46,368  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:46,368  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:46,368  INFO CustomRunner:139 - Test: testForeignKeyCreation
+14:17:46,370  INFO CustomRunner:139 - Test: testJoinFetchPropertyRef
+14:17:46,372 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:17:46,372 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:17:46,372 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:17:46,372 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:17:46,373 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_PERS
+        (name, person_userid, id) 
+    values
+        (?, ?, ?)
+14:17:46,374 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_ADDR
+        (address, zip, country, person, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:46,374 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_1_,
+        person0_.name as name3_1_,
+        person0_.person_userid as person3_3_1_,
+        address1_.id as id1_0_,
+        address1_.address as address1_0_,
+        address1_.zip as zip1_0_,
+        address1_.country as country1_0_,
+        address1_.person as person1_0_ 
+    from
+        PROPREF_PERS person0_ 
+    left outer join
+        PROPREF_ADDR address1_ 
+            on person0_.id=address1_.person 
+    where
+        person0_.id=?
+14:17:46,375 DEBUG SQL:104 - 
+    select
+        this_.id as id3_0_,
+        this_.name as name3_0_,
+        this_.person_userid as person3_3_0_ 
+    from
+        PROPREF_PERS this_
+14:17:46,375 DEBUG SQL:104 - 
+    select
+        address0_.id as id1_0_,
+        address0_.address as address1_0_,
+        address0_.zip as zip1_0_,
+        address0_.country as country1_0_,
+        address0_.person as person1_0_ 
+    from
+        PROPREF_ADDR address0_ 
+    where
+        address0_.person=?
+14:17:46,376 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.propertyref.basic.Address
+14:17:46,376 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'propertyref'
+             |  \-[IDENT] Node: 'basic'
+             \-[IDENT] Node: 'Address'
+
+14:17:46,377 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,377 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Address (<no alias>) -> address0_
+14:17:46,377 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (PROPREF_ADDR)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[address0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'PROPREF_ADDR' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PROPREF_ADDR,tableAlias=address0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Address}}
+
+14:17:46,383 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,383 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,384 DEBUG SQL:104 - 
+    delete 
+    from
+        PROPREF_ADDR
+14:17:46,385 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.propertyref.basic.Person
+14:17:46,385 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'propertyref'
+             |  \-[IDENT] Node: 'basic'
+             \-[IDENT] Node: 'Person'
+
+14:17:46,385 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,386 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Person (<no alias>) -> person0_
+14:17:46,386 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (PROPREF_PERS)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'PROPREF_PERS' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}
+
+14:17:46,395 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,395 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,395 DEBUG SQL:104 - 
+    delete 
+    from
+        PROPREF_PERS
+14:17:46,396  INFO CustomRunner:139 - Test: testManyToManyPropertyRef
+14:17:46,398 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_PERS
+        (name, person_userid, id) 
+    values
+        (?, ?, ?)
+14:17:46,398 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_GRP
+        (name) 
+    values
+        (?)
+14:17:46,399 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_USERGROUP
+        (groupName, userId) 
+    values
+        (?, ?)
+14:17:46,407 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_PERS
+        (name, person_userid, id) 
+    values
+        (?, ?, ?)
+14:17:46,408 DEBUG SQL:104 - 
+    update
+        PROPREF_PERS 
+    set
+        name=?,
+        person_userid=? 
+    where
+        id=?
+14:17:46,409 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_USERGROUP
+        (groupName, userId) 
+    values
+        (?, ?)
+14:17:46,409 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.propertyref.basic.Group g left join fetch g.users
+14:17:46,409 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Group",<108> previously: <24>,line=1,col=43,possibleID=true]
+14:17:46,410 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  \-[IDENT] Node: 'propertyref'
+          |  |  |  \-[IDENT] Node: 'basic'
+          |  |  \-[IDENT] Node: 'Group'
+          |  \-[ALIAS] Node: 'g'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'g'
+                \-[IDENT] Node: 'users'
+
+14:17:46,419 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,419 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Group (g) -> group0_
+14:17:46,419 DEBUG FromReferenceNode:74 - Resolved : g -> group0_.name
+14:17:46,419 DEBUG DotNode:599 - getDataType() : users -> org.hibernate.type.SetType(org.hibernate.test.propertyref.basic.Group.users)
+14:17:46,419 DEBUG FromElementFactory:385 - createManyToMany() : path = g.users role = org.hibernate.test.propertyref.basic.Group.users associatedEntityName = org.hibernate.test.propertyref.basic.Person
+14:17:46,420 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Person (<no alias>) -> person2_
+14:17:46,420 DEBUG FromClause:282 - addJoinByPathMap() : g.users -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PROPREF_PERS,tableAlias=person2_,origin=PROPREF_GRP group0_,columns={group0_.name ,className=org.hibernate.test.propertyref.basic.Person}}
+14:17:46,420 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for g.users : PROPREF_USERGROUP person2_
+14:17:46,420 DEBUG FromReferenceNode:74 - Resolved : g.users -> .
+14:17:46,420 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'PROPREF_USERGROUP person2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.propertyref.basic.Group.users,tableName=PROPREF_PERS,tableAlias=person2_,origin=PROPREF_GRP group0_,columns={group0_.name ,className=org.hibernate.test.propertyref.basic.Person}}
+
+14:17:46,428 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( PROPREF_GRP group0_ PROPREF_USERGROUP person2_ ) ) )
+14:17:46,428 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:46,428 DEBUG JoinProcessor:175 - Using FROM fragment [PROPREF_GRP group0_]
+14:17:46,428 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join PROPREF_USERGROUP users1_ on group0_.name=users1_.groupName left outer join PROPREF_PERS person2_ on users1_.userId=person2_.person_userid]
+14:17:46,428 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (PROPREF_GRP,PROPREF_PERS,PROPREF_USERGROUP)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'group0_.name as name2_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=g,role=null,tableName=PROPREF_GRP,tableAlias=group0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Group}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person2_.id as id3_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.propertyref.basic.Group.users,tableName=PROPREF_PERS,tableAlias=person2_,origin=PROPREF_GRP group0_,columns={group0_.name ,className=org.hibernate.test.propertyref.basic.Person}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person2_.name as name3_1_, person2_.person_userid as person3_3_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'users1_.groupName as groupName2_0__, users1_.userId as userId4_0__'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[g], fromElementByTableAlias=[person2_, group0_], fromElementsByPath=[g.users], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'PROPREF_GRP group0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=g,role=null,tableName=PROPREF_GRP,tableAlias=group0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Group}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join PROPREF_USERGROUP users1_ on group0_.name=users1_.groupName left outer join PROPREF_PERS person2_ on users1_.userId=person2_.person_userid' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.propertyref.basic.Group.users,tableName=PROPREF_PERS,tableAlias=person2_,origin=PROPREF_GRP group0_,columns={group0_.name ,className=org.hibernate.test.propertyref.basic.Person}}
+
+14:17:46,429 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,429 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.propertyref.basic.Group g left join fetch g.users
+14:17:46,429 DEBUG QueryTranslatorImpl:236 - SQL: select group0_.name as name2_0_, person2_.id as id3_1_, person2_.name as name3_1_, person2_.person_userid as person3_3_1_, users1_.groupName as groupName2_0__, users1_.userId as userId4_0__ from PROPREF_GRP group0_ left outer join PROPREF_USERGROUP users1_ on group0_.name=users1_.groupName left outer join PROPREF_PERS person2_ on users1_.userId=person2_.person_userid
+14:17:46,429 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,429 DEBUG SQL:104 - 
+    select
+        group0_.name as name2_0_,
+        person2_.id as id3_1_,
+        person2_.name as name3_1_,
+        person2_.person_userid as person3_3_1_,
+        users1_.groupName as groupName2_0__,
+        users1_.userId as userId4_0__ 
+    from
+        PROPREF_GRP group0_ 
+    left outer join
+        PROPREF_USERGROUP users1_ 
+            on group0_.name=users1_.groupName 
+    left outer join
+        PROPREF_PERS person2_ 
+            on users1_.userId=person2_.person_userid
+14:17:46,440 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_1_,
+        person0_.name as name3_1_,
+        person0_.person_userid as person3_3_1_,
+        address1_.id as id1_0_,
+        address1_.address as address1_0_,
+        address1_.zip as zip1_0_,
+        address1_.country as country1_0_,
+        address1_.person as person1_0_ 
+    from
+        PROPREF_PERS person0_ 
+    left outer join
+        PROPREF_ADDR address1_ 
+            on person0_.id=address1_.person 
+    where
+        person0_.person_userid=?
+14:17:46,440 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_1_,
+        person0_.name as name3_1_,
+        person0_.person_userid as person3_3_1_,
+        address1_.id as id1_0_,
+        address1_.address as address1_0_,
+        address1_.zip as zip1_0_,
+        address1_.country as country1_0_,
+        address1_.person as person1_0_ 
+    from
+        PROPREF_PERS person0_ 
+    left outer join
+        PROPREF_ADDR address1_ 
+            on person0_.id=address1_.person 
+    where
+        person0_.person_userid=?
+14:17:46,451 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.propertyref.basic.Person
+14:17:46,452 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'propertyref'
+             |  \-[IDENT] Node: 'basic'
+             \-[IDENT] Node: 'Person'
+
+14:17:46,452 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,452 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Person (<no alias>) -> person0_
+14:17:46,452 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (PROPREF_PERS)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'PROPREF_PERS' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}
+
+14:17:46,461 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,461 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,461 DEBUG SQL:104 - 
+    delete 
+    from
+        PROPREF_PERS
+14:17:46,462 DEBUG SQL:104 - 
+    delete 
+    from
+        PROPREF_USERGROUP 
+    where
+        groupName=?
+14:17:46,462 DEBUG SQL:104 - 
+    delete 
+    from
+        PROPREF_GRP 
+    where
+        name=?
+14:17:46,463  INFO CustomRunner:139 - Test: testNonLazyBagKeyPropertyRef
+14:17:46,465 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_PERS
+        (name, person_userid, id) 
+    values
+        (?, ?, ?)
+14:17:46,466 DEBUG SQL:104 - 
+    insert 
+    into
+        USER_SYSTEM
+        (USER_ID, SYSTEM) 
+    values
+        (?, ?)
+14:17:46,466 DEBUG SQL:104 - 
+    insert 
+    into
+        USER_SYSTEM
+        (USER_ID, SYSTEM) 
+    values
+        (?, ?)
+14:17:46,466 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.propertyref.basic.Person
+14:17:46,467 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'propertyref'
+                |  \-[IDENT] Node: 'basic'
+                \-[IDENT] Node: 'Person'
+
+14:17:46,476 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,477 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Person (<no alias>) -> person0_
+14:17:46,477 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} PROPREF_PERS person0_ ) )
+14:17:46,477 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:46,477 DEBUG JoinProcessor:175 - Using FROM fragment [PROPREF_PERS person0_]
+14:17:46,477 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (PROPREF_PERS)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name3_, person0_.person_userid as person3_3_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'PROPREF_PERS person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}
+
+14:17:46,477 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,478 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.propertyref.basic.Person
+14:17:46,478 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id3_, person0_.name as name3_, person0_.person_userid as person3_3_ from PROPREF_PERS person0_
+14:17:46,478 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,478 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_,
+        person0_.name as name3_,
+        person0_.person_userid as person3_3_ 
+    from
+        PROPREF_PERS person0_
+14:17:46,478 DEBUG SQL:104 - 
+    select
+        address0_.id as id1_0_,
+        address0_.address as address1_0_,
+        address0_.zip as zip1_0_,
+        address0_.country as country1_0_,
+        address0_.person as person1_0_ 
+    from
+        PROPREF_ADDR address0_ 
+    where
+        address0_.person=?
+14:17:46,488 DEBUG SQL:104 - 
+    select
+        p.id as id3_0_,
+        p.name as name3_0_,
+        p.person_userid as person3_3_0_ 
+    from
+        PROPREF_PERS p
+14:17:46,488 DEBUG SQL:104 - 
+    select
+        address0_.id as id1_0_,
+        address0_.address as address1_0_,
+        address0_.zip as zip1_0_,
+        address0_.country as country1_0_,
+        address0_.person as person1_0_ 
+    from
+        PROPREF_ADDR address0_ 
+    where
+        address0_.person=?
+14:17:46,489 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_,
+        person0_.name as name3_,
+        person0_.person_userid as person3_3_ 
+    from
+        PROPREF_PERS person0_
+14:17:46,489 DEBUG SQL:104 - 
+    select
+        address0_.id as id1_0_,
+        address0_.address as address1_0_,
+        address0_.zip as zip1_0_,
+        address0_.country as country1_0_,
+        address0_.person as person1_0_ 
+    from
+        PROPREF_ADDR address0_ 
+    where
+        address0_.person=?
+14:17:46,490 DEBUG SQL:104 - 
+    delete 
+    from
+        USER_SYSTEM 
+    where
+        USER_ID=?
+14:17:46,512 DEBUG SQL:104 - 
+    delete 
+    from
+        PROPREF_PERS 
+    where
+        id=?
+14:17:46,513  INFO CustomRunner:139 - Test: testOneToOnePropertyRef
+14:17:46,515 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_PERS
+        (name, person_userid, id) 
+    values
+        (?, ?, ?)
+14:17:46,515 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_ADDR
+        (address, zip, country, person, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:46,515 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_PERS
+        (name, person_userid, id) 
+    values
+        (?, ?, ?)
+14:17:46,522 DEBUG SQL:104 - 
+    insert 
+    into
+        PROPREF_ACCT
+        (userId, "type", accountId) 
+    values
+        (?, ?, ?)
+14:17:46,523 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_1_,
+        person0_.name as name3_1_,
+        person0_.person_userid as person3_3_1_,
+        address1_.id as id1_0_,
+        address1_.address as address1_0_,
+        address1_.zip as zip1_0_,
+        address1_.country as country1_0_,
+        address1_.person as person1_0_ 
+    from
+        PROPREF_PERS person0_ 
+    left outer join
+        PROPREF_ADDR address1_ 
+            on person0_.id=address1_.person 
+    where
+        person0_.id=?
+14:17:46,523 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_1_,
+        person0_.name as name3_1_,
+        person0_.person_userid as person3_3_1_,
+        address1_.id as id1_0_,
+        address1_.address as address1_0_,
+        address1_.zip as zip1_0_,
+        address1_.country as country1_0_,
+        address1_.person as person1_0_ 
+    from
+        PROPREF_PERS person0_ 
+    left outer join
+        PROPREF_ADDR address1_ 
+            on person0_.id=address1_.person 
+    where
+        person0_.id=?
+14:17:46,533 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_,
+        person0_.name as name3_,
+        person0_.person_userid as person3_3_ 
+    from
+        PROPREF_PERS person0_
+14:17:46,534 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.propertyref.basic.Person p order by p.name
+14:17:46,535 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'propertyref'
+    |        |  |  \-[IDENT] Node: 'basic'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'p'
+          \-[IDENT] Node: 'name'
+
+14:17:46,542 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,543 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Person (p) -> person0_
+14:17:46,543 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:17:46,543 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:17:46,543 DEBUG FromReferenceNode:74 - Resolved : p.name -> person0_.name
+14:17:46,543 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} PROPREF_PERS person0_ ) ( order ( person0_.name person0_.id name ) ) )
+14:17:46,544 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:46,544 DEBUG JoinProcessor:175 - Using FROM fragment [PROPREF_PERS person0_]
+14:17:46,544 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (PROPREF_PERS)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name3_, person0_.person_userid as person3_3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'PROPREF_PERS person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=person0_,className=org.hibernate.test.propertyref.basic.Person,classAlias=p}
+          +-[ALIAS_REF] IdentNode: 'person0_.id' {alias=p, className=org.hibernate.test.propertyref.basic.Person, tableAlias=person0_}
+          \-[IDENT] IdentNode: 'name' {originalText=name}
+
+14:17:46,553 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,554 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.propertyref.basic.Person p order by p.name
+14:17:46,554 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id3_, person0_.name as name3_, person0_.person_userid as person3_3_ from PROPREF_PERS person0_ order by person0_.name
+14:17:46,554 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,554 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_,
+        person0_.name as name3_,
+        person0_.person_userid as person3_3_ 
+    from
+        PROPREF_PERS person0_ 
+    order by
+        person0_.name
+14:17:46,555 DEBUG SQL:104 - 
+    select
+        address0_.id as id1_0_,
+        address0_.address as address1_0_,
+        address0_.zip as zip1_0_,
+        address0_.country as country1_0_,
+        address0_.person as person1_0_ 
+    from
+        PROPREF_ADDR address0_ 
+    where
+        address0_.person=?
+14:17:46,556 DEBUG SQL:104 - 
+    select
+        address0_.id as id1_0_,
+        address0_.address as address1_0_,
+        address0_.zip as zip1_0_,
+        address0_.country as country1_0_,
+        address0_.person as person1_0_ 
+    from
+        PROPREF_ADDR address0_ 
+    where
+        address0_.person=?
+14:17:46,565 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.propertyref.basic.Person p left join fetch p.address a order by a.country
+14:17:46,567 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  |  \-[IDENT] Node: 'propertyref'
+    |     |  |  |  \-[IDENT] Node: 'basic'
+    |     |  |  \-[IDENT] Node: 'Person'
+    |     |  \-[ALIAS] Node: 'p'
+    |     \-[JOIN] Node: 'join'
+    |        +-[LEFT] Node: 'left'
+    |        +-[FETCH] Node: 'fetch'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'p'
+    |        |  \-[IDENT] Node: 'address'
+    |        \-[ALIAS] Node: 'a'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'a'
+          \-[IDENT] Node: 'country'
+
+14:17:46,577 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,577 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Person (p) -> person0_
+14:17:46,577 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:17:46,578 DEBUG DotNode:599 - getDataType() : address -> org.hibernate.type.OneToOneType(org.hibernate.test.propertyref.basic.Address)
+14:17:46,578 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for address in org.hibernate.test.propertyref.basic.Person (a) parent = [ {null} ]
+14:17:46,578 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Address (a) -> address1_
+14:17:46,578 DEBUG FromClause:282 - addJoinByPathMap() : p.address -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=PROPREF_ADDR,tableAlias=address1_,origin=PROPREF_PERS person0_,columns={person0_.id ,className=org.hibernate.test.propertyref.basic.Address}}
+14:17:46,578 DEBUG FromReferenceNode:74 - Resolved : p.address -> person0_.id
+14:17:46,578 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'PROPREF_ADDR address1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=PROPREF_ADDR,tableAlias=address1_,origin=PROPREF_PERS person0_,columns={person0_.id ,className=org.hibernate.test.propertyref.basic.Address}}
+
+14:17:46,578 DEBUG FromReferenceNode:74 - Resolved : a -> address1_.id
+14:17:46,578 DEBUG DotNode:599 - getDataType() : country -> org.hibernate.type.StringType@2dc8de40
+14:17:46,579 DEBUG FromReferenceNode:74 - Resolved : a.country -> address1_.country
+14:17:46,579 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( PROPREF_PERS person0_ PROPREF_ADDR address1_ ) ) ( order ( address1_.country address1_.id country ) ) )
+14:17:46,579 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:46,579 DEBUG JoinProcessor:175 - Using FROM fragment [PROPREF_PERS person0_]
+14:17:46,579 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join PROPREF_ADDR address1_ on person0_.id=address1_.person]
+14:17:46,580 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (PROPREF_PERS,PROPREF_ADDR)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id3_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'address1_.id as id1_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=PROPREF_ADDR,tableAlias=address1_,origin=PROPREF_PERS person0_,columns={person0_.id ,className=org.hibernate.test.propertyref.basic.Address}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name3_0_, person0_.person_userid as person3_3_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'address1_.address as address1_1_, address1_.zip as zip1_1_, address1_.country as country1_1_, address1_.person as person1_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a, p], fromElementByTableAlias=[person0_, address1_], fromElementsByPath=[p.address], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'PROPREF_PERS person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join PROPREF_ADDR address1_ on person0_.id=address1_.person' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=PROPREF_ADDR,tableAlias=address1_,origin=PROPREF_PERS person0_,columns={person0_.id ,className=org.hibernate.test.propertyref.basic.Address}}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'address1_.country' {propertyName=country,dereferenceType=ALL,propertyPath=country,path=a.country,tableAlias=address1_,className=org.hibernate.test.propertyref.basic.Address,classAlias=a}
+          +-[ALIAS_REF] IdentNode: 'address1_.id' {alias=a, className=org.hibernate.test.propertyref.basic.Address, tableAlias=address1_}
+          \-[IDENT] IdentNode: 'country' {originalText=country}
+
+14:17:46,589 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,589 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.propertyref.basic.Person p left join fetch p.address a order by a.country
+14:17:46,589 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id3_0_, address1_.id as id1_1_, person0_.name as name3_0_, person0_.person_userid as person3_3_0_, address1_.address as address1_1_, address1_.zip as zip1_1_, address1_.country as country1_1_, address1_.person as person1_1_ from PROPREF_PERS person0_ left outer join PROPREF_ADDR address1_ on person0_.id=address1_.person order by address1_.country
+14:17:46,589 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,590 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_0_,
+        address1_.id as id1_1_,
+        person0_.name as name3_0_,
+        person0_.person_userid as person3_3_0_,
+        address1_.address as address1_1_,
+        address1_.zip as zip1_1_,
+        address1_.country as country1_1_,
+        address1_.person as person1_1_ 
+    from
+        PROPREF_PERS person0_ 
+    left outer join
+        PROPREF_ADDR address1_ 
+            on person0_.id=address1_.person 
+    order by
+        address1_.country
+14:17:46,591 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.propertyref.basic.Person p left join p.accounts a
+14:17:46,592 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  \-[IDENT] Node: 'propertyref'
+          |  |  |  \-[IDENT] Node: 'basic'
+          |  |  \-[IDENT] Node: 'Person'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'p'
+             |  \-[IDENT] Node: 'accounts'
+             \-[ALIAS] Node: 'a'
+
+14:17:46,592 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,592 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Person (p) -> person0_
+14:17:46,592 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:17:46,605 DEBUG DotNode:599 - getDataType() : accounts -> org.hibernate.type.SetType(org.hibernate.test.propertyref.basic.Person.accounts)
+14:17:46,605 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = p.accounts role = org.hibernate.test.propertyref.basic.Person.accounts associatedEntityName = org.hibernate.test.propertyref.basic.Account
+14:17:46,605 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Account (a) -> accounts1_
+14:17:46,605 DEBUG FromClause:282 - addJoinByPathMap() : p.accounts -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=PROPREF_ACCT,tableAlias=accounts1_,origin=PROPREF_PERS person0_,columns={person0_.person_userid ,className=org.hibernate.test.propertyref.basic.Account}}
+14:17:46,605 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.accounts : PROPREF_ACCT accounts1_
+14:17:46,605 DEBUG FromReferenceNode:74 - Resolved : p.accounts -> .
+14:17:46,606 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'PROPREF_ACCT accounts1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=org.hibernate.test.propertyref.basic.Person.accounts,tableName=PROPREF_ACCT,tableAlias=accounts1_,origin=PROPREF_PERS person0_,columns={person0_.person_userid ,className=org.hibernate.test.propertyref.basic.Account}}
+
+14:17:46,606 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( PROPREF_PERS person0_ PROPREF_ACCT accounts1_ ) ) )
+14:17:46,606 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:46,606 DEBUG JoinProcessor:175 - Using FROM fragment [PROPREF_PERS person0_]
+14:17:46,606 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join PROPREF_ACCT accounts1_ on person0_.person_userid=accounts1_.userId]
+14:17:46,606 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (PROPREF_ACCT,PROPREF_PERS)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id3_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'accounts1_.accountId as accountId0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=org.hibernate.test.propertyref.basic.Person.accounts,tableName=PROPREF_ACCT,tableAlias=accounts1_,origin=PROPREF_PERS person0_,columns={person0_.person_userid ,className=org.hibernate.test.propertyref.basic.Account}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name3_0_, person0_.person_userid as person3_3_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'accounts1_.userId as userId0_1_, accounts1_."type" as type3_0_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a, p], fromElementByTableAlias=[person0_, accounts1_], fromElementsByPath=[p.accounts], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'PROPREF_PERS person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join PROPREF_ACCT accounts1_ on person0_.person_userid=accounts1_.userId' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=org.hibernate.test.propertyref.basic.Person.accounts,tableName=PROPREF_ACCT,tableAlias=accounts1_,origin=PROPREF_PERS person0_,columns={person0_.person_userid ,className=org.hibernate.test.propertyref.basic.Account}}
+
+14:17:46,607 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,607 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.propertyref.basic.Person p left join p.accounts a
+14:17:46,607 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id3_0_, accounts1_.accountId as accountId0_1_, person0_.name as name3_0_, person0_.person_userid as person3_3_0_, accounts1_.userId as userId0_1_, accounts1_."type" as type3_0_1_ from PROPREF_PERS person0_ left outer join PROPREF_ACCT accounts1_ on person0_.person_userid=accounts1_.userId
+14:17:46,607 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,607 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_0_,
+        accounts1_.accountId as accountId0_1_,
+        person0_.name as name3_0_,
+        person0_.person_userid as person3_3_0_,
+        accounts1_.userId as userId0_1_,
+        accounts1_."type" as type3_0_1_ 
+    from
+        PROPREF_PERS person0_ 
+    left outer join
+        PROPREF_ACCT accounts1_ 
+            on person0_.person_userid=accounts1_.userId
+14:17:46,615 DEBUG SQL:104 - 
+    select
+        address0_.id as id1_0_,
+        address0_.address as address1_0_,
+        address0_.zip as zip1_0_,
+        address0_.country as country1_0_,
+        address0_.person as person1_0_ 
+    from
+        PROPREF_ADDR address0_ 
+    where
+        address0_.person=?
+14:17:46,616 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_1_,
+        person0_.name as name3_1_,
+        person0_.person_userid as person3_3_1_,
+        address1_.id as id1_0_,
+        address1_.address as address1_0_,
+        address1_.zip as zip1_0_,
+        address1_.country as country1_0_,
+        address1_.person as person1_0_ 
+    from
+        PROPREF_PERS person0_ 
+    left outer join
+        PROPREF_ADDR address1_ 
+            on person0_.id=address1_.person 
+    where
+        person0_.person_userid=?
+14:17:46,616 DEBUG SQL:104 - 
+    select
+        address0_.id as id1_0_,
+        address0_.address as address1_0_,
+        address0_.zip as zip1_0_,
+        address0_.country as country1_0_,
+        address0_.person as person1_0_ 
+    from
+        PROPREF_ADDR address0_ 
+    where
+        address0_.person=?
+14:17:46,642 DEBUG SQL:104 - 
+    select
+        accounts0_.userId as userId3_1_,
+        accounts0_.accountId as accountId0_1_,
+        accounts0_.accountId as accountId0_0_,
+        accounts0_.userId as userId0_0_,
+        accounts0_."type" as type3_0_0_ 
+    from
+        PROPREF_ACCT accounts0_ 
+    where
+        accounts0_.userId=?
+14:17:46,642 DEBUG SQL:104 - 
+    select
+        person_.id as id3_ 
+    from
+        PROPREF_PERS person_ 
+    where
+        person_.person_userid=?
+14:17:46,643 DEBUG SQL:104 - 
+    select
+        accounts0_.userId as userId3_1_,
+        accounts0_.accountId as accountId0_1_,
+        accounts0_.accountId as accountId0_0_,
+        accounts0_.userId as userId0_0_,
+        accounts0_."type" as type3_0_0_ 
+    from
+        PROPREF_ACCT accounts0_ 
+    where
+        accounts0_.userId=?
+14:17:46,653 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.propertyref.basic.Person p left join fetch p.accounts a order by p.name
+14:17:46,655 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  |  \-[IDENT] Node: 'propertyref'
+    |     |  |  |  \-[IDENT] Node: 'basic'
+    |     |  |  \-[IDENT] Node: 'Person'
+    |     |  \-[ALIAS] Node: 'p'
+    |     \-[JOIN] Node: 'join'
+    |        +-[LEFT] Node: 'left'
+    |        +-[FETCH] Node: 'fetch'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'p'
+    |        |  \-[IDENT] Node: 'accounts'
+    |        \-[ALIAS] Node: 'a'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'p'
+          \-[IDENT] Node: 'name'
+
+14:17:46,655 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,655 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Person (p) -> person0_
+14:17:46,655 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:17:46,655 DEBUG DotNode:599 - getDataType() : accounts -> org.hibernate.type.SetType(org.hibernate.test.propertyref.basic.Person.accounts)
+14:17:46,655 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = p.accounts role = org.hibernate.test.propertyref.basic.Person.accounts associatedEntityName = org.hibernate.test.propertyref.basic.Account
+14:17:46,655 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Account (a) -> accounts1_
+14:17:46,656 DEBUG FromClause:282 - addJoinByPathMap() : p.accounts -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=PROPREF_ACCT,tableAlias=accounts1_,origin=PROPREF_PERS person0_,columns={person0_.person_userid ,className=org.hibernate.test.propertyref.basic.Account}}
+14:17:46,656 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.accounts : PROPREF_ACCT accounts1_
+14:17:46,656 DEBUG FromReferenceNode:74 - Resolved : p.accounts -> .
+14:17:46,656 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'PROPREF_ACCT accounts1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=org.hibernate.test.propertyref.basic.Person.accounts,tableName=PROPREF_ACCT,tableAlias=accounts1_,origin=PROPREF_PERS person0_,columns={person0_.person_userid ,className=org.hibernate.test.propertyref.basic.Account}}
+
+14:17:46,656 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:17:46,656 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:17:46,656 DEBUG FromReferenceNode:74 - Resolved : p.name -> person0_.name
+14:17:46,656 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( PROPREF_PERS person0_ PROPREF_ACCT accounts1_ ) ) ( order ( person0_.name person0_.id name ) ) )
+14:17:46,657 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:46,657 DEBUG JoinProcessor:175 - Using FROM fragment [PROPREF_PERS person0_]
+14:17:46,657 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join PROPREF_ACCT accounts1_ on person0_.person_userid=accounts1_.userId]
+14:17:46,657 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (PROPREF_ACCT,PROPREF_PERS)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id3_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'accounts1_.accountId as accountId0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=org.hibernate.test.propertyref.basic.Person.accounts,tableName=PROPREF_ACCT,tableAlias=accounts1_,origin=PROPREF_PERS person0_,columns={person0_.person_userid ,className=org.hibernate.test.propertyref.basic.Account}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name3_0_, person0_.person_userid as person3_3_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'accounts1_.userId as userId0_1_, accounts1_."type" as type3_0_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'accounts1_.userId as userId3_0__, accounts1_.accountId as accountId0_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a, p], fromElementByTableAlias=[person0_, accounts1_], fromElementsByPath=[p.accounts], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'PROPREF_PERS person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=PROPREF_PERS,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Person}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join PROPREF_ACCT accounts1_ on person0_.person_userid=accounts1_.userId' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=org.hibernate.test.propertyref.basic.Person.accounts,tableName=PROPREF_ACCT,tableAlias=accounts1_,origin=PROPREF_PERS person0_,columns={person0_.person_userid ,className=org.hibernate.test.propertyref.basic.Account}}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=person0_,className=org.hibernate.test.propertyref.basic.Person,classAlias=p}
+          +-[ALIAS_REF] IdentNode: 'person0_.id' {alias=p, className=org.hibernate.test.propertyref.basic.Person, tableAlias=person0_}
+          \-[IDENT] IdentNode: 'name' {originalText=name}
+
+14:17:46,657 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,657 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.propertyref.basic.Person p left join fetch p.accounts a order by p.name
+14:17:46,657 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id3_0_, accounts1_.accountId as accountId0_1_, person0_.name as name3_0_, person0_.person_userid as person3_3_0_, accounts1_.userId as userId0_1_, accounts1_."type" as type3_0_1_, accounts1_.userId as userId3_0__, accounts1_.accountId as accountId0_0__ from PROPREF_PERS person0_ left outer join PROPREF_ACCT accounts1_ on person0_.person_userid=accounts1_.userId order by person0_.name
+14:17:46,657 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,658 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_0_,
+        accounts1_.accountId as accountId0_1_,
+        person0_.name as name3_0_,
+        person0_.person_userid as person3_3_0_,
+        accounts1_.userId as userId0_1_,
+        accounts1_."type" as type3_0_1_,
+        accounts1_.userId as userId3_0__,
+        accounts1_.accountId as accountId0_0__ 
+    from
+        PROPREF_PERS person0_ 
+    left outer join
+        PROPREF_ACCT accounts1_ 
+            on person0_.person_userid=accounts1_.userId 
+    order by
+        person0_.name
+14:17:46,677 DEBUG SQL:104 - 
+    select
+        person_.id as id3_ 
+    from
+        PROPREF_PERS person_ 
+    where
+        person_.person_userid=?
+14:17:46,677 DEBUG SQL:104 - 
+    select
+        person_.id as id3_ 
+    from
+        PROPREF_PERS person_ 
+    where
+        person_.person_userid=?
+14:17:46,690 DEBUG SQL:104 - 
+    select
+        address0_.id as id1_0_,
+        address0_.address as address1_0_,
+        address0_.zip as zip1_0_,
+        address0_.country as country1_0_,
+        address0_.person as person1_0_ 
+    from
+        PROPREF_ADDR address0_ 
+    where
+        address0_.person=?
+14:17:46,690 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_1_,
+        person0_.name as name3_1_,
+        person0_.person_userid as person3_3_1_,
+        address1_.id as id1_0_,
+        address1_.address as address1_0_,
+        address1_.zip as zip1_0_,
+        address1_.country as country1_0_,
+        address1_.person as person1_0_ 
+    from
+        PROPREF_PERS person0_ 
+    left outer join
+        PROPREF_ADDR address1_ 
+            on person0_.id=address1_.person 
+    where
+        person0_.person_userid=?
+14:17:46,691 DEBUG SQL:104 - 
+    select
+        address0_.id as id1_0_,
+        address0_.address as address1_0_,
+        address0_.zip as zip1_0_,
+        address0_.country as country1_0_,
+        address0_.person as person1_0_ 
+    from
+        PROPREF_ADDR address0_ 
+    where
+        address0_.person=?
+14:17:46,699 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.propertyref.basic.Account a left join fetch a.user
+14:17:46,700 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  \-[IDENT] Node: 'propertyref'
+          |  |  |  \-[IDENT] Node: 'basic'
+          |  |  \-[IDENT] Node: 'Account'
+          |  \-[ALIAS] Node: 'a'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'a'
+                \-[IDENT] Node: 'user'
+
+14:17:46,708 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,709 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Account (a) -> account0_
+14:17:46,709 DEBUG FromReferenceNode:74 - Resolved : a -> account0_.accountId
+14:17:46,709 DEBUG DotNode:599 - getDataType() : user -> org.hibernate.type.ManyToOneType(org.hibernate.test.propertyref.basic.Person)
+14:17:46,709 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for user in org.hibernate.test.propertyref.basic.Account (<no alias>) parent = [ {null} ]
+14:17:46,710 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Person (<no alias>) -> person1_
+14:17:46,710 DEBUG FromClause:282 - addJoinByPathMap() : a.user -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PROPREF_PERS,tableAlias=person1_,origin=PROPREF_ACCT account0_,columns={account0_.userId ,className=org.hibernate.test.propertyref.basic.Person}}
+14:17:46,710 DEBUG FromReferenceNode:74 - Resolved : a.user -> account0_.userId
+14:17:46,710 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'PROPREF_PERS person1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PROPREF_PERS,tableAlias=person1_,origin=PROPREF_ACCT account0_,columns={account0_.userId ,className=org.hibernate.test.propertyref.basic.Person}}
+
+14:17:46,710 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( PROPREF_ACCT account0_ PROPREF_PERS person1_ ) ) )
+14:17:46,710 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:46,710 DEBUG JoinProcessor:175 - Using FROM fragment [PROPREF_ACCT account0_]
+14:17:46,711 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join PROPREF_PERS person1_ on account0_.userId=person1_.person_userid]
+14:17:46,711 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (PROPREF_ACCT,PROPREF_PERS)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'account0_.accountId as accountId0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=PROPREF_ACCT,tableAlias=account0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Account}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person1_.id as id3_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PROPREF_PERS,tableAlias=person1_,origin=PROPREF_ACCT account0_,columns={account0_.userId ,className=org.hibernate.test.propertyref.basic.Person}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'account0_.userId as userId0_0_, account0_."type" as type3_0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'person1_.name as name3_1_, person1_.person_userid as person3_3_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a], fromElementByTableAlias=[account0_, person1_], fromElementsByPath=[a.user], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'PROPREF_ACCT account0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=PROPREF_ACCT,tableAlias=account0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Account}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join PROPREF_PERS person1_ on account0_.userId=person1_.person_userid' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PROPREF_PERS,tableAlias=person1_,origin=PROPREF_ACCT account0_,columns={account0_.userId ,className=org.hibernate.test.propertyref.basic.Person}}
+
+14:17:46,721 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,721 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.propertyref.basic.Account a left join fetch a.user
+14:17:46,721 DEBUG QueryTranslatorImpl:236 - SQL: select account0_.accountId as accountId0_0_, person1_.id as id3_1_, account0_.userId as userId0_0_, account0_."type" as type3_0_0_, person1_.name as name3_1_, person1_.person_userid as person3_3_1_ from PROPREF_ACCT account0_ left outer join PROPREF_PERS person1_ on account0_.userId=person1_.person_userid
+14:17:46,721 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,721 DEBUG SQL:104 - 
+    select
+        account0_.accountId as accountId0_0_,
+        person1_.id as id3_1_,
+        account0_.userId as userId0_0_,
+        account0_."type" as type3_0_0_,
+        person1_.name as name3_1_,
+        person1_.person_userid as person3_3_1_ 
+    from
+        PROPREF_ACCT account0_ 
+    left outer join
+        PROPREF_PERS person1_ 
+            on account0_.userId=person1_.person_userid
+14:17:46,722 DEBUG SQL:104 - 
+    select
+        address0_.id as id1_0_,
+        address0_.address as address1_0_,
+        address0_.zip as zip1_0_,
+        address0_.country as country1_0_,
+        address0_.person as person1_0_ 
+    from
+        PROPREF_ADDR address0_ 
+    where
+        address0_.person=?
+14:17:46,723 DEBUG SQL:104 - 
+    select
+        accounts0_.userId as userId3_1_,
+        accounts0_.accountId as accountId0_1_,
+        accounts0_.accountId as accountId0_0_,
+        accounts0_.userId as userId0_0_,
+        accounts0_."type" as type3_0_0_ 
+    from
+        PROPREF_ACCT accounts0_ 
+    where
+        accounts0_.userId=?
+14:17:46,723 DEBUG SQL:104 - 
+    delete 
+    from
+        PROPREF_ADDR
+14:17:46,724 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.propertyref.basic.Account
+14:17:46,724 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'propertyref'
+             |  \-[IDENT] Node: 'basic'
+             \-[IDENT] Node: 'Account'
+
+14:17:46,734 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,734 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.basic.Account (<no alias>) -> account0_
+14:17:46,734 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (PROPREF_ACCT)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[account0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'PROPREF_ACCT' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PROPREF_ACCT,tableAlias=account0_,origin=null,columns={,className=org.hibernate.test.propertyref.basic.Account}}
+
+14:17:46,734 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,735 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:46,735 DEBUG SQL:104 - 
+    delete 
+    from
+        PROPREF_ACCT
+14:17:46,735 DEBUG SQL:104 - 
+    delete 
+    from
+        PROPREF_PERS
+14:17:46,736  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:46,737 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:46,737 DEBUG SQL:104 - 
+    alter table PROPREF_ACCT 
+        drop constraint FKD5CC64C2CA7438E1
+14:17:46,737 DEBUG SQL:104 - 
+    alter table PROPREF_ADDR 
+        drop constraint FKD5CC68A0C12CA210
+14:17:46,737 DEBUG SQL:104 - 
+    alter table PROPREF_USERGROUP 
+        drop constraint FK573B82253BB49FE3
+14:17:46,745 DEBUG SQL:104 - 
+    drop table PROPREF_ACCT if exists
+14:17:46,746 DEBUG SQL:104 - 
+    drop table PROPREF_ADDR if exists
+14:17:46,746 DEBUG SQL:104 - 
+    drop table PROPREF_GRP if exists
+14:17:46,746 DEBUG SQL:104 - 
+    drop table PROPREF_PERS if exists
+14:17:46,747 DEBUG SQL:104 - 
+    drop table PROPREF_USERGROUP if exists
+14:17:46,747 DEBUG SQL:104 - 
+    drop table USER_SYSTEM if exists
+14:17:46,747 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:17:46,747  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:46,747  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

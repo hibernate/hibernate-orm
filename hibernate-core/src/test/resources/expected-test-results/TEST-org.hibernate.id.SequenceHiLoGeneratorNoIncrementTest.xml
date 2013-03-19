@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.id.SequenceHiLoGeneratorNoIncrementTest" tests="1" time="0.658" timestamp="2013-02-28T20:09:53">
+  <properties />
+  <testcase classname="org.hibernate.id.SequenceHiLoGeneratorNoIncrementTest" name="testHiLoAlgorithm" time="0.651" />
+  <system-out><![CDATA[14:09:53,469  INFO CustomRunner:132 - BeforeClass: org.hibernate.id.SequenceHiLoGeneratorNoIncrementTest
+14:09:53,470  INFO CustomRunner:139 - Test: testHiLoAlgorithm
+14:09:53,471  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:53,475  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:53,531  INFO Version:37 - HCANN000001: Hibernate Commons Annotations {4.0.1.Final}
+14:09:53,645  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:53,646  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:53,646  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:53,646  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:53,647  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa, password=****}
+14:09:53,833  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:53,837  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:53,849  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:09:53,854  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:09:53,857  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:09:53,904  INFO Version:24 - Hibernate Validator 4.2.0.Final
+14:09:54,013  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:09:54,014 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:09:54,019 DEBUG SQL:104 - 
+    drop sequence test_sequence
+14:09:54,026 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence test_sequence
+14:09:54,027 ERROR SchemaExport:426 - Sequence "TEST_SEQUENCE" not found; SQL statement:
+
+    drop sequence test_sequence [90036-145]
+14:09:54,027 DEBUG SQL:104 - 
+    create sequence test_sequence
+14:09:54,032  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:09:54,033  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:09:54,079 DEBUG SQL:104 - 
+    select
+        currval('test_sequence');
+14:09:54,082 DEBUG SQL:104 - 
+    call next value for test_sequence
+14:09:54,088 DEBUG SQL:104 - 
+    select
+        currval('test_sequence');
+14:09:54,088 DEBUG SQL:104 - 
+    call next value for test_sequence
+14:09:54,093 DEBUG SQL:104 - 
+    select
+        currval('test_sequence');
+14:09:54,094 DEBUG SQL:104 - 
+    call next value for test_sequence
+14:09:54,095 DEBUG SQL:104 - 
+    select
+        currval('test_sequence');
+14:09:54,097 DEBUG SQL:104 - 
+    call next value for test_sequence
+14:09:54,099 DEBUG SQL:104 - 
+    select
+        currval('test_sequence');
+14:09:54,103 DEBUG SQL:104 - 
+    call next value for test_sequence
+14:09:54,106 DEBUG SQL:104 - 
+    select
+        currval('test_sequence');
+14:09:54,116  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:09:54,118 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:09:54,119 DEBUG SQL:104 - 
+    drop sequence test_sequence
+14:09:54,120  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:09:54,121  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

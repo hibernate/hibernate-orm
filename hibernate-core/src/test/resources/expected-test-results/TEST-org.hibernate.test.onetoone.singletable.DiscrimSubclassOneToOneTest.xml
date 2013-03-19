@@ -1,0 +1,711 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.onetoone.singletable.DiscrimSubclassOneToOneTest" tests="1" time="0.29" timestamp="2013-02-28T20:17:39">
+  <properties />
+  <testcase classname="org.hibernate.test.onetoone.singletable.DiscrimSubclassOneToOneTest" name="testOneToOneOnSubclass" time="0.186" />
+  <system-out><![CDATA[14:17:39,519  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.onetoone.singletable.DiscrimSubclassOneToOneTest
+14:17:39,521  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/onetoone/singletable/Person.hbm.xml
+14:17:39,592  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:39,593  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:39,593  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:39,593  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:39,593  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:39,595  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:39,595  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:39,596  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:39,596  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:39,608  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:39,609 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:39,609 DEBUG SQL:104 - 
+    alter table Address 
+        drop constraint FK1ED033D41E7335F7
+14:17:39,609 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Address drop constraint FK1ED033D41E7335F7
+14:17:39,609 ERROR SchemaExport:426 - Table "ADDRESS" not found; SQL statement:
+
+    alter table Address 
+        drop constraint FK1ED033D41E7335F7 [42102-145]
+14:17:39,610 DEBUG SQL:104 - 
+    drop table Address if exists
+14:17:39,610 DEBUG SQL:104 - 
+    drop table Entity if exists
+14:17:39,610 DEBUG SQL:104 - 
+    drop table MailingAddress if exists
+14:17:39,610 DEBUG SQL:104 - 
+    create table Address (
+        entityName varchar(255) not null,
+        street varchar(255),
+        state varchar(255),
+        zip varchar(255),
+        primary key (entityName)
+    )
+14:17:39,610 DEBUG SQL:104 - 
+    create table Entity (
+        name varchar(255) not null,
+        subtype varchar(255) not null,
+        primary key (name)
+    )
+14:17:39,611 DEBUG SQL:104 - 
+    create table MailingAddress (
+        entityName varchar(255) not null,
+        street varchar(255),
+        state varchar(255),
+        zip varchar(255),
+        primary key (entityName)
+    )
+14:17:39,611 DEBUG SQL:104 - 
+    alter table Address 
+        add constraint FK1ED033D41E7335F7 
+        foreign key (entityName) 
+        references Entity
+14:17:39,612  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:39,612  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:39,612  INFO CustomRunner:139 - Test: testOneToOneOnSubclass
+14:17:39,614 DEBUG SQL:104 - 
+    insert 
+    into
+        Entity
+        (subtype, name) 
+    values
+        ('org.hibernate.test.onetoone.singletable.Person', ?)
+14:17:39,614 DEBUG SQL:104 - 
+    insert 
+    into
+        Address
+        (street, state, zip, entityName) 
+    values
+        (?, ?, ?, ?)
+14:17:39,615 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetoone.singletable.Person p join fetch p.address left join fetch p.mailingAddress
+14:17:39,616 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  \-[IDENT] Node: 'onetoone'
+          |  |  |  \-[IDENT] Node: 'singletable'
+          |  |  \-[IDENT] Node: 'Person'
+          |  \-[ALIAS] Node: 'p'
+          +-[JOIN] Node: 'join'
+          |  +-[FETCH] Node: 'fetch'
+          |  \-[DOT] Node: '.'
+          |     +-[IDENT] Node: 'p'
+          |     \-[IDENT] Node: 'address'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'mailingAddress'
+
+14:17:39,616 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,616 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetoone.singletable.Person (p) -> person0_
+14:17:39,617 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.name
+14:17:39,617 DEBUG DotNode:599 - getDataType() : address -> org.hibernate.type.OneToOneType(org.hibernate.test.onetoone.singletable.Address)
+14:17:39,617 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for address in org.hibernate.test.onetoone.singletable.Person (<no alias>) parent = [ {null} ]
+14:17:39,617 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetoone.singletable.Address (<no alias>) -> address1_
+14:17:39,617 DEBUG FromClause:282 - addJoinByPathMap() : p.address -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity person0_,columns={person0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}
+14:17:39,617 DEBUG FromReferenceNode:74 - Resolved : p.address -> person0_.name
+14:17:39,617 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Address address1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity person0_,columns={person0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}
+
+14:17:39,617 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.name
+14:17:39,618 DEBUG DotNode:599 - getDataType() : mailingAddress -> org.hibernate.type.OneToOneType(MailingAddress)
+14:17:39,618 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for mailingAddress in org.hibernate.test.onetoone.singletable.Person (<no alias>) parent = [ {null} ]
+14:17:39,618 DEBUG FromElement:157 - FromClause{level=1} : MailingAddress (<no alias>) -> mailingadd2_
+14:17:39,618 DEBUG FromClause:282 - addJoinByPathMap() : p.mailingAddress -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=MailingAddress,tableAlias=mailingadd2_,origin=Entity person0_,columns={person0_.name ,className=MailingAddress}}
+14:17:39,618 DEBUG FromReferenceNode:74 - Resolved : p.mailingAddress -> person0_.name
+14:17:39,618 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'MailingAddress mailingadd2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=MailingAddress,tableAlias=mailingadd2_,origin=Entity person0_,columns={person0_.name ,className=MailingAddress}}
+
+14:17:39,618 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Entity person0_ Address address1_ MailingAddress mailingadd2_ ) ) )
+14:17:39,618 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:39,619 DEBUG JoinProcessor:175 - Using FROM fragment [Entity person0_]
+14:17:39,619 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [person0_.subtype='org.hibernate.test.onetoone.singletable.Person']
+14:17:39,619 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [person0_.subtype='org.hibernate.test.onetoone.singletable.Person']
+14:17:39,619 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:17:39,619 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Address address1_ on person0_.name=address1_.entityName]
+14:17:39,619 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join MailingAddress mailingadd2_ on person0_.name=mailingadd2_.entityName]
+14:17:39,619 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Address,MailingAddress,Entity)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.name as name1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Entity,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Person}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'address1_.entityName as entityName0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity person0_,columns={person0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'mailingadd2_.entityName as entityName2_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=MailingAddress,tableAlias=mailingadd2_,origin=Entity person0_,columns={person0_.name ,className=MailingAddress}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'address1_.street as street0_1_, address1_.state as state0_1_, address1_.zip as zip0_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'mailingadd2_.street as street2_2_, mailingadd2_.state as state2_2_, mailingadd2_.zip as zip2_2_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[p], fromElementByTableAlias=[mailingadd2_, person0_, address1_], fromElementsByPath=[p.mailingAddress, p.address], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Entity person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Entity,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Person}}
+    |     +-[JOIN_FRAGMENT] FromElement: 'inner join Address address1_ on person0_.name=address1_.entityName' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity person0_,columns={person0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join MailingAddress mailingadd2_ on person0_.name=mailingadd2_.entityName' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=MailingAddress,tableAlias=mailingadd2_,origin=Entity person0_,columns={person0_.name ,className=MailingAddress}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'person0_.subtype='org.hibernate.test.onetoone.singletable.Person''
+
+14:17:39,619 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,620 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetoone.singletable.Person p join fetch p.address left join fetch p.mailingAddress
+14:17:39,620 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.name as name1_0_, address1_.entityName as entityName0_1_, mailingadd2_.entityName as entityName2_2_, address1_.street as street0_1_, address1_.state as state0_1_, address1_.zip as zip0_1_, mailingadd2_.street as street2_2_, mailingadd2_.state as state2_2_, mailingadd2_.zip as zip2_2_ from Entity person0_ inner join Address address1_ on person0_.name=address1_.entityName left outer join MailingAddress mailingadd2_ on person0_.name=mailingadd2_.entityName where person0_.subtype='org.hibernate.test.onetoone.singletable.Person'
+14:17:39,620 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,620 DEBUG SQL:104 - 
+    select
+        person0_.name as name1_0_,
+        address1_.entityName as entityName0_1_,
+        mailingadd2_.entityName as entityName2_2_,
+        address1_.street as street0_1_,
+        address1_.state as state0_1_,
+        address1_.zip as zip0_1_,
+        mailingadd2_.street as street2_2_,
+        mailingadd2_.state as state2_2_,
+        mailingadd2_.zip as zip2_2_ 
+    from
+        Entity person0_ 
+    inner join
+        Address address1_ 
+            on person0_.name=address1_.entityName 
+    left outer join
+        MailingAddress mailingadd2_ 
+            on person0_.name=mailingadd2_.entityName 
+    where
+        person0_.subtype='org.hibernate.test.onetoone.singletable.Person'
+14:17:39,621 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetoone.singletable.Person p join fetch p.address
+14:17:39,622 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  \-[IDENT] Node: 'onetoone'
+          |  |  |  \-[IDENT] Node: 'singletable'
+          |  |  \-[IDENT] Node: 'Person'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'address'
+
+14:17:39,622 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,623 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetoone.singletable.Person (p) -> person0_
+14:17:39,623 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.name
+14:17:39,623 DEBUG DotNode:599 - getDataType() : address -> org.hibernate.type.OneToOneType(org.hibernate.test.onetoone.singletable.Address)
+14:17:39,623 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for address in org.hibernate.test.onetoone.singletable.Person (<no alias>) parent = [ {null} ]
+14:17:39,623 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetoone.singletable.Address (<no alias>) -> address1_
+14:17:39,623 DEBUG FromClause:282 - addJoinByPathMap() : p.address -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity person0_,columns={person0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}
+14:17:39,623 DEBUG FromReferenceNode:74 - Resolved : p.address -> person0_.name
+14:17:39,624 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Address address1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity person0_,columns={person0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}
+
+14:17:39,624 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Entity person0_ Address address1_ ) ) )
+14:17:39,624 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:39,624 DEBUG JoinProcessor:175 - Using FROM fragment [Entity person0_]
+14:17:39,624 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [person0_.subtype='org.hibernate.test.onetoone.singletable.Person']
+14:17:39,624 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [person0_.subtype='org.hibernate.test.onetoone.singletable.Person']
+14:17:39,624 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:17:39,625 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Address address1_ on person0_.name=address1_.entityName]
+14:17:39,625 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Address,Entity)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.name as name1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Entity,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Person}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'address1_.entityName as entityName0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity person0_,columns={person0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'address1_.street as street0_1_, address1_.state as state0_1_, address1_.zip as zip0_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_, address1_], fromElementsByPath=[p.address], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Entity person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Entity,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Person}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join Address address1_ on person0_.name=address1_.entityName' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity person0_,columns={person0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'person0_.subtype='org.hibernate.test.onetoone.singletable.Person''
+
+14:17:39,630 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,630 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetoone.singletable.Person p join fetch p.address
+14:17:39,630 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.name as name1_0_, address1_.entityName as entityName0_1_, address1_.street as street0_1_, address1_.state as state0_1_, address1_.zip as zip0_1_ from Entity person0_ inner join Address address1_ on person0_.name=address1_.entityName where person0_.subtype='org.hibernate.test.onetoone.singletable.Person'
+14:17:39,630 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,631 DEBUG SQL:104 - 
+    select
+        person0_.name as name1_0_,
+        address1_.entityName as entityName0_1_,
+        address1_.street as street0_1_,
+        address1_.state as state0_1_,
+        address1_.zip as zip0_1_ 
+    from
+        Entity person0_ 
+    inner join
+        Address address1_ 
+            on person0_.name=address1_.entityName 
+    where
+        person0_.subtype='org.hibernate.test.onetoone.singletable.Person'
+14:17:39,632 DEBUG SQL:104 - 
+    select
+        mailingadd0_.entityName as entityName2_0_,
+        mailingadd0_.street as street2_0_,
+        mailingadd0_.state as state2_0_,
+        mailingadd0_.zip as zip2_0_ 
+    from
+        MailingAddress mailingadd0_ 
+    where
+        mailingadd0_.entityName=?
+14:17:39,642 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetoone.singletable.Person
+14:17:39,643 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'onetoone'
+                |  \-[IDENT] Node: 'singletable'
+                \-[IDENT] Node: 'Person'
+
+14:17:39,643 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,643 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetoone.singletable.Person (<no alias>) -> person0_
+14:17:39,643 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Entity person0_ ) )
+14:17:39,644 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:39,644 DEBUG JoinProcessor:175 - Using FROM fragment [Entity person0_]
+14:17:39,644 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [person0_.subtype='org.hibernate.test.onetoone.singletable.Person']
+14:17:39,644 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [person0_.subtype='org.hibernate.test.onetoone.singletable.Person']
+14:17:39,644 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:17:39,651 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Entity)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'person0_.name as name1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Entity,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Person}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Entity person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Entity,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Person}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'person0_.subtype='org.hibernate.test.onetoone.singletable.Person''
+
+14:17:39,651 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,652 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetoone.singletable.Person
+14:17:39,652 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.name as name1_ from Entity person0_ where person0_.subtype='org.hibernate.test.onetoone.singletable.Person'
+14:17:39,652 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,652 DEBUG SQL:104 - 
+    select
+        person0_.name as name1_ 
+    from
+        Entity person0_ 
+    where
+        person0_.subtype='org.hibernate.test.onetoone.singletable.Person'
+14:17:39,653 DEBUG SQL:104 - 
+    select
+        address0_.entityName as entityName0_0_,
+        address0_.street as street0_0_,
+        address0_.state as state0_0_,
+        address0_.zip as zip0_0_ 
+    from
+        Address address0_ 
+    where
+        address0_.entityName=?
+14:17:39,663 DEBUG SQL:104 - 
+    select
+        mailingadd0_.entityName as entityName2_0_,
+        mailingadd0_.street as street2_0_,
+        mailingadd0_.state as state2_0_,
+        mailingadd0_.zip as zip2_0_ 
+    from
+        MailingAddress mailingadd0_ 
+    where
+        mailingadd0_.entityName=?
+14:17:39,664 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetoone.singletable.Entity
+14:17:39,665 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'onetoone'
+                |  \-[IDENT] Node: 'singletable'
+                \-[IDENT] Node: 'Entity'
+
+14:17:39,674 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,674 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetoone.singletable.Entity (<no alias>) -> entity0_
+14:17:39,674 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Entity entity0_ ) )
+14:17:39,674 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:39,675 DEBUG JoinProcessor:175 - Using FROM fragment [Entity entity0_]
+14:17:39,675 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Entity)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'entity0_.name as name1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Entity,tableAlias=entity0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Entity}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'entity0_.subtype as subtype1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[entity0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Entity entity0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Entity,tableAlias=entity0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Entity}}
+
+14:17:39,675 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,675 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetoone.singletable.Entity
+14:17:39,675 DEBUG QueryTranslatorImpl:236 - SQL: select entity0_.name as name1_, entity0_.subtype as subtype1_ from Entity entity0_
+14:17:39,675 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,676 DEBUG SQL:104 - 
+    select
+        entity0_.name as name1_,
+        entity0_.subtype as subtype1_ 
+    from
+        Entity entity0_
+14:17:39,676 DEBUG SQL:104 - 
+    select
+        address0_.entityName as entityName0_0_,
+        address0_.street as street0_0_,
+        address0_.state as state0_0_,
+        address0_.zip as zip0_0_ 
+    from
+        Address address0_ 
+    where
+        address0_.entityName=?
+14:17:39,685 DEBUG SQL:104 - 
+    select
+        mailingadd0_.entityName as entityName2_0_,
+        mailingadd0_.street as street2_0_,
+        mailingadd0_.state as state2_0_,
+        mailingadd0_.zip as zip2_0_ 
+    from
+        MailingAddress mailingadd0_ 
+    where
+        mailingadd0_.entityName=?
+14:17:39,685 DEBUG SQL:104 - 
+    select
+        person0_.name as name1_2_,
+        address1_.entityName as entityName0_0_,
+        address1_.street as street0_0_,
+        address1_.state as state0_0_,
+        address1_.zip as zip0_0_,
+        mailingadd2_.entityName as entityName2_1_,
+        mailingadd2_.street as street2_1_,
+        mailingadd2_.state as state2_1_,
+        mailingadd2_.zip as zip2_1_ 
+    from
+        Entity person0_ 
+    left outer join
+        Address address1_ 
+            on person0_.name=address1_.entityName 
+    left outer join
+        MailingAddress mailingadd2_ 
+            on person0_.name=mailingadd2_.entityName 
+    where
+        person0_.name=? 
+        and person0_.subtype='org.hibernate.test.onetoone.singletable.Person'
+14:17:39,687 DEBUG SQL:104 - 
+    select
+        entity0_.name as name1_2_,
+        entity0_.subtype as subtype1_2_,
+        address1_.entityName as entityName0_0_,
+        address1_.street as street0_0_,
+        address1_.state as state0_0_,
+        address1_.zip as zip0_0_,
+        mailingadd2_.entityName as entityName2_1_,
+        mailingadd2_.street as street2_1_,
+        mailingadd2_.state as state2_1_,
+        mailingadd2_.zip as zip2_1_ 
+    from
+        Entity entity0_ 
+    left outer join
+        Address address1_ 
+            on entity0_.name=address1_.entityName 
+    left outer join
+        MailingAddress mailingadd2_ 
+            on entity0_.name=mailingadd2_.entityName 
+    where
+        entity0_.name=?
+14:17:39,699 DEBUG SQL:104 - 
+    insert 
+    into
+        Entity
+        (subtype, name) 
+    values
+        ('org.hibernate.test.onetoone.singletable.Org', ?)
+14:17:39,700 DEBUG SQL:104 - 
+    insert 
+    into
+        Address
+        (street, state, zip, entityName) 
+    values
+        (?, ?, ?, ?)
+14:17:39,700 DEBUG SQL:104 - 
+    select
+        entity0_.name as name1_2_,
+        entity0_.subtype as subtype1_2_,
+        address1_.entityName as entityName0_0_,
+        address1_.street as street0_0_,
+        address1_.state as state0_0_,
+        address1_.zip as zip0_0_,
+        mailingadd2_.entityName as entityName2_1_,
+        mailingadd2_.street as street2_1_,
+        mailingadd2_.state as state2_1_,
+        mailingadd2_.zip as zip2_1_ 
+    from
+        Entity entity0_ 
+    left outer join
+        Address address1_ 
+            on entity0_.name=address1_.entityName 
+    left outer join
+        MailingAddress mailingadd2_ 
+            on entity0_.name=mailingadd2_.entityName 
+    where
+        entity0_.name=?
+14:17:39,709 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetoone.singletable.Entity e order by e.name
+14:17:39,711 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'onetoone'
+    |        |  |  \-[IDENT] Node: 'singletable'
+    |        |  \-[IDENT] Node: 'Entity'
+    |        \-[ALIAS] Node: 'e'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'e'
+          \-[IDENT] Node: 'name'
+
+14:17:39,711 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,711 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetoone.singletable.Entity (e) -> entity0_
+14:17:39,711 DEBUG FromReferenceNode:74 - Resolved : e -> entity0_.name
+14:17:39,711 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:17:39,712 DEBUG FromReferenceNode:74 - Resolved : e.name -> entity0_.name
+14:17:39,712 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Entity entity0_ ) ( order ( entity0_.name entity0_.name name ) ) )
+14:17:39,712 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:39,712 DEBUG JoinProcessor:175 - Using FROM fragment [Entity entity0_]
+14:17:39,712 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Entity)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'entity0_.name as name1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Entity,tableAlias=entity0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Entity}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'entity0_.subtype as subtype1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[entity0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Entity entity0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Entity,tableAlias=entity0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Entity}}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'entity0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=e.name,tableAlias=entity0_,className=org.hibernate.test.onetoone.singletable.Entity,classAlias=e}
+          +-[ALIAS_REF] IdentNode: 'entity0_.name' {alias=e, className=org.hibernate.test.onetoone.singletable.Entity, tableAlias=entity0_}
+          \-[IDENT] IdentNode: 'name' {originalText=name}
+
+14:17:39,733 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,734 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetoone.singletable.Entity e order by e.name
+14:17:39,734 DEBUG QueryTranslatorImpl:236 - SQL: select entity0_.name as name1_, entity0_.subtype as subtype1_ from Entity entity0_ order by entity0_.name
+14:17:39,734 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,735 DEBUG SQL:104 - 
+    select
+        entity0_.name as name1_,
+        entity0_.subtype as subtype1_ 
+    from
+        Entity entity0_ 
+    order by
+        entity0_.name
+14:17:39,735 DEBUG SQL:104 - 
+    select
+        address0_.entityName as entityName0_0_,
+        address0_.street as street0_0_,
+        address0_.state as state0_0_,
+        address0_.zip as zip0_0_ 
+    from
+        Address address0_ 
+    where
+        address0_.entityName=?
+14:17:39,736 DEBUG SQL:104 - 
+    select
+        mailingadd0_.entityName as entityName2_0_,
+        mailingadd0_.street as street2_0_,
+        mailingadd0_.state as state2_0_,
+        mailingadd0_.zip as zip2_0_ 
+    from
+        MailingAddress mailingadd0_ 
+    where
+        mailingadd0_.entityName=?
+14:17:39,745 DEBUG SQL:104 - 
+    select
+        addresses0_.entityName as entityName1_1_,
+        addresses0_.entityName as entityName0_1_,
+        addresses0_.entityName as entityName0_0_,
+        addresses0_.street as street0_0_,
+        addresses0_.state as state0_0_,
+        addresses0_.zip as zip0_0_ 
+    from
+        Address addresses0_ 
+    where
+        addresses0_.entityName=?
+14:17:39,745 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetoone.singletable.Entity e left join fetch e.address left join fetch e.mailingAddress order by e.name
+14:17:39,747 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  |  \-[IDENT] Node: 'onetoone'
+    |     |  |  |  \-[IDENT] Node: 'singletable'
+    |     |  |  \-[IDENT] Node: 'Entity'
+    |     |  \-[ALIAS] Node: 'e'
+    |     +-[JOIN] Node: 'join'
+    |     |  +-[LEFT] Node: 'left'
+    |     |  +-[FETCH] Node: 'fetch'
+    |     |  \-[DOT] Node: '.'
+    |     |     +-[IDENT] Node: 'e'
+    |     |     \-[IDENT] Node: 'address'
+    |     \-[JOIN] Node: 'join'
+    |        +-[LEFT] Node: 'left'
+    |        +-[FETCH] Node: 'fetch'
+    |        \-[DOT] Node: '.'
+    |           +-[IDENT] Node: 'e'
+    |           \-[IDENT] Node: 'mailingAddress'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'e'
+          \-[IDENT] Node: 'name'
+
+14:17:39,755 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,756 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetoone.singletable.Entity (e) -> entity0_
+14:17:39,756 DEBUG FromReferenceNode:74 - Resolved : e -> entity0_.name
+14:17:39,756 DEBUG DotNode:599 - getDataType() : address -> org.hibernate.type.OneToOneType(org.hibernate.test.onetoone.singletable.Address)
+14:17:39,765 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for address in org.hibernate.test.onetoone.singletable.Entity (<no alias>) parent = [ {null} ]
+14:17:39,765 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetoone.singletable.Address (<no alias>) -> address1_
+14:17:39,765 DEBUG FromClause:282 - addJoinByPathMap() : e.address -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity entity0_,columns={entity0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}
+14:17:39,765 DEBUG FromReferenceNode:74 - Resolved : e.address -> entity0_.name
+14:17:39,765 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Address address1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity entity0_,columns={entity0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}
+
+14:17:39,766 DEBUG FromReferenceNode:74 - Resolved : e -> entity0_.name
+14:17:39,766 DEBUG DotNode:599 - getDataType() : mailingAddress -> org.hibernate.type.OneToOneType(MailingAddress)
+14:17:39,766 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for mailingAddress in org.hibernate.test.onetoone.singletable.Entity (<no alias>) parent = [ {null} ]
+14:17:39,766 DEBUG FromElement:157 - FromClause{level=1} : MailingAddress (<no alias>) -> mailingadd2_
+14:17:39,766 DEBUG FromClause:282 - addJoinByPathMap() : e.mailingAddress -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=MailingAddress,tableAlias=mailingadd2_,origin=Entity entity0_,columns={entity0_.name ,className=MailingAddress}}
+14:17:39,766 DEBUG FromReferenceNode:74 - Resolved : e.mailingAddress -> entity0_.name
+14:17:39,766 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'MailingAddress mailingadd2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=MailingAddress,tableAlias=mailingadd2_,origin=Entity entity0_,columns={entity0_.name ,className=MailingAddress}}
+
+14:17:39,766 DEBUG FromReferenceNode:74 - Resolved : e -> entity0_.name
+14:17:39,767 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:17:39,767 DEBUG FromReferenceNode:74 - Resolved : e.name -> entity0_.name
+14:17:39,767 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Entity entity0_ Address address1_ MailingAddress mailingadd2_ ) ) ( order ( entity0_.name entity0_.name name ) ) )
+14:17:39,767 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:39,767 DEBUG JoinProcessor:175 - Using FROM fragment [Entity entity0_]
+14:17:39,767 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Address address1_ on entity0_.name=address1_.entityName]
+14:17:39,767 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join MailingAddress mailingadd2_ on entity0_.name=mailingadd2_.entityName]
+14:17:39,768 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Address,MailingAddress,Entity)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'entity0_.name as name1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Entity,tableAlias=entity0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Entity}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'address1_.entityName as entityName0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity entity0_,columns={entity0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'mailingadd2_.entityName as entityName2_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=MailingAddress,tableAlias=mailingadd2_,origin=Entity entity0_,columns={entity0_.name ,className=MailingAddress}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'entity0_.subtype as subtype1_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'address1_.street as street0_1_, address1_.state as state0_1_, address1_.zip as zip0_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'mailingadd2_.street as street2_2_, mailingadd2_.state as state2_2_, mailingadd2_.zip as zip2_2_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[e], fromElementByTableAlias=[entity0_, mailingadd2_, address1_], fromElementsByPath=[e.address, e.mailingAddress], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Entity entity0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Entity,tableAlias=entity0_,origin=null,columns={,className=org.hibernate.test.onetoone.singletable.Entity}}
+    |     +-[JOIN_FRAGMENT] FromElement: 'left outer join Address address1_ on entity0_.name=address1_.entityName' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Entity entity0_,columns={entity0_.name ,className=org.hibernate.test.onetoone.singletable.Address}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join MailingAddress mailingadd2_ on entity0_.name=mailingadd2_.entityName' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=MailingAddress,tableAlias=mailingadd2_,origin=Entity entity0_,columns={entity0_.name ,className=MailingAddress}}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'entity0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=e.name,tableAlias=entity0_,className=org.hibernate.test.onetoone.singletable.Entity,classAlias=e}
+          +-[ALIAS_REF] IdentNode: 'entity0_.name' {alias=e, className=org.hibernate.test.onetoone.singletable.Entity, tableAlias=entity0_}
+          \-[IDENT] IdentNode: 'name' {originalText=name}
+
+14:17:39,777 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,777 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetoone.singletable.Entity e left join fetch e.address left join fetch e.mailingAddress order by e.name
+14:17:39,778 DEBUG QueryTranslatorImpl:236 - SQL: select entity0_.name as name1_0_, address1_.entityName as entityName0_1_, mailingadd2_.entityName as entityName2_2_, entity0_.subtype as subtype1_0_, address1_.street as street0_1_, address1_.state as state0_1_, address1_.zip as zip0_1_, mailingadd2_.street as street2_2_, mailingadd2_.state as state2_2_, mailingadd2_.zip as zip2_2_ from Entity entity0_ left outer join Address address1_ on entity0_.name=address1_.entityName left outer join MailingAddress mailingadd2_ on entity0_.name=mailingadd2_.entityName order by entity0_.name
+14:17:39,778 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:39,778 DEBUG SQL:104 - 
+    select
+        entity0_.name as name1_0_,
+        address1_.entityName as entityName0_1_,
+        mailingadd2_.entityName as entityName2_2_,
+        entity0_.subtype as subtype1_0_,
+        address1_.street as street0_1_,
+        address1_.state as state0_1_,
+        address1_.zip as zip0_1_,
+        mailingadd2_.street as street2_2_,
+        mailingadd2_.state as state2_2_,
+        mailingadd2_.zip as zip2_2_ 
+    from
+        Entity entity0_ 
+    left outer join
+        Address address1_ 
+            on entity0_.name=address1_.entityName 
+    left outer join
+        MailingAddress mailingadd2_ 
+            on entity0_.name=mailingadd2_.entityName 
+    order by
+        entity0_.name
+14:17:39,788 DEBUG SQL:104 - 
+    select
+        addresses0_.entityName as entityName1_1_,
+        addresses0_.entityName as entityName0_1_,
+        addresses0_.entityName as entityName0_0_,
+        addresses0_.street as street0_0_,
+        addresses0_.state as state0_0_,
+        addresses0_.zip as zip0_0_ 
+    from
+        Address addresses0_ 
+    where
+        addresses0_.entityName=?
+14:17:39,789 DEBUG SQL:104 - 
+    delete 
+    from
+        Address 
+    where
+        entityName=?
+14:17:39,789 DEBUG SQL:104 - 
+    delete 
+    from
+        Entity 
+    where
+        name=?
+14:17:39,797 DEBUG SQL:104 - 
+    delete 
+    from
+        Address 
+    where
+        entityName=?
+14:17:39,797 DEBUG SQL:104 - 
+    delete 
+    from
+        Entity 
+    where
+        name=?
+14:17:39,798  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:39,799 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:39,799 DEBUG SQL:104 - 
+    alter table Address 
+        drop constraint FK1ED033D41E7335F7
+14:17:39,799 DEBUG SQL:104 - 
+    drop table Address if exists
+14:17:39,800 DEBUG SQL:104 - 
+    drop table Entity if exists
+14:17:39,800 DEBUG SQL:104 - 
+    drop table MailingAddress if exists
+14:17:39,800  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:39,807  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

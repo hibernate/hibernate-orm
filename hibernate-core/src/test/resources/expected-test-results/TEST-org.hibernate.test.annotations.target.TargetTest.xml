@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.target.TargetTest" tests="3" time="0.113" timestamp="2013-02-28T20:10:44">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.target.TargetTest" name="testTargetOnEmbedded" time="0.01" />
+  <testcase classname="org.hibernate.test.annotations.target.TargetTest" name="testTargetOnMapKey" time="0.023" />
+  <testcase classname="org.hibernate.test.annotations.target.TargetTest" name="testTargetOnMapKeyManyToMany" time="0.021" />
+  <system-out><![CDATA[14:10:44,647  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.target.TargetTest
+14:10:44,654  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:44,654  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:44,655  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:44,655  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:44,655  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:44,656  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:44,656  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:44,657  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:44,657  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:44,657  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:44,667  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:44,667 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:44,668 DEBUG SQL:104 - 
+    alter table Brand_LuggageImpl 
+        drop constraint FK6B940A7E305BB4BE
+14:10:44,669 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Brand_LuggageImpl drop constraint FK6B940A7E305BB4BE
+14:10:44,669 ERROR SchemaExport:426 - Table "BRAND_LUGGAGEIMPL" not found; SQL statement:
+
+    alter table Brand_LuggageImpl 
+        drop constraint FK6B940A7E305BB4BE [42102-145]
+14:10:44,669 DEBUG SQL:104 - 
+    alter table Brand_LuggageImpl 
+        drop constraint FK6B940A7ECF0A685D
+14:10:44,669 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Brand_LuggageImpl drop constraint FK6B940A7ECF0A685D
+14:10:44,669 ERROR SchemaExport:426 - Table "BRAND_LUGGAGEIMPL" not found; SQL statement:
+
+    alter table Brand_LuggageImpl 
+        drop constraint FK6B940A7ECF0A685D [42102-145]
+14:10:44,670 DEBUG SQL:104 - 
+    alter table Brand_sizePerLuggage 
+        drop constraint FK349C03121513ED13
+14:10:44,670 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Brand_sizePerLuggage drop constraint FK349C03121513ED13
+14:10:44,671 ERROR SchemaExport:426 - Table "BRAND_SIZEPERLUGGAGE" not found; SQL statement:
+
+    alter table Brand_sizePerLuggage 
+        drop constraint FK349C03121513ED13 [42102-145]
+14:10:44,671 DEBUG SQL:104 - 
+    alter table Brand_sizePerLuggage 
+        drop constraint FK349C0312CF0A685D
+14:10:44,671 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Brand_sizePerLuggage drop constraint FK349C0312CF0A685D
+14:10:44,671 ERROR SchemaExport:426 - Table "BRAND_SIZEPERLUGGAGE" not found; SQL statement:
+
+    alter table Brand_sizePerLuggage 
+        drop constraint FK349C0312CF0A685D [42102-145]
+14:10:44,671 DEBUG SQL:104 - 
+    drop table Brand if exists
+14:10:44,671 DEBUG SQL:104 - 
+    drop table Brand_LuggageImpl if exists
+14:10:44,671 DEBUG SQL:104 - 
+    drop table Brand_sizePerLuggage if exists
+14:10:44,672 DEBUG SQL:104 - 
+    drop table LuggageImpl if exists
+14:10:44,672 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:44,672 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:44,672 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:44,686 DEBUG SQL:104 - 
+    create table Brand (
+        id bigint not null,
+        primary key (id)
+    )
+14:10:44,686 DEBUG SQL:104 - 
+    create table Brand_LuggageImpl (
+        Brand_id bigint not null,
+        luggagesBySize_id bigint not null,
+        name varchar(255) not null,
+        primary key (Brand_id, name)
+    )
+14:10:44,687 DEBUG SQL:104 - 
+    create table Brand_sizePerLuggage (
+        Brand_id bigint not null,
+        name varchar(255) not null,
+        sizePerLuggage_KEY bigint not null,
+        primary key (Brand_id, sizePerLuggage_KEY)
+    )
+14:10:44,687 DEBUG SQL:104 - 
+    create table LuggageImpl (
+        id bigint not null,
+        height double not null,
+        name varchar(255),
+        width double not null,
+        primary key (id)
+    )
+14:10:44,687 DEBUG SQL:104 - 
+    alter table Brand_LuggageImpl 
+        add constraint FK6B940A7E305BB4BE 
+        foreign key (luggagesBySize_id) 
+        references LuggageImpl
+14:10:44,688 DEBUG SQL:104 - 
+    alter table Brand_LuggageImpl 
+        add constraint FK6B940A7ECF0A685D 
+        foreign key (Brand_id) 
+        references Brand
+14:10:44,689 DEBUG SQL:104 - 
+    alter table Brand_sizePerLuggage 
+        add constraint FK349C03121513ED13 
+        foreign key (sizePerLuggage_KEY) 
+        references LuggageImpl
+14:10:44,689 DEBUG SQL:104 - 
+    alter table Brand_sizePerLuggage 
+        add constraint FK349C0312CF0A685D 
+        foreign key (Brand_id) 
+        references Brand
+14:10:44,690 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:44,690  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:44,691  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:44,691  INFO CustomRunner:139 - Test: testTargetOnEmbedded
+14:10:44,693 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:44,695 DEBUG SQL:104 - 
+    insert 
+    into
+        LuggageImpl
+        (height, name, width, id) 
+    values
+        (?, ?, ?, ?)
+14:10:44,700 DEBUG SQL:104 - 
+    select
+        luggageimp0_.id as id3_0_,
+        luggageimp0_.height as height3_0_,
+        luggageimp0_.name as name3_0_,
+        luggageimp0_.width as width3_0_ 
+    from
+        LuggageImpl luggageimp0_ 
+    where
+        luggageimp0_.id=?
+14:10:44,701  INFO CustomRunner:139 - Test: testTargetOnMapKey
+14:10:44,702 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:44,702 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:44,703 DEBUG SQL:104 - 
+    insert 
+    into
+        LuggageImpl
+        (height, name, width, id) 
+    values
+        (?, ?, ?, ?)
+14:10:44,703 DEBUG SQL:104 - 
+    insert 
+    into
+        Brand
+        (id) 
+    values
+        (?)
+14:10:44,714 DEBUG SQL:104 - 
+    insert 
+    into
+        Brand_LuggageImpl
+        (Brand_id, name, luggagesBySize_id) 
+    values
+        (?, ?, ?)
+14:10:44,714 DEBUG SQL:104 - 
+    select
+        brand0_.id as id0_0_ 
+    from
+        Brand brand0_ 
+    where
+        brand0_.id=?
+14:10:44,715 DEBUG SQL:104 - 
+    select
+        luggagesby0_.Brand_id as Brand1_0_1_,
+        luggagesby0_.luggagesBySize_id as luggages2_1_1_,
+        luggagesby0_.name as name1_,
+        luggageimp1_.id as id3_0_,
+        luggageimp1_.height as height3_0_,
+        luggageimp1_.name as name3_0_,
+        luggageimp1_.width as width3_0_ 
+    from
+        Brand_LuggageImpl luggagesby0_ 
+    inner join
+        LuggageImpl luggageimp1_ 
+            on luggagesby0_.luggagesBySize_id=luggageimp1_.id 
+    where
+        luggagesby0_.Brand_id=?
+14:10:44,724  INFO CustomRunner:139 - Test: testTargetOnMapKeyManyToMany
+14:10:44,725 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:44,726 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:44,735 DEBUG SQL:104 - 
+    insert 
+    into
+        LuggageImpl
+        (height, name, width, id) 
+    values
+        (?, ?, ?, ?)
+14:10:44,735 DEBUG SQL:104 - 
+    insert 
+    into
+        Brand
+        (id) 
+    values
+        (?)
+14:10:44,735 DEBUG SQL:104 - 
+    insert 
+    into
+        Brand_sizePerLuggage
+        (Brand_id, sizePerLuggage_KEY, name) 
+    values
+        (?, ?, ?)
+14:10:44,736 DEBUG SQL:104 - 
+    select
+        brand0_.id as id0_0_ 
+    from
+        Brand brand0_ 
+    where
+        brand0_.id=?
+14:10:44,736 DEBUG SQL:104 - 
+    select
+        sizeperlug0_.Brand_id as Brand1_0_0_,
+        sizeperlug0_.name as name2_0_,
+        sizeperlug0_.sizePerLuggage_KEY as sizePerL3_0_ 
+    from
+        Brand_sizePerLuggage sizeperlug0_ 
+    where
+        sizeperlug0_.Brand_id=?
+14:10:44,745 DEBUG SQL:104 - 
+    select
+        luggageimp0_.id as id3_0_,
+        luggageimp0_.height as height3_0_,
+        luggageimp0_.name as name3_0_,
+        luggageimp0_.width as width3_0_ 
+    from
+        LuggageImpl luggageimp0_ 
+    where
+        luggageimp0_.id=?
+14:10:44,746  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:44,747 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:44,747 DEBUG SQL:104 - 
+    alter table Brand_LuggageImpl 
+        drop constraint FK6B940A7E305BB4BE
+14:10:44,747 DEBUG SQL:104 - 
+    alter table Brand_LuggageImpl 
+        drop constraint FK6B940A7ECF0A685D
+14:10:44,747 DEBUG SQL:104 - 
+    alter table Brand_sizePerLuggage 
+        drop constraint FK349C03121513ED13
+14:10:44,755 DEBUG SQL:104 - 
+    alter table Brand_sizePerLuggage 
+        drop constraint FK349C0312CF0A685D
+14:10:44,756 DEBUG SQL:104 - 
+    drop table Brand if exists
+14:10:44,756 DEBUG SQL:104 - 
+    drop table Brand_LuggageImpl if exists
+14:10:44,756 DEBUG SQL:104 - 
+    drop table Brand_sizePerLuggage if exists
+14:10:44,756 DEBUG SQL:104 - 
+    drop table LuggageImpl if exists
+14:10:44,757 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:44,757  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:44,757  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

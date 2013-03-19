@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" tests="14" time="0.037" timestamp="2013-02-28T20:14:00">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testIncompleteScroll" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testIncompleteScrollFirstResult" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testIncompleteScrollFirstResultInTransaction" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testIncompleteScrollLast" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testIncompleteScrollSecondResult" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testIncompleteScrollSecondResultInTransaction" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testListOrderChildrenDesc" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testNoScroll" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testScroll" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testScrollOrderChildrenDesc" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testScrollOrderParentAsc" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testScrollOrderParentAscChildrenAsc" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testScrollOrderParentAscChildrenDesc" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest" name="testScrollOrderParentDesc" time="0.0" />
+  <system-out><![CDATA[14:14:00,526  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.hqlfetchscroll.NoIdentityHQLScrollFetchTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

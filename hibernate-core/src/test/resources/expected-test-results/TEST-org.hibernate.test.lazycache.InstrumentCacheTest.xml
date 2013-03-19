@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.lazycache.InstrumentCacheTest" tests="2" time="0.007" timestamp="2013-02-28T20:14:52">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.lazycache.InstrumentCacheTest" name="testInitFromCache" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.lazycache.InstrumentCacheTest" name="testInitFromCache2" time="0.0" />
+  <system-out><![CDATA[14:14:52,802  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.lazycache.InstrumentCacheTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

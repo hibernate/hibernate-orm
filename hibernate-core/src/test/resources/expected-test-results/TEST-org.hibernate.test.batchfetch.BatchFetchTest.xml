@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.batchfetch.BatchFetchTest" tests="2" time="0.401" timestamp="2013-02-28T20:11:38">
+  <properties />
+  <testcase classname="org.hibernate.test.batchfetch.BatchFetchTest" name="testBatchFetch" time="0.077" />
+  <testcase classname="org.hibernate.test.batchfetch.BatchFetchTest" name="testBatchFetch2" time="0.054" />
+  <system-out><![CDATA[14:11:38,660  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.batchfetch.BatchFetchTest
+14:11:38,665  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/batchfetch/ProductLine.hbm.xml
+14:11:38,737  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:38,737  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:38,738  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:38,738  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:38,738  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:38,741  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:38,741  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:38,742  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:38,742  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:38,812  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:38,814 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:38,814 DEBUG SQL:104 - 
+    alter table Model 
+        drop constraint FK4710B0921C08435
+14:11:38,847 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Model drop constraint FK4710B0921C08435
+14:11:38,847 ERROR SchemaExport:426 - Table "MODEL" not found; SQL statement:
+
+    alter table Model 
+        drop constraint FK4710B0921C08435 [42102-145]
+14:11:38,847 DEBUG SQL:104 - 
+    drop table BatchLoadableEntity if exists
+14:11:38,847 DEBUG SQL:104 - 
+    drop table Model if exists
+14:11:38,847 DEBUG SQL:104 - 
+    drop table ProductLine if exists
+14:11:38,848 DEBUG SQL:104 - 
+    create table BatchLoadableEntity (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:11:38,848 DEBUG SQL:104 - 
+    create table Model (
+        modelId varchar(32) not null,
+        name varchar(25) not null,
+        description varchar(200) not null,
+        productId varchar(32) not null,
+        primary key (modelId)
+    )
+14:11:38,849 DEBUG SQL:104 - 
+    create table ProductLine (
+        productId varchar(32) not null,
+        description varchar(200) not null,
+        primary key (productId)
+    )
+14:11:38,849 DEBUG SQL:104 - 
+    alter table Model 
+        add constraint FK4710B0921C08435 
+        foreign key (productId) 
+        references ProductLine
+14:11:38,850  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:38,851  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:38,851  INFO CustomRunner:139 - Test: testBatchFetch
+14:11:38,854 DEBUG SQL:104 - 
+    insert 
+    into
+        ProductLine
+        (description, productId) 
+    values
+        (?, ?)
+14:11:38,856 DEBUG SQL:104 - 
+    insert 
+    into
+        Model
+        (name, description, productId, modelId) 
+    values
+        (?, ?, ?, ?)
+14:11:38,856 DEBUG SQL:104 - 
+    insert 
+    into
+        Model
+        (name, description, productId, modelId) 
+    values
+        (?, ?, ?, ?)
+14:11:38,856 DEBUG SQL:104 - 
+    insert 
+    into
+        ProductLine
+        (description, productId) 
+    values
+        (?, ?)
+14:11:38,857 DEBUG SQL:104 - 
+    insert 
+    into
+        Model
+        (name, description, productId, modelId) 
+    values
+        (?, ?, ?, ?)
+14:11:38,857 DEBUG SQL:104 - 
+    insert 
+    into
+        Model
+        (name, description, productId, modelId) 
+    values
+        (?, ?, ?, ?)
+14:11:38,857 DEBUG SQL:104 - 
+    insert 
+    into
+        Model
+        (name, description, productId, modelId) 
+    values
+        (?, ?, ?, ?)
+14:11:38,858 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.batchfetch.ProductLine pl order by pl.description
+14:11:38,861 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'batchfetch'
+    |        |  \-[IDENT] Node: 'ProductLine'
+    |        \-[ALIAS] Node: 'pl'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'pl'
+          \-[IDENT] Node: 'description'
+
+14:11:38,861 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,862 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.batchfetch.ProductLine (pl) -> productlin0_
+14:11:38,862 DEBUG FromReferenceNode:74 - Resolved : pl -> productlin0_.productId
+14:11:38,863 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:11:38,863 DEBUG FromReferenceNode:74 - Resolved : pl.description -> productlin0_.description
+14:11:38,863 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ProductLine productlin0_ ) ( order ( productlin0_.description productlin0_.productId description ) ) )
+14:11:38,863 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:38,863 DEBUG JoinProcessor:175 - Using FROM fragment [ProductLine productlin0_]
+14:11:38,864 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ProductLine)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'productlin0_.productId as productId2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=pl,role=null,tableName=ProductLine,tableAlias=productlin0_,origin=null,columns={,className=org.hibernate.test.batchfetch.ProductLine}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'productlin0_.description as descript2_2_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[pl], fromElementByTableAlias=[productlin0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'ProductLine productlin0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=pl,role=null,tableName=ProductLine,tableAlias=productlin0_,origin=null,columns={,className=org.hibernate.test.batchfetch.ProductLine}}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'productlin0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=pl.description,tableAlias=productlin0_,className=org.hibernate.test.batchfetch.ProductLine,classAlias=pl}
+          +-[ALIAS_REF] IdentNode: 'productlin0_.productId' {alias=pl, className=org.hibernate.test.batchfetch.ProductLine, tableAlias=productlin0_}
+          \-[IDENT] IdentNode: 'description' {originalText=description}
+
+14:11:38,864 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,865 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.batchfetch.ProductLine pl order by pl.description
+14:11:38,865 DEBUG QueryTranslatorImpl:236 - SQL: select productlin0_.productId as productId2_, productlin0_.description as descript2_2_ from ProductLine productlin0_ order by productlin0_.description
+14:11:38,865 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,865 DEBUG SQL:104 - 
+    select
+        productlin0_.productId as productId2_,
+        productlin0_.description as descript2_2_ 
+    from
+        ProductLine productlin0_ 
+    order by
+        productlin0_.description
+14:11:38,866 DEBUG SQL:104 - 
+    select
+        models0_.productId as productId2_1_,
+        models0_.modelId as modelId1_1_,
+        models0_.modelId as modelId1_0_,
+        models0_.name as name1_0_,
+        models0_.description as descript3_1_0_,
+        models0_.productId as productId1_0_ 
+    from
+        Model models0_ 
+    where
+        models0_.productId in (
+            ?, ?
+        )
+14:11:38,871 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.batchfetch.Model m
+14:11:38,873 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'batchfetch'
+             |  \-[IDENT] Node: 'Model'
+             \-[ALIAS] Node: 'm'
+
+14:11:38,874 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,874 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.batchfetch.Model (m) -> model0_
+14:11:38,874 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Model model0_ ) )
+14:11:38,874 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:38,875 DEBUG JoinProcessor:175 - Using FROM fragment [Model model0_]
+14:11:38,875 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Model)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'model0_.modelId as modelId1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Model,tableAlias=model0_,origin=null,columns={,className=org.hibernate.test.batchfetch.Model}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'model0_.name as name1_, model0_.description as descript3_1_, model0_.productId as productId1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[m], fromElementByTableAlias=[model0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Model model0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Model,tableAlias=model0_,origin=null,columns={,className=org.hibernate.test.batchfetch.Model}}
+
+14:11:38,875 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,876 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.batchfetch.Model m
+14:11:38,876 DEBUG QueryTranslatorImpl:236 - SQL: select model0_.modelId as modelId1_, model0_.name as name1_, model0_.description as descript3_1_, model0_.productId as productId1_ from Model model0_
+14:11:38,876 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,876 DEBUG SQL:104 - 
+    select
+        model0_.modelId as modelId1_,
+        model0_.name as name1_,
+        model0_.description as descript3_1_,
+        model0_.productId as productId1_ 
+    from
+        Model model0_
+14:11:38,878 DEBUG SQL:104 - 
+    select
+        productlin0_.productId as productId2_0_,
+        productlin0_.description as descript2_2_0_ 
+    from
+        ProductLine productlin0_ 
+    where
+        productlin0_.productId in (
+            ?, ?
+        )
+14:11:38,879 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.batchfetch.Model
+14:11:38,881 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'batchfetch'
+                \-[IDENT] Node: 'Model'
+
+14:11:38,881 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,882 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.batchfetch.Model (<no alias>) -> model0_
+14:11:38,882 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Model model0_ ) )
+14:11:38,883 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:38,883 DEBUG JoinProcessor:175 - Using FROM fragment [Model model0_]
+14:11:38,883 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Model)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'model0_.modelId as modelId1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Model,tableAlias=model0_,origin=null,columns={,className=org.hibernate.test.batchfetch.Model}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'model0_.name as name1_, model0_.description as descript3_1_, model0_.productId as productId1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[model0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Model model0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Model,tableAlias=model0_,origin=null,columns={,className=org.hibernate.test.batchfetch.Model}}
+
+14:11:38,883 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,884 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.batchfetch.Model
+14:11:38,884 DEBUG QueryTranslatorImpl:236 - SQL: select model0_.modelId as modelId1_, model0_.name as name1_, model0_.description as descript3_1_, model0_.productId as productId1_ from Model model0_
+14:11:38,884 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,885 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.batchfetch.Model
+14:11:38,886 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'batchfetch'
+                \-[IDENT] Node: 'Model'
+
+14:11:38,887 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,888 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.batchfetch.Model (<no alias>) -> model0_
+14:11:38,888 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Model model0_ ) )
+14:11:38,888 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:38,888 DEBUG JoinProcessor:175 - Using FROM fragment [Model model0_]
+14:11:38,889 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Model)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'model0_.modelId as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Model,tableAlias=model0_,origin=null,columns={,className=org.hibernate.test.batchfetch.Model}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[model0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Model model0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Model,tableAlias=model0_,origin=null,columns={,className=org.hibernate.test.batchfetch.Model}}
+
+14:11:38,889 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,889 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.batchfetch.Model
+14:11:38,889 DEBUG QueryTranslatorImpl:236 - SQL: select model0_.modelId as col_0_0_ from Model model0_
+14:11:38,890 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,890 DEBUG SQL:104 - 
+    select
+        model0_.modelId as col_0_0_ 
+    from
+        Model model0_
+14:11:38,906 DEBUG SQL:104 - 
+    select
+        model0_.modelId as modelId1_0_,
+        model0_.name as name1_0_,
+        model0_.description as descript3_1_0_,
+        model0_.productId as productId1_0_ 
+    from
+        Model model0_ 
+    where
+        model0_.modelId in (
+            ?, ?, ?, ?, ?
+        )
+14:11:38,909 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.batchfetch.ProductLine
+14:11:38,911 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'batchfetch'
+                \-[IDENT] Node: 'ProductLine'
+
+14:11:38,911 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,912 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.batchfetch.ProductLine (<no alias>) -> productlin0_
+14:11:38,912 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ProductLine productlin0_ ) )
+14:11:38,912 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:38,913 DEBUG JoinProcessor:175 - Using FROM fragment [ProductLine productlin0_]
+14:11:38,913 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ProductLine)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'productlin0_.productId as productId2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ProductLine,tableAlias=productlin0_,origin=null,columns={,className=org.hibernate.test.batchfetch.ProductLine}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'productlin0_.description as descript2_2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[productlin0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ProductLine productlin0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ProductLine,tableAlias=productlin0_,origin=null,columns={,className=org.hibernate.test.batchfetch.ProductLine}}
+
+14:11:38,913 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,914 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.batchfetch.ProductLine
+14:11:38,914 DEBUG QueryTranslatorImpl:236 - SQL: select productlin0_.productId as productId2_, productlin0_.description as descript2_2_ from ProductLine productlin0_
+14:11:38,914 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,915 DEBUG SQL:104 - 
+    select
+        productlin0_.productId as productId2_,
+        productlin0_.description as descript2_2_ 
+    from
+        ProductLine productlin0_
+14:11:38,916 DEBUG SQL:104 - 
+    select
+        models0_.productId as productId2_1_,
+        models0_.modelId as modelId1_1_,
+        models0_.modelId as modelId1_0_,
+        models0_.name as name1_0_,
+        models0_.description as descript3_1_0_,
+        models0_.productId as productId1_0_ 
+    from
+        Model models0_ 
+    where
+        models0_.productId=?
+14:11:38,919 DEBUG SQL:104 - 
+    select
+        productlin0_.productId as productId2_,
+        productlin0_.description as descript2_2_ 
+    from
+        ProductLine productlin0_ 
+    order by
+        productlin0_.description
+14:11:38,920 DEBUG SQL:104 - 
+    select
+        models0_.productId as productId2_1_,
+        models0_.modelId as modelId1_1_,
+        models0_.modelId as modelId1_0_,
+        models0_.name as name1_0_,
+        models0_.description as descript3_1_0_,
+        models0_.productId as productId1_0_ 
+    from
+        Model models0_ 
+    where
+        models0_.productId in (
+            ?, ?
+        )
+14:11:38,922 DEBUG SQL:104 - 
+    delete 
+    from
+        Model 
+    where
+        modelId=?
+14:11:38,922 DEBUG SQL:104 - 
+    delete 
+    from
+        Model 
+    where
+        modelId=?
+14:11:38,923 DEBUG SQL:104 - 
+    delete 
+    from
+        ProductLine 
+    where
+        productId=?
+14:11:38,923 DEBUG SQL:104 - 
+    delete 
+    from
+        Model 
+    where
+        modelId=?
+14:11:38,923 DEBUG SQL:104 - 
+    delete 
+    from
+        Model 
+    where
+        modelId=?
+14:11:38,923 DEBUG SQL:104 - 
+    delete 
+    from
+        Model 
+    where
+        modelId=?
+14:11:38,924 DEBUG SQL:104 - 
+    delete 
+    from
+        ProductLine 
+    where
+        productId=?
+14:11:38,928  INFO CustomRunner:139 - Test: testBatchFetch2
+14:11:38,933 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,934 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,935 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,935 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,935 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,935 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,936 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,936 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,936 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,936 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,937 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,938 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,938 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,938 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,938 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,939 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,939 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,939 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,940 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,940 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,940 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,940 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,941 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,941 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,941 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,941 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,941 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,942 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,942 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,942 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,943 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,943 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,943 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,944 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,944 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,944 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,944 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,945 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,945 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,945 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,945 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,946 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,946 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,946 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,946 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,947 DEBUG SQL:104 - 
+    insert 
+    into
+        BatchLoadableEntity
+        (name, id) 
+    values
+        (?, ?)
+14:11:38,949 DEBUG SQL:104 - 
+    select
+        batchloada0_.id as id0_0_,
+        batchloada0_.name as name0_0_ 
+    from
+        BatchLoadableEntity batchloada0_ 
+    where
+        batchloada0_.id in (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        )
+14:11:38,953 DEBUG SQL:104 - 
+    select
+        batchloada0_.id as id0_0_,
+        batchloada0_.name as name0_0_ 
+    from
+        BatchLoadableEntity batchloada0_ 
+    where
+        batchloada0_.id in (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        )
+14:11:38,955 DEBUG SQL:104 - 
+    select
+        batchloada0_.id as id0_0_,
+        batchloada0_.name as name0_0_ 
+    from
+        BatchLoadableEntity batchloada0_ 
+    where
+        batchloada0_.id in (
+            ?, ?, ?, ?
+        )
+14:11:38,959 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.batchfetch.BatchLoadableEntity
+14:11:38,961 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'batchfetch'
+             \-[IDENT] Node: 'BatchLoadableEntity'
+
+14:11:38,961 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,961 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.batchfetch.BatchLoadableEntity (<no alias>) -> batchloada0_
+14:11:38,962 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (BatchLoadableEntity)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[batchloada0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'BatchLoadableEntity' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=BatchLoadableEntity,tableAlias=batchloada0_,origin=null,columns={,className=org.hibernate.test.batchfetch.BatchLoadableEntity}}
+
+14:11:38,962 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,963 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:38,976 DEBUG SQL:104 - 
+    delete 
+    from
+        BatchLoadableEntity
+14:11:38,982  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:38,983 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:38,983 DEBUG SQL:104 - 
+    alter table Model 
+        drop constraint FK4710B0921C08435
+14:11:38,983 DEBUG SQL:104 - 
+    drop table BatchLoadableEntity if exists
+14:11:38,984 DEBUG SQL:104 - 
+    drop table Model if exists
+14:11:38,984 DEBUG SQL:104 - 
+    drop table ProductLine if exists
+14:11:38,984  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:38,984  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.connection.DriverManagerRegistrationTest" tests="2" time="0.018" timestamp="2013-02-28T20:09:52">
+  <properties />
+  <testcase classname="org.hibernate.connection.DriverManagerRegistrationTest" name="testDriverRegistrationUsingClassForNameSucceeds" time="0.005" />
+  <testcase classname="org.hibernate.connection.DriverManagerRegistrationTest" name="testDriverRegistrationUsingLoadClassFails" time="0.001" />
+  <system-out><![CDATA[14:09:52,744  INFO CustomRunner:132 - BeforeClass: org.hibernate.connection.DriverManagerRegistrationTest
+14:09:52,746  INFO CustomRunner:139 - Test: testDriverRegistrationUsingClassForNameSucceeds
+14:09:52,753  INFO CustomRunner:139 - Test: testDriverRegistrationUsingLoadClassFails
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

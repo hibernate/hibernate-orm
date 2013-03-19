@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.collectionalias.ReorderedMappingsCollectionAliasTest" tests="1" time="0.113" timestamp="2013-02-28T20:11:59">
+  <properties />
+  <testcase classname="org.hibernate.test.collectionalias.ReorderedMappingsCollectionAliasTest" name="test" time="0.055" />
+  <system-out><![CDATA[14:11:59,211  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.collectionalias.ReorderedMappingsCollectionAliasTest
+14:11:59,220  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:59,220  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:59,220  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:59,221  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:59,221  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:59,222  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:59,222  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:59,223  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:59,223  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:59,223  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:59,232  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:59,234 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:59,234 DEBUG SQL:104 - 
+    alter table TableB 
+        drop constraint FK94DC2A54205D98F0
+14:11:59,235 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TableB drop constraint FK94DC2A54205D98F0
+14:11:59,235 ERROR SchemaExport:426 - Table "TABLEB" not found; SQL statement:
+
+    alter table TableB 
+        drop constraint FK94DC2A54205D98F0 [42102-145]
+14:11:59,235 DEBUG SQL:104 - 
+    drop table ATable if exists
+14:11:59,235 DEBUG SQL:104 - 
+    drop table TableA if exists
+14:11:59,235 DEBUG SQL:104 - 
+    drop table TableB if exists
+14:11:59,235 DEBUG SQL:104 - 
+    create table ATable (
+        idcolumn integer not null,
+        primary key (idcolumn)
+    )
+14:11:59,236 DEBUG SQL:104 - 
+    create table TableA (
+        id integer not null,
+        test varchar(255),
+        test2 varchar(255),
+        primary key (id)
+    )
+14:11:59,236 DEBUG SQL:104 - 
+    create table TableB (
+        idcolumn integer not null,
+        idcolumn_second varchar(50) not null,
+        thirdcolumn varchar(20) not null,
+        primary key (idcolumn, idcolumn_second, thirdcolumn)
+    )
+14:11:59,236 DEBUG SQL:104 - 
+    alter table TableB 
+        add constraint FK94DC2A54205D98F0 
+        foreign key (idcolumn) 
+        references ATable
+14:11:59,244  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:59,244  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:59,245  INFO CustomRunner:139 - Test: test
+14:11:59,246 DEBUG SQL:104 - 
+    select
+        tableb_.idcolumn,
+        tableb_.idcolumn_second,
+        tableb_.thirdcolumn 
+    from
+        TableB tableb_ 
+    where
+        tableb_.idcolumn=? 
+        and tableb_.idcolumn_second=? 
+        and tableb_.thirdcolumn=?
+14:11:59,247 DEBUG SQL:104 - 
+    insert 
+    into
+        ATable
+        (idcolumn) 
+    values
+        (?)
+14:11:59,249 DEBUG SQL:104 - 
+    insert 
+    into
+        TableB
+        (idcolumn, idcolumn_second, thirdcolumn) 
+    values
+        (?, ?, ?)
+14:11:59,264 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select distinct	tablea from org.hibernate.test.collectionalias.ATable tablea LEFT JOIN FETCH tablea.tablebs 
+14:11:59,266 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  +-[RANGE] Node: 'RANGE'
+       |  |  +-[DOT] Node: '.'
+       |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |  |  |  |  |  \-[IDENT] Node: 'test'
+       |  |  |  |  \-[IDENT] Node: 'collectionalias'
+       |  |  |  \-[IDENT] Node: 'ATable'
+       |  |  \-[ALIAS] Node: 'tablea'
+       |  \-[JOIN] Node: 'JOIN'
+       |     +-[LEFT] Node: 'LEFT'
+       |     +-[FETCH] Node: 'FETCH'
+       |     \-[DOT] Node: '.'
+       |        +-[IDENT] Node: 'tablea'
+       |        \-[IDENT] Node: 'tablebs'
+       \-[SELECT] Node: 'select'
+          +-[DISTINCT] Node: 'distinct'
+          \-[IDENT] Node: 'tablea'
+
+14:11:59,266 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,266 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.collectionalias.ATable (tablea) -> atable0_
+14:11:59,266 DEBUG FromReferenceNode:74 - Resolved : tablea -> atable0_.idcolumn
+14:11:59,266 DEBUG DotNode:599 - getDataType() : tablebs -> org.hibernate.type.BagType(org.hibernate.test.collectionalias.ATable.tablebs)
+14:11:59,266 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = tablea.tablebs role = org.hibernate.test.collectionalias.ATable.tablebs associatedEntityName = org.hibernate.test.collectionalias.TableB
+14:11:59,267 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.collectionalias.TableB (<no alias>) -> tablebs1_
+14:11:59,267 DEBUG FromClause:282 - addJoinByPathMap() : tablea.tablebs -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=TableB,tableAlias=tablebs1_,origin=ATable atable0_,columns={atable0_.idcolumn ,className=org.hibernate.test.collectionalias.TableB}}
+14:11:59,267 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for tablea.tablebs : TableB tablebs1_
+14:11:59,267 DEBUG FromReferenceNode:74 - Resolved : tablea.tablebs -> .
+14:11:59,267 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'TableB tablebs1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.collectionalias.ATable.tablebs,tableName=TableB,tableAlias=tablebs1_,origin=ATable atable0_,columns={atable0_.idcolumn ,className=org.hibernate.test.collectionalias.TableB}}
+
+14:11:59,267 DEBUG FromReferenceNode:74 - Resolved : tablea -> atable0_.idcolumn
+14:11:59,267 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} distinct atable0_.idcolumn ) ( FromClause{level=1} ( ATable atable0_ TableB tablebs1_ ) ) )
+14:11:59,268 DEBUG JoinProcessor:175 - Using FROM fragment [ATable atable0_]
+14:11:59,268 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join TableB tablebs1_ on atable0_.idcolumn=tablebs1_.idcolumn]
+14:11:59,268 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ATable,TableB)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DISTINCT] SqlNode: 'distinct'
+    |  +-[ALIAS_REF] IdentNode: 'atable0_.idcolumn as idcolumn0_0_' {alias=tablea, className=org.hibernate.test.collectionalias.ATable, tableAlias=atable0_}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'tablebs1_.idcolumn as idcolumn2_1_, tablebs1_.idcolumn_second as idcolumn2_2_1_, tablebs1_.thirdcolumn as thirdcol3_2_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.collectionalias.ATable.tablebs,tableName=TableB,tableAlias=tablebs1_,origin=ATable atable0_,columns={atable0_.idcolumn ,className=org.hibernate.test.collectionalias.TableB}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'tablebs1_.idcolumn as idcolumn0_0__, tablebs1_.idcolumn as idcolumn2_0__, tablebs1_.idcolumn_second as idcolumn2_2_0__, tablebs1_.thirdcolumn as thirdcol3_2_0__'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[tablea], fromElementByTableAlias=[tablebs1_, atable0_], fromElementsByPath=[tablea.tablebs], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ATable atable0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=tablea,role=null,tableName=ATable,tableAlias=atable0_,origin=null,columns={,className=org.hibernate.test.collectionalias.ATable}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join TableB tablebs1_ on atable0_.idcolumn=tablebs1_.idcolumn' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.collectionalias.ATable.tablebs,tableName=TableB,tableAlias=tablebs1_,origin=ATable atable0_,columns={atable0_.idcolumn ,className=org.hibernate.test.collectionalias.TableB}}
+
+14:11:59,298 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,299 DEBUG QueryTranslatorImpl:235 - HQL: select distinct	tablea from org.hibernate.test.collectionalias.ATable tablea LEFT JOIN FETCH tablea.tablebs 
+14:11:59,299 DEBUG QueryTranslatorImpl:236 - SQL: select distinct atable0_.idcolumn as idcolumn0_0_, tablebs1_.idcolumn as idcolumn2_1_, tablebs1_.idcolumn_second as idcolumn2_2_1_, tablebs1_.thirdcolumn as thirdcol3_2_1_, tablebs1_.idcolumn as idcolumn0_0__, tablebs1_.idcolumn as idcolumn2_0__, tablebs1_.idcolumn_second as idcolumn2_2_0__, tablebs1_.thirdcolumn as thirdcol3_2_0__ from ATable atable0_ left outer join TableB tablebs1_ on atable0_.idcolumn=tablebs1_.idcolumn
+14:11:59,299 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,299 DEBUG SQL:104 - 
+    select
+        distinct atable0_.idcolumn as idcolumn0_0_,
+        tablebs1_.idcolumn as idcolumn2_1_,
+        tablebs1_.idcolumn_second as idcolumn2_2_1_,
+        tablebs1_.thirdcolumn as thirdcol3_2_1_,
+        tablebs1_.idcolumn as idcolumn0_0__,
+        tablebs1_.idcolumn as idcolumn2_0__,
+        tablebs1_.idcolumn_second as idcolumn2_2_0__,
+        tablebs1_.thirdcolumn as thirdcol3_2_0__ 
+    from
+        ATable atable0_ 
+    left outer join
+        TableB tablebs1_ 
+            on atable0_.idcolumn=tablebs1_.idcolumn
+14:11:59,318  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:59,319 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:59,320 DEBUG SQL:104 - 
+    alter table TableB 
+        drop constraint FK94DC2A54205D98F0
+14:11:59,320 DEBUG SQL:104 - 
+    drop table ATable if exists
+14:11:59,320 DEBUG SQL:104 - 
+    drop table TableA if exists
+14:11:59,321 DEBUG SQL:104 - 
+    drop table TableB if exists
+14:11:59,321  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:59,321  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

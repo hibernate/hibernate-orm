@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.id.enhanced.OptimizerUnitTest" tests="8" time="0.027" timestamp="2013-02-28T20:09:54">
+  <properties />
+  <testcase classname="org.hibernate.id.enhanced.OptimizerUnitTest" name="testBasicHiLoOptimizerUsage" time="0.003" />
+  <testcase classname="org.hibernate.id.enhanced.OptimizerUnitTest" name="testBasicNoOptimizerUsage" time="0.001" />
+  <testcase classname="org.hibernate.id.enhanced.OptimizerUnitTest" name="testBasicPooledLoOptimizerUsage" time="0.001" />
+  <testcase classname="org.hibernate.id.enhanced.OptimizerUnitTest" name="testBasicPooledOptimizerUsage" time="0.001" />
+  <testcase classname="org.hibernate.id.enhanced.OptimizerUnitTest" name="testRecoveredPooledLoOptimizerUsage" time="0.001" />
+  <testcase classname="org.hibernate.id.enhanced.OptimizerUnitTest" name="testRecoveredPooledOptimizerUsage" time="0.001" />
+  <testcase classname="org.hibernate.id.enhanced.OptimizerUnitTest" name="testSubsequentPooledLoOptimizerUsage" time="0.001" />
+  <testcase classname="org.hibernate.id.enhanced.OptimizerUnitTest" name="testSubsequentPooledOptimizerUsage" time="0.011" />
+  <system-out><![CDATA[14:09:54,178  INFO CustomRunner:132 - BeforeClass: org.hibernate.id.enhanced.OptimizerUnitTest
+14:09:54,178  INFO CustomRunner:139 - Test: testBasicHiLoOptimizerUsage
+14:09:54,181  INFO CustomRunner:139 - Test: testBasicNoOptimizerUsage
+14:09:54,183  INFO CustomRunner:139 - Test: testBasicPooledLoOptimizerUsage
+14:09:54,184  INFO CustomRunner:139 - Test: testBasicPooledOptimizerUsage
+14:09:54,186  INFO CustomRunner:139 - Test: testRecoveredPooledLoOptimizerUsage
+14:09:54,187  INFO CustomRunner:139 - Test: testRecoveredPooledOptimizerUsage
+14:09:54,188  INFO CustomRunner:139 - Test: testSubsequentPooledLoOptimizerUsage
+14:09:54,190  INFO CustomRunner:139 - Test: testSubsequentPooledOptimizerUsage
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

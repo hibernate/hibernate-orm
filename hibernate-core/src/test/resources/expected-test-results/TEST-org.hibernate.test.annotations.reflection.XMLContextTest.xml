@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.reflection.XMLContextTest" tests="1" time="0.018" timestamp="2013-02-28T20:10:44">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.reflection.XMLContextTest" name="testAll" time="0.017" />
+  <system-out><![CDATA[14:10:44,446  INFO XMLContext:174 - HHH000073: entity-listener duplication, first event definition will be used: org.hibernate.test.annotations.reflection.LogListener
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

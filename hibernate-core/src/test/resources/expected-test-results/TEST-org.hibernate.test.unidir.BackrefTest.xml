@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.unidir.BackrefTest" tests="2" time="0.109" timestamp="2013-02-28T20:19:26">
+  <properties />
+  <testcase classname="org.hibernate.test.unidir.BackrefTest" name="testBackRef" time="0.015" />
+  <testcase classname="org.hibernate.test.unidir.BackrefTest" name="testBackRefToProxiedEntityOnMerge" time="0.007" />
+  <system-out><![CDATA[14:19:26,550  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.unidir.BackrefTest
+14:19:26,552  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/unidir/ParentChild.hbm.xml
+14:19:26,602  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:26,602  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:26,603  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:26,603  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:26,603  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:26,604  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:26,605  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:26,606  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:26,606  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:26,606  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:26,623  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:26,623 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:26,624 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FCCA2479FA
+14:19:26,624 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Child drop constraint FK3E104FCCA2479FA
+14:19:26,624 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table Child 
+        drop constraint FK3E104FCCA2479FA [42102-145]
+14:19:26,624 DEBUG SQL:104 - 
+    alter table PARENT1 
+        drop constraint FKFB8198C7BD223515
+14:19:26,625 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PARENT1 drop constraint FKFB8198C7BD223515
+14:19:26,625 ERROR SchemaExport:426 - Table "PARENT1" not found; SQL statement:
+
+    alter table PARENT1 
+        drop constraint FKFB8198C7BD223515 [42102-145]
+14:19:26,625 DEBUG SQL:104 - 
+    alter table PARENT1 
+        drop constraint FKFB8198C7BD21C0B5
+14:19:26,625 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PARENT1 drop constraint FKFB8198C7BD21C0B5
+14:19:26,625 ERROR SchemaExport:426 - Table "PARENT1" not found; SQL statement:
+
+    alter table PARENT1 
+        drop constraint FKFB8198C7BD21C0B5 [42102-145]
+14:19:26,625 DEBUG SQL:104 - 
+    drop table CHILD1 if exists
+14:19:26,626 DEBUG SQL:104 - 
+    drop table CHILD2 if exists
+14:19:26,626 DEBUG SQL:104 - 
+    drop table Child if exists
+14:19:26,626 DEBUG SQL:104 - 
+    drop table PARENT1 if exists
+14:19:26,626 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:19:26,626 DEBUG SQL:104 - 
+    create table CHILD1 (
+        ID bigint not null,
+        primary key (ID)
+    )
+14:19:26,627 DEBUG SQL:104 - 
+    create table CHILD2 (
+        ID bigint not null,
+        primary key (ID)
+    )
+14:19:26,627 DEBUG SQL:104 - 
+    create table Child (
+        name varchar(255) not null,
+        age integer not null,
+        parentName varchar(255) not null,
+        sibling integer,
+        primary key (name)
+    )
+14:19:26,627 DEBUG SQL:104 - 
+    create table PARENT1 (
+        ID bigint not null,
+        CHILD2_ID bigint not null,
+        CHILD1_ID bigint not null,
+        primary key (ID)
+    )
+14:19:26,628 DEBUG SQL:104 - 
+    create table Parent (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:19:26,628 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FCCA2479FA 
+        foreign key (parentName) 
+        references Parent
+14:19:26,629 DEBUG SQL:104 - 
+    alter table PARENT1 
+        add constraint FKFB8198C7BD223515 
+        foreign key (CHILD2_ID) 
+        references CHILD2
+14:19:26,629 DEBUG SQL:104 - 
+    alter table PARENT1 
+        add constraint FKFB8198C7BD21C0B5 
+        foreign key (CHILD1_ID) 
+        references CHILD1
+14:19:26,630  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:26,630  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:26,630  INFO CustomRunner:139 - Test: testBackRef
+14:19:26,632 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:26,633 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (age, parentName, sibling, name) 
+    values
+        (?, ?, ?, ?)
+14:19:26,633 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (age, parentName, sibling, name) 
+    values
+        (?, ?, ?, ?)
+14:19:26,633 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:26,633 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        sibling=? 
+    where
+        name=?
+14:19:26,633 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        sibling=? 
+    where
+        name=?
+14:19:26,634 DEBUG SQL:104 - 
+    select
+        child0_.name as name2_0_,
+        child0_.age as age2_0_ 
+    from
+        Child child0_ 
+    where
+        child0_.name=?
+14:19:26,634 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        age=? 
+    where
+        name=?
+14:19:26,635 DEBUG SQL:104 - 
+    select
+        parent0_.name as name4_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.name=?
+14:19:26,635 DEBUG SQL:104 - 
+    select
+        child0_.name as name2_0_,
+        child0_.age as age2_0_ 
+    from
+        Child child0_ 
+    where
+        child0_.name=?
+14:19:26,635 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        age=? 
+    where
+        name=?
+14:19:26,636 DEBUG SQL:104 - 
+    select
+        parent0_.name as name4_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.name=?
+14:19:26,636 DEBUG SQL:104 - 
+    select
+        parent0_.name as name4_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.name=?
+14:19:26,636 DEBUG SQL:104 - 
+    select
+        child0_.name as name2_0_,
+        child0_.age as age2_0_ 
+    from
+        Child child0_ 
+    where
+        child0_.name=?
+14:19:26,637 DEBUG SQL:104 - 
+    select
+        children0_.parentName as parentName4_1_,
+        children0_.name as name2_1_,
+        children0_.sibling as sibling1_,
+        children0_.name as name2_0_,
+        children0_.age as age2_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.parentName=?
+14:19:26,637 DEBUG SQL:104 - 
+    select
+        children0_.parentName as parentName4_1_,
+        children0_.name as name2_1_,
+        children0_.sibling as sibling1_,
+        children0_.name as name2_0_,
+        children0_.age as age2_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.parentName=?
+14:19:26,638 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        sibling=? 
+    where
+        name=?
+14:19:26,638 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        sibling=? 
+    where
+        name=?
+14:19:26,638 DEBUG SQL:104 - 
+    select
+        parent0_.name as name4_1_,
+        children1_.parentName as parentName4_3_,
+        children1_.name as name2_3_,
+        children1_.sibling as sibling3_,
+        children1_.name as name2_0_,
+        children1_.age as age2_0_ 
+    from
+        Parent parent0_ 
+    left outer join
+        Child children1_ 
+            on parent0_.name=children1_.parentName 
+    where
+        parent0_.name=?
+14:19:26,639 DEBUG SQL:104 - 
+    select
+        child0_.name as name2_0_,
+        child0_.age as age2_0_ 
+    from
+        Child child0_ 
+    where
+        child0_.name=?
+14:19:26,640 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:26,640 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (age, parentName, sibling, name) 
+    values
+        (?, ?, ?, ?)
+14:19:26,641 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        sibling=? 
+    where
+        name=?
+14:19:26,641 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.unidir.Child
+14:19:26,643 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'unidir'
+             \-[IDENT] Node: 'Child'
+
+14:19:26,643 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,643 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unidir.Child (<no alias>) -> child0_
+14:19:26,644 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Child)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[child0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Child' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.unidir.Child}}
+
+14:19:26,644 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,644 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,644 DEBUG SQL:104 - 
+    delete 
+    from
+        Child
+14:19:26,645 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.unidir.Parent
+14:19:26,645 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'unidir'
+             \-[IDENT] Node: 'Parent'
+
+14:19:26,645 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,645 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unidir.Parent (<no alias>) -> parent0_
+14:19:26,646 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Parent)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[parent0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Parent' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.unidir.Parent}}
+
+14:19:26,646 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,646 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,646 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent
+14:19:26,647  INFO CustomRunner:139 - Test: testBackRefToProxiedEntityOnMerge
+14:19:26,649 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:26,649 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (age, parentName, sibling, name) 
+    values
+        (?, ?, ?, ?)
+14:19:26,650 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        sibling=? 
+    where
+        name=?
+14:19:26,650 DEBUG SQL:104 - 
+    select
+        parent0_.name as name4_1_,
+        children1_.parentName as parentName4_3_,
+        children1_.name as name2_3_,
+        children1_.sibling as sibling3_,
+        children1_.name as name2_0_,
+        children1_.age as age2_0_ 
+    from
+        Parent parent0_ 
+    left outer join
+        Child children1_ 
+            on parent0_.name=children1_.parentName 
+    where
+        parent0_.name=?
+14:19:26,651 DEBUG SQL:104 - 
+    select
+        child0_.name as name2_0_,
+        child0_.age as age2_0_ 
+    from
+        Child child0_ 
+    where
+        child0_.name=?
+14:19:26,652 DEBUG SQL:104 - 
+    select
+        child0_.name as name2_0_,
+        child0_.age as age2_0_ 
+    from
+        Child child0_ 
+    where
+        child0_.name=?
+14:19:26,652 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (age, parentName, sibling, name) 
+    values
+        (?, ?, ?, ?)
+14:19:26,652 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (age, parentName, sibling, name) 
+    values
+        (?, ?, ?, ?)
+14:19:26,653 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        sibling=? 
+    where
+        name=?
+14:19:26,653 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        sibling=? 
+    where
+        name=?
+14:19:26,653 DEBUG SQL:104 - 
+    delete 
+    from
+        Child
+14:19:26,653 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent
+14:19:26,654  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:26,655 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:26,655 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FCCA2479FA
+14:19:26,655 DEBUG SQL:104 - 
+    alter table PARENT1 
+        drop constraint FKFB8198C7BD223515
+14:19:26,655 DEBUG SQL:104 - 
+    alter table PARENT1 
+        drop constraint FKFB8198C7BD21C0B5
+14:19:26,656 DEBUG SQL:104 - 
+    drop table CHILD1 if exists
+14:19:26,656 DEBUG SQL:104 - 
+    drop table CHILD2 if exists
+14:19:26,656 DEBUG SQL:104 - 
+    drop table Child if exists
+14:19:26,656 DEBUG SQL:104 - 
+    drop table PARENT1 if exists
+14:19:26,656 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:19:26,657  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:26,657  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

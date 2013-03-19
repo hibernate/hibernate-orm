@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.naturalid.immutable.ImmutableNaturalIdTest" tests="5" time="0.084" timestamp="2013-02-28T20:17:31">
+  <properties />
+  <testcase classname="org.hibernate.test.naturalid.immutable.ImmutableNaturalIdTest" name="testNaturalIdCache" time="0.024" />
+  <testcase classname="org.hibernate.test.naturalid.immutable.ImmutableNaturalIdTest" name="testNaturalIdCheck" time="0.002" />
+  <testcase classname="org.hibernate.test.naturalid.immutable.ImmutableNaturalIdTest" name="testNaturalIdDeleteUsingCache" time="0.004" />
+  <testcase classname="org.hibernate.test.naturalid.immutable.ImmutableNaturalIdTest" name="testNaturalIdRecreateUsingCache" time="0.009" />
+  <testcase classname="org.hibernate.test.naturalid.immutable.ImmutableNaturalIdTest" name="testUpdate" time="0.006" />
+  <system-out><![CDATA[14:17:31,367  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.naturalid.immutable.ImmutableNaturalIdTest
+14:17:31,369  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/naturalid/immutable/User.hbm.xml
+14:17:31,376  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:31,377  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:31,377  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:31,378  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:31,378  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:31,379  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:31,379  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:31,380  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:31,380  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:31,380  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:31,381  INFO UpdateTimestampsCache:61 - HHH000250: Starting update timestamps cache at region: hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache
+14:17:31,381  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: hibernate.test.org.hibernate.cache.internal.StandardQueryCache
+14:17:31,387  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,388 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,388 DEBUG SQL:104 - 
+    drop table IMM_NAT_ID_USER if exists
+14:17:31,388 DEBUG SQL:104 - 
+    create table IMM_NAT_ID_USER (
+        myUserId integer not null,
+        version integer not null,
+        userName varchar(10) not null,
+        "password" varchar(15) not null,
+        email varchar(255),
+        primary key (myUserId)
+    )
+14:17:31,393 DEBUG SQL:104 - 
+    alter table IMM_NAT_ID_USER 
+        add constraint _UniqueKey unique (userName)
+14:17:31,394  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,394  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:31,394  INFO CustomRunner:139 - Test: testNaturalIdCache
+14:17:31,395 DEBUG SQL:104 - 
+    select
+        max(myUserId) 
+    from
+        IMM_NAT_ID_USER
+14:17:31,396 DEBUG SQL:104 - 
+    insert 
+    into
+        IMM_NAT_ID_USER
+        (version, userName, "password", email, myUserId) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:31,397 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090785878016]
+14:17:31,397 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540122112]
+14:17:31,397  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.immutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,397 DEBUG SQL:104 - 
+    select
+        user_.myUserId as myUserId0_ 
+    from
+        IMM_NAT_ID_USER user_ 
+    where
+        user_.userName=?
+14:17:31,397 DEBUG SQL:104 - 
+    select
+        user0_.myUserId as myUserId0_0_,
+        user0_.version as version0_0_,
+        user0_.userName as userName0_0_,
+        user0_."password" as password4_0_0_,
+        user0_.email as email0_0_ 
+    from
+        IMM_NAT_ID_USER user0_ 
+    where
+        user0_.myUserId=?
+14:17:31,398 DEBUG SQL:104 - 
+    insert 
+    into
+        IMM_NAT_ID_USER
+        (version, userName, "password", email, myUserId) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:31,399 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090785890304]
+14:17:31,399 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540130305]
+14:17:31,399  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.immutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,399 DEBUG SQL:104 - 
+    select
+        user_.myUserId as myUserId0_ 
+    from
+        IMM_NAT_ID_USER user_ 
+    where
+        user_.userName=?
+14:17:31,399 DEBUG SQL:104 - 
+    select
+        user0_.myUserId as myUserId0_0_,
+        user0_.version as version0_0_,
+        user0_.userName as userName0_0_,
+        user0_."password" as password4_0_0_,
+        user0_.email as email0_0_ 
+    from
+        IMM_NAT_ID_USER user0_ 
+    where
+        user0_.myUserId=?
+14:17:31,400  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.immutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,400 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.naturalid.immutable.User
+14:17:31,417 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'naturalid'
+             |  \-[IDENT] Node: 'immutable'
+             \-[IDENT] Node: 'User'
+
+14:17:31,417 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:31,418 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.naturalid.immutable.User (<no alias>) -> user0_
+14:17:31,418 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (IMM_NAT_ID_USER)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'IMM_NAT_ID_USER' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=IMM_NAT_ID_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.naturalid.immutable.User}}
+
+14:17:31,418 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:31,418 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:31,419 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090785972224]
+14:17:31,419 DEBUG SQL:104 - 
+    delete 
+    from
+        IMM_NAT_ID_USER
+14:17:31,419 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540212225]
+14:17:31,420  INFO CustomRunner:139 - Test: testNaturalIdCheck
+14:17:31,421 DEBUG SQL:104 - 
+    insert 
+    into
+        IMM_NAT_ID_USER
+        (version, userName, "password", email, myUserId) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:31,421 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090785980416]
+14:17:31,421 DEBUG SQL:104 - 
+    delete 
+    from
+        IMM_NAT_ID_USER 
+    where
+        myUserId=? 
+        and version=?
+14:17:31,422 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090785984512]
+14:17:31,422 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540224513]
+14:17:31,423  INFO CustomRunner:139 - Test: testNaturalIdDeleteUsingCache
+14:17:31,423 DEBUG SQL:104 - 
+    insert 
+    into
+        IMM_NAT_ID_USER
+        (version, userName, "password", email, myUserId) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:31,424 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090785992704]
+14:17:31,424 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540232705]
+14:17:31,424  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.immutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,424 DEBUG SQL:104 - 
+    select
+        user_.myUserId as myUserId0_ 
+    from
+        IMM_NAT_ID_USER user_ 
+    where
+        user_.userName=?
+14:17:31,425 DEBUG SQL:104 - 
+    select
+        user0_.myUserId as myUserId0_0_,
+        user0_.version as version0_0_,
+        user0_.userName as userName0_0_,
+        user0_."password" as password4_0_0_,
+        user0_.email as email0_0_ 
+    from
+        IMM_NAT_ID_USER user0_ 
+    where
+        user0_.myUserId=?
+14:17:31,425  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.immutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,425 DEBUG SQL:104 - 
+    select
+        user_.myUserId as myUserId0_ 
+    from
+        IMM_NAT_ID_USER user_ 
+    where
+        user_.userName=?
+14:17:31,426 DEBUG SQL:104 - 
+    select
+        user0_.myUserId as myUserId0_0_,
+        user0_.version as version0_0_,
+        user0_.userName as userName0_0_,
+        user0_."password" as password4_0_0_,
+        user0_.email as email0_0_ 
+    from
+        IMM_NAT_ID_USER user0_ 
+    where
+        user0_.myUserId=?
+14:17:31,426 DEBUG SQL:104 - 
+    delete 
+    from
+        IMM_NAT_ID_USER 
+    where
+        myUserId=? 
+        and version=?
+14:17:31,426 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090786000896]
+14:17:31,427 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540244992]
+14:17:31,427  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.immutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,427 DEBUG SQL:104 - 
+    select
+        user_.myUserId as myUserId0_ 
+    from
+        IMM_NAT_ID_USER user_ 
+    where
+        user_.userName=?
+14:17:31,428  INFO CustomRunner:139 - Test: testNaturalIdRecreateUsingCache
+14:17:31,429 DEBUG SQL:104 - 
+    insert 
+    into
+        IMM_NAT_ID_USER
+        (version, userName, "password", email, myUserId) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:31,429 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090786013184]
+14:17:31,429 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540253185]
+14:17:31,430  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.immutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,430 DEBUG SQL:104 - 
+    select
+        user_.myUserId as myUserId0_ 
+    from
+        IMM_NAT_ID_USER user_ 
+    where
+        user_.userName=?
+14:17:31,430 DEBUG SQL:104 - 
+    select
+        user0_.myUserId as myUserId0_0_,
+        user0_.version as version0_0_,
+        user0_.userName as userName0_0_,
+        user0_."password" as password4_0_0_,
+        user0_.email as email0_0_ 
+    from
+        IMM_NAT_ID_USER user0_ 
+    where
+        user0_.myUserId=?
+14:17:31,431  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.immutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,431 DEBUG SQL:104 - 
+    select
+        user_.myUserId as myUserId0_ 
+    from
+        IMM_NAT_ID_USER user_ 
+    where
+        user_.userName=?
+14:17:31,431 DEBUG SQL:104 - 
+    select
+        user0_.myUserId as myUserId0_0_,
+        user0_.version as version0_0_,
+        user0_.userName as userName0_0_,
+        user0_."password" as password4_0_0_,
+        user0_.email as email0_0_ 
+    from
+        IMM_NAT_ID_USER user0_ 
+    where
+        user0_.myUserId=?
+14:17:31,431 DEBUG SQL:104 - 
+    delete 
+    from
+        IMM_NAT_ID_USER 
+    where
+        myUserId=? 
+        and version=?
+14:17:31,432 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090786025472]
+14:17:31,432 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540265473]
+14:17:31,432  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.immutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,432 DEBUG SQL:104 - 
+    select
+        user_.myUserId as myUserId0_ 
+    from
+        IMM_NAT_ID_USER user_ 
+    where
+        user_.userName=?
+14:17:31,433 DEBUG SQL:104 - 
+    insert 
+    into
+        IMM_NAT_ID_USER
+        (version, userName, "password", email, myUserId) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:31,433 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090786029568]
+14:17:31,433 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540269569]
+14:17:31,434  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.immutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,434 DEBUG SQL:104 - 
+    select
+        user_.myUserId as myUserId0_ 
+    from
+        IMM_NAT_ID_USER user_ 
+    where
+        user_.userName=?
+14:17:31,434 DEBUG SQL:104 - 
+    select
+        user0_.myUserId as myUserId0_0_,
+        user0_.version as version0_0_,
+        user0_.userName as userName0_0_,
+        user0_."password" as password4_0_0_,
+        user0_.email as email0_0_ 
+    from
+        IMM_NAT_ID_USER user0_ 
+    where
+        user0_.myUserId=?
+14:17:31,435  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.immutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,435 DEBUG SQL:104 - 
+    select
+        user_.myUserId as myUserId0_ 
+    from
+        IMM_NAT_ID_USER user_ 
+    where
+        user_.userName=?
+14:17:31,436 DEBUG SQL:104 - 
+    select
+        user0_.myUserId as myUserId0_0_,
+        user0_.version as version0_0_,
+        user0_.userName as userName0_0_,
+        user0_."password" as password4_0_0_,
+        user0_.email as email0_0_ 
+    from
+        IMM_NAT_ID_USER user0_ 
+    where
+        user0_.myUserId=?
+14:17:31,436 DEBUG SQL:104 - 
+    delete 
+    from
+        IMM_NAT_ID_USER 
+    where
+        myUserId=? 
+        and version=?
+14:17:31,436 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090786041856]
+14:17:31,437 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540285952]
+14:17:31,437  INFO CustomRunner:139 - Test: testUpdate
+14:17:31,438 DEBUG SQL:104 - 
+    insert 
+    into
+        IMM_NAT_ID_USER
+        (version, userName, "password", email, myUserId) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:31,439 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090786054144]
+14:17:31,440 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540294145]
+14:17:31,440 DEBUG SQL:104 - 
+    select
+        user_.userName as userName0_ 
+    from
+        IMM_NAT_ID_USER user_ 
+    where
+        user_.myUserId=?
+14:17:31,441 DEBUG SQL:104 - 
+    update
+        IMM_NAT_ID_USER 
+    set
+        version=?,
+        "password"=?,
+        email=? 
+    where
+        myUserId=? 
+        and version=?
+14:17:31,442 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090786066432]
+14:17:31,442 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540306433]
+14:17:31,442 DEBUG SQL:104 - 
+    delete 
+    from
+        IMM_NAT_ID_USER 
+    where
+        myUserId=? 
+        and version=?
+14:17:31,443 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090786070528]
+14:17:31,443 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [IMM_NAT_ID_USER] -> [5579090540310529]
+14:17:31,443  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,444 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,444 DEBUG SQL:104 - 
+    drop table IMM_NAT_ID_USER if exists
+14:17:31,444  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,445  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

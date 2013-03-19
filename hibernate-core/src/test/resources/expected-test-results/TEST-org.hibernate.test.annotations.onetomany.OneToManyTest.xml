@@ -1,0 +1,1508 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.onetomany.OneToManyTest" tests="12" time="0.789" timestamp="2013-02-28T20:10:39">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testCascadeDelete" time="0.023" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testCascadeDeleteOrphan" time="0.052" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testColumnDefinitionPropagation" time="0.014" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testFetching" time="0.132" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testJoinColumnConfiguredInXml" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testJoinColumns" time="0.006" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testListWithBagSemanticAndOrderBy" time="0.031" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testOrderByOnSuperclassProperty" time="0.052" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testSimpleOneToManyCollection" time="0.027" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testSimpleOneToManySet" time="0.025" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testUnidirectionalDefault" time="0.026" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.OneToManyTest" name="testUnidirectionalExplicit" time="0.046" />
+  <system-out><![CDATA[14:10:39,047  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.onetomany.OneToManyTest
+14:10:39,122  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:39,122  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:39,122  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:39,122  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:39,122  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:39,123  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:39,124  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:39,124  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:39,124  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:39,125  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:39,214  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:39,215 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:39,215 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC1821519
+14:10:39,216 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Child drop constraint FK3E104FC1821519
+14:10:39,216 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table Child 
+        drop constraint FK3E104FC1821519 [42102-145]
+14:10:39,216 DEBUG SQL:104 - 
+    alter table Customer 
+        drop constraint FK27FBE3FE1E3E1F5A
+14:10:39,216 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Customer drop constraint FK27FBE3FE1E3E1F5A
+14:10:39,216 ERROR SchemaExport:426 - Table "CUSTOMER" not found; SQL statement:
+
+    alter table Customer 
+        drop constraint FK27FBE3FE1E3E1F5A [42102-145]
+14:10:39,216 DEBUG SQL:104 - 
+    alter table Discount 
+        drop constraint FK1422D961AED1FBDA
+14:10:39,216 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Discount drop constraint FK1422D961AED1FBDA
+14:10:39,216 ERROR SchemaExport:426 - Table "DISCOUNT" not found; SQL statement:
+
+    alter table Discount 
+        drop constraint FK1422D961AED1FBDA [42102-145]
+14:10:39,217 DEBUG SQL:104 - 
+    alter table Model 
+        drop constraint FK4710B0926C8BCE8
+14:10:39,217 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Model drop constraint FK4710B0926C8BCE8
+14:10:39,217 ERROR SchemaExport:426 - Table "MODEL" not found; SQL statement:
+
+    alter table Model 
+        drop constraint FK4710B0926C8BCE8 [42102-145]
+14:10:39,217 DEBUG SQL:104 - 
+    alter table Model 
+        drop constraint FK4710B09896645E1
+14:10:39,217 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Model drop constraint FK4710B09896645E1
+14:10:39,217 ERROR SchemaExport:426 - Table "MODEL" not found; SQL statement:
+
+    alter table Model 
+        drop constraint FK4710B09896645E1 [42102-145]
+14:10:39,217 DEBUG SQL:104 - 
+    alter table ORGANISATION_USER 
+        drop constraint FKB7E22C104E6723AC
+14:10:39,217 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ORGANISATION_USER drop constraint FKB7E22C104E6723AC
+14:10:39,218 ERROR SchemaExport:426 - Table "ORGANISATION_USER" not found; SQL statement:
+
+    alter table ORGANISATION_USER 
+        drop constraint FKB7E22C104E6723AC [42102-145]
+14:10:39,218 DEBUG SQL:104 - 
+    alter table ORGANISATION_USER 
+        drop constraint FKB7E22C10D2BE188F
+14:10:39,218 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ORGANISATION_USER drop constraint FKB7E22C10D2BE188F
+14:10:39,218 ERROR SchemaExport:426 - Table "ORGANISATION_USER" not found; SQL statement:
+
+    alter table ORGANISATION_USER 
+        drop constraint FKB7E22C10D2BE188F [42102-145]
+14:10:39,218 DEBUG SQL:104 - 
+    alter table Politician 
+        drop constraint FKF1F519E4F91D13F5
+14:10:39,218 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Politician drop constraint FKF1F519E4F91D13F5
+14:10:39,218 ERROR SchemaExport:426 - Table "POLITICIAN" not found; SQL statement:
+
+    alter table Politician 
+        drop constraint FKF1F519E4F91D13F5 [42102-145]
+14:10:39,218 DEBUG SQL:104 - 
+    alter table Soldier 
+        drop constraint FKEA301962A4F85B16
+14:10:39,219 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Soldier drop constraint FKEA301962A4F85B16
+14:10:39,219 ERROR SchemaExport:426 - Table "SOLDIER" not found; SQL statement:
+
+    alter table Soldier 
+        drop constraint FKEA301962A4F85B16 [42102-145]
+14:10:39,219 DEBUG SQL:104 - 
+    alter table Street 
+        drop constraint FK943A3C2341634CA8
+14:10:39,219 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Street drop constraint FK943A3C2341634CA8
+14:10:39,219 ERROR SchemaExport:426 - Table "STREET" not found; SQL statement:
+
+    alter table Street 
+        drop constraint FK943A3C2341634CA8 [42102-145]
+14:10:39,219 DEBUG SQL:104 - 
+    alter table Street 
+        drop constraint CITYSTR_FK
+14:10:39,219 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Street drop constraint CITYSTR_FK
+14:10:39,219 ERROR SchemaExport:426 - Table "STREET" not found; SQL statement:
+
+    alter table Street 
+        drop constraint CITYSTR_FK [42102-145]
+14:10:39,220 DEBUG SQL:104 - 
+    alter table Ticket 
+        drop constraint FK954D572C5BAC2545
+14:10:39,220 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Ticket drop constraint FK954D572C5BAC2545
+14:10:39,220 ERROR SchemaExport:426 - Table "TICKET" not found; SQL statement:
+
+    alter table Ticket 
+        drop constraint FK954D572C5BAC2545 [42102-145]
+14:10:39,220 DEBUG SQL:104 - 
+    alter table TrainedMonkeys 
+        drop constraint TM_MON_FK
+14:10:39,220 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TrainedMonkeys drop constraint TM_MON_FK
+14:10:39,220 ERROR SchemaExport:426 - Table "TRAINEDMONKEYS" not found; SQL statement:
+
+    alter table TrainedMonkeys 
+        drop constraint TM_MON_FK [42102-145]
+14:10:39,220 DEBUG SQL:104 - 
+    alter table TrainedMonkeys 
+        drop constraint TM_TRA_FK
+14:10:39,221 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TrainedMonkeys drop constraint TM_TRA_FK
+14:10:39,221 ERROR SchemaExport:426 - Table "TRAINEDMONKEYS" not found; SQL statement:
+
+    alter table TrainedMonkeys 
+        drop constraint TM_TRA_FK [42102-145]
+14:10:39,221 DEBUG SQL:104 - 
+    alter table Trainer_Tiger 
+        drop constraint FK339314752254D490
+14:10:39,221 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Trainer_Tiger drop constraint FK339314752254D490
+14:10:39,222 ERROR SchemaExport:426 - Table "TRAINER_TIGER" not found; SQL statement:
+
+    alter table Trainer_Tiger 
+        drop constraint FK339314752254D490 [42102-145]
+14:10:39,222 DEBUG SQL:104 - 
+    alter table Trainer_Tiger 
+        drop constraint FK3393147558C0480C
+14:10:39,222 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Trainer_Tiger drop constraint FK3393147558C0480C
+14:10:39,222 ERROR SchemaExport:426 - Table "TRAINER_TIGER" not found; SQL statement:
+
+    alter table Trainer_Tiger 
+        drop constraint FK3393147558C0480C [42102-145]
+14:10:39,222 DEBUG SQL:104 - 
+    drop table Child if exists
+14:10:39,222 DEBUG SQL:104 - 
+    drop table City if exists
+14:10:39,222 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:10:39,223 DEBUG SQL:104 - 
+    drop table Discount if exists
+14:10:39,223 DEBUG SQL:104 - 
+    drop table Manufacturer if exists
+14:10:39,223 DEBUG SQL:104 - 
+    drop table Model if exists
+14:10:39,223 DEBUG SQL:104 - 
+    drop table Monkey if exists
+14:10:39,223 DEBUG SQL:104 - 
+    drop table ORGANISATION if exists
+14:10:39,223 DEBUG SQL:104 - 
+    drop table ORGANISATION_USER if exists
+14:10:39,224 DEBUG SQL:104 - 
+    drop table PERSON_Orderby if exists
+14:10:39,224 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:10:39,224 DEBUG SQL:104 - 
+    drop table Passport if exists
+14:10:39,224 DEBUG SQL:104 - 
+    drop table PoliticalParty if exists
+14:10:39,224 DEBUG SQL:104 - 
+    drop table Politician if exists
+14:10:39,224 DEBUG SQL:104 - 
+    drop table Soldier if exists
+14:10:39,224 DEBUG SQL:104 - 
+    drop table Street if exists
+14:10:39,225 DEBUG SQL:104 - 
+    drop table Ticket if exists
+14:10:39,225 DEBUG SQL:104 - 
+    drop table Tiger if exists
+14:10:39,225 DEBUG SQL:104 - 
+    drop table TrainedMonkeys if exists
+14:10:39,225 DEBUG SQL:104 - 
+    drop table Trainer if exists
+14:10:39,225 DEBUG SQL:104 - 
+    drop table Trainer_Tiger if exists
+14:10:39,225 DEBUG SQL:104 - 
+    drop table Troop if exists
+14:10:39,225 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:39,226 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:39,226 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:39,226 DEBUG SQL:104 - 
+    create table Child (
+        id integer not null,
+        fav_singer varchar(255),
+        fav_sup_hero varchar(255),
+        parentFirstName varchar(255),
+        parentCivility boolean,
+        parentLastName varchar(255),
+        primary key (id)
+    )
+14:10:39,228 DEBUG SQL:104 - 
+    create table City (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:39,229 DEBUG SQL:104 - 
+    create table Customer (
+        id bigint not null,
+        name varchar(255),
+        passport_id bigint,
+        primary key (id)
+    )
+14:10:39,229 DEBUG SQL:104 - 
+    create table Discount (
+        id bigint not null,
+        discount double,
+        CUSTOMER_ID bigint,
+        primary key (id)
+    )
+14:10:39,229 DEBUG SQL:104 - 
+    create table Manufacturer (
+        id integer not null,
+        primary key (id)
+    )
+14:10:39,229 DEBUG SQL:104 - 
+    create table Model (
+        id integer not null,
+        manufacturer_id integer,
+        model_manufacturer_join integer,
+        primary key (id)
+    )
+14:10:39,230 DEBUG SQL:104 - 
+    create table Monkey (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:39,230 DEBUG SQL:104 - 
+    create table ORGANISATION (
+        id_organisation bigint not null,
+        name varchar(40) not null,
+        primary key (id_organisation)
+    )
+14:10:39,239 DEBUG SQL:104 - 
+    create table ORGANISATION_USER (
+        some_text varchar(1024),
+        id_organisation_user bigint not null,
+        fk_id_organisation bigint not null,
+        primary key (id_organisation_user)
+    )
+14:10:39,240 DEBUG SQL:104 - 
+    create table PERSON_Orderby (
+        id_person bigint not null,
+        first_name varchar(40) not null,
+        last_name varchar(40) not null,
+        primary key (id_person)
+    )
+14:10:39,240 DEBUG SQL:104 - 
+    create table Parent (
+        firstName varchar(255) not null,
+        isMale boolean not null,
+        lastName varchar(255) not null,
+        age integer not null,
+        primary key (firstName, isMale, lastName)
+    )
+14:10:39,240 DEBUG SQL:104 - 
+    create table Passport (
+        id bigint not null,
+        passport_number varchar(255),
+        primary key (id)
+    )
+14:10:39,257 DEBUG SQL:104 - 
+    create table PoliticalParty (
+        name VARCHAR(60) not null,
+        primary key (name)
+    )
+14:10:39,258 DEBUG SQL:104 - 
+    create table Politician (
+        name VARCHAR(30) not null,
+        party_fk VARCHAR(60),
+        primary key (name)
+    )
+14:10:39,258 DEBUG SQL:104 - 
+    create table Soldier (
+        id integer not null,
+        name varchar(255),
+        troop_fk integer,
+        primary key (id)
+    )
+14:10:39,260 DEBUG SQL:104 - 
+    create table Street (
+        id integer not null,
+        STREET_NAME varchar(255),
+        city_id integer,
+        mainstreetcity_id integer,
+        primary key (id)
+    )
+14:10:39,260 DEBUG SQL:104 - 
+    create table Ticket (
+        id bigint not null,
+        ticket_number varchar(255),
+        CUST_ID bigint,
+        primary key (id)
+    )
+14:10:39,260 DEBUG SQL:104 - 
+    create table Tiger (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:39,261 DEBUG SQL:104 - 
+    create table TrainedMonkeys (
+        trainer_id integer not null,
+        monkey_id integer not null,
+        primary key (trainer_id, monkey_id)
+    )
+14:10:39,271 DEBUG SQL:104 - 
+    create table Trainer (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:39,271 DEBUG SQL:104 - 
+    create table Trainer_Tiger (
+        Trainer_id integer not null,
+        trainedTigers_id integer not null,
+        primary key (Trainer_id, trainedTigers_id)
+    )
+14:10:39,272 DEBUG SQL:104 - 
+    create table Troop (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:39,272 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FC1821519 
+        foreign key (parentFirstName, parentCivility, parentLastName) 
+        references Parent
+14:10:39,273 DEBUG SQL:104 - 
+    alter table Customer 
+        add constraint FK27FBE3FE1E3E1F5A 
+        foreign key (passport_id) 
+        references Passport
+14:10:39,289 DEBUG SQL:104 - 
+    alter table Discount 
+        add constraint FK1422D961AED1FBDA 
+        foreign key (CUSTOMER_ID) 
+        references Customer
+14:10:39,290 DEBUG SQL:104 - 
+    alter table Model 
+        add constraint FK4710B0926C8BCE8 
+        foreign key (manufacturer_id) 
+        references Manufacturer
+14:10:39,291 DEBUG SQL:104 - 
+    alter table Model 
+        add constraint FK4710B09896645E1 
+        foreign key (model_manufacturer_join) 
+        references Manufacturer
+14:10:39,292 DEBUG SQL:104 - 
+    alter table ORGANISATION_USER 
+        add constraint FKB7E22C104E6723AC 
+        foreign key (fk_id_organisation) 
+        references ORGANISATION
+14:10:39,292 DEBUG SQL:104 - 
+    alter table ORGANISATION_USER 
+        add constraint FKB7E22C10D2BE188F 
+        foreign key (id_organisation_user) 
+        references PERSON_Orderby
+14:10:39,303 DEBUG SQL:104 - 
+    alter table Politician 
+        add constraint FKF1F519E4F91D13F5 
+        foreign key (party_fk) 
+        references PoliticalParty
+14:10:39,304 DEBUG SQL:104 - 
+    alter table Soldier 
+        add constraint FKEA301962A4F85B16 
+        foreign key (troop_fk) 
+        references Troop 
+        on delete cascade
+14:10:39,305 DEBUG SQL:104 - 
+    alter table Street 
+        add constraint FK943A3C2341634CA8 
+        foreign key (city_id) 
+        references City
+14:10:39,305 DEBUG SQL:104 - 
+    alter table Street 
+        add constraint CITYSTR_FK 
+        foreign key (mainstreetcity_id) 
+        references City
+14:10:39,306 DEBUG SQL:104 - 
+    alter table Ticket 
+        add constraint FK954D572C5BAC2545 
+        foreign key (CUST_ID) 
+        references Customer
+14:10:39,306 DEBUG SQL:104 - 
+    alter table TrainedMonkeys 
+        add constraint UK_6A9FC79A3117107 unique (monkey_id)
+14:10:39,318 DEBUG SQL:104 - 
+    alter table TrainedMonkeys 
+        add constraint TM_MON_FK 
+        foreign key (monkey_id) 
+        references Monkey
+14:10:39,320 DEBUG SQL:104 - 
+    alter table TrainedMonkeys 
+        add constraint TM_TRA_FK 
+        foreign key (trainer_id) 
+        references Trainer
+14:10:39,321 DEBUG SQL:104 - 
+    alter table Trainer_Tiger 
+        add constraint UK_33931475E1A9E0DF unique (trainedTigers_id)
+14:10:39,321 DEBUG SQL:104 - 
+    alter table Trainer_Tiger 
+        add constraint FK339314752254D490 
+        foreign key (trainedTigers_id) 
+        references Tiger
+14:10:39,322 DEBUG SQL:104 - 
+    alter table Trainer_Tiger 
+        add constraint FK3393147558C0480C 
+        foreign key (Trainer_id) 
+        references Trainer
+14:10:39,322 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:39,322  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:39,324  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:39,325  INFO CustomRunner:139 - Test: testCascadeDelete
+14:10:39,326 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,326 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,328 DEBUG SQL:104 - 
+    insert 
+    into
+        Troop
+        (name, id) 
+    values
+        (?, ?)
+14:10:39,329 DEBUG SQL:104 - 
+    insert 
+    into
+        Soldier
+        (name, troop_fk, id) 
+    values
+        (?, ?, ?)
+14:10:39,329 DEBUG SQL:104 - 
+    select
+        troop0_.id as id21_0_,
+        troop0_.name as name21_0_ 
+    from
+        Troop troop0_ 
+    where
+        troop0_.id=?
+14:10:39,330 DEBUG SQL:104 - 
+    select
+        soldiers0_.troop_fk as troop3_21_1_,
+        soldiers0_.id as id14_1_,
+        soldiers0_.id as id14_0_,
+        soldiers0_.name as name14_0_,
+        soldiers0_.troop_fk as troop3_14_0_ 
+    from
+        Soldier soldiers0_ 
+    where
+        soldiers0_.troop_fk=? 
+    order by
+        soldiers0_.name desc
+14:10:39,347 DEBUG SQL:104 - 
+    delete 
+    from
+        Troop 
+    where
+        id=?
+14:10:39,347 DEBUG SQL:104 - 
+    select
+        soldier0_.id as id14_1_,
+        soldier0_.name as name14_1_,
+        soldier0_.troop_fk as troop3_14_1_,
+        troop1_.id as id21_0_,
+        troop1_.name as name21_0_ 
+    from
+        Soldier soldier0_ 
+    left outer join
+        Troop troop1_ 
+            on soldier0_.troop_fk=troop1_.id 
+    where
+        soldier0_.id=?
+14:10:39,348  INFO CustomRunner:139 - Test: testCascadeDeleteOrphan
+14:10:39,376 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,376 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,377 DEBUG SQL:104 - 
+    insert 
+    into
+        Troop
+        (name, id) 
+    values
+        (?, ?)
+14:10:39,378 DEBUG SQL:104 - 
+    insert 
+    into
+        Soldier
+        (name, troop_fk, id) 
+    values
+        (?, ?, ?)
+14:10:39,378 DEBUG SQL:104 - 
+    select
+        troop0_.id as id21_0_,
+        troop0_.name as name21_0_ 
+    from
+        Troop troop0_ 
+    where
+        troop0_.id=?
+14:10:39,379 DEBUG SQL:104 - 
+    select
+        soldiers0_.troop_fk as troop3_21_1_,
+        soldiers0_.id as id14_1_,
+        soldiers0_.id as id14_0_,
+        soldiers0_.name as name14_0_,
+        soldiers0_.troop_fk as troop3_14_0_ 
+    from
+        Soldier soldiers0_ 
+    where
+        soldiers0_.troop_fk=? 
+    order by
+        soldiers0_.name desc
+14:10:39,393 DEBUG SQL:104 - 
+    select
+        troop0_.id as id21_1_,
+        troop0_.name as name21_1_,
+        soldiers1_.troop_fk as troop3_21_3_,
+        soldiers1_.id as id14_3_,
+        soldiers1_.id as id14_0_,
+        soldiers1_.name as name14_0_,
+        soldiers1_.troop_fk as troop3_14_0_ 
+    from
+        Troop troop0_ 
+    left outer join
+        Soldier soldiers1_ 
+            on troop0_.id=soldiers1_.troop_fk 
+    where
+        troop0_.id=? 
+    order by
+        soldiers1_.name desc
+14:10:39,404 DEBUG SQL:104 - 
+    delete 
+    from
+        Soldier 
+    where
+        id=?
+14:10:39,404 DEBUG SQL:104 - 
+    select
+        soldier0_.id as id14_1_,
+        soldier0_.name as name14_1_,
+        soldier0_.troop_fk as troop3_14_1_,
+        troop1_.id as id21_0_,
+        troop1_.name as name21_0_ 
+    from
+        Soldier soldier0_ 
+    left outer join
+        Troop troop1_ 
+            on soldier0_.troop_fk=troop1_.id 
+    where
+        soldier0_.id=?
+14:10:39,414 DEBUG SQL:104 - 
+    select
+        troop0_.id as id21_0_,
+        troop0_.name as name21_0_ 
+    from
+        Troop troop0_ 
+    where
+        troop0_.id=?
+14:10:39,415 DEBUG SQL:104 - 
+    select
+        soldiers0_.troop_fk as troop3_21_1_,
+        soldiers0_.id as id14_1_,
+        soldiers0_.id as id14_0_,
+        soldiers0_.name as name14_0_,
+        soldiers0_.troop_fk as troop3_14_0_ 
+    from
+        Soldier soldiers0_ 
+    where
+        soldiers0_.troop_fk=? 
+    order by
+        soldiers0_.name desc
+14:10:39,416 DEBUG SQL:104 - 
+    delete 
+    from
+        Troop 
+    where
+        id=?
+14:10:39,427  INFO CustomRunner:139 - Test: testColumnDefinitionPropagation
+14:10:39,431 DEBUG SQL:104 - 
+    insert 
+    into
+        PoliticalParty
+        (name) 
+    values
+        (?)
+14:10:39,432 DEBUG SQL:104 - 
+    insert 
+    into
+        Politician
+        (party_fk, name) 
+    values
+        (?, ?)
+14:10:39,434 DEBUG SQL:104 - 
+    select
+        politicalp0_.name as name12_0_ 
+    from
+        PoliticalParty politicalp0_ 
+    where
+        politicalp0_.name=?
+14:10:39,434 DEBUG SQL:104 - 
+    select
+        politician0_.party_fk as party2_12_1_,
+        politician0_.name as name13_1_,
+        politician0_.name as name13_0_,
+        politician0_.party_fk as party2_13_0_ 
+    from
+        Politician politician0_ 
+    where
+        politician0_.party_fk=?
+14:10:39,441 DEBUG SQL:104 - 
+    delete 
+    from
+        Politician 
+    where
+        name=?
+14:10:39,442 DEBUG SQL:104 - 
+    delete 
+    from
+        PoliticalParty 
+    where
+        name=?
+14:10:39,442  INFO CustomRunner:139 - Test: testFetching
+14:10:39,445 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,446 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,447 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,447 DEBUG SQL:104 - 
+    insert 
+    into
+        Troop
+        (name, id) 
+    values
+        (?, ?)
+14:10:39,457 DEBUG SQL:104 - 
+    insert 
+    into
+        Soldier
+        (name, troop_fk, id) 
+    values
+        (?, ?, ?)
+14:10:39,458 DEBUG SQL:104 - 
+    insert 
+    into
+        Soldier
+        (name, troop_fk, id) 
+    values
+        (?, ?, ?)
+14:10:39,458 DEBUG SQL:104 - 
+    select
+        troop0_.id as id21_0_,
+        troop0_.name as name21_0_ 
+    from
+        Troop troop0_ 
+    where
+        troop0_.id=?
+14:10:39,460 DEBUG SQL:104 - 
+    select
+        soldiers0_.troop_fk as troop3_21_1_,
+        soldiers0_.id as id14_1_,
+        soldiers0_.id as id14_0_,
+        soldiers0_.name as name14_0_,
+        soldiers0_.troop_fk as troop3_14_0_ 
+    from
+        Soldier soldiers0_ 
+    where
+        soldiers0_.troop_fk=? 
+    order by
+        soldiers0_.name desc
+14:10:39,461 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.onetomany.Troop as t where t.id = :id
+14:10:39,463 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  \-[IDENT] Node: 'onetomany'
+    |        |  \-[IDENT] Node: 'Troop'
+    |        \-[ALIAS] Node: 't'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 't'
+          |  \-[IDENT] Node: 'id'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'id'
+
+14:10:39,477 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,478 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.onetomany.Troop (t) -> troop0_
+14:10:39,478 DEBUG FromReferenceNode:74 - Resolved : t -> troop0_.id
+14:10:39,478 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:10:39,478 DEBUG FromReferenceNode:74 - Resolved : t.id -> troop0_.id
+14:10:39,479 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Troop troop0_ ) ( where ( = ( troop0_.id troop0_.id id ) ? ) ) )
+14:10:39,479 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:39,479 DEBUG JoinProcessor:175 - Using FROM fragment [Troop troop0_]
+14:10:39,479 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Troop)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'troop0_.id as id21_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=t,role=null,tableName=Troop,tableAlias=troop0_,origin=null,columns={,className=org.hibernate.test.annotations.onetomany.Troop}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'troop0_.name as name21_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[t], fromElementByTableAlias=[troop0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Troop troop0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=t,role=null,tableName=Troop,tableAlias=troop0_,origin=null,columns={,className=org.hibernate.test.annotations.onetomany.Troop}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'troop0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=t.id,tableAlias=troop0_,className=org.hibernate.test.annotations.onetomany.Troop,classAlias=t}
+          |  +-[ALIAS_REF] IdentNode: 'troop0_.id' {alias=t, className=org.hibernate.test.annotations.onetomany.Troop, tableAlias=troop0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=id, expectedType=org.hibernate.type.IntegerType@42252fee}
+
+14:10:39,479 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,480 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.onetomany.Troop as t where t.id = :id
+14:10:39,480 DEBUG QueryTranslatorImpl:236 - SQL: select troop0_.id as id21_, troop0_.name as name21_ from Troop troop0_ where troop0_.id=?
+14:10:39,480 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,480 DEBUG SQL:104 - 
+    select
+        troop0_.id as id21_,
+        troop0_.name as name21_ 
+    from
+        Troop troop0_ 
+    where
+        troop0_.id=?
+14:10:39,496 DEBUG SQL:104 - 
+    select
+        soldier0_.id as id14_1_,
+        soldier0_.name as name14_1_,
+        soldier0_.troop_fk as troop3_14_1_,
+        troop1_.id as id21_0_,
+        troop1_.name as name21_0_ 
+    from
+        Soldier soldier0_ 
+    left outer join
+        Troop troop1_ 
+            on soldier0_.troop_fk=troop1_.id 
+    where
+        soldier0_.id=?
+14:10:39,497 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.onetomany.Soldier as s where s.id = :rid
+14:10:39,498 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  \-[IDENT] Node: 'onetomany'
+    |        |  \-[IDENT] Node: 'Soldier'
+    |        \-[ALIAS] Node: 's'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 's'
+          |  \-[IDENT] Node: 'id'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'rid'
+
+14:10:39,522 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,567 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.onetomany.Soldier (s) -> soldier0_
+14:10:39,567 DEBUG FromReferenceNode:74 - Resolved : s -> soldier0_.id
+14:10:39,567 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:10:39,567 DEBUG FromReferenceNode:74 - Resolved : s.id -> soldier0_.id
+14:10:39,567 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Soldier soldier0_ ) ( where ( = ( soldier0_.id soldier0_.id id ) ? ) ) )
+14:10:39,568 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:39,568 DEBUG JoinProcessor:175 - Using FROM fragment [Soldier soldier0_]
+14:10:39,568 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Soldier)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'soldier0_.id as id14_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=Soldier,tableAlias=soldier0_,origin=null,columns={,className=org.hibernate.test.annotations.onetomany.Soldier}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'soldier0_.name as name14_, soldier0_.troop_fk as troop3_14_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[s], fromElementByTableAlias=[soldier0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Soldier soldier0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=Soldier,tableAlias=soldier0_,origin=null,columns={,className=org.hibernate.test.annotations.onetomany.Soldier}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'soldier0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=s.id,tableAlias=soldier0_,className=org.hibernate.test.annotations.onetomany.Soldier,classAlias=s}
+          |  +-[ALIAS_REF] IdentNode: 'soldier0_.id' {alias=s, className=org.hibernate.test.annotations.onetomany.Soldier, tableAlias=soldier0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=rid, expectedType=org.hibernate.type.IntegerType@42252fee}
+
+14:10:39,573 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,573 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.onetomany.Soldier as s where s.id = :rid
+14:10:39,573 DEBUG QueryTranslatorImpl:236 - SQL: select soldier0_.id as id14_, soldier0_.name as name14_, soldier0_.troop_fk as troop3_14_ from Soldier soldier0_ where soldier0_.id=?
+14:10:39,573 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,574 DEBUG SQL:104 - 
+    select
+        soldier0_.id as id14_,
+        soldier0_.name as name14_,
+        soldier0_.troop_fk as troop3_14_ 
+    from
+        Soldier soldier0_ 
+    where
+        soldier0_.id=?
+14:10:39,574 DEBUG SQL:104 - 
+    select
+        troop0_.id as id21_0_,
+        troop0_.name as name21_0_ 
+    from
+        Troop troop0_ 
+    where
+        troop0_.id=?
+14:10:39,575  INFO CustomRunner:139 - Test: testJoinColumnConfiguredInXml
+14:10:39,578  INFO CustomRunner:139 - Test: testJoinColumns
+14:10:39,578 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,579 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,580 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (age, firstName, isMale, lastName) 
+    values
+        (?, ?, ?, ?)
+14:10:39,581 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (fav_singer, fav_sup_hero, parentFirstName, parentCivility, parentLastName, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:39,581 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (fav_singer, fav_sup_hero, parentFirstName, parentCivility, parentLastName, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:39,582 DEBUG SQL:104 - 
+    select
+        parent0_.firstName as firstName10_0_,
+        parent0_.isMale as isMale10_0_,
+        parent0_.lastName as lastName10_0_,
+        parent0_.age as age10_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.firstName=? 
+        and parent0_.isMale=? 
+        and parent0_.lastName=?
+14:10:39,582 DEBUG SQL:104 - 
+    select
+        children0_.parentFirstName as parentFi4_10_1_,
+        children0_.parentCivility as parentCi5_10_1_,
+        children0_.parentLastName as parentLa6_10_1_,
+        children0_.id as id0_1_,
+        children0_.id as id0_0_,
+        children0_.fav_singer as fav2_0_0_,
+        children0_.fav_sup_hero as fav3_0_0_,
+        children0_.parentFirstName as parentFi4_0_0_,
+        children0_.parentCivility as parentCi5_0_0_,
+        children0_.parentLastName as parentLa6_0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.parentFirstName=? 
+        and children0_.parentCivility=? 
+        and children0_.parentLastName=? 
+    order by
+        children0_.fav_sup_hero asc,
+        children0_.fav_singer desc
+14:10:39,584  INFO CustomRunner:139 - Test: testListWithBagSemanticAndOrderBy
+14:10:39,585 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,586 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,586 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,586 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,587 DEBUG SQL:104 - 
+    insert 
+    into
+        City
+        (name, id) 
+    values
+        (?, ?)
+14:10:39,588 DEBUG SQL:104 - 
+    insert 
+    into
+        Street
+        (city_id, STREET_NAME, id) 
+    values
+        (?, ?, ?)
+14:10:39,588 DEBUG SQL:104 - 
+    insert 
+    into
+        Street
+        (city_id, STREET_NAME, id) 
+    values
+        (?, ?, ?)
+14:10:39,588 DEBUG SQL:104 - 
+    insert 
+    into
+        Street
+        (city_id, STREET_NAME, id) 
+    values
+        (?, ?, ?)
+14:10:39,589 DEBUG SQL:104 - 
+    update
+        Street 
+    set
+        mainstreetcity_id=? 
+    where
+        id=?
+14:10:39,589 DEBUG SQL:104 - 
+    update
+        Street 
+    set
+        mainstreetcity_id=? 
+    where
+        id=?
+14:10:39,589 DEBUG SQL:104 - 
+    select
+        city0_.id as id1_0_,
+        city0_.name as name1_0_ 
+    from
+        City city0_ 
+    where
+        city0_.id=?
+14:10:39,599 DEBUG SQL:104 - 
+    select
+        streets0_.city_id as city3_1_1_,
+        streets0_.id as id15_1_,
+        streets0_.id as id15_0_,
+        streets0_.city_id as city3_15_0_,
+        streets0_.STREET_NAME as STREET2_15_0_,
+        streets0_.STREET_NAME as formula33_0_ 
+    from
+        Street streets0_ 
+    where
+        streets0_.city_id=? 
+    order by
+        streets0_.STREET_NAME,
+        streets0_.id
+14:10:39,600 DEBUG SQL:104 - 
+    select
+        mainstreet0_.mainstreetcity_id as mainstre4_1_2_,
+        mainstreet0_.id as id15_2_,
+        mainstreet0_.id as id15_1_,
+        mainstreet0_.city_id as city3_15_1_,
+        mainstreet0_.STREET_NAME as STREET2_15_1_,
+        mainstreet0_.STREET_NAME as formula33_1_,
+        city1_.id as id1_0_,
+        city1_.name as name1_0_ 
+    from
+        Street mainstreet0_ 
+    left outer join
+        City city1_ 
+            on mainstreet0_.city_id=city1_.id 
+    where
+        mainstreet0_.mainstreetcity_id=? 
+    order by
+        mainstreet0_.id asc
+14:10:39,615  INFO CustomRunner:139 - Test: testOrderByOnSuperclassProperty
+14:10:39,617 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANISATION
+        (name, id_organisation) 
+    values
+        (?, ?)
+14:10:39,619 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON_Orderby
+        (first_name, last_name, id_person) 
+    values
+        (?, ?, ?)
+14:10:39,619 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANISATION_USER
+        (fk_id_organisation, some_text, id_organisation_user) 
+    values
+        (?, ?, ?)
+14:10:39,630 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select org from org.hibernate.test.annotations.onetomany.Organisation org left join fetch org.organisationUsers
+14:10:39,632 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  +-[RANGE] Node: 'RANGE'
+       |  |  +-[DOT] Node: '.'
+       |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |  |  |  |  \-[IDENT] Node: 'onetomany'
+       |  |  |  \-[IDENT] Node: 'Organisation'
+       |  |  \-[ALIAS] Node: 'org'
+       |  \-[JOIN] Node: 'join'
+       |     +-[LEFT] Node: 'left'
+       |     +-[FETCH] Node: 'fetch'
+       |     \-[DOT] Node: '.'
+       |        +-[IDENT] Node: 'org'
+       |        \-[IDENT] Node: 'organisationUsers'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'org'
+
+14:10:39,632 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,632 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.onetomany.Organisation (org) -> organisati0_
+14:10:39,632 DEBUG FromReferenceNode:74 - Resolved : org -> organisati0_.id_organisation
+14:10:39,632 DEBUG DotNode:599 - getDataType() : organisationUsers -> org.hibernate.type.OrderedSetType(org.hibernate.test.annotations.onetomany.Organisation.organisationUsers)
+14:10:39,632 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = org.organisationUsers role = org.hibernate.test.annotations.onetomany.Organisation.organisationUsers associatedEntityName = org.hibernate.test.annotations.onetomany.OrganisationUser
+14:10:39,633 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.onetomany.OrganisationUser (<no alias>) -> organisati1_
+14:10:39,633 DEBUG FromClause:282 - addJoinByPathMap() : org.organisationUsers -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ORGANISATION_USER,tableAlias=organisati1_,origin=ORGANISATION organisati0_,columns={organisati0_.id_organisation ,className=org.hibernate.test.annotations.onetomany.OrganisationUser}}
+14:10:39,633 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for org.organisationUsers : ORGANISATION_USER organisati1_
+14:10:39,633 DEBUG FromReferenceNode:74 - Resolved : org.organisationUsers -> .
+14:10:39,633 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'ORGANISATION_USER organisati1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.onetomany.Organisation.organisationUsers,tableName=ORGANISATION_USER,tableAlias=organisati1_,origin=ORGANISATION organisati0_,columns={organisati0_.id_organisation ,className=org.hibernate.test.annotations.onetomany.OrganisationUser}}
+
+14:10:39,633 DEBUG FromReferenceNode:74 - Resolved : org -> organisati0_.id_organisation
+14:10:39,633 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} organisati0_.id_organisation ) ( FromClause{level=1} ( ORGANISATION organisati0_ ORGANISATION_USER organisati1_ ) ) )
+14:10:39,634 DEBUG JoinProcessor:175 - Using FROM fragment [ORGANISATION organisati0_]
+14:10:39,634 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join ORGANISATION_USER organisati1_ on organisati0_.id_organisation=organisati1_.fk_id_organisation left outer join PERSON_Orderby organisati1_1_ on organisati1_.id_organisation_user=organisati1_1_.id_person]
+14:10:39,634 DEBUG QueryNode:101 - getOrderByClause() : Creating a new ORDER BY clause
+14:10:39,657 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ORGANISATION_USER,ORGANISATION,PERSON_Orderby)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'organisati0_.id_organisation as id1_7_0_' {alias=org, className=org.hibernate.test.annotations.onetomany.Organisation, tableAlias=organisati0_}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'organisati1_.id_organisation_user as id1_9_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.onetomany.Organisation.organisationUsers,tableName=ORGANISATION_USER,tableAlias=organisati1_,origin=ORGANISATION organisati0_,columns={organisati0_.id_organisation ,className=org.hibernate.test.annotations.onetomany.OrganisationUser}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'organisati0_.name as name7_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'organisati1_1_.first_name as first2_9_1_, organisati1_1_.last_name as last3_9_1_, organisati1_.fk_id_organisation as fk3_8_1_, organisati1_.some_text as some1_8_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'organisati1_.fk_id_organisation as fk3_7_0__, organisati1_.id_organisation_user as id2_8_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[org], fromElementByTableAlias=[organisati1_, organisati0_], fromElementsByPath=[org.organisationUsers], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'ORGANISATION organisati0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=org,role=null,tableName=ORGANISATION,tableAlias=organisati0_,origin=null,columns={,className=org.hibernate.test.annotations.onetomany.Organisation}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join ORGANISATION_USER organisati1_ on organisati0_.id_organisation=organisati1_.fk_id_organisation left outer join PERSON_Orderby organisati1_1_ on organisati1_.id_organisation_user=organisati1_1_.id_person' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.onetomany.Organisation.organisationUsers,tableName=ORGANISATION_USER,tableAlias=organisati1_,origin=ORGANISATION organisati0_,columns={organisati0_.id_organisation ,className=org.hibernate.test.annotations.onetomany.OrganisationUser}}
+    \-[ORDER] OrderByClause: 'ORDER'
+       \-[SQL_TOKEN] SqlFragment: 'organisati1_1_.first_name'
+
+14:10:39,657 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,657 DEBUG QueryTranslatorImpl:235 - HQL: select org from org.hibernate.test.annotations.onetomany.Organisation org left join fetch org.organisationUsers
+14:10:39,657 DEBUG QueryTranslatorImpl:236 - SQL: select organisati0_.id_organisation as id1_7_0_, organisati1_.id_organisation_user as id1_9_1_, organisati0_.name as name7_0_, organisati1_1_.first_name as first2_9_1_, organisati1_1_.last_name as last3_9_1_, organisati1_.fk_id_organisation as fk3_8_1_, organisati1_.some_text as some1_8_1_, organisati1_.fk_id_organisation as fk3_7_0__, organisati1_.id_organisation_user as id2_8_0__ from ORGANISATION organisati0_ left outer join ORGANISATION_USER organisati1_ on organisati0_.id_organisation=organisati1_.fk_id_organisation left outer join PERSON_Orderby organisati1_1_ on organisati1_.id_organisation_user=organisati1_1_.id_person order by organisati1_1_.first_name
+14:10:39,657 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,657 DEBUG SQL:104 - 
+    select
+        organisati0_.id_organisation as id1_7_0_,
+        organisati1_.id_organisation_user as id1_9_1_,
+        organisati0_.name as name7_0_,
+        organisati1_1_.first_name as first2_9_1_,
+        organisati1_1_.last_name as last3_9_1_,
+        organisati1_.fk_id_organisation as fk3_8_1_,
+        organisati1_.some_text as some1_8_1_,
+        organisati1_.fk_id_organisation as fk3_7_0__,
+        organisati1_.id_organisation_user as id2_8_0__ 
+    from
+        ORGANISATION organisati0_ 
+    left outer join
+        ORGANISATION_USER organisati1_ 
+            on organisati0_.id_organisation=organisati1_.fk_id_organisation 
+    left outer join
+        PERSON_Orderby organisati1_1_ 
+            on organisati1_.id_organisation_user=organisati1_1_.id_person 
+    order by
+        organisati1_1_.first_name
+14:10:39,669  INFO CustomRunner:139 - Test: testSimpleOneToManyCollection
+14:10:39,670 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,670 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,671 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (name, passport_id, id) 
+    values
+        (?, ?, ?)
+14:10:39,672 DEBUG SQL:104 - 
+    insert 
+    into
+        Discount
+        (discount, CUSTOMER_ID, id) 
+    values
+        (?, ?, ?)
+14:10:39,672 DEBUG SQL:104 - 
+    select
+        customer0_.id as id2_2_,
+        customer0_.name as name2_2_,
+        customer0_.passport_id as passport3_2_2_,
+        passport1_.id as id11_0_,
+        passport1_.passport_number as passport2_11_0_,
+        tickets2_.CUST_ID as CUST3_2_4_,
+        tickets2_.id as id16_4_,
+        tickets2_.id as id16_1_,
+        tickets2_.ticket_number as ticket2_16_1_ 
+    from
+        Customer customer0_ 
+    left outer join
+        Passport passport1_ 
+            on customer0_.passport_id=passport1_.id 
+    left outer join
+        Ticket tickets2_ 
+            on customer0_.id=tickets2_.CUST_ID 
+    where
+        customer0_.id=?
+14:10:39,684 DEBUG SQL:104 - 
+    select
+        discountti0_.CUSTOMER_ID as CUSTOMER3_2_1_,
+        discountti0_.id as id3_1_,
+        discountti0_.id as id3_0_,
+        discountti0_.discount as discount3_0_,
+        discountti0_.CUSTOMER_ID as CUSTOMER3_3_0_ 
+    from
+        Discount discountti0_ 
+    where
+        discountti0_.CUSTOMER_ID=?
+14:10:39,696  INFO CustomRunner:139 - Test: testSimpleOneToManySet
+14:10:39,697 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,698 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,698 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,699 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (name, passport_id, id) 
+    values
+        (?, ?, ?)
+14:10:39,699 DEBUG SQL:104 - 
+    insert 
+    into
+        Ticket
+        (ticket_number, id) 
+    values
+        (?, ?)
+14:10:39,699 DEBUG SQL:104 - 
+    insert 
+    into
+        Ticket
+        (ticket_number, id) 
+    values
+        (?, ?)
+14:10:39,717 DEBUG SQL:104 - 
+    update
+        Ticket 
+    set
+        CUST_ID=? 
+    where
+        id=?
+14:10:39,717 DEBUG SQL:104 - 
+    update
+        Ticket 
+    set
+        CUST_ID=? 
+    where
+        id=?
+14:10:39,718 DEBUG SQL:104 - 
+    select
+        customer0_.id as id2_2_,
+        customer0_.name as name2_2_,
+        customer0_.passport_id as passport3_2_2_,
+        passport1_.id as id11_0_,
+        passport1_.passport_number as passport2_11_0_,
+        tickets2_.CUST_ID as CUST3_2_4_,
+        tickets2_.id as id16_4_,
+        tickets2_.id as id16_1_,
+        tickets2_.ticket_number as ticket2_16_1_ 
+    from
+        Customer customer0_ 
+    left outer join
+        Passport passport1_ 
+            on customer0_.passport_id=passport1_.id 
+    left outer join
+        Ticket tickets2_ 
+            on customer0_.id=tickets2_.CUST_ID 
+    where
+        customer0_.id=?
+14:10:39,721  INFO CustomRunner:139 - Test: testUnidirectionalDefault
+14:10:39,723 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,723 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,723 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,724 DEBUG SQL:104 - 
+    insert 
+    into
+        Trainer
+        (name, id) 
+    values
+        (?, ?)
+14:10:39,725 DEBUG SQL:104 - 
+    insert 
+    into
+        Tiger
+        (name, id) 
+    values
+        (?, ?)
+14:10:39,725 DEBUG SQL:104 - 
+    insert 
+    into
+        Tiger
+        (name, id) 
+    values
+        (?, ?)
+14:10:39,733 DEBUG SQL:104 - 
+    insert 
+    into
+        Trainer_Tiger
+        (Trainer_id, trainedTigers_id) 
+    values
+        (?, ?)
+14:10:39,733 DEBUG SQL:104 - 
+    insert 
+    into
+        Trainer_Tiger
+        (Trainer_id, trainedTigers_id) 
+    values
+        (?, ?)
+14:10:39,733 DEBUG SQL:104 - 
+    select
+        trainer0_.id as id19_0_,
+        trainer0_.name as name19_0_ 
+    from
+        Trainer trainer0_ 
+    where
+        trainer0_.id=?
+14:10:39,734 DEBUG SQL:104 - 
+    select
+        trainedtig0_.Trainer_id as Trainer1_19_1_,
+        trainedtig0_.trainedTigers_id as trainedT2_20_1_,
+        tiger1_.id as id17_0_,
+        tiger1_.name as name17_0_ 
+    from
+        Trainer_Tiger trainedtig0_ 
+    inner join
+        Tiger tiger1_ 
+            on trainedtig0_.trainedTigers_id=tiger1_.id 
+    where
+        trainedtig0_.Trainer_id=?
+14:10:39,735 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,735 DEBUG SQL:104 - 
+    insert 
+    into
+        Trainer
+        (name, id) 
+    values
+        (?, ?)
+14:10:39,736 DEBUG SQL:104 - 
+    insert 
+    into
+        Trainer_Tiger
+        (Trainer_id, trainedTigers_id) 
+    values
+        (?, ?)
+14:10:39,736  WARN SqlExceptionHelper:143 - SQL Error: 23001, SQLState: 23001
+14:10:39,736 ERROR SqlExceptionHelper:144 - Unique index or primary key violation: "UK_33931475E1A9E0DF_INDEX_F ON PUBLIC.TRAINER_TIGER(TRAINEDTIGERS_ID)"; SQL statement:
+insert into Trainer_Tiger (Trainer_id, trainedTigers_id) values (?, ?) [23001-145]
+14:10:39,736  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:39,748  INFO CustomRunner:139 - Test: testUnidirectionalExplicit
+14:10:39,749 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,750 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,750 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:39,750 DEBUG SQL:104 - 
+    insert 
+    into
+        Trainer
+        (name, id) 
+    values
+        (?, ?)
+14:10:39,751 DEBUG SQL:104 - 
+    insert 
+    into
+        Monkey
+        (name, id) 
+    values
+        (?, ?)
+14:10:39,751 DEBUG SQL:104 - 
+    insert 
+    into
+        Monkey
+        (name, id) 
+    values
+        (?, ?)
+14:10:39,758 DEBUG SQL:104 - 
+    insert 
+    into
+        TrainedMonkeys
+        (trainer_id, monkey_id) 
+    values
+        (?, ?)
+14:10:39,758 DEBUG SQL:104 - 
+    insert 
+    into
+        TrainedMonkeys
+        (trainer_id, monkey_id) 
+    values
+        (?, ?)
+14:10:39,759 DEBUG SQL:104 - 
+    select
+        trainer0_.id as id19_0_,
+        trainer0_.name as name19_0_ 
+    from
+        Trainer trainer0_ 
+    where
+        trainer0_.id=?
+14:10:39,759 DEBUG SQL:104 - 
+    select
+        trainedmon0_.trainer_id as trainer1_19_1_,
+        trainedmon0_.monkey_id as monkey2_18_1_,
+        monkey1_.id as id6_0_,
+        monkey1_.name as name6_0_ 
+    from
+        TrainedMonkeys trainedmon0_ 
+    inner join
+        Monkey monkey1_ 
+            on trainedmon0_.monkey_id=monkey1_.id 
+    where
+        trainedmon0_.trainer_id=?
+14:10:39,760 DEBUG SQL:104 - 
+    delete 
+    from
+        TrainedMonkeys 
+    where
+        trainer_id=?
+14:10:39,761 DEBUG SQL:104 - 
+    delete 
+    from
+        Trainer_Tiger 
+    where
+        Trainer_id=?
+14:10:39,779 DEBUG SQL:104 - 
+    delete 
+    from
+        Trainer 
+    where
+        id=?
+14:10:39,780 DEBUG SQL:104 - 
+    select
+        monkey0_.id as id6_0_,
+        monkey0_.name as name6_0_ 
+    from
+        Monkey monkey0_ 
+    where
+        monkey0_.id=?
+14:10:39,781 DEBUG SQL:104 - 
+    select
+        monkey0_.id as id6_0_,
+        monkey0_.name as name6_0_ 
+    from
+        Monkey monkey0_ 
+    where
+        monkey0_.id=?
+14:10:39,782 DEBUG SQL:104 - 
+    delete 
+    from
+        Monkey 
+    where
+        id=?
+14:10:39,783 DEBUG SQL:104 - 
+    delete 
+    from
+        Monkey 
+    where
+        id=?
+14:10:39,795  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:39,796 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:39,796 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC1821519
+14:10:39,797 DEBUG SQL:104 - 
+    alter table Customer 
+        drop constraint FK27FBE3FE1E3E1F5A
+14:10:39,797 DEBUG SQL:104 - 
+    alter table Discount 
+        drop constraint FK1422D961AED1FBDA
+14:10:39,797 DEBUG SQL:104 - 
+    alter table Model 
+        drop constraint FK4710B0926C8BCE8
+14:10:39,797 DEBUG SQL:104 - 
+    alter table Model 
+        drop constraint FK4710B09896645E1
+14:10:39,797 DEBUG SQL:104 - 
+    alter table ORGANISATION_USER 
+        drop constraint FKB7E22C104E6723AC
+14:10:39,797 DEBUG SQL:104 - 
+    alter table ORGANISATION_USER 
+        drop constraint FKB7E22C10D2BE188F
+14:10:39,798 DEBUG SQL:104 - 
+    alter table Politician 
+        drop constraint FKF1F519E4F91D13F5
+14:10:39,807 DEBUG SQL:104 - 
+    alter table Soldier 
+        drop constraint FKEA301962A4F85B16
+14:10:39,807 DEBUG SQL:104 - 
+    alter table Street 
+        drop constraint FK943A3C2341634CA8
+14:10:39,807 DEBUG SQL:104 - 
+    alter table Street 
+        drop constraint CITYSTR_FK
+14:10:39,807 DEBUG SQL:104 - 
+    alter table Ticket 
+        drop constraint FK954D572C5BAC2545
+14:10:39,807 DEBUG SQL:104 - 
+    alter table TrainedMonkeys 
+        drop constraint TM_MON_FK
+14:10:39,808 DEBUG SQL:104 - 
+    alter table TrainedMonkeys 
+        drop constraint TM_TRA_FK
+14:10:39,808 DEBUG SQL:104 - 
+    alter table Trainer_Tiger 
+        drop constraint FK339314752254D490
+14:10:39,808 DEBUG SQL:104 - 
+    alter table Trainer_Tiger 
+        drop constraint FK3393147558C0480C
+14:10:39,808 DEBUG SQL:104 - 
+    drop table Child if exists
+14:10:39,808 DEBUG SQL:104 - 
+    drop table City if exists
+14:10:39,809 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:10:39,817 DEBUG SQL:104 - 
+    drop table Discount if exists
+14:10:39,817 DEBUG SQL:104 - 
+    drop table Manufacturer if exists
+14:10:39,817 DEBUG SQL:104 - 
+    drop table Model if exists
+14:10:39,818 DEBUG SQL:104 - 
+    drop table Monkey if exists
+14:10:39,818 DEBUG SQL:104 - 
+    drop table ORGANISATION if exists
+14:10:39,818 DEBUG SQL:104 - 
+    drop table ORGANISATION_USER if exists
+14:10:39,818 DEBUG SQL:104 - 
+    drop table PERSON_Orderby if exists
+14:10:39,819 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:10:39,819 DEBUG SQL:104 - 
+    drop table Passport if exists
+14:10:39,819 DEBUG SQL:104 - 
+    drop table PoliticalParty if exists
+14:10:39,819 DEBUG SQL:104 - 
+    drop table Politician if exists
+14:10:39,820 DEBUG SQL:104 - 
+    drop table Soldier if exists
+14:10:39,820 DEBUG SQL:104 - 
+    drop table Street if exists
+14:10:39,820 DEBUG SQL:104 - 
+    drop table Ticket if exists
+14:10:39,820 DEBUG SQL:104 - 
+    drop table Tiger if exists
+14:10:39,832 DEBUG SQL:104 - 
+    drop table TrainedMonkeys if exists
+14:10:39,832 DEBUG SQL:104 - 
+    drop table Trainer if exists
+14:10:39,833 DEBUG SQL:104 - 
+    drop table Trainer_Tiger if exists
+14:10:39,833 DEBUG SQL:104 - 
+    drop table Troop if exists
+14:10:39,833 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:39,833  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:39,833  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

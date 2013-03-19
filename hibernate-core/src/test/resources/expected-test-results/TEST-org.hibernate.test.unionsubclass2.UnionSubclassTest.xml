@@ -1,0 +1,2303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.unionsubclass2.UnionSubclassTest" tests="3" time="0.775" timestamp="2013-02-28T20:19:29">
+  <properties />
+  <testcase classname="org.hibernate.test.unionsubclass2.UnionSubclassTest" name="testCustomColumnReadAndWrite" time="0.066" />
+  <testcase classname="org.hibernate.test.unionsubclass2.UnionSubclassTest" name="testQuerySubclassAttribute" time="0.166" />
+  <testcase classname="org.hibernate.test.unionsubclass2.UnionSubclassTest" name="testUnionSubclass" time="0.448" />
+  <system-out><![CDATA[14:19:29,101  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.unionsubclass2.UnionSubclassTest
+14:19:29,103  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/unionsubclass2/Person.hbm.xml
+14:19:29,113  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:29,113  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:29,114  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:29,114  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:29,114  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:29,115  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:29,115  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:29,116  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:29,116  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:29,117  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:29,172  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:29,173 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:29,173 DEBUG SQL:104 - 
+    alter table UCustomer 
+        drop constraint FK62B4BF5398311FBC
+14:19:29,174 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table UCustomer drop constraint FK62B4BF5398311FBC
+14:19:29,174 ERROR SchemaExport:426 - Table "UCUSTOMER" not found; SQL statement:
+
+    alter table UCustomer 
+        drop constraint FK62B4BF5398311FBC [42102-145]
+14:19:29,174 DEBUG SQL:104 - 
+    alter table UEmployee 
+        drop constraint FK85B6262346644408
+14:19:29,174 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table UEmployee drop constraint FK85B6262346644408
+14:19:29,175 ERROR SchemaExport:426 - Table "UEMPLOYEE" not found; SQL statement:
+
+    alter table UEmployee 
+        drop constraint FK85B6262346644408 [42102-145]
+14:19:29,175 DEBUG SQL:104 - 
+    drop table UCustomer if exists
+14:19:29,175 DEBUG SQL:104 - 
+    drop table UEmployee if exists
+14:19:29,175 DEBUG SQL:104 - 
+    drop table UPerson if exists
+14:19:29,175 DEBUG SQL:104 - 
+    create table UCustomer (
+        person_id bigint not null,
+        name varchar(80) not null,
+        sex char(255) not null,
+        height_centimeters double not null,
+        address varchar(255),
+        zip varchar(255),
+        country varchar(255),
+        comments varchar(255),
+        salesperson bigint,
+        primary key (person_id)
+    )
+14:19:29,176 DEBUG SQL:104 - 
+    create table UEmployee (
+        person_id bigint not null,
+        name varchar(80) not null,
+        sex char(255) not null,
+        height_centimeters double not null,
+        address varchar(255),
+        zip varchar(255),
+        country varchar(255),
+        title varchar(20) not null,
+        salary decimal(19,2),
+        pwd_expiry_weeks double not null,
+        manager bigint,
+        primary key (person_id)
+    )
+14:19:29,177 DEBUG SQL:104 - 
+    create table UPerson (
+        person_id bigint not null,
+        name varchar(80) not null,
+        sex char(255) not null,
+        height_centimeters double not null,
+        address varchar(255),
+        zip varchar(255),
+        country varchar(255),
+        primary key (person_id)
+    )
+14:19:29,177 DEBUG SQL:104 - 
+    alter table UPerson 
+        add constraint NameUniqueKey unique (name)
+14:19:29,177 DEBUG SQL:104 - 
+    create index UCustomerAddressIndex on UCustomer (address, zip)
+14:19:29,178 DEBUG SQL:104 - 
+    alter table UCustomer 
+        add constraint FK62B4BF5398311FBC 
+        foreign key (salesperson) 
+        references UEmployee
+14:19:29,178 DEBUG SQL:104 - 
+    alter table UPerson 
+        add constraint NameUniqueKey unique (name)
+14:19:29,179 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table UPerson add constraint NameUniqueKey unique (name)
+14:19:29,179 ERROR SchemaExport:426 - Constraint "NAMEUNIQUEKEY" already exists; SQL statement:
+
+    alter table UPerson 
+        add constraint NameUniqueKey unique (name) [90045-145]
+14:19:29,179 DEBUG SQL:104 - 
+    create index UEmployeeAddressIndex on UEmployee (address, zip)
+14:19:29,179 DEBUG SQL:104 - 
+    alter table UEmployee 
+        add constraint FK85B6262346644408 
+        foreign key (manager) 
+        references UEmployee
+14:19:29,180 DEBUG SQL:104 - 
+    alter table UPerson 
+        add constraint NameUniqueKey unique (name)
+14:19:29,180 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table UPerson add constraint NameUniqueKey unique (name)
+14:19:29,180 ERROR SchemaExport:426 - Constraint "NAMEUNIQUEKEY" already exists; SQL statement:
+
+    alter table UPerson 
+        add constraint NameUniqueKey unique (name) [90045-145]
+14:19:29,180 DEBUG SQL:104 - 
+    create index AddressIndex on UPerson (address, zip)
+14:19:29,181  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:29,181  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:29,181  INFO CustomRunner:139 - Test: testCustomColumnReadAndWrite
+14:19:29,182 DEBUG SQL:104 - 
+    select
+        max(ids_.mx) 
+    from
+        ( select
+            max(person_id) as mx 
+        from
+            UPerson 
+        union
+        select
+            max(person_id) as mx 
+        from
+            UCustomer 
+        union
+        select
+            max(person_id) as mx 
+        from
+            UEmployee 
+    ) ids_
+14:19:29,184 DEBUG SQL:104 - 
+    insert 
+    into
+        UPerson
+        (name, sex, height_centimeters, address, zip, country, person_id) 
+    values
+        (?, ?, ? * 2.54E0, ?, ?, ?, ?)
+14:19:29,185 DEBUG SQL:104 - 
+    insert 
+    into
+        UEmployee
+        (name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, person_id) 
+    values
+        (?, ?, ? * 2.54E0, ?, ?, ?, ?, ?, ? / 7.0E0, ?, ?)
+14:19:29,185 DEBUG SQL:104 - 
+    select
+        height_centimeters 
+    from
+        UPerson 
+    where
+        name='Emmanuel'
+14:19:29,186 DEBUG SQL:104 - 
+    select
+        pwd_expiry_weeks 
+    from
+        UEmployee 
+    where
+        person_id=?
+14:19:29,186 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select p.heightInches from org.hibernate.test.unionsubclass2.Person p where p.name = 'Emmanuel'
+14:19:29,187 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'unionsubclass2'
+    |  |     |  \-[IDENT] Node: 'Person'
+    |  |     \-[ALIAS] Node: 'p'
+    |  \-[SELECT] Node: 'select'
+    |     \-[DOT] Node: '.'
+    |        +-[IDENT] Node: 'p'
+    |        \-[IDENT] Node: 'heightInches'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Emmanuel''
+
+14:19:29,187 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,188 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Person (p) -> person0_
+14:19:29,188 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:19:29,188 DEBUG DotNode:599 - getDataType() : heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:19:29,188 DEBUG FromReferenceNode:74 - Resolved : p.heightInches -> person0_.height_centimeters / 2.54E0
+14:19:29,188 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:19:29,188 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:29,188 DEBUG FromReferenceNode:74 - Resolved : p.name -> person0_.name
+14:19:29,189 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( person0_.height_centimeters / 2.54E0 person0_.person_id heightInches ) ) ( FromClause{level=1} ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ ) ( where ( = ( person0_.name person0_.person_id name ) 'Emmanuel' ) ) )
+14:19:29,189 DEBUG JoinProcessor:175 - Using FROM fragment [( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_]
+14:19:29,189 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'person0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=heightInches,path=p.heightInches,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=p}
+    |  |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.unionsubclass2.Person, tableAlias=person0_}
+    |  |  \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.unionsubclass2.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Emmanuel''
+
+14:19:29,189 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,189 DEBUG QueryTranslatorImpl:235 - HQL: select p.heightInches from org.hibernate.test.unionsubclass2.Person p where p.name = 'Emmanuel'
+14:19:29,189 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.height_centimeters / 2.54E0 as col_0_0_ from ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ where person0_.name='Emmanuel'
+14:19:29,190 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,190 DEBUG SQL:104 - 
+    select
+        person0_.height_centimeters / 2.54E0 as col_0_0_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_ 
+where
+    person0_.name='Emmanuel'
+14:19:29,192 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select e.passwordExpiryDays from org.hibernate.test.unionsubclass2.Employee e where e.name = 'Steve'
+14:19:29,193 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'unionsubclass2'
+    |  |     |  \-[IDENT] Node: 'Employee'
+    |  |     \-[ALIAS] Node: 'e'
+    |  \-[SELECT] Node: 'select'
+    |     \-[DOT] Node: '.'
+    |        +-[IDENT] Node: 'e'
+    |        \-[IDENT] Node: 'passwordExpiryDays'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'e'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Steve''
+
+14:19:29,194 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,194 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Employee (e) -> employee0_
+14:19:29,194 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.person_id
+14:19:29,194 DEBUG DotNode:599 - getDataType() : passwordExpiryDays -> org.hibernate.type.DoubleType@26e7f2ac
+14:19:29,195 DEBUG FromReferenceNode:74 - Resolved : e.passwordExpiryDays -> employee0_.pwd_expiry_weeks * 7.0E0
+14:19:29,195 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.person_id
+14:19:29,195 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:29,195 DEBUG FromReferenceNode:74 - Resolved : e.name -> employee0_.name
+14:19:29,195 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( employee0_.pwd_expiry_weeks * 7.0E0 employee0_.person_id passwordExpiryDays ) ) ( FromClause{level=1} UEmployee employee0_ ) ( where ( = ( employee0_.name employee0_.person_id name ) 'Steve' ) ) )
+14:19:29,195 DEBUG JoinProcessor:175 - Using FROM fragment [UEmployee employee0_]
+14:19:29,196 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'employee0_.pwd_expiry_weeks * 7.0E0' {propertyName=passwordExpiryDays,dereferenceType=ALL,propertyPath=passwordExpiryDays,path=e.passwordExpiryDays,tableAlias=employee0_,className=org.hibernate.test.unionsubclass2.Employee,classAlias=e}
+    |  |  +-[ALIAS_REF] IdentNode: 'employee0_.person_id' {alias=e, className=org.hibernate.test.unionsubclass2.Employee, tableAlias=employee0_}
+    |  |  \-[IDENT] IdentNode: 'passwordExpiryDays' {originalText=passwordExpiryDays}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'UEmployee employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=UEmployee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'employee0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=e.name,tableAlias=employee0_,className=org.hibernate.test.unionsubclass2.Employee,classAlias=e}
+          |  +-[ALIAS_REF] IdentNode: 'employee0_.person_id' {alias=e, className=org.hibernate.test.unionsubclass2.Employee, tableAlias=employee0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Steve''
+
+14:19:29,196 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,196 DEBUG QueryTranslatorImpl:235 - HQL: select e.passwordExpiryDays from org.hibernate.test.unionsubclass2.Employee e where e.name = 'Steve'
+14:19:29,196 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.pwd_expiry_weeks * 7.0E0 as col_0_0_ from UEmployee employee0_ where employee0_.name='Steve'
+14:19:29,196 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,197 DEBUG SQL:104 - 
+    select
+        employee0_.pwd_expiry_weeks * 7.0E0 as col_0_0_ 
+    from
+        UEmployee employee0_ 
+    where
+        employee0_.name='Steve'
+14:19:29,198 DEBUG SQL:104 - 
+    select
+        this_.person_id as person1_2_0_,
+        this_.name as name2_0_,
+        this_.sex as sex2_0_,
+        this_.height_centimeters / 2.54E0 as height4_2_0_,
+        this_.address as address2_0_,
+        this_.zip as zip2_0_,
+        this_.country as country2_0_,
+        this_.title as title1_0_,
+        this_.salary as salary1_0_,
+        this_.pwd_expiry_weeks * 7.0E0 as pwd3_1_0_,
+        this_.manager as manager1_0_,
+        this_.comments as comments0_0_,
+        this_.salesperson as salesper2_0_0_,
+        this_.clazz_ as clazz_0_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) this_ 
+where
+    this_.height_centimeters / 2.54E0 between ? and ?
+14:19:29,199 DEBUG SQL:104 - 
+    select
+        this_.person_id as person1_2_0_,
+        this_.name as name2_0_,
+        this_.sex as sex2_0_,
+        this_.height_centimeters / 2.54E0 as height4_2_0_,
+        this_.address as address2_0_,
+        this_.zip as zip2_0_,
+        this_.country as country2_0_,
+        this_.title as title1_0_,
+        this_.salary as salary1_0_,
+        this_.pwd_expiry_weeks * 7.0E0 as pwd3_1_0_,
+        this_.manager as manager1_0_ 
+    from
+        UEmployee this_ 
+    where
+        this_.pwd_expiry_weeks * 7.0E0 between ? and ?
+14:19:29,200 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Person p where p.heightInches between ? and ?
+14:19:29,201 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'unionsubclass2'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[BETWEEN] Node: 'between'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'heightInches'
+          +-[PARAM] Node: '?'
+          \-[PARAM] Node: '?'
+
+14:19:29,201 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,201 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Person (p) -> person0_
+14:19:29,201 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:19:29,201 DEBUG DotNode:599 - getDataType() : heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:19:29,202 DEBUG FromReferenceNode:74 - Resolved : p.heightInches -> person0_.height_centimeters / 2.54E0
+14:19:29,202  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 78.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:19:29,202  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 84.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:19:29,202 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ ) ( where ( between ( person0_.height_centimeters / 2.54E0 person0_.person_id heightInches ) ? ? ) ) )
+14:19:29,202 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,202 DEBUG JoinProcessor:175 - Using FROM fragment [( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_]
+14:19:29,203 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[BETWEEN] BetweenOperatorNode: 'between'
+          +-[DOT] DotNode: 'person0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=heightInches,path=p.heightInches,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.unionsubclass2.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+          +-[PARAM] ParameterNode: '?' {ordinal=0, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+          \-[PARAM] ParameterNode: '?' {ordinal=1, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+
+14:19:29,203 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,203 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Person p where p.heightInches between ? and ?
+14:19:29,203 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_2_, person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_ from ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ where person0_.height_centimeters / 2.54E0 between ? and ?
+14:19:29,203 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,204 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_2_,
+        person0_.name as name2_,
+        person0_.sex as sex2_,
+        person0_.height_centimeters / 2.54E0 as height4_2_,
+        person0_.address as address2_,
+        person0_.zip as zip2_,
+        person0_.country as country2_,
+        person0_.title as title1_,
+        person0_.salary as salary1_,
+        person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_,
+        person0_.manager as manager1_,
+        person0_.comments as comments0_,
+        person0_.salesperson as salesper2_0_,
+        person0_.clazz_ as clazz_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_ 
+where
+    person0_.height_centimeters / 2.54E0 between ? and ?
+14:19:29,213 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Employee e where e.passwordExpiryDays between ? and ?
+14:19:29,214 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'unionsubclass2'
+    |        |  \-[IDENT] Node: 'Employee'
+    |        \-[ALIAS] Node: 'e'
+    \-[WHERE] Node: 'where'
+       \-[BETWEEN] Node: 'between'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'e'
+          |  \-[IDENT] Node: 'passwordExpiryDays'
+          +-[PARAM] Node: '?'
+          \-[PARAM] Node: '?'
+
+14:19:29,214 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,215 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Employee (e) -> employee0_
+14:19:29,215 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.person_id
+14:19:29,215 DEBUG DotNode:599 - getDataType() : passwordExpiryDays -> org.hibernate.type.DoubleType@26e7f2ac
+14:19:29,215 DEBUG FromReferenceNode:74 - Resolved : e.passwordExpiryDays -> employee0_.pwd_expiry_weeks * 7.0E0
+14:19:29,215  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 86.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:19:29,223  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 92.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:19:29,223 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} UEmployee employee0_ ) ( where ( between ( employee0_.pwd_expiry_weeks * 7.0E0 employee0_.person_id passwordExpiryDays ) ? ? ) ) )
+14:19:29,223 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,223 DEBUG JoinProcessor:175 - Using FROM fragment [UEmployee employee0_]
+14:19:29,224 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.person_id as person1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=UEmployee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Employee}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'employee0_.name as name2_, employee0_.sex as sex2_, employee0_.height_centimeters / 2.54E0 as height4_2_, employee0_.address as address2_, employee0_.zip as zip2_, employee0_.country as country2_, employee0_.title as title1_, employee0_.salary as salary1_, employee0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, employee0_.manager as manager1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'UEmployee employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=UEmployee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[BETWEEN] BetweenOperatorNode: 'between'
+          +-[DOT] DotNode: 'employee0_.pwd_expiry_weeks * 7.0E0' {propertyName=passwordExpiryDays,dereferenceType=ALL,propertyPath=passwordExpiryDays,path=e.passwordExpiryDays,tableAlias=employee0_,className=org.hibernate.test.unionsubclass2.Employee,classAlias=e}
+          |  +-[ALIAS_REF] IdentNode: 'employee0_.person_id' {alias=e, className=org.hibernate.test.unionsubclass2.Employee, tableAlias=employee0_}
+          |  \-[IDENT] IdentNode: 'passwordExpiryDays' {originalText=passwordExpiryDays}
+          +-[PARAM] ParameterNode: '?' {ordinal=0, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+          \-[PARAM] ParameterNode: '?' {ordinal=1, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+
+14:19:29,224 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,224 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Employee e where e.passwordExpiryDays between ? and ?
+14:19:29,224 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.person_id as person1_2_, employee0_.name as name2_, employee0_.sex as sex2_, employee0_.height_centimeters / 2.54E0 as height4_2_, employee0_.address as address2_, employee0_.zip as zip2_, employee0_.country as country2_, employee0_.title as title1_, employee0_.salary as salary1_, employee0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, employee0_.manager as manager1_ from UEmployee employee0_ where employee0_.pwd_expiry_weeks * 7.0E0 between ? and ?
+14:19:29,224 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,225 DEBUG SQL:104 - 
+    select
+        employee0_.person_id as person1_2_,
+        employee0_.name as name2_,
+        employee0_.sex as sex2_,
+        employee0_.height_centimeters / 2.54E0 as height4_2_,
+        employee0_.address as address2_,
+        employee0_.zip as zip2_,
+        employee0_.country as country2_,
+        employee0_.title as title1_,
+        employee0_.salary as salary1_,
+        employee0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_,
+        employee0_.manager as manager1_ 
+    from
+        UEmployee employee0_ 
+    where
+        employee0_.pwd_expiry_weeks * 7.0E0 between ? and ?
+14:19:29,235 DEBUG SQL:104 - 
+    update
+        UPerson 
+    set
+        name=?,
+        height_centimeters=? * 2.54E0,
+        address=?,
+        zip=?,
+        country=? 
+    where
+        person_id=?
+14:19:29,236 DEBUG SQL:104 - 
+    update
+        UEmployee 
+    set
+        name=?,
+        height_centimeters=? * 2.54E0,
+        address=?,
+        zip=?,
+        country=?,
+        title=?,
+        salary=?,
+        pwd_expiry_weeks=? / 7.0E0,
+        manager=? 
+    where
+        person_id=?
+14:19:29,236 DEBUG SQL:104 - 
+    select
+        height_centimeters 
+    from
+        UPerson 
+    where
+        name='Emmanuel'
+14:19:29,237 DEBUG SQL:104 - 
+    select
+        pwd_expiry_weeks 
+    from
+        UEmployee 
+    where
+        person_id=?
+14:19:29,237 DEBUG SQL:104 - 
+    delete 
+    from
+        UPerson 
+    where
+        person_id=?
+14:19:29,237 DEBUG SQL:104 - 
+    delete 
+    from
+        UEmployee 
+    where
+        person_id=?
+14:19:29,248  INFO CustomRunner:139 - Test: testQuerySubclassAttribute
+14:19:29,250 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Person where salary > 100
+14:19:29,250 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'unionsubclass2'
+    |           \-[IDENT] Node: 'Person'
+    \-[WHERE] Node: 'where'
+       \-[GT] Node: '>'
+          +-[IDENT] Node: 'salary'
+          \-[NUM_INT] Node: '100'
+
+14:19:29,251 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,251 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Person (<no alias>) -> person0_
+14:19:29,251 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:29,251 DEBUG DotNode:599 - getDataType() : salary -> org.hibernate.type.BigDecimalType@3bb4a749
+14:19:29,251 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.salary -> person0_.salary
+14:19:29,259 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ ) ( where ( > ( person0_.salary {synthetic-alias} salary ) 100 ) ) )
+14:19:29,259 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,259 DEBUG JoinProcessor:175 - Using FROM fragment [( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_]
+14:19:29,260 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[GT] BinaryLogicOperatorNode: '>'
+          +-[DOT] DotNode: 'person0_.salary' {propertyName=salary,dereferenceType=ALL,propertyPath=salary,path={synthetic-alias}.salary,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'salary' {originalText=salary}
+          \-[NUM_INT] LiteralNode: '100'
+
+14:19:29,260 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,260 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Person where salary > 100
+14:19:29,260 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_2_, person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_ from ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ where person0_.salary>100
+14:19:29,260 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,261 DEBUG SQL:104 - 
+    insert 
+    into
+        UPerson
+        (name, sex, height_centimeters, address, zip, country, person_id) 
+    values
+        (?, ?, ? * 2.54E0, ?, ?, ?, ?)
+14:19:29,261 DEBUG SQL:104 - 
+    insert 
+    into
+        UEmployee
+        (name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, person_id) 
+    values
+        (?, ?, ? * 2.54E0, ?, ?, ?, ?, ?, ? / 7.0E0, ?, ?)
+14:19:29,262 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_2_,
+        person0_.name as name2_,
+        person0_.sex as sex2_,
+        person0_.height_centimeters / 2.54E0 as height4_2_,
+        person0_.address as address2_,
+        person0_.zip as zip2_,
+        person0_.country as country2_,
+        person0_.title as title1_,
+        person0_.salary as salary1_,
+        person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_,
+        person0_.manager as manager1_,
+        person0_.comments as comments0_,
+        person0_.salesperson as salesper2_0_,
+        person0_.clazz_ as clazz_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_ 
+where
+    person0_.salary>100
+14:19:29,301 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Person where salary > 100 or name like 'E%'
+14:19:29,302 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'unionsubclass2'
+    |           \-[IDENT] Node: 'Person'
+    \-[WHERE] Node: 'where'
+       \-[OR] Node: 'or'
+          +-[GT] Node: '>'
+          |  +-[IDENT] Node: 'salary'
+          |  \-[NUM_INT] Node: '100'
+          \-[LIKE] Node: 'like'
+             +-[IDENT] Node: 'name'
+             \-[QUOTED_STRING] Node: ''E%''
+
+14:19:29,302 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,310 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Person (<no alias>) -> person0_
+14:19:29,311 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:29,311 DEBUG DotNode:599 - getDataType() : salary -> org.hibernate.type.BigDecimalType@3bb4a749
+14:19:29,311 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.salary -> person0_.salary
+14:19:29,311 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:29,311 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:29,311 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> person0_.name
+14:19:29,311 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ ) ( where ( or ( > ( person0_.salary {synthetic-alias} salary ) 100 ) ( like ( person0_.name {synthetic-alias} name ) 'E%' ) ) ) )
+14:19:29,312 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,312 DEBUG JoinProcessor:175 - Using FROM fragment [( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_]
+14:19:29,312 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[OR] SqlNode: 'or'
+          +-[GT] BinaryLogicOperatorNode: '>'
+          |  +-[DOT] DotNode: 'person0_.salary' {propertyName=salary,dereferenceType=ALL,propertyPath=salary,path={synthetic-alias}.salary,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=null}
+          |  |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  |  \-[IDENT] IdentNode: 'salary' {originalText=salary}
+          |  \-[NUM_INT] LiteralNode: '100'
+          \-[LIKE] BinaryLogicOperatorNode: 'like'
+             +-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=null}
+             |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             |  \-[IDENT] IdentNode: 'name' {originalText=name}
+             \-[QUOTED_STRING] LiteralNode: ''E%''
+
+14:19:29,320 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,321 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Person where salary > 100 or name like 'E%'
+14:19:29,321 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_2_, person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_ from ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ where person0_.salary>100 or person0_.name like 'E%'
+14:19:29,321 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,322 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_2_,
+        person0_.name as name2_,
+        person0_.sex as sex2_,
+        person0_.height_centimeters / 2.54E0 as height4_2_,
+        person0_.address as address2_,
+        person0_.zip as zip2_,
+        person0_.country as country2_,
+        person0_.title as title1_,
+        person0_.salary as salary1_,
+        person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_,
+        person0_.manager as manager1_,
+        person0_.comments as comments0_,
+        person0_.salesperson as salesper2_0_,
+        person0_.clazz_ as clazz_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_ 
+where
+    person0_.salary>100 
+    or person0_.name like 'E%'
+14:19:29,342 DEBUG SQL:104 - 
+    select
+        this_.person_id as person1_2_0_,
+        this_.name as name2_0_,
+        this_.sex as sex2_0_,
+        this_.height_centimeters / 2.54E0 as height4_2_0_,
+        this_.address as address2_0_,
+        this_.zip as zip2_0_,
+        this_.country as country2_0_,
+        this_.title as title1_0_,
+        this_.salary as salary1_0_,
+        this_.pwd_expiry_weeks * 7.0E0 as pwd3_1_0_,
+        this_.manager as manager1_0_,
+        this_.comments as comments0_0_,
+        this_.salesperson as salesper2_0_0_,
+        this_.clazz_ as clazz_0_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) this_ 
+where
+    this_.salary>?
+14:19:29,370 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select salary from org.hibernate.test.unionsubclass2.Person where salary > 100
+14:19:29,371 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     \-[DOT] Node: '.'
+    |  |        +-[DOT] Node: '.'
+    |  |        |  +-[DOT] Node: '.'
+    |  |        |  |  +-[DOT] Node: '.'
+    |  |        |  |  |  +-[IDENT] Node: 'org'
+    |  |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |        |  |  \-[IDENT] Node: 'test'
+    |  |        |  \-[IDENT] Node: 'unionsubclass2'
+    |  |        \-[IDENT] Node: 'Person'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'salary'
+    \-[WHERE] Node: 'where'
+       \-[GT] Node: '>'
+          +-[IDENT] Node: 'salary'
+          \-[NUM_INT] Node: '100'
+
+14:19:29,371 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,371 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Person (<no alias>) -> person0_
+14:19:29,371 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:29,379 DEBUG DotNode:599 - getDataType() : salary -> org.hibernate.type.BigDecimalType@3bb4a749
+14:19:29,379 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.salary -> person0_.salary
+14:19:29,380 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:29,380 DEBUG DotNode:599 - getDataType() : salary -> org.hibernate.type.BigDecimalType@3bb4a749
+14:19:29,380 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.salary -> person0_.salary
+14:19:29,380 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( person0_.salary {synthetic-alias} salary ) ) ( FromClause{level=1} ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ ) ( where ( > ( person0_.salary {synthetic-alias} salary ) 100 ) ) )
+14:19:29,380 DEBUG JoinProcessor:175 - Using FROM fragment [( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_]
+14:19:29,380 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'person0_.salary' {propertyName=salary,dereferenceType=ALL,propertyPath=salary,path={synthetic-alias}.salary,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=null}
+    |  |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+    |  |  \-[IDENT] IdentNode: 'salary' {originalText=salary}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[GT] BinaryLogicOperatorNode: '>'
+          +-[DOT] DotNode: 'person0_.salary' {propertyName=salary,dereferenceType=ALL,propertyPath=salary,path={synthetic-alias}.salary,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'salary' {originalText=salary}
+          \-[NUM_INT] LiteralNode: '100'
+
+14:19:29,381 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,381 DEBUG QueryTranslatorImpl:235 - HQL: select salary from org.hibernate.test.unionsubclass2.Person where salary > 100
+14:19:29,381 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.salary as col_0_0_ from ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ where person0_.salary>100
+14:19:29,381 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,381 DEBUG SQL:104 - 
+    select
+        person0_.salary as col_0_0_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_ 
+where
+    person0_.salary>100
+14:19:29,414 DEBUG SQL:104 - 
+    delete 
+    from
+        UPerson 
+    where
+        person_id=?
+14:19:29,414 DEBUG SQL:104 - 
+    delete 
+    from
+        UEmployee 
+    where
+        person_id=?
+14:19:29,415  INFO CustomRunner:139 - Test: testUnionSubclass
+14:19:29,423  WARN QuerySplitter:128 - HHH000183: no persistent classes found for query class: from java.io.Serializable
+14:19:29,424 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Person
+14:19:29,425 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'unionsubclass2'
+                \-[IDENT] Node: 'Person'
+
+14:19:29,425 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,426 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Person (<no alias>) -> person0_
+14:19:29,426 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ ) )
+14:19:29,426 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,426 DEBUG JoinProcessor:175 - Using FROM fragment [( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_]
+14:19:29,426 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: '( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}
+
+14:19:29,427 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,427 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Person
+14:19:29,438 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_2_, person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_ from ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_
+14:19:29,438 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,439 DEBUG SQL:104 - 
+    insert 
+    into
+        UPerson
+        (name, sex, height_centimeters, address, zip, country, person_id) 
+    values
+        (?, ?, ? * 2.54E0, ?, ?, ?, ?)
+14:19:29,439 DEBUG SQL:104 - 
+    insert 
+    into
+        UEmployee
+        (name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, person_id) 
+    values
+        (?, ?, ? * 2.54E0, ?, ?, ?, ?, ?, ? / 7.0E0, ?, ?)
+14:19:29,439 DEBUG SQL:104 - 
+    insert 
+    into
+        UCustomer
+        (name, sex, height_centimeters, address, zip, country, comments, salesperson, person_id) 
+    values
+        (?, ?, ? * 2.54E0, ?, ?, ?, ?, ?, ?)
+14:19:29,440 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_2_,
+        person0_.name as name2_,
+        person0_.sex as sex2_,
+        person0_.height_centimeters / 2.54E0 as height4_2_,
+        person0_.address as address2_,
+        person0_.zip as zip2_,
+        person0_.country as country2_,
+        person0_.title as title1_,
+        person0_.salary as salary1_,
+        person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_,
+        person0_.manager as manager1_,
+        person0_.comments as comments0_,
+        person0_.salesperson as salesper2_0_,
+        person0_.clazz_ as clazz_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_
+14:19:29,483 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Person p where p.class = Customer
+14:19:29,484 DEBUG HqlParser:378 - handleDotIdent() : new LT(2) token - [".",<15> previously: <15>,line=1,col=56,possibleID=false]
+14:19:29,485 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'unionsubclass2'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'class'
+          \-[IDENT] Node: 'Customer'
+
+14:19:29,514 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,515 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Person (p) -> person0_
+14:19:29,515 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:19:29,515 DEBUG DotNode:599 - getDataType() : class -> org.hibernate.type.IntegerType@42252fee
+14:19:29,515 DEBUG FromReferenceNode:74 - Resolved : p.class -> clazz_
+14:19:29,516 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ ) ( where ( = ( clazz_ person0_.person_id class ) 2 ) ) )
+14:19:29,516 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,516 DEBUG JoinProcessor:175 - Using FROM fragment [( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_]
+14:19:29,516 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'clazz_' {propertyName=class,dereferenceType=ALL,propertyPath=class,path=p.class,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.unionsubclass2.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'class' {originalText=class}
+          \-[IDENT] IdentNode: '2' {originalText=Customer}
+
+14:19:29,517 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,517 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Person p where p.class = Customer
+14:19:29,517 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_2_, person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_ from ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ where clazz_=2
+14:19:29,517 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,517 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_2_,
+        person0_.name as name2_,
+        person0_.sex as sex2_,
+        person0_.height_centimeters / 2.54E0 as height4_2_,
+        person0_.address as address2_,
+        person0_.zip as zip2_,
+        person0_.country as country2_,
+        person0_.title as title1_,
+        person0_.salary as salary1_,
+        person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_,
+        person0_.manager as manager1_,
+        person0_.comments as comments0_,
+        person0_.salesperson as salesper2_0_,
+        person0_.clazz_ as clazz_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_ 
+where
+    clazz_=2
+14:19:29,540 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Person p where p.class = Person
+14:19:29,540 DEBUG HqlParser:378 - handleDotIdent() : new LT(2) token - [".",<15> previously: <15>,line=1,col=56,possibleID=false]
+14:19:29,541 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'unionsubclass2'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'class'
+          \-[IDENT] Node: 'Person'
+
+14:19:29,541 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,541 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Person (p) -> person0_
+14:19:29,542 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:19:29,542 DEBUG DotNode:599 - getDataType() : class -> org.hibernate.type.IntegerType@42252fee
+14:19:29,542 DEBUG FromReferenceNode:74 - Resolved : p.class -> clazz_
+14:19:29,542 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ ) ( where ( = ( clazz_ person0_.person_id class ) 0 ) ) )
+14:19:29,561 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,561 DEBUG JoinProcessor:175 - Using FROM fragment [( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_]
+14:19:29,562 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'clazz_' {propertyName=class,dereferenceType=ALL,propertyPath=class,path=p.class,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.unionsubclass2.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'class' {originalText=class}
+          \-[IDENT] IdentNode: '0' {originalText=Person}
+
+14:19:29,562 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,563 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Person p where p.class = Person
+14:19:29,563 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_2_, person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_ from ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ where clazz_=0
+14:19:29,563 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,563 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_2_,
+        person0_.name as name2_,
+        person0_.sex as sex2_,
+        person0_.height_centimeters / 2.54E0 as height4_2_,
+        person0_.address as address2_,
+        person0_.zip as zip2_,
+        person0_.country as country2_,
+        person0_.title as title1_,
+        person0_.salary as salary1_,
+        person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_,
+        person0_.manager as manager1_,
+        person0_.comments as comments0_,
+        person0_.salesperson as salesper2_0_,
+        person0_.clazz_ as clazz_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_ 
+where
+    clazz_=0
+14:19:29,588 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Person p where type(p) in :who
+14:19:29,590 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'unionsubclass2'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[IN] Node: 'in'
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'type'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     \-[IDENT] Node: 'p'
+          \-[IN_LIST] Node: 'inList'
+             \-[COLON] Node: ':'
+                \-[IDENT] Node: 'who'
+
+14:19:29,599 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,600 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Person (p) -> person0_
+14:19:29,600 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:19:29,600 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ ) ( where ( in ( clazz_ type ( exprList person0_.person_id ) ) ( inList ? ) ) ) )
+14:19:29,601 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,601 DEBUG JoinProcessor:175 - Using FROM fragment [( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_]
+14:19:29,601 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IN] InLogicOperatorNode: 'in'
+          +-[SQL_TOKEN] MethodNode: 'clazz_'
+          |  +-[METHOD_NAME] IdentNode: 'type' {originalText=type}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     \-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.unionsubclass2.Person, tableAlias=person0_}
+          \-[IN_LIST] SqlNode: 'inList'
+             \-[NAMED_PARAM] ParameterNode: '?' {name=who, expectedType=org.hibernate.persister.entity.DiscriminatorType@3d14db1c}
+
+14:19:29,610 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,610 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Person p where type(p) in :who
+14:19:29,610 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_2_, person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_ from ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ where clazz_ in (?)
+14:19:29,610 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,611 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_2_,
+        person0_.name as name2_,
+        person0_.sex as sex2_,
+        person0_.height_centimeters / 2.54E0 as height4_2_,
+        person0_.address as address2_,
+        person0_.zip as zip2_,
+        person0_.country as country2_,
+        person0_.title as title1_,
+        person0_.salary as salary1_,
+        person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_,
+        person0_.manager as manager1_,
+        person0_.comments as comments0_,
+        person0_.salesperson as salesper2_0_,
+        person0_.clazz_ as clazz_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_ 
+where
+    clazz_ in (
+        ?
+    )
+14:19:29,642 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Person p where type(p) in (:who0_, :who1_)
+14:19:29,643 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'unionsubclass2'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[IN] Node: 'in'
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'type'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     \-[IDENT] Node: 'p'
+          \-[IN_LIST] Node: 'inList'
+             +-[COLON] Node: ':'
+             |  \-[IDENT] Node: 'who0_'
+             \-[COLON] Node: ':'
+                \-[IDENT] Node: 'who1_'
+
+14:19:29,643 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,643 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Person (p) -> person0_
+14:19:29,643 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:19:29,644 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ ) ( where ( in ( clazz_ type ( exprList person0_.person_id ) ) ( inList ? ? ) ) ) )
+14:19:29,644 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,644 DEBUG JoinProcessor:175 - Using FROM fragment [( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_]
+14:19:29,644 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IN] InLogicOperatorNode: 'in'
+          +-[SQL_TOKEN] MethodNode: 'clazz_'
+          |  +-[METHOD_NAME] IdentNode: 'type' {originalText=type}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     \-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.unionsubclass2.Person, tableAlias=person0_}
+          \-[IN_LIST] SqlNode: 'inList'
+             +-[NAMED_PARAM] ParameterNode: '?' {name=who0_, expectedType=org.hibernate.persister.entity.DiscriminatorType@191af923}
+             \-[NAMED_PARAM] ParameterNode: '?' {name=who1_, expectedType=org.hibernate.persister.entity.DiscriminatorType@191af923}
+
+14:19:29,644 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,644 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Person p where type(p) in (:who0_, :who1_)
+14:19:29,645 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_2_, person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_ from ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ where clazz_ in (? , ?)
+14:19:29,653 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,654 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_2_,
+        person0_.name as name2_,
+        person0_.sex as sex2_,
+        person0_.height_centimeters / 2.54E0 as height4_2_,
+        person0_.address as address2_,
+        person0_.zip as zip2_,
+        person0_.country as country2_,
+        person0_.title as title1_,
+        person0_.salary as salary1_,
+        person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_,
+        person0_.manager as manager1_,
+        person0_.comments as comments0_,
+        person0_.salesperson as salesper2_0_,
+        person0_.clazz_ as clazz_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_ 
+where
+    clazz_ in (
+        ? , ?
+    )
+14:19:29,686 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Customer c left join fetch c.salesperson
+14:19:29,687 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'unionsubclass2'
+          |  |  \-[IDENT] Node: 'Customer'
+          |  \-[ALIAS] Node: 'c'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'c'
+                \-[IDENT] Node: 'salesperson'
+
+14:19:29,687 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,687 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Customer (c) -> customer0_
+14:19:29,687 DEBUG FromReferenceNode:74 - Resolved : c -> customer0_.person_id
+14:19:29,687 DEBUG DotNode:599 - getDataType() : salesperson -> org.hibernate.type.ManyToOneType(org.hibernate.test.unionsubclass2.Employee)
+14:19:29,687 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for salesperson in org.hibernate.test.unionsubclass2.Customer (<no alias>) parent = [ {null} ]
+14:19:29,688 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Employee (<no alias>) -> employee1_
+14:19:29,688 DEBUG FromClause:282 - addJoinByPathMap() : c.salesperson -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=UEmployee,tableAlias=employee1_,origin=UCustomer customer0_,columns={customer0_.salesperson ,className=org.hibernate.test.unionsubclass2.Employee}}
+14:19:29,694 DEBUG FromReferenceNode:74 - Resolved : c.salesperson -> customer0_.salesperson
+14:19:29,694 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'UEmployee employee1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=UEmployee,tableAlias=employee1_,origin=UCustomer customer0_,columns={customer0_.salesperson ,className=org.hibernate.test.unionsubclass2.Employee}}
+
+14:19:29,694 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( UCustomer customer0_ UEmployee employee1_ ) ) )
+14:19:29,694 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,695 DEBUG JoinProcessor:175 - Using FROM fragment [UCustomer customer0_]
+14:19:29,695 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join UEmployee employee1_ on customer0_.salesperson=employee1_.person_id]
+14:19:29,695 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'customer0_.person_id as person1_2_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=UCustomer,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Customer}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee1_.person_id as person1_2_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=UEmployee,tableAlias=employee1_,origin=UCustomer customer0_,columns={customer0_.salesperson ,className=org.hibernate.test.unionsubclass2.Employee}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'customer0_.name as name2_0_, customer0_.sex as sex2_0_, customer0_.height_centimeters / 2.54E0 as height4_2_0_, customer0_.address as address2_0_, customer0_.zip as zip2_0_, customer0_.country as country2_0_, customer0_.comments as comments0_0_, customer0_.salesperson as salesper2_0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'employee1_.name as name2_1_, employee1_.sex as sex2_1_, employee1_.height_centimeters / 2.54E0 as height4_2_1_, employee1_.address as address2_1_, employee1_.zip as zip2_1_, employee1_.country as country2_1_, employee1_.title as title1_1_, employee1_.salary as salary1_1_, employee1_.pwd_expiry_weeks * 7.0E0 as pwd3_1_1_, employee1_.manager as manager1_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[c], fromElementByTableAlias=[customer0_, employee1_], fromElementsByPath=[c.salesperson], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'UCustomer customer0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=UCustomer,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Customer}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join UEmployee employee1_ on customer0_.salesperson=employee1_.person_id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=UEmployee,tableAlias=employee1_,origin=UCustomer customer0_,columns={customer0_.salesperson ,className=org.hibernate.test.unionsubclass2.Employee}}
+
+14:19:29,695 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,695 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Customer c left join fetch c.salesperson
+14:19:29,695 DEBUG QueryTranslatorImpl:236 - SQL: select customer0_.person_id as person1_2_0_, employee1_.person_id as person1_2_1_, customer0_.name as name2_0_, customer0_.sex as sex2_0_, customer0_.height_centimeters / 2.54E0 as height4_2_0_, customer0_.address as address2_0_, customer0_.zip as zip2_0_, customer0_.country as country2_0_, customer0_.comments as comments0_0_, customer0_.salesperson as salesper2_0_0_, employee1_.name as name2_1_, employee1_.sex as sex2_1_, employee1_.height_centimeters / 2.54E0 as height4_2_1_, employee1_.address as address2_1_, employee1_.zip as zip2_1_, employee1_.country as country2_1_, employee1_.title as title1_1_, employee1_.salary as salary1_1_, employee1_.pwd_expiry_weeks * 7.0E0 as pwd3_1_1_, employee1_.manager as manager1_1_ from UCustomer customer0_ left outer join UEmployee employee1_ on customer0_.salesperson=employee1_.person_id
+14:19:29,695 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,696 DEBUG SQL:104 - 
+    select
+        customer0_.person_id as person1_2_0_,
+        employee1_.person_id as person1_2_1_,
+        customer0_.name as name2_0_,
+        customer0_.sex as sex2_0_,
+        customer0_.height_centimeters / 2.54E0 as height4_2_0_,
+        customer0_.address as address2_0_,
+        customer0_.zip as zip2_0_,
+        customer0_.country as country2_0_,
+        customer0_.comments as comments0_0_,
+        customer0_.salesperson as salesper2_0_0_,
+        employee1_.name as name2_1_,
+        employee1_.sex as sex2_1_,
+        employee1_.height_centimeters / 2.54E0 as height4_2_1_,
+        employee1_.address as address2_1_,
+        employee1_.zip as zip2_1_,
+        employee1_.country as country2_1_,
+        employee1_.title as title1_1_,
+        employee1_.salary as salary1_1_,
+        employee1_.pwd_expiry_weeks * 7.0E0 as pwd3_1_1_,
+        employee1_.manager as manager1_1_ 
+    from
+        UCustomer customer0_ 
+    left outer join
+        UEmployee employee1_ 
+            on customer0_.salesperson=employee1_.person_id
+14:19:29,706 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Customer
+14:19:29,706 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'unionsubclass2'
+                \-[IDENT] Node: 'Customer'
+
+14:19:29,714 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,714 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Customer (<no alias>) -> customer0_
+14:19:29,714 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} UCustomer customer0_ ) )
+14:19:29,715 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,715 DEBUG JoinProcessor:175 - Using FROM fragment [UCustomer customer0_]
+14:19:29,715 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'customer0_.person_id as person1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=UCustomer,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Customer}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'customer0_.name as name2_, customer0_.sex as sex2_, customer0_.height_centimeters / 2.54E0 as height4_2_, customer0_.address as address2_, customer0_.zip as zip2_, customer0_.country as country2_, customer0_.comments as comments0_, customer0_.salesperson as salesper2_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[customer0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'UCustomer customer0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=UCustomer,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Customer}}
+
+14:19:29,715 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,715 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Customer
+14:19:29,715 DEBUG QueryTranslatorImpl:236 - SQL: select customer0_.person_id as person1_2_, customer0_.name as name2_, customer0_.sex as sex2_, customer0_.height_centimeters / 2.54E0 as height4_2_, customer0_.address as address2_, customer0_.zip as zip2_, customer0_.country as country2_, customer0_.comments as comments0_, customer0_.salesperson as salesper2_0_ from UCustomer customer0_
+14:19:29,715 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,716 DEBUG SQL:104 - 
+    select
+        customer0_.person_id as person1_2_,
+        customer0_.name as name2_,
+        customer0_.sex as sex2_,
+        customer0_.height_centimeters / 2.54E0 as height4_2_,
+        customer0_.address as address2_,
+        customer0_.zip as zip2_,
+        customer0_.country as country2_,
+        customer0_.comments as comments0_,
+        customer0_.salesperson as salesper2_0_ 
+    from
+        UCustomer customer0_
+14:19:29,725 DEBUG SQL:104 - 
+    select
+        employee0_.person_id as person1_2_0_,
+        employee0_.name as name2_0_,
+        employee0_.sex as sex2_0_,
+        employee0_.height_centimeters / 2.54E0 as height4_2_0_,
+        employee0_.address as address2_0_,
+        employee0_.zip as zip2_0_,
+        employee0_.country as country2_0_,
+        employee0_.title as title1_0_,
+        employee0_.salary as salary1_0_,
+        employee0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_0_,
+        employee0_.manager as manager1_0_ 
+    from
+        UEmployee employee0_ 
+    where
+        employee0_.person_id=?
+14:19:29,726 DEBUG SQL:104 - 
+    select
+        employee0_.person_id as person1_2_0_,
+        employee0_.name as name2_0_,
+        employee0_.sex as sex2_0_,
+        employee0_.height_centimeters / 2.54E0 as height4_2_0_,
+        employee0_.address as address2_0_,
+        employee0_.zip as zip2_0_,
+        employee0_.country as country2_0_,
+        employee0_.title as title1_0_,
+        employee0_.salary as salary1_0_,
+        employee0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_0_,
+        employee0_.manager as manager1_0_ 
+    from
+        UEmployee employee0_ 
+    where
+        employee0_.person_id=?
+14:19:29,735 DEBUG SQL:104 - 
+    select
+        customer0_.person_id as person1_2_0_,
+        customer0_.name as name2_0_,
+        customer0_.sex as sex2_0_,
+        customer0_.height_centimeters / 2.54E0 as height4_2_0_,
+        customer0_.address as address2_0_,
+        customer0_.zip as zip2_0_,
+        customer0_.country as country2_0_,
+        customer0_.comments as comments0_0_,
+        customer0_.salesperson as salesper2_0_0_ 
+    from
+        UCustomer customer0_ 
+    where
+        customer0_.person_id=?
+14:19:29,735 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass2.Person p where p.address.zip = '30306'
+14:19:29,736 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'unionsubclass2'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'p'
+          |  |  \-[IDENT] Node: 'address'
+          |  \-[IDENT] Node: 'zip'
+          \-[QUOTED_STRING] Node: ''30306''
+
+14:19:29,743 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,744 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass2.Person (p) -> person0_
+14:19:29,744 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:19:29,744 DEBUG DotNode:599 - getDataType() : address -> org.hibernate.type.ComponentType@1cce2386
+14:19:29,753 DEBUG DotNode:585 - Unresolved property path is now 'address.zip'
+14:19:29,753 DEBUG FromReferenceNode:74 - Resolved : p.address -> person0_.zip
+14:19:29,754 DEBUG DotNode:599 - getDataType() : address.zip -> org.hibernate.type.StringType@2dc8de40
+14:19:29,754 DEBUG FromReferenceNode:74 - Resolved : p.address.zip -> person0_.zip
+14:19:29,754 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ ) ( where ( = ( person0_.zip ( person0_.zip person0_.person_id address ) zip ) '30306' ) ) )
+14:19:29,754 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,754 DEBUG JoinProcessor:175 - Using FROM fragment [( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_]
+14:19:29,755 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UEmployee,UCustomer,UPerson)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ),tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.unionsubclass2.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.zip' {propertyName=zip,dereferenceType=ALL,propertyPath=address.zip,path=p.address.zip,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=p}
+          |  +-[DOT] DotNode: 'person0_.zip' {propertyName=zip,dereferenceType=2,propertyPath=address.zip,path=p.address,tableAlias=person0_,className=org.hibernate.test.unionsubclass2.Person,classAlias=p}
+          |  |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.unionsubclass2.Person, tableAlias=person0_}
+          |  |  \-[IDENT] IdentNode: 'address' {originalText=address}
+          |  \-[IDENT] IdentNode: 'zip' {originalText=zip}
+          \-[QUOTED_STRING] LiteralNode: ''30306''
+
+14:19:29,755 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,755 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass2.Person p where p.address.zip = '30306'
+14:19:29,755 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_2_, person0_.name as name2_, person0_.sex as sex2_, person0_.height_centimeters / 2.54E0 as height4_2_, person0_.address as address2_, person0_.zip as zip2_, person0_.country as country2_, person0_.title as title1_, person0_.salary as salary1_, person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_, person0_.manager as manager1_, person0_.comments as comments0_, person0_.salesperson as salesper2_0_, person0_.clazz_ as clazz_ from ( select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, null as comments, null as salesperson, 0 as clazz_ from UPerson union all select person_id, name, sex, height_centimeters, address, zip, country, title, salary, pwd_expiry_weeks, manager, null as comments, null as salesperson, 1 as clazz_ from UEmployee union all select person_id, name, sex, height_centimeters, address, zip, country, null as title, null as salary, null as pwd_expiry_weeks, null as manager, comments, salesperson, 2 as clazz_ from UCustomer ) person0_ where person0_.zip='30306'
+14:19:29,755 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,756 DEBUG SQL:104 - 
+    update
+        UEmployee 
+    set
+        name=?,
+        height_centimeters=? * 2.54E0,
+        address=?,
+        zip=?,
+        country=?,
+        title=?,
+        salary=?,
+        pwd_expiry_weeks=? / 7.0E0,
+        manager=? 
+    where
+        person_id=?
+14:19:29,766 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_2_,
+        person0_.name as name2_,
+        person0_.sex as sex2_,
+        person0_.height_centimeters / 2.54E0 as height4_2_,
+        person0_.address as address2_,
+        person0_.zip as zip2_,
+        person0_.country as country2_,
+        person0_.title as title1_,
+        person0_.salary as salary1_,
+        person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_,
+        person0_.manager as manager1_,
+        person0_.comments as comments0_,
+        person0_.salesperson as salesper2_0_,
+        person0_.clazz_ as clazz_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_ 
+where
+    person0_.zip='30306'
+14:19:29,781 DEBUG SQL:104 - 
+    select
+        this_.person_id as person1_2_0_,
+        this_.name as name2_0_,
+        this_.sex as sex2_0_,
+        this_.height_centimeters / 2.54E0 as height4_2_0_,
+        this_.address as address2_0_,
+        this_.zip as zip2_0_,
+        this_.country as country2_0_,
+        this_.title as title1_0_,
+        this_.salary as salary1_0_,
+        this_.pwd_expiry_weeks * 7.0E0 as pwd3_1_0_,
+        this_.manager as manager1_0_,
+        this_.comments as comments0_0_,
+        this_.salesperson as salesper2_0_0_,
+        this_.clazz_ as clazz_0_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) this_ 
+where
+    (
+        (
+            this_.address = ? 
+            and this_.zip = ? 
+            and this_.country= ? 
+        ) 
+        or  (
+            this_.address = ? 
+            and this_.zip = ? 
+            and this_.country= ? 
+        )  
+    ) 
+14:19:29,849 DEBUG SQL:104 - 
+    update
+        UCustomer 
+    set
+        name=?,
+        height_centimeters=? * 2.54E0,
+        address=?,
+        zip=?,
+        country=?,
+        comments=?,
+        salesperson=? 
+    where
+        person_id=?
+14:19:29,849 DEBUG SQL:104 - 
+    delete 
+    from
+        UEmployee 
+    where
+        person_id=?
+14:19:29,850 DEBUG SQL:104 - 
+    delete 
+    from
+        UCustomer 
+    where
+        person_id=?
+14:19:29,850 DEBUG SQL:104 - 
+    delete 
+    from
+        UPerson 
+    where
+        person_id=?
+14:19:29,850 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_2_,
+        person0_.name as name2_,
+        person0_.sex as sex2_,
+        person0_.height_centimeters / 2.54E0 as height4_2_,
+        person0_.address as address2_,
+        person0_.zip as zip2_,
+        person0_.country as country2_,
+        person0_.title as title1_,
+        person0_.salary as salary1_,
+        person0_.pwd_expiry_weeks * 7.0E0 as pwd3_1_,
+        person0_.manager as manager1_,
+        person0_.comments as comments0_,
+        person0_.salesperson as salesper2_0_,
+        person0_.clazz_ as clazz_ 
+    from
+        ( select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            null as comments,
+            null as salesperson,
+            0 as clazz_ 
+        from
+            UPerson 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            title,
+            salary,
+            pwd_expiry_weeks,
+            manager,
+            null as comments,
+            null as salesperson,
+            1 as clazz_ 
+        from
+            UEmployee 
+        union
+        all select
+            person_id,
+            name,
+            sex,
+            height_centimeters,
+            address,
+            zip,
+            country,
+            null as title,
+            null as salary,
+            null as pwd_expiry_weeks,
+            null as manager,
+            comments,
+            salesperson,
+            2 as clazz_ 
+        from
+            UCustomer 
+    ) person0_
+14:19:29,864  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:29,872 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:29,872 DEBUG SQL:104 - 
+    alter table UCustomer 
+        drop constraint FK62B4BF5398311FBC
+14:19:29,872 DEBUG SQL:104 - 
+    alter table UEmployee 
+        drop constraint FK85B6262346644408
+14:19:29,873 DEBUG SQL:104 - 
+    drop table UCustomer if exists
+14:19:29,873 DEBUG SQL:104 - 
+    drop table UEmployee if exists
+14:19:29,873 DEBUG SQL:104 - 
+    drop table UPerson if exists
+14:19:29,873  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:29,874  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

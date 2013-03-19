@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.flush.TestClearBatchFetchQueueAfterFlush" tests="1" time="0.153" timestamp="2013-02-28T20:12:32">
+  <properties />
+  <testcase classname="org.hibernate.test.flush.TestClearBatchFetchQueueAfterFlush" name="testClearBatchFetchQueueAfterFlush" time="0.075" />
+  <system-out><![CDATA[14:12:32,787  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.flush.TestClearBatchFetchQueueAfterFlush
+14:12:32,796  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:32,796  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:32,797  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:32,797  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:32,797  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:32,798  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:32,798  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:32,799  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:32,799  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:32,799  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:32,825  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:32,825 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:32,826 DEBUG SQL:104 - 
+    alter table Author 
+        drop constraint FK75920DABF8DA94BA
+14:12:32,826 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Author drop constraint FK75920DABF8DA94BA
+14:12:32,826 ERROR SchemaExport:426 - Table "AUTHOR" not found; SQL statement:
+
+    alter table Author 
+        drop constraint FK75920DABF8DA94BA [42102-145]
+14:12:32,826 DEBUG SQL:104 - 
+    alter table Book 
+        drop constraint FK1FAF091F0B1D5A
+14:12:32,826 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Book drop constraint FK1FAF091F0B1D5A
+14:12:32,826 ERROR SchemaExport:426 - Table "BOOK" not found; SQL statement:
+
+    alter table Book 
+        drop constraint FK1FAF091F0B1D5A [42102-145]
+14:12:32,827 DEBUG SQL:104 - 
+    alter table BookStore_Book 
+        drop constraint FKE549E79015738D39
+14:12:32,827 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table BookStore_Book drop constraint FKE549E79015738D39
+14:12:32,827 ERROR SchemaExport:426 - Table "BOOKSTORE_BOOK" not found; SQL statement:
+
+    alter table BookStore_Book 
+        drop constraint FKE549E79015738D39 [42102-145]
+14:12:32,827 DEBUG SQL:104 - 
+    alter table BookStore_Book 
+        drop constraint FKE549E79055546F1A
+14:12:32,827 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table BookStore_Book drop constraint FKE549E79055546F1A
+14:12:32,827 ERROR SchemaExport:426 - Table "BOOKSTORE_BOOK" not found; SQL statement:
+
+    alter table BookStore_Book 
+        drop constraint FKE549E79055546F1A [42102-145]
+14:12:32,828 DEBUG SQL:104 - 
+    drop table Author if exists
+14:12:32,828 DEBUG SQL:104 - 
+    drop table Book if exists
+14:12:32,828 DEBUG SQL:104 - 
+    drop table BookStore if exists
+14:12:32,828 DEBUG SQL:104 - 
+    drop table BookStore_Book if exists
+14:12:32,828 DEBUG SQL:104 - 
+    drop table Publisher if exists
+14:12:32,828 DEBUG SQL:104 - 
+    create table Author (
+        id bigint not null,
+        name varchar(255),
+        publisher_id bigint,
+        primary key (id)
+    )
+14:12:32,829 DEBUG SQL:104 - 
+    create table Book (
+        id bigint not null,
+        title varchar(255),
+        author_id bigint,
+        primary key (id)
+    )
+14:12:32,829 DEBUG SQL:104 - 
+    create table BookStore (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:32,829 DEBUG SQL:104 - 
+    create table BookStore_Book (
+        BookStore_id bigint not null,
+        books_id bigint not null,
+        primary key (BookStore_id, books_id)
+    )
+14:12:32,829 DEBUG SQL:104 - 
+    create table Publisher (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:32,830 DEBUG SQL:104 - 
+    alter table Author 
+        add constraint FK75920DABF8DA94BA 
+        foreign key (publisher_id) 
+        references Publisher
+14:12:32,830 DEBUG SQL:104 - 
+    alter table Book 
+        add constraint FK1FAF091F0B1D5A 
+        foreign key (author_id) 
+        references Author
+14:12:32,831 DEBUG SQL:104 - 
+    alter table BookStore_Book 
+        add constraint FKE549E79015738D39 
+        foreign key (books_id) 
+        references Book
+14:12:32,831 DEBUG SQL:104 - 
+    alter table BookStore_Book 
+        add constraint FKE549E79055546F1A 
+        foreign key (BookStore_id) 
+        references BookStore
+14:12:32,832  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:32,832  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:32,832  INFO CustomRunner:139 - Test: testClearBatchFetchQueueAfterFlush
+14:12:32,833 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Author
+14:12:32,834 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Book
+14:12:32,841 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        BookStore
+14:12:32,843 DEBUG SQL:104 - 
+    insert 
+    into
+        Author
+        (name, publisher_id, id) 
+    values
+        (?, ?, ?)
+14:12:32,843 DEBUG SQL:104 - 
+    insert 
+    into
+        Book
+        (author_id, title, id) 
+    values
+        (?, ?, ?)
+14:12:32,844 DEBUG SQL:104 - 
+    insert 
+    into
+        Book
+        (author_id, title, id) 
+    values
+        (?, ?, ?)
+14:12:32,844 DEBUG SQL:104 - 
+    insert 
+    into
+        Book
+        (author_id, title, id) 
+    values
+        (?, ?, ?)
+14:12:32,857 DEBUG SQL:104 - 
+    insert 
+    into
+        BookStore
+        (name, id) 
+    values
+        (?, ?)
+14:12:32,857 DEBUG SQL:104 - 
+    insert 
+    into
+        BookStore
+        (name, id) 
+    values
+        (?, ?)
+14:12:32,858 DEBUG SQL:104 - 
+    insert 
+    into
+        BookStore
+        (name, id) 
+    values
+        (?, ?)
+14:12:32,858 DEBUG SQL:104 - 
+    insert 
+    into
+        BookStore_Book
+        (BookStore_id, books_id) 
+    values
+        (?, ?)
+14:12:32,858 DEBUG SQL:104 - 
+    insert 
+    into
+        BookStore_Book
+        (BookStore_id, books_id) 
+    values
+        (?, ?)
+14:12:32,858 DEBUG SQL:104 - 
+    insert 
+    into
+        BookStore_Book
+        (BookStore_id, books_id) 
+    values
+        (?, ?)
+14:12:32,859 DEBUG SQL:104 - 
+    select
+        bookstore0_.id as id2_0_,
+        bookstore0_.name as name2_0_ 
+    from
+        BookStore bookstore0_ 
+    where
+        bookstore0_.id in (
+            ?, ?, ?
+        )
+14:12:32,860 DEBUG SQL:104 - 
+    delete 
+    from
+        BookStore_Book 
+    where
+        BookStore_id=?
+14:12:32,878 DEBUG SQL:104 - 
+    delete 
+    from
+        BookStore 
+    where
+        id=?
+14:12:32,879 DEBUG SQL:104 - 
+    select
+        books0_.BookStore_id as BookStore1_2_3_,
+        books0_.books_id as books2_3_3_,
+        book1_.id as id1_0_,
+        book1_.author_id as author3_1_0_,
+        book1_.title as title1_0_,
+        author2_.id as id0_1_,
+        author2_.name as name0_1_,
+        author2_.publisher_id as publisher3_0_1_,
+        publisher3_.id as id4_2_,
+        publisher3_.name as name4_2_ 
+    from
+        BookStore_Book books0_ 
+    inner join
+        Book book1_ 
+            on books0_.books_id=book1_.id 
+    left outer join
+        Author author2_ 
+            on book1_.author_id=author2_.id 
+    left outer join
+        Publisher publisher3_ 
+            on author2_.publisher_id=publisher3_.id 
+    where
+        books0_.BookStore_id=?
+14:12:32,897 DEBUG SQL:104 - 
+    select
+        books0_.BookStore_id as BookStore1_2_3_,
+        books0_.books_id as books2_3_3_,
+        book1_.id as id1_0_,
+        book1_.author_id as author3_1_0_,
+        book1_.title as title1_0_,
+        author2_.id as id0_1_,
+        author2_.name as name0_1_,
+        author2_.publisher_id as publisher3_0_1_,
+        publisher3_.id as id4_2_,
+        publisher3_.name as name4_2_ 
+    from
+        BookStore_Book books0_ 
+    inner join
+        Book book1_ 
+            on books0_.books_id=book1_.id 
+    left outer join
+        Author author2_ 
+            on book1_.author_id=author2_.id 
+    left outer join
+        Publisher publisher3_ 
+            on author2_.publisher_id=publisher3_.id 
+    where
+        books0_.BookStore_id=?
+14:12:32,910  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:32,910 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:32,910 DEBUG SQL:104 - 
+    alter table Author 
+        drop constraint FK75920DABF8DA94BA
+14:12:32,911 DEBUG SQL:104 - 
+    alter table Book 
+        drop constraint FK1FAF091F0B1D5A
+14:12:32,911 DEBUG SQL:104 - 
+    alter table BookStore_Book 
+        drop constraint FKE549E79015738D39
+14:12:32,911 DEBUG SQL:104 - 
+    alter table BookStore_Book 
+        drop constraint FKE549E79055546F1A
+14:12:32,911 DEBUG SQL:104 - 
+    drop table Author if exists
+14:12:32,929 DEBUG SQL:104 - 
+    drop table Book if exists
+14:12:32,929 DEBUG SQL:104 - 
+    drop table BookStore if exists
+14:12:32,929 DEBUG SQL:104 - 
+    drop table BookStore_Book if exists
+14:12:32,929 DEBUG SQL:104 - 
+    drop table Publisher if exists
+14:12:32,937  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:32,938  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

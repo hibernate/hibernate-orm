@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.lob.ClobLocatorTest" tests="2" time="0.03" timestamp="2013-02-28T20:16:48">
+  <properties />
+  <testcase classname="org.hibernate.test.lob.ClobLocatorTest" name="testBoundedClobLocatorAccess" time="0.006" />
+  <testcase classname="org.hibernate.test.lob.ClobLocatorTest" name="testUnboundedClobLocatorAccess" time="0.004" />
+  <system-out><![CDATA[14:16:48,560  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.lob.ClobLocatorTest
+14:16:48,561  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/lob/LobMappings.hbm.xml
+14:16:48,566  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:16:48,566  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:16:48,566  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:16:48,567  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:16:48,567  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:16:48,568  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:48,568  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:16:48,569  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:16:48,569  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:16:48,569  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:16:48,572  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:48,573 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:48,573 DEBUG SQL:104 - 
+    drop table LOB_ENTITY if exists
+14:16:48,573 DEBUG SQL:104 - 
+    create table LOB_ENTITY (
+        ID bigint not null,
+        CLOB_DATA clob,
+        BLOB_DATA blob,
+        primary key (ID)
+    )
+14:16:48,574  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:48,574  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:16:48,574  INFO CustomRunner:139 - Test: testBoundedClobLocatorAccess
+14:16:48,576 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        LOB_ENTITY
+14:16:48,577 DEBUG SQL:104 - 
+    insert 
+    into
+        LOB_ENTITY
+        (CLOB_DATA, BLOB_DATA, ID) 
+    values
+        (?, ?, ?)
+14:16:48,577 DEBUG SQL:104 - 
+    select
+        lobholder0_.ID as ID0_0_,
+        lobholder0_.CLOB_DATA as CLOB2_0_0_,
+        lobholder0_.BLOB_DATA as BLOB3_0_0_ 
+    from
+        LOB_ENTITY lobholder0_ 
+    where
+        lobholder0_.ID=?
+14:16:48,578 DEBUG SQL:104 - 
+    select
+        lobholder0_.ID as ID0_0_,
+        lobholder0_.CLOB_DATA as CLOB2_0_0_,
+        lobholder0_.BLOB_DATA as BLOB3_0_0_ 
+    from
+        LOB_ENTITY lobholder0_ 
+    where
+        lobholder0_.ID=? for update
+            
+14:16:48,579 DEBUG SQL:104 - 
+    update
+        LOB_ENTITY 
+    set
+        CLOB_DATA=?,
+        BLOB_DATA=? 
+    where
+        ID=?
+14:16:48,579 DEBUG SQL:104 - 
+    select
+        lobholder0_.ID as ID0_0_,
+        lobholder0_.CLOB_DATA as CLOB2_0_0_,
+        lobholder0_.BLOB_DATA as BLOB3_0_0_ 
+    from
+        LOB_ENTITY lobholder0_ 
+    where
+        lobholder0_.ID=?
+14:16:48,579 DEBUG SQL:104 - 
+    update
+        LOB_ENTITY 
+    set
+        CLOB_DATA=?,
+        BLOB_DATA=? 
+    where
+        ID=?
+14:16:48,580 DEBUG SQL:104 - 
+    select
+        lobholder0_.ID as ID0_0_,
+        lobholder0_.CLOB_DATA as CLOB2_0_0_,
+        lobholder0_.BLOB_DATA as BLOB3_0_0_ 
+    from
+        LOB_ENTITY lobholder0_ 
+    where
+        lobholder0_.ID=?
+14:16:48,580 DEBUG SQL:104 - 
+    delete 
+    from
+        LOB_ENTITY 
+    where
+        ID=?
+14:16:48,581  INFO CustomRunner:139 - Test: testUnboundedClobLocatorAccess
+14:16:48,583 DEBUG SQL:104 - 
+    insert 
+    into
+        LOB_ENTITY
+        (CLOB_DATA, BLOB_DATA, ID) 
+    values
+        (?, ?, ?)
+14:16:48,583 DEBUG SQL:104 - 
+    select
+        lobholder0_.ID as ID0_0_,
+        lobholder0_.CLOB_DATA as CLOB2_0_0_,
+        lobholder0_.BLOB_DATA as BLOB3_0_0_ 
+    from
+        LOB_ENTITY lobholder0_ 
+    where
+        lobholder0_.ID=?
+14:16:48,584 DEBUG SQL:104 - 
+    delete 
+    from
+        LOB_ENTITY 
+    where
+        ID=?
+14:16:48,585  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:48,585 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:48,586 DEBUG SQL:104 - 
+    drop table LOB_ENTITY if exists
+14:16:48,587  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:48,587  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

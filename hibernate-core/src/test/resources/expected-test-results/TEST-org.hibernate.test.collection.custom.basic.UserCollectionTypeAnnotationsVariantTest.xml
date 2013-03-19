@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.collection.custom.basic.UserCollectionTypeAnnotationsVariantTest" tests="1" time="0.14" timestamp="2013-02-28T20:11:55">
+  <properties />
+  <testcase classname="org.hibernate.test.collection.custom.basic.UserCollectionTypeAnnotationsVariantTest" name="testBasicOperation" time="0.045" />
+  <system-out><![CDATA[14:11:55,661  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.collection.custom.basic.UserCollectionTypeAnnotationsVariantTest
+14:11:55,682  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:55,683  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:55,683  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:55,683  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:55,683  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:55,685  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:55,685  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:55,686  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:55,686  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:55,686  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:55,731  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:55,732 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:55,732 DEBUG SQL:104 - 
+    alter table Email 
+        drop constraint FK3FF5B7C713D704
+14:11:55,732 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Email drop constraint FK3FF5B7C713D704
+14:11:55,733 ERROR SchemaExport:426 - Table "EMAIL" not found; SQL statement:
+
+    alter table Email 
+        drop constraint FK3FF5B7C713D704 [42102-145]
+14:11:55,733 DEBUG SQL:104 - 
+    drop table Email if exists
+14:11:55,733 DEBUG SQL:104 - 
+    drop table UC_BSC_USER if exists
+14:11:55,733 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:11:55,733 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:11:55,733 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:11:55,733 DEBUG SQL:104 - 
+    create table Email (
+        id bigint not null,
+        address varchar(255),
+        userName varchar(255),
+        displayOrder integer,
+        primary key (id)
+    )
+14:11:55,734 DEBUG SQL:104 - 
+    create table UC_BSC_USER (
+        userName varchar(255) not null,
+        primary key (userName)
+    )
+14:11:55,734 DEBUG SQL:104 - 
+    alter table Email 
+        add constraint FK3FF5B7C713D704 
+        foreign key (userName) 
+        references UC_BSC_USER
+14:11:55,735 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:11:55,735  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:55,736  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:55,736  INFO CustomRunner:139 - Test: testBasicOperation
+14:11:55,738 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.custom.basic.User] lookup : key[org.hibernate.test.collection.custom.basic.User#max]
+14:11:55,740 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:11:55,740 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:11:55,742 DEBUG SQL:104 - 
+    insert 
+    into
+        UC_BSC_USER
+        (userName) 
+    values
+        (?)
+14:11:55,742 DEBUG SQL:104 - 
+    insert 
+    into
+        Email
+        (address, id) 
+    values
+        (?, ?)
+14:11:55,748 DEBUG SQL:104 - 
+    insert 
+    into
+        Email
+        (address, id) 
+    values
+        (?, ?)
+14:11:55,748 DEBUG SQL:104 - 
+    update
+        Email 
+    set
+        userName=?,
+        displayOrder=? 
+    where
+        id=?
+14:11:55,749 DEBUG SQL:104 - 
+    update
+        Email 
+    set
+        userName=?,
+        displayOrder=? 
+    where
+        id=?
+14:11:55,750 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.custom.basic.User.emailAddresses]: org.hibernate.test.collection.custom.basic.User.emailAddresses#max
+14:11:55,750 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.custom.basic.User.emailAddresses]: org.hibernate.test.collection.custom.basic.User.emailAddresses#max
+14:11:55,751 DEBUG SQL:104 - 
+    select
+        this_.userName as userName1_1_,
+        emailaddre2_.userName as userName1_3_,
+        emailaddre2_.id as id0_3_,
+        emailaddre2_.displayOrder as displayO4_3_,
+        emailaddre2_.id as id0_0_,
+        emailaddre2_.address as address0_0_ 
+    from
+        UC_BSC_USER this_ 
+    left outer join
+        Email emailaddre2_ 
+            on this_.userName=emailaddre2_.userName
+14:11:55,752 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.custom.basic.Email#1
+14:11:55,752 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.custom.basic.Email] : [org.hibernate.test.collection.custom.basic.Email#1] -> [CacheEntry(org.hibernate.test.collection.custom.basic.Email)[max@hibernate.org]]
+14:11:55,753 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.custom.basic.User#max
+14:11:55,753 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.custom.basic.User] : [org.hibernate.test.collection.custom.basic.User#max] -> [CacheEntry(org.hibernate.test.collection.custom.basic.User)[max]]
+14:11:55,753 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.custom.basic.Email#2
+14:11:55,753 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.custom.basic.Email] : [org.hibernate.test.collection.custom.basic.Email#2] -> [CacheEntry(org.hibernate.test.collection.custom.basic.Email)[max.andersen@jboss.com]]
+14:11:55,754 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.custom.basic.User.emailAddresses#max
+14:11:55,754 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.custom.basic.User.emailAddresses] : [org.hibernate.test.collection.custom.basic.User.emailAddresses#max] -> [CollectionCacheEntry[1,2]]
+14:11:55,755 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.custom.basic.User] lookup : key[org.hibernate.test.collection.custom.basic.User#max]
+14:11:55,755 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.custom.basic.User] hit: org.hibernate.test.collection.custom.basic.User#max
+14:11:55,755 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.custom.basic.User.emailAddresses] lookup : key[org.hibernate.test.collection.custom.basic.User.emailAddresses#max]
+14:11:55,755 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.custom.basic.User.emailAddresses] hit: org.hibernate.test.collection.custom.basic.User.emailAddresses#max
+14:11:55,755 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.custom.basic.Email] lookup : key[org.hibernate.test.collection.custom.basic.Email#1]
+14:11:55,756 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.custom.basic.Email] hit: org.hibernate.test.collection.custom.basic.Email#1
+14:11:55,756 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.custom.basic.Email] lookup : key[org.hibernate.test.collection.custom.basic.Email#2]
+14:11:55,756 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.custom.basic.Email] hit: org.hibernate.test.collection.custom.basic.Email#2
+14:11:55,756 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.custom.basic.User] lookup : key[org.hibernate.test.collection.custom.basic.User#max]
+14:11:55,756 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.custom.basic.User] hit: org.hibernate.test.collection.custom.basic.User#max
+14:11:55,757 DEBUG SQL:104 - 
+    update
+        Email 
+    set
+        userName=null,
+        displayOrder=null 
+    where
+        userName=?
+14:11:55,757 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.custom.basic.User.emailAddresses]: org.hibernate.test.collection.custom.basic.User.emailAddresses#max
+14:11:55,757 DEBUG SQL:104 - 
+    delete 
+    from
+        Email 
+    where
+        id=?
+14:11:55,758 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.custom.basic.Email]: org.hibernate.test.collection.custom.basic.Email#1
+14:11:55,758 DEBUG SQL:104 - 
+    delete 
+    from
+        Email 
+    where
+        id=?
+14:11:55,779 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.custom.basic.Email]: org.hibernate.test.collection.custom.basic.Email#2
+14:11:55,780 DEBUG SQL:104 - 
+    delete 
+    from
+        UC_BSC_USER 
+    where
+        userName=?
+14:11:55,780 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.custom.basic.User]: org.hibernate.test.collection.custom.basic.User#max
+14:11:55,780 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.custom.basic.User.emailAddresses]: org.hibernate.test.collection.custom.basic.User.emailAddresses#max
+14:11:55,780 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.custom.basic.Email]: org.hibernate.test.collection.custom.basic.Email#1
+14:11:55,781 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.custom.basic.Email]: org.hibernate.test.collection.custom.basic.Email#2
+14:11:55,781 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.custom.basic.User]: org.hibernate.test.collection.custom.basic.User#max
+14:11:55,781  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:55,782 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:55,782 DEBUG SQL:104 - 
+    alter table Email 
+        drop constraint FK3FF5B7C713D704
+14:11:55,782 DEBUG SQL:104 - 
+    drop table Email if exists
+14:11:55,783 DEBUG SQL:104 - 
+    drop table UC_BSC_USER if exists
+14:11:55,783 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:11:55,783  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:55,797  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

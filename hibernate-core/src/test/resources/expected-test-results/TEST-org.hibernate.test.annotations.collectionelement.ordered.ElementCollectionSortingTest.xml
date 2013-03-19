@@ -1,0 +1,626 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.collectionelement.ordered.ElementCollectionSortingTest" tests="1" time="0.235" timestamp="2013-02-28T20:10:17">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.collectionelement.ordered.ElementCollectionSortingTest" name="testSortingElementCollectionSyntax" time="0.156" />
+  <system-out><![CDATA[14:10:17,394  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.collectionelement.ordered.ElementCollectionSortingTest
+14:10:17,405  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:17,405  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:17,405  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:17,405  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:17,406  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:17,407  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:17,407  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:17,408  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:17,408  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:17,408  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:17,424  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:17,425 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:17,425 DEBUG SQL:104 - 
+    alter table T_ADDRESS_A 
+        drop constraint FK5C84306B144BAA6B
+14:10:17,425 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_ADDRESS_A drop constraint FK5C84306B144BAA6B
+14:10:17,425 ERROR SchemaExport:426 - Table "T_ADDRESS_A" not found; SQL statement:
+
+    alter table T_ADDRESS_A 
+        drop constraint FK5C84306B144BAA6B [42102-145]
+14:10:17,426 DEBUG SQL:104 - 
+    alter table T_ADDRESS_D 
+        drop constraint FK5C84306E144BAA6B
+14:10:17,426 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_ADDRESS_D drop constraint FK5C84306E144BAA6B
+14:10:17,426 ERROR SchemaExport:426 - Table "T_ADDRESS_D" not found; SQL statement:
+
+    alter table T_ADDRESS_D 
+        drop constraint FK5C84306E144BAA6B [42102-145]
+14:10:17,426 DEBUG SQL:104 - 
+    alter table T_ADD_CITY_A 
+        drop constraint FKDFBCA4B6144BAA6B
+14:10:17,426 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_ADD_CITY_A drop constraint FKDFBCA4B6144BAA6B
+14:10:17,426 ERROR SchemaExport:426 - Table "T_ADD_CITY_A" not found; SQL statement:
+
+    alter table T_ADD_CITY_A 
+        drop constraint FKDFBCA4B6144BAA6B [42102-145]
+14:10:17,427 DEBUG SQL:104 - 
+    alter table T_ADD_CITY_D 
+        drop constraint FKDFBCA4B9144BAA6B
+14:10:17,427 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_ADD_CITY_D drop constraint FKDFBCA4B9144BAA6B
+14:10:17,427 ERROR SchemaExport:426 - Table "T_ADD_CITY_D" not found; SQL statement:
+
+    alter table T_ADD_CITY_D 
+        drop constraint FKDFBCA4B9144BAA6B [42102-145]
+14:10:17,427 DEBUG SQL:104 - 
+    alter table T_NICKNAMES_A 
+        drop constraint FKF2DA2CBC144BAA6B
+14:10:17,427 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_NICKNAMES_A drop constraint FKF2DA2CBC144BAA6B
+14:10:17,427 ERROR SchemaExport:426 - Table "T_NICKNAMES_A" not found; SQL statement:
+
+    alter table T_NICKNAMES_A 
+        drop constraint FKF2DA2CBC144BAA6B [42102-145]
+14:10:17,428 DEBUG SQL:104 - 
+    alter table T_NICKNAMES_D 
+        drop constraint FKF2DA2CBF144BAA6B
+14:10:17,428 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_NICKNAMES_D drop constraint FKF2DA2CBF144BAA6B
+14:10:17,428 ERROR SchemaExport:426 - Table "T_NICKNAMES_D" not found; SQL statement:
+
+    alter table T_NICKNAMES_D 
+        drop constraint FKF2DA2CBF144BAA6B [42102-145]
+14:10:17,428 DEBUG SQL:104 - 
+    drop table Person if exists
+14:10:17,428 DEBUG SQL:104 - 
+    drop table T_ADDRESS_A if exists
+14:10:17,428 DEBUG SQL:104 - 
+    drop table T_ADDRESS_D if exists
+14:10:17,429 DEBUG SQL:104 - 
+    drop table T_ADD_CITY_A if exists
+14:10:17,429 DEBUG SQL:104 - 
+    drop table T_ADD_CITY_D if exists
+14:10:17,429 DEBUG SQL:104 - 
+    drop table T_NICKNAMES_A if exists
+14:10:17,429 DEBUG SQL:104 - 
+    drop table T_NICKNAMES_D if exists
+14:10:17,429 DEBUG SQL:104 - 
+    create table Person (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:17,430 DEBUG SQL:104 - 
+    create table T_ADDRESS_A (
+        Person_id bigint not null,
+        city varchar(255),
+        country varchar(255),
+        street varchar(255)
+    )
+14:10:17,432 DEBUG SQL:104 - 
+    create table T_ADDRESS_D (
+        Person_id bigint not null,
+        city varchar(255),
+        country varchar(255),
+        street varchar(255)
+    )
+14:10:17,432 DEBUG SQL:104 - 
+    create table T_ADD_CITY_A (
+        Person_id bigint not null,
+        city varchar(255),
+        country varchar(255),
+        street varchar(255)
+    )
+14:10:17,432 DEBUG SQL:104 - 
+    create table T_ADD_CITY_D (
+        Person_id bigint not null,
+        city varchar(255),
+        country varchar(255),
+        street varchar(255)
+    )
+14:10:17,433 DEBUG SQL:104 - 
+    create table T_NICKNAMES_A (
+        Person_id bigint not null,
+        nickNamesAscendingNaturalSort varchar(255)
+    )
+14:10:17,443 DEBUG SQL:104 - 
+    create table T_NICKNAMES_D (
+        Person_id bigint not null,
+        nickNamesDescendingNaturalSort varchar(255)
+    )
+14:10:17,443 DEBUG SQL:104 - 
+    alter table T_ADDRESS_A 
+        add constraint FK5C84306B144BAA6B 
+        foreign key (Person_id) 
+        references Person
+14:10:17,444 DEBUG SQL:104 - 
+    alter table T_ADDRESS_D 
+        add constraint FK5C84306E144BAA6B 
+        foreign key (Person_id) 
+        references Person
+14:10:17,445 DEBUG SQL:104 - 
+    alter table T_ADD_CITY_A 
+        add constraint FKDFBCA4B6144BAA6B 
+        foreign key (Person_id) 
+        references Person
+14:10:17,446 DEBUG SQL:104 - 
+    alter table T_ADD_CITY_D 
+        add constraint FKDFBCA4B9144BAA6B 
+        foreign key (Person_id) 
+        references Person
+14:10:17,446 DEBUG SQL:104 - 
+    alter table T_NICKNAMES_A 
+        add constraint FKF2DA2CBC144BAA6B 
+        foreign key (Person_id) 
+        references Person
+14:10:17,447 DEBUG SQL:104 - 
+    alter table T_NICKNAMES_D 
+        add constraint FKF2DA2CBF144BAA6B 
+        foreign key (Person_id) 
+        references Person
+14:10:17,448  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:17,449  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:17,449  INFO CustomRunner:139 - Test: testSortingElementCollectionSyntax
+14:10:17,450 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.nickNamesAscendingNaturalSort
+14:10:17,454 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  |  \-[IDENT] Node: 'annotations'
+          |  |  |  |  \-[IDENT] Node: 'collectionelement'
+          |  |  |  \-[IDENT] Node: 'ordered'
+          |  |  \-[IDENT] Node: 'Person'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'nickNamesAscendingNaturalSort'
+
+14:10:17,468 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,468 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.collectionelement.ordered.Person (p) -> person0_
+14:10:17,468 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:10:17,469 DEBUG DotNode:599 - getDataType() : nickNamesAscendingNaturalSort -> org.hibernate.type.OrderedSetType(org.hibernate.test.annotations.collectionelement.ordered.Person.nickNamesAscendingNaturalSort)
+14:10:17,469 DEBUG FromElement:157 - FromClause{level=1} : null (<no alias>) -> nicknamesa1_
+14:10:17,469 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.nickNamesAscendingNaturalSort -> T_NICKNAMES_A
+14:10:17,469 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.nickNamesAscendingNaturalSort : T_NICKNAMES_A nicknamesa1_
+14:10:17,469 DEBUG FromReferenceNode:74 - Resolved : p.nickNamesAscendingNaturalSort -> .
+14:10:17,469 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'T_NICKNAMES_A nicknamesa1_' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.nickNamesAscendingNaturalSort,tableName={none},tableAlias=nicknamesa1_,origin=null,columns={,className=null}}
+
+14:10:17,469 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} (  T_NICKNAMES_A nicknamesa1_ ) ) )
+14:10:17,470 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:17,470 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:10:17,470 DEBUG JoinProcessor:175 - Using FROM fragment [inner join T_NICKNAMES_A nicknamesa1_ on person0_.id=nicknamesa1_.Person_id]
+14:10:17,470 DEBUG QueryNode:101 - getOrderByClause() : Creating a new ORDER BY clause
+14:10:17,471 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_NICKNAMES_A,Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id0_' {FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'nicknamesa1_.Person_id as Person1_0_0__, nicknamesa1_.nickNamesAscendingNaturalSort as nickName2_5_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_, nicknamesa1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.nickNamesAscendingNaturalSort], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join T_NICKNAMES_A nicknamesa1_ on person0_.id=nicknamesa1_.Person_id' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.nickNamesAscendingNaturalSort,tableName={none},tableAlias=nicknamesa1_,origin=Person person0_,columns={,className=null}}
+    \-[ORDER] OrderByClause: 'ORDER'
+       \-[SQL_TOKEN] SqlFragment: 'nicknamesa1_.nickNamesAscendingNaturalSort asc'
+
+14:10:17,474 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,474 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.nickNamesAscendingNaturalSort
+14:10:17,474 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id0_, person0_.name as name0_, nicknamesa1_.Person_id as Person1_0_0__, nicknamesa1_.nickNamesAscendingNaturalSort as nickName2_5_0__ from Person person0_ inner join T_NICKNAMES_A nicknamesa1_ on person0_.id=nicknamesa1_.Person_id order by nicknamesa1_.nickNamesAscendingNaturalSort asc
+14:10:17,474 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,475 DEBUG SQL:104 - 
+    select
+        person0_.id as id0_,
+        person0_.name as name0_,
+        nicknamesa1_.Person_id as Person1_0_0__,
+        nicknamesa1_.nickNamesAscendingNaturalSort as nickName2_5_0__ 
+    from
+        Person person0_ 
+    inner join
+        T_NICKNAMES_A nicknamesa1_ 
+            on person0_.id=nicknamesa1_.Person_id 
+    order by
+        nicknamesa1_.nickNamesAscendingNaturalSort asc
+14:10:17,475 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.nickNamesDescendingNaturalSort
+14:10:17,477 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  |  \-[IDENT] Node: 'annotations'
+          |  |  |  |  \-[IDENT] Node: 'collectionelement'
+          |  |  |  \-[IDENT] Node: 'ordered'
+          |  |  \-[IDENT] Node: 'Person'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'nickNamesDescendingNaturalSort'
+
+14:10:17,501 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,501 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.collectionelement.ordered.Person (p) -> person0_
+14:10:17,502 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:10:17,502 DEBUG DotNode:599 - getDataType() : nickNamesDescendingNaturalSort -> org.hibernate.type.OrderedSetType(org.hibernate.test.annotations.collectionelement.ordered.Person.nickNamesDescendingNaturalSort)
+14:10:17,502 DEBUG FromElement:157 - FromClause{level=1} : null (<no alias>) -> nicknamesd1_
+14:10:17,502 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.nickNamesDescendingNaturalSort -> T_NICKNAMES_D
+14:10:17,502 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.nickNamesDescendingNaturalSort : T_NICKNAMES_D nicknamesd1_
+14:10:17,502 DEBUG FromReferenceNode:74 - Resolved : p.nickNamesDescendingNaturalSort -> .
+14:10:17,502 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'T_NICKNAMES_D nicknamesd1_' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.nickNamesDescendingNaturalSort,tableName={none},tableAlias=nicknamesd1_,origin=null,columns={,className=null}}
+
+14:10:17,502 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} (  T_NICKNAMES_D nicknamesd1_ ) ) )
+14:10:17,503 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:17,503 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:10:17,503 DEBUG JoinProcessor:175 - Using FROM fragment [inner join T_NICKNAMES_D nicknamesd1_ on person0_.id=nicknamesd1_.Person_id]
+14:10:17,503 DEBUG QueryNode:101 - getOrderByClause() : Creating a new ORDER BY clause
+14:10:17,503 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Person,T_NICKNAMES_D)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id0_' {FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'nicknamesd1_.Person_id as Person1_0_0__, nicknamesd1_.nickNamesDescendingNaturalSort as nickName2_6_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_, nicknamesd1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.nickNamesDescendingNaturalSort], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join T_NICKNAMES_D nicknamesd1_ on person0_.id=nicknamesd1_.Person_id' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.nickNamesDescendingNaturalSort,tableName={none},tableAlias=nicknamesd1_,origin=Person person0_,columns={,className=null}}
+    \-[ORDER] OrderByClause: 'ORDER'
+       \-[SQL_TOKEN] SqlFragment: 'nicknamesd1_.nickNamesDescendingNaturalSort desc'
+
+14:10:17,514 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,514 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.nickNamesDescendingNaturalSort
+14:10:17,515 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id0_, person0_.name as name0_, nicknamesd1_.Person_id as Person1_0_0__, nicknamesd1_.nickNamesDescendingNaturalSort as nickName2_6_0__ from Person person0_ inner join T_NICKNAMES_D nicknamesd1_ on person0_.id=nicknamesd1_.Person_id order by nicknamesd1_.nickNamesDescendingNaturalSort desc
+14:10:17,515 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,515 DEBUG SQL:104 - 
+    select
+        person0_.id as id0_,
+        person0_.name as name0_,
+        nicknamesd1_.Person_id as Person1_0_0__,
+        nicknamesd1_.nickNamesDescendingNaturalSort as nickName2_6_0__ 
+    from
+        Person person0_ 
+    inner join
+        T_NICKNAMES_D nicknamesd1_ 
+            on person0_.id=nicknamesd1_.Person_id 
+    order by
+        nicknamesd1_.nickNamesDescendingNaturalSort desc
+14:10:17,516 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.addressesAscendingNaturalSort
+14:10:17,518 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  |  \-[IDENT] Node: 'annotations'
+          |  |  |  |  \-[IDENT] Node: 'collectionelement'
+          |  |  |  \-[IDENT] Node: 'ordered'
+          |  |  \-[IDENT] Node: 'Person'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'addressesAscendingNaturalSort'
+
+14:10:17,523 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,523 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.collectionelement.ordered.Person (p) -> person0_
+14:10:17,523 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:10:17,524 DEBUG DotNode:599 - getDataType() : addressesAscendingNaturalSort -> org.hibernate.type.SetType(org.hibernate.test.annotations.collectionelement.ordered.Person.addressesAscendingNaturalSort)
+14:10:17,524 DEBUG FromElement:157 - FromClause{level=1} : null (<no alias>) -> addressesa1_
+14:10:17,524 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.addressesAscendingNaturalSort -> T_ADDRESS_A
+14:10:17,524 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.addressesAscendingNaturalSort : T_ADDRESS_A addressesa1_
+14:10:17,524 DEBUG FromReferenceNode:74 - Resolved : p.addressesAscendingNaturalSort -> .
+14:10:17,524 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'T_ADDRESS_A addressesa1_' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.addressesAscendingNaturalSort,tableName={none},tableAlias=addressesa1_,origin=null,columns={,className=null}}
+
+14:10:17,524 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} (  T_ADDRESS_A addressesa1_ ) ) )
+14:10:17,525 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:17,525 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:10:17,525 DEBUG JoinProcessor:175 - Using FROM fragment [inner join T_ADDRESS_A addressesa1_ on person0_.id=addressesa1_.Person_id]
+14:10:17,525 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ADDRESS_A,Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id0_' {FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'addressesa1_.Person_id as Person1_0_0__, addressesa1_.city as city1_0__, addressesa1_.country as country1_0__, addressesa1_.street as street1_0__'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_, addressesa1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.addressesAscendingNaturalSort], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join T_ADDRESS_A addressesa1_ on person0_.id=addressesa1_.Person_id' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.addressesAscendingNaturalSort,tableName={none},tableAlias=addressesa1_,origin=Person person0_,columns={,className=null}}
+
+14:10:17,534 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,535 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.addressesAscendingNaturalSort
+14:10:17,535 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id0_, person0_.name as name0_, addressesa1_.Person_id as Person1_0_0__, addressesa1_.city as city1_0__, addressesa1_.country as country1_0__, addressesa1_.street as street1_0__ from Person person0_ inner join T_ADDRESS_A addressesa1_ on person0_.id=addressesa1_.Person_id
+14:10:17,535 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,535 DEBUG SQL:104 - 
+    select
+        person0_.id as id0_,
+        person0_.name as name0_,
+        addressesa1_.Person_id as Person1_0_0__,
+        addressesa1_.city as city1_0__,
+        addressesa1_.country as country1_0__,
+        addressesa1_.street as street1_0__ 
+    from
+        Person person0_ 
+    inner join
+        T_ADDRESS_A addressesa1_ 
+            on person0_.id=addressesa1_.Person_id
+14:10:17,536 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.addressesDescendingNaturalSort
+14:10:17,538 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  |  \-[IDENT] Node: 'annotations'
+          |  |  |  |  \-[IDENT] Node: 'collectionelement'
+          |  |  |  \-[IDENT] Node: 'ordered'
+          |  |  \-[IDENT] Node: 'Person'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'addressesDescendingNaturalSort'
+
+14:10:17,545 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,545 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.collectionelement.ordered.Person (p) -> person0_
+14:10:17,545 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:10:17,546 DEBUG DotNode:599 - getDataType() : addressesDescendingNaturalSort -> org.hibernate.type.OrderedSetType(org.hibernate.test.annotations.collectionelement.ordered.Person.addressesDescendingNaturalSort)
+14:10:17,546 DEBUG FromElement:157 - FromClause{level=1} : null (<no alias>) -> addressesd1_
+14:10:17,546 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.addressesDescendingNaturalSort -> T_ADDRESS_D
+14:10:17,546 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.addressesDescendingNaturalSort : T_ADDRESS_D addressesd1_
+14:10:17,546 DEBUG FromReferenceNode:74 - Resolved : p.addressesDescendingNaturalSort -> .
+14:10:17,546 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'T_ADDRESS_D addressesd1_' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.addressesDescendingNaturalSort,tableName={none},tableAlias=addressesd1_,origin=null,columns={,className=null}}
+
+14:10:17,555 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} (  T_ADDRESS_D addressesd1_ ) ) )
+14:10:17,555 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:17,555 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:10:17,555 DEBUG JoinProcessor:175 - Using FROM fragment [inner join T_ADDRESS_D addressesd1_ on person0_.id=addressesd1_.Person_id]
+14:10:17,556 DEBUG QueryNode:101 - getOrderByClause() : Creating a new ORDER BY clause
+14:10:17,556 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ADDRESS_D,Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id0_' {FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'addressesd1_.Person_id as Person1_0_0__, addressesd1_.city as city2_0__, addressesd1_.country as country2_0__, addressesd1_.street as street2_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[addressesd1_, person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.addressesDescendingNaturalSort], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join T_ADDRESS_D addressesd1_ on person0_.id=addressesd1_.Person_id' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.addressesDescendingNaturalSort,tableName={none},tableAlias=addressesd1_,origin=Person person0_,columns={,className=null}}
+    \-[ORDER] OrderByClause: 'ORDER'
+       \-[SQL_TOKEN] SqlFragment: 'addressesd1_.city desc, addressesd1_.country desc, addressesd1_.street desc'
+
+14:10:17,556 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,556 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.addressesDescendingNaturalSort
+14:10:17,556 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id0_, person0_.name as name0_, addressesd1_.Person_id as Person1_0_0__, addressesd1_.city as city2_0__, addressesd1_.country as country2_0__, addressesd1_.street as street2_0__ from Person person0_ inner join T_ADDRESS_D addressesd1_ on person0_.id=addressesd1_.Person_id order by addressesd1_.city desc, addressesd1_.country desc, addressesd1_.street desc
+14:10:17,556 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,557 DEBUG SQL:104 - 
+    select
+        person0_.id as id0_,
+        person0_.name as name0_,
+        addressesd1_.Person_id as Person1_0_0__,
+        addressesd1_.city as city2_0__,
+        addressesd1_.country as country2_0__,
+        addressesd1_.street as street2_0__ 
+    from
+        Person person0_ 
+    inner join
+        T_ADDRESS_D addressesd1_ 
+            on person0_.id=addressesd1_.Person_id 
+    order by
+        addressesd1_.city desc,
+        addressesd1_.country desc,
+        addressesd1_.street desc
+14:10:17,566 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.addressesCityAscendingSort
+14:10:17,567 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  |  \-[IDENT] Node: 'annotations'
+          |  |  |  |  \-[IDENT] Node: 'collectionelement'
+          |  |  |  \-[IDENT] Node: 'ordered'
+          |  |  \-[IDENT] Node: 'Person'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'addressesCityAscendingSort'
+
+14:10:17,575 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,575 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.collectionelement.ordered.Person (p) -> person0_
+14:10:17,576 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:10:17,576 DEBUG DotNode:599 - getDataType() : addressesCityAscendingSort -> org.hibernate.type.OrderedSetType(org.hibernate.test.annotations.collectionelement.ordered.Person.addressesCityAscendingSort)
+14:10:17,576 DEBUG FromElement:157 - FromClause{level=1} : null (<no alias>) -> addressesc1_
+14:10:17,576 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.addressesCityAscendingSort -> T_ADD_CITY_A
+14:10:17,576 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.addressesCityAscendingSort : T_ADD_CITY_A addressesc1_
+14:10:17,576 DEBUG FromReferenceNode:74 - Resolved : p.addressesCityAscendingSort -> .
+14:10:17,576 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'T_ADD_CITY_A addressesc1_' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.addressesCityAscendingSort,tableName={none},tableAlias=addressesc1_,origin=null,columns={,className=null}}
+
+14:10:17,577 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} (  T_ADD_CITY_A addressesc1_ ) ) )
+14:10:17,577 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:17,577 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:10:17,577 DEBUG JoinProcessor:175 - Using FROM fragment [inner join T_ADD_CITY_A addressesc1_ on person0_.id=addressesc1_.Person_id]
+14:10:17,577 DEBUG QueryNode:101 - getOrderByClause() : Creating a new ORDER BY clause
+14:10:17,578 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ADD_CITY_A,Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id0_' {FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'addressesc1_.Person_id as Person1_0_0__, addressesc1_.city as city3_0__, addressesc1_.country as country3_0__, addressesc1_.street as street3_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[addressesc1_, person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.addressesCityAscendingSort], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join T_ADD_CITY_A addressesc1_ on person0_.id=addressesc1_.Person_id' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.addressesCityAscendingSort,tableName={none},tableAlias=addressesc1_,origin=Person person0_,columns={,className=null}}
+    \-[ORDER] OrderByClause: 'ORDER'
+       \-[SQL_TOKEN] SqlFragment: 'addressesc1_.city'
+
+14:10:17,578 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,578 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.addressesCityAscendingSort
+14:10:17,578 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id0_, person0_.name as name0_, addressesc1_.Person_id as Person1_0_0__, addressesc1_.city as city3_0__, addressesc1_.country as country3_0__, addressesc1_.street as street3_0__ from Person person0_ inner join T_ADD_CITY_A addressesc1_ on person0_.id=addressesc1_.Person_id order by addressesc1_.city
+14:10:17,578 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,578 DEBUG SQL:104 - 
+    select
+        person0_.id as id0_,
+        person0_.name as name0_,
+        addressesc1_.Person_id as Person1_0_0__,
+        addressesc1_.city as city3_0__,
+        addressesc1_.country as country3_0__,
+        addressesc1_.street as street3_0__ 
+    from
+        Person person0_ 
+    inner join
+        T_ADD_CITY_A addressesc1_ 
+            on person0_.id=addressesc1_.Person_id 
+    order by
+        addressesc1_.city
+14:10:17,579 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.addressesCityDescendingSort
+14:10:17,581 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  |  \-[IDENT] Node: 'annotations'
+          |  |  |  |  \-[IDENT] Node: 'collectionelement'
+          |  |  |  \-[IDENT] Node: 'ordered'
+          |  |  \-[IDENT] Node: 'Person'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'addressesCityDescendingSort'
+
+14:10:17,590 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,590 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.collectionelement.ordered.Person (p) -> person0_
+14:10:17,591 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:10:17,591 DEBUG DotNode:599 - getDataType() : addressesCityDescendingSort -> org.hibernate.type.OrderedSetType(org.hibernate.test.annotations.collectionelement.ordered.Person.addressesCityDescendingSort)
+14:10:17,591 DEBUG FromElement:157 - FromClause{level=1} : null (<no alias>) -> addressesc1_
+14:10:17,591 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.addressesCityDescendingSort -> T_ADD_CITY_D
+14:10:17,591 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.addressesCityDescendingSort : T_ADD_CITY_D addressesc1_
+14:10:17,591 DEBUG FromReferenceNode:74 - Resolved : p.addressesCityDescendingSort -> .
+14:10:17,591 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'T_ADD_CITY_D addressesc1_' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.addressesCityDescendingSort,tableName={none},tableAlias=addressesc1_,origin=null,columns={,className=null}}
+
+14:10:17,591 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} (  T_ADD_CITY_D addressesc1_ ) ) )
+14:10:17,592 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:17,592 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:10:17,592 DEBUG JoinProcessor:175 - Using FROM fragment [inner join T_ADD_CITY_D addressesc1_ on person0_.id=addressesc1_.Person_id]
+14:10:17,592 DEBUG QueryNode:101 - getOrderByClause() : Creating a new ORDER BY clause
+14:10:17,592 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ADD_CITY_D,Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id0_' {FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'addressesc1_.Person_id as Person1_0_0__, addressesc1_.city as city4_0__, addressesc1_.country as country4_0__, addressesc1_.street as street4_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[addressesc1_, person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.addressesCityDescendingSort], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.ordered.Person}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join T_ADD_CITY_D addressesc1_ on person0_.id=addressesc1_.Person_id' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.annotations.collectionelement.ordered.Person.addressesCityDescendingSort,tableName={none},tableAlias=addressesc1_,origin=Person person0_,columns={,className=null}}
+    \-[ORDER] OrderByClause: 'ORDER'
+       \-[SQL_TOKEN] SqlFragment: 'addressesc1_.city desc'
+
+14:10:17,603 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,603 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.collectionelement.ordered.Person p join fetch p.addressesCityDescendingSort
+14:10:17,603 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id0_, person0_.name as name0_, addressesc1_.Person_id as Person1_0_0__, addressesc1_.city as city4_0__, addressesc1_.country as country4_0__, addressesc1_.street as street4_0__ from Person person0_ inner join T_ADD_CITY_D addressesc1_ on person0_.id=addressesc1_.Person_id order by addressesc1_.city desc
+14:10:17,603 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,604 DEBUG SQL:104 - 
+    select
+        person0_.id as id0_,
+        person0_.name as name0_,
+        addressesc1_.Person_id as Person1_0_0__,
+        addressesc1_.city as city4_0__,
+        addressesc1_.country as country4_0__,
+        addressesc1_.street as street4_0__ 
+    from
+        Person person0_ 
+    inner join
+        T_ADD_CITY_D addressesc1_ 
+            on person0_.id=addressesc1_.Person_id 
+    order by
+        addressesc1_.city desc
+14:10:17,605  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:17,606 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:17,606 DEBUG SQL:104 - 
+    alter table T_ADDRESS_A 
+        drop constraint FK5C84306B144BAA6B
+14:10:17,616 DEBUG SQL:104 - 
+    alter table T_ADDRESS_D 
+        drop constraint FK5C84306E144BAA6B
+14:10:17,617 DEBUG SQL:104 - 
+    alter table T_ADD_CITY_A 
+        drop constraint FKDFBCA4B6144BAA6B
+14:10:17,617 DEBUG SQL:104 - 
+    alter table T_ADD_CITY_D 
+        drop constraint FKDFBCA4B9144BAA6B
+14:10:17,617 DEBUG SQL:104 - 
+    alter table T_NICKNAMES_A 
+        drop constraint FKF2DA2CBC144BAA6B
+14:10:17,618 DEBUG SQL:104 - 
+    alter table T_NICKNAMES_D 
+        drop constraint FKF2DA2CBF144BAA6B
+14:10:17,626 DEBUG SQL:104 - 
+    drop table Person if exists
+14:10:17,627 DEBUG SQL:104 - 
+    drop table T_ADDRESS_A if exists
+14:10:17,627 DEBUG SQL:104 - 
+    drop table T_ADDRESS_D if exists
+14:10:17,627 DEBUG SQL:104 - 
+    drop table T_ADD_CITY_A if exists
+14:10:17,627 DEBUG SQL:104 - 
+    drop table T_ADD_CITY_D if exists
+14:10:17,627 DEBUG SQL:104 - 
+    drop table T_NICKNAMES_A if exists
+14:10:17,628 DEBUG SQL:104 - 
+    drop table T_NICKNAMES_D if exists
+14:10:17,628  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:17,628  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

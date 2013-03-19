@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.flush.TestCollectionInitializingDuringFlush" tests="1" time="0.111" timestamp="2013-02-28T20:12:32">
+  <properties />
+  <testcase classname="org.hibernate.test.flush.TestCollectionInitializingDuringFlush" name="testInitializationDuringFlush" time="0.038" />
+  <system-out><![CDATA[14:12:32,941  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.flush.TestCollectionInitializingDuringFlush
+14:12:32,948  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:32,948  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:32,949  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:32,949  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:32,949  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:32,950  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:32,950  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:32,951  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:32,951  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:32,951  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:32,960  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:32,961 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:32,961 DEBUG SQL:104 - 
+    alter table Author 
+        drop constraint FK75920DABF8DA94BA
+14:12:32,993 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Author drop constraint FK75920DABF8DA94BA
+14:12:32,994 ERROR SchemaExport:426 - Table "AUTHOR" not found; SQL statement:
+
+    alter table Author 
+        drop constraint FK75920DABF8DA94BA [42102-145]
+14:12:32,994 DEBUG SQL:104 - 
+    alter table Book 
+        drop constraint FK1FAF091F0B1D5A
+14:12:32,995 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Book drop constraint FK1FAF091F0B1D5A
+14:12:32,995 ERROR SchemaExport:426 - Table "BOOK" not found; SQL statement:
+
+    alter table Book 
+        drop constraint FK1FAF091F0B1D5A [42102-145]
+14:12:32,995 DEBUG SQL:104 - 
+    drop table Author if exists
+14:12:32,995 DEBUG SQL:104 - 
+    drop table Book if exists
+14:12:32,995 DEBUG SQL:104 - 
+    drop table Publisher if exists
+14:12:32,995 DEBUG SQL:104 - 
+    create table Author (
+        id bigint not null,
+        name varchar(255),
+        publisher_id bigint,
+        primary key (id)
+    )
+14:12:32,996 DEBUG SQL:104 - 
+    create table Book (
+        id bigint not null,
+        title varchar(255),
+        author_id bigint,
+        primary key (id)
+    )
+14:12:32,996 DEBUG SQL:104 - 
+    create table Publisher (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:32,996 DEBUG SQL:104 - 
+    alter table Author 
+        add constraint FK75920DABF8DA94BA 
+        foreign key (publisher_id) 
+        references Publisher
+14:12:32,997 DEBUG SQL:104 - 
+    alter table Book 
+        add constraint FK1FAF091F0B1D5A 
+        foreign key (author_id) 
+        references Author
+14:12:32,997  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:32,998  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:32,998  INFO CustomRunner:139 - Test: testInitializationDuringFlush
+14:12:32,999 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Author
+14:12:32,999 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Publisher
+14:12:33,014 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Book
+14:12:33,016 DEBUG SQL:104 - 
+    insert 
+    into
+        Publisher
+        (name, id) 
+    values
+        (?, ?)
+14:12:33,016 DEBUG SQL:104 - 
+    insert 
+    into
+        Author
+        (name, publisher_id, id) 
+    values
+        (?, ?, ?)
+14:12:33,017 DEBUG SQL:104 - 
+    insert 
+    into
+        Book
+        (author_id, title, id) 
+    values
+        (?, ?, ?)
+14:12:33,018 DEBUG SQL:104 - 
+    select
+        publisher0_.id as id2_0_,
+        publisher0_.name as name2_0_ 
+    from
+        Publisher publisher0_ 
+    where
+        publisher0_.id=?
+14:12:33,035 DEBUG SQL:104 - 
+    delete 
+    from
+        Book 
+    where
+        id=?
+14:12:33,035 DEBUG SQL:104 - 
+    delete 
+    from
+        Author 
+    where
+        id=?
+14:12:33,036 DEBUG SQL:104 - 
+    delete 
+    from
+        Publisher 
+    where
+        id=?
+14:12:33,036  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:33,037 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:33,037 DEBUG SQL:104 - 
+    alter table Author 
+        drop constraint FK75920DABF8DA94BA
+14:12:33,048 DEBUG SQL:104 - 
+    alter table Book 
+        drop constraint FK1FAF091F0B1D5A
+14:12:33,048 DEBUG SQL:104 - 
+    drop table Author if exists
+14:12:33,049 DEBUG SQL:104 - 
+    drop table Book if exists
+14:12:33,049 DEBUG SQL:104 - 
+    drop table Publisher if exists
+14:12:33,049  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:33,050  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

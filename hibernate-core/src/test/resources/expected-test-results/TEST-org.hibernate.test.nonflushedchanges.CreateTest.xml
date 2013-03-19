@@ -1,0 +1,783 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.nonflushedchanges.CreateTest" tests="6" time="0.348" timestamp="2013-02-28T20:17:32">
+  <properties />
+  <testcase classname="org.hibernate.test.nonflushedchanges.CreateTest" name="testBasic" time="0.032" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.CreateTest" name="testCreateException" time="0.054" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.CreateTest" name="testCreateExceptionWithGeneratedId" time="0.03" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.CreateTest" name="testCreateTree" time="0.014" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.CreateTest" name="testCreateTreeWithGeneratedId" time="0.023" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.CreateTest" name="testNoUpdatesOnCreateVersionedWithCollection" time="0.015" />
+  <system-out><![CDATA[14:17:32,550  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.nonflushedchanges.CreateTest
+14:17:32,553  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/Node.hbm.xml
+14:17:32,597  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/Employer.hbm.xml
+14:17:32,603  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/OptLockEntity.hbm.xml
+14:17:32,608  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/OneToOne.hbm.xml
+14:17:32,615  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/Competition.hbm.xml
+14:17:32,648  INFO ConnectionProviderInitiator:188 - HHH000130: Instantiating explicit connection provider: org.hibernate.testing.jta.JtaAwareConnectionProviderImpl
+14:17:32,649  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:32,649  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 20
+14:17:32,649  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:32,649  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:32,650  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa, autocommit=false, release_mode=AFTER_STATEMENT}
+14:17:32,651  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:32,651  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:32,651  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:32,651  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:32,685  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:32,686 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:32,686 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB74F32D66
+14:17:32,687 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table COMPET_ION_OR drop constraint FK1AAE64FB74F32D66
+14:17:32,687 ERROR SchemaExport:426 - Table "COMPET_ION_OR" not found; SQL statement:
+
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB74F32D66 [42102-145]
+14:17:32,687 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB1F11BBAE
+14:17:32,687 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table COMPET_ION_OR drop constraint FK1AAE64FB1F11BBAE
+14:17:32,687 ERROR SchemaExport:426 - Table "COMPET_ION_OR" not found; SQL statement:
+
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB1F11BBAE [42102-145]
+14:17:32,687 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D4A24D7
+14:17:32,687 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMPLOYER_EMPLOYEE drop constraint FKDC9B93B28D4A24D7
+14:17:32,688 ERROR SchemaExport:426 - Table "EMPLOYER_EMPLOYEE" not found; SQL statement:
+
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D4A24D7 [42102-145]
+14:17:32,688 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D500DB7
+14:17:32,688 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMPLOYER_EMPLOYEE drop constraint FKDC9B93B28D500DB7
+14:17:32,688 ERROR SchemaExport:426 - Table "EMPLOYER_EMPLOYEE" not found; SQL statement:
+
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D500DB7 [42102-145]
+14:17:32,688 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK252222D556A303
+14:17:32,688 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Node drop constraint FK252222D556A303
+14:17:32,689 ERROR SchemaExport:426 - Table "NODE" not found; SQL statement:
+
+    alter table Node 
+        drop constraint FK252222D556A303 [42102-145]
+14:17:32,689 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK25222261DDD534
+14:17:32,689 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Node drop constraint FK25222261DDD534
+14:17:32,689 ERROR SchemaExport:426 - Table "NODE" not found; SQL statement:
+
+    alter table Node 
+        drop constraint FK25222261DDD534 [42102-145]
+14:17:32,689 DEBUG SQL:104 - 
+    alter table NumberedNode 
+        drop constraint FK667A9BEA4467F5CB
+14:17:32,689 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table NumberedNode drop constraint FK667A9BEA4467F5CB
+14:17:32,689 ERROR SchemaExport:426 - Table "NUMBEREDNODE" not found; SQL statement:
+
+    alter table NumberedNode 
+        drop constraint FK667A9BEA4467F5CB [42102-145]
+14:17:32,689 DEBUG SQL:104 - 
+    alter table OPS_ADDRESS 
+        drop constraint FKCEA94F2782611B3C
+14:17:32,690 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OPS_ADDRESS drop constraint FKCEA94F2782611B3C
+14:17:32,690 ERROR SchemaExport:426 - Table "OPS_ADDRESS" not found; SQL statement:
+
+    alter table OPS_ADDRESS 
+        drop constraint FKCEA94F2782611B3C [42102-145]
+14:17:32,690 DEBUG SQL:104 - 
+    alter table OPS_PERS_DETAIL 
+        drop constraint FK2409C38D9711DB07
+14:17:32,690 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OPS_PERS_DETAIL drop constraint FK2409C38D9711DB07
+14:17:32,690 ERROR SchemaExport:426 - Table "OPS_PERS_DETAIL" not found; SQL statement:
+
+    alter table OPS_PERS_DETAIL 
+        drop constraint FK2409C38D9711DB07 [42102-145]
+14:17:32,690 DEBUG SQL:104 - 
+    alter table V_ENTITY 
+        drop constraint FK145E7ECFD463E2D
+14:17:32,691 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table V_ENTITY drop constraint FK145E7ECFD463E2D
+14:17:32,691 ERROR SchemaExport:426 - Table "V_ENTITY" not found; SQL statement:
+
+    alter table V_ENTITY 
+        drop constraint FK145E7ECFD463E2D [42102-145]
+14:17:32,691 DEBUG SQL:104 - 
+    drop table COMPET_ION_OR if exists
+14:17:32,691 DEBUG SQL:104 - 
+    drop table Competition if exists
+14:17:32,691 DEBUG SQL:104 - 
+    drop table Competitor if exists
+14:17:32,691 DEBUG SQL:104 - 
+    drop table EMPLOYER_EMPLOYEE if exists
+14:17:32,691 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:17:32,691 DEBUG SQL:104 - 
+    drop table Employer if exists
+14:17:32,692 DEBUG SQL:104 - 
+    drop table Node if exists
+14:17:32,692 DEBUG SQL:104 - 
+    drop table NumberedNode if exists
+14:17:32,692 DEBUG SQL:104 - 
+    drop table OPS_ADDRESS if exists
+14:17:32,692 DEBUG SQL:104 - 
+    drop table OPS_PERSON if exists
+14:17:32,692 DEBUG SQL:104 - 
+    drop table OPS_PERS_DETAIL if exists
+14:17:32,692 DEBUG SQL:104 - 
+    drop table T_ENTITY if exists
+14:17:32,692 DEBUG SQL:104 - 
+    drop table V_ENTITY if exists
+14:17:32,693 DEBUG SQL:104 - 
+    create table COMPET_ION_OR (
+        TION_ID integer not null,
+        TOR_ID integer not null,
+        INDEX_COL integer not null,
+        primary key (TION_ID, INDEX_COL)
+    )
+14:17:32,693 DEBUG SQL:104 - 
+    create table Competition (
+        id integer generated by default as identity,
+        primary key (id)
+    )
+14:17:32,693 DEBUG SQL:104 - 
+    create table Competitor (
+        id integer generated by default as identity,
+        name varchar(255),
+        primary key (id)
+    )
+14:17:32,694 DEBUG SQL:104 - 
+    create table EMPLOYER_EMPLOYEE (
+        EMPER_ID integer not null,
+        EMPEE_ID integer not null
+    )
+14:17:32,694 DEBUG SQL:104 - 
+    create table Employee (
+        id integer generated by default as identity,
+        primary key (id)
+    )
+14:17:32,694 DEBUG SQL:104 - 
+    create table Employer (
+        id integer generated by default as identity,
+        vers integer not null,
+        primary key (id)
+    )
+14:17:32,694 DEBUG SQL:104 - 
+    create table Node (
+        name varchar(255) not null,
+        description varchar(255),
+        parent varchar(255),
+        created date not null,
+        CASC_PARENT varchar(255),
+        primary key (name)
+    )
+14:17:32,695 DEBUG SQL:104 - 
+    create table NumberedNode (
+        id bigint generated by default as identity,
+        name varchar(255) not null,
+        description varchar(255),
+        created date not null,
+        parent bigint,
+        primary key (id)
+    )
+14:17:32,695 DEBUG SQL:104 - 
+    create table OPS_ADDRESS (
+        ID bigint not null,
+        STREET varchar(255),
+        CITY varchar(255),
+        CTRY varchar(255),
+        RESIDENT bigint,
+        primary key (ID)
+    )
+14:17:32,695 DEBUG SQL:104 - 
+    create table OPS_PERSON (
+        ID bigint not null,
+        NAME varchar(255),
+        primary key (ID)
+    )
+14:17:32,696 DEBUG SQL:104 - 
+    create table OPS_PERS_DETAIL (
+        ID bigint not null,
+        SOME_DETAIL varchar(255),
+        primary key (ID)
+    )
+14:17:32,696 DEBUG SQL:104 - 
+    create table T_ENTITY (
+        ID varchar(255) not null,
+        TS timestamp not null,
+        NAME varchar(255),
+        primary key (ID)
+    )
+14:17:32,696 DEBUG SQL:104 - 
+    create table V_ENTITY (
+        ID varchar(255) not null,
+        VERS bigint not null,
+        NAME varchar(255),
+        parent varchar(255),
+        primary key (ID)
+    )
+14:17:32,696 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        add constraint FK1AAE64FB74F32D66 
+        foreign key (TOR_ID) 
+        references Competitor
+14:17:32,697 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        add constraint FK1AAE64FB1F11BBAE 
+        foreign key (TION_ID) 
+        references Competition
+14:17:32,697 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        add constraint FKDC9B93B28D4A24D7 
+        foreign key (EMPEE_ID) 
+        references Employee
+14:17:32,698 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        add constraint FKDC9B93B28D500DB7 
+        foreign key (EMPER_ID) 
+        references Employer
+14:17:32,698 DEBUG SQL:104 - 
+    alter table Node 
+        add constraint FK252222D556A303 
+        foreign key (parent) 
+        references Node
+14:17:32,698 DEBUG SQL:104 - 
+    alter table Node 
+        add constraint FK25222261DDD534 
+        foreign key (CASC_PARENT) 
+        references Node
+14:17:32,699 DEBUG SQL:104 - 
+    create index iname on NumberedNode (name)
+14:17:32,699 DEBUG SQL:104 - 
+    alter table NumberedNode 
+        add constraint FK667A9BEA4467F5CB 
+        foreign key (parent) 
+        references NumberedNode
+14:17:32,699 DEBUG SQL:104 - 
+    alter table OPS_ADDRESS 
+        add constraint FKCEA94F2782611B3C 
+        foreign key (RESIDENT) 
+        references OPS_PERSON
+14:17:32,700 DEBUG SQL:104 - 
+    alter table OPS_PERS_DETAIL 
+        add constraint FK2409C38D9711DB07 
+        foreign key (ID) 
+        references OPS_PERSON
+14:17:32,700 DEBUG SQL:104 - 
+    alter table V_ENTITY 
+        add constraint FK145E7ECFD463E2D 
+        foreign key (parent) 
+        references V_ENTITY
+14:17:32,700  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:32,701  INFO CustomRunner:139 - Test: testBasic
+14:17:32,719 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (id) 
+    values
+        (null)
+14:17:32,724 DEBUG SQL:104 - 
+    insert 
+    into
+        Employer
+        (id, vers) 
+    values
+        (null, ?)
+14:17:32,725 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYER_EMPLOYEE
+        (EMPER_ID, EMPEE_ID) 
+    values
+        (?, ?)
+14:17:32,728 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_0_,
+        employer0_.vers as vers5_0_ 
+    from
+        Employer employer0_ 
+    where
+        employer0_.id=?
+14:17:32,729 DEBUG SQL:104 - 
+    select
+        employees0_.EMPER_ID as EMPER1_5_1_,
+        employees0_.EMPEE_ID as EMPEE2_3_1_,
+        employee1_.id as id4_0_ 
+    from
+        EMPLOYER_EMPLOYEE employees0_ 
+    inner join
+        Employee employee1_ 
+            on employees0_.EMPEE_ID=employee1_.id 
+    where
+        employees0_.EMPER_ID=?
+14:17:32,733  INFO CustomRunner:139 - Test: testCreateException
+14:17:32,740 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:32,744 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:32,745  WARN SqlExceptionHelper:143 - SQL Error: 23001, SQLState: 23001
+14:17:32,745 ERROR SqlExceptionHelper:144 - Unique index or primary key violation: "PRIMARY_KEY_24 ON PUBLIC.NODE(NAME)"; SQL statement:
+insert into Node (description, parent, created, name) values (?, ?, ?, ?) [23001-145]
+14:17:32,746 ERROR SynchronizationCallbackCoordinatorImpl:158 - HHH000346: Error during managed flush [could not execute statement]
+14:17:32,767  WARN arjuna:281 - ARJUNA012125: TwoPhaseCoordinator.beforeCompletion - failed for SynchronizationImple< 0:ffff0a0fd0a8:ce54:512fba11:b7, org.hibernate.engine.transaction.synchronization.internal.RegisteredSynchronization@6a7bf3bf >
+org.hibernate.exception.ConstraintViolationException: could not execute statement
+	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:128)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:49)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:125)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:110)
+	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:128)
+	at org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch.addToBatch(NonBatchingBatch.java:58)
+	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3059)
+	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3500)
+	at org.hibernate.action.internal.EntityInsertAction.execute(EntityInsertAction.java:88)
+	at org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:362)
+	at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:354)
+	at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:275)
+	at org.hibernate.event.internal.AbstractFlushingEventListener.performExecutions(AbstractFlushingEventListener.java:327)
+	at org.hibernate.event.internal.DefaultFlushEventListener.onFlush(DefaultFlushEventListener.java:52)
+	at org.hibernate.internal.SessionImpl.flush(SessionImpl.java:1213)
+	at org.hibernate.internal.SessionImpl.managedFlush(SessionImpl.java:401)
+	at org.hibernate.engine.transaction.synchronization.internal.SynchronizationCallbackCoordinatorImpl.beforeCompletion(SynchronizationCallbackCoordinatorImpl.java:104)
+	at org.hibernate.engine.transaction.synchronization.internal.RegisteredSynchronization.beforeCompletion(RegisteredSynchronization.java:53)
+	at com.arjuna.ats.internal.jta.resources.arjunacore.SynchronizationImple.beforeCompletion(SynchronizationImple.java:76)
+	at com.arjuna.ats.arjuna.coordinator.TwoPhaseCoordinator.beforeCompletion(TwoPhaseCoordinator.java:273)
+	at com.arjuna.ats.arjuna.coordinator.TwoPhaseCoordinator.end(TwoPhaseCoordinator.java:93)
+	at com.arjuna.ats.arjuna.AtomicAction.commit(AtomicAction.java:164)
+	at com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionImple.commitAndDisassociate(TransactionImple.java:1165)
+	at com.arjuna.ats.internal.jta.transaction.arjunacore.BaseTransaction.commit(BaseTransaction.java:117)
+	at org.hibernate.test.nonflushedchanges.CreateTest.testCreateException(CreateTest.java:168)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:45)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:42)
+	at org.hibernate.testing.junit4.ExtendedFrameworkMethod.invokeExplosively(ExtendedFrameworkMethod.java:63)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:20)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:28)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:30)
+	at org.junit.internal.runners.statements.FailOnTimeout$StatementThread.run(FailOnTimeout.java:62)
+Caused by: org.h2.jdbc.JdbcSQLException: Unique index or primary key violation: "PRIMARY_KEY_24 ON PUBLIC.NODE(NAME)"; SQL statement:
+insert into Node (description, parent, created, name) values (?, ?, ?, ?) [23001-145]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:327)
+	at org.h2.message.DbException.get(DbException.java:167)
+	at org.h2.message.DbException.get(DbException.java:144)
+	at org.h2.index.BaseIndex.getDuplicateKeyException(BaseIndex.java:158)
+	at org.h2.index.TreeIndex.add(TreeIndex.java:56)
+	at org.h2.index.MultiVersionIndex.add(MultiVersionIndex.java:49)
+	at org.h2.table.RegularTable.addRow(RegularTable.java:125)
+	at org.h2.command.dml.Insert.insertRows(Insert.java:126)
+	at org.h2.command.dml.Insert.update(Insert.java:86)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:69)
+	at org.h2.command.Command.executeUpdate(Command.java:201)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdateInternal(JdbcPreparedStatement.java:143)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdate(JdbcPreparedStatement.java:129)
+	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:125)
+	... 32 more
+14:17:32,770  INFO JdbcCoordinatorImpl:269 - HHH000106: Forcing container resource cleanup on transaction completion
+14:17:32,770  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:17:32,779 ERROR AbstractBatchImpl:167 - HHH000352: Unable to release batch statement...
+14:17:32,780 ERROR AbstractBatchImpl:168 - HHH000246: SQLException escaped proxy
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-145]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:327)
+	at org.h2.message.DbException.get(DbException.java:167)
+	at org.h2.message.DbException.get(DbException.java:144)
+	at org.h2.message.DbException.get(DbException.java:133)
+	at org.h2.jdbc.JdbcStatement.checkClosed(JdbcStatement.java:889)
+	at org.h2.jdbc.JdbcPreparedStatement.checkClosed(JdbcPreparedStatement.java:1497)
+	at org.h2.jdbc.JdbcStatement.checkClosed(JdbcStatement.java:865)
+	at org.h2.jdbc.JdbcPreparedStatement.clearBatch(JdbcPreparedStatement.java:1035)
+	at org.hibernate.engine.jdbc.batch.internal.AbstractBatchImpl.releaseStatements(AbstractBatchImpl.java:163)
+	at org.hibernate.engine.jdbc.batch.internal.AbstractBatchImpl.release(AbstractBatchImpl.java:197)
+	at org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl.close(JdbcCoordinatorImpl.java:174)
+	at org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl.close(TransactionCoordinatorImpl.java:281)
+	at org.hibernate.internal.SessionImpl.close(SessionImpl.java:351)
+	at org.hibernate.internal.SessionImpl.managedClose(SessionImpl.java:542)
+	at org.hibernate.engine.transaction.synchronization.internal.SynchronizationCallbackCoordinatorImpl.afterCompletion(SynchronizationCallbackCoordinatorImpl.java:132)
+	at org.hibernate.engine.transaction.synchronization.internal.RegisteredSynchronization.afterCompletion(RegisteredSynchronization.java:61)
+	at com.arjuna.ats.internal.jta.resources.arjunacore.SynchronizationImple.afterCompletion(SynchronizationImple.java:96)
+	at com.arjuna.ats.arjuna.coordinator.TwoPhaseCoordinator.afterCompletion(TwoPhaseCoordinator.java:402)
+	at com.arjuna.ats.arjuna.coordinator.TwoPhaseCoordinator.end(TwoPhaseCoordinator.java:103)
+	at com.arjuna.ats.arjuna.AtomicAction.commit(AtomicAction.java:164)
+	at com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionImple.commitAndDisassociate(TransactionImple.java:1165)
+	at com.arjuna.ats.internal.jta.transaction.arjunacore.BaseTransaction.commit(BaseTransaction.java:117)
+	at org.hibernate.test.nonflushedchanges.CreateTest.testCreateException(CreateTest.java:168)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:45)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:42)
+	at org.hibernate.testing.junit4.ExtendedFrameworkMethod.invokeExplosively(ExtendedFrameworkMethod.java:63)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:20)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:28)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:30)
+	at org.junit.internal.runners.statements.FailOnTimeout$StatementThread.run(FailOnTimeout.java:62)
+14:17:32,784 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:32,785 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:32,785  WARN SqlExceptionHelper:143 - SQL Error: 23001, SQLState: 23001
+14:17:32,785 ERROR SqlExceptionHelper:144 - Unique index or primary key violation: "PRIMARY_KEY_24 ON PUBLIC.NODE(NAME)"; SQL statement:
+insert into Node (description, parent, created, name) values (?, ?, ?, ?) [23001-145]
+14:17:32,786 ERROR SynchronizationCallbackCoordinatorImpl:158 - HHH000346: Error during managed flush [could not execute statement]
+14:17:32,786  WARN arjuna:281 - ARJUNA012125: TwoPhaseCoordinator.beforeCompletion - failed for SynchronizationImple< 0:ffff0a0fd0a8:ce54:512fba11:c0, org.hibernate.engine.transaction.synchronization.internal.RegisteredSynchronization@7642c038 >
+org.hibernate.exception.ConstraintViolationException: could not execute statement
+	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:128)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:49)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:125)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:110)
+	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:128)
+	at org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch.addToBatch(NonBatchingBatch.java:58)
+	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3059)
+	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3500)
+	at org.hibernate.action.internal.EntityInsertAction.execute(EntityInsertAction.java:88)
+	at org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:362)
+	at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:354)
+	at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:275)
+	at org.hibernate.event.internal.AbstractFlushingEventListener.performExecutions(AbstractFlushingEventListener.java:327)
+	at org.hibernate.event.internal.DefaultFlushEventListener.onFlush(DefaultFlushEventListener.java:52)
+	at org.hibernate.internal.SessionImpl.flush(SessionImpl.java:1213)
+	at org.hibernate.internal.SessionImpl.managedFlush(SessionImpl.java:401)
+	at org.hibernate.engine.transaction.synchronization.internal.SynchronizationCallbackCoordinatorImpl.beforeCompletion(SynchronizationCallbackCoordinatorImpl.java:104)
+	at org.hibernate.engine.transaction.synchronization.internal.RegisteredSynchronization.beforeCompletion(RegisteredSynchronization.java:53)
+	at com.arjuna.ats.internal.jta.resources.arjunacore.SynchronizationImple.beforeCompletion(SynchronizationImple.java:76)
+	at com.arjuna.ats.arjuna.coordinator.TwoPhaseCoordinator.beforeCompletion(TwoPhaseCoordinator.java:273)
+	at com.arjuna.ats.arjuna.coordinator.TwoPhaseCoordinator.end(TwoPhaseCoordinator.java:93)
+	at com.arjuna.ats.arjuna.AtomicAction.commit(AtomicAction.java:164)
+	at com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionImple.commitAndDisassociate(TransactionImple.java:1165)
+	at com.arjuna.ats.internal.jta.transaction.arjunacore.BaseTransaction.commit(BaseTransaction.java:117)
+	at org.hibernate.test.nonflushedchanges.CreateTest.testCreateException(CreateTest.java:193)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:45)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:42)
+	at org.hibernate.testing.junit4.ExtendedFrameworkMethod.invokeExplosively(ExtendedFrameworkMethod.java:63)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:20)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:28)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:30)
+	at org.junit.internal.runners.statements.FailOnTimeout$StatementThread.run(FailOnTimeout.java:62)
+Caused by: org.h2.jdbc.JdbcSQLException: Unique index or primary key violation: "PRIMARY_KEY_24 ON PUBLIC.NODE(NAME)"; SQL statement:
+insert into Node (description, parent, created, name) values (?, ?, ?, ?) [23001-145]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:327)
+	at org.h2.message.DbException.get(DbException.java:167)
+	at org.h2.message.DbException.get(DbException.java:144)
+	at org.h2.index.BaseIndex.getDuplicateKeyException(BaseIndex.java:158)
+	at org.h2.index.TreeIndex.add(TreeIndex.java:56)
+	at org.h2.index.MultiVersionIndex.add(MultiVersionIndex.java:49)
+	at org.h2.table.RegularTable.addRow(RegularTable.java:125)
+	at org.h2.command.dml.Insert.insertRows(Insert.java:126)
+	at org.h2.command.dml.Insert.update(Insert.java:86)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:69)
+	at org.h2.command.Command.executeUpdate(Command.java:201)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdateInternal(JdbcPreparedStatement.java:143)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdate(JdbcPreparedStatement.java:129)
+	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:125)
+	... 32 more
+14:17:32,787  INFO JdbcCoordinatorImpl:269 - HHH000106: Forcing container resource cleanup on transaction completion
+14:17:32,787  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:17:32,787 ERROR AbstractBatchImpl:167 - HHH000352: Unable to release batch statement...
+14:17:32,787 ERROR AbstractBatchImpl:168 - HHH000246: SQLException escaped proxy
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-145]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:327)
+	at org.h2.message.DbException.get(DbException.java:167)
+	at org.h2.message.DbException.get(DbException.java:144)
+	at org.h2.message.DbException.get(DbException.java:133)
+	at org.h2.jdbc.JdbcStatement.checkClosed(JdbcStatement.java:889)
+	at org.h2.jdbc.JdbcPreparedStatement.checkClosed(JdbcPreparedStatement.java:1497)
+	at org.h2.jdbc.JdbcStatement.checkClosed(JdbcStatement.java:865)
+	at org.h2.jdbc.JdbcPreparedStatement.clearBatch(JdbcPreparedStatement.java:1035)
+	at org.hibernate.engine.jdbc.batch.internal.AbstractBatchImpl.releaseStatements(AbstractBatchImpl.java:163)
+	at org.hibernate.engine.jdbc.batch.internal.AbstractBatchImpl.release(AbstractBatchImpl.java:197)
+	at org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl.close(JdbcCoordinatorImpl.java:174)
+	at org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl.close(TransactionCoordinatorImpl.java:281)
+	at org.hibernate.internal.SessionImpl.close(SessionImpl.java:351)
+	at org.hibernate.internal.SessionImpl.managedClose(SessionImpl.java:542)
+	at org.hibernate.engine.transaction.synchronization.internal.SynchronizationCallbackCoordinatorImpl.afterCompletion(SynchronizationCallbackCoordinatorImpl.java:132)
+	at org.hibernate.engine.transaction.synchronization.internal.RegisteredSynchronization.afterCompletion(RegisteredSynchronization.java:61)
+	at com.arjuna.ats.internal.jta.resources.arjunacore.SynchronizationImple.afterCompletion(SynchronizationImple.java:96)
+	at com.arjuna.ats.arjuna.coordinator.TwoPhaseCoordinator.afterCompletion(TwoPhaseCoordinator.java:402)
+	at com.arjuna.ats.arjuna.coordinator.TwoPhaseCoordinator.end(TwoPhaseCoordinator.java:103)
+	at com.arjuna.ats.arjuna.AtomicAction.commit(AtomicAction.java:164)
+	at com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionImple.commitAndDisassociate(TransactionImple.java:1165)
+	at com.arjuna.ats.internal.jta.transaction.arjunacore.BaseTransaction.commit(BaseTransaction.java:117)
+	at org.hibernate.test.nonflushedchanges.CreateTest.testCreateException(CreateTest.java:193)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:45)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:42)
+	at org.hibernate.testing.junit4.ExtendedFrameworkMethod.invokeExplosively(ExtendedFrameworkMethod.java:63)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:20)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:28)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:30)
+	at org.junit.internal.runners.statements.FailOnTimeout$StatementThread.run(FailOnTimeout.java:62)
+14:17:32,788  INFO CustomRunner:139 - Test: testCreateExceptionWithGeneratedId
+14:17:32,790 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:32,818 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:32,820  INFO CustomRunner:139 - Test: testCreateTree
+14:17:32,824 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:32,825 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+getting
+14:17:32,825 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_0_,
+        node0_.description as descript2_6_0_,
+        node0_.parent as parent6_0_,
+        node0_.created as created6_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.name=?
+14:17:32,827 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent6_1_,
+        children0_.name as name6_1_,
+        children0_.name as name6_0_,
+        children0_.description as descript2_6_0_,
+        children0_.parent as parent6_0_,
+        children0_.created as created6_0_ 
+    from
+        Node children0_ 
+    where
+        children0_.parent=?
+14:17:32,830 DEBUG SQL:104 - 
+    select
+        node_.name,
+        node_.description as descript2_6_,
+        node_.parent as parent6_,
+        node_.created as created6_ 
+    from
+        Node node_ 
+    where
+        node_.name=?
+14:17:32,833 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:32,834  INFO CustomRunner:139 - Test: testCreateTreeWithGeneratedId
+14:17:32,835 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:32,847 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:32,850 DEBUG SQL:104 - 
+    select
+        numberedno0_.id as id7_0_,
+        numberedno0_.name as name7_0_,
+        numberedno0_.description as descript3_7_0_,
+        numberedno0_.created as created7_0_,
+        numberedno0_.parent as parent7_0_ 
+    from
+        NumberedNode numberedno0_ 
+    where
+        numberedno0_.id=?
+14:17:32,852 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent7_1_,
+        children0_.id as id7_1_,
+        children0_.id as id7_0_,
+        children0_.name as name7_0_,
+        children0_.description as descript3_7_0_,
+        children0_.created as created7_0_,
+        children0_.parent as parent7_0_ 
+    from
+        NumberedNode children0_ 
+    where
+        children0_.parent=?
+14:17:32,855 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:32,857  INFO CustomRunner:139 - Test: testNoUpdatesOnCreateVersionedWithCollection
+14:17:32,859 DEBUG SQL:104 - 
+    select
+        versionede_.ID,
+        versionede_.VERS as VERS12_,
+        versionede_.NAME as NAME12_,
+        versionede_.parent as parent12_ 
+    from
+        V_ENTITY versionede_ 
+    where
+        versionede_.ID=?
+14:17:32,865 DEBUG SQL:104 - 
+    insert 
+    into
+        V_ENTITY
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:17:32,866 DEBUG SQL:104 - 
+    insert 
+    into
+        V_ENTITY
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:17:32,866 DEBUG SQL:104 - 
+    select
+        versionede_.ID,
+        versionede_.VERS as VERS12_,
+        versionede_.NAME as NAME12_,
+        versionede_.parent as parent12_ 
+    from
+        V_ENTITY versionede_ 
+    where
+        versionede_.ID=?
+14:17:32,867 DEBUG SQL:104 - 
+    select
+        versionede_.ID,
+        versionede_.VERS as VERS12_,
+        versionede_.NAME as NAME12_,
+        versionede_.parent as parent12_ 
+    from
+        V_ENTITY versionede_ 
+    where
+        versionede_.ID=?
+14:17:32,871 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        ID=? 
+        and VERS=?
+14:17:32,872 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        ID=? 
+        and VERS=?
+14:17:32,872  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:32,873 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:32,873 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB74F32D66
+14:17:32,873 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB1F11BBAE
+14:17:32,873 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D4A24D7
+14:17:32,874 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D500DB7
+14:17:32,874 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK252222D556A303
+14:17:32,874 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK25222261DDD534
+14:17:32,874 DEBUG SQL:104 - 
+    alter table NumberedNode 
+        drop constraint FK667A9BEA4467F5CB
+14:17:32,874 DEBUG SQL:104 - 
+    alter table OPS_ADDRESS 
+        drop constraint FKCEA94F2782611B3C
+14:17:32,874 DEBUG SQL:104 - 
+    alter table OPS_PERS_DETAIL 
+        drop constraint FK2409C38D9711DB07
+14:17:32,875 DEBUG SQL:104 - 
+    alter table V_ENTITY 
+        drop constraint FK145E7ECFD463E2D
+14:17:32,875 DEBUG SQL:104 - 
+    drop table COMPET_ION_OR if exists
+14:17:32,875 DEBUG SQL:104 - 
+    drop table Competition if exists
+14:17:32,876 DEBUG SQL:104 - 
+    drop table Competitor if exists
+14:17:32,876 DEBUG SQL:104 - 
+    drop table EMPLOYER_EMPLOYEE if exists
+14:17:32,876 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:17:32,876 DEBUG SQL:104 - 
+    drop table Employer if exists
+14:17:32,876 DEBUG SQL:104 - 
+    drop table Node if exists
+14:17:32,877 DEBUG SQL:104 - 
+    drop table NumberedNode if exists
+14:17:32,877 DEBUG SQL:104 - 
+    drop table OPS_ADDRESS if exists
+14:17:32,877 DEBUG SQL:104 - 
+    drop table OPS_PERSON if exists
+14:17:32,877 DEBUG SQL:104 - 
+    drop table OPS_PERS_DETAIL if exists
+14:17:32,877 DEBUG SQL:104 - 
+    drop table T_ENTITY if exists
+14:17:32,878 DEBUG SQL:104 - 
+    drop table V_ENTITY if exists
+14:17:32,878  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:32,878  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

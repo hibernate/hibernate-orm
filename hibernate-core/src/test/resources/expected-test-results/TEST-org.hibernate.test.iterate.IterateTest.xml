@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.iterate.IterateTest" tests="2" time="0.055" timestamp="2013-02-28T20:14:48">
+  <properties />
+  <testcase classname="org.hibernate.test.iterate.IterateTest" name="testIterate" time="0.009" />
+  <testcase classname="org.hibernate.test.iterate.IterateTest" name="testScroll" time="0.003" />
+  <system-out><![CDATA[14:14:48,265  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.iterate.IterateTest
+14:14:48,267  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/iterate/Item.hbm.xml
+14:14:48,274  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:48,274  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:48,274  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:48,275  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:48,275  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:48,276  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:48,276  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:48,277  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:48,277  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:48,277  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:48,277  INFO UpdateTimestampsCache:61 - HHH000250: Starting update timestamps cache at region: foo.org.hibernate.cache.spi.UpdateTimestampsCache
+14:14:48,277  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: foo.org.hibernate.cache.internal.StandardQueryCache
+14:14:48,283  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:48,284 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:48,284 DEBUG SQL:104 - 
+    drop table NamedItem if exists
+14:14:48,284 DEBUG SQL:104 - 
+    create table NamedItem (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:14:48,284  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:48,284  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:48,285 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Item order by name desc
+14:14:48,286 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[IDENT] Node: 'Item'
+    \-[ORDER] Node: 'order'
+       +-[IDENT] Node: 'name'
+       \-[DESCENDING] Node: 'desc'
+
+14:14:48,286 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,286 DEBUG FromElement:157 - FromClause{level=1} : Item (<no alias>) -> item0_
+14:14:48,286 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:14:48,286 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:14:48,287 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> item0_.name
+14:14:48,287 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} NamedItem item0_ ) ( order ( item0_.name {synthetic-alias} name ) desc ) )
+14:14:48,287 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,287 DEBUG JoinProcessor:175 - Using FROM fragment [NamedItem item0_]
+14:14:48,288 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (NamedItem)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'item0_.name as name0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=NamedItem,tableAlias=item0_,origin=null,columns={,className=Item}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[item0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'NamedItem item0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=NamedItem,tableAlias=item0_,origin=null,columns={,className=Item}}
+    \-[ORDER] OrderByClause: 'order'
+       +-[DOT] DotNode: 'item0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=item0_,className=Item,classAlias=null}
+       |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+       |  \-[IDENT] IdentNode: 'name' {originalText=name}
+       \-[DESCENDING] SqlNode: 'desc'
+
+14:14:48,288 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,288 DEBUG QueryTranslatorImpl:235 - HQL: from Item order by name desc
+14:14:48,288 DEBUG QueryTranslatorImpl:236 - SQL: select item0_.name as name0_ from NamedItem item0_ order by item0_.name desc
+14:14:48,288 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,289  INFO CustomRunner:139 - Test: testIterate
+14:14:48,292 DEBUG SQL:104 - 
+    insert 
+    into
+        NamedItem
+        (name) 
+    values
+        (?)
+14:14:48,292 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579090117804032]
+14:14:48,293 DEBUG SQL:104 - 
+    insert 
+    into
+        NamedItem
+        (name) 
+    values
+        (?)
+14:14:48,293 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579090117808128]
+14:14:48,293 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579089872048129]
+14:14:48,293 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Item order by name desc
+14:14:48,294 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[IDENT] Node: 'Item'
+    \-[ORDER] Node: 'order'
+       +-[IDENT] Node: 'name'
+       \-[DESCENDING] Node: 'desc'
+
+14:14:48,294 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,294 DEBUG FromElement:157 - FromClause{level=1} : Item (<no alias>) -> item0_
+14:14:48,294 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:14:48,294 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:14:48,294 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> item0_.name
+14:14:48,294 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} NamedItem item0_ ) ( order ( item0_.name {synthetic-alias} name ) desc ) )
+14:14:48,295 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,295 DEBUG JoinProcessor:175 - Using FROM fragment [NamedItem item0_]
+14:14:48,295 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (NamedItem)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'item0_.name as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=NamedItem,tableAlias=item0_,origin=null,columns={,className=Item}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[item0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'NamedItem item0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=NamedItem,tableAlias=item0_,origin=null,columns={,className=Item}}
+    \-[ORDER] OrderByClause: 'order'
+       +-[DOT] DotNode: 'item0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=item0_,className=Item,classAlias=null}
+       |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+       |  \-[IDENT] IdentNode: 'name' {originalText=name}
+       \-[DESCENDING] SqlNode: 'desc'
+
+14:14:48,295 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,295 DEBUG QueryTranslatorImpl:235 - HQL: from Item order by name desc
+14:14:48,295 DEBUG QueryTranslatorImpl:236 - SQL: select item0_.name as col_0_0_ from NamedItem item0_ order by item0_.name desc
+14:14:48,295 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,295 DEBUG SQL:104 - 
+    select
+        item0_.name as col_0_0_ 
+    from
+        NamedItem item0_ 
+    order by
+        item0_.name desc
+14:14:48,296 DEBUG SQL:104 - 
+    select
+        item0_.name as name0_0_ 
+    from
+        NamedItem item0_ 
+    where
+        item0_.name=?
+14:14:48,297 DEBUG SQL:104 - 
+    select
+        item0_.name as name0_0_ 
+    from
+        NamedItem item0_ 
+    where
+        item0_.name=?
+14:14:48,297 DEBUG SQL:104 - 
+    delete 
+    from
+        NamedItem 
+    where
+        name=?
+14:14:48,297 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579090117824512]
+14:14:48,297 DEBUG SQL:104 - 
+    delete 
+    from
+        NamedItem 
+    where
+        name=?
+14:14:48,297 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579090117824513]
+14:14:48,297 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579089872064514]
+14:14:48,298  INFO CustomRunner:139 - Test: testScroll
+14:14:48,299 DEBUG SQL:104 - 
+    insert 
+    into
+        NamedItem
+        (name) 
+    values
+        (?)
+14:14:48,299 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579090117832705]
+14:14:48,299 DEBUG SQL:104 - 
+    insert 
+    into
+        NamedItem
+        (name) 
+    values
+        (?)
+14:14:48,300 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579090117836800]
+14:14:48,300 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579089872076801]
+14:14:48,300 DEBUG SQL:104 - 
+    select
+        item0_.name as name0_ 
+    from
+        NamedItem item0_ 
+    order by
+        item0_.name desc
+14:14:48,300 DEBUG SQL:104 - 
+    delete 
+    from
+        NamedItem 
+    where
+        name=?
+14:14:48,301 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579090117840896]
+14:14:48,301 DEBUG SQL:104 - 
+    delete 
+    from
+        NamedItem 
+    where
+        name=?
+14:14:48,301 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579090117840897]
+14:14:48,301 DEBUG BaseGeneralDataRegion:59 - Caching[foo.org.hibernate.cache.spi.UpdateTimestampsCache] : [NamedItem] -> [5579089872080898]
+14:14:48,301  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:48,302 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:48,302 DEBUG SQL:104 - 
+    drop table NamedItem if exists
+14:14:48,302  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:48,303  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

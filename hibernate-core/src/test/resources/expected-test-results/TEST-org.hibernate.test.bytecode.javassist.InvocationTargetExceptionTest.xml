@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.bytecode.javassist.InvocationTargetExceptionTest" tests="1" time="0.066" timestamp="2013-02-28T20:11:39">
+  <properties />
+  <testcase classname="org.hibernate.test.bytecode.javassist.InvocationTargetExceptionTest" name="testProxiedInvocationException" time="0.005" />
+  <system-out><![CDATA[14:11:39,534  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.bytecode.javassist.InvocationTargetExceptionTest
+14:11:39,538  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/bytecode/Bean.hbm.xml
+14:11:39,549  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:39,552  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:39,553  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:39,553  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:39,553  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:39,556  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:39,556  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:39,559  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:39,559  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:39,559  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:39,578  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:39,579 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:39,579 DEBUG SQL:104 - 
+    drop table Bean if exists
+14:11:39,579 DEBUG SQL:104 - 
+    drop table ProxyBean if exists
+14:11:39,586 DEBUG SQL:104 - 
+    create table Bean (
+        someString varchar(255) not null,
+        S_LONG_1 bigint,
+        S_INT_1 integer,
+        S_DATE_1 timestamp,
+        S_LONG_2 bigint,
+        S_INT_2 integer,
+        S_OBJ_1 binary(255),
+        primary key (someString)
+    )
+14:11:39,588 DEBUG SQL:104 - 
+    create table ProxyBean (
+        someString varchar(255) not null,
+        S_LONG_1 bigint,
+        primary key (someString)
+    )
+14:11:39,588  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:39,589  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:39,589  INFO CustomRunner:139 - Test: testProxiedInvocationException
+14:11:39,592 DEBUG SQL:104 - 
+    insert 
+    into
+        Bean
+        (S_LONG_1, S_INT_1, S_DATE_1, S_LONG_2, S_INT_2, S_OBJ_1, someString) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:11:39,593 DEBUG SQL:104 - 
+    select
+        bean0_.someString as someString0_0_,
+        bean0_.S_LONG_1 as S2_0_0_,
+        bean0_.S_INT_1 as S3_0_0_,
+        bean0_.S_DATE_1 as S4_0_0_,
+        bean0_.S_LONG_2 as S5_0_0_,
+        bean0_.S_INT_2 as S6_0_0_,
+        bean0_.S_OBJ_1 as S7_0_0_ 
+    from
+        Bean bean0_ 
+    where
+        bean0_.someString=?
+14:11:39,594 DEBUG SQL:104 - 
+    delete 
+    from
+        Bean 
+    where
+        someString=?
+14:11:39,595  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:39,596 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:39,596 DEBUG SQL:104 - 
+    drop table Bean if exists
+14:11:39,596 DEBUG SQL:104 - 
+    drop table ProxyBean if exists
+14:11:39,596  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:39,597  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.sql.check.OracleCheckStyleTest" tests="6" time="0.033" timestamp="2013-02-28T20:19:16">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.sql.check.OracleCheckStyleTest" name="testDeleteWithExceptionChecking" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.sql.check.OracleCheckStyleTest" name="testDeleteWithParamChecking" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.sql.check.OracleCheckStyleTest" name="testInsertionFailureWithExceptionChecking" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.sql.check.OracleCheckStyleTest" name="testInsertionFailureWithParamChecking" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.sql.check.OracleCheckStyleTest" name="testUpdateFailureWithExceptionChecking" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.sql.check.OracleCheckStyleTest" name="testUpdateFailureWithParamChecking" time="0.0" />
+  <system-out><![CDATA[14:19:16,832  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.sql.check.OracleCheckStyleTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,575 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.hql.CriteriaClassicAggregationReturnTest" tests="1" time="0.964" timestamp="2013-02-28T20:13:20">
+  <properties />
+  <testcase classname="org.hibernate.test.hql.CriteriaClassicAggregationReturnTest" name="testClassicHQLAggregationReturnTypes" time="0.059" />
+  <system-out><![CDATA[14:13:20,726  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.hql.CriteriaClassicAggregationReturnTest
+14:13:20,776  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/Animal.hbm.xml
+14:13:20,784  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/EntityWithCrazyCompositeKey.hbm.xml
+14:13:20,789  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/CrazyIdFieldNames.hbm.xml
+14:13:20,794  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/SimpleEntityWithAssociation.hbm.xml
+14:13:20,799  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/ComponentContainer.hbm.xml
+14:13:20,804  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/batchfetch/ProductLine.hbm.xml
+14:13:20,809  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Customer.hbm.xml
+14:13:20,813  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Order.hbm.xml
+14:13:20,817  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/LineItem.hbm.xml
+14:13:20,822  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Product.hbm.xml
+14:13:20,826  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Baz.hbm.xml
+14:13:20,834  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Category.hbm.xml
+14:13:20,840  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Commento.hbm.xml
+14:13:20,845  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Container.hbm.xml
+14:13:20,851  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Custom.hbm.xml
+14:13:20,855  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Eye.hbm.xml
+14:13:20,859  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Fee.hbm.xml
+14:13:20,864  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/FooBar.hbm.xml
+14:13:20,877  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Fum.hbm.xml
+14:13:20,884  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Glarch.hbm.xml
+14:13:20,889  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Holder.hbm.xml
+14:13:20,936  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Many.hbm.xml
+14:13:20,941  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Marelo.hbm.xml
+14:13:20,946  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/MasterDetail.hbm.xml
+14:13:20,953  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Middle.hbm.xml
+14:13:20,966  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Multi.hbm.xml
+14:13:20,994  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Nameable.hbm.xml
+14:13:21,000  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/One.hbm.xml
+14:13:21,004  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Qux.hbm.xml
+14:13:21,009  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Simple.hbm.xml
+14:13:21,014  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/SingleSeveral.hbm.xml
+14:13:21,036  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/WZ.hbm.xml
+14:13:21,041  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/UpDown.hbm.xml
+14:13:21,047  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/compositeelement/Parent.hbm.xml
+14:13:21,051  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/onetoone/joined/Person.hbm.xml
+14:13:21,060  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/any/Properties.hbm.xml
+14:13:21,132  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.legacy.Several
+14:13:21,132  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.Several
+14:13:21,133  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.legacy.Single
+14:13:21,134  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.Single
+14:13:21,138  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:13:21,139  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:13:21,139  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:13:21,139  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:13:21,139  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:13:21,140  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:13:21,141  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:13:21,141  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:13:21,142  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,142  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:13:21,605  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:13:21,612 DEBUG QueryTranslatorImpl:265 - parse() - HQL: 
+		from 
+			org.hibernate.test.legacy.Detail as d
+	
+14:13:21,618 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'legacy'
+             |  \-[IDENT] Node: 'Detail'
+             \-[ALIAS] Node: 'd'
+
+14:13:21,623 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,624 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.legacy.Detail (d) -> detail0_
+14:13:21,624 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Detail detail0_ ) )
+14:13:21,624 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:21,624 DEBUG JoinProcessor:175 - Using FROM fragment [Detail detail0_]
+14:13:21,625 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Detail)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'detail0_.detail_key_column as detail1_19_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=Detail,tableAlias=detail0_,origin=null,columns={,className=org.hibernate.test.legacy.Detail}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'detail0_.x as x19_, detail0_.i as i19_, detail0_.master_key as master4_19_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[d], fromElementByTableAlias=[detail0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Detail detail0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=Detail,tableAlias=detail0_,origin=null,columns={,className=org.hibernate.test.legacy.Detail}}
+
+14:13:21,625 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,626 DEBUG QueryTranslatorImpl:235 - HQL: 
+		from 
+			org.hibernate.test.legacy.Detail as d
+	
+14:13:21,626 DEBUG QueryTranslatorImpl:236 - SQL: select detail0_.detail_key_column as detail1_19_, detail0_.x as x19_, detail0_.i as i19_, detail0_.master_key as master4_19_ from Detail detail0_
+14:13:21,626 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,627  INFO CustomRunner:139 - Test: testClassicHQLAggregationReturnTypes
+14:13:21,628  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,628 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from Human h
+14:13:21,628 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:13:21,628 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,628 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,628 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,629 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,629 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,629 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,629 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from Human h
+14:13:21,629 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,629 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,629  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,629 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(h.heightInches) from Human h
+14:13:21,630 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'heightInches'
+
+14:13:21,630 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,630 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,630 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,631 DEBUG DotNode:599 - getDataType() : heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:13:21,631 DEBUG FromReferenceNode:74 - Resolved : h.heightInches -> human0_.height_centimeters / 2.54E0
+14:13:21,631 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count ( human0_.height_centimeters / 2.54E0 human0_.mammal heightInches ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,631 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,631 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[DOT] DotNode: 'human0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=heightInches,path=h.heightInches,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,631 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,631 DEBUG QueryTranslatorImpl:235 - HQL: select count(h.heightInches) from Human h
+14:13:21,631 DEBUG QueryTranslatorImpl:236 - SQL: select count(human0_.height_centimeters / 2.54E0) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,632 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,632  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,632 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select max(h.heightInches) from Human h
+14:13:21,632 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[AGGREGATE] Node: 'max'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'heightInches'
+
+14:13:21,632 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,632 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,633 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,633 DEBUG DotNode:599 - getDataType() : heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:13:21,633 DEBUG FromReferenceNode:74 - Resolved : h.heightInches -> human0_.height_centimeters / 2.54E0
+14:13:21,633 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( max ( human0_.height_centimeters / 2.54E0 human0_.mammal heightInches ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,633 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,633 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[AGGREGATE] AggregateNode: 'max'
+    |  |  \-[DOT] DotNode: 'human0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=heightInches,path=h.heightInches,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,634 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,634 DEBUG QueryTranslatorImpl:235 - HQL: select max(h.heightInches) from Human h
+14:13:21,634 DEBUG QueryTranslatorImpl:236 - SQL: select max(human0_.height_centimeters / 2.54E0) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,634 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,639  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,639 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select max(h.id) from Human h
+14:13:21,640 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[AGGREGATE] Node: 'max'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'id'
+
+14:13:21,640 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,640 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,640 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,640 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:13:21,641 DEBUG FromReferenceNode:74 - Resolved : h.id -> human0_.mammal
+14:13:21,641 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( max ( human0_.mammal human0_.mammal id ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,641 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,641 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[AGGREGATE] AggregateNode: 'max'
+    |  |  \-[DOT] DotNode: 'human0_.mammal' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=h.id,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'id' {originalText=id}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,641 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,641 DEBUG QueryTranslatorImpl:235 - HQL: select max(h.id) from Human h
+14:13:21,641 DEBUG QueryTranslatorImpl:236 - SQL: select max(human0_.mammal) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,642 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,642  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,642 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select avg(h.heightInches) from Human h
+14:13:21,642 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[AGGREGATE] Node: 'avg'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'heightInches'
+
+14:13:21,643 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,643 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,643 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,643 DEBUG DotNode:599 - getDataType() : heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:13:21,644 DEBUG FromReferenceNode:74 - Resolved : h.heightInches -> human0_.height_centimeters / 2.54E0
+14:13:21,644 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( avg ( human0_.height_centimeters / 2.54E0 human0_.mammal heightInches ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,644 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,644 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[AGGREGATE] AggregateNode: 'avg'
+    |  |  \-[DOT] DotNode: 'human0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=heightInches,path=h.heightInches,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,644 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,645 DEBUG QueryTranslatorImpl:235 - HQL: select avg(h.heightInches) from Human h
+14:13:21,645 DEBUG QueryTranslatorImpl:236 - SQL: select avg(human0_.height_centimeters / 2.54E0) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,645 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,645  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,645 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select avg(h.id) from Human h
+14:13:21,646 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[AGGREGATE] Node: 'avg'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'id'
+
+14:13:21,646 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,646 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,646 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,646 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:13:21,646 DEBUG FromReferenceNode:74 - Resolved : h.id -> human0_.mammal
+14:13:21,647 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( avg ( human0_.mammal human0_.mammal id ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,647 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,647 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[AGGREGATE] AggregateNode: 'avg'
+    |  |  \-[DOT] DotNode: 'human0_.mammal' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=h.id,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'id' {originalText=id}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,647 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,647 DEBUG QueryTranslatorImpl:235 - HQL: select avg(h.id) from Human h
+14:13:21,647 DEBUG QueryTranslatorImpl:236 - SQL: select avg(human0_.mammal) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,647 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,647  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,647 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select avg(h.bigIntegerValue) from Human h
+14:13:21,648 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[AGGREGATE] Node: 'avg'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'bigIntegerValue'
+
+14:13:21,648 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,648 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,648 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,648 DEBUG DotNode:599 - getDataType() : bigIntegerValue -> org.hibernate.type.BigIntegerType@4746e33
+14:13:21,648 DEBUG FromReferenceNode:74 - Resolved : h.bigIntegerValue -> human0_.bigIntegerValue
+14:13:21,649 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( avg ( human0_.bigIntegerValue human0_.mammal bigIntegerValue ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,649 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,649 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[AGGREGATE] AggregateNode: 'avg'
+    |  |  \-[DOT] DotNode: 'human0_.bigIntegerValue' {propertyName=bigIntegerValue,dereferenceType=ALL,propertyPath=bigIntegerValue,path=h.bigIntegerValue,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'bigIntegerValue' {originalText=bigIntegerValue}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,649 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,649 DEBUG QueryTranslatorImpl:235 - HQL: select avg(h.bigIntegerValue) from Human h
+14:13:21,649 DEBUG QueryTranslatorImpl:236 - SQL: select avg(human0_.bigIntegerValue) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,649 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,649  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,650 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select sum(h.id) from Human h
+14:13:21,650 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[AGGREGATE] Node: 'sum'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'id'
+
+14:13:21,650 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,650 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,650 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,650 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:13:21,651 DEBUG FromReferenceNode:74 - Resolved : h.id -> human0_.mammal
+14:13:21,651 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( sum ( human0_.mammal human0_.mammal id ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,651 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,651 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[AGGREGATE] AggregateNode: 'sum'
+    |  |  \-[DOT] DotNode: 'human0_.mammal' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=h.id,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'id' {originalText=id}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,651 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,651 DEBUG QueryTranslatorImpl:235 - HQL: select sum(h.id) from Human h
+14:13:21,651 DEBUG QueryTranslatorImpl:236 - SQL: select sum(human0_.mammal) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,651 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,651  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,652 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select sum(h.intValue) from Human h
+14:13:21,652 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[AGGREGATE] Node: 'sum'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'intValue'
+
+14:13:21,652 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,652 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,653 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,653 DEBUG DotNode:599 - getDataType() : intValue -> org.hibernate.type.IntegerType@42252fee
+14:13:21,653 DEBUG FromReferenceNode:74 - Resolved : h.intValue -> human0_.intValue
+14:13:21,653 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( sum ( human0_.intValue human0_.mammal intValue ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,653 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,653 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[AGGREGATE] AggregateNode: 'sum'
+    |  |  \-[DOT] DotNode: 'human0_.intValue' {propertyName=intValue,dereferenceType=ALL,propertyPath=intValue,path=h.intValue,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'intValue' {originalText=intValue}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,653 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,653 DEBUG QueryTranslatorImpl:235 - HQL: select sum(h.intValue) from Human h
+14:13:21,653 DEBUG QueryTranslatorImpl:236 - SQL: select sum(human0_.intValue) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,654 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,654  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,654 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select sum(h.heightInches) from Human h
+14:13:21,654 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[AGGREGATE] Node: 'sum'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'heightInches'
+
+14:13:21,654 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,655 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,655 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,655 DEBUG DotNode:599 - getDataType() : heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:13:21,655 DEBUG FromReferenceNode:74 - Resolved : h.heightInches -> human0_.height_centimeters / 2.54E0
+14:13:21,655 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( sum ( human0_.height_centimeters / 2.54E0 human0_.mammal heightInches ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,655 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,655 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[AGGREGATE] AggregateNode: 'sum'
+    |  |  \-[DOT] DotNode: 'human0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=heightInches,path=h.heightInches,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,656 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,656 DEBUG QueryTranslatorImpl:235 - HQL: select sum(h.heightInches) from Human h
+14:13:21,656 DEBUG QueryTranslatorImpl:236 - SQL: select sum(human0_.height_centimeters / 2.54E0) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,656 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,656  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,656 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select sum(h.floatValue) from Human h
+14:13:21,659 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[AGGREGATE] Node: 'sum'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'floatValue'
+
+14:13:21,659 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,659 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,660 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,660 DEBUG DotNode:599 - getDataType() : floatValue -> org.hibernate.type.FloatType@39fd378e
+14:13:21,660 DEBUG FromReferenceNode:74 - Resolved : h.floatValue -> human0_.floatValue
+14:13:21,660 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( sum ( human0_.floatValue human0_.mammal floatValue ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,660 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,660 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[AGGREGATE] AggregateNode: 'sum'
+    |  |  \-[DOT] DotNode: 'human0_.floatValue' {propertyName=floatValue,dereferenceType=ALL,propertyPath=floatValue,path=h.floatValue,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'floatValue' {originalText=floatValue}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,661 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,661 DEBUG QueryTranslatorImpl:235 - HQL: select sum(h.floatValue) from Human h
+14:13:21,661 DEBUG QueryTranslatorImpl:236 - SQL: select sum(human0_.floatValue) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,661 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,661  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,661 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select sum(h.bigIntegerValue) from Human h
+14:13:21,662 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[AGGREGATE] Node: 'sum'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'bigIntegerValue'
+
+14:13:21,662 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,662 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,663 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,663 DEBUG DotNode:599 - getDataType() : bigIntegerValue -> org.hibernate.type.BigIntegerType@4746e33
+14:13:21,663 DEBUG FromReferenceNode:74 - Resolved : h.bigIntegerValue -> human0_.bigIntegerValue
+14:13:21,663 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( sum ( human0_.bigIntegerValue human0_.mammal bigIntegerValue ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,663 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,663 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[AGGREGATE] AggregateNode: 'sum'
+    |  |  \-[DOT] DotNode: 'human0_.bigIntegerValue' {propertyName=bigIntegerValue,dereferenceType=ALL,propertyPath=bigIntegerValue,path=h.bigIntegerValue,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'bigIntegerValue' {originalText=bigIntegerValue}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,664 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,664 DEBUG QueryTranslatorImpl:235 - HQL: select sum(h.bigIntegerValue) from Human h
+14:13:21,664 DEBUG QueryTranslatorImpl:236 - SQL: select sum(human0_.bigIntegerValue) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,664 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,664  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:21,664 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select sum(h.bigDecimalValue) from Human h
+14:13:21,665 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[AGGREGATE] Node: 'sum'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'h'
+                \-[IDENT] Node: 'bigDecimalValue'
+
+14:13:21,665 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,665 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:21,665 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:21,665 DEBUG DotNode:599 - getDataType() : bigDecimalValue -> org.hibernate.type.BigDecimalType@3bb4a749
+14:13:21,665 DEBUG FromReferenceNode:74 - Resolved : h.bigDecimalValue -> human0_.bigDecimalValue
+14:13:21,665 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( sum ( human0_.bigDecimalValue human0_.mammal bigDecimalValue ) ) ) ( FromClause{level=1} Human human0_ ) )
+14:13:21,665 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:21,666 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[AGGREGATE] AggregateNode: 'sum'
+    |  |  \-[DOT] DotNode: 'human0_.bigDecimalValue' {propertyName=bigDecimalValue,dereferenceType=ALL,propertyPath=bigDecimalValue,path=h.bigDecimalValue,tableAlias=human0_,className=Human,classAlias=h}
+    |  |     +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+    |  |     \-[IDENT] IdentNode: 'bigDecimalValue' {originalText=bigDecimalValue}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+
+14:13:21,669 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,669 DEBUG QueryTranslatorImpl:235 - HQL: select sum(h.bigDecimalValue) from Human h
+14:13:21,670 DEBUG QueryTranslatorImpl:236 - SQL: select sum(human0_.bigDecimalValue) as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id
+14:13:21,670 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:21,687  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

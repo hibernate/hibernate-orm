@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.onetoone.OneToOneErrorTest" tests="1" time="0.005" timestamp="2013-02-28T20:10:40">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneErrorTest" name="testWrongOneToOne" time="0.004" />
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

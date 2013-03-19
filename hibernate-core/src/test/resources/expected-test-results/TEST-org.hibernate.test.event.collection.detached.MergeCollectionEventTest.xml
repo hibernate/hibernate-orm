@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.event.collection.detached.MergeCollectionEventTest" tests="1" time="0.111" timestamp="2013-02-28T20:12:25">
+  <properties />
+  <testcase classname="org.hibernate.test.event.collection.detached.MergeCollectionEventTest" name="testCollectionEventHandlingOnMerge" time="0.074" />
+  <system-out><![CDATA[14:12:25,096  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.event.collection.detached.MergeCollectionEventTest
+14:12:25,102  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:25,104  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:25,104  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:25,104  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:25,104  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:25,107  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:25,108  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:25,108  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:25,109  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:25,109  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:25,118  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:25,118 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:25,119 DEBUG SQL:104 - 
+    alter table CHARACTER_ALIAS 
+        drop constraint FKBFBA17A55528DA3
+14:12:25,119 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CHARACTER_ALIAS drop constraint FKBFBA17A55528DA3
+14:12:25,119 ERROR SchemaExport:426 - Table "CHARACTER_ALIAS" not found; SQL statement:
+
+    alter table CHARACTER_ALIAS 
+        drop constraint FKBFBA17A55528DA3 [42102-145]
+14:12:25,119 DEBUG SQL:104 - 
+    alter table CHARACTER_ALIAS 
+        drop constraint FKBFBA17AA869D0B6
+14:12:25,119 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CHARACTER_ALIAS drop constraint FKBFBA17AA869D0B6
+14:12:25,119 ERROR SchemaExport:426 - Table "CHARACTER_ALIAS" not found; SQL statement:
+
+    alter table CHARACTER_ALIAS 
+        drop constraint FKBFBA17AA869D0B6 [42102-145]
+14:12:25,119 DEBUG SQL:104 - 
+    drop table Alias if exists
+14:12:25,120 DEBUG SQL:104 - 
+    drop table CHARACTER_ALIAS if exists
+14:12:25,120 DEBUG SQL:104 - 
+    drop table CharacterTable if exists
+14:12:25,120 DEBUG SQL:104 - 
+    create table Alias (
+        id integer not null,
+        alias varchar(255),
+        primary key (id)
+    )
+14:12:25,120 DEBUG SQL:104 - 
+    create table CHARACTER_ALIAS (
+        aliases_id integer not null,
+        characters_id integer not null
+    )
+14:12:25,120 DEBUG SQL:104 - 
+    create table CharacterTable (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:25,121 DEBUG SQL:104 - 
+    create index idx_CHARACTER_ALIAS_1 on CHARACTER_ALIAS (characters_id)
+14:12:25,121 DEBUG SQL:104 - 
+    alter table CHARACTER_ALIAS 
+        add constraint FKBFBA17A55528DA3 
+        foreign key (characters_id) 
+        references CharacterTable
+14:12:25,121 DEBUG SQL:104 - 
+    alter table CHARACTER_ALIAS 
+        add constraint FKBFBA17AA869D0B6 
+        foreign key (aliases_id) 
+        references Alias
+14:12:25,122  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:25,122  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:25,122  INFO CustomRunner:139 - Test: testCollectionEventHandlingOnMerge
+14:12:25,125 DEBUG SQL:104 - 
+    insert 
+    into
+        CharacterTable
+        (name, id) 
+    values
+        (?, ?)
+14:12:25,126 DEBUG SQL:104 - 
+    insert 
+    into
+        CharacterTable
+        (name, id) 
+    values
+        (?, ?)
+14:12:25,128 DEBUG SQL:104 - 
+    insert 
+    into
+        Alias
+        (alias, id) 
+    values
+        (?, ?)
+14:12:25,128 DEBUG SQL:104 - 
+    insert 
+    into
+        Alias
+        (alias, id) 
+    values
+        (?, ?)
+14:12:25,129 DEBUG SQL:104 - 
+    select
+        alias0_.id as id0_1_,
+        alias0_.alias as alias0_1_,
+        characters1_.aliases_id as aliases1_0_3_,
+        character2_.id as characters2_1_3_,
+        character2_.id as id2_0_,
+        character2_.name as name2_0_ 
+    from
+        Alias alias0_ 
+    left outer join
+        CHARACTER_ALIAS characters1_ 
+            on alias0_.id=characters1_.aliases_id 
+    left outer join
+        CharacterTable character2_ 
+            on characters1_.characters_id=character2_.id 
+    where
+        alias0_.id=?
+14:12:25,129 DEBUG SQL:104 - 
+    select
+        character0_.id as id2_1_,
+        character0_.name as name2_1_,
+        aliases1_.characters_id as characters2_2_3_,
+        alias2_.id as aliases1_1_3_,
+        alias2_.id as id0_0_,
+        alias2_.alias as alias0_0_ 
+    from
+        CharacterTable character0_ 
+    left outer join
+        CHARACTER_ALIAS aliases1_ 
+            on character0_.id=aliases1_.characters_id 
+    left outer join
+        Alias alias2_ 
+            on aliases1_.aliases_id=alias2_.id 
+    where
+        character0_.id=?
+14:12:25,138 DEBUG SQL:104 - 
+    select
+        alias0_.id as id0_1_,
+        alias0_.alias as alias0_1_,
+        characters1_.aliases_id as aliases1_0_3_,
+        character2_.id as characters2_1_3_,
+        character2_.id as id2_0_,
+        character2_.name as name2_0_ 
+    from
+        Alias alias0_ 
+    left outer join
+        CHARACTER_ALIAS characters1_ 
+            on alias0_.id=characters1_.aliases_id 
+    left outer join
+        CharacterTable character2_ 
+            on characters1_.characters_id=character2_.id 
+    where
+        alias0_.id=?
+14:12:25,140 DEBUG SQL:104 - 
+    select
+        character0_.id as id2_1_,
+        character0_.name as name2_1_,
+        aliases1_.characters_id as characters2_2_3_,
+        alias2_.id as aliases1_1_3_,
+        alias2_.id as id0_0_,
+        alias2_.alias as alias0_0_ 
+    from
+        CharacterTable character0_ 
+    left outer join
+        CHARACTER_ALIAS aliases1_ 
+            on character0_.id=aliases1_.characters_id 
+    left outer join
+        Alias alias2_ 
+            on aliases1_.aliases_id=alias2_.id 
+    where
+        character0_.id=?
+14:12:25,148 DEBUG SQL:104 - 
+    insert 
+    into
+        CHARACTER_ALIAS
+        (aliases_id, characters_id) 
+    values
+        (?, ?)
+14:12:25,149 DEBUG SQL:104 - 
+    insert 
+    into
+        CHARACTER_ALIAS
+        (aliases_id, characters_id) 
+    values
+        (?, ?)
+14:12:25,157 DEBUG SQL:104 - 
+    insert 
+    into
+        CHARACTER_ALIAS
+        (aliases_id, characters_id) 
+    values
+        (?, ?)
+14:12:25,194 DEBUG SQL:104 - 
+    insert 
+    into
+        CHARACTER_ALIAS
+        (aliases_id, characters_id) 
+    values
+        (?, ?)
+14:12:25,196 DEBUG SQL:104 - 
+    delete 
+    from
+        CHARACTER_ALIAS 
+    where
+        aliases_id=?
+14:12:25,196 DEBUG SQL:104 - 
+    insert 
+    into
+        CHARACTER_ALIAS
+        (aliases_id, characters_id) 
+    values
+        (?, ?)
+14:12:25,196 DEBUG SQL:104 - 
+    insert 
+    into
+        CHARACTER_ALIAS
+        (aliases_id, characters_id) 
+    values
+        (?, ?)
+14:12:25,196 DEBUG SQL:104 - 
+    delete 
+    from
+        CHARACTER_ALIAS 
+    where
+        aliases_id=?
+14:12:25,196 DEBUG SQL:104 - 
+    insert 
+    into
+        CHARACTER_ALIAS
+        (aliases_id, characters_id) 
+    values
+        (?, ?)
+14:12:25,197 DEBUG SQL:104 - 
+    insert 
+    into
+        CHARACTER_ALIAS
+        (aliases_id, characters_id) 
+    values
+        (?, ?)
+14:12:25,198  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:25,198 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:25,198 DEBUG SQL:104 - 
+    alter table CHARACTER_ALIAS 
+        drop constraint FKBFBA17A55528DA3
+14:12:25,199 DEBUG SQL:104 - 
+    alter table CHARACTER_ALIAS 
+        drop constraint FKBFBA17AA869D0B6
+14:12:25,199 DEBUG SQL:104 - 
+    drop table Alias if exists
+14:12:25,199 DEBUG SQL:104 - 
+    drop table CHARACTER_ALIAS if exists
+14:12:25,199 DEBUG SQL:104 - 
+    drop table CharacterTable if exists
+14:12:25,200  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:25,200  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.mapping.ValueVisitorTest" tests="1" time="0.055" timestamp="2013-02-28T20:17:29">
+  <properties />
+  <testcase classname="org.hibernate.test.mapping.ValueVisitorTest" name="testProperCallbacks" time="0.003" />
+  <system-out><![CDATA[14:17:29,487  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.mapping.ValueVisitorTest
+14:17:29,488  INFO CustomRunner:139 - Test: testProperCallbacks
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

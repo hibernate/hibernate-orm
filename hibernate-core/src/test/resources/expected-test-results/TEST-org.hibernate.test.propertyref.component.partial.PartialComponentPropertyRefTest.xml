@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.propertyref.component.partial.PartialComponentPropertyRefTest" tests="1" time="0.127" timestamp="2013-02-28T20:17:46">
+  <properties />
+  <testcase classname="org.hibernate.test.propertyref.component.partial.PartialComponentPropertyRefTest" name="testComponentPropertyRef" time="0.035" />
+  <system-out><![CDATA[14:17:46,924  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.propertyref.component.partial.PartialComponentPropertyRefTest
+14:17:46,925  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/propertyref/component/partial/Mapping.hbm.xml
+14:17:46,953  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:46,954  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:46,954  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:46,954  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:46,954  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:46,955  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:46,956  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:46,957  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:46,957  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:46,957  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:47,008  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:47,009 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:47,009 DEBUG SQL:104 - 
+    alter table PART_COMP_PROPREF_ACCT 
+        drop constraint FK89B4A6A6188398CC
+14:17:47,009 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PART_COMP_PROPREF_ACCT drop constraint FK89B4A6A6188398CC
+14:17:47,009 ERROR SchemaExport:426 - Table "PART_COMP_PROPREF_ACCT" not found; SQL statement:
+
+    alter table PART_COMP_PROPREF_ACCT 
+        drop constraint FK89B4A6A6188398CC [42102-145]
+14:17:47,009 DEBUG SQL:104 - 
+    drop table PART_COMP_PROPREF_ACCT if exists
+14:17:47,009 DEBUG SQL:104 - 
+    drop table PART_COMP_PROPREF_PERS if exists
+14:17:47,010 DEBUG SQL:104 - 
+    create table PART_COMP_PROPREF_ACCT (
+        accnum varchar(255) not null,
+        owner varchar(255),
+        primary key (accnum)
+    )
+14:17:47,010 DEBUG SQL:104 - 
+    create table PART_COMP_PROPREF_PERS (
+        id bigint not null,
+        name varchar(255),
+        ssn varchar(255) not null,
+        primary key (id)
+    )
+14:17:47,010 DEBUG SQL:104 - 
+    alter table PART_COMP_PROPREF_ACCT 
+        add constraint FK89B4A6A6188398CC 
+        foreign key (owner) 
+        references PART_COMP_PROPREF_PERS (ssn)
+14:17:47,011 DEBUG SQL:104 - 
+    alter table PART_COMP_PROPREF_PERS 
+        add constraint uc_PART_COMP_PROPREF_PERS_1 unique (ssn)
+14:17:47,011  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:47,011  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:47,012  INFO CustomRunner:139 - Test: testComponentPropertyRef
+14:17:47,013 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        PART_COMP_PROPREF_PERS
+14:17:47,013 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.propertyref.component.partial.Account] lookup : key[org.hibernate.test.propertyref.component.partial.Account#123-12345-1236]
+14:17:47,014 DEBUG SQL:104 - 
+    insert 
+    into
+        PART_COMP_PROPREF_PERS
+        (name, ssn, id) 
+    values
+        (?, ?, ?)
+14:17:47,014 DEBUG SQL:104 - 
+    insert 
+    into
+        PART_COMP_PROPREF_ACCT
+        (owner, accnum) 
+    values
+        (?, ?)
+14:17:47,015 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.propertyref.component.partial.Account a left join fetch a.owner
+14:17:47,026 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  |  \-[IDENT] Node: 'propertyref'
+          |  |  |  |  \-[IDENT] Node: 'component'
+          |  |  |  \-[IDENT] Node: 'partial'
+          |  |  \-[IDENT] Node: 'Account'
+          |  \-[ALIAS] Node: 'a'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'a'
+                \-[IDENT] Node: 'owner'
+
+14:17:47,026 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,026 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.component.partial.Account (a) -> account0_
+14:17:47,027 DEBUG FromReferenceNode:74 - Resolved : a -> account0_.accnum
+14:17:47,027 DEBUG DotNode:599 - getDataType() : owner -> org.hibernate.type.ManyToOneType(org.hibernate.test.propertyref.component.partial.Person)
+14:17:47,027 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for owner in org.hibernate.test.propertyref.component.partial.Account (<no alias>) parent = [ {null} ]
+14:17:47,027 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.propertyref.component.partial.Person (<no alias>) -> person1_
+14:17:47,027 DEBUG FromClause:282 - addJoinByPathMap() : a.owner -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PART_COMP_PROPREF_PERS,tableAlias=person1_,origin=PART_COMP_PROPREF_ACCT account0_,columns={account0_.owner ,className=org.hibernate.test.propertyref.component.partial.Person}}
+14:17:47,027 DEBUG FromReferenceNode:74 - Resolved : a.owner -> account0_.owner
+14:17:47,027 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'PART_COMP_PROPREF_PERS person1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PART_COMP_PROPREF_PERS,tableAlias=person1_,origin=PART_COMP_PROPREF_ACCT account0_,columns={account0_.owner ,className=org.hibernate.test.propertyref.component.partial.Person}}
+
+14:17:47,028 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( PART_COMP_PROPREF_ACCT account0_ PART_COMP_PROPREF_PERS person1_ ) ) )
+14:17:47,028 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:47,028 DEBUG JoinProcessor:175 - Using FROM fragment [PART_COMP_PROPREF_ACCT account0_]
+14:17:47,028 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join PART_COMP_PROPREF_PERS person1_ on account0_.owner=person1_.ssn]
+14:17:47,028 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (PART_COMP_PROPREF_PERS,PART_COMP_PROPREF_ACCT)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'account0_.accnum as accnum0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=PART_COMP_PROPREF_ACCT,tableAlias=account0_,origin=null,columns={,className=org.hibernate.test.propertyref.component.partial.Account}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person1_.id as id1_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PART_COMP_PROPREF_PERS,tableAlias=person1_,origin=PART_COMP_PROPREF_ACCT account0_,columns={account0_.owner ,className=org.hibernate.test.propertyref.component.partial.Person}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'account0_.owner as owner0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'person1_.name as name1_1_, person1_.ssn as ssn1_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a], fromElementByTableAlias=[account0_, person1_], fromElementsByPath=[a.owner], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'PART_COMP_PROPREF_ACCT account0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=PART_COMP_PROPREF_ACCT,tableAlias=account0_,origin=null,columns={,className=org.hibernate.test.propertyref.component.partial.Account}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join PART_COMP_PROPREF_PERS person1_ on account0_.owner=person1_.ssn' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PART_COMP_PROPREF_PERS,tableAlias=person1_,origin=PART_COMP_PROPREF_ACCT account0_,columns={account0_.owner ,className=org.hibernate.test.propertyref.component.partial.Person}}
+
+14:17:47,028 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,028 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.propertyref.component.partial.Account a left join fetch a.owner
+14:17:47,028 DEBUG QueryTranslatorImpl:236 - SQL: select account0_.accnum as accnum0_0_, person1_.id as id1_1_, account0_.owner as owner0_0_, person1_.name as name1_1_, person1_.ssn as ssn1_1_ from PART_COMP_PROPREF_ACCT account0_ left outer join PART_COMP_PROPREF_PERS person1_ on account0_.owner=person1_.ssn
+14:17:47,029 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,029 DEBUG SQL:104 - 
+    select
+        account0_.accnum as accnum0_0_,
+        person1_.id as id1_1_,
+        account0_.owner as owner0_0_,
+        person1_.name as name1_1_,
+        person1_.ssn as ssn1_1_ 
+    from
+        PART_COMP_PROPREF_ACCT account0_ 
+    left outer join
+        PART_COMP_PROPREF_PERS person1_ 
+            on account0_.owner=person1_.ssn
+14:17:47,033 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_0_,
+        person0_.name as name1_0_,
+        person0_.ssn as ssn1_0_ 
+    from
+        PART_COMP_PROPREF_PERS person0_ 
+    where
+        person0_.ssn=?
+14:17:47,034 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.propertyref.component.partial.Account#123-12345-1236
+14:17:47,034 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.propertyref.component.partial.Account] : [org.hibernate.test.propertyref.component.partial.Account#123-12345-1236] -> [CacheEntry(org.hibernate.test.propertyref.component.partial.Account)[1]]
+14:17:47,034 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.propertyref.component.partial.Person#1
+14:17:47,034 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.propertyref.component.partial.Person] : [org.hibernate.test.propertyref.component.partial.Person#1] -> [CacheEntry(org.hibernate.test.propertyref.component.partial.Person)[[Ljava.lang.Object;@30cf1906]]
+14:17:47,035 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.propertyref.component.partial.Account] lookup : key[org.hibernate.test.propertyref.component.partial.Account#123-12345-1236]
+14:17:47,035 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.propertyref.component.partial.Account] hit: org.hibernate.test.propertyref.component.partial.Account#123-12345-1236
+14:17:47,035 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.propertyref.component.partial.Person] lookup : key[org.hibernate.test.propertyref.component.partial.Person#1]
+14:17:47,035 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.propertyref.component.partial.Person] hit: org.hibernate.test.propertyref.component.partial.Person#1
+14:17:47,035 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.propertyref.component.partial.Account]
+14:17:47,036 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.propertyref.component.partial.Person]
+14:17:47,036 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.propertyref.component.partial.Account] lookup : key[org.hibernate.test.propertyref.component.partial.Account#123-12345-1236]
+14:17:47,036 DEBUG SQL:104 - 
+    select
+        account0_.accnum as accnum0_0_,
+        account0_.owner as owner0_0_ 
+    from
+        PART_COMP_PROPREF_ACCT account0_ 
+    where
+        account0_.accnum=?
+14:17:47,036 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_0_,
+        person0_.name as name1_0_,
+        person0_.ssn as ssn1_0_ 
+    from
+        PART_COMP_PROPREF_PERS person0_ 
+    where
+        person0_.ssn=?
+14:17:47,044 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.propertyref.component.partial.Person#1
+14:17:47,044 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.propertyref.component.partial.Person] : [org.hibernate.test.propertyref.component.partial.Person#1] -> [CacheEntry(org.hibernate.test.propertyref.component.partial.Person)[[Ljava.lang.Object;@65432a1e]]
+14:17:47,045 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.propertyref.component.partial.Account#123-12345-1236
+14:17:47,045 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.propertyref.component.partial.Account] : [org.hibernate.test.propertyref.component.partial.Account#123-12345-1236] -> [CacheEntry(org.hibernate.test.propertyref.component.partial.Account)[1]]
+14:17:47,046 DEBUG SQL:104 - 
+    delete 
+    from
+        PART_COMP_PROPREF_ACCT 
+    where
+        accnum=?
+14:17:47,046 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.propertyref.component.partial.Account]: org.hibernate.test.propertyref.component.partial.Account#123-12345-1236
+14:17:47,046 DEBUG SQL:104 - 
+    delete 
+    from
+        PART_COMP_PROPREF_PERS 
+    where
+        id=?
+14:17:47,046 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.propertyref.component.partial.Person]: org.hibernate.test.propertyref.component.partial.Person#1
+14:17:47,046 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.propertyref.component.partial.Account]: org.hibernate.test.propertyref.component.partial.Account#123-12345-1236
+14:17:47,046 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.propertyref.component.partial.Person]: org.hibernate.test.propertyref.component.partial.Person#1
+14:17:47,047  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:47,048 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:47,048 DEBUG SQL:104 - 
+    alter table PART_COMP_PROPREF_ACCT 
+        drop constraint FK89B4A6A6188398CC
+14:17:47,048 DEBUG SQL:104 - 
+    drop table PART_COMP_PROPREF_ACCT if exists
+14:17:47,048 DEBUG SQL:104 - 
+    drop table PART_COMP_PROPREF_PERS if exists
+14:17:47,048  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:47,049  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

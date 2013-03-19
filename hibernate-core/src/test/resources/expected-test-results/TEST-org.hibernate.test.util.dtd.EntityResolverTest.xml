@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.util.dtd.EntityResolverTest" tests="1" time="0.021" timestamp="2013-02-28T20:19:29">
+  <properties />
+  <testcase classname="org.hibernate.test.util.dtd.EntityResolverTest" name="testEntityIncludeResolution" time="0.019" />
+  <system-out><![CDATA[14:19:29,915  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.util.dtd.EntityResolverTest
+14:19:29,915  INFO CustomRunner:139 - Test: testEntityIncludeResolution
+14:19:29,916  INFO Configuration:725 - HHH000221: Reading mappings from resource: org/hibernate/test/util/dtd/Parent.hbm.xml
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

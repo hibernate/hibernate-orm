@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.indexcoll.MapKeyTest" tests="1" time="0.066" timestamp="2013-02-28T20:10:31">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.MapKeyTest" name="testMapKeyOnEmbeddedId" time="0.019" />
+  <system-out><![CDATA[14:10:31,672  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.indexcoll.MapKeyTest
+14:10:31,677  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.HSQLDialect
+14:10:31,678  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.HSQLDialect
+14:10:31,679  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:31,679  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:31,679  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:31,679  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:31,679  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:31,688  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:31,688  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:31,688  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:31,689  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:31,689  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:31,698  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:31,699 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:31,699 DEBUG SQL:104 - 
+    alter table GenerationUser_GenerationGroup 
+        drop constraint FK39143D0BF9828E7E
+14:10:31,699 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table GenerationUser_GenerationGroup drop constraint FK39143D0BF9828E7E
+14:10:31,699 ERROR SchemaExport:426 - Table "GENERATIONUSER_GENERATIONGROUP" not found; SQL statement:
+
+    alter table GenerationUser_GenerationGroup 
+        drop constraint FK39143D0BF9828E7E [42102-145]
+14:10:31,699 DEBUG SQL:104 - 
+    alter table GenerationUser_GenerationGroup 
+        drop constraint FK39143D0BA9CEE30A
+14:10:31,700 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table GenerationUser_GenerationGroup drop constraint FK39143D0BA9CEE30A
+14:10:31,700 ERROR SchemaExport:426 - Table "GENERATIONUSER_GENERATIONGROUP" not found; SQL statement:
+
+    alter table GenerationUser_GenerationGroup 
+        drop constraint FK39143D0BA9CEE30A [42102-145]
+14:10:31,700 DEBUG SQL:104 - 
+    drop table GenerationGroup if exists
+14:10:31,700 DEBUG SQL:104 - 
+    drop table GenerationUser if exists
+14:10:31,700 DEBUG SQL:104 - 
+    drop table GenerationUser_GenerationGroup if exists
+14:10:31,700 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:31,701 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:31,701 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:31,701 DEBUG SQL:104 - 
+    create table GenerationGroup (
+        id integer not null,
+        age varchar(255),
+        culture varchar(255),
+        primary key (id)
+    )
+14:10:31,702 DEBUG SQL:104 - 
+    create table GenerationUser (
+        id integer not null,
+        primary key (id)
+    )
+14:10:31,702 DEBUG SQL:104 - 
+    create table GenerationUser_GenerationGroup (
+        GenerationUser_id integer not null,
+        ref_id integer not null,
+        primary key (GenerationUser_id, ref_id)
+    )
+14:10:31,702 DEBUG SQL:104 - 
+    alter table GenerationUser_GenerationGroup 
+        add constraint UK_39143D0BC8478C47 unique (ref_id)
+14:10:31,703 DEBUG SQL:104 - 
+    alter table GenerationUser_GenerationGroup 
+        add constraint FK39143D0BF9828E7E 
+        foreign key (ref_id) 
+        references GenerationGroup
+14:10:31,712 DEBUG SQL:104 - 
+    alter table GenerationUser_GenerationGroup 
+        add constraint FK39143D0BA9CEE30A 
+        foreign key (GenerationUser_id) 
+        references GenerationUser
+14:10:31,713 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:31,713  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:31,714  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:31,714  INFO CustomRunner:139 - Test: testMapKeyOnEmbeddedId
+14:10:31,715 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,716 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,717 DEBUG SQL:104 - 
+    insert 
+    into
+        GenerationGroup
+        (age, culture, id) 
+    values
+        (?, ?, ?)
+14:10:31,717 DEBUG SQL:104 - 
+    insert 
+    into
+        GenerationUser
+        (id) 
+    values
+        (?)
+14:10:31,718 DEBUG SQL:104 - 
+    insert 
+    into
+        GenerationUser_GenerationGroup
+        (GenerationUser_id, ref_id) 
+    values
+        (?, ?)
+14:10:31,722 DEBUG SQL:104 - 
+    select
+        generation0_.id as id1_0_ 
+    from
+        GenerationUser generation0_ 
+    where
+        generation0_.id=?
+14:10:31,723 DEBUG SQL:104 - 
+    select
+        ref0_.GenerationUser_id as Generati1_1_1_,
+        ref0_.ref_id as ref2_2_1_,
+        (select
+            a3.age 
+        from
+            GenerationGroup a3 
+        where
+            a3.id=ref0_.ref_id) as formula12_1_,
+        (select
+            a5.culture 
+        from
+            GenerationGroup a5 
+        where
+            a5.id=ref0_.ref_id) as formula13_1_,
+        generation1_.id as id0_0_,
+        generation1_.age as age0_0_,
+        generation1_.culture as culture0_0_ 
+    from
+        GenerationUser_GenerationGroup ref0_ 
+    inner join
+        GenerationGroup generation1_ 
+            on ref0_.ref_id=generation1_.id 
+    where
+        ref0_.GenerationUser_id=?
+14:10:31,734  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:31,735 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:31,735 DEBUG SQL:104 - 
+    alter table GenerationUser_GenerationGroup 
+        drop constraint FK39143D0BF9828E7E
+14:10:31,736 DEBUG SQL:104 - 
+    alter table GenerationUser_GenerationGroup 
+        drop constraint FK39143D0BA9CEE30A
+14:10:31,736 DEBUG SQL:104 - 
+    drop table GenerationGroup if exists
+14:10:31,736 DEBUG SQL:104 - 
+    drop table GenerationUser if exists
+14:10:31,736 DEBUG SQL:104 - 
+    drop table GenerationUser_GenerationGroup if exists
+14:10:31,737 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:31,737  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:31,737  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,807 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.id.IdTest" tests="12" time="0.542" timestamp="2013-02-28T20:10:28">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testClassLevelGenerator" time="0.023" />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testColumnDefinition" time="0.0" />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testDefaultSequence" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testGenericGenerator" time="0.004" />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testGenericGenerators" time="0.01" />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testIdClass" time="0.119" />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testIdInEmbeddableSuperclass" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testLowAllocationSize" time="0.047" />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testMethodLevelGenerator" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testParameterizedAuto" time="0.027" />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testSequenceGenerator" time="0.012" />
+  <testcase classname="org.hibernate.test.annotations.id.IdTest" name="testTableGenerator" time="0.076" />
+  <system-out><![CDATA[14:10:28,412  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.id.IdTest
+14:10:28,478  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:28,478  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:28,478  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:28,478  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:28,479  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:28,480  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:28,480  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:28,481  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:28,481  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:28,481  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:28,498  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:10:28,568  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:10:28,569  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:10:28,570  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:28,570 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:28,570 DEBUG SQL:104 - 
+    drop table Ball if exists
+14:10:28,570 DEBUG SQL:104 - 
+    drop table BreakDance if exists
+14:10:28,571 DEBUG SQL:104 - 
+    drop table Computer if exists
+14:10:28,571 DEBUG SQL:104 - 
+    drop table Department if exists
+14:10:28,571 DEBUG SQL:104 - 
+    drop table FirTree if exists
+14:10:28,571 DEBUG SQL:104 - 
+    drop table Footballer if exists
+14:10:28,571 DEBUG SQL:104 - 
+    drop table Furniture if exists
+14:10:28,571 DEBUG SQL:104 - 
+    drop table Home if exists
+14:10:28,571 DEBUG SQL:104 - 
+    drop table Monkey if exists
+14:10:28,571 DEBUG SQL:104 - 
+    drop table Phone if exists
+14:10:28,572 DEBUG SQL:104 - 
+    drop table Shoe if exists
+14:10:28,572 DEBUG SQL:104 - 
+    drop table SoundSystem if exists
+14:10:28,572 DEBUG SQL:104 - 
+    drop table Store if exists
+14:10:28,572 DEBUG SQL:104 - 
+    drop table tbl_dog if exists
+14:10:28,572 DEBUG SQL:104 - 
+    drop table GENERATOR_TABLE if exists
+14:10:28,572 DEBUG SQL:104 - 
+    drop table hi_id_key if exists
+14:10:28,572 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:28,573 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:28,573 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:28,573 DEBUG SQL:104 - 
+    drop table hibernate_sequences if exists
+14:10:28,573 DEBUG SQL:104 - 
+    create table Ball (
+        ball_id integer not null,
+        primary key (ball_id)
+    )
+14:10:28,573 DEBUG SQL:104 - 
+    create table BreakDance (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:28,574 DEBUG SQL:104 - 
+    create table Computer (
+        id bigint not null,
+        serialNumber varchar(255),
+        primary key (id)
+    )
+14:10:28,581 DEBUG SQL:104 - 
+    create table Department (
+        id bigint not null,
+        primary key (id)
+    )
+14:10:28,581 DEBUG SQL:104 - 
+    create table FirTree (
+        id integer not null,
+        primary key (id)
+    )
+14:10:28,582 DEBUG SQL:104 - 
+    create table Footballer (
+        bibi varchar(31) not null,
+        fb_fname varchar(255) not null,
+        lastname varchar(255) not null,
+        club varchar(255),
+        primary key (fb_fname, lastname)
+    )
+14:10:28,582 DEBUG SQL:104 - 
+    create table Furniture (
+        id integer not null,
+        primary key (id)
+    )
+14:10:28,582 DEBUG SQL:104 - 
+    create table Home (
+        id bigint not null,
+        primary key (id)
+    )
+14:10:28,582 DEBUG SQL:104 - 
+    create table Monkey (
+        id varchar(255) not null,
+        primary key (id)
+    )
+14:10:28,583 DEBUG SQL:104 - 
+    create table Phone (
+        id integer not null,
+        primary key (id)
+    )
+14:10:28,583 DEBUG SQL:104 - 
+    create table Shoe (
+        id bigint not null,
+        primary key (id)
+    )
+14:10:28,583 DEBUG SQL:104 - 
+    create table SoundSystem (
+        id varchar(255) not null,
+        brand varchar(255),
+        model varchar(255),
+        primary key (id)
+    )
+14:10:28,584 DEBUG SQL:104 - 
+    create table Store (
+        id bigint not null,
+        primary key (id)
+    )
+14:10:28,584 DEBUG SQL:104 - 
+    create table tbl_dog (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:28,584 DEBUG SQL:104 - 
+    create table GENERATOR_TABLE (
+         pkey varchar(255) not null ,
+         hi bigint,
+        primary key ( pkey ) 
+    ) 
+14:10:28,584 DEBUG SQL:104 - 
+    create table hi_id_key (
+         id_key varchar(255) not null ,
+         next_hi bigint,
+        primary key ( id_key ) 
+    ) 
+14:10:28,585 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:28,585 DEBUG SQL:104 - 
+    create table hibernate_sequences (
+         sequence_name varchar(255) not null ,
+         next_val bigint,
+        primary key ( sequence_name ) 
+    ) 
+14:10:28,585  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:28,586  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:10:28,588  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:10:28,588  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:28,589  INFO CustomRunner:139 - Test: testClassLevelGenerator
+14:10:28,590 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:28,594 DEBUG SQL:104 - 
+    insert 
+    into
+        Store
+        (id) 
+    values
+        (?)
+14:10:28,595 DEBUG SQL:104 - 
+    select
+        store0_.id as id12_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.id=?
+14:10:28,596 DEBUG SQL:104 - 
+    delete 
+    from
+        Store 
+    where
+        id=?
+14:10:28,612  INFO CustomRunner:139 - Test: testColumnDefinition
+14:10:28,613  INFO CustomRunner:139 - Test: testDefaultSequence
+14:10:28,614 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:28,615 DEBUG SQL:104 - 
+    insert 
+    into
+        Home
+        (id) 
+    values
+        (?)
+14:10:28,616 DEBUG SQL:104 - 
+    select
+        home0_.id as id7_0_ 
+    from
+        Home home0_ 
+    where
+        home0_.id=?
+14:10:28,616 DEBUG SQL:104 - 
+    delete 
+    from
+        Home 
+    where
+        id=?
+14:10:28,617  INFO CustomRunner:139 - Test: testGenericGenerator
+14:10:28,618 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:28,619 DEBUG SQL:104 - 
+    insert 
+    into
+        SoundSystem
+        (brand, model, id) 
+    values
+        (?, ?, ?)
+14:10:28,620 DEBUG SQL:104 - 
+    insert 
+    into
+        Furniture
+        (id) 
+    values
+        (?)
+14:10:28,620 DEBUG SQL:104 - 
+    select
+        soundsyste0_.id as id11_0_,
+        soundsyste0_.brand as brand11_0_,
+        soundsyste0_.model as model11_0_ 
+    from
+        SoundSystem soundsyste0_ 
+    where
+        soundsyste0_.id=?
+14:10:28,621 DEBUG SQL:104 - 
+    select
+        furniture0_.id as id6_0_ 
+    from
+        Furniture furniture0_ 
+    where
+        furniture0_.id=?
+14:10:28,621 DEBUG SQL:104 - 
+    delete 
+    from
+        SoundSystem 
+    where
+        id=?
+14:10:28,622 DEBUG SQL:104 - 
+    delete 
+    from
+        Furniture 
+    where
+        id=?
+14:10:28,623  INFO CustomRunner:139 - Test: testGenericGenerators
+14:10:28,632 DEBUG SQL:104 - 
+    insert 
+    into
+        Monkey
+        (id) 
+    values
+        (?)
+14:10:28,633  INFO CustomRunner:139 - Test: testIdClass
+14:10:28,634 DEBUG SQL:104 - 
+    insert 
+    into
+        Footballer
+        (club, bibi, fb_fname, lastname) 
+    values
+        (?, 'Footballer', ?, ?)
+14:10:28,637 DEBUG SQL:104 - 
+    insert 
+    into
+        Footballer
+        (club, bibi, fb_fname, lastname) 
+    values
+        (?, 'GoalKeeper', ?, ?)
+14:10:28,638 DEBUG SQL:104 - 
+    select
+        footballer0_.fb_fname as fb2_5_0_,
+        footballer0_.lastname as lastname5_0_,
+        footballer0_.club as club5_0_,
+        footballer0_.bibi as bibi5_0_ 
+    from
+        Footballer footballer0_ 
+    where
+        footballer0_.fb_fname=? 
+        and footballer0_.lastname=?
+14:10:28,659 DEBUG SQL:104 - 
+    select
+        goalkeeper0_.fb_fname as fb2_5_0_,
+        goalkeeper0_.lastname as lastname5_0_,
+        goalkeeper0_.club as club5_0_ 
+    from
+        Footballer goalkeeper0_ 
+    where
+        goalkeeper0_.fb_fname=? 
+        and goalkeeper0_.lastname=? 
+        and goalkeeper0_.bibi='GoalKeeper'
+14:10:28,660 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.id.entities.Footballer f where f.firstname = 'David'
+14:10:28,680 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  |  \-[IDENT] Node: 'id'
+    |        |  |  \-[IDENT] Node: 'entities'
+    |        |  \-[IDENT] Node: 'Footballer'
+    |        \-[ALIAS] Node: 'f'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'f'
+          |  \-[IDENT] Node: 'firstname'
+          \-[QUOTED_STRING] Node: ''David''
+
+14:10:28,681 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:28,682 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.id.entities.Footballer (f) -> footballer0_
+14:10:28,682 DEBUG FromReferenceNode:74 - Resolved : f -> (footballer0_.fb_fname, footballer0_.lastname)
+14:10:28,682 DEBUG DotNode:599 - getDataType() : firstname -> org.hibernate.type.StringType@2dc8de40
+14:10:28,682 DEBUG FromReferenceNode:74 - Resolved : f.firstname -> footballer0_.fb_fname
+14:10:28,682 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Footballer footballer0_ ) ( where ( = ( footballer0_.fb_fname (footballer0_.fb_fname, footballer0_.lastname) firstname ) 'David' ) ) )
+14:10:28,683 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:28,683 DEBUG JoinProcessor:175 - Using FROM fragment [Footballer footballer0_]
+14:10:28,683 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Footballer)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'footballer0_.fb_fname as fb2_5_, footballer0_.lastname as lastname5_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=null,tableName=Footballer,tableAlias=footballer0_,origin=null,columns={,className=org.hibernate.test.annotations.id.entities.Footballer}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'footballer0_.club as club5_, footballer0_.bibi as bibi5_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[f], fromElementByTableAlias=[footballer0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Footballer footballer0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=null,tableName=Footballer,tableAlias=footballer0_,origin=null,columns={,className=org.hibernate.test.annotations.id.entities.Footballer}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'footballer0_.fb_fname' {propertyName=firstname,dereferenceType=ALL,propertyPath=firstname,path=f.firstname,tableAlias=footballer0_,className=org.hibernate.test.annotations.id.entities.Footballer,classAlias=f}
+          |  +-[ALIAS_REF] IdentNode: '(footballer0_.fb_fname, footballer0_.lastname)' {alias=f, className=org.hibernate.test.annotations.id.entities.Footballer, tableAlias=footballer0_}
+          |  \-[IDENT] IdentNode: 'firstname' {originalText=firstname}
+          \-[QUOTED_STRING] LiteralNode: ''David''
+
+14:10:28,694 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:28,695 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.id.entities.Footballer f where f.firstname = 'David'
+14:10:28,695 DEBUG QueryTranslatorImpl:236 - SQL: select footballer0_.fb_fname as fb2_5_, footballer0_.lastname as lastname5_, footballer0_.club as club5_, footballer0_.bibi as bibi5_ from Footballer footballer0_ where footballer0_.fb_fname='David'
+14:10:28,695 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:28,696 DEBUG SQL:104 - 
+    select
+        footballer0_.fb_fname as fb2_5_,
+        footballer0_.lastname as lastname5_,
+        footballer0_.club as club5_,
+        footballer0_.bibi as bibi5_ 
+    from
+        Footballer footballer0_ 
+    where
+        footballer0_.fb_fname='David'
+14:10:28,697 DEBUG SQL:104 - 
+    update
+        Footballer 
+    set
+        club=? 
+    where
+        fb_fname=? 
+        and lastname=?
+14:10:28,697 DEBUG SQL:104 - 
+    update
+        Footballer 
+    set
+        club=? 
+    where
+        fb_fname=? 
+        and lastname=?
+14:10:28,698 DEBUG SQL:104 - 
+    select
+        footballer0_.fb_fname as fb2_5_0_,
+        footballer0_.lastname as lastname5_0_,
+        footballer0_.club as club5_0_,
+        footballer0_.bibi as bibi5_0_ 
+    from
+        Footballer footballer0_ 
+    where
+        footballer0_.fb_fname=? 
+        and footballer0_.lastname=?
+14:10:28,699  INFO DefaultDeleteEventListener:202 - HHH000114: Handling transient entity in delete processing
+14:10:28,699 DEBUG SQL:104 - 
+    delete 
+    from
+        Footballer 
+    where
+        fb_fname=? 
+        and lastname=?
+14:10:28,752  INFO CustomRunner:139 - Test: testIdInEmbeddableSuperclass
+14:10:28,753 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:28,754 DEBUG SQL:104 - 
+    insert 
+    into
+        FirTree
+        (id) 
+    values
+        (?)
+14:10:28,754 DEBUG SQL:104 - 
+    select
+        firtree0_.id as id4_0_ 
+    from
+        FirTree firtree0_ 
+    where
+        firtree0_.id=?
+14:10:28,755 DEBUG SQL:104 - 
+    delete 
+    from
+        FirTree 
+    where
+        id=?
+14:10:28,777  INFO CustomRunner:139 - Test: testLowAllocationSize
+14:10:28,781 DEBUG SQL:104 - 
+    select
+        tbl.next_hi 
+    from
+        hi_id_key tbl 
+    where
+        tbl.id_key=? for update
+            
+14:10:28,781 DEBUG SQL:104 - 
+    insert 
+    into
+        hi_id_key
+        (id_key, next_hi)  
+    values
+        (?,?)
+14:10:28,781 DEBUG SQL:104 - 
+    update
+        hi_id_key 
+    set
+        next_hi=?  
+    where
+        next_hi=? 
+        and id_key=?
+14:10:28,782 DEBUG SQL:104 - 
+    select
+        tbl.next_hi 
+    from
+        hi_id_key tbl 
+    where
+        tbl.id_key=? for update
+            
+14:10:28,782 DEBUG SQL:104 - 
+    update
+        hi_id_key 
+    set
+        next_hi=?  
+    where
+        next_hi=? 
+        and id_key=?
+14:10:28,782 DEBUG SQL:104 - 
+    select
+        tbl.next_hi 
+    from
+        hi_id_key tbl 
+    where
+        tbl.id_key=? for update
+            
+14:10:28,782 DEBUG SQL:104 - 
+    update
+        hi_id_key 
+    set
+        next_hi=?  
+    where
+        next_hi=? 
+        and id_key=?
+14:10:28,783 DEBUG SQL:104 - 
+    select
+        tbl.next_hi 
+    from
+        hi_id_key tbl 
+    where
+        tbl.id_key=? for update
+            
+14:10:28,800 DEBUG SQL:104 - 
+    update
+        hi_id_key 
+    set
+        next_hi=?  
+    where
+        next_hi=? 
+        and id_key=?
+14:10:28,802 DEBUG SQL:104 - 
+    insert 
+    into
+        BreakDance
+        (name, id) 
+    values
+        (?, ?)
+14:10:28,802 DEBUG SQL:104 - 
+    insert 
+    into
+        BreakDance
+        (name, id) 
+    values
+        (?, ?)
+14:10:28,802 DEBUG SQL:104 - 
+    insert 
+    into
+        BreakDance
+        (name, id) 
+    values
+        (?, ?)
+14:10:28,825 DEBUG SQL:104 - 
+    insert 
+    into
+        BreakDance
+        (name, id) 
+    values
+        (?, ?)
+14:10:28,826  INFO CustomRunner:139 - Test: testMethodLevelGenerator
+14:10:28,827 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:28,828 DEBUG SQL:104 - 
+    insert 
+    into
+        Department
+        (id) 
+    values
+        (?)
+14:10:28,829 DEBUG SQL:104 - 
+    select
+        department0_.id as id3_0_ 
+    from
+        Department department0_ 
+    where
+        department0_.id=?
+14:10:28,829 DEBUG SQL:104 - 
+    delete 
+    from
+        Department 
+    where
+        id=?
+14:10:28,830  INFO CustomRunner:139 - Test: testParameterizedAuto
+14:10:28,831 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:28,831 DEBUG SQL:104 - 
+    insert 
+    into
+        Home
+        (id) 
+    values
+        (?)
+14:10:28,855 DEBUG SQL:104 - 
+    select
+        home0_.id as id7_0_ 
+    from
+        Home home0_ 
+    where
+        home0_.id=?
+14:10:28,856 DEBUG SQL:104 - 
+    delete 
+    from
+        Home 
+    where
+        id=?
+14:10:28,857  INFO CustomRunner:139 - Test: testSequenceGenerator
+14:10:28,858 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:28,859 DEBUG SQL:104 - 
+    insert 
+    into
+        Shoe
+        (id) 
+    values
+        (?)
+14:10:28,860 DEBUG SQL:104 - 
+    select
+        shoe0_.id as id10_0_ 
+    from
+        Shoe shoe0_ 
+    where
+        shoe0_.id=?
+14:10:28,869 DEBUG SQL:104 - 
+    delete 
+    from
+        Shoe 
+    where
+        id=?
+14:10:28,870  INFO CustomRunner:139 - Test: testTableGenerator
+14:10:28,871 DEBUG SQL:104 - 
+    select
+        tbl.hi 
+    from
+        GENERATOR_TABLE tbl 
+    where
+        tbl.pkey=? for update
+            
+14:10:28,871 DEBUG SQL:104 - 
+    insert 
+    into
+        GENERATOR_TABLE
+        (pkey, hi)  
+    values
+        (?,?)
+14:10:28,885 DEBUG SQL:104 - 
+    update
+        GENERATOR_TABLE 
+    set
+        hi=?  
+    where
+        hi=? 
+        and pkey=?
+14:10:28,885 DEBUG SQL:104 - 
+    select
+        tbl.hi 
+    from
+        GENERATOR_TABLE tbl 
+    where
+        tbl.pkey=? for update
+            
+14:10:28,885 DEBUG SQL:104 - 
+    update
+        GENERATOR_TABLE 
+    set
+        hi=?  
+    where
+        hi=? 
+        and pkey=?
+14:10:28,886 DEBUG SQL:104 - 
+    select
+        tbl.hi 
+    from
+        GENERATOR_TABLE tbl 
+    where
+        tbl.pkey=? for update
+            
+14:10:28,898 DEBUG SQL:104 - 
+    insert 
+    into
+        GENERATOR_TABLE
+        (pkey, hi)  
+    values
+        (?,?)
+14:10:28,898 DEBUG SQL:104 - 
+    update
+        GENERATOR_TABLE 
+    set
+        hi=?  
+    where
+        hi=? 
+        and pkey=?
+14:10:28,899 DEBUG SQL:104 - 
+    select
+        tbl.hi 
+    from
+        GENERATOR_TABLE tbl 
+    where
+        tbl.pkey=? for update
+            
+14:10:28,899 DEBUG SQL:104 - 
+    update
+        GENERATOR_TABLE 
+    set
+        hi=?  
+    where
+        hi=? 
+        and pkey=?
+14:10:28,910 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        hibernate_sequences tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:10:28,910 DEBUG SQL:104 - 
+    insert 
+    into
+        hibernate_sequences
+        (sequence_name, next_val)  
+    values
+        (?,?)
+14:10:28,910 DEBUG SQL:104 - 
+    update
+        hibernate_sequences 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:10:28,911 DEBUG SQL:104 - 
+    insert 
+    into
+        Ball
+        (ball_id) 
+    values
+        (?)
+14:10:28,912 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_dog
+        (name, id) 
+    values
+        (?, ?)
+14:10:28,912 DEBUG SQL:104 - 
+    insert 
+    into
+        Computer
+        (serialNumber, id) 
+    values
+        (?, ?)
+14:10:28,916 DEBUG SQL:104 - 
+    select
+        ball0_.ball_id as ball1_0_0_ 
+    from
+        Ball ball0_ 
+    where
+        ball0_.ball_id=?
+14:10:28,917 DEBUG SQL:104 - 
+    select
+        dog0_.id as id13_0_,
+        dog0_.name as name13_0_ 
+    from
+        tbl_dog dog0_ 
+    where
+        dog0_.id=?
+14:10:28,935 DEBUG SQL:104 - 
+    select
+        computer0_.id as id2_0_,
+        computer0_.serialNumber as serialNu2_2_0_ 
+    from
+        Computer computer0_ 
+    where
+        computer0_.id=?
+14:10:28,940 DEBUG SQL:104 - 
+    delete 
+    from
+        Ball 
+    where
+        ball_id=?
+14:10:28,941 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_dog 
+    where
+        id=?
+14:10:28,941 DEBUG SQL:104 - 
+    delete 
+    from
+        Computer 
+    where
+        id=?
+14:10:28,946  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:28,948 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:28,948 DEBUG SQL:104 - 
+    drop table Ball if exists
+14:10:28,948 DEBUG SQL:104 - 
+    drop table BreakDance if exists
+14:10:28,948 DEBUG SQL:104 - 
+    drop table Computer if exists
+14:10:28,949 DEBUG SQL:104 - 
+    drop table Department if exists
+14:10:28,949 DEBUG SQL:104 - 
+    drop table FirTree if exists
+14:10:28,949 DEBUG SQL:104 - 
+    drop table Footballer if exists
+14:10:28,949 DEBUG SQL:104 - 
+    drop table Furniture if exists
+14:10:28,950 DEBUG SQL:104 - 
+    drop table Home if exists
+14:10:28,950 DEBUG SQL:104 - 
+    drop table Monkey if exists
+14:10:28,950 DEBUG SQL:104 - 
+    drop table Phone if exists
+14:10:28,950 DEBUG SQL:104 - 
+    drop table Shoe if exists
+14:10:28,950 DEBUG SQL:104 - 
+    drop table SoundSystem if exists
+14:10:28,951 DEBUG SQL:104 - 
+    drop table Store if exists
+14:10:28,951 DEBUG SQL:104 - 
+    drop table tbl_dog if exists
+14:10:28,951 DEBUG SQL:104 - 
+    drop table GENERATOR_TABLE if exists
+14:10:28,951 DEBUG SQL:104 - 
+    drop table hi_id_key if exists
+14:10:28,952 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:28,952 DEBUG SQL:104 - 
+    drop table hibernate_sequences if exists
+14:10:28,952  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:28,952  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

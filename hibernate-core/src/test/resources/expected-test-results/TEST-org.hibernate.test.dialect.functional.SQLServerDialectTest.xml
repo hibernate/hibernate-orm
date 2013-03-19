@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.dialect.functional.SQLServerDialectTest" tests="10" time="0.033" timestamp="2013-02-28T20:12:12">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.dialect.functional.SQLServerDialectTest" name="testLockNowaitSqlServer" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.dialect.functional.SQLServerDialectTest" name="testMaxResultsSqlServerWithCaseSensitiveCollation" time="0.001" />
+  <ignored-testcase classname="org.hibernate.test.dialect.functional.SQLServerDialectTest" name="testPaginationWithAggregation" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.dialect.functional.SQLServerDialectTest" name="testPaginationWithCastOperator" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.dialect.functional.SQLServerDialectTest" name="testPaginationWithFormulaSubquery" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.dialect.functional.SQLServerDialectTest" name="testPaginationWithHQL" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.dialect.functional.SQLServerDialectTest" name="testPaginationWithHQLProjection" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.dialect.functional.SQLServerDialectTest" name="testPaginationWithMaxOnly" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.dialect.functional.SQLServerDialectTest" name="testPaginationWithScalarQuery" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.dialect.functional.SQLServerDialectTest" name="testPaginationWithTrailingSemicolon" time="0.0" />
+  <system-out><![CDATA[14:12:12,948  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.dialect.functional.SQLServerDialectTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

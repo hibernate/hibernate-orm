@@ -1,0 +1,953 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.inheritance.joined.JoinedSubclassTest" tests="6" time="0.576" timestamp="2013-02-28T20:10:32">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.inheritance.joined.JoinedSubclassTest" name="testDefault" time="0.041" />
+  <testcase classname="org.hibernate.test.annotations.inheritance.joined.JoinedSubclassTest" name="testInheritance" time="0.042" />
+  <testcase classname="org.hibernate.test.annotations.inheritance.joined.JoinedSubclassTest" name="testJoinedAbstractClass" time="0.031" />
+  <testcase classname="org.hibernate.test.annotations.inheritance.joined.JoinedSubclassTest" name="testManyToOneOnAbstract" time="0.131" />
+  <testcase classname="org.hibernate.test.annotations.inheritance.joined.JoinedSubclassTest" name="testManyToOneWithJoinTable" time="0.01" />
+  <testcase classname="org.hibernate.test.annotations.inheritance.joined.JoinedSubclassTest" name="testSecondaryTables" time="0.014" />
+  <system-out><![CDATA[14:10:32,123  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.inheritance.joined.JoinedSubclassTest
+14:10:32,138  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:32,139  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:32,139  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:32,139  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:32,139  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:32,142  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:32,142  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:32,144  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:32,144  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:32,145  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:32,215  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:32,216 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:32,216 DEBUG SQL:104 - 
+    alter table Alarm 
+        drop constraint FK3C68A31182D3C90
+14:10:32,216 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Alarm drop constraint FK3C68A31182D3C90
+14:10:32,216 ERROR SchemaExport:426 - Table "ALARM" not found; SQL statement:
+
+    alter table Alarm 
+        drop constraint FK3C68A31182D3C90 [42102-145]
+14:10:32,216 DEBUG SQL:104 - 
+    alter table Alarm 
+        drop constraint FK3C68A31EAF6A1B9
+14:10:32,217 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Alarm drop constraint FK3C68A31EAF6A1B9
+14:10:32,217 ERROR SchemaExport:426 - Table "ALARM" not found; SQL statement:
+
+    alter table Alarm 
+        drop constraint FK3C68A31EAF6A1B9 [42102-145]
+14:10:32,217 DEBUG SQL:104 - 
+    alter table CLIENT 
+        drop constraint FK76A5E7CBCB0989F1
+14:10:32,217 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CLIENT drop constraint FK76A5E7CBCB0989F1
+14:10:32,217 ERROR SchemaExport:426 - Table "CLIENT" not found; SQL statement:
+
+    alter table CLIENT 
+        drop constraint FK76A5E7CBCB0989F1 [42102-145]
+14:10:32,218 DEBUG SQL:104 - 
+    alter table CLIENT_ACCOUNT 
+        drop constraint FKC541A999CAA817F
+14:10:32,218 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CLIENT_ACCOUNT drop constraint FKC541A999CAA817F
+14:10:32,218 ERROR SchemaExport:426 - Table "CLIENT_ACCOUNT" not found; SQL statement:
+
+    alter table CLIENT_ACCOUNT 
+        drop constraint FKC541A999CAA817F [42102-145]
+14:10:32,218 DEBUG SQL:104 - 
+    alter table CLIENT_ACCOUNT 
+        drop constraint FKC541A999841DC1D1
+14:10:32,218 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CLIENT_ACCOUNT drop constraint FKC541A999841DC1D1
+14:10:32,218 ERROR SchemaExport:426 - Table "CLIENT_ACCOUNT" not found; SQL statement:
+
+    alter table CLIENT_ACCOUNT 
+        drop constraint FKC541A999841DC1D1 [42102-145]
+14:10:32,218 DEBUG SQL:104 - 
+    alter table Company 
+        drop constraint FK9BDFD45D3855123A
+14:10:32,219 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Company drop constraint FK9BDFD45D3855123A
+14:10:32,219 ERROR SchemaExport:426 - Table "COMPANY" not found; SQL statement:
+
+    alter table Company 
+        drop constraint FK9BDFD45D3855123A [42102-145]
+14:10:32,219 DEBUG SQL:104 - 
+    alter table CompanyAddress 
+        drop constraint FK70072CD7F73D9837
+14:10:32,219 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CompanyAddress drop constraint FK70072CD7F73D9837
+14:10:32,219 ERROR SchemaExport:426 - Table "COMPANYADDRESS" not found; SQL statement:
+
+    alter table CompanyAddress 
+        drop constraint FK70072CD7F73D9837 [42102-145]
+14:10:32,219 DEBUG SQL:104 - 
+    alter table CustomerDetails 
+        drop constraint FK73EACC643855123A
+14:10:32,219 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CustomerDetails drop constraint FK73EACC643855123A
+14:10:32,219 ERROR SchemaExport:426 - Table "CUSTOMERDETAILS" not found; SQL statement:
+
+    alter table CustomerDetails 
+        drop constraint FK73EACC643855123A [42102-145]
+14:10:32,220 DEBUG SQL:104 - 
+    alter table Document 
+        drop constraint FK_DOCU_FILE
+14:10:32,221 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Document drop constraint FK_DOCU_FILE
+14:10:32,221 ERROR SchemaExport:426 - Table "DOCUMENT" not found; SQL statement:
+
+    alter table Document 
+        drop constraint FK_DOCU_FILE [42102-145]
+14:10:32,221 DEBUG SQL:104 - 
+    alter table Folder 
+        drop constraint FK7DC2088E31E69544
+14:10:32,221 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Folder drop constraint FK7DC2088E31E69544
+14:10:32,221 ERROR SchemaExport:426 - Table "FOLDER" not found; SQL statement:
+
+    alter table Folder 
+        drop constraint FK7DC2088E31E69544 [42102-145]
+14:10:32,221 DEBUG SQL:104 - 
+    alter table ProgramExecution 
+        drop constraint FK78A065144E742398
+14:10:32,222 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ProgramExecution drop constraint FK78A065144E742398
+14:10:32,222 ERROR SchemaExport:426 - Table "PROGRAMEXECUTION" not found; SQL statement:
+
+    alter table ProgramExecution 
+        drop constraint FK78A065144E742398 [42102-145]
+14:10:32,222 DEBUG SQL:104 - 
+    alter table Sweater 
+        drop constraint FKF77306018B7AE9FB
+14:10:32,222 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Sweater drop constraint FKF77306018B7AE9FB
+14:10:32,222 ERROR SchemaExport:426 - Table "SWEATER" not found; SQL statement:
+
+    alter table Sweater 
+        drop constraint FKF77306018B7AE9FB [42102-145]
+14:10:32,222 DEBUG SQL:104 - 
+    alter table SymbolicLink 
+        drop constraint FKB8B04BEC42158832
+14:10:32,228 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table SymbolicLink drop constraint FKB8B04BEC42158832
+14:10:32,229 ERROR SchemaExport:426 - Table "SYMBOLICLINK" not found; SQL statement:
+
+    alter table SymbolicLink 
+        drop constraint FKB8B04BEC42158832 [42102-145]
+14:10:32,229 DEBUG SQL:104 - 
+    alter table SymbolicLink 
+        drop constraint FKB8B04BEC31E69544
+14:10:32,230 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table SymbolicLink drop constraint FKB8B04BEC31E69544
+14:10:32,230 ERROR SchemaExport:426 - Table "SYMBOLICLINK" not found; SQL statement:
+
+    alter table SymbolicLink 
+        drop constraint FKB8B04BEC31E69544 [42102-145]
+14:10:32,230 DEBUG SQL:104 - 
+    alter table joined_file 
+        drop constraint FK94418CB2641F97EB
+14:10:32,230 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table joined_file drop constraint FK94418CB2641F97EB
+14:10:32,230 ERROR SchemaExport:426 - Table "JOINED_FILE" not found; SQL statement:
+
+    alter table joined_file 
+        drop constraint FK94418CB2641F97EB [42102-145]
+14:10:32,230 DEBUG SQL:104 - 
+    drop table ACCOUNT if exists
+14:10:32,230 DEBUG SQL:104 - 
+    drop table Alarm if exists
+14:10:32,230 DEBUG SQL:104 - 
+    drop table CLIENT if exists
+14:10:32,231 DEBUG SQL:104 - 
+    drop table CLIENT_ACCOUNT if exists
+14:10:32,231 DEBUG SQL:104 - 
+    drop table Clothing if exists
+14:10:32,231 DEBUG SQL:104 - 
+    drop table Company if exists
+14:10:32,231 DEBUG SQL:104 - 
+    drop table CompanyAddress if exists
+14:10:32,231 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:10:32,231 DEBUG SQL:104 - 
+    drop table CustomerDetails if exists
+14:10:32,231 DEBUG SQL:104 - 
+    drop table Document if exists
+14:10:32,231 DEBUG SQL:104 - 
+    drop table EventInformation if exists
+14:10:32,259 DEBUG SQL:104 - 
+    drop table Folder if exists
+14:10:32,259 DEBUG SQL:104 - 
+    drop table PERSON if exists
+14:10:32,259 DEBUG SQL:104 - 
+    drop table ProgramExecution if exists
+14:10:32,259 DEBUG SQL:104 - 
+    drop table Sweater if exists
+14:10:32,260 DEBUG SQL:104 - 
+    drop table SymbolicLink if exists
+14:10:32,260 DEBUG SQL:104 - 
+    drop table joined_file if exists
+14:10:32,260 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:32,260 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:32,260 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:32,260 DEBUG SQL:104 - 
+    create table ACCOUNT (
+        id integer not null,
+        balance double not null,
+        fld_number varchar(255),
+        primary key (id)
+    )
+14:10:32,261 DEBUG SQL:104 - 
+    create table Alarm (
+        notificationId varchar(255) not null,
+        EVENTINFO_NOTIFICATIONID varchar(255),
+        primary key (notificationId)
+    )
+14:10:32,280 DEBUG SQL:104 - 
+    create table CLIENT (
+        city varchar(255),
+        code varchar(255),
+        street varchar(255),
+        id integer not null,
+        primary key (id)
+    )
+14:10:32,281 DEBUG SQL:104 - 
+    create table CLIENT_ACCOUNT (
+        FK_ACCOUNT integer,
+        FK_CLIENT integer not null,
+        primary key (FK_CLIENT)
+    )
+14:10:32,281 DEBUG SQL:104 - 
+    create table Clothing (
+        id bigint not null,
+        color varchar(255),
+        cloth_size integer,
+        primary key (id)
+    )
+14:10:32,281 DEBUG SQL:104 - 
+    create table Company (
+        companyName varchar(255),
+        id bigint not null,
+        primary key (id)
+    )
+14:10:32,282 DEBUG SQL:104 - 
+    create table CompanyAddress (
+        companyAddress varchar(255),
+        id bigint not null,
+        primary key (id)
+    )
+14:10:32,282 DEBUG SQL:104 - 
+    create table Customer (
+        id bigint not null,
+        customerName varchar(255),
+        primary key (id)
+    )
+14:10:32,282 DEBUG SQL:104 - 
+    create table CustomerDetails (
+        customerCode varchar(255),
+        id bigint not null,
+        primary key (id)
+    )
+14:10:32,282 DEBUG SQL:104 - 
+    create table Document (
+        xsize integer not null,
+        filename varchar(255) not null,
+        primary key (filename)
+    )
+14:10:32,283 DEBUG SQL:104 - 
+    create table EventInformation (
+        notificationId varchar(255) not null,
+        primary key (notificationId)
+    )
+14:10:32,283 DEBUG SQL:104 - 
+    create table Folder (
+        filename varchar(255) not null,
+        primary key (filename)
+    )
+14:10:32,283 DEBUG SQL:104 - 
+    create table PERSON (
+        id integer not null,
+        firtsname varchar(255),
+        name varchar(255),
+        primary key (id)
+    )
+14:10:32,299 DEBUG SQL:104 - 
+    create table ProgramExecution (
+        id integer not null,
+        action varchar(255),
+        appliesOn_filename varchar(255),
+        primary key (id)
+    )
+14:10:32,299 DEBUG SQL:104 - 
+    create table Sweater (
+        sweat boolean not null,
+        clothing_id bigint not null,
+        primary key (clothing_id)
+    )
+14:10:32,300 DEBUG SQL:104 - 
+    create table SymbolicLink (
+        filename varchar(255) not null,
+        target_filename varchar(255) not null,
+        primary key (filename)
+    )
+14:10:32,300 DEBUG SQL:104 - 
+    create table joined_file (
+        filename varchar(255) not null,
+        parent_filename varchar(255),
+        primary key (filename)
+    )
+14:10:32,300 DEBUG SQL:104 - 
+    alter table Alarm 
+        add constraint FK3C68A31182D3C90 
+        foreign key (EVENTINFO_NOTIFICATIONID) 
+        references EventInformation
+14:10:32,315 DEBUG SQL:104 - 
+    alter table Alarm 
+        add constraint FK3C68A31EAF6A1B9 
+        foreign key (notificationId) 
+        references EventInformation
+14:10:32,316 DEBUG SQL:104 - 
+    alter table CLIENT 
+        add constraint FK76A5E7CBCB0989F1 
+        foreign key (id) 
+        references PERSON
+14:10:32,317 DEBUG SQL:104 - 
+    alter table CLIENT_ACCOUNT 
+        add constraint FKC541A999CAA817F 
+        foreign key (FK_ACCOUNT) 
+        references ACCOUNT
+14:10:32,317 DEBUG SQL:104 - 
+    alter table CLIENT_ACCOUNT 
+        add constraint FKC541A999841DC1D1 
+        foreign key (FK_CLIENT) 
+        references CLIENT
+14:10:32,318 DEBUG SQL:104 - 
+    alter table Company 
+        add constraint FK9BDFD45D3855123A 
+        foreign key (id) 
+        references Customer
+14:10:32,318 DEBUG SQL:104 - 
+    alter table CompanyAddress 
+        add constraint FK70072CD7F73D9837 
+        foreign key (id) 
+        references Company
+14:10:32,373 DEBUG SQL:104 - 
+    alter table CustomerDetails 
+        add constraint FK73EACC643855123A 
+        foreign key (id) 
+        references Customer
+14:10:32,373 DEBUG SQL:104 - 
+    alter table Document 
+        add constraint FK_DOCU_FILE 
+        foreign key (filename) 
+        references joined_file
+14:10:32,374 DEBUG SQL:104 - 
+    alter table Folder 
+        add constraint FK7DC2088E31E69544 
+        foreign key (filename) 
+        references joined_file
+14:10:32,386 DEBUG SQL:104 - 
+    alter table ProgramExecution 
+        add constraint FK78A065144E742398 
+        foreign key (appliesOn_filename) 
+        references joined_file
+14:10:32,387 DEBUG SQL:104 - 
+    alter table Sweater 
+        add constraint FKF77306018B7AE9FB 
+        foreign key (clothing_id) 
+        references Clothing
+14:10:32,388 DEBUG SQL:104 - 
+    alter table SymbolicLink 
+        add constraint FKB8B04BEC42158832 
+        foreign key (target_filename) 
+        references joined_file
+14:10:32,388 DEBUG SQL:104 - 
+    alter table SymbolicLink 
+        add constraint FKB8B04BEC31E69544 
+        foreign key (filename) 
+        references joined_file
+14:10:32,389 DEBUG SQL:104 - 
+    alter table joined_file 
+        add constraint FK94418CB2641F97EB 
+        foreign key (parent_filename) 
+        references Folder
+14:10:32,390 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:32,390  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:32,407  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:32,407  INFO CustomRunner:139 - Test: testDefault
+14:10:32,423 DEBUG SQL:104 - 
+    insert 
+    into
+        joined_file
+        (parent_filename, filename) 
+    values
+        (?, ?)
+14:10:32,424 DEBUG SQL:104 - 
+    insert 
+    into
+        Document
+        (xsize, filename) 
+    values
+        (?, ?)
+14:10:32,425 DEBUG SQL:104 - 
+    insert 
+    into
+        joined_file
+        (parent_filename, filename) 
+    values
+        (?, ?)
+14:10:32,425 DEBUG SQL:104 - 
+    insert 
+    into
+        Folder
+        (filename) 
+    values
+        (?)
+14:10:32,426 DEBUG SQL:104 - 
+    select
+        this_.filename as filename16_2_,
+        this_.parent_filename as parent2_16_2_,
+        this_2_.xsize as xsize9_2_,
+        this_3_.target_filename as target2_15_2_,
+        case 
+            when this_1_.filename is not null then 1 
+            when this_2_.filename is not null then 2 
+            when this_3_.filename is not null then 3 
+            when this_.filename is not null then 0 
+        end as clazz_2_,
+        folder2_.filename as filename16_0_,
+        folder2_1_.parent_filename as parent2_16_0_,
+        file3_.filename as filename16_1_,
+        file3_.parent_filename as parent2_16_1_,
+        file3_2_.xsize as xsize9_1_,
+        file3_3_.target_filename as target2_15_1_,
+        case 
+            when file3_1_.filename is not null then 1 
+            when file3_2_.filename is not null then 2 
+            when file3_3_.filename is not null then 3 
+            when file3_.filename is not null then 0 
+        end as clazz_1_ 
+    from
+        joined_file this_ 
+    left outer join
+        Folder this_1_ 
+            on this_.filename=this_1_.filename 
+    left outer join
+        Document this_2_ 
+            on this_.filename=this_2_.filename 
+    left outer join
+        SymbolicLink this_3_ 
+            on this_.filename=this_3_.filename 
+    left outer join
+        Folder folder2_ 
+            on this_.parent_filename=folder2_.filename 
+    left outer join
+        joined_file folder2_1_ 
+            on folder2_.filename=folder2_1_.filename 
+    left outer join
+        joined_file file3_ 
+            on this_3_.target_filename=file3_.filename 
+    left outer join
+        Folder file3_1_ 
+            on file3_.filename=file3_1_.filename 
+    left outer join
+        Document file3_2_ 
+            on file3_.filename=file3_2_.filename 
+    left outer join
+        SymbolicLink file3_3_ 
+            on file3_.filename=file3_3_.filename
+14:10:32,437 DEBUG SQL:104 - 
+    delete 
+    from
+        Document 
+    where
+        filename=?
+14:10:32,438 DEBUG SQL:104 - 
+    delete 
+    from
+        joined_file 
+    where
+        filename=?
+14:10:32,447 DEBUG SQL:104 - 
+    delete 
+    from
+        Folder 
+    where
+        filename=?
+14:10:32,448 DEBUG SQL:104 - 
+    delete 
+    from
+        joined_file 
+    where
+        filename=?
+14:10:32,449  INFO CustomRunner:139 - Test: testInheritance
+14:10:32,450 DEBUG SQL:104 - 
+    select
+        eventinfor0_.notificationId as notifica1_10_1_,
+        eventinfor0_1_.EVENTINFO_NOTIFICATIONID as EVENTINFO2_1_1_,
+        case 
+            when eventinfor0_1_.notificationId is not null then 1 
+            when eventinfor0_.notificationId is not null then 0 
+        end as clazz_1_,
+        eventinfor1_.notificationId as notifica1_10_0_,
+        eventinfor1_1_.EVENTINFO_NOTIFICATIONID as EVENTINFO2_1_0_,
+        case 
+            when eventinfor1_1_.notificationId is not null then 1 
+            when eventinfor1_.notificationId is not null then 0 
+        end as clazz_0_ 
+    from
+        EventInformation eventinfor0_ 
+    left outer join
+        Alarm eventinfor0_1_ 
+            on eventinfor0_.notificationId=eventinfor0_1_.notificationId 
+    left outer join
+        EventInformation eventinfor1_ 
+            on eventinfor0_1_.EVENTINFO_NOTIFICATIONID=eventinfor1_.notificationId 
+    left outer join
+        Alarm eventinfor1_1_ 
+            on eventinfor1_.notificationId=eventinfor1_1_.notificationId 
+    where
+        eventinfor0_.notificationId=?
+14:10:32,475 DEBUG SQL:104 - 
+    select
+        alarm0_.notificationId as notifica1_10_1_,
+        alarm0_.EVENTINFO_NOTIFICATIONID as EVENTINFO2_1_1_,
+        eventinfor1_.notificationId as notifica1_10_0_,
+        eventinfor1_1_.EVENTINFO_NOTIFICATIONID as EVENTINFO2_1_0_,
+        case 
+            when eventinfor1_1_.notificationId is not null then 1 
+            when eventinfor1_.notificationId is not null then 0 
+        end as clazz_0_ 
+    from
+        Alarm alarm0_ 
+    inner join
+        EventInformation alarm0_1_ 
+            on alarm0_.notificationId=alarm0_1_.notificationId 
+    left outer join
+        EventInformation eventinfor1_ 
+            on alarm0_.EVENTINFO_NOTIFICATIONID=eventinfor1_.notificationId 
+    left outer join
+        Alarm eventinfor1_1_ 
+            on eventinfor1_.notificationId=eventinfor1_1_.notificationId 
+    where
+        alarm0_.notificationId=?
+14:10:32,478 DEBUG SQL:104 - 
+    insert 
+    into
+        EventInformation
+        (notificationId) 
+    values
+        (?)
+14:10:32,489 DEBUG SQL:104 - 
+    insert 
+    into
+        EventInformation
+        (notificationId) 
+    values
+        (?)
+14:10:32,490 DEBUG SQL:104 - 
+    insert 
+    into
+        Alarm
+        (EVENTINFO_NOTIFICATIONID, notificationId) 
+    values
+        (?, ?)
+14:10:32,491  INFO CustomRunner:139 - Test: testJoinedAbstractClass
+14:10:32,492 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:32,493 DEBUG SQL:104 - 
+    insert 
+    into
+        Clothing
+        (color, cloth_size, id) 
+    values
+        (?, ?, ?)
+14:10:32,493 DEBUG SQL:104 - 
+    insert 
+    into
+        Sweater
+        (sweat, clothing_id) 
+    values
+        (?, ?)
+14:10:32,508 DEBUG SQL:104 - 
+    select
+        sweater0_.clothing_id as id4_0_,
+        sweater0_1_.color as color4_0_,
+        sweater0_1_.cloth_size as cloth3_4_0_,
+        sweater0_.sweat as sweat14_0_ 
+    from
+        Sweater sweater0_ 
+    inner join
+        Clothing sweater0_1_ 
+            on sweater0_.clothing_id=sweater0_1_.id 
+    where
+        sweater0_.clothing_id=?
+14:10:32,509 DEBUG SQL:104 - 
+    delete 
+    from
+        Sweater 
+    where
+        clothing_id=?
+14:10:32,509 DEBUG SQL:104 - 
+    delete 
+    from
+        Clothing 
+    where
+        id=?
+14:10:32,523  INFO CustomRunner:139 - Test: testManyToOneOnAbstract
+14:10:32,524 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:32,524 DEBUG SQL:104 - 
+    insert 
+    into
+        joined_file
+        (parent_filename, filename) 
+    values
+        (?, ?)
+14:10:32,525 DEBUG SQL:104 - 
+    insert 
+    into
+        Folder
+        (filename) 
+    values
+        (?)
+14:10:32,528 DEBUG SQL:104 - 
+    insert 
+    into
+        ProgramExecution
+        (action, appliesOn_filename, id) 
+    values
+        (?, ?, ?)
+14:10:32,529 DEBUG SQL:104 - 
+    select
+        programexe0_.id as id13_0_,
+        programexe0_.action as action13_0_,
+        programexe0_.appliesOn_filename as appliesOn3_13_0_ 
+    from
+        ProgramExecution programexe0_ 
+    where
+        programexe0_.id=?
+14:10:32,536 DEBUG SQL:104 - 
+    select
+        file0_.filename as filename16_2_,
+        file0_.parent_filename as parent2_16_2_,
+        file0_2_.xsize as xsize9_2_,
+        file0_3_.target_filename as target2_15_2_,
+        case 
+            when file0_1_.filename is not null then 1 
+            when file0_2_.filename is not null then 2 
+            when file0_3_.filename is not null then 3 
+            when file0_.filename is not null then 0 
+        end as clazz_2_,
+        folder1_.filename as filename16_0_,
+        folder1_1_.parent_filename as parent2_16_0_,
+        file2_.filename as filename16_1_,
+        file2_.parent_filename as parent2_16_1_,
+        file2_2_.xsize as xsize9_1_,
+        file2_3_.target_filename as target2_15_1_,
+        case 
+            when file2_1_.filename is not null then 1 
+            when file2_2_.filename is not null then 2 
+            when file2_3_.filename is not null then 3 
+            when file2_.filename is not null then 0 
+        end as clazz_1_ 
+    from
+        joined_file file0_ 
+    left outer join
+        Folder file0_1_ 
+            on file0_.filename=file0_1_.filename 
+    left outer join
+        Document file0_2_ 
+            on file0_.filename=file0_2_.filename 
+    left outer join
+        SymbolicLink file0_3_ 
+            on file0_.filename=file0_3_.filename 
+    left outer join
+        Folder folder1_ 
+            on file0_.parent_filename=folder1_.filename 
+    left outer join
+        joined_file folder1_1_ 
+            on folder1_.filename=folder1_1_.filename 
+    left outer join
+        joined_file file2_ 
+            on file0_3_.target_filename=file2_.filename 
+    left outer join
+        Folder file2_1_ 
+            on file2_.filename=file2_1_.filename 
+    left outer join
+        Document file2_2_ 
+            on file2_.filename=file2_2_.filename 
+    left outer join
+        SymbolicLink file2_3_ 
+            on file2_.filename=file2_3_.filename 
+    where
+        file0_.filename=?
+14:10:32,653 DEBUG SQL:104 - 
+    delete 
+    from
+        ProgramExecution 
+    where
+        id=?
+14:10:32,653 DEBUG SQL:104 - 
+    delete 
+    from
+        Folder 
+    where
+        filename=?
+14:10:32,654 DEBUG SQL:104 - 
+    delete 
+    from
+        joined_file 
+    where
+        filename=?
+14:10:32,655  INFO CustomRunner:139 - Test: testManyToOneWithJoinTable
+14:10:32,657 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:32,657 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:32,659 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (firtsname, name, id) 
+    values
+        (?, ?, ?)
+14:10:32,659 DEBUG SQL:104 - 
+    insert 
+    into
+        CLIENT
+        (city, code, street, id) 
+    values
+        (?, ?, ?, ?)
+14:10:32,660 DEBUG SQL:104 - 
+    insert 
+    into
+        ACCOUNT
+        (balance, fld_number, id) 
+    values
+        (?, ?, ?)
+14:10:32,661 DEBUG SQL:104 - 
+    insert 
+    into
+        CLIENT_ACCOUNT
+        (FK_ACCOUNT, FK_CLIENT) 
+    values
+        (?, ?)
+14:10:32,661 DEBUG SQL:104 - 
+    select
+        client0_.id as id12_1_,
+        client0_1_.firtsname as firtsname12_1_,
+        client0_1_.name as name12_1_,
+        client0_.city as city2_1_,
+        client0_.code as code2_1_,
+        client0_.street as street2_1_,
+        client0_2_.FK_ACCOUNT as FK1_3_1_,
+        account1_.id as id0_0_,
+        account1_.balance as balance0_0_,
+        account1_.fld_number as fld3_0_0_ 
+    from
+        CLIENT client0_ 
+    inner join
+        PERSON client0_1_ 
+            on client0_.id=client0_1_.id 
+    left outer join
+        CLIENT_ACCOUNT client0_2_ 
+            on client0_.id=client0_2_.FK_CLIENT 
+    left outer join
+        ACCOUNT account1_ 
+            on client0_2_.FK_ACCOUNT=account1_.id 
+    where
+        client0_.id=?
+14:10:32,663 DEBUG SQL:104 - 
+    select
+        account0_.id as id0_0_,
+        account0_.balance as balance0_0_,
+        account0_.fld_number as fld3_0_0_ 
+    from
+        ACCOUNT account0_ 
+    where
+        account0_.id=?
+14:10:32,663 DEBUG SQL:104 - 
+    select
+        clients0_.FK_ACCOUNT as FK1_0_2_,
+        clients0_.FK_CLIENT as FK2_3_2_,
+        client1_.id as id12_0_,
+        client1_1_.firtsname as firtsname12_0_,
+        client1_1_.name as name12_0_,
+        client1_.city as city2_0_,
+        client1_.code as code2_0_,
+        client1_.street as street2_0_,
+        client1_2_.FK_ACCOUNT as FK1_3_0_,
+        account2_.id as id0_1_,
+        account2_.balance as balance0_1_,
+        account2_.fld_number as fld3_0_1_ 
+    from
+        CLIENT_ACCOUNT clients0_ 
+    inner join
+        CLIENT client1_ 
+            on clients0_.FK_CLIENT=client1_.id 
+    left outer join
+        PERSON client1_1_ 
+            on client1_.id=client1_1_.id 
+    left outer join
+        CLIENT_ACCOUNT client1_2_ 
+            on client1_.id=client1_2_.FK_CLIENT 
+    left outer join
+        ACCOUNT account2_ 
+            on client1_2_.FK_ACCOUNT=account2_.id 
+    where
+        clients0_.FK_ACCOUNT=?
+14:10:32,665  INFO CustomRunner:139 - Test: testSecondaryTables
+14:10:32,671 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:32,673 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (customerName, id) 
+    values
+        (?, ?)
+14:10:32,673 DEBUG SQL:104 - 
+    insert 
+    into
+        Company
+        (companyName, id) 
+    values
+        (?, ?)
+14:10:32,673 DEBUG SQL:104 - 
+    insert 
+    into
+        CustomerDetails
+        (customerCode, id) 
+    values
+        (?, ?)
+14:10:32,674 DEBUG SQL:104 - 
+    insert 
+    into
+        CompanyAddress
+        (companyAddress, id) 
+    values
+        (?, ?)
+14:10:32,674 DEBUG SQL:104 - 
+    select
+        company0_.id as id7_0_,
+        company0_1_.customerName as customer2_7_0_,
+        company0_2_.customerCode as customer1_8_0_,
+        company0_.companyName as companyN1_5_0_,
+        company0_3_.companyAddress as companyA1_6_0_ 
+    from
+        Company company0_ 
+    inner join
+        Customer company0_1_ 
+            on company0_.id=company0_1_.id 
+    left outer join
+        CustomerDetails company0_2_ 
+            on company0_.id=company0_2_.id 
+    left outer join
+        CompanyAddress company0_3_ 
+            on company0_.id=company0_3_.id 
+    where
+        company0_.id=?
+14:10:32,675 DEBUG SQL:104 - 
+    delete 
+    from
+        CompanyAddress 
+    where
+        id=?
+14:10:32,675 DEBUG SQL:104 - 
+    delete 
+    from
+        CustomerDetails 
+    where
+        id=?
+14:10:32,676 DEBUG SQL:104 - 
+    delete 
+    from
+        Company 
+    where
+        id=?
+14:10:32,676 DEBUG SQL:104 - 
+    delete 
+    from
+        Customer 
+    where
+        id=?
+14:10:32,679  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:32,680 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:32,680 DEBUG SQL:104 - 
+    alter table Alarm 
+        drop constraint FK3C68A31182D3C90
+14:10:32,680 DEBUG SQL:104 - 
+    alter table Alarm 
+        drop constraint FK3C68A31EAF6A1B9
+14:10:32,680 DEBUG SQL:104 - 
+    alter table CLIENT 
+        drop constraint FK76A5E7CBCB0989F1
+14:10:32,681 DEBUG SQL:104 - 
+    alter table CLIENT_ACCOUNT 
+        drop constraint FKC541A999CAA817F
+14:10:32,681 DEBUG SQL:104 - 
+    alter table CLIENT_ACCOUNT 
+        drop constraint FKC541A999841DC1D1
+14:10:32,681 DEBUG SQL:104 - 
+    alter table Company 
+        drop constraint FK9BDFD45D3855123A
+14:10:32,681 DEBUG SQL:104 - 
+    alter table CompanyAddress 
+        drop constraint FK70072CD7F73D9837
+14:10:32,681 DEBUG SQL:104 - 
+    alter table CustomerDetails 
+        drop constraint FK73EACC643855123A
+14:10:32,682 DEBUG SQL:104 - 
+    alter table Document 
+        drop constraint FK_DOCU_FILE
+14:10:32,682 DEBUG SQL:104 - 
+    alter table Folder 
+        drop constraint FK7DC2088E31E69544
+14:10:32,682 DEBUG SQL:104 - 
+    alter table ProgramExecution 
+        drop constraint FK78A065144E742398
+14:10:32,682 DEBUG SQL:104 - 
+    alter table Sweater 
+        drop constraint FKF77306018B7AE9FB
+14:10:32,682 DEBUG SQL:104 - 
+    alter table SymbolicLink 
+        drop constraint FKB8B04BEC42158832
+14:10:32,683 DEBUG SQL:104 - 
+    alter table SymbolicLink 
+        drop constraint FKB8B04BEC31E69544
+14:10:32,683 DEBUG SQL:104 - 
+    alter table joined_file 
+        drop constraint FK94418CB2641F97EB
+14:10:32,683 DEBUG SQL:104 - 
+    drop table ACCOUNT if exists
+14:10:32,683 DEBUG SQL:104 - 
+    drop table Alarm if exists
+14:10:32,683 DEBUG SQL:104 - 
+    drop table CLIENT if exists
+14:10:32,684 DEBUG SQL:104 - 
+    drop table CLIENT_ACCOUNT if exists
+14:10:32,684 DEBUG SQL:104 - 
+    drop table Clothing if exists
+14:10:32,693 DEBUG SQL:104 - 
+    drop table Company if exists
+14:10:32,693 DEBUG SQL:104 - 
+    drop table CompanyAddress if exists
+14:10:32,693 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:10:32,693 DEBUG SQL:104 - 
+    drop table CustomerDetails if exists
+14:10:32,694 DEBUG SQL:104 - 
+    drop table Document if exists
+14:10:32,694 DEBUG SQL:104 - 
+    drop table EventInformation if exists
+14:10:32,694 DEBUG SQL:104 - 
+    drop table Folder if exists
+14:10:32,694 DEBUG SQL:104 - 
+    drop table PERSON if exists
+14:10:32,694 DEBUG SQL:104 - 
+    drop table ProgramExecution if exists
+14:10:32,695 DEBUG SQL:104 - 
+    drop table Sweater if exists
+14:10:32,695 DEBUG SQL:104 - 
+    drop table SymbolicLink if exists
+14:10:32,695 DEBUG SQL:104 - 
+    drop table joined_file if exists
+14:10:32,695 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:32,696  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:32,696  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

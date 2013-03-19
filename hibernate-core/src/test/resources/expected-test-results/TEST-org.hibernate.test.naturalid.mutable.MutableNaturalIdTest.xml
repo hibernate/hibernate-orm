@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.naturalid.mutable.MutableNaturalIdTest" tests="10" time="0.281" timestamp="2013-02-28T20:17:31">
+  <properties />
+  <testcase classname="org.hibernate.test.naturalid.mutable.MutableNaturalIdTest" name="testCacheSynchronizationOnMutation" time="0.005" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.MutableNaturalIdTest" name="testClear" time="0.004" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.MutableNaturalIdTest" name="testEviction" time="0.013" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.MutableNaturalIdTest" name="testNaturalIdCache" time="0.027" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.MutableNaturalIdTest" name="testNaturalIdDeleteUsingCache" time="0.026" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.MutableNaturalIdTest" name="testNaturalIdRecreateUsingCache" time="0.041" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.MutableNaturalIdTest" name="testNonexistentNaturalIdCache" time="0.023" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.MutableNaturalIdTest" name="testQuerying" time="0.04" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.MutableNaturalIdTest" name="testReattachmentNaturalIdCheck" time="0.012" />
+  <testcase classname="org.hibernate.test.naturalid.mutable.MutableNaturalIdTest" name="testReattachmentUnmodifiedNaturalIdCheck" time="0.021" />
+  <system-out><![CDATA[14:17:31,579  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.naturalid.mutable.MutableNaturalIdTest
+14:17:31,582  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/naturalid/mutable/User.hbm.xml
+14:17:31,609  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:31,610  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:31,610  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:31,610  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:31,610  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:31,612  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:31,613  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:31,613  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:31,614  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:31,614  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:31,614  INFO UpdateTimestampsCache:61 - HHH000250: Starting update timestamps cache at region: hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache
+14:17:31,614  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: hibernate.test.org.hibernate.cache.internal.StandardQueryCache
+14:17:31,619  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,620 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,620 DEBUG SQL:104 - 
+    drop table SystemUserInfo if exists
+14:17:31,620 DEBUG SQL:104 - 
+    create table SystemUserInfo (
+        id bigint not null,
+        name varchar(255) not null,
+        org varchar(255) not null,
+        "password" varchar(255),
+        primary key (id)
+    )
+14:17:31,621 DEBUG SQL:104 - 
+    alter table SystemUserInfo 
+        add constraint _UniqueKey unique (name, org)
+14:17:31,621  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,621  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:31,622  INFO CustomRunner:139 - Test: testCacheSynchronizationOnMutation
+14:17:31,624 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        SystemUserInfo
+14:17:31,624 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,625 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090786816000]
+14:17:31,625 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541056001]
+14:17:31,625 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,626 DEBUG SQL:104 - 
+    update
+        SystemUserInfo 
+    set
+        name=?,
+        org=?,
+        "password"=? 
+    where
+        id=?
+14:17:31,626 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090786820096]
+14:17:31,626 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541060097]
+14:17:31,627 DEBUG SQL:104 - 
+    delete 
+    from
+        SystemUserInfo 
+    where
+        id=?
+14:17:31,627 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090786824193]
+14:17:31,627 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541064194]
+14:17:31,627  INFO CustomRunner:139 - Test: testClear
+14:17:31,629 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,629 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090786832385]
+14:17:31,629 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541072386]
+14:17:31,630 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,630 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,630 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,630 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,631 DEBUG SQL:104 - 
+    delete 
+    from
+        SystemUserInfo 
+    where
+        id=?
+14:17:31,631 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090786840576]
+14:17:31,631 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541080577]
+14:17:31,632  INFO CustomRunner:139 - Test: testEviction
+14:17:31,633 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,633 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090786848768]
+14:17:31,634 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541092864]
+14:17:31,634 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,641 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,642 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,642 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,643 DEBUG SQL:104 - 
+    delete 
+    from
+        SystemUserInfo 
+    where
+        id=?
+14:17:31,644 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090786893824]
+14:17:31,644 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541133825]
+14:17:31,645  INFO CustomRunner:139 - Test: testNaturalIdCache
+14:17:31,648 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,649 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090786914304]
+14:17:31,649 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541154305]
+14:17:31,649  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,649 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,651 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,651 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,652 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090786926592]
+14:17:31,652 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541166593]
+14:17:31,652  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,652 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,652 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,661  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,661 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.naturalid.mutable.User
+14:17:31,662 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'naturalid'
+             |  \-[IDENT] Node: 'mutable'
+             \-[IDENT] Node: 'User'
+
+14:17:31,662 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:31,663 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.naturalid.mutable.User (<no alias>) -> user0_
+14:17:31,663 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (SystemUserInfo)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'SystemUserInfo' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=SystemUserInfo,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.naturalid.mutable.User}}
+
+14:17:31,671 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:31,671 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:31,671 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787004416]
+14:17:31,672 DEBUG SQL:104 - 
+    delete 
+    from
+        SystemUserInfo
+14:17:31,672 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541248512]
+14:17:31,673  INFO CustomRunner:139 - Test: testNaturalIdDeleteUsingCache
+14:17:31,674 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,674 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787016704]
+14:17:31,674 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541256705]
+14:17:31,674  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,674 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,682 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,683  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,684 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,685 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,694 DEBUG SQL:104 - 
+    delete 
+    from
+        SystemUserInfo 
+    where
+        id=?
+14:17:31,695 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787102720]
+14:17:31,697 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541350912]
+14:17:31,697  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,697 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,699  INFO CustomRunner:139 - Test: testNaturalIdRecreateUsingCache
+14:17:31,700 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,708 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787155968]
+14:17:31,709 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541400064]
+14:17:31,712  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,713 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,713 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,714  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,714 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,714 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,714 DEBUG SQL:104 - 
+    delete 
+    from
+        SystemUserInfo 
+    where
+        id=?
+14:17:31,715 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787184640]
+14:17:31,715 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541424641]
+14:17:31,715  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,715 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,726 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,727 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787233792]
+14:17:31,727 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541473793]
+14:17:31,727  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,728 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,728 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,736  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,736 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,737 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,738 DEBUG SQL:104 - 
+    delete 
+    from
+        SystemUserInfo 
+    where
+        id=?
+14:17:31,738 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787278848]
+14:17:31,739 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541522944]
+14:17:31,740  INFO CustomRunner:139 - Test: testNonexistentNaturalIdCache
+14:17:31,741  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,741 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,741 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,759 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787364864]
+14:17:31,759 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541604865]
+14:17:31,760  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,760 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,760 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,761  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,761 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,761 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_.name as name0_0_,
+        user0_.org as org0_0_,
+        user0_."password" as password4_0_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.id=?
+14:17:31,762 DEBUG SQL:104 - 
+    delete 
+    from
+        SystemUserInfo 
+    where
+        id=?
+14:17:31,762 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787377152]
+14:17:31,762 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541617153]
+14:17:31,763  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.naturalid.mutable.User) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:17:31,763 DEBUG SQL:104 - 
+    select
+        user_.id as id0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.name=? 
+        and user_.org=?
+14:17:31,763  INFO CustomRunner:139 - Test: testQuerying
+14:17:31,764 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,765 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787385345]
+14:17:31,782 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541699072]
+14:17:31,782 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.naturalid.mutable.User u where u.name = :name
+14:17:31,784 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'naturalid'
+    |        |  |  \-[IDENT] Node: 'mutable'
+    |        |  \-[IDENT] Node: 'User'
+    |        \-[ALIAS] Node: 'u'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'u'
+          |  \-[IDENT] Node: 'name'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'name'
+
+14:17:31,785 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:31,785 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.naturalid.mutable.User (u) -> user0_
+14:17:31,785 DEBUG FromReferenceNode:74 - Resolved : u -> user0_.id
+14:17:31,792 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:17:31,792 DEBUG FromReferenceNode:74 - Resolved : u.name -> user0_.name
+14:17:31,792 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} SystemUserInfo user0_ ) ( where ( = ( user0_.name user0_.id name ) ? ) ) )
+14:17:31,792 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:31,793 DEBUG JoinProcessor:175 - Using FROM fragment [SystemUserInfo user0_]
+14:17:31,793 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (SystemUserInfo)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user0_.id as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=SystemUserInfo,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.naturalid.mutable.User}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'user0_.name as name0_, user0_.org as org0_, user0_."password" as password4_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[u], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'SystemUserInfo user0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=SystemUserInfo,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.naturalid.mutable.User}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'user0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=u.name,tableAlias=user0_,className=org.hibernate.test.naturalid.mutable.User,classAlias=u}
+          |  +-[ALIAS_REF] IdentNode: 'user0_.id' {alias=u, className=org.hibernate.test.naturalid.mutable.User, tableAlias=user0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:17:31,793 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:31,793 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.naturalid.mutable.User u where u.name = :name
+14:17:31,793 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.id as id0_, user0_.name as name0_, user0_.org as org0_, user0_."password" as password4_0_ from SystemUserInfo user0_ where user0_.name=?
+14:17:31,794 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:31,794 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_,
+        user0_.name as name0_,
+        user0_.org as org0_,
+        user0_."password" as password4_0_ 
+    from
+        SystemUserInfo user0_ 
+    where
+        user0_.name=?
+14:17:31,803 DEBUG SQL:104 - 
+    delete 
+    from
+        SystemUserInfo 
+    where
+        id=?
+14:17:31,804 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787549184]
+14:17:31,804 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541789185]
+14:17:31,805  INFO CustomRunner:139 - Test: testReattachmentNaturalIdCheck
+14:17:31,807 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,808 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787565568]
+14:17:31,808 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541805569]
+14:17:31,808 DEBUG SQL:104 - 
+    select
+        user_.id,
+        user_.name as name0_,
+        user_.org as org0_,
+        user_."password" as password4_0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.id=?
+14:17:31,815 DEBUG SQL:104 - 
+    update
+        SystemUserInfo 
+    set
+        name=?,
+        org=?,
+        "password"=? 
+    where
+        id=?
+14:17:31,816 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787598336]
+14:17:31,817 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541842432]
+14:17:31,817 DEBUG SQL:104 - 
+    delete 
+    from
+        SystemUserInfo 
+    where
+        id=?
+14:17:31,817 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787602434]
+14:17:31,818 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541846528]
+14:17:31,818  INFO CustomRunner:139 - Test: testReattachmentUnmodifiedNaturalIdCheck
+14:17:31,820 DEBUG SQL:104 - 
+    insert 
+    into
+        SystemUserInfo
+        (name, org, "password", id) 
+    values
+        (?, ?, ?, ?)
+14:17:31,834 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787672064]
+14:17:31,834 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541912065]
+14:17:31,835 DEBUG SQL:104 - 
+    select
+        user_.id,
+        user_.name as name0_,
+        user_.org as org0_,
+        user_."password" as password4_0_ 
+    from
+        SystemUserInfo user_ 
+    where
+        user_.id=?
+14:17:31,835 DEBUG SQL:104 - 
+    update
+        SystemUserInfo 
+    set
+        name=?,
+        org=?,
+        "password"=? 
+    where
+        id=?
+14:17:31,836 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787680256]
+14:17:31,836 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541920257]
+14:17:31,836 DEBUG SQL:104 - 
+    delete 
+    from
+        SystemUserInfo 
+    where
+        id=?
+14:17:31,836 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090787680259]
+14:17:31,840 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SystemUserInfo] -> [5579090541936640]
+14:17:31,841  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,842 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,842 DEBUG SQL:104 - 
+    drop table SystemUserInfo if exists
+14:17:31,842  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,842  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,903 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.cuk.CompositePropertyRefTest" tests="1" time="0.468" timestamp="2013-02-28T20:12:11">
+  <properties />
+  <testcase classname="org.hibernate.test.cuk.CompositePropertyRefTest" name="testOneToOnePropertyRef" time="0.37" />
+  <system-out><![CDATA[14:12:11,825  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.cuk.CompositePropertyRefTest
+14:12:11,827  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cuk/Person.hbm.xml
+14:12:11,840  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:11,840  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:11,841  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:11,843  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:11,844  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:11,845  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:11,846  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:11,846  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:11,846  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:11,847  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:11,902  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:11,903 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:11,904 DEBUG SQL:104 - 
+    alter table Address 
+        drop constraint FK1ED033D445A74AD5
+14:12:11,904 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Address drop constraint FK1ED033D445A74AD5
+14:12:11,904 ERROR SchemaExport:426 - Table "ADDRESS" not found; SQL statement:
+
+    alter table Address 
+        drop constraint FK1ED033D445A74AD5 [42102-145]
+14:12:11,904 DEBUG SQL:104 - 
+    alter table "Account" 
+        drop constraint FK1D0C220D36225B94
+14:12:11,904 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "Account" drop constraint FK1D0C220D36225B94
+14:12:11,905 ERROR SchemaExport:426 - Table "Account" not found; SQL statement:
+
+    alter table "Account" 
+        drop constraint FK1D0C220D36225B94 [42102-145]
+14:12:11,905 DEBUG SQL:104 - 
+    drop table Address if exists
+14:12:11,905 DEBUG SQL:104 - 
+    drop table Person if exists
+14:12:11,905 DEBUG SQL:104 - 
+    drop table "Account" if exists
+14:12:11,905 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:12:11,905 DEBUG SQL:104 - 
+    create table Address (
+        id bigint not null,
+        address varchar(300),
+        zip varchar(5),
+        country varchar(25),
+        person bigint not null,
+        primary key (id)
+    )
+14:12:11,906 DEBUG SQL:104 - 
+    create table Person (
+        id bigint not null,
+        name varchar(100),
+        userId varchar(8),
+        deleted boolean,
+        primary key (id)
+    )
+14:12:11,906 DEBUG SQL:104 - 
+    create table "Account" (
+        accountId varchar(32) not null,
+        userId varchar(255),
+        userDeleted boolean,
+        "type" char(255) not null,
+        primary key (accountId)
+    )
+14:12:11,907 DEBUG SQL:104 - 
+    alter table Address 
+        add constraint uc_Address_1 unique (person)
+14:12:11,907 DEBUG SQL:104 - 
+    alter table Address 
+        add constraint FK1ED033D445A74AD5 
+        foreign key (person) 
+        references Person
+14:12:11,908 DEBUG SQL:104 - 
+    alter table Person 
+        add constraint UK_8E4887752A95623F unique (userId, deleted)
+14:12:11,911 DEBUG SQL:104 - 
+    alter table "Account" 
+        add constraint FK1D0C220D36225B94 
+        foreign key (userId, userDeleted) 
+        references Person (userId, deleted)
+14:12:11,912 DEBUG SQL:104 - 
+    create table hibernate_unique_key (
+         next_hi integer 
+    )
+14:12:11,913 DEBUG SQL:104 - 
+    insert into hibernate_unique_key values ( 0 )
+14:12:11,913  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:11,914  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:11,914  INFO CustomRunner:139 - Test: testOneToOnePropertyRef
+14:12:11,976 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:12:11,977 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:12:11,977 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:12:11,977 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:12:11,978 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (name, userId, deleted, id) 
+    values
+        (?, ?, ?, ?)
+14:12:11,979 DEBUG SQL:104 - 
+    insert 
+    into
+        Address
+        (address, zip, country, person, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:11,979 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (name, userId, deleted, id) 
+    values
+        (?, ?, ?, ?)
+14:12:11,980 DEBUG SQL:104 - 
+    insert 
+    into
+        "Account"
+        (userId, userDeleted, "type", accountId) 
+    values
+        (?, ?, ?, ?)
+14:12:11,980 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_1_,
+        person0_.name as name1_1_,
+        person0_.userId as userId1_1_,
+        person0_.deleted as deleted1_1_,
+        address1_.id as id0_0_,
+        address1_.address as address0_0_,
+        address1_.zip as zip0_0_,
+        address1_.country as country0_0_,
+        address1_.person as person0_0_ 
+    from
+        Person person0_ 
+    left outer join
+        Address address1_ 
+            on person0_.id=address1_.person 
+    where
+        person0_.id=?
+14:12:11,982 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_1_,
+        person0_.name as name1_1_,
+        person0_.userId as userId1_1_,
+        person0_.deleted as deleted1_1_,
+        address1_.id as id0_0_,
+        address1_.address as address0_0_,
+        address1_.zip as zip0_0_,
+        address1_.country as country0_0_,
+        address1_.person as person0_0_ 
+    from
+        Person person0_ 
+    left outer join
+        Address address1_ 
+            on person0_.id=address1_.person 
+    where
+        person0_.id=?
+14:12:11,982 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cuk.Person
+14:12:11,983 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'cuk'
+                \-[IDENT] Node: 'Person'
+
+14:12:11,983 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,983 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Person (<no alias>) -> person0_
+14:12:11,984 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Person person0_ ) )
+14:12:11,984 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:11,984 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:12:11,984 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name1_, person0_.userId as userId1_, person0_.deleted as deleted1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}
+
+14:12:11,984 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,984 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cuk.Person
+14:12:11,984 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id1_, person0_.name as name1_, person0_.userId as userId1_, person0_.deleted as deleted1_ from Person person0_
+14:12:11,984 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,985 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_,
+        person0_.name as name1_,
+        person0_.userId as userId1_,
+        person0_.deleted as deleted1_ 
+    from
+        Person person0_
+14:12:11,985 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cuk.Person p order by p.name
+14:12:11,987 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'cuk'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'p'
+          \-[IDENT] Node: 'name'
+
+14:12:11,987 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,987 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Person (p) -> person0_
+14:12:11,987 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:12:11,987 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:12:11,988 DEBUG FromReferenceNode:74 - Resolved : p.name -> person0_.name
+14:12:11,988 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Person person0_ ) ( order ( person0_.name person0_.id name ) ) )
+14:12:11,988 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:11,988 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:12:11,988 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name1_, person0_.userId as userId1_, person0_.deleted as deleted1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=person0_,className=org.hibernate.test.cuk.Person,classAlias=p}
+          +-[ALIAS_REF] IdentNode: 'person0_.id' {alias=p, className=org.hibernate.test.cuk.Person, tableAlias=person0_}
+          \-[IDENT] IdentNode: 'name' {originalText=name}
+
+14:12:11,988 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,988 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cuk.Person p order by p.name
+14:12:11,988 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id1_, person0_.name as name1_, person0_.userId as userId1_, person0_.deleted as deleted1_ from Person person0_ order by person0_.name
+14:12:11,989 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,989 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_,
+        person0_.name as name1_,
+        person0_.userId as userId1_,
+        person0_.deleted as deleted1_ 
+    from
+        Person person0_ 
+    order by
+        person0_.name
+14:12:11,989 DEBUG SQL:104 - 
+    select
+        address0_.id as id0_0_,
+        address0_.address as address0_0_,
+        address0_.zip as zip0_0_,
+        address0_.country as country0_0_,
+        address0_.person as person0_0_ 
+    from
+        Address address0_ 
+    where
+        address0_.person=?
+14:12:11,990 DEBUG SQL:104 - 
+    select
+        address0_.id as id0_0_,
+        address0_.address as address0_0_,
+        address0_.zip as zip0_0_,
+        address0_.country as country0_0_,
+        address0_.person as person0_0_ 
+    from
+        Address address0_ 
+    where
+        address0_.person=?
+14:12:11,990 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cuk.Person p left join fetch p.address a order by a.country
+14:12:11,991 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'cuk'
+    |     |  |  \-[IDENT] Node: 'Person'
+    |     |  \-[ALIAS] Node: 'p'
+    |     \-[JOIN] Node: 'join'
+    |        +-[LEFT] Node: 'left'
+    |        +-[FETCH] Node: 'fetch'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'p'
+    |        |  \-[IDENT] Node: 'address'
+    |        \-[ALIAS] Node: 'a'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'a'
+          \-[IDENT] Node: 'country'
+
+14:12:11,992 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,992 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Person (p) -> person0_
+14:12:11,992 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:12:11,992 DEBUG DotNode:599 - getDataType() : address -> org.hibernate.type.OneToOneType(org.hibernate.test.cuk.Address)
+14:12:11,992 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for address in org.hibernate.test.cuk.Person (a) parent = [ {null} ]
+14:12:11,992 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Address (a) -> address1_
+14:12:11,992 DEBUG FromClause:282 - addJoinByPathMap() : p.address -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Address,tableAlias=address1_,origin=Person person0_,columns={person0_.id ,className=org.hibernate.test.cuk.Address}}
+14:12:11,992 DEBUG FromReferenceNode:74 - Resolved : p.address -> person0_.id
+14:12:11,993 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Address address1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Address,tableAlias=address1_,origin=Person person0_,columns={person0_.id ,className=org.hibernate.test.cuk.Address}}
+
+14:12:11,993 DEBUG FromReferenceNode:74 - Resolved : a -> address1_.id
+14:12:11,993 DEBUG DotNode:599 - getDataType() : country -> org.hibernate.type.StringType@2dc8de40
+14:12:11,993 DEBUG FromReferenceNode:74 - Resolved : a.country -> address1_.country
+14:12:11,993 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Person person0_ Address address1_ ) ) ( order ( address1_.country address1_.id country ) ) )
+14:12:11,993 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:11,993 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:12:11,993 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Address address1_ on person0_.id=address1_.person]
+14:12:11,994 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Address,Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'address1_.id as id0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Address,tableAlias=address1_,origin=Person person0_,columns={person0_.id ,className=org.hibernate.test.cuk.Address}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name1_0_, person0_.userId as userId1_0_, person0_.deleted as deleted1_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'address1_.address as address0_1_, address1_.zip as zip0_1_, address1_.country as country0_1_, address1_.person as person0_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a, p], fromElementByTableAlias=[person0_, address1_], fromElementsByPath=[p.address], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join Address address1_ on person0_.id=address1_.person' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Address,tableAlias=address1_,origin=Person person0_,columns={person0_.id ,className=org.hibernate.test.cuk.Address}}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'address1_.country' {propertyName=country,dereferenceType=ALL,propertyPath=country,path=a.country,tableAlias=address1_,className=org.hibernate.test.cuk.Address,classAlias=a}
+          +-[ALIAS_REF] IdentNode: 'address1_.id' {alias=a, className=org.hibernate.test.cuk.Address, tableAlias=address1_}
+          \-[IDENT] IdentNode: 'country' {originalText=country}
+
+14:12:11,994 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,994 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cuk.Person p left join fetch p.address a order by a.country
+14:12:11,994 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id1_0_, address1_.id as id0_1_, person0_.name as name1_0_, person0_.userId as userId1_0_, person0_.deleted as deleted1_0_, address1_.address as address0_1_, address1_.zip as zip0_1_, address1_.country as country0_1_, address1_.person as person0_1_ from Person person0_ left outer join Address address1_ on person0_.id=address1_.person order by address1_.country
+14:12:11,994 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,994 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_0_,
+        address1_.id as id0_1_,
+        person0_.name as name1_0_,
+        person0_.userId as userId1_0_,
+        person0_.deleted as deleted1_0_,
+        address1_.address as address0_1_,
+        address1_.zip as zip0_1_,
+        address1_.country as country0_1_,
+        address1_.person as person0_1_ 
+    from
+        Person person0_ 
+    left outer join
+        Address address1_ 
+            on person0_.id=address1_.person 
+    order by
+        address1_.country
+14:12:11,995 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cuk.Person p left join p.accounts
+14:12:11,996 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'cuk'
+          |  |  \-[IDENT] Node: 'Person'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'accounts'
+
+14:12:11,996 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,997 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Person (p) -> person0_
+14:12:11,997 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:12:11,997 DEBUG DotNode:599 - getDataType() : accounts -> org.hibernate.type.SetType(org.hibernate.test.cuk.Person.accounts)
+14:12:11,997 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = p.accounts role = org.hibernate.test.cuk.Person.accounts associatedEntityName = org.hibernate.test.cuk.Account
+14:12:11,997 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Account (<no alias>) -> accounts1_
+14:12:11,997 DEBUG FromClause:282 - addJoinByPathMap() : p.accounts -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName="Account",tableAlias=accounts1_,origin=Person person0_,columns={person0_.userId person0_.deleted ,className=org.hibernate.test.cuk.Account}}
+14:12:11,998 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.accounts : "Account" accounts1_
+14:12:11,998 DEBUG FromReferenceNode:74 - Resolved : p.accounts -> .
+14:12:11,999 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: '"Account" accounts1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.cuk.Person.accounts,tableName="Account",tableAlias=accounts1_,origin=Person person0_,columns={person0_.userId person0_.deleted ,className=org.hibernate.test.cuk.Account}}
+
+14:12:11,999 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Person person0_ "Account" accounts1_ ) ) )
+14:12:11,999 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:11,999 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:12:11,999 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join "Account" accounts1_ on person0_.userId=accounts1_.userId and person0_.deleted=accounts1_.userDeleted]
+14:12:11,999 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces ("Account",Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'accounts1_.accountId as accountId2_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.cuk.Person.accounts,tableName="Account",tableAlias=accounts1_,origin=Person person0_,columns={person0_.userId person0_.deleted ,className=org.hibernate.test.cuk.Account}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name1_0_, person0_.userId as userId1_0_, person0_.deleted as deleted1_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'accounts1_.userId as userId2_1_, accounts1_.userDeleted as userDele3_2_1_, accounts1_."type" as type4_2_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_, accounts1_], fromElementsByPath=[p.accounts], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join "Account" accounts1_ on person0_.userId=accounts1_.userId and person0_.deleted=accounts1_.userDeleted' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.cuk.Person.accounts,tableName="Account",tableAlias=accounts1_,origin=Person person0_,columns={person0_.userId person0_.deleted ,className=org.hibernate.test.cuk.Account}}
+
+14:12:12,000 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,000 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cuk.Person p left join p.accounts
+14:12:12,000 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id1_0_, accounts1_.accountId as accountId2_1_, person0_.name as name1_0_, person0_.userId as userId1_0_, person0_.deleted as deleted1_0_, accounts1_.userId as userId2_1_, accounts1_.userDeleted as userDele3_2_1_, accounts1_."type" as type4_2_1_ from Person person0_ left outer join "Account" accounts1_ on person0_.userId=accounts1_.userId and person0_.deleted=accounts1_.userDeleted
+14:12:12,000 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,000 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_0_,
+        accounts1_.accountId as accountId2_1_,
+        person0_.name as name1_0_,
+        person0_.userId as userId1_0_,
+        person0_.deleted as deleted1_0_,
+        accounts1_.userId as userId2_1_,
+        accounts1_.userDeleted as userDele3_2_1_,
+        accounts1_."type" as type4_2_1_ 
+    from
+        Person person0_ 
+    left outer join
+        "Account" accounts1_ 
+            on person0_.userId=accounts1_.userId 
+            and person0_.deleted=accounts1_.userDeleted
+14:12:12,001 DEBUG SQL:104 - 
+    select
+        address0_.id as id0_0_,
+        address0_.address as address0_0_,
+        address0_.zip as zip0_0_,
+        address0_.country as country0_0_,
+        address0_.person as person0_0_ 
+    from
+        Address address0_ 
+    where
+        address0_.person=?
+14:12:12,002 DEBUG SQL:104 - 
+    select
+        address0_.id as id0_0_,
+        address0_.address as address0_0_,
+        address0_.zip as zip0_0_,
+        address0_.country as country0_0_,
+        address0_.person as person0_0_ 
+    from
+        Address address0_ 
+    where
+        address0_.person=?
+14:12:12,044 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_1_,
+        person0_.name as name1_1_,
+        person0_.userId as userId1_1_,
+        person0_.deleted as deleted1_1_,
+        address1_.id as id0_0_,
+        address1_.address as address0_0_,
+        address1_.zip as zip0_0_,
+        address1_.country as country0_0_,
+        address1_.person as person0_0_ 
+    from
+        Person person0_ 
+    left outer join
+        Address address1_ 
+            on person0_.id=address1_.person 
+    where
+        person0_.userId=? 
+        and person0_.deleted=?
+14:12:12,045 DEBUG SQL:104 - 
+    select
+        accounts0_.userId as userId1_1_,
+        accounts0_.userDeleted as userDele3_1_1_,
+        accounts0_.accountId as accountId2_1_,
+        accounts0_.accountId as accountId2_0_,
+        accounts0_.userId as userId2_0_,
+        accounts0_.userDeleted as userDele3_2_0_,
+        accounts0_."type" as type4_2_0_ 
+    from
+        "Account" accounts0_ 
+    where
+        accounts0_.userId=? 
+        and accounts0_.userDeleted=?
+14:12:12,045 DEBUG SQL:104 - 
+    select
+        accounts0_.userId as userId1_1_,
+        accounts0_.userDeleted as userDele3_1_1_,
+        accounts0_.accountId as accountId2_1_,
+        accounts0_.accountId as accountId2_0_,
+        accounts0_.userId as userId2_0_,
+        accounts0_.userDeleted as userDele3_2_0_,
+        accounts0_."type" as type4_2_0_ 
+    from
+        "Account" accounts0_ 
+    where
+        accounts0_.userId=? 
+        and accounts0_.userDeleted=?
+14:12:12,046 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cuk.Person p left join fetch p.accounts a order by p.name
+14:12:12,048 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'cuk'
+    |     |  |  \-[IDENT] Node: 'Person'
+    |     |  \-[ALIAS] Node: 'p'
+    |     \-[JOIN] Node: 'join'
+    |        +-[LEFT] Node: 'left'
+    |        +-[FETCH] Node: 'fetch'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'p'
+    |        |  \-[IDENT] Node: 'accounts'
+    |        \-[ALIAS] Node: 'a'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'p'
+          \-[IDENT] Node: 'name'
+
+14:12:12,067 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,067 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Person (p) -> person0_
+14:12:12,068 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:12:12,068 DEBUG DotNode:599 - getDataType() : accounts -> org.hibernate.type.SetType(org.hibernate.test.cuk.Person.accounts)
+14:12:12,068 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = p.accounts role = org.hibernate.test.cuk.Person.accounts associatedEntityName = org.hibernate.test.cuk.Account
+14:12:12,068 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Account (a) -> accounts1_
+14:12:12,068 DEBUG FromClause:282 - addJoinByPathMap() : p.accounts -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName="Account",tableAlias=accounts1_,origin=Person person0_,columns={person0_.userId person0_.deleted ,className=org.hibernate.test.cuk.Account}}
+14:12:12,080 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.accounts : "Account" accounts1_
+14:12:12,081 DEBUG FromReferenceNode:74 - Resolved : p.accounts -> .
+14:12:12,081 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: '"Account" accounts1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=org.hibernate.test.cuk.Person.accounts,tableName="Account",tableAlias=accounts1_,origin=Person person0_,columns={person0_.userId person0_.deleted ,className=org.hibernate.test.cuk.Account}}
+
+14:12:12,082 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:12:12,082 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:12:12,082 DEBUG FromReferenceNode:74 - Resolved : p.name -> person0_.name
+14:12:12,082 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Person person0_ "Account" accounts1_ ) ) ( order ( person0_.name person0_.id name ) ) )
+14:12:12,082 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:12,082 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:12:12,082 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join "Account" accounts1_ on person0_.userId=accounts1_.userId and person0_.deleted=accounts1_.userDeleted]
+14:12:12,083 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces ("Account",Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'accounts1_.accountId as accountId2_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=org.hibernate.test.cuk.Person.accounts,tableName="Account",tableAlias=accounts1_,origin=Person person0_,columns={person0_.userId person0_.deleted ,className=org.hibernate.test.cuk.Account}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name1_0_, person0_.userId as userId1_0_, person0_.deleted as deleted1_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'accounts1_.userId as userId2_1_, accounts1_.userDeleted as userDele3_2_1_, accounts1_."type" as type4_2_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'accounts1_.userId as userId1_0__, accounts1_.userDeleted as userDele3_1_0__, accounts1_.accountId as accountId2_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a, p], fromElementByTableAlias=[person0_, accounts1_], fromElementsByPath=[p.accounts], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join "Account" accounts1_ on person0_.userId=accounts1_.userId and person0_.deleted=accounts1_.userDeleted' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=a,role=org.hibernate.test.cuk.Person.accounts,tableName="Account",tableAlias=accounts1_,origin=Person person0_,columns={person0_.userId person0_.deleted ,className=org.hibernate.test.cuk.Account}}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=person0_,className=org.hibernate.test.cuk.Person,classAlias=p}
+          +-[ALIAS_REF] IdentNode: 'person0_.id' {alias=p, className=org.hibernate.test.cuk.Person, tableAlias=person0_}
+          \-[IDENT] IdentNode: 'name' {originalText=name}
+
+14:12:12,083 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,083 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cuk.Person p left join fetch p.accounts a order by p.name
+14:12:12,083 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id1_0_, accounts1_.accountId as accountId2_1_, person0_.name as name1_0_, person0_.userId as userId1_0_, person0_.deleted as deleted1_0_, accounts1_.userId as userId2_1_, accounts1_.userDeleted as userDele3_2_1_, accounts1_."type" as type4_2_1_, accounts1_.userId as userId1_0__, accounts1_.userDeleted as userDele3_1_0__, accounts1_.accountId as accountId2_0__ from Person person0_ left outer join "Account" accounts1_ on person0_.userId=accounts1_.userId and person0_.deleted=accounts1_.userDeleted order by person0_.name
+14:12:12,083 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,083 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_0_,
+        accounts1_.accountId as accountId2_1_,
+        person0_.name as name1_0_,
+        person0_.userId as userId1_0_,
+        person0_.deleted as deleted1_0_,
+        accounts1_.userId as userId2_1_,
+        accounts1_.userDeleted as userDele3_2_1_,
+        accounts1_."type" as type4_2_1_,
+        accounts1_.userId as userId1_0__,
+        accounts1_.userDeleted as userDele3_1_0__,
+        accounts1_.accountId as accountId2_0__ 
+    from
+        Person person0_ 
+    left outer join
+        "Account" accounts1_ 
+            on person0_.userId=accounts1_.userId 
+            and person0_.deleted=accounts1_.userDeleted 
+    order by
+        person0_.name
+14:12:12,110 DEBUG SQL:104 - 
+    select
+        address0_.id as id0_0_,
+        address0_.address as address0_0_,
+        address0_.zip as zip0_0_,
+        address0_.country as country0_0_,
+        address0_.person as person0_0_ 
+    from
+        Address address0_ 
+    where
+        address0_.person=?
+14:12:12,113 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_1_,
+        person0_.name as name1_1_,
+        person0_.userId as userId1_1_,
+        person0_.deleted as deleted1_1_,
+        address1_.id as id0_0_,
+        address1_.address as address0_0_,
+        address1_.zip as zip0_0_,
+        address1_.country as country0_0_,
+        address1_.person as person0_0_ 
+    from
+        Person person0_ 
+    left outer join
+        Address address1_ 
+            on person0_.id=address1_.person 
+    where
+        person0_.userId=? 
+        and person0_.deleted=?
+14:12:12,132 DEBUG SQL:104 - 
+    select
+        address0_.id as id0_0_,
+        address0_.address as address0_0_,
+        address0_.zip as zip0_0_,
+        address0_.country as country0_0_,
+        address0_.person as person0_0_ 
+    from
+        Address address0_ 
+    where
+        address0_.person=?
+14:12:12,134 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cuk.Account a join fetch a.user
+14:12:12,135 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'cuk'
+          |  |  \-[IDENT] Node: 'Account'
+          |  \-[ALIAS] Node: 'a'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'a'
+                \-[IDENT] Node: 'user'
+
+14:12:12,163 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,164 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Account (a) -> account0_
+14:12:12,164 DEBUG FromReferenceNode:74 - Resolved : a -> account0_.accountId
+14:12:12,164 DEBUG DotNode:599 - getDataType() : user -> org.hibernate.type.ManyToOneType(org.hibernate.test.cuk.Person)
+14:12:12,164 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for user in org.hibernate.test.cuk.Account (<no alias>) parent = [ {null} ]
+14:12:12,164 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Person (<no alias>) -> person1_
+14:12:12,165 DEBUG FromClause:282 - addJoinByPathMap() : a.user -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person1_,origin="Account" account0_,columns={account0_.userId account0_.userDeleted ,className=org.hibernate.test.cuk.Person}}
+14:12:12,165 DEBUG FromReferenceNode:74 - Resolved : a.user -> account0_.userId, account0_.userDeleted
+14:12:12,165 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Person person1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person1_,origin="Account" account0_,columns={account0_.userId account0_.userDeleted ,className=org.hibernate.test.cuk.Person}}
+
+14:12:12,165 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( "Account" account0_ Person person1_ ) ) )
+14:12:12,165 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:12,165 DEBUG JoinProcessor:175 - Using FROM fragment ["Account" account0_]
+14:12:12,165 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Person person1_ on account0_.userId=person1_.userId and account0_.userDeleted=person1_.deleted]
+14:12:12,166 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces ("Account",Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'account0_.accountId as accountId2_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName="Account",tableAlias=account0_,origin=null,columns={,className=org.hibernate.test.cuk.Account}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person1_.id as id1_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person1_,origin="Account" account0_,columns={account0_.userId account0_.userDeleted ,className=org.hibernate.test.cuk.Person}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'account0_.userId as userId2_0_, account0_.userDeleted as userDele3_2_0_, account0_."type" as type4_2_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'person1_.name as name1_1_, person1_.userId as userId1_1_, person1_.deleted as deleted1_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a], fromElementByTableAlias=[account0_, person1_], fromElementsByPath=[a.user], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: '"Account" account0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName="Account",tableAlias=account0_,origin=null,columns={,className=org.hibernate.test.cuk.Account}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join Person person1_ on account0_.userId=person1_.userId and account0_.userDeleted=person1_.deleted' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person1_,origin="Account" account0_,columns={account0_.userId account0_.userDeleted ,className=org.hibernate.test.cuk.Person}}
+
+14:12:12,166 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,166 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cuk.Account a join fetch a.user
+14:12:12,166 DEBUG QueryTranslatorImpl:236 - SQL: select account0_.accountId as accountId2_0_, person1_.id as id1_1_, account0_.userId as userId2_0_, account0_.userDeleted as userDele3_2_0_, account0_."type" as type4_2_0_, person1_.name as name1_1_, person1_.userId as userId1_1_, person1_.deleted as deleted1_1_ from "Account" account0_ inner join Person person1_ on account0_.userId=person1_.userId and account0_.userDeleted=person1_.deleted
+14:12:12,166 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,166 DEBUG SQL:104 - 
+    select
+        account0_.accountId as accountId2_0_,
+        person1_.id as id1_1_,
+        account0_.userId as userId2_0_,
+        account0_.userDeleted as userDele3_2_0_,
+        account0_."type" as type4_2_0_,
+        person1_.name as name1_1_,
+        person1_.userId as userId1_1_,
+        person1_.deleted as deleted1_1_ 
+    from
+        "Account" account0_ 
+    inner join
+        Person person1_ 
+            on account0_.userId=person1_.userId 
+            and account0_.userDeleted=person1_.deleted
+14:12:12,167 DEBUG SQL:104 - 
+    select
+        address0_.id as id0_0_,
+        address0_.address as address0_0_,
+        address0_.zip as zip0_0_,
+        address0_.country as country0_0_,
+        address0_.person as person0_0_ 
+    from
+        Address address0_ 
+    where
+        address0_.person=?
+14:12:12,201 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cuk.Person p left join fetch p.address
+14:12:12,202 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'cuk'
+          |  |  \-[IDENT] Node: 'Person'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'address'
+
+14:12:12,213 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,214 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Person (p) -> person0_
+14:12:12,214 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:12:12,214 DEBUG DotNode:599 - getDataType() : address -> org.hibernate.type.OneToOneType(org.hibernate.test.cuk.Address)
+14:12:12,214 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for address in org.hibernate.test.cuk.Person (<no alias>) parent = [ {null} ]
+14:12:12,214 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Address (<no alias>) -> address1_
+14:12:12,214 DEBUG FromClause:282 - addJoinByPathMap() : p.address -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Person person0_,columns={person0_.id ,className=org.hibernate.test.cuk.Address}}
+14:12:12,215 DEBUG FromReferenceNode:74 - Resolved : p.address -> person0_.id
+14:12:12,215 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Address address1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Person person0_,columns={person0_.id ,className=org.hibernate.test.cuk.Address}}
+
+14:12:12,215 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Person person0_ Address address1_ ) ) )
+14:12:12,215 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:12,215 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:12:12,215 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Address address1_ on person0_.id=address1_.person]
+14:12:12,216 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Address,Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'address1_.id as id0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Person person0_,columns={person0_.id ,className=org.hibernate.test.cuk.Address}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'person0_.name as name1_0_, person0_.userId as userId1_0_, person0_.deleted as deleted1_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'address1_.address as address0_1_, address1_.zip as zip0_1_, address1_.country as country0_1_, address1_.person as person0_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_, address1_], fromElementsByPath=[p.address], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join Address address1_ on person0_.id=address1_.person' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address1_,origin=Person person0_,columns={person0_.id ,className=org.hibernate.test.cuk.Address}}
+
+14:12:12,216 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,216 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cuk.Person p left join fetch p.address
+14:12:12,216 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id1_0_, address1_.id as id0_1_, person0_.name as name1_0_, person0_.userId as userId1_0_, person0_.deleted as deleted1_0_, address1_.address as address0_1_, address1_.zip as zip0_1_, address1_.country as country0_1_, address1_.person as person0_1_ from Person person0_ left outer join Address address1_ on person0_.id=address1_.person
+14:12:12,216 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,216 DEBUG SQL:104 - 
+    select
+        person0_.id as id1_0_,
+        address1_.id as id0_1_,
+        person0_.name as name1_0_,
+        person0_.userId as userId1_0_,
+        person0_.deleted as deleted1_0_,
+        address1_.address as address0_1_,
+        address1_.zip as zip0_1_,
+        address1_.country as country0_1_,
+        address1_.person as person0_1_ 
+    from
+        Person person0_ 
+    left outer join
+        Address address1_ 
+            on person0_.id=address1_.person
+14:12:12,245 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.cuk.Address
+14:12:12,246 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'cuk'
+             \-[IDENT] Node: 'Address'
+
+14:12:12,246 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,246 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Address (<no alias>) -> address0_
+14:12:12,247 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Address)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[address0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Address' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=address0_,origin=null,columns={,className=org.hibernate.test.cuk.Address}}
+
+14:12:12,247 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,247 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,247 DEBUG SQL:104 - 
+    delete 
+    from
+        Address
+14:12:12,258 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.cuk.Account
+14:12:12,259 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'cuk'
+             \-[IDENT] Node: 'Account'
+
+14:12:12,259 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,259 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Account (<no alias>) -> account0_
+14:12:12,259 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces ("Account")
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[account0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: '"Account"' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName="Account",tableAlias=account0_,origin=null,columns={,className=org.hibernate.test.cuk.Account}}
+
+14:12:12,260 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,260 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,260 DEBUG SQL:104 - 
+    delete 
+    from
+        "Account"
+14:12:12,281 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.cuk.Person
+14:12:12,282 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'cuk'
+             \-[IDENT] Node: 'Person'
+
+14:12:12,282 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,282 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cuk.Person (<no alias>) -> person0_
+14:12:12,282 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Person)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Person' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.cuk.Person}}
+
+14:12:12,282 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,283 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,283 DEBUG SQL:104 - 
+    delete 
+    from
+        Person
+14:12:12,284  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:12,285 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:12,285 DEBUG SQL:104 - 
+    alter table Address 
+        drop constraint FK1ED033D445A74AD5
+14:12:12,285 DEBUG SQL:104 - 
+    alter table "Account" 
+        drop constraint FK1D0C220D36225B94
+14:12:12,285 DEBUG SQL:104 - 
+    drop table Address if exists
+14:12:12,286 DEBUG SQL:104 - 
+    drop table Person if exists
+14:12:12,286 DEBUG SQL:104 - 
+    drop table "Account" if exists
+14:12:12,286 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:12:12,286  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:12,286  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.jpa.lock.JPALockTest" tests="2" time="0.024" timestamp="2013-02-28T20:14:51">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.jpa.lock.JPALockTest" name="testLockModeTypeRead" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.jpa.lock.JPALockTest" name="testLockModeTypeWrite" time="0.0" />
+  <system-out><![CDATA[14:14:51,198  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.jpa.lock.JPALockTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

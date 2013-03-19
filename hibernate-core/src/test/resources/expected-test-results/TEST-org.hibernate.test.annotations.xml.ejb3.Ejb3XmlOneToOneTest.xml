@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" tests="11" time="0.04" timestamp="2013-02-28T20:10:45">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" name="testAllAttributes" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" name="testCascadeAll" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" name="testCascadeAllPlusMore" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" name="testCascadeSomeWithDefaultPersist" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" name="testJoinTableAllChildren" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" name="testJoinTableNoChildren" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" name="testMultipleJoinColumns" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" name="testMultiplePrimaryKeyJoinColumn" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" name="testNoChildren" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" name="testSingleJoinColumn" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest" name="testSinglePrimaryKeyJoinColumn" time="0.008" />
+  <system-out><![CDATA[14:10:45,501  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.xml.ejb3.Ejb3XmlOneToOneTest
+14:10:45,501  INFO CustomRunner:139 - Test: testAllAttributes
+14:10:45,504  INFO CustomRunner:139 - Test: testCascadeAll
+14:10:45,506  INFO CustomRunner:139 - Test: testCascadeAllPlusMore
+14:10:45,509  INFO CustomRunner:139 - Test: testCascadeSomeWithDefaultPersist
+14:10:45,511  INFO CustomRunner:139 - Test: testJoinTableAllChildren
+14:10:45,514  INFO CustomRunner:139 - Test: testJoinTableNoChildren
+14:10:45,517  INFO CustomRunner:139 - Test: testMultipleJoinColumns
+14:10:45,522  INFO CustomRunner:139 - Test: testMultiplePrimaryKeyJoinColumn
+14:10:45,525  INFO CustomRunner:139 - Test: testNoChildren
+14:10:45,528  INFO CustomRunner:139 - Test: testSingleJoinColumn
+14:10:45,531  INFO CustomRunner:139 - Test: testSinglePrimaryKeyJoinColumn
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.cache.spi.NaturalIdCacheKeyTest" tests="1" time="1.1" timestamp="2013-02-28T20:09:50">
+  <properties />
+  <testcase classname="org.hibernate.cache.spi.NaturalIdCacheKeyTest" name="testSerializationRoundTrip" time="0.872" />
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

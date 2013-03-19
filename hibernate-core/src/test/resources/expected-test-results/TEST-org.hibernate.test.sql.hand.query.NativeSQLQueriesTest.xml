@@ -1,0 +1,1519 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" tests="14" time="0.357" timestamp="2013-02-28T20:19:17">
+  <properties />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testAddJoinForManyToMany" time="0.007" />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testAutoDetectAliasing" time="0.066" />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testCompositeIdJoins" time="0.068" />
+  <ignored-testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testEscapeColonInSQL" time="0.0" />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testExplicitReturnAPI" time="0.007" />
+  <ignored-testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testFailOnNoAddEntityOrScalar" time="0.0" />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testImageTypeInSQLQuery" time="0.009" />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testManualSynchronization" time="0.002" />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testMappedAliasStrategy" time="0.005" />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testMixAndMatchEntityScalar" time="0.002" />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testResultSetMappingDefinition" time="0.004" />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testSQLQueryInterface" time="0.004" />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testScalarValues" time="0.003" />
+  <testcase classname="org.hibernate.test.sql.hand.query.NativeSQLQueriesTest" name="testTextTypeInSQLQuery" time="0.025" />
+  <system-out><![CDATA[14:19:17,063  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.sql.hand.query.NativeSQLQueriesTest
+14:19:17,065  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/sql/hand/query/NativeSQLQueries.hbm.xml
+14:19:17,107  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.sql.hand.Product$ProductId
+14:19:17,108  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.sql.hand.Product$ProductId
+14:19:17,108  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.sql.hand.Order$OrderId
+14:19:17,108  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.sql.hand.Order$OrderId
+14:19:17,109  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:17,109  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:17,109  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:17,110  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:17,110  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:17,111  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:17,112  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:17,113  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:17,113  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:17,114  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:17,135  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:17,136 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:17,136 DEBUG SQL:104 - 
+    alter table EMPLOYMENT 
+        drop constraint FK26F18FEC68A9736C
+14:19:17,136 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMPLOYMENT drop constraint FK26F18FEC68A9736C
+14:19:17,136 ERROR SchemaExport:426 - Table "EMPLOYMENT" not found; SQL statement:
+
+    alter table EMPLOYMENT 
+        drop constraint FK26F18FEC68A9736C [42102-145]
+14:19:17,137 DEBUG SQL:104 - 
+    alter table EMPLOYMENT 
+        drop constraint FK26F18FECD8C05297
+14:19:17,137 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMPLOYMENT drop constraint FK26F18FECD8C05297
+14:19:17,137 ERROR SchemaExport:426 - Table "EMPLOYMENT" not found; SQL statement:
+
+    alter table EMPLOYMENT 
+        drop constraint FK26F18FECD8C05297 [42102-145]
+14:19:17,138 DEBUG SQL:104 - 
+    alter table GROUP_PERSON 
+        drop constraint FK152D753554612703
+14:19:17,138 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table GROUP_PERSON drop constraint FK152D753554612703
+14:19:17,138 ERROR SchemaExport:426 - Table "GROUP_PERSON" not found; SQL statement:
+
+    alter table GROUP_PERSON 
+        drop constraint FK152D753554612703 [42102-145]
+14:19:17,138 DEBUG SQL:104 - 
+    alter table GROUP_PERSON 
+        drop constraint FK152D75356042AD1
+14:19:17,139 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table GROUP_PERSON drop constraint FK152D75356042AD1
+14:19:17,139 ERROR SchemaExport:426 - Table "GROUP_PERSON" not found; SQL statement:
+
+    alter table GROUP_PERSON 
+        drop constraint FK152D75356042AD1 [42102-145]
+14:19:17,139 DEBUG SQL:104 - 
+    alter table TBL_ORDER 
+        drop constraint FKC977874D56710066
+14:19:17,140 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TBL_ORDER drop constraint FKC977874D56710066
+14:19:17,140 ERROR SchemaExport:426 - Table "TBL_ORDER" not found; SQL statement:
+
+    alter table TBL_ORDER 
+        drop constraint FKC977874D56710066 [42102-145]
+14:19:17,140 DEBUG SQL:104 - 
+    alter table TBL_ORDER 
+        drop constraint FKC977874DE66A2813
+14:19:17,140 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TBL_ORDER drop constraint FKC977874DE66A2813
+14:19:17,141 ERROR SchemaExport:426 - Table "TBL_ORDER" not found; SQL statement:
+
+    alter table TBL_ORDER 
+        drop constraint FKC977874DE66A2813 [42102-145]
+14:19:17,141 DEBUG SQL:104 - 
+    drop table Dimension if exists
+14:19:17,141 DEBUG SQL:104 - 
+    drop table EMPLOYMENT if exists
+14:19:17,141 DEBUG SQL:104 - 
+    drop table GROUPP if exists
+14:19:17,142 DEBUG SQL:104 - 
+    drop table GROUP_PERSON if exists
+14:19:17,142 DEBUG SQL:104 - 
+    drop table IMAGE_HOLDER if exists
+14:19:17,142 DEBUG SQL:104 - 
+    drop table ORGANIZATION if exists
+14:19:17,142 DEBUG SQL:104 - 
+    drop table PERSON if exists
+14:19:17,142 DEBUG SQL:104 - 
+    drop table Product if exists
+14:19:17,143 DEBUG SQL:104 - 
+    drop table SpaceShip if exists
+14:19:17,143 DEBUG SQL:104 - 
+    drop table Speech if exists
+14:19:17,143 DEBUG SQL:104 - 
+    drop table TBL_ORDER if exists
+14:19:17,143 DEBUG SQL:104 - 
+    drop table TEXT_HOLDER if exists
+14:19:17,144 DEBUG SQL:104 - 
+    create table Dimension (
+        id bigint not null,
+        d_len integer,
+        d_width integer,
+        primary key (id)
+    )
+14:19:17,144 DEBUG SQL:104 - 
+    create table EMPLOYMENT (
+        EMPID bigint not null,
+        EMPLOYEE bigint not null,
+        EMPLOYER bigint not null,
+        STARTDATE timestamp,
+        ENDDATE timestamp,
+        REGIONCODE varchar(255),
+        AMOUNT float,
+        CURRENCY varchar(255),
+        primary key (EMPID)
+    )
+14:19:17,145 DEBUG SQL:104 - 
+    create table GROUPP (
+        ID bigint not null,
+        NAME varchar(255) not null,
+        primary key (ID)
+    )
+14:19:17,145 DEBUG SQL:104 - 
+    create table GROUP_PERSON (
+        GROUP_ID bigint not null,
+        PERSON_ID bigint not null,
+        POS integer not null,
+        primary key (GROUP_ID, POS)
+    )
+14:19:17,145 DEBUG SQL:104 - 
+    create table IMAGE_HOLDER (
+        id bigint not null,
+        photo longvarbinary,
+        primary key (id)
+    )
+14:19:17,145 DEBUG SQL:104 - 
+    create table ORGANIZATION (
+        ORGID bigint not null,
+        NAME varchar(255) not null,
+        primary key (ORGID)
+    )
+14:19:17,146 DEBUG SQL:104 - 
+    create table PERSON (
+        PERID bigint not null,
+        NAME varchar(255) not null,
+        primary key (PERID)
+    )
+14:19:17,146 DEBUG SQL:104 - 
+    create table Product (
+        orgid varchar(255) not null,
+        productnumber varchar(255) not null,
+        name varchar(255),
+        primary key (orgid, productnumber)
+    )
+14:19:17,146 DEBUG SQL:104 - 
+    create table SpaceShip (
+        id integer not null,
+        fld_name varchar(255),
+        fld_model varchar(255),
+        fld_speed double,
+        fld_length integer,
+        fld_width integer,
+        primary key (id)
+    )
+14:19:17,146 DEBUG SQL:104 - 
+    create table Speech (
+        id integer not null,
+        name varchar(255),
+        flength double,
+        primary key (id)
+    )
+14:19:17,147 DEBUG SQL:104 - 
+    create table TBL_ORDER (
+        orgid varchar(255) not null,
+        ordernumber varchar(255) not null,
+        PROD_ORGID varchar(255),
+        PROD_NO varchar(255),
+        person bigint,
+        primary key (orgid, ordernumber)
+    )
+14:19:17,147 DEBUG SQL:104 - 
+    create table TEXT_HOLDER (
+        id bigint not null,
+        description longvarchar,
+        primary key (id)
+    )
+14:19:17,147 DEBUG SQL:104 - 
+    alter table EMPLOYMENT 
+        add constraint FK26F18FEC68A9736C 
+        foreign key (EMPLOYEE) 
+        references PERSON
+14:19:17,148 DEBUG SQL:104 - 
+    alter table EMPLOYMENT 
+        add constraint FK26F18FECD8C05297 
+        foreign key (EMPLOYER) 
+        references ORGANIZATION
+14:19:17,148 DEBUG SQL:104 - 
+    alter table GROUP_PERSON 
+        add constraint FK152D753554612703 
+        foreign key (PERSON_ID) 
+        references PERSON
+14:19:17,149 DEBUG SQL:104 - 
+    alter table GROUP_PERSON 
+        add constraint FK152D75356042AD1 
+        foreign key (GROUP_ID) 
+        references GROUPP
+14:19:17,150 DEBUG SQL:104 - 
+    alter table TBL_ORDER 
+        add constraint FKC977874D56710066 
+        foreign key (PROD_ORGID, PROD_NO) 
+        references Product
+14:19:17,151 DEBUG SQL:104 - 
+    alter table TBL_ORDER 
+        add constraint FKC977874DE66A2813 
+        foreign key (person) 
+        references PERSON
+14:19:17,152  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:17,152  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:17,192  INFO CustomRunner:139 - Test: testAddJoinForManyToMany
+14:19:17,193 DEBUG SQL:104 - 
+    select
+        max(PERID) 
+    from
+        PERSON
+14:19:17,194 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        GROUPP
+14:19:17,194 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, PERID) 
+    values
+        (?, ?)
+14:19:17,194 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, PERID) 
+    values
+        (?, ?)
+14:19:17,195 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, PERID) 
+    values
+        (?, ?)
+14:19:17,195 DEBUG SQL:104 - 
+    insert 
+    into
+        GROUPP
+        (NAME, ID) 
+    values
+        (?, ?)
+14:19:17,195 DEBUG SQL:104 - 
+    insert 
+    into
+        GROUPP
+        (NAME, ID) 
+    values
+        (?, ?)
+14:19:17,195 DEBUG SQL:104 - 
+    insert 
+    into
+        GROUP_PERSON
+        (GROUP_ID, POS, PERSON_ID) 
+    values
+        (?, ?, ?)
+14:19:17,195 DEBUG SQL:104 - 
+    insert 
+    into
+        GROUP_PERSON
+        (GROUP_ID, POS, PERSON_ID) 
+    values
+        (?, ?, ?)
+14:19:17,196 DEBUG SQL:104 - 
+    insert 
+    into
+        GROUP_PERSON
+        (GROUP_ID, POS, PERSON_ID) 
+    values
+        (?, ?, ?)
+14:19:17,196 DEBUG SQL:104 - 
+    insert 
+    into
+        GROUP_PERSON
+        (GROUP_ID, POS, PERSON_ID) 
+    values
+        (?, ?, ?)
+14:19:17,196 DEBUG SQL:104 - 
+    SELECT
+        groupp.ID as group_id,
+        groupp.NAME as group_name,
+        group_person.PERSON_ID as group_person_personId,
+        group_person.GROUP_ID as group_person_groupId,
+        group_person.POS as group_person_pos,
+        person.PERID as person_id,
+        person.NAME as person_name    
+    FROM
+        GROUPP groupp,
+        GROUP_PERSON group_person,
+        PERSON person    
+    WHERE
+        groupp.ID = group_person.GROUP_ID      
+        and person.PERID = group_person.PERSON_ID
+14:19:17,197 DEBUG SQL:104 - 
+    delete 
+    from
+        GROUP_PERSON 
+    where
+        GROUP_ID=?
+14:19:17,198 DEBUG SQL:104 - 
+    delete 
+    from
+        GROUP_PERSON 
+    where
+        GROUP_ID=?
+14:19:17,198 DEBUG SQL:104 - 
+    delete 
+    from
+        GROUPP 
+    where
+        ID=?
+14:19:17,198 DEBUG SQL:104 - 
+    delete 
+    from
+        GROUPP 
+    where
+        ID=?
+14:19:17,198 DEBUG SQL:104 - 
+    delete 
+    from
+        PERSON 
+    where
+        PERID=?
+14:19:17,198 DEBUG SQL:104 - 
+    delete 
+    from
+        PERSON 
+    where
+        PERID=?
+14:19:17,199 DEBUG SQL:104 - 
+    delete 
+    from
+        PERSON 
+    where
+        PERID=?
+14:19:17,199  INFO CustomRunner:139 - Test: testAutoDetectAliasing
+14:19:17,201 DEBUG SQL:104 - 
+    select
+        max(ORGID) 
+    from
+        ORGANIZATION
+14:19:17,201 DEBUG SQL:104 - 
+    select
+        max(EMPID) 
+    from
+        EMPLOYMENT
+14:19:17,202 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,202 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,202 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, PERID) 
+    values
+        (?, ?)
+14:19:17,203 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYMENT
+        (EMPLOYEE, EMPLOYER, STARTDATE, REGIONCODE, AMOUNT, CURRENCY, EMPID) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:19:17,203 DEBUG SQL:104 - 
+    SELECT
+        * 
+    FROM
+        EMPLOYMENT
+14:19:17,204 DEBUG SQL:104 - 
+    SELECT
+        * 
+    FROM
+        EMPLOYMENT
+14:19:17,204 DEBUG SQL:104 - 
+    SELECT
+        * 
+    FROM
+        EMPLOYMENT
+14:19:17,206 DEBUG SQL:104 - 
+    SELECT
+        * 
+    FROM
+        EMPLOYMENT
+14:19:17,254 DEBUG SQL:104 - 
+    SELECT
+        e.*,
+        e.employer as employerid  
+    FROM
+        EMPLOYMENT e
+14:19:17,255 DEBUG SQL:104 - 
+    SELECT
+        empcol.EMPLOYER as EMPLOYER5_0__,
+        empcol.EMPID as EMPID1_0__,
+        empcol.EMPID as EMPID1_0_,
+        empcol.EMPLOYEE as EMPLOYEE1_0_,
+        empcol.EMPLOYER as EMPLOYER1_0_,
+        empcol.STARTDATE as STARTDATE1_0_,
+        empcol.ENDDATE as ENDDATE1_0_,
+        empcol.REGIONCODE as REGIONCODE1_0_,
+        empcol.AMOUNT as AMOUNT1_0_,
+        empcol.CURRENCY as CURRENCY1_0_    
+    FROM
+        EMPLOYMENT empcol   
+    WHERE
+        EMPLOYER = ?   
+    ORDER BY
+        STARTDATE ASC,
+        EMPLOYEE ASC
+14:19:17,258 DEBUG SQL:104 - 
+    SELECT
+        org.ORGID as ORGID5_0_,
+        org.NAME as NAME5_0_,
+        emp.EMPLOYER as EMPLOYER5_0__,
+        emp.EMPID as EMPID1_0__,
+        emp.EMPID as EMPID1_1_,
+        emp.EMPLOYEE as EMPLOYEE1_1_,
+        emp.EMPLOYER as EMPLOYER1_1_,
+        emp.STARTDATE as STARTDATE1_1_,
+        emp.ENDDATE as ENDDATE1_1_,
+        emp.REGIONCODE as REGIONCODE1_1_,
+        emp.AMOUNT as AMOUNT1_1_,
+        emp.CURRENCY as CURRENCY1_1_  
+    FROM
+        ORGANIZATION org     
+    LEFT OUTER JOIN
+        EMPLOYMENT emp 
+            ON org.ORGID = emp.EMPLOYER
+14:19:17,259 DEBUG SQL:104 - 
+    SELECT
+        org.ORGID as ORGID5_0_,
+        org.NAME as NAME5_0_,
+        emp.EMPLOYER as EMPLOYER5_0__,
+        emp.EMPID as EMPID1_0__,
+        emp.EMPID as EMPID1_1_,
+        emp.EMPLOYEE as EMPLOYEE1_1_,
+        emp.EMPLOYER as EMPLOYER1_1_,
+        emp.STARTDATE as STARTDATE1_1_,
+        emp.ENDDATE as ENDDATE1_1_,
+        emp.REGIONCODE as REGIONCODE1_1_,
+        emp.AMOUNT as AMOUNT1_1_,
+        emp.CURRENCY as CURRENCY1_1_  
+    FROM
+        ORGANIZATION org     
+    LEFT OUTER JOIN
+        EMPLOYMENT emp 
+            ON org.ORGID = emp.EMPLOYER
+14:19:17,260 DEBUG SQL:104 - 
+    SELECT
+        org.ORGID as orgid,
+        org.NAME as name,
+        emp.EMPLOYER as employer,
+        emp.EMPID as empid,
+        emp.EMPLOYEE as employee,
+        emp.EMPLOYER as employer,
+        emp.STARTDATE as xstartDate,
+        emp.ENDDATE as endDate,
+        emp.REGIONCODE as regionCode,
+        emp.AMOUNT as AMOUNT,
+        emp.CURRENCY as CURRENCY         
+    FROM
+        ORGANIZATION org    
+    LEFT OUTER JOIN
+        EMPLOYMENT emp 
+            ON org.ORGID = emp.EMPLOYER
+14:19:17,261 DEBUG SQL:104 - 
+    SELECT
+        org.ORGID as orgid,
+        org.NAME as name,
+        emp.EMPLOYER as employer,
+        emp.EMPID as empid,
+        emp.EMPLOYEE as employee,
+        emp.EMPLOYER as employer,
+        emp.STARTDATE as xstartDate,
+        emp.ENDDATE as endDate,
+        emp.REGIONCODE as regionCode,
+        emp.AMOUNT as AMOUNT,
+        emp.CURRENCY as CURRENCY         
+    FROM
+        ORGANIZATION org    
+    LEFT OUTER JOIN
+        EMPLOYMENT emp 
+            ON org.ORGID = emp.EMPLOYER
+14:19:17,261 DEBUG SQL:104 - 
+    SELECT
+        org.ORGID as orgid,
+        org.NAME as name,
+        emp.EMPLOYER as employer,
+        emp.EMPID as empid,
+        emp.EMPLOYEE as employee,
+        emp.EMPLOYER as employer,
+        emp.STARTDATE as startDate,
+        emp.ENDDATE as endDate,
+        emp.REGIONCODE as regionCode,
+        emp.AMOUNT as AMOUNT,
+        emp.CURRENCY as CURRENCY   
+    FROM
+        ORGANIZATION org    
+    LEFT OUTER JOIN
+        EMPLOYMENT emp 
+            ON org.ORGID = emp.EMPLOYER
+14:19:17,262 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYMENT 
+    where
+        EMPID=?
+14:19:17,262 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,262 DEBUG SQL:104 - 
+    delete 
+    from
+        PERSON 
+    where
+        PERID=?
+14:19:17,263 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,263 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Dimension
+14:19:17,263 DEBUG SQL:104 - 
+    select
+        d_len * d_width as surface,
+        d_len * d_width * 10 as volume 
+    from
+        Dimension
+14:19:17,264 DEBUG SQL:104 - 
+    insert 
+    into
+        Dimension
+        (d_len, d_width, id) 
+    values
+        (?, ?, ?)
+14:19:17,264 DEBUG SQL:104 - 
+    delete 
+    from
+        Dimension 
+    where
+        id=?
+14:19:17,264 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        SpaceShip
+14:19:17,265 DEBUG SQL:104 - 
+    insert 
+    into
+        SpaceShip
+        (fld_name, fld_model, fld_speed, fld_length, fld_width, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:19:17,265 DEBUG SQL:104 - 
+    select
+        id as id,
+        fld_name as name,
+        fld_model as model,
+        fld_speed as speed,
+        fld_length as length,
+        fld_width as width,
+        fld_length * fld_width as surface,
+        fld_length * fld_width *10 as volume         
+    from
+        SpaceShip
+14:19:17,266 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip 
+    where
+        id=?
+14:19:17,266  INFO CustomRunner:139 - Test: testCompositeIdJoins
+14:19:17,268 DEBUG SQL:104 - 
+    insert 
+    into
+        Product
+        (name, orgid, productnumber) 
+    values
+        (?, ?, ?)
+14:19:17,268 DEBUG SQL:104 - 
+    insert 
+    into
+        TBL_ORDER
+        (PROD_ORGID, PROD_NO, person, orgid, ordernumber) 
+    values
+        (?, ?, ?, ?, ?)
+14:19:17,268 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, PERID) 
+    values
+        (?, ?)
+14:19:17,269 DEBUG SQL:104 - 
+    update
+        TBL_ORDER 
+    set
+        PROD_ORGID=?,
+        PROD_NO=?,
+        person=? 
+    where
+        orgid=? 
+        and ordernumber=?
+14:19:17,269 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.sql.hand.Product p join fetch p.orders
+14:19:17,280 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  \-[IDENT] Node: 'sql'
+          |  |  |  \-[IDENT] Node: 'hand'
+          |  |  \-[IDENT] Node: 'Product'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'orders'
+
+14:19:17,280 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:17,281 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.sql.hand.Product (p) -> product0_
+14:19:17,281 DEBUG FromReferenceNode:74 - Resolved : p -> (product0_.orgid, product0_.productnumber)
+14:19:17,281 DEBUG DotNode:599 - getDataType() : orders -> org.hibernate.type.SetType(org.hibernate.test.sql.hand.Product.orders)
+14:19:17,281 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = p.orders role = org.hibernate.test.sql.hand.Product.orders associatedEntityName = org.hibernate.test.sql.hand.Order
+14:19:17,281 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.sql.hand.Order (<no alias>) -> orders1_
+14:19:17,281 DEBUG FromClause:282 - addJoinByPathMap() : p.orders -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=TBL_ORDER,tableAlias=orders1_,origin=Product product0_,columns={product0_.orgid product0_.productnumber ,className=org.hibernate.test.sql.hand.Order}}
+14:19:17,281 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.orders : TBL_ORDER orders1_
+14:19:17,281 DEBUG FromReferenceNode:74 - Resolved : p.orders -> .
+14:19:17,282 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'TBL_ORDER orders1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.sql.hand.Product.orders,tableName=TBL_ORDER,tableAlias=orders1_,origin=Product product0_,columns={product0_.orgid product0_.productnumber ,className=org.hibernate.test.sql.hand.Order}}
+
+14:19:17,282 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Product product0_ TBL_ORDER orders1_ ) ) )
+14:19:17,282 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:17,282 DEBUG JoinProcessor:175 - Using FROM fragment [Product product0_]
+14:19:17,282 DEBUG JoinProcessor:175 - Using FROM fragment [inner join TBL_ORDER orders1_ on product0_.orgid=orders1_.PROD_ORGID and product0_.productnumber=orders1_.PROD_NO]
+14:19:17,282 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (TBL_ORDER,Product)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'product0_.orgid as orgid7_0_, product0_.productnumber as productn2_7_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Product,tableAlias=product0_,origin=null,columns={,className=org.hibernate.test.sql.hand.Product}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'orders1_.orgid as orgid10_1_, orders1_.ordernumber as ordernum2_10_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.sql.hand.Product.orders,tableName=TBL_ORDER,tableAlias=orders1_,origin=Product product0_,columns={product0_.orgid product0_.productnumber ,className=org.hibernate.test.sql.hand.Order}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'product0_.name as name7_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'orders1_.PROD_ORGID as PROD3_10_1_, orders1_.PROD_NO as PROD4_10_1_, orders1_.person as person10_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'orders1_.PROD_ORGID as PROD3_7_0__, orders1_.PROD_NO as PROD4_7_0__, orders1_.orgid as orgid10_0__, orders1_.ordernumber as ordernum2_10_0__'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[product0_, orders1_], fromElementsByPath=[p.orders], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Product product0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Product,tableAlias=product0_,origin=null,columns={,className=org.hibernate.test.sql.hand.Product}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join TBL_ORDER orders1_ on product0_.orgid=orders1_.PROD_ORGID and product0_.productnumber=orders1_.PROD_NO' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.sql.hand.Product.orders,tableName=TBL_ORDER,tableAlias=orders1_,origin=Product product0_,columns={product0_.orgid product0_.productnumber ,className=org.hibernate.test.sql.hand.Order}}
+
+14:19:17,283 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:17,283 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.sql.hand.Product p join fetch p.orders
+14:19:17,283 DEBUG QueryTranslatorImpl:236 - SQL: select product0_.orgid as orgid7_0_, product0_.productnumber as productn2_7_0_, orders1_.orgid as orgid10_1_, orders1_.ordernumber as ordernum2_10_1_, product0_.name as name7_0_, orders1_.PROD_ORGID as PROD3_10_1_, orders1_.PROD_NO as PROD4_10_1_, orders1_.person as person10_1_, orders1_.PROD_ORGID as PROD3_7_0__, orders1_.PROD_NO as PROD4_7_0__, orders1_.orgid as orgid10_0__, orders1_.ordernumber as ordernum2_10_0__ from Product product0_ inner join TBL_ORDER orders1_ on product0_.orgid=orders1_.PROD_ORGID and product0_.productnumber=orders1_.PROD_NO
+14:19:17,283 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:17,283 DEBUG SQL:104 - 
+    select
+        product0_.orgid as orgid7_0_,
+        product0_.productnumber as productn2_7_0_,
+        orders1_.orgid as orgid10_1_,
+        orders1_.ordernumber as ordernum2_10_1_,
+        product0_.name as name7_0_,
+        orders1_.PROD_ORGID as PROD3_10_1_,
+        orders1_.PROD_NO as PROD4_10_1_,
+        orders1_.person as person10_1_,
+        orders1_.PROD_ORGID as PROD3_7_0__,
+        orders1_.PROD_NO as PROD4_7_0__,
+        orders1_.orgid as orgid10_0__,
+        orders1_.ordernumber as ordernum2_10_0__ 
+    from
+        Product product0_ 
+    inner join
+        TBL_ORDER orders1_ 
+            on product0_.orgid=orders1_.PROD_ORGID 
+            and product0_.productnumber=orders1_.PROD_NO
+14:19:17,285  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:19:17,287  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/sql/hand/query/NativeSQLQueries.hbm.xml
+14:19:17,300  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.sql.hand.Product$ProductId
+14:19:17,300  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.sql.hand.Product$ProductId
+14:19:17,301  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.sql.hand.Order$OrderId
+14:19:17,301  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.sql.hand.Order$OrderId
+14:19:17,301  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:17,302  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:17,302  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:17,302  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:17,302  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:17,303  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:17,304  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:17,305  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:17,305  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:17,305  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:17,319  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:17,321 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:17,321 DEBUG SQL:104 - 
+    alter table EMPLOYMENT 
+        drop constraint FK26F18FEC68A9736C
+14:19:17,321 DEBUG SQL:104 - 
+    alter table EMPLOYMENT 
+        drop constraint FK26F18FECD8C05297
+14:19:17,321 DEBUG SQL:104 - 
+    alter table GROUP_PERSON 
+        drop constraint FK152D753554612703
+14:19:17,321 DEBUG SQL:104 - 
+    alter table GROUP_PERSON 
+        drop constraint FK152D75356042AD1
+14:19:17,322 DEBUG SQL:104 - 
+    alter table TBL_ORDER 
+        drop constraint FKC977874D56710066
+14:19:17,322 DEBUG SQL:104 - 
+    alter table TBL_ORDER 
+        drop constraint FKC977874DE66A2813
+14:19:17,322 DEBUG SQL:104 - 
+    drop table Dimension if exists
+14:19:17,322 DEBUG SQL:104 - 
+    drop table EMPLOYMENT if exists
+14:19:17,323 DEBUG SQL:104 - 
+    drop table GROUPP if exists
+14:19:17,323 DEBUG SQL:104 - 
+    drop table GROUP_PERSON if exists
+14:19:17,323 DEBUG SQL:104 - 
+    drop table IMAGE_HOLDER if exists
+14:19:17,323 DEBUG SQL:104 - 
+    drop table ORGANIZATION if exists
+14:19:17,324 DEBUG SQL:104 - 
+    drop table PERSON if exists
+14:19:17,324 DEBUG SQL:104 - 
+    drop table Product if exists
+14:19:17,324 DEBUG SQL:104 - 
+    drop table SpaceShip if exists
+14:19:17,325 DEBUG SQL:104 - 
+    drop table Speech if exists
+14:19:17,325 DEBUG SQL:104 - 
+    drop table TBL_ORDER if exists
+14:19:17,326 DEBUG SQL:104 - 
+    drop table TEXT_HOLDER if exists
+14:19:17,326 DEBUG SQL:104 - 
+    create table Dimension (
+        id bigint not null,
+        d_len integer,
+        d_width integer,
+        primary key (id)
+    )
+14:19:17,326 DEBUG SQL:104 - 
+    create table EMPLOYMENT (
+        EMPID bigint not null,
+        EMPLOYEE bigint not null,
+        EMPLOYER bigint not null,
+        STARTDATE timestamp,
+        ENDDATE timestamp,
+        REGIONCODE varchar(255),
+        AMOUNT float,
+        CURRENCY varchar(255),
+        primary key (EMPID)
+    )
+14:19:17,327 DEBUG SQL:104 - 
+    create table GROUPP (
+        ID bigint not null,
+        NAME varchar(255) not null,
+        primary key (ID)
+    )
+14:19:17,327 DEBUG SQL:104 - 
+    create table GROUP_PERSON (
+        GROUP_ID bigint not null,
+        PERSON_ID bigint not null,
+        POS integer not null,
+        primary key (GROUP_ID, POS)
+    )
+14:19:17,328 DEBUG SQL:104 - 
+    create table IMAGE_HOLDER (
+        id bigint not null,
+        photo longvarbinary,
+        primary key (id)
+    )
+14:19:17,328 DEBUG SQL:104 - 
+    create table ORGANIZATION (
+        ORGID bigint not null,
+        NAME varchar(255) not null,
+        primary key (ORGID)
+    )
+14:19:17,328 DEBUG SQL:104 - 
+    create table PERSON (
+        PERID bigint not null,
+        NAME varchar(255) not null,
+        primary key (PERID)
+    )
+14:19:17,329 DEBUG SQL:104 - 
+    create table Product (
+        orgid varchar(255) not null,
+        productnumber varchar(255) not null,
+        name varchar(255),
+        primary key (orgid, productnumber)
+    )
+14:19:17,329 DEBUG SQL:104 - 
+    create table SpaceShip (
+        id integer not null,
+        fld_name varchar(255),
+        fld_model varchar(255),
+        fld_speed double,
+        fld_length integer,
+        fld_width integer,
+        primary key (id)
+    )
+14:19:17,329 DEBUG SQL:104 - 
+    create table Speech (
+        id integer not null,
+        name varchar(255),
+        flength double,
+        primary key (id)
+    )
+14:19:17,330 DEBUG SQL:104 - 
+    create table TBL_ORDER (
+        orgid varchar(255) not null,
+        ordernumber varchar(255) not null,
+        PROD_ORGID varchar(255),
+        PROD_NO varchar(255),
+        person bigint,
+        primary key (orgid, ordernumber)
+    )
+14:19:17,330 DEBUG SQL:104 - 
+    create table TEXT_HOLDER (
+        id bigint not null,
+        description longvarchar,
+        primary key (id)
+    )
+14:19:17,331 DEBUG SQL:104 - 
+    alter table EMPLOYMENT 
+        add constraint FK26F18FEC68A9736C 
+        foreign key (EMPLOYEE) 
+        references PERSON
+14:19:17,331 DEBUG SQL:104 - 
+    alter table EMPLOYMENT 
+        add constraint FK26F18FECD8C05297 
+        foreign key (EMPLOYER) 
+        references ORGANIZATION
+14:19:17,332 DEBUG SQL:104 - 
+    alter table GROUP_PERSON 
+        add constraint FK152D753554612703 
+        foreign key (PERSON_ID) 
+        references PERSON
+14:19:17,332 DEBUG SQL:104 - 
+    alter table GROUP_PERSON 
+        add constraint FK152D75356042AD1 
+        foreign key (GROUP_ID) 
+        references GROUPP
+14:19:17,333 DEBUG SQL:104 - 
+    alter table TBL_ORDER 
+        add constraint FKC977874D56710066 
+        foreign key (PROD_ORGID, PROD_NO) 
+        references Product
+14:19:17,333 DEBUG SQL:104 - 
+    alter table TBL_ORDER 
+        add constraint FKC977874DE66A2813 
+        foreign key (person) 
+        references PERSON
+14:19:17,334  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:17,334  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:17,336  INFO CustomRunner:139 - Test: testExplicitReturnAPI
+14:19:17,336 DEBUG SQL:104 - 
+    select
+        max(ORGID) 
+    from
+        ORGANIZATION
+14:19:17,337 DEBUG SQL:104 - 
+    select
+        max(PERID) 
+    from
+        PERSON
+14:19:17,337 DEBUG SQL:104 - 
+    select
+        max(EMPID) 
+    from
+        EMPLOYMENT
+14:19:17,338 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,338 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, PERID) 
+    values
+        (?, ?)
+14:19:17,338 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYMENT
+        (EMPLOYEE, EMPLOYER, STARTDATE, REGIONCODE, AMOUNT, CURRENCY, EMPID) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:19:17,339 DEBUG SQL:104 - 
+    SELECT
+        org.ORGID   as orgid,
+        org.NAME   as name,
+        emp.EMPLOYER  as employer,
+        emp.EMPID   as empid,
+        emp.EMPLOYEE  as employee,
+        emp.EMPLOYER  as employer,
+        emp.STARTDATE  as startDate,
+        emp.ENDDATE  as endDate,
+        emp.REGIONCODE  as regionCode,
+        emp.AMOUNT   as AMOUNT,
+        emp.CURRENCY  as CURRENCY 
+    FROM
+        ORGANIZATION org    
+    LEFT OUTER JOIN
+        EMPLOYMENT emp 
+            ON org.ORGID = emp.EMPLOYER
+14:19:17,340 DEBUG SQL:104 - 
+    SELECT
+        org.ORGID   as orgid,
+        org.NAME   as name,
+        emp.EMPLOYER  as employer,
+        emp.EMPID   as empid,
+        emp.EMPLOYEE  as employee,
+        emp.EMPLOYER  as employer,
+        emp.STARTDATE  as startDate,
+        emp.ENDDATE  as endDate,
+        emp.REGIONCODE  as regionCode,
+        emp.AMOUNT   as AMOUNT,
+        emp.CURRENCY  as CURRENCY 
+    FROM
+        ORGANIZATION org    
+    LEFT OUTER JOIN
+        EMPLOYMENT emp 
+            ON org.ORGID = emp.EMPLOYER
+14:19:17,342 DEBUG SQL:104 - 
+    SELECT
+        org.ORGID   as orgid,
+        org.NAME   as name,
+        emp.EMPLOYER  as employer,
+        emp.EMPID   as empid,
+        emp.EMPLOYEE  as employee,
+        emp.EMPLOYER  as employer,
+        emp.STARTDATE  as startDate,
+        emp.ENDDATE  as endDate,
+        emp.REGIONCODE  as regionCode,
+        emp.AMOUNT   as AMOUNT,
+        emp.CURRENCY  as CURRENCY 
+    FROM
+        ORGANIZATION org    
+    LEFT OUTER JOIN
+        EMPLOYMENT emp 
+            ON org.ORGID = emp.EMPLOYER
+14:19:17,342 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYMENT 
+    where
+        EMPID=?
+14:19:17,343 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,343 DEBUG SQL:104 - 
+    delete 
+    from
+        PERSON 
+    where
+        PERID=?
+14:19:17,344  INFO CustomRunner:139 - Test: testImageTypeInSQLQuery
+14:19:17,347 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        IMAGE_HOLDER
+14:19:17,347 DEBUG SQL:104 - 
+    insert 
+    into
+        IMAGE_HOLDER
+        (photo, id) 
+    values
+        (?, ?)
+14:19:17,348 DEBUG SQL:104 - 
+    select
+        PHOTO 
+    from
+        IMAGE_HOLDER
+14:19:17,348 DEBUG SQL:104 - 
+    delete 
+    from
+        IMAGE_HOLDER 
+    where
+        id=?
+14:19:17,353  INFO CustomRunner:139 - Test: testManualSynchronization
+14:19:17,354 DEBUG SQL:104 - 
+    SELECT
+        * 
+    FROM
+        EMPLOYMENT
+14:19:17,355 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,355 DEBUG SQL:104 - 
+    SELECT
+        * 
+    FROM
+        EMPLOYMENT
+14:19:17,356 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,356  INFO CustomRunner:139 - Test: testMappedAliasStrategy
+14:19:17,357 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,357 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,357 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, PERID) 
+    values
+        (?, ?)
+14:19:17,357 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYMENT
+        (EMPLOYEE, EMPLOYER, STARTDATE, REGIONCODE, AMOUNT, CURRENCY, EMPID) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:19:17,358 DEBUG SQL:104 - 
+    SELECT
+        * 
+    FROM
+        EMPLOYMENT
+14:19:17,358 DEBUG SQL:104 - 
+    SELECT
+        * 
+    FROM
+        EMPLOYMENT,
+        PERSON
+14:19:17,359 DEBUG SQL:104 - 
+    SELECT
+        org.ORGID as orgid,
+        org.NAME as name,
+        emp.EMPLOYER as employer,
+        emp.EMPID as empid,
+        emp.EMPLOYEE as employee,
+        emp.EMPLOYER as employer,
+        emp.STARTDATE as xstartDate,
+        emp.ENDDATE as endDate,
+        emp.REGIONCODE as regionCode,
+        emp.AMOUNT as AMOUNT,
+        emp.CURRENCY as CURRENCY         
+    FROM
+        ORGANIZATION org    
+    LEFT OUTER JOIN
+        EMPLOYMENT emp 
+            ON org.ORGID = emp.EMPLOYER
+14:19:17,359 DEBUG SQL:104 - 
+    SELECT
+        * 
+    FROM
+        EMPLOYMENT,
+        PERSON
+14:19:17,360 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYMENT 
+    where
+        EMPID=?
+14:19:17,360 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,360 DEBUG SQL:104 - 
+    delete 
+    from
+        PERSON 
+    where
+        PERID=?
+14:19:17,360 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,361  INFO CustomRunner:139 - Test: testMixAndMatchEntityScalar
+14:19:17,361 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Speech
+14:19:17,362 DEBUG SQL:104 - 
+    insert 
+    into
+        Speech
+        (name, flength, id) 
+    values
+        (?, ?, ?)
+14:19:17,362 DEBUG SQL:104 - 
+    select
+        name,
+        id,
+        flength,
+        name as scalarName 
+    from
+        Speech
+14:19:17,363  INFO CustomRunner:139 - Test: testResultSetMappingDefinition
+14:19:17,364 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,364 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,364 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, PERID) 
+    values
+        (?, ?)
+14:19:17,364 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYMENT
+        (EMPLOYEE, EMPLOYER, STARTDATE, REGIONCODE, AMOUNT, CURRENCY, EMPID) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:19:17,365 DEBUG SQL:104 - 
+    select
+        org.ORGID as ORGID5_0_,
+        org.NAME as NAME5_0_,
+        emp.EMPLOYER as EMPLOYER5_0__,
+        emp.EMPID as EMPID1_0__,
+        emp.EMPID as EMPID1_1_,
+        emp.EMPLOYEE as EMPLOYEE1_1_,
+        emp.EMPLOYER as EMPLOYER1_1_,
+        emp.STARTDATE as STARTDATE1_1_,
+        emp.ENDDATE as ENDDATE1_1_,
+        emp.REGIONCODE as REGIONCODE1_1_,
+        emp.AMOUNT as AMOUNT1_1_,
+        emp.CURRENCY as CURRENCY1_1_,
+        emp.REGIONCODE 
+    from
+        ORGANIZATION org      
+    left outer join
+        EMPLOYMENT emp 
+            on org.ORGID = emp.EMPLOYER
+14:19:17,365 DEBUG SQL:104 - 
+    select
+        org.ORGID as ORGID5_0_,
+        org.NAME as NAME5_0_,
+        emp.EMPLOYER as EMPLOYER5_0__,
+        emp.EMPID as EMPID1_0__,
+        emp.EMPID as EMPID1_1_,
+        emp.EMPLOYEE as EMPLOYEE1_1_,
+        emp.EMPLOYER as EMPLOYER1_1_,
+        emp.STARTDATE as STARTDATE1_1_,
+        emp.ENDDATE as ENDDATE1_1_,
+        emp.REGIONCODE as REGIONCODE1_1_,
+        emp.AMOUNT as AMOUNT1_1_,
+        emp.CURRENCY as CURRENCY1_1_,
+        pers.PERID as PERID6_2_,
+        pers.NAME as NAME6_2_ 
+    from
+        ORGANIZATION org     
+    join
+        EMPLOYMENT emp 
+            on org.ORGID = emp.EMPLOYER     
+    join
+        PERSON pers 
+            on pers.PERID = emp.EMPLOYEE 
+14:19:17,366 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYMENT 
+    where
+        EMPID=?
+14:19:17,366 DEBUG SQL:104 - 
+    delete 
+    from
+        PERSON 
+    where
+        PERID=?
+14:19:17,366 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,366 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,367  INFO CustomRunner:139 - Test: testSQLQueryInterface
+14:19:17,367 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,368 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,368 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, PERID) 
+    values
+        (?, ?)
+14:19:17,368 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYMENT
+        (EMPLOYEE, EMPLOYER, STARTDATE, REGIONCODE, AMOUNT, CURRENCY, EMPID) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:19:17,369 DEBUG SQL:104 - 
+    select
+        org.ORGID as ORGID5_0_,
+        org.NAME as NAME5_0_,
+        emp.EMPLOYER as EMPLOYER5_0__,
+        emp.EMPID as EMPID1_0__,
+        emp.EMPID as EMPID1_1_,
+        emp.EMPLOYEE as EMPLOYEE1_1_,
+        emp.EMPLOYER as EMPLOYER1_1_,
+        emp.STARTDATE as STARTDATE1_1_,
+        emp.ENDDATE as ENDDATE1_1_,
+        emp.REGIONCODE as REGIONCODE1_1_,
+        emp.AMOUNT as AMOUNT1_1_,
+        emp.CURRENCY as CURRENCY1_1_,
+        emp.REGIONCODE 
+    from
+        ORGANIZATION org      
+    left outer join
+        EMPLOYMENT emp 
+            on org.ORGID = emp.EMPLOYER
+14:19:17,369 DEBUG SQL:104 - 
+    select
+        org.ORGID as ORGID5_0_,
+        org.NAME as NAME5_0_,
+        emp.EMPLOYER as EMPLOYER5_0__,
+        emp.EMPID as EMPID1_0__,
+        emp.EMPID as EMPID1_1_,
+        emp.EMPLOYEE as EMPLOYEE1_1_,
+        emp.EMPLOYER as EMPLOYER1_1_,
+        emp.STARTDATE as STARTDATE1_1_,
+        emp.ENDDATE as ENDDATE1_1_,
+        emp.REGIONCODE as REGIONCODE1_1_,
+        emp.AMOUNT as AMOUNT1_1_,
+        emp.CURRENCY as CURRENCY1_1_,
+        pers.PERID as PERID6_2_,
+        pers.NAME as NAME6_2_ 
+    from
+        ORGANIZATION org     
+    join
+        EMPLOYMENT emp 
+            on org.ORGID = emp.EMPLOYER     
+    join
+        PERSON pers 
+            on pers.PERID = emp.EMPLOYEE 
+14:19:17,370 DEBUG SQL:104 - 
+    select
+        org.ORGID as ORGID5_0_,
+        org.NAME as NAME5_0_,
+        emp.EMPLOYER as EMPLOYER5_0__,
+        emp.EMPID as EMPID1_0__,
+        emp.EMPID as EMPID1_1_,
+        emp.EMPLOYEE as EMPLOYEE1_1_,
+        emp.EMPLOYER as EMPLOYER1_1_,
+        emp.STARTDATE as STARTDATE1_1_,
+        emp.ENDDATE as ENDDATE1_1_,
+        emp.REGIONCODE as REGIONCODE1_1_,
+        emp.AMOUNT as AMOUNT1_1_,
+        emp.CURRENCY as CURRENCY1_1_ 
+    from
+        ORGANIZATION org      
+    left outer join
+        EMPLOYMENT emp 
+            on org.ORGID = emp.EMPLOYER,
+        ORGANIZATION org2
+14:19:17,370 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYMENT 
+    where
+        EMPID=?
+14:19:17,371 DEBUG SQL:104 - 
+    delete 
+    from
+        PERSON 
+    where
+        PERID=?
+14:19:17,371 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,371 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,371  INFO CustomRunner:139 - Test: testScalarValues
+14:19:17,372 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,372 DEBUG SQL:104 - 
+    insert 
+    into
+        ORGANIZATION
+        (NAME, ORGID) 
+    values
+        (?, ?)
+14:19:17,373 DEBUG SQL:104 - 
+    SELECT
+        org.NAME 
+    FROM
+        ORGANIZATION org
+14:19:17,373 DEBUG SQL:104 - 
+    SELECT
+        org.NAME 
+    FROM
+        ORGANIZATION org
+14:19:17,373 DEBUG SQL:104 - 
+    SELECT
+        org.NAME AS thename,
+        org.NAME AS NAME5_0_,
+        org.ORGID AS ORGID5_0_    
+    FROM
+        ORGANIZATION org   
+    ORDER BY
+        thename
+14:19:17,374 DEBUG SQL:104 - 
+    SELECT
+        org.NAME AS thename,
+        org.NAME AS NAME5_0_,
+        org.ORGID AS ORGID5_0_    
+    FROM
+        ORGANIZATION org   
+    ORDER BY
+        thename
+14:19:17,374 DEBUG SQL:104 - 
+    SELECT
+        NAME AS thename,
+        ORGID AS orgid   
+    FROM
+        ORGANIZATION   
+    ORDER BY
+        thename
+14:19:17,375 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,375 DEBUG SQL:104 - 
+    delete 
+    from
+        ORGANIZATION 
+    where
+        ORGID=?
+14:19:17,375  INFO CustomRunner:139 - Test: testTextTypeInSQLQuery
+14:19:17,377 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        TEXT_HOLDER
+14:19:17,396 DEBUG SQL:104 - 
+    insert 
+    into
+        TEXT_HOLDER
+        (description, id) 
+    values
+        (?, ?)
+14:19:17,397 DEBUG SQL:104 - 
+    select
+        DESCRIPTION 
+    from
+        TEXT_HOLDER
+14:19:17,398 DEBUG SQL:104 - 
+    delete 
+    from
+        TEXT_HOLDER 
+    where
+        id=?
+14:19:17,401  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:17,402 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:17,402 DEBUG SQL:104 - 
+    alter table EMPLOYMENT 
+        drop constraint FK26F18FEC68A9736C
+14:19:17,402 DEBUG SQL:104 - 
+    alter table EMPLOYMENT 
+        drop constraint FK26F18FECD8C05297
+14:19:17,402 DEBUG SQL:104 - 
+    alter table GROUP_PERSON 
+        drop constraint FK152D753554612703
+14:19:17,403 DEBUG SQL:104 - 
+    alter table GROUP_PERSON 
+        drop constraint FK152D75356042AD1
+14:19:17,403 DEBUG SQL:104 - 
+    alter table TBL_ORDER 
+        drop constraint FKC977874D56710066
+14:19:17,403 DEBUG SQL:104 - 
+    alter table TBL_ORDER 
+        drop constraint FKC977874DE66A2813
+14:19:17,403 DEBUG SQL:104 - 
+    drop table Dimension if exists
+14:19:17,403 DEBUG SQL:104 - 
+    drop table EMPLOYMENT if exists
+14:19:17,404 DEBUG SQL:104 - 
+    drop table GROUPP if exists
+14:19:17,404 DEBUG SQL:104 - 
+    drop table GROUP_PERSON if exists
+14:19:17,404 DEBUG SQL:104 - 
+    drop table IMAGE_HOLDER if exists
+14:19:17,405 DEBUG SQL:104 - 
+    drop table ORGANIZATION if exists
+14:19:17,405 DEBUG SQL:104 - 
+    drop table PERSON if exists
+14:19:17,405 DEBUG SQL:104 - 
+    drop table Product if exists
+14:19:17,412 DEBUG SQL:104 - 
+    drop table SpaceShip if exists
+14:19:17,413 DEBUG SQL:104 - 
+    drop table Speech if exists
+14:19:17,413 DEBUG SQL:104 - 
+    drop table TBL_ORDER if exists
+14:19:17,413 DEBUG SQL:104 - 
+    drop table TEXT_HOLDER if exists
+14:19:17,413  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:17,414  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

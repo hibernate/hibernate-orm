@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.id.IdClassTest" tests="1" time="0.069" timestamp="2013-02-28T20:10:28">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.id.IdClassTest" name="testIdClassInSuperclass" time="0.021" />
+  <system-out><![CDATA[14:10:28,341  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.id.IdClassTest
+14:10:28,346  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:28,346  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:28,346  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:28,346  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:28,375  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:28,376  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:28,377  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:28,377  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:28,378  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:28,378  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:28,384  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:28,384 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:28,384 DEBUG SQL:104 - 
+    drop table Tower if exists
+14:10:28,385 DEBUG SQL:104 - 
+    create table Tower (
+        latitude double not null,
+        fld_longitude double not null,
+        primary key (latitude, fld_longitude)
+    )
+14:10:28,385  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:28,385  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:28,386  INFO CustomRunner:139 - Test: testIdClassInSuperclass
+14:10:28,388 DEBUG SQL:104 - 
+    insert 
+    into
+        Tower
+        (latitude, fld_longitude) 
+    values
+        (?, ?)
+14:10:28,392 DEBUG SQL:104 - 
+    select
+        tower0_.latitude as latitude0_0_,
+        tower0_.fld_longitude as fld2_0_0_ 
+    from
+        Tower tower0_ 
+    where
+        tower0_.latitude=? 
+        and tower0_.fld_longitude=?
+14:10:28,408  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:28,408 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:28,409 DEBUG SQL:104 - 
+    drop table Tower if exists
+14:10:28,409  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:28,409  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

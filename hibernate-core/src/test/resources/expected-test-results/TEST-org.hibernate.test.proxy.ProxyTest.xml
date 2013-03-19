@@ -1,0 +1,1812 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.proxy.ProxyTest" tests="13" time="0.713" timestamp="2013-02-28T20:17:47">
+  <properties />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testFinalizeFiltered" time="0.014" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testFullyLoadedPCSerialization" time="0.436" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testInitializedProxySerializationAfterSessionClosed" time="0.004" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testLockUninitializedProxy" time="0.002" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testProxy" time="0.025" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testProxyEviction" time="0.054" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testProxyException" time="0.01" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testProxySerialization" time="0.012" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testProxySerializationAfterSessionClosed" time="0.005" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testRefreshLockInitializedProxy" time="0.014" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testRefreshLockUninitializedProxy" time="0.055" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testRefreshLockUninitializedProxyThenRead" time="0.03" />
+  <testcase classname="org.hibernate.test.proxy.ProxyTest" name="testSubsequentNonExistentProxyAccess" time="0.001" />
+  <system-out><![CDATA[14:17:47,405  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.proxy.ProxyTest
+14:17:47,408  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/proxy/DataPoint.hbm.xml
+14:17:47,418  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:47,418  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:47,418  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:47,419  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:47,419  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:47,420  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:47,420  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:47,421  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:47,421  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:47,421  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:47,433  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:47,434 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:47,434 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61CC948950
+14:17:47,434 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container drop constraint FK5EF36C61CC948950
+14:17:47,435 ERROR SchemaExport:426 - Table "CONTAINER" not found; SQL statement:
+
+    alter table Container 
+        drop constraint FK5EF36C61CC948950 [42102-145]
+14:17:47,435 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61DCEA37B4
+14:17:47,435 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container drop constraint FK5EF36C61DCEA37B4
+14:17:47,435 ERROR SchemaExport:426 - Table "CONTAINER" not found; SQL statement:
+
+    alter table Container 
+        drop constraint FK5EF36C61DCEA37B4 [42102-145]
+14:17:47,435 DEBUG SQL:104 - 
+    alter table DataPoint 
+        drop constraint FK60F3CFE63960C662
+14:17:47,435 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DataPoint drop constraint FK60F3CFE63960C662
+14:17:47,435 ERROR SchemaExport:426 - Table "DATAPOINT" not found; SQL statement:
+
+    alter table DataPoint 
+        drop constraint FK60F3CFE63960C662 [42102-145]
+14:17:47,436 DEBUG SQL:104 - 
+    drop table Container if exists
+14:17:47,436 DEBUG SQL:104 - 
+    drop table DataPoint if exists
+14:17:47,436 DEBUG SQL:104 - 
+    drop table Info if exists
+14:17:47,436 DEBUG SQL:104 - 
+    drop table Owner if exists
+14:17:47,436 DEBUG SQL:104 - 
+    create table Container (
+        id bigint not null,
+        name varchar(255),
+        owner_name varchar(255),
+        info_id bigint,
+        primary key (id)
+    )
+14:17:47,437 DEBUG SQL:104 - 
+    create table DataPoint (
+        id bigint not null,
+        xval decimal(19,2) not null,
+        yval decimal(19,2) not null,
+        description varchar(255),
+        c_id bigint,
+        primary key (id)
+    )
+14:17:47,437 DEBUG SQL:104 - 
+    create table Info (
+        id bigint not null,
+        details varchar(255),
+        primary key (id)
+    )
+14:17:47,437 DEBUG SQL:104 - 
+    create table Owner (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:17:47,437 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C61CC948950 
+        foreign key (info_id) 
+        references Info
+14:17:47,438 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C61DCEA37B4 
+        foreign key (owner_name) 
+        references Owner (name)
+14:17:47,438 DEBUG SQL:104 - 
+    alter table DataPoint 
+        add constraint xy unique (xval, yval)
+14:17:47,438 DEBUG SQL:104 - 
+    alter table DataPoint 
+        add constraint FK60F3CFE63960C662 
+        foreign key (c_id) 
+        references Container
+14:17:47,439 DEBUG SQL:104 - 
+    alter table Owner 
+        add constraint uc_Owner_1 unique (name)
+14:17:47,439  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:47,440  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:47,440  INFO CustomRunner:139 - Test: testFinalizeFiltered
+14:17:47,441 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        DataPoint
+14:17:47,442 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,442 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:47,453 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint 
+    where
+        id=?
+14:17:47,454  INFO CustomRunner:139 - Test: testFullyLoadedPCSerialization
+14:17:47,455 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Container
+14:17:47,456 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Owner
+14:17:47,464 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:17:47,469 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, owner_name, info_id, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,470 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,470 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,471 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,480 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,480 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,481 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:17:47,481 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, owner_name, info_id, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,482 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,490 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,490 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,491 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,491 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,500 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:17:47,501 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, owner_name, info_id, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,501 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,501 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,510 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,510 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,511 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,511 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:17:47,519 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, owner_name, info_id, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,520 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,520 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,520 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,521 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,521 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,521 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:17:47,521 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, owner_name, info_id, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,521 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,533 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,534 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,534 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,534 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,543 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:17:47,544 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, owner_name, info_id, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,544 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,544 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,544 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,545 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,545 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,568 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:17:47,568 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, owner_name, info_id, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,568 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,568 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,577 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,577 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,577 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,578 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:17:47,588 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, owner_name, info_id, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,588 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,588 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,588 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,597 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,598 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,598 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:17:47,598 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, owner_name, info_id, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,598 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,612 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,613 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,613 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,613 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,622 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:17:47,622 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, owner_name, info_id, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,623 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,623 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,634 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,634 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,635 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,635 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,646 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,647 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,648 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,648 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,648 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,648 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,649 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,649 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,661 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,661 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,662 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,662 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,672 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,672 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,673 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,673 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,674 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,674 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,674 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,695 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,695 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,696 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,696 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,702 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,703 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,703 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,704 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,713 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,713 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,714 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,714 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,723 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,724 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,724 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,724 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,724 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,735 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,735 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,736 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,736 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,736 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,736 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,737 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,737 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,737 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,737 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,761 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,761 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,761 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,763 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.proxy.Container as c inner join fetch c.owner inner join fetch c.dataPoints where c.id <> :last
+14:17:47,766 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'proxy'
+    |     |  |  \-[IDENT] Node: 'Container'
+    |     |  \-[ALIAS] Node: 'c'
+    |     +-[JOIN] Node: 'join'
+    |     |  +-[INNER] Node: 'inner'
+    |     |  +-[FETCH] Node: 'fetch'
+    |     |  \-[DOT] Node: '.'
+    |     |     +-[IDENT] Node: 'c'
+    |     |     \-[IDENT] Node: 'owner'
+    |     \-[JOIN] Node: 'join'
+    |        +-[INNER] Node: 'inner'
+    |        +-[FETCH] Node: 'fetch'
+    |        \-[DOT] Node: '.'
+    |           +-[IDENT] Node: 'c'
+    |           \-[IDENT] Node: 'dataPoints'
+    \-[WHERE] Node: 'where'
+       \-[NE] Node: '<>'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'c'
+          |  \-[IDENT] Node: 'id'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'last'
+
+14:17:47,777 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,777 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.proxy.Container (c) -> container0_
+14:17:47,777 DEBUG FromReferenceNode:74 - Resolved : c -> container0_.id
+14:17:47,778 DEBUG DotNode:599 - getDataType() : owner -> org.hibernate.type.ManyToOneType(org.hibernate.test.proxy.Owner)
+14:17:47,778 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for owner in org.hibernate.test.proxy.Container (<no alias>) parent = [ {null} ]
+14:17:47,778 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.proxy.Owner (<no alias>) -> owner1_
+14:17:47,778 DEBUG FromClause:282 - addJoinByPathMap() : c.owner -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Owner,tableAlias=owner1_,origin=Container container0_,columns={container0_.owner_name ,className=org.hibernate.test.proxy.Owner}}
+14:17:47,778 DEBUG FromReferenceNode:74 - Resolved : c.owner -> container0_.owner_name
+14:17:47,779 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Owner owner1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Owner,tableAlias=owner1_,origin=Container container0_,columns={container0_.owner_name ,className=org.hibernate.test.proxy.Owner}}
+
+14:17:47,779 DEBUG FromReferenceNode:74 - Resolved : c -> container0_.id
+14:17:47,779 DEBUG DotNode:599 - getDataType() : dataPoints -> org.hibernate.type.SetType(org.hibernate.test.proxy.Container.dataPoints)
+14:17:47,779 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = c.dataPoints role = org.hibernate.test.proxy.Container.dataPoints associatedEntityName = org.hibernate.test.proxy.DataPoint
+14:17:47,779 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.proxy.DataPoint (<no alias>) -> datapoints2_
+14:17:47,779 DEBUG FromClause:282 - addJoinByPathMap() : c.dataPoints -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=DataPoint,tableAlias=datapoints2_,origin=Container container0_,columns={container0_.id ,className=org.hibernate.test.proxy.DataPoint}}
+14:17:47,779 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for c.dataPoints : DataPoint datapoints2_
+14:17:47,779 DEBUG FromReferenceNode:74 - Resolved : c.dataPoints -> .
+14:17:47,779 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'DataPoint datapoints2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.proxy.Container.dataPoints,tableName=DataPoint,tableAlias=datapoints2_,origin=Container container0_,columns={container0_.id ,className=org.hibernate.test.proxy.DataPoint}}
+
+14:17:47,780 DEBUG FromReferenceNode:74 - Resolved : c -> container0_.id
+14:17:47,780 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:17:47,780 DEBUG FromReferenceNode:74 - Resolved : c.id -> container0_.id
+14:17:47,780 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Container container0_ Owner owner1_ DataPoint datapoints2_ ) ) ( where ( <> ( container0_.id container0_.id id ) ? ) ) )
+14:17:47,780 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:47,780 DEBUG JoinProcessor:175 - Using FROM fragment [Container container0_]
+14:17:47,780 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Owner owner1_ on container0_.owner_name=owner1_.name]
+14:17:47,781 DEBUG JoinProcessor:175 - Using FROM fragment [inner join DataPoint datapoints2_ on container0_.id=datapoints2_.c_id]
+14:17:47,781 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Owner,DataPoint,Container)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'container0_.id as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.proxy.Container}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'owner1_.id as id3_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Owner,tableAlias=owner1_,origin=Container container0_,columns={container0_.owner_name ,className=org.hibernate.test.proxy.Owner}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'datapoints2_.id as id1_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.proxy.Container.dataPoints,tableName=DataPoint,tableAlias=datapoints2_,origin=Container container0_,columns={container0_.id ,className=org.hibernate.test.proxy.DataPoint}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'container0_.name as name0_0_, container0_.owner_name as owner3_0_0_, container0_.info_id as info4_0_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'owner1_.name as name3_1_'
+    |  +-[SQL_TOKEN] SqlFragment: 'datapoints2_.xval as xval1_2_, datapoints2_.yval as yval1_2_, datapoints2_.description as descript4_1_2_'
+    |  \-[SQL_TOKEN] SqlFragment: 'datapoints2_.c_id as c5_0_0__, datapoints2_.id as id1_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[c], fromElementByTableAlias=[datapoints2_, owner1_, container0_], fromElementsByPath=[c.dataPoints, c.owner], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Container container0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.proxy.Container}}
+    |     +-[JOIN_FRAGMENT] FromElement: 'inner join Owner owner1_ on container0_.owner_name=owner1_.name' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Owner,tableAlias=owner1_,origin=Container container0_,columns={container0_.owner_name ,className=org.hibernate.test.proxy.Owner}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join DataPoint datapoints2_ on container0_.id=datapoints2_.c_id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.proxy.Container.dataPoints,tableName=DataPoint,tableAlias=datapoints2_,origin=Container container0_,columns={container0_.id ,className=org.hibernate.test.proxy.DataPoint}}
+    \-[WHERE] SqlNode: 'where'
+       \-[NE] BinaryLogicOperatorNode: '<>'
+          +-[DOT] DotNode: 'container0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=c.id,tableAlias=container0_,className=org.hibernate.test.proxy.Container,classAlias=c}
+          |  +-[ALIAS_REF] IdentNode: 'container0_.id' {alias=c, className=org.hibernate.test.proxy.Container, tableAlias=container0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=last, expectedType=org.hibernate.type.LongType@4bf3f9d}
+
+14:17:47,793 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,793 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.proxy.Container as c inner join fetch c.owner inner join fetch c.dataPoints where c.id <> :last
+14:17:47,793 DEBUG QueryTranslatorImpl:236 - SQL: select container0_.id as id0_0_, owner1_.id as id3_1_, datapoints2_.id as id1_2_, container0_.name as name0_0_, container0_.owner_name as owner3_0_0_, container0_.info_id as info4_0_0_, owner1_.name as name3_1_, datapoints2_.xval as xval1_2_, datapoints2_.yval as yval1_2_, datapoints2_.description as descript4_1_2_, datapoints2_.c_id as c5_0_0__, datapoints2_.id as id1_0__ from Container container0_ inner join Owner owner1_ on container0_.owner_name=owner1_.name inner join DataPoint datapoints2_ on container0_.id=datapoints2_.c_id where container0_.id<>?
+14:17:47,794 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,794 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_0_,
+        owner1_.id as id3_1_,
+        datapoints2_.id as id1_2_,
+        container0_.name as name0_0_,
+        container0_.owner_name as owner3_0_0_,
+        container0_.info_id as info4_0_0_,
+        owner1_.name as name3_1_,
+        datapoints2_.xval as xval1_2_,
+        datapoints2_.yval as yval1_2_,
+        datapoints2_.description as descript4_1_2_,
+        datapoints2_.c_id as c5_0_0__,
+        datapoints2_.id as id1_0__ 
+    from
+        Container container0_ 
+    inner join
+        Owner owner1_ 
+            on container0_.owner_name=owner1_.name 
+    inner join
+        DataPoint datapoints2_ 
+            on container0_.id=datapoints2_.c_id 
+    where
+        container0_.id<>?
+14:17:47,811 DEBUG SQL:104 - 
+    select
+        container_.id,
+        container_.name as name0_,
+        container_.owner_name as owner3_0_,
+        container_.info_id as info4_0_ 
+    from
+        Container container_ 
+    where
+        container_.id=?
+14:17:47,818 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.proxy.DataPoint
+14:17:47,819 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'proxy'
+             \-[IDENT] Node: 'DataPoint'
+
+14:17:47,819 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,819 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.proxy.DataPoint (<no alias>) -> datapoint0_
+14:17:47,819 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (DataPoint)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[datapoint0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'DataPoint' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=DataPoint,tableAlias=datapoint0_,origin=null,columns={,className=org.hibernate.test.proxy.DataPoint}}
+
+14:17:47,843 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,844 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,844 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:17:47,844 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.proxy.Container
+14:17:47,845 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'proxy'
+             \-[IDENT] Node: 'Container'
+
+14:17:47,845 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,845 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.proxy.Container (<no alias>) -> container0_
+14:17:47,846 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Container)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[container0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Container' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.proxy.Container}}
+
+14:17:47,846 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,846 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,846 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:17:47,856 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.proxy.Owner
+14:17:47,857 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'proxy'
+             \-[IDENT] Node: 'Owner'
+
+14:17:47,857 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,857 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.proxy.Owner (<no alias>) -> owner0_
+14:17:47,858 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Owner)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[owner0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Owner' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Owner,tableAlias=owner0_,origin=null,columns={,className=org.hibernate.test.proxy.Owner}}
+
+14:17:47,858 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,858 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,858 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:17:47,892  INFO CustomRunner:139 - Test: testInitializedProxySerializationAfterSessionClosed
+14:17:47,893 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,893 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:47,895 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint 
+    where
+        id=?
+14:17:47,896  INFO CustomRunner:139 - Test: testLockUninitializedProxy
+14:17:47,897 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,898 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:47,898 DEBUG SQL:104 - 
+    select
+        id 
+    from
+        DataPoint 
+    where
+        id =? for update
+            
+14:17:47,899 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint 
+    where
+        id=?
+14:17:47,899  INFO CustomRunner:139 - Test: testProxy
+14:17:47,900 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,901 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:47,901 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:47,901 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:47,911 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.proxy.DataPoint
+14:17:47,911 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'proxy'
+                \-[IDENT] Node: 'DataPoint'
+
+14:17:47,912 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,912 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.proxy.DataPoint (<no alias>) -> datapoint0_
+14:17:47,913 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} DataPoint datapoint0_ ) )
+14:17:47,913 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:47,913 DEBUG JoinProcessor:175 - Using FROM fragment [DataPoint datapoint0_]
+14:17:47,913 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (DataPoint)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'datapoint0_.id as id1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=DataPoint,tableAlias=datapoint0_,origin=null,columns={,className=org.hibernate.test.proxy.DataPoint}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'datapoint0_.xval as xval1_, datapoint0_.yval as yval1_, datapoint0_.description as descript4_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[datapoint0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'DataPoint datapoint0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=DataPoint,tableAlias=datapoint0_,origin=null,columns={,className=org.hibernate.test.proxy.DataPoint}}
+
+14:17:47,922 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,922 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.proxy.DataPoint
+14:17:47,923 DEBUG QueryTranslatorImpl:236 - SQL: select datapoint0_.id as id1_, datapoint0_.xval as xval1_, datapoint0_.yval as yval1_, datapoint0_.description as descript4_1_ from DataPoint datapoint0_
+14:17:47,923 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:47,923 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_
+14:17:47,924 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint 
+    where
+        id=?
+14:17:47,926  INFO CustomRunner:139 - Test: testProxyEviction
+14:17:47,927 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Info
+14:17:47,927 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:17:47,928 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:17:47,948 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, owner_name, info_id, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,948 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,949 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,949 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,949 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=? 
+    where
+        id=?
+14:17:47,958 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_0_,
+        container0_.name as name0_0_,
+        container0_.owner_name as owner3_0_0_,
+        container0_.info_id as info4_0_0_ 
+    from
+        Container container0_ 
+    where
+        container0_.id=?
+14:17:47,959 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:17:47,960 DEBUG SQL:104 - 
+    select
+        datapoints0_.c_id as c5_0_1_,
+        datapoints0_.id as id1_1_,
+        datapoints0_.id as id1_0_,
+        datapoints0_.xval as xval1_0_,
+        datapoints0_.yval as yval1_0_,
+        datapoints0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoints0_ 
+    where
+        datapoints0_.c_id=?
+14:17:47,968 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:17:47,969 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_id=null 
+    where
+        c_id=?
+14:17:47,969 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint 
+    where
+        id=?
+14:17:47,969 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint 
+    where
+        id=?
+14:17:47,979 DEBUG SQL:104 - 
+    delete 
+    from
+        Container 
+    where
+        id=?
+14:17:47,980 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner 
+    where
+        id=?
+14:17:47,980 DEBUG SQL:104 - 
+    delete 
+    from
+        Info 
+    where
+        id=?
+14:17:47,980  INFO CustomRunner:139 - Test: testProxyException
+14:17:47,981 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,982 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:47,990 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint 
+    where
+        id=?
+14:17:47,992  INFO CustomRunner:139 - Test: testProxySerialization
+14:17:47,993 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,993 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:48,001 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint 
+    where
+        id=?
+14:17:48,004  INFO CustomRunner:139 - Test: testProxySerializationAfterSessionClosed
+14:17:48,005 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:48,007 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:48,009 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint 
+    where
+        id=?
+14:17:48,010  INFO CustomRunner:139 - Test: testRefreshLockInitializedProxy
+14:17:48,011 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:48,012 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:48,012 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=? for update
+            
+14:17:48,021 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint 
+    where
+        id=?
+14:17:48,025  INFO CustomRunner:139 - Test: testRefreshLockUninitializedProxy
+14:17:48,026 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:48,027  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:17:48,029  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/proxy/DataPoint.hbm.xml
+14:17:48,035  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:48,036  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:48,036  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:48,037  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:48,038  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:48,039  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:48,040  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:48,063  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:48,063  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:48,063  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:48,072  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:48,073 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:48,074 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61CC948950
+14:17:48,074 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61DCEA37B4
+14:17:48,074 DEBUG SQL:104 - 
+    alter table DataPoint 
+        drop constraint FK60F3CFE63960C662
+14:17:48,074 DEBUG SQL:104 - 
+    drop table Container if exists
+14:17:48,075 DEBUG SQL:104 - 
+    drop table DataPoint if exists
+14:17:48,075 DEBUG SQL:104 - 
+    drop table Info if exists
+14:17:48,075 DEBUG SQL:104 - 
+    drop table Owner if exists
+14:17:48,076 DEBUG SQL:104 - 
+    create table Container (
+        id bigint not null,
+        name varchar(255),
+        owner_name varchar(255),
+        info_id bigint,
+        primary key (id)
+    )
+14:17:48,076 DEBUG SQL:104 - 
+    create table DataPoint (
+        id bigint not null,
+        xval decimal(19,2) not null,
+        yval decimal(19,2) not null,
+        description varchar(255),
+        c_id bigint,
+        primary key (id)
+    )
+14:17:48,076 DEBUG SQL:104 - 
+    create table Info (
+        id bigint not null,
+        details varchar(255),
+        primary key (id)
+    )
+14:17:48,077 DEBUG SQL:104 - 
+    create table Owner (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:17:48,077 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C61CC948950 
+        foreign key (info_id) 
+        references Info
+14:17:48,078 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C61DCEA37B4 
+        foreign key (owner_name) 
+        references Owner (name)
+14:17:48,078 DEBUG SQL:104 - 
+    alter table DataPoint 
+        add constraint xy unique (xval, yval)
+14:17:48,078 DEBUG SQL:104 - 
+    alter table DataPoint 
+        add constraint FK60F3CFE63960C662 
+        foreign key (c_id) 
+        references Container
+14:17:48,079 DEBUG SQL:104 - 
+    alter table Owner 
+        add constraint uc_Owner_1 unique (name)
+14:17:48,079  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:48,080  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:48,080  INFO CustomRunner:139 - Test: testRefreshLockUninitializedProxyThenRead
+14:17:48,081 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        DataPoint
+14:17:48,082 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:17:48,082 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:48,083  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:17:48,084  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/proxy/DataPoint.hbm.xml
+14:17:48,091  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:48,092  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:48,092  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:48,092  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:48,092  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:48,093  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:48,094  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:48,094  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:48,095  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:48,095  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:48,103  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:48,103 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:48,104 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61CC948950
+14:17:48,104 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61DCEA37B4
+14:17:48,104 DEBUG SQL:104 - 
+    alter table DataPoint 
+        drop constraint FK60F3CFE63960C662
+14:17:48,104 DEBUG SQL:104 - 
+    drop table Container if exists
+14:17:48,105 DEBUG SQL:104 - 
+    drop table DataPoint if exists
+14:17:48,105 DEBUG SQL:104 - 
+    drop table Info if exists
+14:17:48,105 DEBUG SQL:104 - 
+    drop table Owner if exists
+14:17:48,105 DEBUG SQL:104 - 
+    create table Container (
+        id bigint not null,
+        name varchar(255),
+        owner_name varchar(255),
+        info_id bigint,
+        primary key (id)
+    )
+14:17:48,106 DEBUG SQL:104 - 
+    create table DataPoint (
+        id bigint not null,
+        xval decimal(19,2) not null,
+        yval decimal(19,2) not null,
+        description varchar(255),
+        c_id bigint,
+        primary key (id)
+    )
+14:17:48,106 DEBUG SQL:104 - 
+    create table Info (
+        id bigint not null,
+        details varchar(255),
+        primary key (id)
+    )
+14:17:48,106 DEBUG SQL:104 - 
+    create table Owner (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:17:48,107 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C61CC948950 
+        foreign key (info_id) 
+        references Info
+14:17:48,107 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C61DCEA37B4 
+        foreign key (owner_name) 
+        references Owner (name)
+14:17:48,108 DEBUG SQL:104 - 
+    alter table DataPoint 
+        add constraint xy unique (xval, yval)
+14:17:48,108 DEBUG SQL:104 - 
+    alter table DataPoint 
+        add constraint FK60F3CFE63960C662 
+        foreign key (c_id) 
+        references Container
+14:17:48,108 DEBUG SQL:104 - 
+    alter table Owner 
+        add constraint uc_Owner_1 unique (name)
+14:17:48,109  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:48,109  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:48,110  INFO CustomRunner:139 - Test: testSubsequentNonExistentProxyAccess
+14:17:48,111 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:17:48,111  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:48,112 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:48,112 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61CC948950
+14:17:48,113 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61DCEA37B4
+14:17:48,113 DEBUG SQL:104 - 
+    alter table DataPoint 
+        drop constraint FK60F3CFE63960C662
+14:17:48,113 DEBUG SQL:104 - 
+    drop table Container if exists
+14:17:48,113 DEBUG SQL:104 - 
+    drop table DataPoint if exists
+14:17:48,113 DEBUG SQL:104 - 
+    drop table Info if exists
+14:17:48,114 DEBUG SQL:104 - 
+    drop table Owner if exists
+14:17:48,114  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:48,114  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

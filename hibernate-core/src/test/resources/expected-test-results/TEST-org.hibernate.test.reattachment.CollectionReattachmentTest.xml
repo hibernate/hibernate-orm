@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.reattachment.CollectionReattachmentTest" tests="2" time="0.066" timestamp="2013-02-28T20:19:15">
+  <properties />
+  <testcase classname="org.hibernate.test.reattachment.CollectionReattachmentTest" name="testUpdateOwnerAfterClear" time="0.016" />
+  <testcase classname="org.hibernate.test.reattachment.CollectionReattachmentTest" name="testUpdateOwnerAfterEvict" time="0.02" />
+  <system-out><![CDATA[14:19:15,375  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.reattachment.CollectionReattachmentTest
+14:19:15,378  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/reattachment/Mappings.hbm.xml
+14:19:15,385  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:15,385  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:15,385  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:15,386  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:15,386  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:15,387  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:15,387  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:15,388  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:15,388  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:15,388  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:15,397  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:15,397 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:15,398 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FCF706F0D6
+14:19:15,398 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Child drop constraint FK3E104FCF706F0D6
+14:19:15,398 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table Child 
+        drop constraint FK3E104FCF706F0D6 [42102-145]
+14:19:15,398 DEBUG SQL:104 - 
+    drop table Child if exists
+14:19:15,398 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:19:15,398 DEBUG SQL:104 - 
+    create table Child (
+        NAME varchar(255) not null,
+        parent varchar(255),
+        primary key (NAME)
+    )
+14:19:15,399 DEBUG SQL:104 - 
+    create table Parent (
+        NAME varchar(255) not null,
+        primary key (NAME)
+    )
+14:19:15,399 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FCF706F0D6 
+        foreign key (parent) 
+        references Parent
+14:19:15,400  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:15,400  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:15,400  INFO CustomRunner:139 - Test: testUpdateOwnerAfterClear
+14:19:15,401 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,404 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,404 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,405 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,405 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,405 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,415 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,416  INFO CustomRunner:139 - Test: testUpdateOwnerAfterEvict
+14:19:15,418 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,418 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,426 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,427 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,427 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,428 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,437  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:15,438 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:15,438 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FCF706F0D6
+14:19:15,438 DEBUG SQL:104 - 
+    drop table Child if exists
+14:19:15,439 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:19:15,439  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:15,439  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

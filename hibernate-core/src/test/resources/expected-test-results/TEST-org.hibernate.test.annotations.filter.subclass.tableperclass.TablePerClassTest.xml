@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.filter.subclass.tableperclass.TablePerClassTest" tests="3" time="0.234" timestamp="2013-02-28T20:10:27">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.filter.subclass.tableperclass.TablePerClassTest" name="testIqFilter" time="0.063" />
+  <testcase classname="org.hibernate.test.annotations.filter.subclass.tableperclass.TablePerClassTest" name="testNonHumanFilter" time="0.034" />
+  <testcase classname="org.hibernate.test.annotations.filter.subclass.tableperclass.TablePerClassTest" name="testPregnantFilter" time="0.064" />
+  <system-out><![CDATA[14:10:27,521  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.filter.subclass.tableperclass.TablePerClassTest
+14:10:27,527  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:27,527  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:27,527  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:27,527  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:27,527  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:27,529  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:27,529  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:27,529  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:27,530  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:27,530  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:27,549  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:27,550 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:27,550 DEBUG SQL:104 - 
+    drop table ZOOLOGY_ANIMAL if exists
+14:10:27,550 DEBUG SQL:104 - 
+    drop table ZOOLOGY_HUMAN if exists
+14:10:27,550 DEBUG SQL:104 - 
+    drop table ZOOLOGY_MAMMAL if exists
+14:10:27,550 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:27,550 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:27,550 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:27,551 DEBUG SQL:104 - 
+    create table ZOOLOGY_ANIMAL (
+        ANIMAL_ID integer not null,
+        ANIMAL_NAME varchar(255),
+        primary key (ANIMAL_ID)
+    )
+14:10:27,551 DEBUG SQL:104 - 
+    create table ZOOLOGY_HUMAN (
+        ANIMAL_ID integer not null,
+        ANIMAL_NAME varchar(255),
+        IS_PREGNANT integer,
+        HUMAN_IQ integer,
+        primary key (ANIMAL_ID)
+    )
+14:10:27,551 DEBUG SQL:104 - 
+    create table ZOOLOGY_MAMMAL (
+        ANIMAL_ID integer not null,
+        ANIMAL_NAME varchar(255),
+        IS_PREGNANT integer,
+        primary key (ANIMAL_ID)
+    )
+14:10:27,552 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:27,552  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:27,552  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:27,553  INFO CustomRunner:139 - Test: testIqFilter
+14:10:27,564 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:27,578 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:27,579 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:27,581 DEBUG SQL:104 - 
+    insert 
+    into
+        ZOOLOGY_HUMAN
+        (ANIMAL_NAME, IS_PREGNANT, HUMAN_IQ, ANIMAL_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:27,581 DEBUG SQL:104 - 
+    insert 
+    into
+        ZOOLOGY_HUMAN
+        (ANIMAL_NAME, IS_PREGNANT, HUMAN_IQ, ANIMAL_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:27,582 DEBUG SQL:104 - 
+    insert 
+    into
+        ZOOLOGY_HUMAN
+        (ANIMAL_NAME, IS_PREGNANT, HUMAN_IQ, ANIMAL_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:27,582 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(h) from org.hibernate.test.annotations.filter.subclass.tableperclass.Human h
+14:10:27,583 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  |  \-[IDENT] Node: 'filter'
+       |     |  |  |  \-[IDENT] Node: 'subclass'
+       |     |  |  \-[IDENT] Node: 'tableperclass'
+       |     |  \-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[IDENT] Node: 'h'
+
+14:10:27,584 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,584 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.filter.subclass.tableperclass.Human (h) -> human0_
+14:10:27,584 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.ANIMAL_ID
+14:10:27,584 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count human0_.ANIMAL_ID ) ) ( FromClause{level=1} ZOOLOGY_HUMAN human0_ ) )
+14:10:27,584 DEBUG JoinProcessor:175 - Using FROM fragment [ZOOLOGY_HUMAN human0_]
+14:10:27,584 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ZOOLOGY_ANIMAL,ZOOLOGY_HUMAN,ZOOLOGY_MAMMAL)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ALIAS_REF] IdentNode: 'human0_.ANIMAL_ID' {alias=h, className=org.hibernate.test.annotations.filter.subclass.tableperclass.Human, tableAlias=human0_}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ZOOLOGY_HUMAN human0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=ZOOLOGY_HUMAN,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.annotations.filter.subclass.tableperclass.Human}}
+
+14:10:27,585 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,585 DEBUG QueryTranslatorImpl:235 - HQL: select count(h) from org.hibernate.test.annotations.filter.subclass.tableperclass.Human h
+14:10:27,585 DEBUG QueryTranslatorImpl:236 - SQL: select count(human0_.ANIMAL_ID) as col_0_0_ from ZOOLOGY_HUMAN human0_
+14:10:27,585 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,585 DEBUG SQL:104 - 
+    select
+        count(human0_.ANIMAL_ID) as col_0_0_ 
+    from
+        ZOOLOGY_HUMAN human0_
+14:10:27,586 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(h) from org.hibernate.test.annotations.filter.subclass.tableperclass.Human h
+14:10:27,587 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  |  \-[IDENT] Node: 'filter'
+       |     |  |  |  \-[IDENT] Node: 'subclass'
+       |     |  |  \-[IDENT] Node: 'tableperclass'
+       |     |  \-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[IDENT] Node: 'h'
+
+14:10:27,590 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,590 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.filter.subclass.tableperclass.Human (h) -> human0_
+14:10:27,590 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.ANIMAL_ID
+14:10:27,590 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count human0_.ANIMAL_ID ) ) ( FromClause{level=1} ZOOLOGY_HUMAN human0_ ) )
+14:10:27,590 DEBUG JoinProcessor:175 - Using FROM fragment [ZOOLOGY_HUMAN human0_]
+14:10:27,591 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [human0_.HUMAN_IQ BETWEEN :iqRange.min AND :iqRange.max]
+14:10:27,591 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [human0_.HUMAN_IQ BETWEEN ? AND ?]
+14:10:27,591 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:27,591 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ZOOLOGY_ANIMAL,ZOOLOGY_HUMAN,ZOOLOGY_MAMMAL)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ALIAS_REF] IdentNode: 'human0_.ANIMAL_ID' {alias=h, className=org.hibernate.test.annotations.filter.subclass.tableperclass.Human, tableAlias=human0_}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'ZOOLOGY_HUMAN human0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=ZOOLOGY_HUMAN,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.annotations.filter.subclass.tableperclass.Human}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'human0_.HUMAN_IQ BETWEEN ? AND ?'
+
+14:10:27,602 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,603 DEBUG QueryTranslatorImpl:235 - HQL: select count(h) from org.hibernate.test.annotations.filter.subclass.tableperclass.Human h
+14:10:27,603 DEBUG QueryTranslatorImpl:236 - SQL: select count(human0_.ANIMAL_ID) as col_0_0_ from ZOOLOGY_HUMAN human0_ where human0_.HUMAN_IQ BETWEEN ? AND ?
+14:10:27,603 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,603 DEBUG SQL:104 - 
+    select
+        count(human0_.ANIMAL_ID) as col_0_0_ 
+    from
+        ZOOLOGY_HUMAN human0_ 
+    where
+        human0_.HUMAN_IQ BETWEEN ? AND ?
+14:10:27,604 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.filter.subclass.tableperclass.Human
+14:10:27,605 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  |  |  \-[IDENT] Node: 'test'
+             |  |  |  |  \-[IDENT] Node: 'annotations'
+             |  |  |  \-[IDENT] Node: 'filter'
+             |  |  \-[IDENT] Node: 'subclass'
+             |  \-[IDENT] Node: 'tableperclass'
+             \-[IDENT] Node: 'Human'
+
+14:10:27,614 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,614 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.filter.subclass.tableperclass.Human (<no alias>) -> human0_
+14:10:27,615 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (ZOOLOGY_ANIMAL,ZOOLOGY_HUMAN,ZOOLOGY_MAMMAL)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ZOOLOGY_HUMAN' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ZOOLOGY_HUMAN,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.annotations.filter.subclass.tableperclass.Human}}
+
+14:10:27,615 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,615 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,615 DEBUG SQL:104 - 
+    delete 
+    from
+        ZOOLOGY_HUMAN
+14:10:27,616  INFO CustomRunner:139 - Test: testNonHumanFilter
+14:10:27,617 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:27,617 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:27,617 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:27,618 DEBUG SQL:104 - 
+    insert 
+    into
+        ZOOLOGY_HUMAN
+        (ANIMAL_NAME, IS_PREGNANT, HUMAN_IQ, ANIMAL_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:27,618 DEBUG SQL:104 - 
+    insert 
+    into
+        ZOOLOGY_HUMAN
+        (ANIMAL_NAME, IS_PREGNANT, HUMAN_IQ, ANIMAL_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:27,619 DEBUG SQL:104 - 
+    insert 
+    into
+        ZOOLOGY_HUMAN
+        (ANIMAL_NAME, IS_PREGNANT, HUMAN_IQ, ANIMAL_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:27,619 DEBUG SQL:104 - 
+    select
+        count(human0_.ANIMAL_ID) as col_0_0_ 
+    from
+        ZOOLOGY_HUMAN human0_
+14:10:27,620 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(h) from org.hibernate.test.annotations.filter.subclass.tableperclass.Human h
+14:10:27,621 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  |  \-[IDENT] Node: 'filter'
+       |     |  |  |  \-[IDENT] Node: 'subclass'
+       |     |  |  \-[IDENT] Node: 'tableperclass'
+       |     |  \-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[IDENT] Node: 'h'
+
+14:10:27,631 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,631 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.filter.subclass.tableperclass.Human (h) -> human0_
+14:10:27,632 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.ANIMAL_ID
+14:10:27,632 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count human0_.ANIMAL_ID ) ) ( FromClause{level=1} ZOOLOGY_HUMAN human0_ ) )
+14:10:27,642 DEBUG JoinProcessor:175 - Using FROM fragment [ZOOLOGY_HUMAN human0_]
+14:10:27,647 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:ignoreSome.name <> human0_.ANIMAL_NAME]
+14:10:27,647 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? <> human0_.ANIMAL_NAME]
+14:10:27,647 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:27,647 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ZOOLOGY_ANIMAL,ZOOLOGY_HUMAN,ZOOLOGY_MAMMAL)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ALIAS_REF] IdentNode: 'human0_.ANIMAL_ID' {alias=h, className=org.hibernate.test.annotations.filter.subclass.tableperclass.Human, tableAlias=human0_}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'ZOOLOGY_HUMAN human0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=ZOOLOGY_HUMAN,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.annotations.filter.subclass.tableperclass.Human}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? <> human0_.ANIMAL_NAME'
+
+14:10:27,648 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,648 DEBUG QueryTranslatorImpl:235 - HQL: select count(h) from org.hibernate.test.annotations.filter.subclass.tableperclass.Human h
+14:10:27,648 DEBUG QueryTranslatorImpl:236 - SQL: select count(human0_.ANIMAL_ID) as col_0_0_ from ZOOLOGY_HUMAN human0_ where ? <> human0_.ANIMAL_NAME
+14:10:27,648 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,648 DEBUG SQL:104 - 
+    select
+        count(human0_.ANIMAL_ID) as col_0_0_ 
+    from
+        ZOOLOGY_HUMAN human0_ 
+    where
+        ? <> human0_.ANIMAL_NAME
+14:10:27,649 DEBUG SQL:104 - 
+    delete 
+    from
+        ZOOLOGY_HUMAN
+14:10:27,650  INFO CustomRunner:139 - Test: testPregnantFilter
+14:10:27,651 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:27,651 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:27,652 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:27,652 DEBUG SQL:104 - 
+    insert 
+    into
+        ZOOLOGY_HUMAN
+        (ANIMAL_NAME, IS_PREGNANT, HUMAN_IQ, ANIMAL_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:27,681 DEBUG SQL:104 - 
+    insert 
+    into
+        ZOOLOGY_HUMAN
+        (ANIMAL_NAME, IS_PREGNANT, HUMAN_IQ, ANIMAL_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:27,681 DEBUG SQL:104 - 
+    insert 
+    into
+        ZOOLOGY_HUMAN
+        (ANIMAL_NAME, IS_PREGNANT, HUMAN_IQ, ANIMAL_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:27,682 DEBUG SQL:104 - 
+    select
+        count(human0_.ANIMAL_ID) as col_0_0_ 
+    from
+        ZOOLOGY_HUMAN human0_
+14:10:27,683 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(h) from org.hibernate.test.annotations.filter.subclass.tableperclass.Human h
+14:10:27,684 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  |  \-[IDENT] Node: 'filter'
+       |     |  |  |  \-[IDENT] Node: 'subclass'
+       |     |  |  \-[IDENT] Node: 'tableperclass'
+       |     |  \-[IDENT] Node: 'Human'
+       |     \-[ALIAS] Node: 'h'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[IDENT] Node: 'h'
+
+14:10:27,698 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,699 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.filter.subclass.tableperclass.Human (h) -> human0_
+14:10:27,699 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.ANIMAL_ID
+14:10:27,699 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count human0_.ANIMAL_ID ) ) ( FromClause{level=1} ZOOLOGY_HUMAN human0_ ) )
+14:10:27,699 DEBUG JoinProcessor:175 - Using FROM fragment [ZOOLOGY_HUMAN human0_]
+14:10:27,699 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [human0_.IS_PREGNANT = 1]
+14:10:27,699 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [human0_.IS_PREGNANT = 1]
+14:10:27,700 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:27,700 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ZOOLOGY_ANIMAL,ZOOLOGY_HUMAN,ZOOLOGY_MAMMAL)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ALIAS_REF] IdentNode: 'human0_.ANIMAL_ID' {alias=h, className=org.hibernate.test.annotations.filter.subclass.tableperclass.Human, tableAlias=human0_}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'ZOOLOGY_HUMAN human0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=ZOOLOGY_HUMAN,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.annotations.filter.subclass.tableperclass.Human}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'human0_.IS_PREGNANT = 1'
+
+14:10:27,712 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,712 DEBUG QueryTranslatorImpl:235 - HQL: select count(h) from org.hibernate.test.annotations.filter.subclass.tableperclass.Human h
+14:10:27,712 DEBUG QueryTranslatorImpl:236 - SQL: select count(human0_.ANIMAL_ID) as col_0_0_ from ZOOLOGY_HUMAN human0_ where human0_.IS_PREGNANT = 1
+14:10:27,712 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:27,712 DEBUG SQL:104 - 
+    select
+        count(human0_.ANIMAL_ID) as col_0_0_ 
+    from
+        ZOOLOGY_HUMAN human0_ 
+    where
+        human0_.IS_PREGNANT = 1
+14:10:27,713 DEBUG SQL:104 - 
+    delete 
+    from
+        ZOOLOGY_HUMAN
+14:10:27,714  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:27,715 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:27,715 DEBUG SQL:104 - 
+    drop table ZOOLOGY_ANIMAL if exists
+14:10:27,715 DEBUG SQL:104 - 
+    drop table ZOOLOGY_HUMAN if exists
+14:10:27,715 DEBUG SQL:104 - 
+    drop table ZOOLOGY_MAMMAL if exists
+14:10:27,725 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:27,725  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:27,725  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

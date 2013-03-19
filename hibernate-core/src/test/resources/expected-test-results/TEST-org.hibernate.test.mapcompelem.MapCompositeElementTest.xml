@@ -1,0 +1,686 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.mapcompelem.MapCompositeElementTest" tests="2" time="0.29" timestamp="2013-02-28T20:17:28">
+  <properties />
+  <testcase classname="org.hibernate.test.mapcompelem.MapCompositeElementTest" name="testMapCompositeElementWithFormula" time="0.026" />
+  <testcase classname="org.hibernate.test.mapcompelem.MapCompositeElementTest" name="testQueryMapCompositeElement" time="0.116" />
+  <system-out><![CDATA[14:17:28,806  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.mapcompelem.MapCompositeElementTest
+14:17:28,808  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/mapcompelem/ProductPart.hbm.xml
+14:17:28,915  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:28,915  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:28,915  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:28,915  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:28,916  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:28,917  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:28,917  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:28,917  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:28,918  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:28,918  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:28,924  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:28,925 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:28,925 DEBUG SQL:104 - 
+    alter table Items 
+        drop constraint FK43AF7A0D731D5F
+14:17:28,925 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Items drop constraint FK43AF7A0D731D5F
+14:17:28,925 ERROR SchemaExport:426 - Table "ITEMS" not found; SQL statement:
+
+    alter table Items 
+        drop constraint FK43AF7A0D731D5F [42102-145]
+14:17:28,926 DEBUG SQL:104 - 
+    alter table Parts 
+        drop constraint FK4952AC0D731D5F
+14:17:28,926 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Parts drop constraint FK4952AC0D731D5F
+14:17:28,926 ERROR SchemaExport:426 - Table "PARTS" not found; SQL statement:
+
+    alter table Parts 
+        drop constraint FK4952AC0D731D5F [42102-145]
+14:17:28,926 DEBUG SQL:104 - 
+    drop table Items if exists
+14:17:28,926 DEBUG SQL:104 - 
+    drop table Parts if exists
+14:17:28,926 DEBUG SQL:104 - 
+    drop table Products if exists
+14:17:28,926 DEBUG SQL:104 - 
+    create table Items (
+        code varchar(255) not null,
+        productName varchar(255),
+        primary key (code)
+    )
+14:17:28,927 DEBUG SQL:104 - 
+    create table Parts (
+        productName varchar(255) not null,
+        partDescription varchar(255),
+        partName varchar(255) not null,
+        primary key (productName, partName)
+    )
+14:17:28,927 DEBUG SQL:104 - 
+    create table Products (
+        productName varchar(255) not null,
+        primary key (productName)
+    )
+14:17:28,927 DEBUG SQL:104 - 
+    alter table Items 
+        add constraint FK43AF7A0D731D5F 
+        foreign key (productName) 
+        references Products
+14:17:28,928 DEBUG SQL:104 - 
+    alter table Parts 
+        add constraint FK4952AC0D731D5F 
+        foreign key (productName) 
+        references Products
+14:17:28,929  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:28,930  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:28,931  INFO CustomRunner:139 - Test: testMapCompositeElementWithFormula
+14:17:28,949 DEBUG SQL:104 - 
+    insert 
+    into
+        Products
+        (productName) 
+    values
+        (?)
+14:17:28,950 DEBUG SQL:104 - 
+    insert 
+    into
+        Parts
+        (productName, partName, partDescription) 
+    values
+        (?, ?, ?)
+14:17:28,950 DEBUG SQL:104 - 
+    insert 
+    into
+        Parts
+        (productName, partName, partDescription) 
+    values
+        (?, ?, ?)
+14:17:28,951 DEBUG SQL:104 - 
+    select
+        product0_.productName as productN1_2_0_ 
+    from
+        Products product0_ 
+    where
+        product0_.productName=?
+14:17:28,952 DEBUG SQL:104 - 
+    select
+        parts0_.productName as productN1_2_0_,
+        lower(parts0_.partName) as formula98_0_,
+        parts0_.partDescription as partDesc2_1_0_,
+        parts0_.partName as partName0_ 
+    from
+        Parts parts0_ 
+    where
+        parts0_.productName=?
+14:17:28,953 DEBUG SQL:104 - 
+    delete 
+    from
+        Parts 
+    where
+        productName=? 
+        and partName=?
+14:17:28,954 DEBUG SQL:104 - 
+    select
+        product0_.productName as productN1_2_0_ 
+    from
+        Products product0_ 
+    where
+        product0_.productName=?
+14:17:28,954 DEBUG SQL:104 - 
+    select
+        parts0_.productName as productN1_2_0_,
+        lower(parts0_.partName) as formula98_0_,
+        parts0_.partDescription as partDesc2_1_0_,
+        parts0_.partName as partName0_ 
+    from
+        Parts parts0_ 
+    where
+        parts0_.productName=?
+14:17:28,955 DEBUG SQL:104 - 
+    update
+        Parts 
+    set
+        partDescription=? 
+    where
+        productName=? 
+        and partName=?
+14:17:28,956 DEBUG SQL:104 - 
+    select
+        product0_.productName as productN1_2_0_ 
+    from
+        Products product0_ 
+    where
+        product0_.productName=?
+14:17:28,957 DEBUG SQL:104 - 
+    select
+        parts0_.productName as productN1_2_0_,
+        lower(parts0_.partName) as formula98_0_,
+        parts0_.partDescription as partDesc2_1_0_,
+        parts0_.partName as partName0_ 
+    from
+        Parts parts0_ 
+    where
+        parts0_.productName=?
+14:17:28,958 DEBUG SQL:104 - 
+    delete 
+    from
+        Parts 
+    where
+        productName=?
+14:17:28,958 DEBUG SQL:104 - 
+    delete 
+    from
+        Products 
+    where
+        productName=?
+14:17:28,959  INFO CustomRunner:139 - Test: testQueryMapCompositeElement
+14:17:28,971 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select new Part( part.name, part.description ) from org.hibernate.test.mapcompelem.Product prod join prod.parts part order by part.name desc
+14:17:29,025 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  +-[RANGE] Node: 'RANGE'
+    |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |  |  |  |  \-[IDENT] Node: 'mapcompelem'
+    |  |  |  |  \-[IDENT] Node: 'Product'
+    |  |  |  \-[ALIAS] Node: 'prod'
+    |  |  \-[JOIN] Node: 'join'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[IDENT] Node: 'prod'
+    |  |     |  \-[IDENT] Node: 'parts'
+    |  |     \-[ALIAS] Node: 'part'
+    |  \-[SELECT] Node: 'select'
+    |     \-[CONSTRUCTOR] Node: '('
+    |        +-[IDENT] Node: 'Part'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'part'
+    |        |  \-[IDENT] Node: 'name'
+    |        \-[DOT] Node: '.'
+    |           +-[IDENT] Node: 'part'
+    |           \-[IDENT] Node: 'description'
+    \-[ORDER] Node: 'order'
+       +-[DOT] Node: '.'
+       |  +-[IDENT] Node: 'part'
+       |  \-[IDENT] Node: 'name'
+       \-[DESCENDING] Node: 'desc'
+
+14:17:29,025 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,029 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.mapcompelem.Product (prod) -> product0_
+14:17:29,029 DEBUG FromReferenceNode:74 - Resolved : prod -> product0_.productName
+14:17:29,030 DEBUG DotNode:599 - getDataType() : parts -> org.hibernate.type.MapType(org.hibernate.test.mapcompelem.Product.parts)
+14:17:29,030 DEBUG FromElement:157 - FromClause{level=1} : null (part) -> parts1_
+14:17:29,030 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : prod.parts -> Parts
+14:17:29,030 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for prod.parts : Parts parts1_
+14:17:29,031 DEBUG FromReferenceNode:74 - Resolved : prod.parts -> .
+14:17:29,031 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Parts parts1_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=part,role=org.hibernate.test.mapcompelem.Product.parts,tableName={none},tableAlias=parts1_,origin=null,columns={,className=null}}
+
+14:17:29,031 DEBUG FromReferenceNode:74 - Resolved : part -> parts1_.productName
+14:17:29,031 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:17:29,032 DEBUG FromReferenceNode:74 - Resolved : part.name -> lower(parts1_.partName)
+14:17:29,032 DEBUG FromReferenceNode:74 - Resolved : part -> parts1_.productName
+14:17:29,032 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:17:29,032 DEBUG FromReferenceNode:74 - Resolved : part.description -> parts1_.partDescription
+14:17:29,032 DEBUG FromReferenceNode:74 - Resolved : part -> parts1_.productName
+14:17:29,037 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:17:29,037 DEBUG FromReferenceNode:74 - Resolved : part.name -> lower(parts1_.partName)
+14:17:29,038 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( ( Part ( lower(parts1_.partName) parts1_.productName name ) ( parts1_.partDescription parts1_.productName description ) ) ) ( FromClause{level=1} (  Parts parts1_ ) ) ( order ( lower(parts1_.partName) parts1_.productName name ) desc ) )
+14:17:29,038 DEBUG JoinProcessor:175 - Using FROM fragment [Products product0_]
+14:17:29,038 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Parts parts1_ on product0_.productName=parts1_.productName]
+14:17:29,039 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Parts,Products)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[CONSTRUCTOR] ConstructorNode: '('
+    |     +-[IDENT] IdentNode: 'Part' {originalText=Part}
+    |     +-[DOT] DotNode: 'lower(parts1_.partName)' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=part.name,tableAlias=parts1_,className=null,classAlias=part}
+    |     |  +-[ALIAS_REF] IdentNode: 'parts1_.productName' {alias=part, className=null, tableAlias=parts1_}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     +-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    |     +-[DOT] DotNode: 'parts1_.partDescription' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=part.description,tableAlias=parts1_,className=null,classAlias=part}
+    |     |  +-[ALIAS_REF] IdentNode: 'parts1_.productName' {alias=part, className=null, tableAlias=parts1_}
+    |     |  \-[IDENT] IdentNode: 'description' {originalText=description}
+    |     \-[SELECT_COLUMNS] SqlNode: ' as col_1_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[part, prod], fromElementByTableAlias=[product0_, parts1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[prod.parts], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Products product0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=prod,role=null,tableName=Products,tableAlias=product0_,origin=null,columns={,className=org.hibernate.test.mapcompelem.Product}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join Parts parts1_ on product0_.productName=parts1_.productName' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=part,role=org.hibernate.test.mapcompelem.Product.parts,tableName={none},tableAlias=parts1_,origin=Products product0_,columns={,className=null}}
+    \-[ORDER] OrderByClause: 'order'
+       +-[DOT] DotNode: 'lower(parts1_.partName)' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=part.name,tableAlias=parts1_,className=null,classAlias=part}
+       |  +-[ALIAS_REF] IdentNode: 'parts1_.productName' {alias=part, className=null, tableAlias=parts1_}
+       |  \-[IDENT] IdentNode: 'name' {originalText=name}
+       \-[DESCENDING] SqlNode: 'desc'
+
+14:17:29,049 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,050 DEBUG QueryTranslatorImpl:235 - HQL: select new Part( part.name, part.description ) from org.hibernate.test.mapcompelem.Product prod join prod.parts part order by part.name desc
+14:17:29,050 DEBUG QueryTranslatorImpl:236 - SQL: select lower(parts1_.partName) as col_0_0_, parts1_.partDescription as col_1_0_ from Products product0_ inner join Parts parts1_ on product0_.productName=parts1_.productName order by lower(parts1_.partName) desc
+14:17:29,050 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,050 DEBUG SQL:104 - 
+    insert 
+    into
+        Products
+        (productName) 
+    values
+        (?)
+14:17:29,052 DEBUG SQL:104 - 
+    insert 
+    into
+        Items
+        (productName, code) 
+    values
+        (?, ?)
+14:17:29,052 DEBUG SQL:104 - 
+    insert 
+    into
+        Parts
+        (productName, partName, partDescription) 
+    values
+        (?, ?, ?)
+14:17:29,052 DEBUG SQL:104 - 
+    insert 
+    into
+        Parts
+        (productName, partName, partDescription) 
+    values
+        (?, ?, ?)
+14:17:29,053 DEBUG SQL:104 - 
+    select
+        lower(parts1_.partName) as col_0_0_,
+        parts1_.partDescription as col_1_0_ 
+    from
+        Products product0_ 
+    inner join
+        Parts parts1_ 
+            on product0_.productName=parts1_.productName 
+    order by
+        lower(parts1_.partName) desc
+14:17:29,054 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select new Part( part.name, part.description ) from org.hibernate.test.mapcompelem.Product prod join prod.parts part where index(part) = 'Top'
+14:17:29,057 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  +-[RANGE] Node: 'RANGE'
+    |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |  |  |  |  \-[IDENT] Node: 'mapcompelem'
+    |  |  |  |  \-[IDENT] Node: 'Product'
+    |  |  |  \-[ALIAS] Node: 'prod'
+    |  |  \-[JOIN] Node: 'join'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[IDENT] Node: 'prod'
+    |  |     |  \-[IDENT] Node: 'parts'
+    |  |     \-[ALIAS] Node: 'part'
+    |  \-[SELECT] Node: 'select'
+    |     \-[CONSTRUCTOR] Node: '('
+    |        +-[IDENT] Node: 'Part'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'part'
+    |        |  \-[IDENT] Node: 'name'
+    |        \-[DOT] Node: '.'
+    |           +-[IDENT] Node: 'part'
+    |           \-[IDENT] Node: 'description'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'index'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     \-[IDENT] Node: 'part'
+          \-[QUOTED_STRING] Node: ''Top''
+
+14:17:29,057 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,058 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.mapcompelem.Product (prod) -> product0_
+14:17:29,058 DEBUG FromReferenceNode:74 - Resolved : prod -> product0_.productName
+14:17:29,058 DEBUG DotNode:599 - getDataType() : parts -> org.hibernate.type.MapType(org.hibernate.test.mapcompelem.Product.parts)
+14:17:29,058 DEBUG FromElement:157 - FromClause{level=1} : null (part) -> parts1_
+14:17:29,058 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : prod.parts -> Parts
+14:17:29,058 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for prod.parts : Parts parts1_
+14:17:29,058 DEBUG FromReferenceNode:74 - Resolved : prod.parts -> .
+14:17:29,059 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Parts parts1_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=part,role=org.hibernate.test.mapcompelem.Product.parts,tableName={none},tableAlias=parts1_,origin=null,columns={,className=null}}
+
+14:17:29,059 DEBUG FromReferenceNode:74 - Resolved : part -> parts1_.productName
+14:17:29,059 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:17:29,059 DEBUG FromReferenceNode:74 - Resolved : part.name -> lower(parts1_.partName)
+14:17:29,059 DEBUG FromReferenceNode:74 - Resolved : part -> parts1_.productName
+14:17:29,059 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:17:29,059 DEBUG FromReferenceNode:74 - Resolved : part.description -> parts1_.partDescription
+14:17:29,059 DEBUG FromReferenceNode:74 - Resolved : part -> parts1_.productName
+14:17:29,060 DEBUG MethodNode:151 - collectionProperty() :  name=index type=org.hibernate.type.ComponentType@1fca471a
+14:17:29,060 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( ( Part ( lower(parts1_.partName) parts1_.productName name ) ( parts1_.partDescription parts1_.productName description ) ) ) ( FromClause{level=1} (   ) ) ( where ( = ( parts1_.partName index ( exprList parts1_.productName ) ) 'Top' ) ) )
+14:17:29,060 DEBUG JoinProcessor:175 - Using FROM fragment [Products product0_]
+14:17:29,060 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Parts parts1_ on product0_.productName=parts1_.productName]
+14:17:29,060 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Parts,Products)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[CONSTRUCTOR] ConstructorNode: '('
+    |     +-[IDENT] IdentNode: 'Part' {originalText=Part}
+    |     +-[DOT] DotNode: 'lower(parts1_.partName)' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=part.name,tableAlias=parts1_,className=null,classAlias=part}
+    |     |  +-[ALIAS_REF] IdentNode: 'parts1_.productName' {alias=part, className=null, tableAlias=parts1_}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     +-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    |     +-[DOT] DotNode: 'parts1_.partDescription' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=part.description,tableAlias=parts1_,className=null,classAlias=part}
+    |     |  +-[ALIAS_REF] IdentNode: 'parts1_.productName' {alias=part, className=null, tableAlias=parts1_}
+    |     |  \-[IDENT] IdentNode: 'description' {originalText=description}
+    |     \-[SELECT_COLUMNS] SqlNode: ' as col_1_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[part, prod], fromElementByTableAlias=[product0_, parts1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[prod.parts], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Products product0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=prod,role=null,tableName=Products,tableAlias=product0_,origin=null,columns={,className=org.hibernate.test.mapcompelem.Product}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join Parts parts1_ on product0_.productName=parts1_.productName' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=part,role=org.hibernate.test.mapcompelem.Product.parts,tableName={none},tableAlias=parts1_,origin=Products product0_,columns={,className=null}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[SQL_TOKEN] MethodNode: 'parts1_.partName'
+          |  +-[METHOD_NAME] IdentNode: 'index' {originalText=index}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     \-[ALIAS_REF] IdentNode: 'parts1_.productName' {alias=part, className=null, tableAlias=parts1_}
+          \-[QUOTED_STRING] LiteralNode: ''Top''
+
+14:17:29,060 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,060 DEBUG QueryTranslatorImpl:235 - HQL: select new Part( part.name, part.description ) from org.hibernate.test.mapcompelem.Product prod join prod.parts part where index(part) = 'Top'
+14:17:29,060 DEBUG QueryTranslatorImpl:236 - SQL: select lower(parts1_.partName) as col_0_0_, parts1_.partDescription as col_1_0_ from Products product0_ inner join Parts parts1_ on product0_.productName=parts1_.productName where parts1_.partName='Top'
+14:17:29,061 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,061 DEBUG SQL:104 - 
+    select
+        lower(parts1_.partName) as col_0_0_,
+        parts1_.partDescription as col_1_0_ 
+    from
+        Products product0_ 
+    inner join
+        Parts parts1_ 
+            on product0_.productName=parts1_.productName 
+    where
+        parts1_.partName='Top'
+14:17:29,061 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.mapcompelem.Product p where 'Top' in indices(p.parts)
+14:17:29,062 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'mapcompelem'
+    |        |  \-[IDENT] Node: 'Product'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[IN] Node: 'in'
+          +-[QUOTED_STRING] Node: ''Top''
+          \-[IN_LIST] Node: 'inList'
+             \-[INDICES] Node: 'indices'
+                \-[DOT] Node: '.'
+                   +-[IDENT] Node: 'p'
+                   \-[IDENT] Node: 'parts'
+
+14:17:29,062 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,062 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.mapcompelem.Product (p) -> product0_
+14:17:29,063 DEBUG FromReferenceNode:74 - Resolved : p -> product0_.productName
+14:17:29,063 DEBUG DotNode:599 - getDataType() : parts -> org.hibernate.type.MapType(org.hibernate.test.mapcompelem.Product.parts)
+14:17:29,063 DEBUG FromElement:157 - FromClause{level=1} : null (<no alias>) -> parts1_
+14:17:29,063 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.parts -> Parts
+14:17:29,063 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.parts : Parts parts1_
+14:17:29,063 DEBUG FromElementType:347 - toColumns(parts1_,indices) : subquery = select parts1_.partName from Parts parts1_ where product0_.productName=parts1_.productName
+14:17:29,063 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1}   ) ( where ( in 'Top' ( inList ( select parts1_.partName from Parts parts1_ where product0_.productName=parts1_.productName ( . product0_.productName parts ) ) ) ) ) )
+14:17:29,063 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:29,064 DEBUG JoinProcessor:175 - Using FROM fragment [Products product0_]
+14:17:29,064 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Parts,Products)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'product0_.productName as productN1_2_' {FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Products,tableAlias=product0_,origin=null,columns={,className=org.hibernate.test.mapcompelem.Product}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[product0_, parts1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[p.parts], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'Products product0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Products,tableAlias=product0_,origin=null,columns={,className=org.hibernate.test.mapcompelem.Product}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: '' ImpliedFromElement{implied,collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.mapcompelem.Product.parts,tableName={none},tableAlias=parts1_,origin=Products product0_,columns={,className=null}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IN] InLogicOperatorNode: 'in'
+          +-[QUOTED_STRING] LiteralNode: ''Top''
+          \-[IN_LIST] SqlNode: 'inList'
+             \-[SQL_TOKEN] CollectionFunction: 'select parts1_.partName from Parts parts1_ where product0_.productName=parts1_.productName' {method=indices,selectColumns=[select parts1_.partName from Parts parts1_ where product0_.productName=parts1_.productName],fromElement=parts1_}
+                \-[DOT] DotNode: '.' {propertyName=parts,dereferenceType=NULL_TREE_LOOKAHEAD,propertyPath=parts,path=p.parts,tableAlias=parts1_,className=null,classAlias=null}
+                   +-[ALIAS_REF] IdentNode: 'product0_.productName' {alias=p, className=org.hibernate.test.mapcompelem.Product, tableAlias=product0_}
+                   \-[IDENT] IdentNode: 'parts' {originalText=parts}
+
+14:17:29,064 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,064 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.mapcompelem.Product p where 'Top' in indices(p.parts)
+14:17:29,064 DEBUG QueryTranslatorImpl:236 - SQL: select product0_.productName as productN1_2_ from Products product0_ where 'Top' in (select parts1_.partName from Parts parts1_ where product0_.productName=parts1_.productName)
+14:17:29,064 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,064 DEBUG SQL:104 - 
+    select
+        product0_.productName as productN1_2_ 
+    from
+        Products product0_ 
+    where
+        'Top' in (
+            select
+                parts1_.partName 
+            from
+                Parts parts1_ 
+            where
+                product0_.productName=parts1_.productName
+        )
+14:17:29,065 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select i from org.hibernate.test.mapcompelem.Item i join i.product p where 'Top' in indices(p.parts)
+14:17:29,066 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  +-[RANGE] Node: 'RANGE'
+    |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |  |  |  |  \-[IDENT] Node: 'mapcompelem'
+    |  |  |  |  \-[IDENT] Node: 'Item'
+    |  |  |  \-[ALIAS] Node: 'i'
+    |  |  \-[JOIN] Node: 'join'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[IDENT] Node: 'i'
+    |  |     |  \-[IDENT] Node: 'product'
+    |  |     \-[ALIAS] Node: 'p'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'i'
+    \-[WHERE] Node: 'where'
+       \-[IN] Node: 'in'
+          +-[QUOTED_STRING] Node: ''Top''
+          \-[IN_LIST] Node: 'inList'
+             \-[INDICES] Node: 'indices'
+                \-[DOT] Node: '.'
+                   +-[IDENT] Node: 'p'
+                   \-[IDENT] Node: 'parts'
+
+14:17:29,066 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,066 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.mapcompelem.Item (i) -> item0_
+14:17:29,066 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.code
+14:17:29,066 DEBUG DotNode:599 - getDataType() : product -> org.hibernate.type.ManyToOneType(org.hibernate.test.mapcompelem.Product)
+14:17:29,067 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for product in org.hibernate.test.mapcompelem.Item (p) parent = [ {null} ]
+14:17:29,067 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.mapcompelem.Product (p) -> product1_
+14:17:29,067 DEBUG FromClause:282 - addJoinByPathMap() : i.product -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Products,tableAlias=product1_,origin=Items item0_,columns={item0_.productName ,className=org.hibernate.test.mapcompelem.Product}}
+14:17:29,067 DEBUG FromReferenceNode:74 - Resolved : i.product -> item0_.productName
+14:17:29,067 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Products product1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Products,tableAlias=product1_,origin=Items item0_,columns={item0_.productName ,className=org.hibernate.test.mapcompelem.Product}}
+
+14:17:29,067 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.code
+14:17:29,067 DEBUG FromReferenceNode:74 - Resolved : p -> product1_.productName
+14:17:29,067 DEBUG DotNode:599 - getDataType() : parts -> org.hibernate.type.MapType(org.hibernate.test.mapcompelem.Product.parts)
+14:17:29,068 DEBUG FromElement:157 - FromClause{level=1} : null (<no alias>) -> parts2_
+14:17:29,068 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : p.parts -> Parts
+14:17:29,068 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.parts : Parts parts2_
+14:17:29,068 DEBUG FromElementType:347 - toColumns(parts2_,indices) : subquery = select parts2_.partName from Parts parts2_ where product1_.productName=parts2_.productName
+14:17:29,068 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} item0_.code ) ( FromClause{level=1} ( Items item0_  )  ) ( where ( in 'Top' ( inList ( select parts2_.partName from Parts parts2_ where product1_.productName=parts2_.productName ( . product1_.productName parts ) ) ) ) ) )
+14:17:29,068 DEBUG JoinProcessor:175 - Using FROM fragment [Items item0_]
+14:17:29,068 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Products product1_ on item0_.productName=product1_.productName]
+14:17:29,069 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Items,Parts,Products)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'item0_.code as code0_' {alias=i, className=org.hibernate.test.mapcompelem.Item, tableAlias=item0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'item0_.productName as productN2_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=3, fromElementByClassAlias=[p, i], fromElementByTableAlias=[product1_, item0_, parts2_], fromElementsByPath=[i.product], collectionJoinFromElementsByPath=[p.parts], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'Items item0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=Items,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.mapcompelem.Item}}
+    |  |  \-[JOIN_FRAGMENT] FromElement: 'inner join Products product1_ on item0_.productName=product1_.productName' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Products,tableAlias=product1_,origin=Items item0_,columns={item0_.productName ,className=org.hibernate.test.mapcompelem.Product}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: '' ImpliedFromElement{implied,collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.mapcompelem.Product.parts,tableName={none},tableAlias=parts2_,origin=inner join Products product1_ on item0_.productName=product1_.productName,columns={,className=null}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IN] InLogicOperatorNode: 'in'
+          +-[QUOTED_STRING] LiteralNode: ''Top''
+          \-[IN_LIST] SqlNode: 'inList'
+             \-[SQL_TOKEN] CollectionFunction: 'select parts2_.partName from Parts parts2_ where product1_.productName=parts2_.productName' {method=indices,selectColumns=[select parts2_.partName from Parts parts2_ where product1_.productName=parts2_.productName],fromElement=parts2_}
+                \-[DOT] DotNode: '.' {propertyName=parts,dereferenceType=NULL_TREE_LOOKAHEAD,propertyPath=parts,path=p.parts,tableAlias=parts2_,className=null,classAlias=null}
+                   +-[ALIAS_REF] IdentNode: 'product1_.productName' {alias=p, className=org.hibernate.test.mapcompelem.Product, tableAlias=product1_}
+                   \-[IDENT] IdentNode: 'parts' {originalText=parts}
+
+14:17:29,069 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,069 DEBUG QueryTranslatorImpl:235 - HQL: select i from org.hibernate.test.mapcompelem.Item i join i.product p where 'Top' in indices(p.parts)
+14:17:29,069 DEBUG QueryTranslatorImpl:236 - SQL: select item0_.code as code0_, item0_.productName as productN2_0_ from Items item0_ inner join Products product1_ on item0_.productName=product1_.productName where 'Top' in (select parts2_.partName from Parts parts2_ where product1_.productName=parts2_.productName)
+14:17:29,069 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,069 DEBUG SQL:104 - 
+    select
+        item0_.code as code0_,
+        item0_.productName as productN2_0_ 
+    from
+        Items item0_ 
+    inner join
+        Products product1_ 
+            on item0_.productName=product1_.productName 
+    where
+        'Top' in (
+            select
+                parts2_.partName 
+            from
+                Parts parts2_ 
+            where
+                product1_.productName=parts2_.productName
+        )
+14:17:29,070 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.mapcompelem.Item i where 'Top' in indices(i.product.parts)
+14:17:29,070 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'mapcompelem'
+    |        |  \-[IDENT] Node: 'Item'
+    |        \-[ALIAS] Node: 'i'
+    \-[WHERE] Node: 'where'
+       \-[IN] Node: 'in'
+          +-[QUOTED_STRING] Node: ''Top''
+          \-[IN_LIST] Node: 'inList'
+             \-[INDICES] Node: 'indices'
+                \-[DOT] Node: '.'
+                   +-[DOT] Node: '.'
+                   |  +-[IDENT] Node: 'i'
+                   |  \-[IDENT] Node: 'product'
+                   \-[IDENT] Node: 'parts'
+
+14:17:29,070 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,071 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.mapcompelem.Item (i) -> item0_
+14:17:29,071 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.code
+14:17:29,071 DEBUG DotNode:599 - getDataType() : product -> org.hibernate.type.ManyToOneType(org.hibernate.test.mapcompelem.Product)
+14:17:29,071 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for product in org.hibernate.test.mapcompelem.Item (<no alias>) parent = [  ( . ( . item0_.code product ) parts ) ]
+14:17:29,071 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.mapcompelem.Product (<no alias>) -> product1_
+14:17:29,071 DEBUG FromClause:282 - addJoinByPathMap() : i.product -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Products,tableAlias=product1_,origin=Items item0_,columns={item0_.productName ,className=org.hibernate.test.mapcompelem.Product}}
+14:17:29,071 DEBUG FromReferenceNode:74 - Resolved : i.product -> item0_.productName
+14:17:29,071 DEBUG DotNode:599 - getDataType() : parts -> org.hibernate.type.MapType(org.hibernate.test.mapcompelem.Product.parts)
+14:17:29,072 DEBUG FromElement:157 - FromClause{level=1} : null (<no alias>) -> parts2_
+14:17:29,072 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : i.product.parts -> Parts
+14:17:29,072 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for i.product.parts : Parts parts2_
+14:17:29,072 DEBUG FromElementType:347 - toColumns(parts2_,indices) : subquery = select parts2_.partName from Parts parts2_ where product1_.productName=parts2_.productName
+14:17:29,072 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Items item0_ Products product1_  ) ( where ( in 'Top' ( inList ( select parts2_.partName from Parts parts2_ where product1_.productName=parts2_.productName ( . ( item0_.productName item0_.code product ) parts ) ) ) ) ) )
+14:17:29,072 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:29,072 DEBUG JoinProcessor:175 - Using FROM fragment [Items item0_]
+14:17:29,072 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [item0_.productName=product1_.productName]
+14:17:29,073 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [item0_.productName=product1_.productName]
+14:17:29,073 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Items,Parts,Products)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'item0_.code as code0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=Items,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.mapcompelem.Item}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'item0_.productName as productN2_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=3, fromElementByClassAlias=[i], fromElementByTableAlias=[product1_, item0_, parts2_], fromElementsByPath=[i.product], collectionJoinFromElementsByPath=[i.product.parts], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'Items item0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=Items,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.mapcompelem.Item}}
+    |  +-[FROM_FRAGMENT] ImpliedFromElement: 'Products product1_' ImpliedFromElement{implied,collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Products,tableAlias=product1_,origin=Items item0_,columns={item0_.productName ,className=org.hibernate.test.mapcompelem.Product}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: '' ImpliedFromElement{implied,collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.mapcompelem.Product.parts,tableName={none},tableAlias=parts2_,origin=Products product1_,columns={,className=null}}
+    \-[WHERE] SqlNode: 'where'
+       +-[THETA_JOINS] SqlNode: '{theta joins}'
+       |  \-[SQL_TOKEN] SqlFragment: 'item0_.productName=product1_.productName'
+       \-[IN] InLogicOperatorNode: 'in'
+          +-[QUOTED_STRING] LiteralNode: ''Top''
+          \-[IN_LIST] SqlNode: 'inList'
+             \-[SQL_TOKEN] CollectionFunction: 'select parts2_.partName from Parts parts2_ where product1_.productName=parts2_.productName' {method=indices,selectColumns=[select parts2_.partName from Parts parts2_ where product1_.productName=parts2_.productName],fromElement=parts2_}
+                \-[DOT] DotNode: '.' {propertyName=parts,dereferenceType=NULL_TREE_LOOKAHEAD,propertyPath=parts,path=i.product.parts,tableAlias=parts2_,className=null,classAlias=null}
+                   +-[DOT] DotNode: 'item0_.productName' {propertyName=product,dereferenceType=EOF,propertyPath=product,path=i.product,tableAlias=product1_,className=org.hibernate.test.mapcompelem.Product,classAlias=null}
+                   |  +-[ALIAS_REF] IdentNode: 'item0_.code' {alias=i, className=org.hibernate.test.mapcompelem.Item, tableAlias=item0_}
+                   |  \-[IDENT] IdentNode: 'product' {originalText=product}
+                   \-[IDENT] IdentNode: 'parts' {originalText=parts}
+
+14:17:29,073 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,073 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.mapcompelem.Item i where 'Top' in indices(i.product.parts)
+14:17:29,073 DEBUG QueryTranslatorImpl:236 - SQL: select item0_.code as code0_, item0_.productName as productN2_0_ from Items item0_ cross join Products product1_ where item0_.productName=product1_.productName and ('Top' in (select parts2_.partName from Parts parts2_ where product1_.productName=parts2_.productName))
+14:17:29,073 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:29,073 DEBUG SQL:104 - 
+    select
+        item0_.code as code0_,
+        item0_.productName as productN2_0_ 
+    from
+        Items item0_ cross 
+    join
+        Products product1_ 
+    where
+        item0_.productName=product1_.productName 
+        and (
+            'Top' in (
+                select
+                    parts2_.partName 
+                from
+                    Parts parts2_ 
+                where
+                    product1_.productName=parts2_.productName
+            )
+        )
+14:17:29,074 DEBUG SQL:104 - 
+    delete 
+    from
+        Parts 
+    where
+        productName=?
+14:17:29,074 DEBUG SQL:104 - 
+    delete 
+    from
+        Items 
+    where
+        code=?
+14:17:29,074 DEBUG SQL:104 - 
+    delete 
+    from
+        Products 
+    where
+        productName=?
+14:17:29,075  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:29,075 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:29,075 DEBUG SQL:104 - 
+    alter table Items 
+        drop constraint FK43AF7A0D731D5F
+14:17:29,076 DEBUG SQL:104 - 
+    alter table Parts 
+        drop constraint FK4952AC0D731D5F
+14:17:29,076 DEBUG SQL:104 - 
+    drop table Items if exists
+14:17:29,076 DEBUG SQL:104 - 
+    drop table Parts if exists
+14:17:29,076 DEBUG SQL:104 - 
+    drop table Products if exists
+14:17:29,077  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:29,077  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.dialect.DB2DialectTestCase" tests="2" time="0.015" timestamp="2013-02-28T20:09:52">
+  <properties />
+  <testcase classname="org.hibernate.dialect.DB2DialectTestCase" name="testGetDefaultBinaryTypeName" time="0.0" />
+  <testcase classname="org.hibernate.dialect.DB2DialectTestCase" name="testGetExplicitBinaryTypeName" time="0.002" />
+  <system-out><![CDATA[14:09:52,779  INFO CustomRunner:132 - BeforeClass: org.hibernate.dialect.DB2DialectTestCase
+14:09:52,780  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DB2Dialect
+14:09:52,781  INFO CustomRunner:139 - Test: testGetDefaultBinaryTypeName
+14:09:52,784  INFO CustomRunner:139 - Test: testGetExplicitBinaryTypeName
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

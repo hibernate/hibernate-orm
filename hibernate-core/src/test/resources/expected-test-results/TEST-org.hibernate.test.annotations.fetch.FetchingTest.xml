@@ -1,0 +1,814 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.fetch.FetchingTest" tests="4" time="0.369" timestamp="2013-02-28T20:10:25">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.fetch.FetchingTest" name="testExtraLazy" time="0.072" />
+  <testcase classname="org.hibernate.test.annotations.fetch.FetchingTest" name="testHibernateFetchingLazy" time="0.129" />
+  <testcase classname="org.hibernate.test.annotations.fetch.FetchingTest" name="testLazy" time="0.021" />
+  <testcase classname="org.hibernate.test.annotations.fetch.FetchingTest" name="testOneToManyFetchEager" time="0.02" />
+  <system-out><![CDATA[14:10:25,657  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.fetch.FetchingTest
+14:10:25,686  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:25,687  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:25,688  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:25,688  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:25,689  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:25,701  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:25,709  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:25,710  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:25,710  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:25,710  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:25,748  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:25,749 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:25,749 DEBUG SQL:104 - 
+    alter table Leaf 
+        drop constraint FK24137E665970E
+14:10:25,749 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Leaf drop constraint FK24137E665970E
+14:10:25,749 ERROR SchemaExport:426 - Table "LEAF" not found; SQL statement:
+
+    alter table Leaf 
+        drop constraint FK24137E665970E [42102-145]
+14:10:25,750 DEBUG SQL:104 - 
+    alter table Person_Stay 
+        drop constraint FK49FD0D038AFFFA1
+14:10:25,750 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Person_Stay drop constraint FK49FD0D038AFFFA1
+14:10:25,750 ERROR SchemaExport:426 - Table "PERSON_STAY" not found; SQL statement:
+
+    alter table Person_Stay 
+        drop constraint FK49FD0D038AFFFA1 [42102-145]
+14:10:25,750 DEBUG SQL:104 - 
+    alter table Person_Stay 
+        drop constraint FK49FD0D037F66D62E
+14:10:25,750 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Person_Stay drop constraint FK49FD0D037F66D62E
+14:10:25,750 ERROR SchemaExport:426 - Table "PERSON_STAY" not found; SQL statement:
+
+    alter table Person_Stay 
+        drop constraint FK49FD0D037F66D62E [42102-145]
+14:10:25,750 DEBUG SQL:104 - 
+    alter table Stay 
+        drop constraint FK277A79D80A0C25
+14:10:25,751 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Stay drop constraint FK277A79D80A0C25
+14:10:25,751 ERROR SchemaExport:426 - Table "STAY" not found; SQL statement:
+
+    alter table Stay 
+        drop constraint FK277A79D80A0C25 [42102-145]
+14:10:25,751 DEBUG SQL:104 - 
+    alter table Stay 
+        drop constraint FK277A79116FD73E
+14:10:25,751 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Stay drop constraint FK277A79116FD73E
+14:10:25,751 ERROR SchemaExport:426 - Table "STAY" not found; SQL statement:
+
+    alter table Stay 
+        drop constraint FK277A79116FD73E [42102-145]
+14:10:25,751 DEBUG SQL:104 - 
+    alter table Stay 
+        drop constraint FK277A7996135BAF
+14:10:25,751 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Stay drop constraint FK277A7996135BAF
+14:10:25,752 ERROR SchemaExport:426 - Table "STAY" not found; SQL statement:
+
+    alter table Stay 
+        drop constraint FK277A7996135BAF [42102-145]
+14:10:25,752 DEBUG SQL:104 - 
+    drop table Branch if exists
+14:10:25,752 DEBUG SQL:104 - 
+    drop table Leaf if exists
+14:10:25,752 DEBUG SQL:104 - 
+    drop table Person if exists
+14:10:25,752 DEBUG SQL:104 - 
+    drop table Person_Stay if exists
+14:10:25,752 DEBUG SQL:104 - 
+    drop table Stay if exists
+14:10:25,752 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:25,753 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:25,753 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:25,753 DEBUG SQL:104 - 
+    create table Branch (
+        id integer not null,
+        primary key (id)
+    )
+14:10:25,753 DEBUG SQL:104 - 
+    create table Leaf (
+        id integer not null,
+        branch_id integer,
+        primary key (id)
+    )
+14:10:25,753 DEBUG SQL:104 - 
+    create table Person (
+        id integer not null,
+        companyName varchar(255),
+        firstName varchar(255),
+        lastName varchar(255),
+        primary key (id)
+    )
+14:10:25,754 DEBUG SQL:104 - 
+    create table Person_Stay (
+        Person_id integer not null,
+        orderedStay_id integer not null,
+        orderedStayIndex integer not null,
+        primary key (Person_id, orderedStayIndex)
+    )
+14:10:25,754 DEBUG SQL:104 - 
+    create table Stay (
+        id integer not null,
+        authoriser varchar(255),
+        comments varchar(255),
+        endDate timestamp,
+        startDate timestamp,
+        vessel varchar(255),
+        oldperson integer,
+        person integer,
+        veryoldperson integer,
+        primary key (id)
+    )
+14:10:25,755 DEBUG SQL:104 - 
+    alter table Leaf 
+        add constraint FK24137E665970E 
+        foreign key (branch_id) 
+        references Branch
+14:10:25,756 DEBUG SQL:104 - 
+    alter table Person_Stay 
+        add constraint UK_49FD0D034FBA43B4 unique (orderedStay_id)
+14:10:25,756 DEBUG SQL:104 - 
+    alter table Person_Stay 
+        add constraint FK49FD0D038AFFFA1 
+        foreign key (orderedStay_id) 
+        references Stay
+14:10:25,757 DEBUG SQL:104 - 
+    alter table Person_Stay 
+        add constraint FK49FD0D037F66D62E 
+        foreign key (Person_id) 
+        references Person
+14:10:25,759 DEBUG SQL:104 - 
+    alter table Stay 
+        add constraint FK277A79D80A0C25 
+        foreign key (oldperson) 
+        references Person
+14:10:25,760 DEBUG SQL:104 - 
+    alter table Stay 
+        add constraint FK277A79116FD73E 
+        foreign key (person) 
+        references Person
+14:10:25,760 DEBUG SQL:104 - 
+    alter table Stay 
+        add constraint FK277A7996135BAF 
+        foreign key (veryoldperson) 
+        references Person
+14:10:25,761 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:25,761  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:25,762  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:25,763  INFO CustomRunner:139 - Test: testExtraLazy
+14:10:25,764 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:25,765 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:25,766 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (companyName, firstName, lastName, id) 
+    values
+        (?, ?, ?, ?)
+14:10:25,767 DEBUG SQL:104 - 
+    insert 
+    into
+        Stay
+        (authoriser, comments, endDate, oldperson, person, startDate, veryoldperson, vessel, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+14:10:25,768 DEBUG SQL:104 - 
+    insert 
+    into
+        Person_Stay
+        (Person_id, orderedStayIndex, orderedStay_id) 
+    values
+        (?, ?, ?)
+14:10:25,769 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.fetch.Person p where p.firstName = :name
+14:10:25,769 DEBUG ErrorCounter:63 - Keyword  'fetch' is being interpreted as an identifier due to: expecting IDENT, found 'fetch'
+14:10:25,770 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  \-[WEIRD_IDENT] Node: 'fetch'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'firstName'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'name'
+
+14:10:25,770 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:25,771 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.fetch.Person (p) -> person0_
+14:10:25,771 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.id
+14:10:25,771 DEBUG DotNode:599 - getDataType() : firstName -> org.hibernate.type.StringType@2dc8de40
+14:10:25,771 DEBUG FromReferenceNode:74 - Resolved : p.firstName -> person0_.firstName
+14:10:25,771 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Person person0_ ) ( where ( = ( person0_.firstName person0_.id firstName ) ? ) ) )
+14:10:25,771 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:25,772 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:10:25,772 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.id as id2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.fetch.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.companyName as companyN2_2_, person0_.firstName as firstName2_, person0_.lastName as lastName2_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.annotations.fetch.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.firstName' {propertyName=firstName,dereferenceType=ALL,propertyPath=firstName,path=p.firstName,tableAlias=person0_,className=org.hibernate.test.annotations.fetch.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.id' {alias=p, className=org.hibernate.test.annotations.fetch.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'firstName' {originalText=firstName}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:10:25,772 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:25,772 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.fetch.Person p where p.firstName = :name
+14:10:25,772 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.id as id2_, person0_.companyName as companyN2_2_, person0_.firstName as firstName2_, person0_.lastName as lastName2_ from Person person0_ where person0_.firstName=?
+14:10:25,772 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:25,773 DEBUG SQL:104 - 
+    select
+        person0_.id as id2_,
+        person0_.companyName as companyN2_2_,
+        person0_.firstName as firstName2_,
+        person0_.lastName as lastName2_ 
+    from
+        Person person0_ 
+    where
+        person0_.firstName=?
+14:10:25,773 DEBUG SQL:104 - 
+    select
+        max(orderedStayIndex) + 1 
+    from
+        Person_Stay 
+    where
+        Person_id =?
+14:10:25,774 DEBUG SQL:104 - 
+    select
+        orderedStay_id as orderedS2_3_ 
+    from
+        Person_Stay 
+    where
+        Person_id =? 
+        and orderedStayIndex =?
+14:10:25,774 DEBUG SQL:104 - 
+    select
+        stay0_.id as id4_1_,
+        stay0_.authoriser as authoriser4_1_,
+        stay0_.comments as comments4_1_,
+        stay0_.endDate as endDate4_1_,
+        stay0_.oldperson as oldperson4_1_,
+        stay0_.person as person4_1_,
+        stay0_.startDate as startDate4_1_,
+        stay0_.veryoldperson as veryoldp9_4_1_,
+        stay0_.vessel as vessel4_1_,
+        person1_.id as id2_0_,
+        person1_.companyName as companyN2_2_0_,
+        person1_.firstName as firstName2_0_,
+        person1_.lastName as lastName2_0_ 
+    from
+        Stay stay0_ 
+    left outer join
+        Person person1_ 
+            on stay0_.veryoldperson=person1_.id 
+    where
+        stay0_.id=?
+14:10:25,775 DEBUG SQL:104 - 
+    select
+        oldstays0_.oldperson as oldperson2_2_,
+        oldstays0_.id as id4_2_,
+        oldstays0_.id as id4_1_,
+        oldstays0_.authoriser as authoriser4_1_,
+        oldstays0_.comments as comments4_1_,
+        oldstays0_.endDate as endDate4_1_,
+        oldstays0_.oldperson as oldperson4_1_,
+        oldstays0_.person as person4_1_,
+        oldstays0_.startDate as startDate4_1_,
+        oldstays0_.veryoldperson as veryoldp9_4_1_,
+        oldstays0_.vessel as vessel4_1_,
+        person1_.id as id2_0_,
+        person1_.companyName as companyN2_2_0_,
+        person1_.firstName as firstName2_0_,
+        person1_.lastName as lastName2_0_ 
+    from
+        Stay oldstays0_ 
+    left outer join
+        Person person1_ 
+            on oldstays0_.veryoldperson=person1_.id 
+    where
+        oldstays0_.oldperson=?
+14:10:25,776 DEBUG SQL:104 - 
+    select
+        orderedsta0_.Person_id as Person1_2_2_,
+        orderedsta0_.orderedStay_id as orderedS2_3_2_,
+        orderedsta0_.orderedStayIndex as orderedS3_2_,
+        stay1_.id as id4_0_,
+        stay1_.authoriser as authoriser4_0_,
+        stay1_.comments as comments4_0_,
+        stay1_.endDate as endDate4_0_,
+        stay1_.oldperson as oldperson4_0_,
+        stay1_.person as person4_0_,
+        stay1_.startDate as startDate4_0_,
+        stay1_.veryoldperson as veryoldp9_4_0_,
+        stay1_.vessel as vessel4_0_,
+        person2_.id as id2_1_,
+        person2_.companyName as companyN2_2_1_,
+        person2_.firstName as firstName2_1_,
+        person2_.lastName as lastName2_1_ 
+    from
+        Person_Stay orderedsta0_ 
+    inner join
+        Stay stay1_ 
+            on orderedsta0_.orderedStay_id=stay1_.id 
+    left outer join
+        Person person2_ 
+            on stay1_.veryoldperson=person2_.id 
+    where
+        orderedsta0_.Person_id=?
+14:10:25,794 DEBUG SQL:104 - 
+    select
+        stays0_.person as person2_2_,
+        stays0_.id as id4_2_,
+        stays0_.id as id4_1_,
+        stays0_.authoriser as authoriser4_1_,
+        stays0_.comments as comments4_1_,
+        stays0_.endDate as endDate4_1_,
+        stays0_.oldperson as oldperson4_1_,
+        stays0_.person as person4_1_,
+        stays0_.startDate as startDate4_1_,
+        stays0_.veryoldperson as veryoldp9_4_1_,
+        stays0_.vessel as vessel4_1_,
+        person1_.id as id2_0_,
+        person1_.companyName as companyN2_2_0_,
+        person1_.firstName as firstName2_0_,
+        person1_.lastName as lastName2_0_ 
+    from
+        Stay stays0_ 
+    left outer join
+        Person person1_ 
+            on stays0_.veryoldperson=person1_.id 
+    where
+        stays0_.person=?
+14:10:25,821 DEBUG SQL:104 - 
+    select
+        veryoldsta0_.veryoldperson as veryoldp9_2_1_,
+        veryoldsta0_.id as id4_1_,
+        veryoldsta0_.id as id4_0_,
+        veryoldsta0_.authoriser as authoriser4_0_,
+        veryoldsta0_.comments as comments4_0_,
+        veryoldsta0_.endDate as endDate4_0_,
+        veryoldsta0_.oldperson as oldperson4_0_,
+        veryoldsta0_.person as person4_0_,
+        veryoldsta0_.startDate as startDate4_0_,
+        veryoldsta0_.veryoldperson as veryoldp9_4_0_,
+        veryoldsta0_.vessel as vessel4_0_ 
+    from
+        Stay veryoldsta0_ 
+    where
+        veryoldsta0_.veryoldperson=?
+14:10:25,824 DEBUG SQL:104 - 
+    delete 
+    from
+        Person_Stay 
+    where
+        Person_id=?
+14:10:25,825 DEBUG SQL:104 - 
+    delete 
+    from
+        Stay 
+    where
+        id=?
+14:10:25,834 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        id=?
+14:10:25,835  INFO CustomRunner:139 - Test: testHibernateFetchingLazy
+14:10:25,836 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:25,836 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:25,837 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:25,837 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:25,839 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (companyName, firstName, lastName, id) 
+    values
+        (?, ?, ?, ?)
+14:10:25,839 DEBUG SQL:104 - 
+    insert 
+    into
+        Stay
+        (authoriser, comments, endDate, oldperson, person, startDate, veryoldperson, vessel, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+14:10:25,844 DEBUG SQL:104 - 
+    insert 
+    into
+        Stay
+        (authoriser, comments, endDate, oldperson, person, startDate, veryoldperson, vessel, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+14:10:25,845 DEBUG SQL:104 - 
+    insert 
+    into
+        Stay
+        (authoriser, comments, endDate, oldperson, person, startDate, veryoldperson, vessel, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+14:10:25,846 DEBUG SQL:104 - 
+    select
+        person0_.id as id2_,
+        person0_.companyName as companyN2_2_,
+        person0_.firstName as firstName2_,
+        person0_.lastName as lastName2_ 
+    from
+        Person person0_ 
+    where
+        person0_.firstName=?
+14:10:25,847 DEBUG SQL:104 - 
+    select
+        count(id) 
+    from
+        Stay 
+    where
+        oldperson =?
+14:10:25,859 DEBUG SQL:104 - 
+    select
+        stay0_.id as id4_1_,
+        stay0_.authoriser as authoriser4_1_,
+        stay0_.comments as comments4_1_,
+        stay0_.endDate as endDate4_1_,
+        stay0_.oldperson as oldperson4_1_,
+        stay0_.person as person4_1_,
+        stay0_.startDate as startDate4_1_,
+        stay0_.veryoldperson as veryoldp9_4_1_,
+        stay0_.vessel as vessel4_1_,
+        person1_.id as id2_0_,
+        person1_.companyName as companyN2_2_0_,
+        person1_.firstName as firstName2_0_,
+        person1_.lastName as lastName2_0_ 
+    from
+        Stay stay0_ 
+    left outer join
+        Person person1_ 
+            on stay0_.veryoldperson=person1_.id 
+    where
+        stay0_.id=?
+14:10:25,863 DEBUG SQL:104 - 
+    select
+        stay0_.id as id4_1_,
+        stay0_.authoriser as authoriser4_1_,
+        stay0_.comments as comments4_1_,
+        stay0_.endDate as endDate4_1_,
+        stay0_.oldperson as oldperson4_1_,
+        stay0_.person as person4_1_,
+        stay0_.startDate as startDate4_1_,
+        stay0_.veryoldperson as veryoldp9_4_1_,
+        stay0_.vessel as vessel4_1_,
+        person1_.id as id2_0_,
+        person1_.companyName as companyN2_2_0_,
+        person1_.firstName as firstName2_0_,
+        person1_.lastName as lastName2_0_ 
+    from
+        Stay stay0_ 
+    left outer join
+        Person person1_ 
+            on stay0_.veryoldperson=person1_.id 
+    where
+        stay0_.id=?
+14:10:25,864 DEBUG SQL:104 - 
+    select
+        oldstays0_.oldperson as oldperson2_2_,
+        oldstays0_.id as id4_2_,
+        oldstays0_.id as id4_1_,
+        oldstays0_.authoriser as authoriser4_1_,
+        oldstays0_.comments as comments4_1_,
+        oldstays0_.endDate as endDate4_1_,
+        oldstays0_.oldperson as oldperson4_1_,
+        oldstays0_.person as person4_1_,
+        oldstays0_.startDate as startDate4_1_,
+        oldstays0_.veryoldperson as veryoldp9_4_1_,
+        oldstays0_.vessel as vessel4_1_,
+        person1_.id as id2_0_,
+        person1_.companyName as companyN2_2_0_,
+        person1_.firstName as firstName2_0_,
+        person1_.lastName as lastName2_0_ 
+    from
+        Stay oldstays0_ 
+    left outer join
+        Person person1_ 
+            on oldstays0_.veryoldperson=person1_.id 
+    where
+        oldstays0_.oldperson=?
+14:10:25,878 DEBUG SQL:104 - 
+    select
+        orderedsta0_.Person_id as Person1_2_2_,
+        orderedsta0_.orderedStay_id as orderedS2_3_2_,
+        orderedsta0_.orderedStayIndex as orderedS3_2_,
+        stay1_.id as id4_0_,
+        stay1_.authoriser as authoriser4_0_,
+        stay1_.comments as comments4_0_,
+        stay1_.endDate as endDate4_0_,
+        stay1_.oldperson as oldperson4_0_,
+        stay1_.person as person4_0_,
+        stay1_.startDate as startDate4_0_,
+        stay1_.veryoldperson as veryoldp9_4_0_,
+        stay1_.vessel as vessel4_0_,
+        person2_.id as id2_1_,
+        person2_.companyName as companyN2_2_1_,
+        person2_.firstName as firstName2_1_,
+        person2_.lastName as lastName2_1_ 
+    from
+        Person_Stay orderedsta0_ 
+    inner join
+        Stay stay1_ 
+            on orderedsta0_.orderedStay_id=stay1_.id 
+    left outer join
+        Person person2_ 
+            on stay1_.veryoldperson=person2_.id 
+    where
+        orderedsta0_.Person_id=?
+14:10:25,891 DEBUG SQL:104 - 
+    select
+        stays0_.person as person2_2_,
+        stays0_.id as id4_2_,
+        stays0_.id as id4_1_,
+        stays0_.authoriser as authoriser4_1_,
+        stays0_.comments as comments4_1_,
+        stays0_.endDate as endDate4_1_,
+        stays0_.oldperson as oldperson4_1_,
+        stays0_.person as person4_1_,
+        stays0_.startDate as startDate4_1_,
+        stays0_.veryoldperson as veryoldp9_4_1_,
+        stays0_.vessel as vessel4_1_,
+        person1_.id as id2_0_,
+        person1_.companyName as companyN2_2_0_,
+        person1_.firstName as firstName2_0_,
+        person1_.lastName as lastName2_0_ 
+    from
+        Stay stays0_ 
+    left outer join
+        Person person1_ 
+            on stays0_.veryoldperson=person1_.id 
+    where
+        stays0_.person=?
+14:10:25,892 DEBUG SQL:104 - 
+    select
+        veryoldsta0_.veryoldperson as veryoldp9_2_1_,
+        veryoldsta0_.id as id4_1_,
+        veryoldsta0_.id as id4_0_,
+        veryoldsta0_.authoriser as authoriser4_0_,
+        veryoldsta0_.comments as comments4_0_,
+        veryoldsta0_.endDate as endDate4_0_,
+        veryoldsta0_.oldperson as oldperson4_0_,
+        veryoldsta0_.person as person4_0_,
+        veryoldsta0_.startDate as startDate4_0_,
+        veryoldsta0_.veryoldperson as veryoldp9_4_0_,
+        veryoldsta0_.vessel as vessel4_0_ 
+    from
+        Stay veryoldsta0_ 
+    where
+        veryoldsta0_.veryoldperson=?
+14:10:25,962 DEBUG SQL:104 - 
+    delete 
+    from
+        Stay 
+    where
+        id=?
+14:10:25,963 DEBUG SQL:104 - 
+    delete 
+    from
+        Stay 
+    where
+        id=?
+14:10:25,963 DEBUG SQL:104 - 
+    delete 
+    from
+        Stay 
+    where
+        id=?
+14:10:25,963 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        id=?
+14:10:25,964  INFO CustomRunner:139 - Test: testLazy
+14:10:25,965 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:25,966 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:25,967 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (companyName, firstName, lastName, id) 
+    values
+        (?, ?, ?, ?)
+14:10:25,967 DEBUG SQL:104 - 
+    insert 
+    into
+        Stay
+        (authoriser, comments, endDate, oldperson, person, startDate, veryoldperson, vessel, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+14:10:25,968 DEBUG SQL:104 - 
+    select
+        person0_.id as id2_,
+        person0_.companyName as companyN2_2_,
+        person0_.firstName as firstName2_,
+        person0_.lastName as lastName2_ 
+    from
+        Person person0_ 
+    where
+        person0_.firstName=?
+14:10:25,969 DEBUG SQL:104 - 
+    select
+        oldstays0_.oldperson as oldperson2_2_,
+        oldstays0_.id as id4_2_,
+        oldstays0_.id as id4_1_,
+        oldstays0_.authoriser as authoriser4_1_,
+        oldstays0_.comments as comments4_1_,
+        oldstays0_.endDate as endDate4_1_,
+        oldstays0_.oldperson as oldperson4_1_,
+        oldstays0_.person as person4_1_,
+        oldstays0_.startDate as startDate4_1_,
+        oldstays0_.veryoldperson as veryoldp9_4_1_,
+        oldstays0_.vessel as vessel4_1_,
+        person1_.id as id2_0_,
+        person1_.companyName as companyN2_2_0_,
+        person1_.firstName as firstName2_0_,
+        person1_.lastName as lastName2_0_ 
+    from
+        Stay oldstays0_ 
+    left outer join
+        Person person1_ 
+            on oldstays0_.veryoldperson=person1_.id 
+    where
+        oldstays0_.oldperson=?
+14:10:25,969 DEBUG SQL:104 - 
+    select
+        orderedsta0_.Person_id as Person1_2_2_,
+        orderedsta0_.orderedStay_id as orderedS2_3_2_,
+        orderedsta0_.orderedStayIndex as orderedS3_2_,
+        stay1_.id as id4_0_,
+        stay1_.authoriser as authoriser4_0_,
+        stay1_.comments as comments4_0_,
+        stay1_.endDate as endDate4_0_,
+        stay1_.oldperson as oldperson4_0_,
+        stay1_.person as person4_0_,
+        stay1_.startDate as startDate4_0_,
+        stay1_.veryoldperson as veryoldp9_4_0_,
+        stay1_.vessel as vessel4_0_,
+        person2_.id as id2_1_,
+        person2_.companyName as companyN2_2_1_,
+        person2_.firstName as firstName2_1_,
+        person2_.lastName as lastName2_1_ 
+    from
+        Person_Stay orderedsta0_ 
+    inner join
+        Stay stay1_ 
+            on orderedsta0_.orderedStay_id=stay1_.id 
+    left outer join
+        Person person2_ 
+            on stay1_.veryoldperson=person2_.id 
+    where
+        orderedsta0_.Person_id=?
+14:10:25,970 DEBUG SQL:104 - 
+    select
+        stays0_.person as person2_2_,
+        stays0_.id as id4_2_,
+        stays0_.id as id4_1_,
+        stays0_.authoriser as authoriser4_1_,
+        stays0_.comments as comments4_1_,
+        stays0_.endDate as endDate4_1_,
+        stays0_.oldperson as oldperson4_1_,
+        stays0_.person as person4_1_,
+        stays0_.startDate as startDate4_1_,
+        stays0_.veryoldperson as veryoldp9_4_1_,
+        stays0_.vessel as vessel4_1_,
+        person1_.id as id2_0_,
+        person1_.companyName as companyN2_2_0_,
+        person1_.firstName as firstName2_0_,
+        person1_.lastName as lastName2_0_ 
+    from
+        Stay stays0_ 
+    left outer join
+        Person person1_ 
+            on stays0_.veryoldperson=person1_.id 
+    where
+        stays0_.person=?
+14:10:25,971 DEBUG SQL:104 - 
+    select
+        veryoldsta0_.veryoldperson as veryoldp9_2_1_,
+        veryoldsta0_.id as id4_1_,
+        veryoldsta0_.id as id4_0_,
+        veryoldsta0_.authoriser as authoriser4_0_,
+        veryoldsta0_.comments as comments4_0_,
+        veryoldsta0_.endDate as endDate4_0_,
+        veryoldsta0_.oldperson as oldperson4_0_,
+        veryoldsta0_.person as person4_0_,
+        veryoldsta0_.startDate as startDate4_0_,
+        veryoldsta0_.veryoldperson as veryoldp9_4_0_,
+        veryoldsta0_.vessel as vessel4_0_ 
+    from
+        Stay veryoldsta0_ 
+    where
+        veryoldsta0_.veryoldperson=?
+14:10:25,984 DEBUG SQL:104 - 
+    delete 
+    from
+        Stay 
+    where
+        id=?
+14:10:25,985 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        id=?
+14:10:25,985  INFO CustomRunner:139 - Test: testOneToManyFetchEager
+14:10:25,986 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:26,000 DEBUG SQL:104 - 
+    insert 
+    into
+        Branch
+        (id) 
+    values
+        (?)
+14:10:26,001 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:26,002 DEBUG SQL:104 - 
+    insert 
+    into
+        Leaf
+        (branch_id, id) 
+    values
+        (?, ?)
+14:10:26,003 DEBUG SQL:104 - 
+    select
+        this_.id as id0_1_,
+        leaves2_.branch_id as branch2_0_3_,
+        leaves2_.id as id1_3_,
+        leaves2_.id as id1_0_,
+        leaves2_.branch_id as branch2_1_0_ 
+    from
+        Branch this_ 
+    left outer join
+        Leaf leaves2_ 
+            on this_.id=leaves2_.branch_id
+14:10:26,020  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:26,021 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:26,021 DEBUG SQL:104 - 
+    alter table Leaf 
+        drop constraint FK24137E665970E
+14:10:26,021 DEBUG SQL:104 - 
+    alter table Person_Stay 
+        drop constraint FK49FD0D038AFFFA1
+14:10:26,022 DEBUG SQL:104 - 
+    alter table Person_Stay 
+        drop constraint FK49FD0D037F66D62E
+14:10:26,022 DEBUG SQL:104 - 
+    alter table Stay 
+        drop constraint FK277A79D80A0C25
+14:10:26,022 DEBUG SQL:104 - 
+    alter table Stay 
+        drop constraint FK277A79116FD73E
+14:10:26,022 DEBUG SQL:104 - 
+    alter table Stay 
+        drop constraint FK277A7996135BAF
+14:10:26,022 DEBUG SQL:104 - 
+    drop table Branch if exists
+14:10:26,023 DEBUG SQL:104 - 
+    drop table Leaf if exists
+14:10:26,023 DEBUG SQL:104 - 
+    drop table Person if exists
+14:10:26,023 DEBUG SQL:104 - 
+    drop table Person_Stay if exists
+14:10:26,023 DEBUG SQL:104 - 
+    drop table Stay if exists
+14:10:26,024 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:26,024  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:26,024  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

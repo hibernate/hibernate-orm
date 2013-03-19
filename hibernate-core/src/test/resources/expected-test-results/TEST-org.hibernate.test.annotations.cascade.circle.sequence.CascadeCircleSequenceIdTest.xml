@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.cascade.circle.sequence.CascadeCircleSequenceIdTest" tests="1" time="0.337" timestamp="2013-02-28T20:10:11">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.cascade.circle.sequence.CascadeCircleSequenceIdTest" name="testCascade" time="0.024" />
+  <system-out><![CDATA[14:10:11,520  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.cascade.circle.sequence.CascadeCircleSequenceIdTest
+14:10:11,551  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:11,552  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:11,552  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:11,552  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:11,552  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:11,557  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:11,558  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:11,558  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:11,559  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:11,559  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:11,741  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:11,742 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:11,742 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK42B74E7B71
+14:10:11,743 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table B drop constraint FK42B74E7B71
+14:10:11,743 ERROR SchemaExport:426 - Table "B" not found; SQL statement:
+
+    alter table B 
+        drop constraint FK42B74E7B71 [42102-145]
+14:10:11,743 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK42B750C151
+14:10:11,743 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table B drop constraint FK42B750C151
+14:10:11,744 ERROR SchemaExport:426 - Table "B" not found; SQL statement:
+
+    alter table B 
+        drop constraint FK42B750C151 [42102-145]
+14:10:11,744 DEBUG SQL:104 - 
+    alter table C 
+        drop constraint FK43B74E7B71
+14:10:11,744 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table C drop constraint FK43B74E7B71
+14:10:11,744 ERROR SchemaExport:426 - Table "C" not found; SQL statement:
+
+    alter table C 
+        drop constraint FK43B74E7B71 [42102-145]
+14:10:11,745 DEBUG SQL:104 - 
+    alter table C 
+        drop constraint FK43B74EEFD1
+14:10:11,745 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table C drop constraint FK43B74EEFD1
+14:10:11,745 ERROR SchemaExport:426 - Table "C" not found; SQL statement:
+
+    alter table C 
+        drop constraint FK43B74EEFD1 [42102-145]
+14:10:11,745 DEBUG SQL:104 - 
+    alter table C 
+        drop constraint FK43B75135B1
+14:10:11,746 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table C drop constraint FK43B75135B1
+14:10:11,746 ERROR SchemaExport:426 - Table "C" not found; SQL statement:
+
+    alter table C 
+        drop constraint FK43B75135B1 [42102-145]
+14:10:11,746 DEBUG SQL:104 - 
+    alter table D_A 
+        drop constraint FK10B061B372D53
+14:10:11,746 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table D_A drop constraint FK10B061B372D53
+14:10:11,746 ERROR SchemaExport:426 - Table "D_A" not found; SQL statement:
+
+    alter table D_A 
+        drop constraint FK10B061B372D53 [42102-145]
+14:10:11,746 DEBUG SQL:104 - 
+    alter table D_A 
+        drop constraint FK10B06C0D08A33
+14:10:11,747 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table D_A drop constraint FK10B06C0D08A33
+14:10:11,747 ERROR SchemaExport:426 - Table "D_A" not found; SQL statement:
+
+    alter table D_A 
+        drop constraint FK10B06C0D08A33 [42102-145]
+14:10:11,747 DEBUG SQL:104 - 
+    alter table D_E 
+        drop constraint FK10B0AA2AE53D3
+14:10:11,747 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table D_E drop constraint FK10B0AA2AE53D3
+14:10:11,748 ERROR SchemaExport:426 - Table "D_E" not found; SQL statement:
+
+    alter table D_E 
+        drop constraint FK10B0AA2AE53D3 [42102-145]
+14:10:11,748 DEBUG SQL:104 - 
+    alter table D_E 
+        drop constraint FK10B0AB74FD891
+14:10:11,748 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table D_E drop constraint FK10B0AB74FD891
+14:10:11,748 ERROR SchemaExport:426 - Table "D_E" not found; SQL statement:
+
+    alter table D_E 
+        drop constraint FK10B0AB74FD891 [42102-145]
+14:10:11,748 DEBUG SQL:104 - 
+    alter table E 
+        drop constraint FK45B750C151
+14:10:11,749 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table E drop constraint FK45B750C151
+14:10:11,749 ERROR SchemaExport:426 - Table "E" not found; SQL statement:
+
+    alter table E 
+        drop constraint FK45B750C151 [42102-145]
+14:10:11,749 DEBUG SQL:104 - 
+    alter table F 
+        drop constraint FK46B751AA11
+14:10:11,749 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table F drop constraint FK46B751AA11
+14:10:11,750 ERROR SchemaExport:426 - Table "F" not found; SQL statement:
+
+    alter table F 
+        drop constraint FK46B751AA11 [42102-145]
+14:10:11,750 DEBUG SQL:104 - 
+    alter table H 
+        drop constraint FK48B75135B1
+14:10:11,750 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table H drop constraint FK48B75135B1
+14:10:11,750 ERROR SchemaExport:426 - Table "H" not found; SQL statement:
+
+    alter table H 
+        drop constraint FK48B75135B1 [42102-145]
+14:10:11,750 DEBUG SQL:104 - 
+    drop table A if exists
+14:10:11,751 DEBUG SQL:104 - 
+    drop table B if exists
+14:10:11,751 DEBUG SQL:104 - 
+    drop table C if exists
+14:10:11,751 DEBUG SQL:104 - 
+    drop table D if exists
+14:10:11,751 DEBUG SQL:104 - 
+    drop table D_A if exists
+14:10:11,751 DEBUG SQL:104 - 
+    drop table D_E if exists
+14:10:11,751 DEBUG SQL:104 - 
+    drop table E if exists
+14:10:11,752 DEBUG SQL:104 - 
+    drop table F if exists
+14:10:11,752 DEBUG SQL:104 - 
+    drop table G if exists
+14:10:11,752 DEBUG SQL:104 - 
+    drop table H if exists
+14:10:11,752 DEBUG SQL:104 - 
+    drop sequence TIGER_SEQ
+14:10:11,752 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence TIGER_SEQ
+14:10:11,752 ERROR SchemaExport:426 - Sequence "TIGER_SEQ" not found; SQL statement:
+
+    drop sequence TIGER_SEQ [90036-145]
+14:10:11,753 DEBUG SQL:104 - 
+    create table A (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        primary key (id)
+    )
+14:10:11,753 DEBUG SQL:104 - 
+    create table B (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        a_id bigint not null,
+        f_id bigint not null,
+        primary key (id)
+    )
+14:10:11,754 DEBUG SQL:104 - 
+    create table C (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        a_id bigint not null,
+        b_id bigint not null,
+        g_id bigint,
+        primary key (id)
+    )
+14:10:11,754 DEBUG SQL:104 - 
+    create table D (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        primary key (id)
+    )
+14:10:11,755 DEBUG SQL:104 - 
+    create table D_A (
+        dCollection_id bigint not null,
+        aCollection_id bigint not null,
+        primary key (dCollection_id, aCollection_id)
+    )
+14:10:11,756 DEBUG SQL:104 - 
+    create table D_E (
+        D_id bigint not null,
+        eCollection_id bigint not null,
+        primary key (D_id, eCollection_id)
+    )
+14:10:11,757 DEBUG SQL:104 - 
+    create table E (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        f_id bigint not null,
+        primary key (id)
+    )
+14:10:11,757 DEBUG SQL:104 - 
+    create table F (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        h_id bigint,
+        primary key (id)
+    )
+14:10:11,758 DEBUG SQL:104 - 
+    create table G (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        primary key (id)
+    )
+14:10:11,758 DEBUG SQL:104 - 
+    create table H (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        g_id bigint,
+        primary key (id)
+    )
+14:10:11,759 DEBUG SQL:104 - 
+    alter table A 
+        add constraint uc_A_1 unique (uuid)
+14:10:11,759 DEBUG SQL:104 - 
+    alter table B 
+        add constraint uc_B_1 unique (uuid)
+14:10:11,759 DEBUG SQL:104 - 
+    alter table B 
+        add constraint FK42B74E7B71 
+        foreign key (a_id) 
+        references A
+14:10:11,760 DEBUG SQL:104 - 
+    alter table B 
+        add constraint FK42B750C151 
+        foreign key (f_id) 
+        references F
+14:10:11,776 DEBUG SQL:104 - 
+    alter table C 
+        add constraint uc_C_1 unique (uuid)
+14:10:11,776 DEBUG SQL:104 - 
+    alter table C 
+        add constraint FK43B74E7B71 
+        foreign key (a_id) 
+        references A
+14:10:11,777 DEBUG SQL:104 - 
+    alter table C 
+        add constraint FK43B74EEFD1 
+        foreign key (b_id) 
+        references B
+14:10:11,783 DEBUG SQL:104 - 
+    alter table C 
+        add constraint FK43B75135B1 
+        foreign key (g_id) 
+        references G
+14:10:11,784 DEBUG SQL:104 - 
+    alter table D 
+        add constraint uc_D_1 unique (uuid)
+14:10:11,788 DEBUG SQL:104 - 
+    alter table D_A 
+        add constraint FK10B061B372D53 
+        foreign key (aCollection_id) 
+        references A
+14:10:11,790 DEBUG SQL:104 - 
+    alter table D_A 
+        add constraint FK10B06C0D08A33 
+        foreign key (dCollection_id) 
+        references D
+14:10:11,791 DEBUG SQL:104 - 
+    alter table D_E 
+        add constraint UK_10B0AEB8D6217 unique (eCollection_id)
+14:10:11,792 DEBUG SQL:104 - 
+    alter table D_E 
+        add constraint FK10B0AA2AE53D3 
+        foreign key (eCollection_id) 
+        references E
+14:10:11,793 DEBUG SQL:104 - 
+    alter table D_E 
+        add constraint FK10B0AB74FD891 
+        foreign key (D_id) 
+        references D
+14:10:11,794 DEBUG SQL:104 - 
+    alter table E 
+        add constraint uc_E_1 unique (uuid)
+14:10:11,794 DEBUG SQL:104 - 
+    alter table E 
+        add constraint FK45B750C151 
+        foreign key (f_id) 
+        references F
+14:10:11,809 DEBUG SQL:104 - 
+    alter table F 
+        add constraint uc_F_1 unique (uuid)
+14:10:11,809 DEBUG SQL:104 - 
+    alter table F 
+        add constraint FK46B751AA11 
+        foreign key (h_id) 
+        references H
+14:10:11,810 DEBUG SQL:104 - 
+    alter table G 
+        add constraint uc_G_1 unique (uuid)
+14:10:11,811 DEBUG SQL:104 - 
+    alter table H 
+        add constraint uc_H_1 unique (uuid)
+14:10:11,814 DEBUG SQL:104 - 
+    alter table H 
+        add constraint FK48B75135B1 
+        foreign key (g_id) 
+        references G
+14:10:11,815 DEBUG SQL:104 - 
+    create sequence TIGER_SEQ start with 1 increment by 50
+14:10:11,815  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:11,817  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:11,817  INFO CustomRunner:139 - Test: testCascade
+14:10:11,819 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:11,821 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:11,821 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:11,822 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:11,822 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:11,822 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:11,823 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:11,824 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:11,824 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:11,827 DEBUG SQL:104 - 
+    insert 
+    into
+        A
+        (created, uuid, id) 
+    values
+        (?, ?, ?)
+14:10:11,828 DEBUG SQL:104 - 
+    insert 
+    into
+        G
+        (created, uuid, id) 
+    values
+        (?, ?, ?)
+14:10:11,829 DEBUG SQL:104 - 
+    insert 
+    into
+        H
+        (created, uuid, g_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:11,834 DEBUG SQL:104 - 
+    insert 
+    into
+        F
+        (created, uuid, h_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:11,836 DEBUG SQL:104 - 
+    insert 
+    into
+        B
+        (created, uuid, a_id, f_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:11,838 DEBUG SQL:104 - 
+    insert 
+    into
+        C
+        (created, uuid, a_id, b_id, g_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:11,839 DEBUG SQL:104 - 
+    insert 
+    into
+        D
+        (created, uuid, id) 
+    values
+        (?, ?, ?)
+14:10:11,840 DEBUG SQL:104 - 
+    insert 
+    into
+        E
+        (created, uuid, f_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:11,841 DEBUG SQL:104 - 
+    insert 
+    into
+        D_A
+        (dCollection_id, aCollection_id) 
+    values
+        (?, ?)
+14:10:11,841 DEBUG SQL:104 - 
+    insert 
+    into
+        D_E
+        (D_id, eCollection_id) 
+    values
+        (?, ?)
+14:10:11,842  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:11,843 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:11,843 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK42B74E7B71
+14:10:11,845 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK42B750C151
+14:10:11,845 DEBUG SQL:104 - 
+    alter table C 
+        drop constraint FK43B74E7B71
+14:10:11,845 DEBUG SQL:104 - 
+    alter table C 
+        drop constraint FK43B74EEFD1
+14:10:11,845 DEBUG SQL:104 - 
+    alter table C 
+        drop constraint FK43B75135B1
+14:10:11,846 DEBUG SQL:104 - 
+    alter table D_A 
+        drop constraint FK10B061B372D53
+14:10:11,846 DEBUG SQL:104 - 
+    alter table D_A 
+        drop constraint FK10B06C0D08A33
+14:10:11,848 DEBUG SQL:104 - 
+    alter table D_E 
+        drop constraint FK10B0AA2AE53D3
+14:10:11,849 DEBUG SQL:104 - 
+    alter table D_E 
+        drop constraint FK10B0AB74FD891
+14:10:11,849 DEBUG SQL:104 - 
+    alter table E 
+        drop constraint FK45B750C151
+14:10:11,849 DEBUG SQL:104 - 
+    alter table F 
+        drop constraint FK46B751AA11
+14:10:11,850 DEBUG SQL:104 - 
+    alter table H 
+        drop constraint FK48B75135B1
+14:10:11,850 DEBUG SQL:104 - 
+    drop table A if exists
+14:10:11,851 DEBUG SQL:104 - 
+    drop table B if exists
+14:10:11,851 DEBUG SQL:104 - 
+    drop table C if exists
+14:10:11,852 DEBUG SQL:104 - 
+    drop table D if exists
+14:10:11,852 DEBUG SQL:104 - 
+    drop table D_A if exists
+14:10:11,853 DEBUG SQL:104 - 
+    drop table D_E if exists
+14:10:11,853 DEBUG SQL:104 - 
+    drop table E if exists
+14:10:11,854 DEBUG SQL:104 - 
+    drop table F if exists
+14:10:11,854 DEBUG SQL:104 - 
+    drop table G if exists
+14:10:11,855 DEBUG SQL:104 - 
+    drop table H if exists
+14:10:11,855 DEBUG SQL:104 - 
+    drop sequence TIGER_SEQ
+14:10:11,856  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:11,856  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

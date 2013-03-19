@@ -23,8 +23,6 @@
  */
 package org.hibernate.test.propertyref;
 
-import java.util.List;
-
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -71,12 +69,7 @@ public class DoesNotWorkTest extends BaseCoreFunctionalTestCase {
 			Session session = openSession();
 			session.beginTransaction();
 			DoesNotWork entity = (DoesNotWork) session.get( DoesNotWork.class, pk );
-			List<String> notes = entity.getGlobalNotes();
-			if ( notes != null && notes.size() > 0 ) {
-				for ( String s : notes ) {
-					System.out.println( s );
-				}
-			}
+			entity.getGlobalNotes();
 			session.delete( entity );
 			session.getTransaction().commit();
 			session.close();

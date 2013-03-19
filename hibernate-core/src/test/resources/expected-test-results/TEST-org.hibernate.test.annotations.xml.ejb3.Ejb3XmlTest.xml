@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlTest" tests="4" time="0.338" timestamp="2013-02-28T20:10:45">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlTest" name="testEjb3Xml" time="0.13" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlTest" name="testMapXMLSupport" time="0.005" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlTest" name="testXMLEntityHandled" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlTest" name="testXmlDefaultOverriding" time="0.001" />
+  <system-out><![CDATA[14:10:45,542  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.xml.ejb3.Ejb3XmlTest
+14:10:45,606  WARN JPAOverriddenAnnotationReader:449 - HHH000207: Property org.hibernate.test.annotations.xml.ejb3.Model.unknownProperty not found in class but described in <mapping-file/> (possible typo error)
+14:10:45,607  WARN JPAOverriddenAnnotationReader:449 - HHH000207: Property org.hibernate.test.annotations.xml.ejb3.Company.id not found in class but described in <mapping-file/> (possible typo error)
+14:10:45,607  WARN JPAOverriddenAnnotationReader:449 - HHH000207: Property org.hibernate.test.annotations.xml.ejb3.Company.organization not found in class but described in <mapping-file/> (possible typo error)
+14:10:45,607  WARN JPAOverriddenAnnotationReader:449 - HHH000207: Property org.hibernate.test.annotations.xml.ejb3.Company.conferenceRoomExtensions not found in class but described in <mapping-file/> (possible typo error)
+14:10:45,607  WARN JPAOverriddenAnnotationReader:449 - HHH000207: Property org.hibernate.test.annotations.xml.ejb3.VicePresident.id not found in class but described in <mapping-file/> (possible typo error)
+14:10:45,607  WARN JPAOverriddenAnnotationReader:449 - HHH000207: Property org.hibernate.test.annotations.xml.ejb3.VicePresident.name not found in class but described in <mapping-file/> (possible typo error)
+14:10:45,615  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:45,615  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:45,616  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:45,616  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:45,616  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:45,617  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:45,617  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:45,618  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:45,618  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:45,618  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:45,621  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [table_id.sequence_name] suggested; using default [ModelZ]
+14:10:45,646  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [table_id.sequence_name] suggested; using default [ModelZ]
+14:10:45,647  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [table_id.sequence_name] suggested; using default [ModelZ]
+14:10:45,647  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:45,647 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:45,648 DEBUG SQL:104 - 
+    alter table CarModel 
+        drop constraint FK224B3D5E03B7979
+14:10:45,648 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CarModel drop constraint FK224B3D5E03B7979
+14:10:45,648 ERROR SchemaExport:426 - Table "CARMODEL" not found; SQL statement:
+
+    alter table CarModel 
+        drop constraint FK224B3D5E03B7979 [42102-145]
+14:10:45,648 DEBUG SQL:104 - 
+    alter table Company_VicePresident 
+        drop constraint FK919E0269923D9BF1
+14:10:45,648 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Company_VicePresident drop constraint FK919E0269923D9BF1
+14:10:45,649 ERROR SchemaExport:426 - Table "COMPANY_VICEPRESIDENT" not found; SQL statement:
+
+    alter table Company_VicePresident 
+        drop constraint FK919E0269923D9BF1 [42102-145]
+14:10:45,649 DEBUG SQL:104 - 
+    alter table Company_VicePresident 
+        drop constraint FK919E0269FECE6D39
+14:10:45,649 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Company_VicePresident drop constraint FK919E0269FECE6D39
+14:10:45,649 ERROR SchemaExport:426 - Table "COMPANY_VICEPRESIDENT" not found; SQL statement:
+
+    alter table Company_VicePresident 
+        drop constraint FK919E0269FECE6D39 [42102-145]
+14:10:45,649 DEBUG SQL:104 - 
+    alter table ModelZ 
+        drop constraint FK89B05671CC7777BB
+14:10:45,649 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ModelZ drop constraint FK89B05671CC7777BB
+14:10:45,650 ERROR SchemaExport:426 - Table "MODELZ" not found; SQL statement:
+
+    alter table ModelZ 
+        drop constraint FK89B05671CC7777BB [42102-145]
+14:10:45,650 DEBUG SQL:104 - 
+    alter table phone_extension_lookup 
+        drop constraint FK82E0042BFECE6D39
+14:10:45,650 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table phone_extension_lookup drop constraint FK82E0042BFECE6D39
+14:10:45,650 ERROR SchemaExport:426 - Table "PHONE_EXTENSION_LOOKUP" not found; SQL statement:
+
+    alter table phone_extension_lookup 
+        drop constraint FK82E0042BFECE6D39 [42102-145]
+14:10:45,650 DEBUG SQL:104 - 
+    drop table CarModel if exists
+14:10:45,650 DEBUG SQL:104 - 
+    drop table Company if exists
+14:10:45,650 DEBUG SQL:104 - 
+    drop table Company_VicePresident if exists
+14:10:45,650 DEBUG SQL:104 - 
+    drop table Light if exists
+14:10:45,650 DEBUG SQL:104 - 
+    drop table Lighter if exists
+14:10:45,651 DEBUG SQL:104 - 
+    drop table Manufacturer if exists
+14:10:45,651 DEBUG SQL:104 - 
+    drop table ModelZ if exists
+14:10:45,651 DEBUG SQL:104 - 
+    drop table VicePresident if exists
+14:10:45,651 DEBUG SQL:104 - 
+    drop table phone_extension_lookup if exists
+14:10:45,651 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:45,651 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:45,651 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:45,651 DEBUG SQL:104 - 
+    drop table table_id if exists
+14:10:45,652 DEBUG SQL:104 - 
+    create table CarModel (
+        year date not null,
+        model_id integer not null,
+        primary key (model_id)
+    )
+14:10:45,652 DEBUG SQL:104 - 
+    create table Company (
+        id integer not null,
+        primary key (id)
+    )
+14:10:45,652 DEBUG SQL:104 - 
+    create table Company_VicePresident (
+        Company_id integer not null,
+        organization_id integer not null,
+        organization_Key varchar(255) not null,
+        primary key (Company_id, organization_Key)
+    )
+14:10:45,653 DEBUG SQL:104 - 
+    create table Light (
+        fld_id varchar(255) not null,
+        power varchar(255),
+        primary key (fld_id)
+    )
+14:10:45,653 DEBUG SQL:104 - 
+    create table Lighter (
+        fld_id varchar(255) not null,
+        power varchar(255),
+        primary key (fld_id)
+    )
+14:10:45,654 DEBUG SQL:104 - 
+    create table Manufacturer (
+        id integer not null,
+        primary key (id)
+    )
+14:10:45,654 DEBUG SQL:104 - 
+    create table ModelZ (
+        fld_id integer not null,
+        manufacturer_pk integer,
+        primary key (fld_id)
+    )
+14:10:45,655 DEBUG SQL:104 - 
+    create table VicePresident (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:45,655 DEBUG SQL:104 - 
+    create table phone_extension_lookup (
+        company_id integer not null,
+        phone_extension varchar(255),
+        room_number varchar(255) not null,
+        primary key (company_id, room_number)
+    )
+14:10:45,655 DEBUG SQL:104 - 
+    alter table CarModel 
+        add constraint FK224B3D5E03B7979 
+        foreign key (model_id) 
+        references ModelZ
+14:10:45,656 DEBUG SQL:104 - 
+    alter table Company_VicePresident 
+        add constraint UK_919E02694F1093A7 unique (organization_id)
+14:10:45,656 DEBUG SQL:104 - 
+    alter table Company_VicePresident 
+        add constraint FK919E0269923D9BF1 
+        foreign key (organization_id) 
+        references VicePresident
+14:10:45,656 DEBUG SQL:104 - 
+    alter table Company_VicePresident 
+        add constraint FK919E0269FECE6D39 
+        foreign key (Company_id) 
+        references Company
+14:10:45,657 DEBUG SQL:104 - 
+    alter table ModelZ 
+        add constraint FK89B05671CC7777BB 
+        foreign key (manufacturer_pk) 
+        references Manufacturer
+14:10:45,657 DEBUG SQL:104 - 
+    alter table phone_extension_lookup 
+        add constraint FK82E0042BFECE6D39 
+        foreign key (company_id) 
+        references Company
+14:10:45,658 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:45,658 DEBUG SQL:104 - 
+    create table table_id (
+         sequence_name varchar(255) not null ,
+         next_val bigint,
+        primary key ( sequence_name ) 
+    ) 
+14:10:45,658  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:45,659  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [table_id.sequence_name] suggested; using default [ModelZ]
+14:10:45,659  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [table_id.sequence_name] suggested; using default [ModelZ]
+14:10:45,660  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:45,660 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select m from org.hibernate.test.annotations.xml.ejb3.Manufacturer m
+14:10:45,661 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  \-[IDENT] Node: 'xml'
+       |     |  |  \-[IDENT] Node: 'ejb3'
+       |     |  \-[IDENT] Node: 'Manufacturer'
+       |     \-[ALIAS] Node: 'm'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'm'
+
+14:10:45,661 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,661 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.xml.ejb3.Manufacturer (m) -> manufactur0_
+14:10:45,662 DEBUG FromReferenceNode:74 - Resolved : m -> manufactur0_.id
+14:10:45,662 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} manufactur0_.id ) ( FromClause{level=1} Manufacturer manufactur0_ ) )
+14:10:45,662 DEBUG JoinProcessor:175 - Using FROM fragment [Manufacturer manufactur0_]
+14:10:45,662 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Manufacturer)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'manufactur0_.id as id5_' {alias=m, className=org.hibernate.test.annotations.xml.ejb3.Manufacturer, tableAlias=manufactur0_}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[m], fromElementByTableAlias=[manufactur0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Manufacturer manufactur0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Manufacturer,tableAlias=manufactur0_,origin=null,columns={,className=org.hibernate.test.annotations.xml.ejb3.Manufacturer}}
+
+14:10:45,663 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,663 DEBUG QueryTranslatorImpl:235 - HQL: select m from org.hibernate.test.annotations.xml.ejb3.Manufacturer m
+14:10:45,663 DEBUG QueryTranslatorImpl:236 - SQL: select manufactur0_.id as id5_ from Manufacturer manufactur0_
+14:10:45,663 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,663 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select l from org.hibernate.test.annotations.xml.ejb3.Light l
+14:10:45,664 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  \-[IDENT] Node: 'xml'
+       |     |  |  \-[IDENT] Node: 'ejb3'
+       |     |  \-[IDENT] Node: 'Light'
+       |     \-[ALIAS] Node: 'l'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'l'
+
+14:10:45,696 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,696 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.xml.ejb3.Light (l) -> light0_
+14:10:45,697 DEBUG FromReferenceNode:74 - Resolved : l -> light0_.fld_id
+14:10:45,699 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} light0_.fld_id ) ( FromClause{level=1} Light light0_ ) )
+14:10:45,699 DEBUG JoinProcessor:175 - Using FROM fragment [Light light0_]
+14:10:45,713 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Light)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'light0_.fld_id as fld1_3_' {alias=l, className=org.hibernate.test.annotations.xml.ejb3.Light, tableAlias=light0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'light0_.power as power3_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[l], fromElementByTableAlias=[light0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Light light0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=l,role=null,tableName=Light,tableAlias=light0_,origin=null,columns={,className=org.hibernate.test.annotations.xml.ejb3.Light}}
+
+14:10:45,714 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,714 DEBUG QueryTranslatorImpl:235 - HQL: select l from org.hibernate.test.annotations.xml.ejb3.Light l
+14:10:45,714 DEBUG QueryTranslatorImpl:236 - SQL: select light0_.fld_id as fld1_3_, light0_.power as power3_ from Light light0_
+14:10:45,714 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,715 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.xml.ejb3.Model m where m.manufacturer = :manufacturer
+14:10:45,716 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  |  \-[IDENT] Node: 'xml'
+    |        |  |  \-[IDENT] Node: 'ejb3'
+    |        |  \-[IDENT] Node: 'Model'
+    |        \-[ALIAS] Node: 'm'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'm'
+          |  \-[IDENT] Node: 'manufacturer'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'manufacturer'
+
+14:10:45,716 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,717 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.xml.ejb3.Model (m) -> model0_
+14:10:45,717 DEBUG FromReferenceNode:74 - Resolved : m -> model0_.fld_id
+14:10:45,717 DEBUG DotNode:599 - getDataType() : manufacturer -> org.hibernate.type.ManyToOneType(org.hibernate.test.annotations.xml.ejb3.Manufacturer)
+14:10:45,717 DEBUG DotNode:562 - dereferenceShortcut() : property manufacturer in org.hibernate.test.annotations.xml.ejb3.Model does not require a join.
+14:10:45,717 DEBUG DotNode:588 - Terminal propertyPath = [manufacturer]
+14:10:45,717 DEBUG FromReferenceNode:74 - Resolved : m.manufacturer -> model0_.manufacturer_pk
+14:10:45,718 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ModelZ model0_ ) ( where ( = ( model0_.manufacturer_pk model0_.fld_id manufacturer ) ? ) ) )
+14:10:45,718 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:45,718 DEBUG JoinProcessor:175 - Using FROM fragment [ModelZ model0_ left outer join CarModel model0_1_ on model0_.fld_id=model0_1_.model_id]
+14:10:45,718 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ModelZ)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'model0_.fld_id as fld1_6_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=ModelZ,tableAlias=model0_,origin=null,columns={,className=org.hibernate.test.annotations.xml.ejb3.Model}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'model0_.manufacturer_pk as manufact2_6_, model0_1_.year as year0_, case when model0_1_.model_id is not null then 1 when model0_.fld_id is not null then 0 end as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[m], fromElementByTableAlias=[model0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'ModelZ model0_ left outer join CarModel model0_1_ on model0_.fld_id=model0_1_.model_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=ModelZ,tableAlias=model0_,origin=null,columns={,className=org.hibernate.test.annotations.xml.ejb3.Model}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'model0_.manufacturer_pk' {propertyName=manufacturer,dereferenceType=0,propertyPath=manufacturer,path=m.manufacturer,tableAlias=model0_,className=org.hibernate.test.annotations.xml.ejb3.Model,classAlias=m}
+          |  +-[ALIAS_REF] IdentNode: 'model0_.fld_id' {alias=m, className=org.hibernate.test.annotations.xml.ejb3.Model, tableAlias=model0_}
+          |  \-[IDENT] IdentNode: 'manufacturer' {originalText=manufacturer}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=manufacturer, expectedType=org.hibernate.type.ManyToOneType(org.hibernate.test.annotations.xml.ejb3.Manufacturer)}
+
+14:10:45,734 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,735 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.xml.ejb3.Model m where m.manufacturer = :manufacturer
+14:10:45,735 DEBUG QueryTranslatorImpl:236 - SQL: select model0_.fld_id as fld1_6_, model0_.manufacturer_pk as manufact2_6_, model0_1_.year as year0_, case when model0_1_.model_id is not null then 1 when model0_.fld_id is not null then 0 end as clazz_ from ModelZ model0_ left outer join CarModel model0_1_ on model0_.fld_id=model0_1_.model_id where model0_.manufacturer_pk=?
+14:10:45,735 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,736  INFO CustomRunner:139 - Test: testEjb3Xml
+14:10:45,737 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        table_id tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:10:45,738 DEBUG SQL:104 - 
+    insert 
+    into
+        table_id
+        (sequence_name, next_val)  
+    values
+        (?,?)
+14:10:45,770 DEBUG SQL:104 - 
+    update
+        table_id 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:10:45,771 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        table_id tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:10:45,771 DEBUG SQL:104 - 
+    update
+        table_id 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:10:45,771 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:45,773 DEBUG SQL:104 - 
+    insert 
+    into
+        Manufacturer
+        (id) 
+    values
+        (?)
+14:10:45,773 DEBUG SQL:104 - 
+    insert 
+    into
+        ModelZ
+        (manufacturer_pk, fld_id) 
+    values
+        (?, ?)
+14:10:45,773 DEBUG SQL:104 - 
+    insert 
+    into
+        CarModel
+        (year, model_id) 
+    values
+        (?, ?)
+14:10:45,858 DEBUG SQL:104 - 
+    select
+        manufactur0_.id as id5_0_ 
+    from
+        Manufacturer manufactur0_ 
+    where
+        manufactur0_.id=?
+14:10:45,864 DEBUG SQL:104 - 
+    select
+        model0_.fld_id as fld1_6_,
+        model0_.manufacturer_pk as manufact2_6_,
+        model0_1_.year as year0_,
+        case 
+            when model0_1_.model_id is not null then 1 
+            when model0_.fld_id is not null then 0 
+        end as clazz_ 
+    from
+        ModelZ model0_ 
+    left outer join
+        CarModel model0_1_ 
+            on model0_.fld_id=model0_1_.model_id 
+    where
+        model0_.manufacturer_pk=?
+14:10:45,866  INFO CustomRunner:139 - Test: testMapXMLSupport
+14:10:45,867 DEBUG SQL:104 - 
+    insert 
+    into
+        Company
+        (id) 
+    values
+        (?)
+14:10:45,868 DEBUG SQL:104 - 
+    insert 
+    into
+        VicePresident
+        (name, id) 
+    values
+        (?, ?)
+14:10:45,869 DEBUG SQL:104 - 
+    insert 
+    into
+        phone_extension_lookup
+        (company_id, room_number, phone_extension) 
+    values
+        (?, ?, ?)
+14:10:45,870 DEBUG SQL:104 - 
+    insert 
+    into
+        Company_VicePresident
+        (Company_id, organization_Key, organization_id) 
+    values
+        (?, ?, ?)
+14:10:45,871  INFO CustomRunner:139 - Test: testXMLEntityHandled
+14:10:45,873 DEBUG SQL:104 - 
+    insert 
+    into
+        Lighter
+        (power, fld_id) 
+    values
+        (?, ?)
+14:10:45,873  INFO CustomRunner:139 - Test: testXmlDefaultOverriding
+14:10:45,874 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:45,875 DEBUG SQL:104 - 
+    insert 
+    into
+        Manufacturer
+        (id) 
+    values
+        (?)
+14:10:45,875 DEBUG SQL:104 - 
+    select
+        manufactur0_.id as id5_ 
+    from
+        Manufacturer manufactur0_
+14:10:45,876  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:45,876 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:45,876 DEBUG SQL:104 - 
+    alter table CarModel 
+        drop constraint FK224B3D5E03B7979
+14:10:45,876 DEBUG SQL:104 - 
+    alter table Company_VicePresident 
+        drop constraint FK919E0269923D9BF1
+14:10:45,877 DEBUG SQL:104 - 
+    alter table Company_VicePresident 
+        drop constraint FK919E0269FECE6D39
+14:10:45,877 DEBUG SQL:104 - 
+    alter table ModelZ 
+        drop constraint FK89B05671CC7777BB
+14:10:45,877 DEBUG SQL:104 - 
+    alter table phone_extension_lookup 
+        drop constraint FK82E0042BFECE6D39
+14:10:45,877 DEBUG SQL:104 - 
+    drop table CarModel if exists
+14:10:45,877 DEBUG SQL:104 - 
+    drop table Company if exists
+14:10:45,877 DEBUG SQL:104 - 
+    drop table Company_VicePresident if exists
+14:10:45,878 DEBUG SQL:104 - 
+    drop table Light if exists
+14:10:45,878 DEBUG SQL:104 - 
+    drop table Lighter if exists
+14:10:45,878 DEBUG SQL:104 - 
+    drop table Manufacturer if exists
+14:10:45,878 DEBUG SQL:104 - 
+    drop table ModelZ if exists
+14:10:45,878 DEBUG SQL:104 - 
+    drop table VicePresident if exists
+14:10:45,879 DEBUG SQL:104 - 
+    drop table phone_extension_lookup if exists
+14:10:45,879 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:45,879 DEBUG SQL:104 - 
+    drop table table_id if exists
+14:10:45,879  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:45,879  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

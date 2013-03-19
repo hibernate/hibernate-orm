@@ -1,0 +1,2008 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" tests="21" time="0.857" timestamp="2013-02-28T20:12:21">
+  <properties />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testDeleteParentAndChild" time="0.018" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testDeleteParentButNotChild" time="0.014" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testDeleteParentWithNoChildren" time="0.022" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testDeleteParentWithNullChildren" time="0.022" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testMoveAllChildrenToDifferentParent" time="0.05" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testMoveChildToDifferentParent" time="0.048" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testMoveCollectionToDifferentParent" time="0.058" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testMoveCollectionToDifferentParentFlushMoveToDifferentParent" time="0.063" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testSaveParentEmptyChildren" time="0.014" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testSaveParentOneChild" time="0.106" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testUpdateParentNoneToOneChild" time="0.036" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testUpdateParentNoneToOneChildDiffCollection" time="0.031" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testUpdateParentNullToOneChild" time="0.038" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testUpdateParentNullToOneChildDiffCollection" time="0.023" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testUpdateParentOneChildDiffCollectionDiffChild" time="0.024" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testUpdateParentOneChildDiffCollectionSameChild" time="0.045" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testUpdateParentOneChildToNoneByClear" time="0.031" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testUpdateParentOneChildToNoneByRemove" time="0.064" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testUpdateParentOneToTwoChildren" time="0.029" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testUpdateParentOneToTwoSameChildren" time="0.006" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest" name="testUpdateParentTwoChildrenToOne" time="0.039" />
+  <system-out><![CDATA[14:12:21,338  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManySetCollectionEventTest
+14:12:21,340  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/event/collection/association/bidirectional/onetomany/BidirectionalOneToManySetMapping.hbm.xml
+14:12:21,347  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:21,347  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:21,347  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:21,347  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:21,347  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:21,348  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:21,349  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:21,349  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:21,350  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:21,350  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:21,355  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:21,356 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:21,356 DEBUG SQL:104 - 
+    alter table CHILD 
+        drop constraint FK3D1FCFCD16C7FE9
+14:12:21,357 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CHILD drop constraint FK3D1FCFCD16C7FE9
+14:12:21,357 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table CHILD 
+        drop constraint FK3D1FCFCD16C7FE9 [42102-145]
+14:12:21,357 DEBUG SQL:104 - 
+    drop table CHILD if exists
+14:12:21,357 DEBUG SQL:104 - 
+    drop table PARENT if exists
+14:12:21,357 DEBUG SQL:104 - 
+    create table CHILD (
+        ID bigint generated by default as identity,
+        NAME varchar(255),
+        parent_id bigint,
+        primary key (ID)
+    )
+14:12:21,357 DEBUG SQL:104 - 
+    create table PARENT (
+        ID bigint generated by default as identity,
+        primary key (ID)
+    )
+14:12:21,358 DEBUG SQL:104 - 
+    alter table CHILD 
+        add constraint FK3D1FCFCD16C7FE9 
+        foreign key (parent_id) 
+        references PARENT
+14:12:21,358  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:21,359  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:21,359  INFO CustomRunner:139 - Test: testDeleteParentAndChild
+14:12:21,360 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,362 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,362 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,363 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,363 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,367 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,368 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,368 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,369 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,377  INFO CustomRunner:139 - Test: testDeleteParentButNotChild
+14:12:21,378 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,379 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,380 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,380 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,390 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,390 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,391 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,391 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,392 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,392 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,393  INFO CustomRunner:139 - Test: testDeleteParentWithNoChildren
+14:12:21,393 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,394 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,402 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,403 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,404 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,405 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,415  INFO CustomRunner:139 - Test: testDeleteParentWithNullChildren
+14:12:21,416 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,417 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,418 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,418 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,419 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,437 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,438  INFO CustomRunner:139 - Test: testMoveAllChildrenToDifferentParent
+14:12:21,439 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,440 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,440 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,441 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,448 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,448 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,449 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,449 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,455 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,457 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,457 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,466 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,467 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,468 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,476 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,476 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,476 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,477 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,477 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,488  INFO CustomRunner:139 - Test: testMoveChildToDifferentParent
+14:12:21,489 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,490 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,491 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,491 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,498 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,499 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,499 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,500 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,520 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,521 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,521 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,522 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,522 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,523 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,523 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,526 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,526 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,527 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,527 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,536 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,537  INFO CustomRunner:139 - Test: testMoveCollectionToDifferentParent
+14:12:21,538 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,538 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,539 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,539 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,540 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,561 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,562 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,563 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,572 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,573 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,573 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,574 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,574 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,583 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,584 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,584 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,594 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,594 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,595  INFO CustomRunner:139 - Test: testMoveCollectionToDifferentParentFlushMoveToDifferentParent
+14:12:21,596 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,596 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,597 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,604 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,605 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,605 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,606 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,615 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,616 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,616 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,627 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,627 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,628 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,640 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,641 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,642 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,643 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,643 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,644 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,644 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,644 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,657 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,657 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,658  INFO CustomRunner:139 - Test: testSaveParentEmptyChildren
+14:12:21,659 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,659 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,670 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,671 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,671 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,671 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,672  INFO CustomRunner:139 - Test: testSaveParentOneChild
+14:12:21,673 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,676 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,717 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,718 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,718 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,719 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,776 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,777 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,778  INFO CustomRunner:139 - Test: testUpdateParentNoneToOneChild
+14:12:21,779 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,780 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,781 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,782 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,788 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,788 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,804 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,805 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,805 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,805 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,815  INFO CustomRunner:139 - Test: testUpdateParentNoneToOneChildDiffCollection
+14:12:21,816 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,817 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,818 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,818 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,819 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,820 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,842 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,844 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,845 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,845 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,846  INFO CustomRunner:139 - Test: testUpdateParentNullToOneChild
+14:12:21,847 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,847 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,848 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,849 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,849 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,869 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,870 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,872 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,872 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,884 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,884  INFO CustomRunner:139 - Test: testUpdateParentNullToOneChildDiffCollection
+14:12:21,885 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,886 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,887 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,897 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,898 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,899 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,899 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,907 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,908 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,908 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,908  INFO CustomRunner:139 - Test: testUpdateParentOneChildDiffCollectionDiffChild
+14:12:21,909 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,910 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,910 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,911 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,911 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,921 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,922 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,923 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,923 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,931 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,932 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,933 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,933 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,933 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,934  INFO CustomRunner:139 - Test: testUpdateParentOneChildDiffCollectionSameChild
+14:12:21,934 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,956 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,957 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,957 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,957 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,968 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,969 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,969 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,978 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,978 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,978 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,979  INFO CustomRunner:139 - Test: testUpdateParentOneChildToNoneByClear
+14:12:21,980 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:21,988 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,989 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:21,989 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,989 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,998 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,999 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:21,999 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:22,000 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:22,010 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:22,011 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:22,011  INFO CustomRunner:139 - Test: testUpdateParentOneChildToNoneByRemove
+14:12:22,012 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:22,013 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:22,020 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:22,021 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:22,021 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:22,021 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:22,034 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:22,034 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:22,035 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:22,071 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:22,074 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:22,075  INFO CustomRunner:139 - Test: testUpdateParentOneToTwoChildren
+14:12:22,100 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:22,101 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:22,102 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:22,103 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:22,104 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:22,105 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:22,105 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:22,106 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:22,106 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:22,107 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:22,107 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:22,107 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:22,107 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:22,129  INFO CustomRunner:139 - Test: testUpdateParentOneToTwoSameChildren
+14:12:22,131 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:22,132 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:22,132 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:22,133 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:22,133 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:22,134 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:22,134 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:22,135 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:22,135 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:22,136 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:22,136 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:22,136  INFO CustomRunner:139 - Test: testUpdateParentTwoChildrenToOne
+14:12:22,137 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID) 
+    values
+        (null)
+14:12:22,138 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:22,144 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:22,145 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:22,145 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:22,146 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=?
+14:12:22,156 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:22,157 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:22,158 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:22,173 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:22,174 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_
+14:12:22,174 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:22,175 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:22,175 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:22,176 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:22,176 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:22,176  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:22,177 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:22,177 DEBUG SQL:104 - 
+    alter table CHILD 
+        drop constraint FK3D1FCFCD16C7FE9
+14:12:22,177 DEBUG SQL:104 - 
+    drop table CHILD if exists
+14:12:22,178 DEBUG SQL:104 - 
+    drop table PARENT if exists
+14:12:22,190  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:22,191  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

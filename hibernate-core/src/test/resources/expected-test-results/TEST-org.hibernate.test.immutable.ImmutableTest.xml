@@ -1,0 +1,4997 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.immutable.ImmutableTest" tests="28" time="2.062" timestamp="2013-02-28T20:14:02">
+  <properties />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testChangeImmutableEntityProxyToModifiable" time="0.062" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testChangeImmutableEntityToModifiable" time="0.08" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testDeleteDetachedImmutable" time="0.006" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testDeleteDetachedModifiedImmutable" time="0.022" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testGetAndDeleteManagedImmutable" time="0.049" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testImmutable" time="0.084" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testImmutableChildEntityWithMerge" time="0.067" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testImmutableChildEntityWithUpdate" time="0.086" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testImmutableCollectionWithMerge" time="0.106" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testImmutableCollectionWithUpdate" time="0.172" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testImmutableEntityAddImmutableToInverseMutableCollection" time="0.118" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testImmutableEntityRemoveImmutableFromInverseMutableCollection" time="0.075" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testImmutableEntityRemoveImmutableFromInverseMutableCollectionByDelete" time="0.064" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testImmutableEntityRemoveImmutableFromInverseMutableCollectionByDeref" time="0.064" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testImmutableParentEntityWithMerge" time="0.085" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testImmutableParentEntityWithUpdate" time="0.039" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testNewEntityViaImmutableEntityWithImmutableCollectionUsingMerge" time="0.097" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testNewEntityViaImmutableEntityWithImmutableCollectionUsingSaveOrUpdate" time="0.062" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testPersistAndUpdateImmutable" time="0.064" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testPersistImmutable" time="0.051" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testPersistUpdateImmutableInSameTransaction" time="0.055" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testRefreshImmutable" time="0.075" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testSaveImmutable" time="0.05" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testSaveOrUpdateImmutable" time="0.046" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testUnmodifiedImmutableParentEntityWithMerge" time="0.08" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testUpdateAndDeleteManagedImmutable" time="0.032" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testUpdatedEntityViaImmutableEntityWithImmutableCollectionUsingMerge" time="0.097" />
+  <testcase classname="org.hibernate.test.immutable.ImmutableTest" name="testUpdatedEntityViaImmutableEntityWithImmutableCollectionUsingSaveOrUpdate" time="0.058" />
+  <system-out><![CDATA[14:14:02,368  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.immutable.ImmutableTest
+14:14:02,369  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/immutable/ContractVariation.hbm.xml
+14:14:02,382  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.immutable.ContractVariation
+14:14:02,383  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.immutable.ContractVariation
+14:14:02,383  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:02,383  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:02,384  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:02,384  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:02,384  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:02,385  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:02,386  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:02,386  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:02,386  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:02,387  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:02,408  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:02,408 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:02,409 DEBUG SQL:104 - 
+    alter table Contract 
+        drop constraint FKE20F75324380197E
+14:14:02,409 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Contract drop constraint FKE20F75324380197E
+14:14:02,409 ERROR SchemaExport:426 - Table "CONTRACT" not found; SQL statement:
+
+    alter table Contract 
+        drop constraint FKE20F75324380197E [42102-145]
+14:14:02,409 DEBUG SQL:104 - 
+    alter table ContractVariation 
+        drop constraint FKB86C05015D0A21E6
+14:14:02,409 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ContractVariation drop constraint FKB86C05015D0A21E6
+14:14:02,410 ERROR SchemaExport:426 - Table "CONTRACTVARIATION" not found; SQL statement:
+
+    alter table ContractVariation 
+        drop constraint FKB86C05015D0A21E6 [42102-145]
+14:14:02,410 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE20616E73
+14:14:02,410 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Info drop constraint FK22D8CE20616E73
+14:14:02,410 ERROR SchemaExport:426 - Table "INFO" not found; SQL statement:
+
+    alter table Info 
+        drop constraint FK22D8CE20616E73 [42102-145]
+14:14:02,410 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE976C1D4A
+14:14:02,410 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Info drop constraint FK22D8CE976C1D4A
+14:14:02,410 ERROR SchemaExport:426 - Table "INFO" not found; SQL statement:
+
+    alter table Info 
+        drop constraint FK22D8CE976C1D4A [42102-145]
+14:14:02,411 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE5D0A21E6
+14:14:02,411 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Info drop constraint FK22D8CE5D0A21E6
+14:14:02,411 ERROR SchemaExport:426 - Table "INFO" not found; SQL statement:
+
+    alter table Info 
+        drop constraint FK22D8CE5D0A21E6 [42102-145]
+14:14:02,411 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE226921B8
+14:14:02,411 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Info drop constraint FK22D8CE226921B8
+14:14:02,411 ERROR SchemaExport:426 - Table "INFO" not found; SQL statement:
+
+    alter table Info 
+        drop constraint FK22D8CE226921B8 [42102-145]
+14:14:02,411 DEBUG SQL:104 - 
+    alter table Party 
+        drop constraint FK4952AC65D0A21E6
+14:14:02,412 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Party drop constraint FK4952AC65D0A21E6
+14:14:02,412 ERROR SchemaExport:426 - Table "PARTY" not found; SQL statement:
+
+    alter table Party 
+        drop constraint FK4952AC65D0A21E6 [42102-145]
+14:14:02,412 DEBUG SQL:104 - 
+    alter table plan_contract 
+        drop constraint FKDE1535685D0A21E6
+14:14:02,412 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table plan_contract drop constraint FKDE1535685D0A21E6
+14:14:02,412 ERROR SchemaExport:426 - Table "PLAN_CONTRACT" not found; SQL statement:
+
+    alter table plan_contract 
+        drop constraint FKDE1535685D0A21E6 [42102-145]
+14:14:02,412 DEBUG SQL:104 - 
+    alter table plan_contract 
+        drop constraint FKDE15356820616E73
+14:14:02,412 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table plan_contract drop constraint FKDE15356820616E73
+14:14:02,413 ERROR SchemaExport:426 - Table "PLAN_CONTRACT" not found; SQL statement:
+
+    alter table plan_contract 
+        drop constraint FKDE15356820616E73 [42102-145]
+14:14:02,413 DEBUG SQL:104 - 
+    drop table Contract if exists
+14:14:02,413 DEBUG SQL:104 - 
+    drop table ContractVariation if exists
+14:14:02,413 DEBUG SQL:104 - 
+    drop table Info if exists
+14:14:02,413 DEBUG SQL:104 - 
+    drop table Party if exists
+14:14:02,413 DEBUG SQL:104 - 
+    drop table plan_contract if exists
+14:14:02,413 DEBUG SQL:104 - 
+    drop table tbl_plan if exists
+14:14:02,414 DEBUG SQL:104 - 
+    create table Contract (
+        id bigint not null,
+        customerName varchar(255) not null,
+        "type" varchar(255) not null,
+        parent bigint,
+        primary key (id)
+    )
+14:14:02,414 DEBUG SQL:104 - 
+    create table ContractVariation (
+        contract bigint not null,
+        version integer not null,
+        text longvarchar,
+        primary key (contract, version)
+    )
+14:14:02,414 DEBUG SQL:104 - 
+    create table Info (
+        id bigint not null,
+        text varchar(255),
+        col_plan bigint,
+        party bigint,
+        contract bigint,
+        contractvariation bigint,
+        version integer,
+        primary key (id)
+    )
+14:14:02,415 DEBUG SQL:104 - 
+    create table Party (
+        id bigint not null,
+        contract bigint,
+        name varchar(255) not null,
+        primary key (id)
+    )
+14:14:02,415 DEBUG SQL:104 - 
+    create table plan_contract (
+        col_plan bigint not null,
+        contract bigint not null,
+        primary key (col_plan, contract)
+    )
+14:14:02,416 DEBUG SQL:104 - 
+    create table tbl_plan (
+        id bigint not null,
+        description varchar(255) not null,
+        primary key (id)
+    )
+14:14:02,416 DEBUG SQL:104 - 
+    alter table Contract 
+        add constraint FKE20F75324380197E 
+        foreign key (parent) 
+        references Contract
+14:14:02,420 DEBUG SQL:104 - 
+    alter table ContractVariation 
+        add constraint FKB86C05015D0A21E6 
+        foreign key (contract) 
+        references Contract
+14:14:02,421 DEBUG SQL:104 - 
+    alter table Info 
+        add constraint FK22D8CE20616E73 
+        foreign key (col_plan) 
+        references tbl_plan
+14:14:02,421 DEBUG SQL:104 - 
+    alter table Info 
+        add constraint FK22D8CE976C1D4A 
+        foreign key (party) 
+        references Party
+14:14:02,422 DEBUG SQL:104 - 
+    alter table Info 
+        add constraint FK22D8CE5D0A21E6 
+        foreign key (contract) 
+        references Contract
+14:14:02,422 DEBUG SQL:104 - 
+    alter table Info 
+        add constraint FK22D8CE226921B8 
+        foreign key (contractvariation, version) 
+        references ContractVariation
+14:14:02,423 DEBUG SQL:104 - 
+    alter table Party 
+        add constraint FK4952AC65D0A21E6 
+        foreign key (contract) 
+        references Contract
+14:14:02,432 DEBUG SQL:104 - 
+    alter table plan_contract 
+        add constraint FKDE1535685D0A21E6 
+        foreign key (contract) 
+        references Contract
+14:14:02,433 DEBUG SQL:104 - 
+    alter table plan_contract 
+        add constraint FKDE15356820616E73 
+        foreign key (col_plan) 
+        references tbl_plan
+14:14:02,433  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:02,434  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:02,434  INFO CustomRunner:139 - Test: testChangeImmutableEntityProxyToModifiable
+14:14:02,435 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Contract
+14:14:02,437 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:02,437 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,437 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,438 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:02,468 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:02,468 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,469 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:02,477 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,477 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:02,486 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:02,487 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,487 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,487 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:02,495 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:02,496 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:02,497  INFO CustomRunner:139 - Test: testChangeImmutableEntityToModifiable
+14:14:02,500 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:02,501 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,501 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,507 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:02,518 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:02,519 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,527 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:02,527 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,528 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:02,528 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:02,529 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,529 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,574 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:02,576 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:02,577 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:02,578  INFO CustomRunner:139 - Test: testDeleteDetachedImmutable
+14:14:02,579 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:02,580 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,580 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,581 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:02,581 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:02,582 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,583 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,583 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:02,583 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:02,584  INFO CustomRunner:139 - Test: testDeleteDetachedModifiedImmutable
+14:14:02,586 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:02,587 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,587 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,597 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:02,598 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:02,598 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,599 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,606 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:02,607  INFO CustomRunner:139 - Test: testGetAndDeleteManagedImmutable
+14:14:02,608 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:02,609 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,609 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,617 DEBUG SQL:104 - 
+    select
+        contract0_.id as id0_3_,
+        contract0_.customerName as customer2_0_3_,
+        contract0_."type" as type3_0_3_,
+        contract0_.parent as parent0_3_,
+        variations1_.contract as contract0_5_,
+        variations1_.contract as contract1_5_,
+        variations1_.version as version1_5_,
+        variations1_.contract as contract1_0_,
+        variations1_.version as version1_0_,
+        variations1_.text as text1_0_,
+        subcontrac2_.parent as parent0_6_,
+        subcontrac2_.id as id0_6_,
+        subcontrac2_.id as id0_1_,
+        subcontrac2_.customerName as customer2_0_1_,
+        subcontrac2_."type" as type3_0_1_,
+        subcontrac2_.parent as parent0_1_,
+        parties3_.contract as contract0_7_,
+        parties3_.id as id3_7_,
+        parties3_.id as id3_2_,
+        parties3_.contract as contract3_2_,
+        parties3_.name as name3_2_ 
+    from
+        Contract contract0_ 
+    left outer join
+        ContractVariation variations1_ 
+            on contract0_.id=variations1_.contract 
+    left outer join
+        Contract subcontrac2_ 
+            on contract0_.id=subcontrac2_.parent 
+    left outer join
+        Party parties3_ 
+            on subcontrac2_.id=parties3_.contract 
+    where
+        contract0_.id=? 
+    order by
+        variations1_.version asc
+14:14:02,628 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,628 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,637 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:02,637 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:02,651 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,651 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,651 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:02,652 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:02,655 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:02,656  INFO CustomRunner:139 - Test: testImmutable
+14:14:02,657 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:02,658 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,658 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,659 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:02,685 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:02,686 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,719 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,720 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:02,720 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:02,729 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,729 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,730 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:02,730 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:02,738 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:02,741  INFO CustomRunner:139 - Test: testImmutableChildEntityWithMerge
+14:14:02,742 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:02,742 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,743 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,751 DEBUG SQL:104 - 
+    select
+        contract0_.id as id0_1_,
+        contract0_.customerName as customer2_0_1_,
+        contract0_."type" as type3_0_1_,
+        contract0_.parent as parent0_1_,
+        variations1_.contract as contract0_3_,
+        variations1_.contract as contract1_3_,
+        variations1_.version as version1_3_,
+        variations1_.contract as contract1_0_,
+        variations1_.version as version1_0_,
+        variations1_.text as text1_0_ 
+    from
+        Contract contract0_ 
+    left outer join
+        ContractVariation variations1_ 
+            on contract0_.id=variations1_.contract 
+    where
+        contract0_.id=? 
+    order by
+        variations1_.version asc
+14:14:02,753 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,771 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,771 DEBUG SQL:104 - 
+    select
+        subcontrac0_.parent as parent0_1_,
+        subcontrac0_.id as id0_1_,
+        subcontrac0_.id as id0_0_,
+        subcontrac0_.customerName as customer2_0_0_,
+        subcontrac0_."type" as type3_0_0_,
+        subcontrac0_.parent as parent0_0_ 
+    from
+        Contract subcontrac0_ 
+    where
+        subcontrac0_.parent=?
+14:14:02,772 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:02,782 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:02,784 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,785 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,795 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:02,796 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:02,797 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,806 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,807 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:02,807 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:02,807 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:02,808  INFO CustomRunner:139 - Test: testImmutableChildEntityWithUpdate
+14:14:02,813 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:02,814 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,846 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,847 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:02,848 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:02,849 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:02,871 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,873 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,874 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:02,881 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:02,882 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,882 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,893 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:02,893 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:02,894 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:02,894  INFO CustomRunner:139 - Test: testImmutableCollectionWithMerge
+14:14:02,896 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:02,897 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,909 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:02,910 DEBUG SQL:104 - 
+    select
+        contract0_.id as id0_1_,
+        contract0_.customerName as customer2_0_1_,
+        contract0_."type" as type3_0_1_,
+        contract0_.parent as parent0_1_,
+        variations1_.contract as contract0_3_,
+        variations1_.contract as contract1_3_,
+        variations1_.version as version1_3_,
+        variations1_.contract as contract1_0_,
+        variations1_.version as version1_0_,
+        variations1_.text as text1_0_ 
+    from
+        Contract contract0_ 
+    left outer join
+        ContractVariation variations1_ 
+            on contract0_.id=variations1_.contract 
+    where
+        contract0_.id=? 
+    order by
+        variations1_.version asc
+14:14:02,911 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,912 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,912 DEBUG SQL:104 - 
+    select
+        contractva0_.contract as contract1_1_,
+        contractva0_.version as version1_1_,
+        contractva0_.text as text1_1_,
+        infos1_.contractvariation as contract6_1_3_,
+        infos1_.version as version1_3_,
+        infos1_.id as id2_3_,
+        infos1_.id as id2_0_,
+        infos1_.text as text2_0_ 
+    from
+        ContractVariation contractva0_ 
+    left outer join
+        Info infos1_ 
+            on contractva0_.contract=infos1_.contractvariation 
+            and contractva0_.version=infos1_.version 
+    where
+        contractva0_.contract=? 
+        and contractva0_.version=?
+14:14:02,928 DEBUG SQL:104 - 
+    select
+        subcontrac0_.parent as parent0_1_,
+        subcontrac0_.id as id0_1_,
+        subcontrac0_.id as id0_0_,
+        subcontrac0_.customerName as customer2_0_0_,
+        subcontrac0_."type" as type3_0_0_,
+        subcontrac0_.parent as parent0_0_ 
+    from
+        Contract subcontrac0_ 
+    where
+        subcontrac0_.parent=?
+14:14:02,928 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:02,966 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:02,968 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,971 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:02,972 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:02,984 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:02,986 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,996 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:02,997 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,000 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,001 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,001  INFO CustomRunner:139 - Test: testImmutableCollectionWithUpdate
+14:14:03,003 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,003 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,004 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,029 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,030 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,030 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,068 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,073 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,074 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,106 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,107 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,107 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,172 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,173 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,173 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,173 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,174  INFO CustomRunner:139 - Test: testImmutableEntityAddImmutableToInverseMutableCollection
+14:14:03,175 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Party
+14:14:03,176 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,176 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,197 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,198 DEBUG SQL:104 - 
+    insert 
+    into
+        Party
+        (contract, name, id) 
+    values
+        (?, ?, ?)
+14:14:03,199 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,199 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,222 DEBUG SQL:104 - 
+    insert 
+    into
+        Party
+        (contract, name, id) 
+    values
+        (?, ?, ?)
+14:14:03,223 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,223 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,234 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,236 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,262 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,263 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,263 DEBUG SQL:104 - 
+    select
+        infos0_.party as party3_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.party=?
+14:14:03,264 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,264 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,265 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,265 DEBUG SQL:104 - 
+    delete 
+    from
+        Party 
+    where
+        id=?
+14:14:03,265 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,265 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,292 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,293  INFO CustomRunner:139 - Test: testImmutableEntityRemoveImmutableFromInverseMutableCollection
+14:14:03,310 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,311 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,311 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,311 DEBUG SQL:104 - 
+    insert 
+    into
+        Party
+        (contract, name, id) 
+    values
+        (?, ?, ?)
+14:14:03,312 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,312 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,313 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,335 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,337 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,337 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,337 DEBUG SQL:104 - 
+    select
+        infos0_.party as party3_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.party=?
+14:14:03,338 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,339 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,353 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,354 DEBUG SQL:104 - 
+    delete 
+    from
+        Party 
+    where
+        id=?
+14:14:03,354 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,354 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,355 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,368  INFO CustomRunner:139 - Test: testImmutableEntityRemoveImmutableFromInverseMutableCollectionByDelete
+14:14:03,371 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,371 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,371 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,372 DEBUG SQL:104 - 
+    insert 
+    into
+        Party
+        (contract, name, id) 
+    values
+        (?, ?, ?)
+14:14:03,372 DEBUG SQL:104 - 
+    delete 
+    from
+        Party 
+    where
+        id=?
+14:14:03,373 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,408 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,408 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,409 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,421 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,426 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,426 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,427 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,432 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,433 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,433  INFO CustomRunner:139 - Test: testImmutableEntityRemoveImmutableFromInverseMutableCollectionByDeref
+14:14:03,435 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,435 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,445 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,445 DEBUG SQL:104 - 
+    insert 
+    into
+        Party
+        (contract, name, id) 
+    values
+        (?, ?, ?)
+14:14:03,446 DEBUG SQL:104 - 
+    select
+        party0_.id as id3_0_,
+        party0_.contract as contract3_0_,
+        party0_.name as name3_0_ 
+    from
+        Party party0_ 
+    where
+        party0_.id=?
+14:14:03,447 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,473 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,473 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,474 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,474 DEBUG SQL:104 - 
+    select
+        infos0_.party as party3_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.party=?
+14:14:03,475 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,475 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,486 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,486 DEBUG SQL:104 - 
+    delete 
+    from
+        Party 
+    where
+        id=?
+14:14:03,487 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,487 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,487 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,499  INFO CustomRunner:139 - Test: testImmutableParentEntityWithMerge
+14:14:03,500 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,501 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,501 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,502 DEBUG SQL:104 - 
+    select
+        contract0_.id as id0_1_,
+        contract0_.customerName as customer2_0_1_,
+        contract0_."type" as type3_0_1_,
+        contract0_.parent as parent0_1_,
+        variations1_.contract as contract0_3_,
+        variations1_.contract as contract1_3_,
+        variations1_.version as version1_3_,
+        variations1_.contract as contract1_0_,
+        variations1_.version as version1_0_,
+        variations1_.text as text1_0_ 
+    from
+        Contract contract0_ 
+    left outer join
+        ContractVariation variations1_ 
+            on contract0_.id=variations1_.contract 
+    where
+        contract0_.id=? 
+    order by
+        variations1_.version asc
+14:14:03,526 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,527 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,528 DEBUG SQL:104 - 
+    select
+        subcontrac0_.parent as parent0_1_,
+        subcontrac0_.id as id0_1_,
+        subcontrac0_.id as id0_0_,
+        subcontrac0_.customerName as customer2_0_0_,
+        subcontrac0_."type" as type3_0_0_,
+        subcontrac0_.parent as parent0_0_ 
+    from
+        Contract subcontrac0_ 
+    where
+        subcontrac0_.parent=?
+14:14:03,538 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,540 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,551 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,561 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,562 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,562 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,572 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,573 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,573 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,574 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,583 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,584  INFO CustomRunner:139 - Test: testImmutableParentEntityWithUpdate
+14:14:03,585 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,586 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,586 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,587 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,596 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,597 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,600 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,610 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,611 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,612 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,622 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,622 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,622 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,623 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,623 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,624  INFO CustomRunner:139 - Test: testNewEntityViaImmutableEntityWithImmutableCollectionUsingMerge
+14:14:03,625 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,644 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,645 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,645 DEBUG SQL:104 - 
+    select
+        contract0_.id as id0_1_,
+        contract0_.customerName as customer2_0_1_,
+        contract0_."type" as type3_0_1_,
+        contract0_.parent as parent0_1_,
+        variations1_.contract as contract0_3_,
+        variations1_.contract as contract1_3_,
+        variations1_.version as version1_3_,
+        variations1_.contract as contract1_0_,
+        variations1_.version as version1_0_,
+        variations1_.text as text1_0_ 
+    from
+        Contract contract0_ 
+    left outer join
+        ContractVariation variations1_ 
+            on contract0_.id=variations1_.contract 
+    where
+        contract0_.id=? 
+    order by
+        variations1_.version asc
+14:14:03,656 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Info
+14:14:03,657 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,657 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,667 DEBUG SQL:104 - 
+    select
+        subcontrac0_.parent as parent0_1_,
+        subcontrac0_.id as id0_1_,
+        subcontrac0_.id as id0_0_,
+        subcontrac0_.customerName as customer2_0_0_,
+        subcontrac0_."type" as type3_0_0_,
+        subcontrac0_.parent as parent0_0_ 
+    from
+        Contract subcontrac0_ 
+    where
+        subcontrac0_.parent=?
+14:14:03,668 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,669 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (text, id) 
+    values
+        (?, ?)
+14:14:03,677 DEBUG SQL:104 - 
+    update
+        Info 
+    set
+        contractvariation=?,
+        version=? 
+    where
+        id=?
+14:14:03,678 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,689 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,699 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,700 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,700 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,710 DEBUG SQL:104 - 
+    update
+        Info 
+    set
+        contractvariation=null,
+        version=null 
+    where
+        contractvariation=? 
+        and version=?
+14:14:03,711 DEBUG SQL:104 - 
+    delete 
+    from
+        Info 
+    where
+        id=?
+14:14:03,711 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,711 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,720 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,721 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,721 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,722  INFO CustomRunner:139 - Test: testNewEntityViaImmutableEntityWithImmutableCollectionUsingSaveOrUpdate
+14:14:03,723 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,723 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,724 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,724 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,725 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,738 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (text, id) 
+    values
+        (?, ?)
+14:14:03,739 DEBUG SQL:104 - 
+    update
+        Info 
+    set
+        contractvariation=?,
+        version=? 
+    where
+        id=?
+14:14:03,740 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,747 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,748 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,770 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,771 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,772 DEBUG SQL:104 - 
+    update
+        Info 
+    set
+        contractvariation=null,
+        version=null 
+    where
+        contractvariation=? 
+        and version=?
+14:14:03,782 DEBUG SQL:104 - 
+    delete 
+    from
+        Info 
+    where
+        id=?
+14:14:03,783 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,783 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,783 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,783 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,784 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,784  INFO CustomRunner:139 - Test: testPersistAndUpdateImmutable
+14:14:03,786 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,786 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,786 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,787 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,806 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,817 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,829 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,829 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,838 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,839 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,839 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,839 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,848 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,848 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,849  INFO CustomRunner:139 - Test: testPersistImmutable
+14:14:03,850 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,851 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,851 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,852 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,862 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,863 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,872 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,873 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,874 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,874 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,874 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,898 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,899 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,900  INFO CustomRunner:139 - Test: testPersistUpdateImmutableInSameTransaction
+14:14:03,901 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,902 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,902 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,910 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:03,921 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,922 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:03,931 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:03,931 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:03,932 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,954 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:03,954 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:03,954 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:03,955 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:03,955  INFO CustomRunner:139 - Test: testRefreshImmutable
+14:14:03,956 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,957 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:03,957 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:03,958 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,958 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:03,958 DEBUG SQL:104 - 
+    select
+        contractva0_.contract as contract1_1_,
+        contractva0_.version as version1_1_,
+        contractva0_.text as text1_1_,
+        infos1_.contractvariation as contract6_1_3_,
+        infos1_.version as version1_3_,
+        infos1_.id as id2_3_,
+        infos1_.id as id2_0_,
+        infos1_.text as text2_0_ 
+    from
+        ContractVariation contractva0_ 
+    left outer join
+        Info infos1_ 
+            on contractva0_.contract=infos1_.contractvariation 
+            and contractva0_.version=infos1_.version 
+    where
+        contractva0_.contract=? 
+        and contractva0_.version=?
+14:14:03,959 DEBUG SQL:104 - 
+    select
+        contractva0_.contract as contract1_1_,
+        contractva0_.version as version1_1_,
+        contractva0_.text as text1_1_,
+        infos1_.contractvariation as contract6_1_3_,
+        infos1_.version as version1_3_,
+        infos1_.id as id2_3_,
+        infos1_.id as id2_0_,
+        infos1_.text as text2_0_ 
+    from
+        ContractVariation contractva0_ 
+    left outer join
+        Info infos1_ 
+            on contractva0_.contract=infos1_.contractvariation 
+            and contractva0_.version=infos1_.version 
+    where
+        contractva0_.contract=? 
+        and contractva0_.version=?
+14:14:03,975 DEBUG SQL:104 - 
+    select
+        contract0_.id as id0_1_,
+        contract0_.customerName as customer2_0_1_,
+        contract0_."type" as type3_0_1_,
+        contract0_.parent as parent0_1_,
+        variations1_.contract as contract0_3_,
+        variations1_.contract as contract1_3_,
+        variations1_.version as version1_3_,
+        variations1_.contract as contract1_0_,
+        variations1_.version as version1_0_,
+        variations1_.text as text1_0_ 
+    from
+        Contract contract0_ 
+    left outer join
+        ContractVariation variations1_ 
+            on contract0_.id=variations1_.contract 
+    where
+        contract0_.id=? 
+    order by
+        variations1_.version asc
+14:14:03,976 DEBUG SQL:104 - 
+    select
+        contractva0_.contract as contract1_1_,
+        contractva0_.version as version1_1_,
+        contractva0_.text as text1_1_,
+        infos1_.contractvariation as contract6_1_3_,
+        infos1_.version as version1_3_,
+        infos1_.id as id2_3_,
+        infos1_.id as id2_0_,
+        infos1_.text as text2_0_ 
+    from
+        ContractVariation contractva0_ 
+    left outer join
+        Info infos1_ 
+            on contractva0_.contract=infos1_.contractvariation 
+            and contractva0_.version=infos1_.version 
+    where
+        contractva0_.contract=? 
+        and contractva0_.version=?
+14:14:03,977 DEBUG SQL:104 - 
+    select
+        contractva0_.contract as contract1_1_,
+        contractva0_.version as version1_1_,
+        contractva0_.text as text1_1_,
+        infos1_.contractvariation as contract6_1_3_,
+        infos1_.version as version1_3_,
+        infos1_.id as id2_3_,
+        infos1_.id as id2_0_,
+        infos1_.text as text2_0_ 
+    from
+        ContractVariation contractva0_ 
+    left outer join
+        Info infos1_ 
+            on contractva0_.contract=infos1_.contractvariation 
+            and contractva0_.version=infos1_.version 
+    where
+        contractva0_.contract=? 
+        and contractva0_.version=?
+14:14:03,990 DEBUG SQL:104 - 
+    select
+        contract0_.id as id0_1_,
+        contract0_.customerName as customer2_0_1_,
+        contract0_."type" as type3_0_1_,
+        contract0_.parent as parent0_1_,
+        variations1_.contract as contract0_3_,
+        variations1_.contract as contract1_3_,
+        variations1_.version as version1_3_,
+        variations1_.contract as contract1_0_,
+        variations1_.version as version1_0_,
+        variations1_.text as text1_0_ 
+    from
+        Contract contract0_ 
+    left outer join
+        ContractVariation variations1_ 
+            on contract0_.id=variations1_.contract 
+    where
+        contract0_.id=? 
+    order by
+        variations1_.version asc
+14:14:03,991 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:04,000 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:04,001 DEBUG SQL:104 - 
+    select
+        subcontrac0_.parent as parent0_1_,
+        subcontrac0_.id as id0_1_,
+        subcontrac0_.id as id0_0_,
+        subcontrac0_.customerName as customer2_0_0_,
+        subcontrac0_."type" as type3_0_0_,
+        subcontrac0_.parent as parent0_0_ 
+    from
+        Contract subcontrac0_ 
+    where
+        subcontrac0_.parent=?
+14:14:04,001 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:04,001 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:04,021 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,022 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,022 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:04,022 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:04,023 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:04,032  INFO CustomRunner:139 - Test: testSaveImmutable
+14:14:04,033 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:04,033 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:04,034 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:04,042 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,042 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,043 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:04,053 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,061 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,062 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:04,062 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:04,072 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,073 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,073 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:04,073 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:04,074 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:04,083  INFO CustomRunner:139 - Test: testSaveOrUpdateImmutable
+14:14:04,084 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:04,084 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:04,085 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:04,092 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,093 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,094 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:04,104 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,105 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,105 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:04,106 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:04,118 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,118 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,118 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:04,119 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:04,129 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:04,129  INFO CustomRunner:139 - Test: testUnmodifiedImmutableParentEntityWithMerge
+14:14:04,131 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:04,131 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,132 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,132 DEBUG SQL:104 - 
+    select
+        contract0_.id as id0_1_,
+        contract0_.customerName as customer2_0_1_,
+        contract0_."type" as type3_0_1_,
+        contract0_.parent as parent0_1_,
+        variations1_.contract as contract0_3_,
+        variations1_.contract as contract1_3_,
+        variations1_.version as version1_3_,
+        variations1_.contract as contract1_0_,
+        variations1_.version as version1_0_,
+        variations1_.text as text1_0_ 
+    from
+        Contract contract0_ 
+    left outer join
+        ContractVariation variations1_ 
+            on contract0_.id=variations1_.contract 
+    where
+        contract0_.id=? 
+    order by
+        variations1_.version asc
+14:14:04,156 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,157 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,166 DEBUG SQL:104 - 
+    select
+        subcontrac0_.parent as parent0_1_,
+        subcontrac0_.id as id0_1_,
+        subcontrac0_.id as id0_0_,
+        subcontrac0_.customerName as customer2_0_0_,
+        subcontrac0_."type" as type3_0_0_,
+        subcontrac0_.parent as parent0_0_ 
+    from
+        Contract subcontrac0_ 
+    where
+        subcontrac0_.parent=?
+14:14:04,166 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:04,167 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:04,177 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,186 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,187 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:04,197 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:04,199 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,200 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,200 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:04,209 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:04,209 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:04,210  INFO CustomRunner:139 - Test: testUpdateAndDeleteManagedImmutable
+14:14:04,211 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:04,211 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,212 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,220 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:04,231 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,231 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,240 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:04,240 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:04,241 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,241 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,242 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:04,242 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:04,242 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:04,243  INFO CustomRunner:139 - Test: testUpdatedEntityViaImmutableEntityWithImmutableCollectionUsingMerge
+14:14:04,244 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:04,255 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,255 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (text, id) 
+    values
+        (?, ?)
+14:14:04,256 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,256 DEBUG SQL:104 - 
+    update
+        Info 
+    set
+        contractvariation=?,
+        version=? 
+    where
+        id=?
+14:14:04,266 DEBUG SQL:104 - 
+    select
+        contract0_.id as id0_1_,
+        contract0_.customerName as customer2_0_1_,
+        contract0_."type" as type3_0_1_,
+        contract0_.parent as parent0_1_,
+        variations1_.contract as contract0_3_,
+        variations1_.contract as contract1_3_,
+        variations1_.version as version1_3_,
+        variations1_.contract as contract1_0_,
+        variations1_.version as version1_0_,
+        variations1_.text as text1_0_ 
+    from
+        Contract contract0_ 
+    left outer join
+        ContractVariation variations1_ 
+            on contract0_.id=variations1_.contract 
+    where
+        contract0_.id=? 
+    order by
+        variations1_.version asc
+14:14:04,267 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.text as text2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:14:04,267 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,286 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,287 DEBUG SQL:104 - 
+    select
+        subcontrac0_.parent as parent0_1_,
+        subcontrac0_.id as id0_1_,
+        subcontrac0_.id as id0_0_,
+        subcontrac0_.customerName as customer2_0_0_,
+        subcontrac0_."type" as type3_0_0_,
+        subcontrac0_.parent as parent0_0_ 
+    from
+        Contract subcontrac0_ 
+    where
+        subcontrac0_.parent=?
+14:14:04,287 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:04,297 DEBUG SQL:104 - 
+    update
+        Info 
+    set
+        text=? 
+    where
+        id=?
+14:14:04,299 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:04,308 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,309 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,318 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:04,319 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:04,329 DEBUG SQL:104 - 
+    update
+        Info 
+    set
+        contractvariation=null,
+        version=null 
+    where
+        contractvariation=? 
+        and version=?
+14:14:04,330 DEBUG SQL:104 - 
+    delete 
+    from
+        Info 
+    where
+        id=?
+14:14:04,330 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,330 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,330 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:04,339 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:04,340 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:04,340  INFO CustomRunner:139 - Test: testUpdatedEntityViaImmutableEntityWithImmutableCollectionUsingSaveOrUpdate
+14:14:04,343 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:04,344 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,351 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (text, id) 
+    values
+        (?, ?)
+14:14:04,351 DEBUG SQL:104 - 
+    insert 
+    into
+        ContractVariation
+        (text, contract, version) 
+    values
+        (?, ?, ?)
+14:14:04,351 DEBUG SQL:104 - 
+    update
+        Info 
+    set
+        contractvariation=?,
+        version=? 
+    where
+        id=?
+14:14:04,352 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:04,362 DEBUG SQL:104 - 
+    select
+        contractva_.contract,
+        contractva_.version,
+        contractva_.text as text1_ 
+    from
+        ContractVariation contractva_ 
+    where
+        contractva_.contract=? 
+        and contractva_.version=?
+14:14:04,362 DEBUG SQL:104 - 
+    update
+        Info 
+    set
+        text=? 
+    where
+        id=?
+14:14:04,363 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.contract as contract1_5_,
+        variations2_.version as version1_5_,
+        variations2_.contract as contract1_0_,
+        variations2_.version as version1_0_,
+        variations2_.text as text1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.version asc
+14:14:04,373 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,374 DEBUG SQL:104 - 
+    select
+        infos0_.contractvariation as contract6_1_1_,
+        infos0_.version as version1_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contractvariation=? 
+        and infos0_.version=?
+14:14:04,374 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:04,386 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:04,387 DEBUG SQL:104 - 
+    update
+        Info 
+    set
+        contractvariation=null,
+        version=null 
+    where
+        contractvariation=? 
+        and version=?
+14:14:04,388 DEBUG SQL:104 - 
+    delete 
+    from
+        Info 
+    where
+        id=?
+14:14:04,388 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,398 DEBUG SQL:104 - 
+    delete 
+    from
+        ContractVariation 
+    where
+        contract=? 
+        and version=?
+14:14:04,398 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:04,399 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:04,399 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        ContractVariation this_
+14:14:04,400  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:04,400 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:04,400 DEBUG SQL:104 - 
+    alter table Contract 
+        drop constraint FKE20F75324380197E
+14:14:04,401 DEBUG SQL:104 - 
+    alter table ContractVariation 
+        drop constraint FKB86C05015D0A21E6
+14:14:04,401 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE20616E73
+14:14:04,401 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE976C1D4A
+14:14:04,401 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE5D0A21E6
+14:14:04,401 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE226921B8
+14:14:04,420 DEBUG SQL:104 - 
+    alter table Party 
+        drop constraint FK4952AC65D0A21E6
+14:14:04,421 DEBUG SQL:104 - 
+    alter table plan_contract 
+        drop constraint FKDE1535685D0A21E6
+14:14:04,421 DEBUG SQL:104 - 
+    alter table plan_contract 
+        drop constraint FKDE15356820616E73
+14:14:04,421 DEBUG SQL:104 - 
+    drop table Contract if exists
+14:14:04,421 DEBUG SQL:104 - 
+    drop table ContractVariation if exists
+14:14:04,422 DEBUG SQL:104 - 
+    drop table Info if exists
+14:14:04,422 DEBUG SQL:104 - 
+    drop table Party if exists
+14:14:04,422 DEBUG SQL:104 - 
+    drop table plan_contract if exists
+14:14:04,422 DEBUG SQL:104 - 
+    drop table tbl_plan if exists
+14:14:04,422  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:04,423  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

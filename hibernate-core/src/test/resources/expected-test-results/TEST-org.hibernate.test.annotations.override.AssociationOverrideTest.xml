@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.override.AssociationOverrideTest" tests="2" time="0.209" timestamp="2013-02-28T20:10:41">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.override.AssociationOverrideTest" name="testDottedNotation" time="0.026" />
+  <testcase classname="org.hibernate.test.annotations.override.AssociationOverrideTest" name="testOverriding" time="0.052" />
+  <system-out><![CDATA[14:10:41,359  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.override.AssociationOverrideTest
+14:10:41,377  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:41,377  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:41,377  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:41,378  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:41,378  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:41,379  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:41,379  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:41,380  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:41,380  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:41,380  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:41,432  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:41,433 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:41,433 DEBUG SQL:104 - 
+    alter table Employee 
+        drop constraint FK4AFD4ACECAD9ADA4
+14:10:41,433 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Employee drop constraint FK4AFD4ACECAD9ADA4
+14:10:41,433 ERROR SchemaExport:426 - Table "EMPLOYEE" not found; SQL statement:
+
+    alter table Employee 
+        drop constraint FK4AFD4ACECAD9ADA4 [42102-145]
+14:10:41,433 DEBUG SQL:104 - 
+    alter table Trip 
+        drop constraint FK27E8452B52BABF
+14:10:41,434 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Trip drop constraint FK27E8452B52BABF
+14:10:41,434 ERROR SchemaExport:426 - Table "TRIP" not found; SQL statement:
+
+    alter table Trip 
+        drop constraint FK27E8452B52BABF [42102-145]
+14:10:41,434 DEBUG SQL:104 - 
+    alter table Trip 
+        drop constraint FK27E84525819E0E
+14:10:41,434 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Trip drop constraint FK27E84525819E0E
+14:10:41,434 ERROR SchemaExport:426 - Table "TRIP" not found; SQL statement:
+
+    alter table Trip 
+        drop constraint FK27E84525819E0E [42102-145]
+14:10:41,434 DEBUG SQL:104 - 
+    alter table tbl_empl_phone 
+        drop constraint FK14B11934E4B2F0F3
+14:10:41,434 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table tbl_empl_phone drop constraint FK14B11934E4B2F0F3
+14:10:41,434 ERROR SchemaExport:426 - Table "TBL_EMPL_PHONE" not found; SQL statement:
+
+    alter table tbl_empl_phone 
+        drop constraint FK14B11934E4B2F0F3 [42102-145]
+14:10:41,435 DEBUG SQL:104 - 
+    alter table tbl_empl_phone 
+        drop constraint FK14B11934945CBC05
+14:10:41,435 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table tbl_empl_phone drop constraint FK14B11934945CBC05
+14:10:41,435 ERROR SchemaExport:426 - Table "TBL_EMPL_PHONE" not found; SQL statement:
+
+    alter table tbl_empl_phone 
+        drop constraint FK14B11934945CBC05 [42102-145]
+14:10:41,435 DEBUG SQL:104 - 
+    alter table tbl_empl_sites 
+        drop constraint FK14DBE5D2F2A7E443
+14:10:41,435 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table tbl_empl_sites drop constraint FK14DBE5D2F2A7E443
+14:10:41,435 ERROR SchemaExport:426 - Table "TBL_EMPL_SITES" not found; SQL statement:
+
+    alter table tbl_empl_sites 
+        drop constraint FK14DBE5D2F2A7E443 [42102-145]
+14:10:41,435 DEBUG SQL:104 - 
+    alter table tbl_empl_sites 
+        drop constraint FK14DBE5D231CF083C
+14:10:41,436 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table tbl_empl_sites drop constraint FK14DBE5D231CF083C
+14:10:41,436 ERROR SchemaExport:426 - Table "TBL_EMPL_SITES" not found; SQL statement:
+
+    alter table tbl_empl_sites 
+        drop constraint FK14DBE5D231CF083C [42102-145]
+14:10:41,436 DEBUG SQL:104 - 
+    drop table Addr if exists
+14:10:41,436 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:10:41,436 DEBUG SQL:104 - 
+    drop table Location if exists
+14:10:41,436 DEBUG SQL:104 - 
+    drop table PhoneNumber if exists
+14:10:41,436 DEBUG SQL:104 - 
+    drop table SocialSite if exists
+14:10:41,437 DEBUG SQL:104 - 
+    drop table Trip if exists
+14:10:41,437 DEBUG SQL:104 - 
+    drop table tbl_empl_phone if exists
+14:10:41,437 DEBUG SQL:104 - 
+    drop table tbl_empl_sites if exists
+14:10:41,437 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:41,437 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:41,437 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:41,437 DEBUG SQL:104 - 
+    create table Addr (
+        id integer not null,
+        city varchar(255),
+        country varchar(255),
+        state varchar(255),
+        street varchar(255),
+        zipcode varchar(255),
+        primary key (id)
+    )
+14:10:41,445 DEBUG SQL:104 - 
+    create table Employee (
+        id integer not null,
+        fld_address_fk integer,
+        primary key (id)
+    )
+14:10:41,446 DEBUG SQL:104 - 
+    create table Location (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:10:41,446 DEBUG SQL:104 - 
+    create table PhoneNumber (
+        id integer not null,
+        fld_number integer,
+        primary key (id)
+    )
+14:10:41,446 DEBUG SQL:104 - 
+    create table SocialSite (
+        id integer not null,
+        website varchar(255),
+        primary key (id)
+    )
+14:10:41,446 DEBUG SQL:104 - 
+    create table Trip (
+        id integer not null,
+        from2 varchar(255) not null,
+        to2 varchar(255) not null,
+        primary key (id)
+    )
+14:10:41,460 DEBUG SQL:104 - 
+    create table tbl_empl_phone (
+        employees_id integer not null,
+        phoneNumbers_id integer not null
+    )
+14:10:41,460 DEBUG SQL:104 - 
+    create table tbl_empl_sites (
+        employee_id integer not null,
+        to_website_fk integer not null
+    )
+14:10:41,460 DEBUG SQL:104 - 
+    alter table Employee 
+        add constraint FK4AFD4ACECAD9ADA4 
+        foreign key (fld_address_fk) 
+        references Addr
+14:10:41,461 DEBUG SQL:104 - 
+    alter table Trip 
+        add constraint FK27E8452B52BABF 
+        foreign key (from2) 
+        references Location
+14:10:41,462 DEBUG SQL:104 - 
+    alter table Trip 
+        add constraint FK27E84525819E0E 
+        foreign key (to2) 
+        references Location
+14:10:41,462 DEBUG SQL:104 - 
+    alter table tbl_empl_phone 
+        add constraint FK14B11934E4B2F0F3 
+        foreign key (phoneNumbers_id) 
+        references PhoneNumber
+14:10:41,481 DEBUG SQL:104 - 
+    alter table tbl_empl_phone 
+        add constraint FK14B11934945CBC05 
+        foreign key (employees_id) 
+        references Employee
+14:10:41,482 DEBUG SQL:104 - 
+    alter table tbl_empl_sites 
+        add constraint FK14DBE5D2F2A7E443 
+        foreign key (to_website_fk) 
+        references SocialSite
+14:10:41,482 DEBUG SQL:104 - 
+    alter table tbl_empl_sites 
+        add constraint FK14DBE5D231CF083C 
+        foreign key (employee_id) 
+        references Employee
+14:10:41,483 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:41,483  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:41,484  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:41,484  INFO CustomRunner:139 - Test: testDottedNotation
+14:10:41,490 DEBUG SQL:104 - 
+    insert 
+    into
+        Addr
+        (city, country, state, street, zipcode, id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:41,491 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (fld_address_fk, id) 
+    values
+        (?, ?)
+14:10:41,492 DEBUG SQL:104 - 
+    insert 
+    into
+        PhoneNumber
+        (fld_number, id) 
+    values
+        (?, ?)
+14:10:41,492 DEBUG SQL:104 - 
+    insert 
+    into
+        SocialSite
+        (website, id) 
+    values
+        (?, ?)
+14:10:41,503 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_empl_phone
+        (employees_id, phoneNumbers_id) 
+    values
+        (?, ?)
+14:10:41,504 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_empl_sites
+        (employee_id, to_website_fk) 
+    values
+        (?, ?)
+14:10:41,505 DEBUG SQL:104 - 
+    select
+        employee0_.id as id1_1_,
+        employee0_.fld_address_fk as fld2_1_1_,
+        addr1_.id as id0_0_,
+        addr1_.city as city0_0_,
+        addr1_.country as country0_0_,
+        addr1_.state as state0_0_,
+        addr1_.street as street0_0_,
+        addr1_.zipcode as zipcode0_0_ 
+    from
+        Employee employee0_ 
+    left outer join
+        Addr addr1_ 
+            on employee0_.fld_address_fk=addr1_.id 
+    where
+        employee0_.id=?
+14:10:41,510  INFO CustomRunner:139 - Test: testOverriding
+14:10:41,511 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:41,512 DEBUG SQL:104 - 
+    insert 
+    into
+        Location
+        (name) 
+    values
+        (?)
+14:10:41,512 DEBUG SQL:104 - 
+    insert 
+    into
+        Location
+        (name) 
+    values
+        (?)
+14:10:41,513 DEBUG SQL:104 - 
+    insert 
+    into
+        Trip
+        (from2, to2, id) 
+    values
+        (?, ?, ?)
+14:10:41,562  WARN SqlExceptionHelper:143 - SQL Error: 90006, SQLState: 90006
+14:10:41,562 ERROR SqlExceptionHelper:144 - NULL not allowed for column "TO2"; SQL statement:
+insert into Trip (from2, to2, id) values (?, ?, ?) [90006-145]
+14:10:41,563  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:41,563  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:41,564 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:41,564 DEBUG SQL:104 - 
+    alter table Employee 
+        drop constraint FK4AFD4ACECAD9ADA4
+14:10:41,564 DEBUG SQL:104 - 
+    alter table Trip 
+        drop constraint FK27E8452B52BABF
+14:10:41,564 DEBUG SQL:104 - 
+    alter table Trip 
+        drop constraint FK27E84525819E0E
+14:10:41,565 DEBUG SQL:104 - 
+    alter table tbl_empl_phone 
+        drop constraint FK14B11934E4B2F0F3
+14:10:41,565 DEBUG SQL:104 - 
+    alter table tbl_empl_phone 
+        drop constraint FK14B11934945CBC05
+14:10:41,565 DEBUG SQL:104 - 
+    alter table tbl_empl_sites 
+        drop constraint FK14DBE5D2F2A7E443
+14:10:41,565 DEBUG SQL:104 - 
+    alter table tbl_empl_sites 
+        drop constraint FK14DBE5D231CF083C
+14:10:41,565 DEBUG SQL:104 - 
+    drop table Addr if exists
+14:10:41,566 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:10:41,566 DEBUG SQL:104 - 
+    drop table Location if exists
+14:10:41,566 DEBUG SQL:104 - 
+    drop table PhoneNumber if exists
+14:10:41,566 DEBUG SQL:104 - 
+    drop table SocialSite if exists
+14:10:41,566 DEBUG SQL:104 - 
+    drop table Trip if exists
+14:10:41,566 DEBUG SQL:104 - 
+    drop table tbl_empl_phone if exists
+14:10:41,567 DEBUG SQL:104 - 
+    drop table tbl_empl_sites if exists
+14:10:41,567 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:41,567  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:41,567  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.subselect.SubselectTest" tests="1" time="0.031" timestamp="2013-02-28T20:10:44">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.subselect.SubselectTest" name="testSubselectWithSynchronize" time="0.009" />
+  <system-out><![CDATA[14:10:44,472  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.subselect.SubselectTest
+14:10:44,479  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:44,479  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:44,479  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:44,479  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:44,479  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:44,480  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:44,481  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:44,481  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:44,482  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:44,482  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:44,490  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:44,491 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:44,491 DEBUG SQL:104 - 
+    drop table Bid if exists
+14:10:44,491 DEBUG SQL:104 - 
+    drop table Item if exists
+14:10:44,491 DEBUG SQL:104 - 
+    create table Bid (
+        id integer not null,
+        amount double not null,
+        itemId bigint not null,
+        primary key (id)
+    )
+14:10:44,491 DEBUG SQL:104 - 
+    create table Item (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:44,492  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:44,492  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:44,492  INFO CustomRunner:139 - Test: testSubselectWithSynchronize
+14:10:44,494 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.subselect.HighestBid b where b.name = :name
+14:10:44,495 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  \-[IDENT] Node: 'subselect'
+    |        |  \-[IDENT] Node: 'HighestBid'
+    |        \-[ALIAS] Node: 'b'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'b'
+          |  \-[IDENT] Node: 'name'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'name'
+
+14:10:44,495 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:44,495 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.subselect.HighestBid (b) -> highestbid0_
+14:10:44,495 DEBUG FromReferenceNode:74 - Resolved : b -> highestbid0_.name
+14:10:44,495 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:10:44,496 DEBUG FromReferenceNode:74 - Resolved : b.name -> highestbid0_.name
+14:10:44,496 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( select Item.name as name, max(Bid.amount) as amount from Item, Bid where Bid.itemId = Item.id group by Item.name ) highestbid0_ ) ( where ( = ( highestbid0_.name highestbid0_.name name ) ? ) ) )
+14:10:44,496 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:44,496 DEBUG JoinProcessor:175 - Using FROM fragment [( select Item.name as name, max(Bid.amount) as amount from Item, Bid where Bid.itemId = Item.id group by Item.name ) highestbid0_]
+14:10:44,496 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Item,Bid,( select Item.name as name, max(Bid.amount) as amount from Item, Bid where Bid.itemId = Item.id group by Item.name ))
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'highestbid0_.name as name2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=( select Item.name as name, max(Bid.amount) as amount from Item, Bid where Bid.itemId = Item.id group by Item.name ),tableAlias=highestbid0_,origin=null,columns={,className=org.hibernate.test.annotations.subselect.HighestBid}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'highestbid0_.amount as amount2_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[b], fromElementByTableAlias=[highestbid0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: '( select Item.name as name, max(Bid.amount) as amount from Item, Bid where Bid.itemId = Item.id group by Item.name ) highestbid0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=( select Item.name as name, max(Bid.amount) as amount from Item, Bid where Bid.itemId = Item.id group by Item.name ),tableAlias=highestbid0_,origin=null,columns={,className=org.hibernate.test.annotations.subselect.HighestBid}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'highestbid0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=b.name,tableAlias=highestbid0_,className=org.hibernate.test.annotations.subselect.HighestBid,classAlias=b}
+          |  +-[ALIAS_REF] IdentNode: 'highestbid0_.name' {alias=b, className=org.hibernate.test.annotations.subselect.HighestBid, tableAlias=highestbid0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:10:44,496 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:44,496 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.subselect.HighestBid b where b.name = :name
+14:10:44,497 DEBUG QueryTranslatorImpl:236 - SQL: select highestbid0_.name as name2_, highestbid0_.amount as amount2_ from ( select Item.name as name, max(Bid.amount) as amount from Item, Bid where Bid.itemId = Item.id group by Item.name ) highestbid0_ where highestbid0_.name=?
+14:10:44,497 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:44,497 DEBUG SQL:104 - 
+    insert 
+    into
+        Item
+        (name, id) 
+    values
+        (?, ?)
+14:10:44,498 DEBUG SQL:104 - 
+    insert 
+    into
+        Bid
+        (amount, itemId, id) 
+    values
+        (?, ?, ?)
+14:10:44,498 DEBUG SQL:104 - 
+    insert 
+    into
+        Bid
+        (amount, itemId, id) 
+    values
+        (?, ?, ?)
+14:10:44,499 DEBUG SQL:104 - 
+    select
+        highestbid0_.name as name2_,
+        highestbid0_.amount as amount2_ 
+    from
+        ( select
+            Item.name as name,
+            max(Bid.amount) as amount 
+        from
+            Item,
+            Bid 
+        where
+            Bid.itemId = Item.id 
+        group by
+            Item.name ) highestbid0_ 
+    where
+        highestbid0_.name=?
+14:10:44,501  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:44,502 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:44,502 DEBUG SQL:104 - 
+    drop table Bid if exists
+14:10:44,502 DEBUG SQL:104 - 
+    drop table Item if exists
+14:10:44,502  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:44,502  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

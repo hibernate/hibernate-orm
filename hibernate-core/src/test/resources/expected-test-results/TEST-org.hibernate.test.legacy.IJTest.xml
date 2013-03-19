@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.IJTest" tests="1" time="0.124" timestamp="2013-02-28T20:16:27">
+  <properties />
+  <testcase classname="org.hibernate.test.legacy.IJTest" name="testFormulaDiscriminator" time="0.093" />
+  <system-out><![CDATA[14:16:27,987  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.IJTest
+14:16:27,988  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:27,990  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/IJ.hbm.xml
+14:16:27,997  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:16:27,997  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:16:27,997  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:16:27,998  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:16:27,998  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:16:27,999  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:27,999  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:16:28,000  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:16:28,000  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:16:28,004  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:28,005 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:28,005 DEBUG SQL:104 - 
+    drop table I if exists
+14:16:28,005 DEBUG SQL:104 - 
+    create table I (
+        id bigint not null,
+        name varchar(255) not null,
+        type_ char(255) not null,
+        amount float,
+        primary key (id)
+    )
+14:16:28,014 DEBUG SQL:104 - 
+    alter table I 
+        add constraint uc_I_1 unique (name)
+14:16:28,014  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:28,015  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:16:28,015  INFO CustomRunner:139 - Test: testFormulaDiscriminator
+14:16:28,016 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        I
+14:16:28,017 DEBUG SQL:104 - 
+    insert 
+    into
+        I
+        (name, type_, id) 
+    values
+        (?, ?, ?)
+14:16:28,018 DEBUG SQL:104 - 
+    insert 
+    into
+        I
+        (name, type_, amount, id) 
+    values
+        (?, ?, ?, ?)
+14:16:28,029 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_0_,
+        i0_.name as name0_0_,
+        i0_.type_ as type3_0_0_,
+        i0_.amount as amount0_0_,
+        case 
+            when i0_.type_ in ('a',
+            'b',
+            'c') then 0 
+            else 1 
+        end as clazz_0_ 
+    from
+        I i0_ 
+    where
+        i0_.id=?
+14:16:28,031 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_0_,
+        i0_.name as name0_0_,
+        i0_.type_ as type3_0_0_,
+        i0_.amount as amount0_0_,
+        case 
+            when i0_.type_ in ('a',
+            'b',
+            'c') then 0 
+            else 1 
+        end as clazz_0_ 
+    from
+        I i0_ 
+    where
+        i0_.id=?
+14:16:28,031 DEBUG SQL:104 - 
+    select
+        id 
+    from
+        I 
+    where
+        id =? for update
+            
+14:16:28,031 DEBUG SQL:104 - 
+    update
+        I 
+    set
+        name=?,
+        type_=?,
+        amount=? 
+    where
+        id=?
+14:16:28,032 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_0_,
+        i0_.name as name0_0_,
+        i0_.type_ as type3_0_0_,
+        i0_.amount as amount0_0_,
+        case 
+            when i0_.type_ in ('a',
+            'b',
+            'c') then 0 
+            else 1 
+        end as clazz_0_ 
+    from
+        I i0_ 
+    where
+        i0_.id=? for update
+            
+14:16:28,045 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_0_,
+        i0_.name as name0_0_,
+        i0_.type_ as type3_0_0_,
+        i0_.amount as amount0_0_,
+        case 
+            when i0_.type_ in ('a',
+            'b',
+            'c') then 0 
+            else 1 
+        end as clazz_0_ 
+    from
+        I i0_ 
+    where
+        i0_.id=? for update
+            
+14:16:28,046 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_,
+        i0_.name as name0_,
+        i0_.type_ as type3_0_,
+        i0_.amount as amount0_,
+        case 
+            when i0_.type_ in ('a',
+            'b',
+            'c') then 0 
+            else 1 
+        end as clazz_ 
+    from
+        I i0_
+14:16:28,059 DEBUG SQL:104 - 
+    select
+        j0_.id as id0_,
+        j0_.name as name0_,
+        j0_.type_ as type3_0_,
+        j0_.amount as amount0_ 
+    from
+        I j0_ 
+    where
+        case 
+            when j0_.type_ in (
+                'a', 'b', 'c'
+            ) then 0 
+            else 1 
+        end=1
+14:16:28,060 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_,
+        i0_.name as name0_,
+        i0_.type_ as type3_0_,
+        i0_.amount as amount0_,
+        case 
+            when i0_.type_ in ('a',
+            'b',
+            'c') then 0 
+            else 1 
+        end as clazz_ 
+    from
+        I i0_ 
+    where
+        (
+            case 
+                when i0_.type_ in (
+                    'a', 'b', 'c'
+                ) then 0 
+                else 1 
+            end=0 
+        )
+14:16:28,062 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_,
+        i0_.name as name0_,
+        i0_.type_ as type3_0_,
+        i0_.amount as amount0_,
+        case 
+            when i0_.type_ in ('a',
+            'b',
+            'c') then 0 
+            else 1 
+        end as clazz_ 
+    from
+        I i0_ 
+    where
+        (
+            case 
+                when i0_.type_ in (
+                    'a', 'b', 'c'
+                ) then 0 
+                else 1 
+            end=1 
+        )
+14:16:28,085 DEBUG SQL:104 - 
+    select
+        j0_.id as id0_0_,
+        j0_.name as name0_0_,
+        j0_.type_ as type3_0_0_,
+        j0_.amount as amount0_0_ 
+    from
+        I j0_ 
+    where
+        j0_.id=? 
+        and case 
+            when j0_.type_ in (
+                'a', 'b', 'c'
+            ) then 0 
+            else 1 
+        end=1
+14:16:28,097 DEBUG SQL:104 - 
+    select
+        i0_.id as id0_0_,
+        i0_.name as name0_0_,
+        i0_.type_ as type3_0_0_,
+        i0_.amount as amount0_0_,
+        case 
+            when i0_.type_ in ('a',
+            'b',
+            'c') then 0 
+            else 1 
+        end as clazz_0_ 
+    from
+        I i0_ 
+    where
+        i0_.id=?
+14:16:28,097 DEBUG SQL:104 - 
+    delete 
+    from
+        I 
+    where
+        id=?
+14:16:28,098 DEBUG SQL:104 - 
+    delete 
+    from
+        I 
+    where
+        id=?
+14:16:28,108  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:28,109 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:28,109 DEBUG SQL:104 - 
+    drop table I if exists
+14:16:28,110  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:28,110  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

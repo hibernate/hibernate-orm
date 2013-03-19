@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.ondemandload.LazyLoadingTest" tests="3" time="0.158" timestamp="2013-02-28T20:17:36">
+  <properties />
+  <testcase classname="org.hibernate.test.ondemandload.LazyLoadingTest" name="testLazyCollectionLoadingWithClearedSession" time="0.048" />
+  <testcase classname="org.hibernate.test.ondemandload.LazyLoadingTest" name="testLazyCollectionLoadingWithClosedSession" time="0.042" />
+  <testcase classname="org.hibernate.test.ondemandload.LazyLoadingTest" name="testLazyEntityLoadingWithClosedSession" time="0.022" />
+  <system-out><![CDATA[14:17:36,053  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.ondemandload.LazyLoadingTest
+14:17:36,064  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:36,064  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:36,064  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:36,064  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:36,065  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:36,066  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:36,066  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:36,067  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:36,067  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:36,067  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:36,078  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:36,079 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:36,079 DEBUG SQL:104 - 
+    alter table Inventory 
+        drop constraint FKFF02393C281A0FEA
+14:17:36,079 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Inventory drop constraint FKFF02393C281A0FEA
+14:17:36,079 ERROR SchemaExport:426 - Table "INVENTORY" not found; SQL statement:
+
+    alter table Inventory 
+        drop constraint FKFF02393C281A0FEA [42102-145]
+14:17:36,079 DEBUG SQL:104 - 
+    alter table Inventory 
+        drop constraint FKFF02393C98652012
+14:17:36,079 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Inventory drop constraint FKFF02393C98652012
+14:17:36,080 ERROR SchemaExport:426 - Table "INVENTORY" not found; SQL statement:
+
+    alter table Inventory 
+        drop constraint FKFF02393C98652012 [42102-145]
+14:17:36,080 DEBUG SQL:104 - 
+    drop table Inventory if exists
+14:17:36,080 DEBUG SQL:104 - 
+    drop table Product if exists
+14:17:36,080 DEBUG SQL:104 - 
+    drop table Store if exists
+14:17:36,080 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:17:36,080 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:17:36,080 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:17:36,081 DEBUG SQL:104 - 
+    create table Inventory (
+        id integer not null,
+        quantity bigint,
+        storePrice decimal(19,2),
+        prod_id varchar(255),
+        store_id integer,
+        primary key (id)
+    )
+14:17:36,081 DEBUG SQL:104 - 
+    create table Product (
+        id varchar(255) not null,
+        description varchar(255),
+        msrp decimal(19,2),
+        name varchar(255),
+        version integer not null,
+        primary key (id)
+    )
+14:17:36,081 DEBUG SQL:104 - 
+    create table Store (
+        ID integer not null,
+        NAME varchar(255),
+        version integer not null,
+        primary key (ID)
+    )
+14:17:36,082 DEBUG SQL:104 - 
+    alter table Inventory 
+        add constraint FKFF02393C281A0FEA 
+        foreign key (prod_id) 
+        references Product
+14:17:36,082 DEBUG SQL:104 - 
+    alter table Inventory 
+        add constraint FKFF02393C98652012 
+        foreign key (store_id) 
+        references Store
+14:17:36,082 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:17:36,083  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:36,083  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:36,083  INFO CustomRunner:139 - Test: testLazyCollectionLoadingWithClearedSession
+14:17:36,084 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:17:36,086 DEBUG SQL:104 - 
+    insert 
+    into
+        Store
+        (NAME, version, ID) 
+    values
+        (?, ?, ?)
+14:17:36,086 DEBUG SQL:104 - 
+    insert 
+    into
+        Product
+        (description, msrp, name, version, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:36,087 DEBUG SQL:104 - 
+    insert 
+    into
+        Inventory
+        (prod_id, quantity, store_id, storePrice, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:36,088 DEBUG SQL:104 - 
+    select
+        store0_.ID as ID2_0_,
+        store0_.NAME as NAME2_0_,
+        store0_.version as version2_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.ID=?
+14:17:36,089 DEBUG SQL:104 - 
+    select
+        inventorie0_.store_id as store5_2_2_,
+        inventorie0_.id as id0_2_,
+        inventorie0_.id as id0_1_,
+        inventorie0_.prod_id as prod4_0_1_,
+        inventorie0_.quantity as quantity0_1_,
+        inventorie0_.store_id as store5_0_1_,
+        inventorie0_.storePrice as storePrice0_1_,
+        product1_.id as id1_0_,
+        product1_.description as descript2_1_0_,
+        product1_.msrp as msrp1_0_,
+        product1_.name as name1_0_,
+        product1_.version as version1_0_ 
+    from
+        Inventory inventorie0_ 
+    left outer join
+        Product product1_ 
+            on inventorie0_.prod_id=product1_.id 
+    where
+        inventorie0_.store_id=?
+14:17:36,090 DEBUG SQL:104 - 
+    select
+        store0_.ID as ID2_0_,
+        store0_.NAME as NAME2_0_,
+        store0_.version as version2_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.ID=?
+14:17:36,091 DEBUG SQL:104 - 
+    select
+        store0_.ID as ID2_0_,
+        store0_.NAME as NAME2_0_,
+        store0_.version as version2_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.ID=?
+14:17:36,098 DEBUG SQL:104 - 
+    select
+        inventorie0_.store_id as store5_2_2_,
+        inventorie0_.id as id0_2_,
+        inventorie0_.id as id0_1_,
+        inventorie0_.prod_id as prod4_0_1_,
+        inventorie0_.quantity as quantity0_1_,
+        inventorie0_.store_id as store5_0_1_,
+        inventorie0_.storePrice as storePrice0_1_,
+        product1_.id as id1_0_,
+        product1_.description as descript2_1_0_,
+        product1_.msrp as msrp1_0_,
+        product1_.name as name1_0_,
+        product1_.version as version1_0_ 
+    from
+        Inventory inventorie0_ 
+    left outer join
+        Product product1_ 
+            on inventorie0_.prod_id=product1_.id 
+    where
+        inventorie0_.store_id=?
+14:17:36,099 DEBUG SQL:104 - 
+    select
+        store0_.ID as ID2_0_,
+        store0_.NAME as NAME2_0_,
+        store0_.version as version2_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.ID=?
+14:17:36,099 DEBUG SQL:104 - 
+    select
+        store0_.ID as ID2_0_,
+        store0_.NAME as NAME2_0_,
+        store0_.version as version2_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.ID=?
+14:17:36,122 DEBUG SQL:104 - 
+    select
+        inventorie0_.store_id as store5_2_2_,
+        inventorie0_.id as id0_2_,
+        inventorie0_.id as id0_1_,
+        inventorie0_.prod_id as prod4_0_1_,
+        inventorie0_.quantity as quantity0_1_,
+        inventorie0_.store_id as store5_0_1_,
+        inventorie0_.storePrice as storePrice0_1_,
+        product1_.id as id1_0_,
+        product1_.description as descript2_1_0_,
+        product1_.msrp as msrp1_0_,
+        product1_.name as name1_0_,
+        product1_.version as version1_0_ 
+    from
+        Inventory inventorie0_ 
+    left outer join
+        Product product1_ 
+            on inventorie0_.prod_id=product1_.id 
+    where
+        inventorie0_.store_id=?
+14:17:36,123 DEBUG SQL:104 - 
+    delete 
+    from
+        Inventory 
+    where
+        id=?
+14:17:36,123 DEBUG SQL:104 - 
+    delete 
+    from
+        Store 
+    where
+        ID=? 
+        and version=?
+14:17:36,131 DEBUG SQL:104 - 
+    delete 
+    from
+        Product 
+    where
+        id=? 
+        and version=?
+14:17:36,132  INFO CustomRunner:139 - Test: testLazyCollectionLoadingWithClosedSession
+14:17:36,134 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:17:36,135 DEBUG SQL:104 - 
+    insert 
+    into
+        Store
+        (NAME, version, ID) 
+    values
+        (?, ?, ?)
+14:17:36,135 DEBUG SQL:104 - 
+    insert 
+    into
+        Product
+        (description, msrp, name, version, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:36,135 DEBUG SQL:104 - 
+    insert 
+    into
+        Inventory
+        (prod_id, quantity, store_id, storePrice, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:36,142 DEBUG SQL:104 - 
+    select
+        store0_.ID as ID2_0_,
+        store0_.NAME as NAME2_0_,
+        store0_.version as version2_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.ID=?
+14:17:36,144 DEBUG SQL:104 - 
+    select
+        inventorie0_.store_id as store5_2_2_,
+        inventorie0_.id as id0_2_,
+        inventorie0_.id as id0_1_,
+        inventorie0_.prod_id as prod4_0_1_,
+        inventorie0_.quantity as quantity0_1_,
+        inventorie0_.store_id as store5_0_1_,
+        inventorie0_.storePrice as storePrice0_1_,
+        product1_.id as id1_0_,
+        product1_.description as descript2_1_0_,
+        product1_.msrp as msrp1_0_,
+        product1_.name as name1_0_,
+        product1_.version as version1_0_ 
+    from
+        Inventory inventorie0_ 
+    left outer join
+        Product product1_ 
+            on inventorie0_.prod_id=product1_.id 
+    where
+        inventorie0_.store_id=?
+14:17:36,153 DEBUG SQL:104 - 
+    select
+        store0_.ID as ID2_0_,
+        store0_.NAME as NAME2_0_,
+        store0_.version as version2_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.ID=?
+14:17:36,154 DEBUG SQL:104 - 
+    select
+        store0_.ID as ID2_0_,
+        store0_.NAME as NAME2_0_,
+        store0_.version as version2_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.ID=?
+14:17:36,154 DEBUG SQL:104 - 
+    select
+        inventorie0_.store_id as store5_2_2_,
+        inventorie0_.id as id0_2_,
+        inventorie0_.id as id0_1_,
+        inventorie0_.prod_id as prod4_0_1_,
+        inventorie0_.quantity as quantity0_1_,
+        inventorie0_.store_id as store5_0_1_,
+        inventorie0_.storePrice as storePrice0_1_,
+        product1_.id as id1_0_,
+        product1_.description as descript2_1_0_,
+        product1_.msrp as msrp1_0_,
+        product1_.name as name1_0_,
+        product1_.version as version1_0_ 
+    from
+        Inventory inventorie0_ 
+    left outer join
+        Product product1_ 
+            on inventorie0_.prod_id=product1_.id 
+    where
+        inventorie0_.store_id=?
+14:17:36,165 DEBUG SQL:104 - 
+    delete 
+    from
+        Inventory 
+    where
+        id=?
+14:17:36,165 DEBUG SQL:104 - 
+    delete 
+    from
+        Store 
+    where
+        ID=? 
+        and version=?
+14:17:36,165 DEBUG SQL:104 - 
+    delete 
+    from
+        Product 
+    where
+        id=? 
+        and version=?
+14:17:36,175  INFO CustomRunner:139 - Test: testLazyEntityLoadingWithClosedSession
+14:17:36,176 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:17:36,177 DEBUG SQL:104 - 
+    insert 
+    into
+        Store
+        (NAME, version, ID) 
+    values
+        (?, ?, ?)
+14:17:36,177 DEBUG SQL:104 - 
+    insert 
+    into
+        Product
+        (description, msrp, name, version, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:36,177 DEBUG SQL:104 - 
+    insert 
+    into
+        Inventory
+        (prod_id, quantity, store_id, storePrice, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:36,186 DEBUG SQL:104 - 
+    select
+        store0_.ID as ID2_0_,
+        store0_.NAME as NAME2_0_,
+        store0_.version as version2_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.ID=?
+14:17:36,187 DEBUG SQL:104 - 
+    select
+        store0_.ID as ID2_0_,
+        store0_.NAME as NAME2_0_,
+        store0_.version as version2_0_ 
+    from
+        Store store0_ 
+    where
+        store0_.ID=?
+14:17:36,187 DEBUG SQL:104 - 
+    select
+        inventorie0_.store_id as store5_2_2_,
+        inventorie0_.id as id0_2_,
+        inventorie0_.id as id0_1_,
+        inventorie0_.prod_id as prod4_0_1_,
+        inventorie0_.quantity as quantity0_1_,
+        inventorie0_.store_id as store5_0_1_,
+        inventorie0_.storePrice as storePrice0_1_,
+        product1_.id as id1_0_,
+        product1_.description as descript2_1_0_,
+        product1_.msrp as msrp1_0_,
+        product1_.name as name1_0_,
+        product1_.version as version1_0_ 
+    from
+        Inventory inventorie0_ 
+    left outer join
+        Product product1_ 
+            on inventorie0_.prod_id=product1_.id 
+    where
+        inventorie0_.store_id=?
+14:17:36,196 DEBUG SQL:104 - 
+    delete 
+    from
+        Inventory 
+    where
+        id=?
+14:17:36,196 DEBUG SQL:104 - 
+    delete 
+    from
+        Store 
+    where
+        ID=? 
+        and version=?
+14:17:36,196 DEBUG SQL:104 - 
+    delete 
+    from
+        Product 
+    where
+        id=? 
+        and version=?
+14:17:36,197  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:36,207 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:36,207 DEBUG SQL:104 - 
+    alter table Inventory 
+        drop constraint FKFF02393C281A0FEA
+14:17:36,207 DEBUG SQL:104 - 
+    alter table Inventory 
+        drop constraint FKFF02393C98652012
+14:17:36,207 DEBUG SQL:104 - 
+    drop table Inventory if exists
+14:17:36,208 DEBUG SQL:104 - 
+    drop table Product if exists
+14:17:36,208 DEBUG SQL:104 - 
+    drop table Store if exists
+14:17:36,208 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:17:36,208  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:36,208  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

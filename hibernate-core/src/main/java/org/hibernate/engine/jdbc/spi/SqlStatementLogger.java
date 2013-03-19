@@ -38,6 +38,8 @@ public class SqlStatementLogger {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, "org.hibernate.SQL");
 
+    public static final String OUTPUT_PREFIX = "Hibernate: ";
+
 	private boolean logToStdout;
 	private boolean format;
 
@@ -103,7 +105,7 @@ public class SqlStatementLogger {
 		}
 		LOG.debug( statement );
 		if ( logToStdout ) {
-			System.out.println( "Hibernate: " + statement );
+			System.out.println( OUTPUT_PREFIX + statement );
 		}
 	}
 }

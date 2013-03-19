@@ -1,0 +1,957 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.collection.set.PersistentSetNonLazyTest" tests="8" time="0.734" timestamp="2013-02-28T20:11:57">
+  <properties />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetNonLazyTest" name="testCollectionMerging" time="0.036" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetNonLazyTest" name="testCollectiondirtyChecking" time="0.04" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetNonLazyTest" name="testCompositeElementCollectionDirtyChecking" time="0.119" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetNonLazyTest" name="testCompositeElementMerging" time="0.108" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetNonLazyTest" name="testCompositeElementWriteMethodDirtying" time="0.004" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetNonLazyTest" name="testLoadChildCheckParentContainsChildCache" time="0.118" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetNonLazyTest" name="testLoadChildCheckParentContainsChildNoCache" time="0.16" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetNonLazyTest" name="testWriteMethodDirtying" time="0.004" />
+  <system-out><![CDATA[14:11:57,656  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.collection.set.PersistentSetNonLazyTest
+14:11:57,659  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/collection/set/MappingsNonLazy.hbm.xml
+14:11:57,696  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:57,696  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:57,697  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:57,697  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:57,697  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:57,698  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:57,699  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:57,700  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:57,700  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:57,700  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:57,738  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:57,739 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:57,739 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        drop constraint FKCD54B1AF7EF8054
+14:11:57,739 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CONTENTS drop constraint FKCD54B1AF7EF8054
+14:11:57,740 ERROR SchemaExport:426 - Table "CONTENTS" not found; SQL statement:
+
+    alter table CONTENTS 
+        drop constraint FKCD54B1AF7EF8054 [42102-145]
+14:11:57,740 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC5A7FE15A
+14:11:57,740 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Child drop constraint FK3E104FC5A7FE15A
+14:11:57,740 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table Child 
+        drop constraint FK3E104FC5A7FE15A [42102-145]
+14:11:57,740 DEBUG SQL:104 - 
+    drop table CONTENTS if exists
+14:11:57,740 DEBUG SQL:104 - 
+    drop table Child if exists
+14:11:57,740 DEBUG SQL:104 - 
+    drop table Container if exists
+14:11:57,741 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:11:57,741 DEBUG SQL:104 - 
+    create table CONTENTS (
+        CONTAINER_ID bigint not null,
+        NAME varchar(255)
+    )
+14:11:57,741 DEBUG SQL:104 - 
+    create table Child (
+        NAME varchar(255) not null,
+        parent varchar(255),
+        description varchar(255),
+        primary key (NAME)
+    )
+14:11:57,741 DEBUG SQL:104 - 
+    create table Container (
+        id bigint not null,
+        NAME varchar(255),
+        primary key (id)
+    )
+14:11:57,742 DEBUG SQL:104 - 
+    create table Parent (
+        NAME varchar(255) not null,
+        primary key (NAME)
+    )
+14:11:57,742 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        add constraint FKCD54B1AF7EF8054 
+        foreign key (CONTAINER_ID) 
+        references Container
+14:11:57,743 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FC5A7FE15A 
+        foreign key (parent) 
+        references Parent
+14:11:57,744  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:57,744  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:57,745  INFO CustomRunner:139 - Test: testCollectionMerging
+14:11:57,746 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] lookup : key[org.hibernate.test.collection.set.Child#c1]
+14:11:57,747 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:57,748 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:11:57,748 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:57,748 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:57,749 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:57,749 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent] lookup : key[org.hibernate.test.collection.set.Parent#p1]
+14:11:57,749 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent] lookup : key[org.hibernate.test.collection.set.Parent#p1]
+14:11:57,749 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_1_,
+        children1_.PARENT as PARENT3_3_,
+        children1_.NAME as NAME1_3_,
+        children1_.NAME as NAME1_0_,
+        children1_.parent as parent1_0_,
+        children1_.description as descript3_1_0_ 
+    from
+        Parent parent0_ 
+    left outer join
+        Child children1_ 
+            on parent0_.NAME=children1_.PARENT 
+    where
+        parent0_.NAME=?
+14:11:57,750 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Child#c1
+14:11:57,750 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Child] : [org.hibernate.test.collection.set.Child#c1] -> [CacheEntry(org.hibernate.test.collection.set.Child)[p1,null]]
+14:11:57,750 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Parent#p1
+14:11:57,750 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Parent] : [org.hibernate.test.collection.set.Parent#p1] -> [CacheEntry(org.hibernate.test.collection.set.Parent)[p1]]
+14:11:57,751 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Parent.children#p1
+14:11:57,751 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Parent.children] : [org.hibernate.test.collection.set.Parent.children#p1] -> [CollectionCacheEntry[c1]]
+14:11:57,751 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent] lookup : key[org.hibernate.test.collection.set.Parent#p1]
+14:11:57,752 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent] hit: org.hibernate.test.collection.set.Parent#p1
+14:11:57,752 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent.children] lookup : key[org.hibernate.test.collection.set.Parent.children#p1]
+14:11:57,752 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent.children] hit: org.hibernate.test.collection.set.Parent.children#p1
+14:11:57,752 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] lookup : key[org.hibernate.test.collection.set.Child#c1]
+14:11:57,752 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] hit: org.hibernate.test.collection.set.Child#c1
+14:11:57,752 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:57,753 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:57,753 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Child]: org.hibernate.test.collection.set.Child#c1
+14:11:57,753 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:11:57,780 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent]: org.hibernate.test.collection.set.Parent#p1
+14:11:57,781 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:57,781 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Child]: org.hibernate.test.collection.set.Child#c1
+14:11:57,781 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent]: org.hibernate.test.collection.set.Parent#p1
+14:11:57,782  INFO CustomRunner:139 - Test: testCollectiondirtyChecking
+14:11:57,796 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] lookup : key[org.hibernate.test.collection.set.Child#c1]
+14:11:57,796 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:57,798 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:11:57,798 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:57,798 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:57,798 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:57,799 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent] lookup : key[org.hibernate.test.collection.set.Parent#p1]
+14:11:57,805 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:57,806 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Parent#p1
+14:11:57,806 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Parent] : [org.hibernate.test.collection.set.Parent#p1] -> [CacheEntry(org.hibernate.test.collection.set.Parent)[p1]]
+14:11:57,807 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent.children] lookup : key[org.hibernate.test.collection.set.Parent.children#p1]
+14:11:57,807 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:57,807 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Child#c1
+14:11:57,807 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Child] : [org.hibernate.test.collection.set.Child#c1] -> [CacheEntry(org.hibernate.test.collection.set.Child)[p1,null]]
+14:11:57,807 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Parent.children#p1
+14:11:57,808 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Parent.children] : [org.hibernate.test.collection.set.Parent.children#p1] -> [CollectionCacheEntry[c1]]
+14:11:57,809 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent] lookup : key[org.hibernate.test.collection.set.Parent#p1]
+14:11:57,821 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent] hit: org.hibernate.test.collection.set.Parent#p1
+14:11:57,821 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] lookup : key[org.hibernate.test.collection.set.Child#c1]
+14:11:57,821 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] hit: org.hibernate.test.collection.set.Child#c1
+14:11:57,822 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:57,822 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:57,822 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Child]: org.hibernate.test.collection.set.Child#c1
+14:11:57,823 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:11:57,823 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent]: org.hibernate.test.collection.set.Parent#p1
+14:11:57,823 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:57,823 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Child]: org.hibernate.test.collection.set.Child#c1
+14:11:57,823 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent]: org.hibernate.test.collection.set.Parent#p1
+14:11:57,824  INFO CustomRunner:139 - Test: testCompositeElementCollectionDirtyChecking
+14:11:57,825 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Container
+14:11:57,826 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (NAME, id) 
+    values
+        (?, ?)
+14:11:57,831 DEBUG SQL:104 - 
+    insert 
+    into
+        CONTENTS
+        (CONTAINER_ID, NAME) 
+    values
+        (?, ?)
+14:11:57,833 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:57,835 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:57,835 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Container] lookup : key[org.hibernate.test.collection.set.Container#1]
+14:11:57,835 DEBUG SQL:104 - 
+    select
+        container0_.id as id2_0_,
+        container0_.NAME as NAME2_0_ 
+    from
+        Container container0_ 
+    where
+        container0_.id=?
+14:11:57,836 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Container#1
+14:11:57,836 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Container] : [org.hibernate.test.collection.set.Container#1] -> [CacheEntry(org.hibernate.test.collection.set.Container)[p1,1]]
+14:11:57,836 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Container.contents] lookup : key[org.hibernate.test.collection.set.Container.contents#1]
+14:11:57,836 DEBUG SQL:104 - 
+    select
+        contents0_.CONTAINER_ID as CONTAINER1_2_0_,
+        contents0_.NAME as NAME0_0_ 
+    from
+        CONTENTS contents0_ 
+    where
+        contents0_.CONTAINER_ID=?
+14:11:57,836 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Container.contents#1
+14:11:57,837 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Container.contents] : [org.hibernate.test.collection.set.Container.contents#1] -> [CollectionCacheEntry[[Ljava.lang.Object;@6a30e44b]]
+14:11:57,837 DEBUG SQL:104 - 
+    delete 
+    from
+        CONTENTS 
+    where
+        CONTAINER_ID=? 
+        and NAME=?
+14:11:57,838 DEBUG SQL:104 - 
+    insert 
+    into
+        CONTENTS
+        (CONTAINER_ID, NAME) 
+    values
+        (?, ?)
+14:11:57,863 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:57,864 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:57,864  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:11:57,867  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/collection/set/MappingsNonLazy.hbm.xml
+14:11:57,876  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:57,876  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:57,876  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:57,877  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:57,877  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:57,878  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:57,878  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:57,879  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:57,879  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:57,880  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:57,934  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:57,935 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:57,935 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        drop constraint FKCD54B1AF7EF8054
+14:11:57,935 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC5A7FE15A
+14:11:57,935 DEBUG SQL:104 - 
+    drop table CONTENTS if exists
+14:11:57,936 DEBUG SQL:104 - 
+    drop table Child if exists
+14:11:57,936 DEBUG SQL:104 - 
+    drop table Container if exists
+14:11:57,936 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:11:57,936 DEBUG SQL:104 - 
+    create table CONTENTS (
+        CONTAINER_ID bigint not null,
+        NAME varchar(255)
+    )
+14:11:57,937 DEBUG SQL:104 - 
+    create table Child (
+        NAME varchar(255) not null,
+        parent varchar(255),
+        description varchar(255),
+        primary key (NAME)
+    )
+14:11:57,937 DEBUG SQL:104 - 
+    create table Container (
+        id bigint not null,
+        NAME varchar(255),
+        primary key (id)
+    )
+14:11:57,937 DEBUG SQL:104 - 
+    create table Parent (
+        NAME varchar(255) not null,
+        primary key (NAME)
+    )
+14:11:57,941 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        add constraint FKCD54B1AF7EF8054 
+        foreign key (CONTAINER_ID) 
+        references Container
+14:11:57,942 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FC5A7FE15A 
+        foreign key (parent) 
+        references Parent
+14:11:57,942  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:57,943  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:57,943  INFO CustomRunner:139 - Test: testCompositeElementMerging
+14:11:57,944 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Container
+14:11:57,946 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (NAME, id) 
+    values
+        (?, ?)
+14:11:57,946 DEBUG SQL:104 - 
+    insert 
+    into
+        CONTENTS
+        (CONTAINER_ID, NAME) 
+    values
+        (?, ?)
+14:11:57,946 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:57,947 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:57,947 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Container] lookup : key[org.hibernate.test.collection.set.Container#1]
+14:11:57,947 DEBUG SQL:104 - 
+    select
+        container0_.id as id2_0_,
+        container0_.NAME as NAME2_0_ 
+    from
+        Container container0_ 
+    where
+        container0_.id=?
+14:11:57,947 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Container#1
+14:11:57,947 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Container] : [org.hibernate.test.collection.set.Container#1] -> [CacheEntry(org.hibernate.test.collection.set.Container)[p1,1]]
+14:11:57,948 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Container.contents] lookup : key[org.hibernate.test.collection.set.Container.contents#1]
+14:11:57,948 DEBUG SQL:104 - 
+    select
+        contents0_.CONTAINER_ID as CONTAINER1_2_0_,
+        contents0_.NAME as NAME0_0_ 
+    from
+        CONTENTS contents0_ 
+    where
+        contents0_.CONTAINER_ID=?
+14:11:57,948 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Container.contents#1
+14:11:57,948 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Container.contents] : [org.hibernate.test.collection.set.Container.contents#1] -> [CollectionCacheEntry[[Ljava.lang.Object;@34ad7086]]
+14:11:57,949 DEBUG SQL:104 - 
+    update
+        Container 
+    set
+        NAME=? 
+    where
+        id=?
+14:11:57,967 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container]: org.hibernate.test.collection.set.Container#1
+14:11:57,968 DEBUG SQL:104 - 
+    delete 
+    from
+        CONTENTS 
+    where
+        CONTAINER_ID=? 
+        and NAME=?
+14:11:57,968 DEBUG SQL:104 - 
+    insert 
+    into
+        CONTENTS
+        (CONTAINER_ID, NAME) 
+    values
+        (?, ?)
+14:11:57,968 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:57,969 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container]: org.hibernate.test.collection.set.Container#1
+14:11:57,969 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:57,978  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:11:57,980  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/collection/set/MappingsNonLazy.hbm.xml
+14:11:57,988  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:57,988  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:57,989  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:57,989  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:57,989  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:57,990  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:57,991  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:57,991  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:57,991  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:58,010  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:58,022  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:58,023 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:58,023 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        drop constraint FKCD54B1AF7EF8054
+14:11:58,023 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC5A7FE15A
+14:11:58,023 DEBUG SQL:104 - 
+    drop table CONTENTS if exists
+14:11:58,024 DEBUG SQL:104 - 
+    drop table Child if exists
+14:11:58,024 DEBUG SQL:104 - 
+    drop table Container if exists
+14:11:58,024 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:11:58,024 DEBUG SQL:104 - 
+    create table CONTENTS (
+        CONTAINER_ID bigint not null,
+        NAME varchar(255)
+    )
+14:11:58,025 DEBUG SQL:104 - 
+    create table Child (
+        NAME varchar(255) not null,
+        parent varchar(255),
+        description varchar(255),
+        primary key (NAME)
+    )
+14:11:58,025 DEBUG SQL:104 - 
+    create table Container (
+        id bigint not null,
+        NAME varchar(255),
+        primary key (id)
+    )
+14:11:58,025 DEBUG SQL:104 - 
+    create table Parent (
+        NAME varchar(255) not null,
+        primary key (NAME)
+    )
+14:11:58,026 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        add constraint FKCD54B1AF7EF8054 
+        foreign key (CONTAINER_ID) 
+        references Container
+14:11:58,050 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FC5A7FE15A 
+        foreign key (parent) 
+        references Parent
+14:11:58,051  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:58,052  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:58,052  INFO CustomRunner:139 - Test: testCompositeElementWriteMethodDirtying
+14:11:58,053 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Container
+14:11:58,054 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (NAME, id) 
+    values
+        (?, ?)
+14:11:58,055 DEBUG SQL:104 - 
+    insert 
+    into
+        CONTENTS
+        (CONTAINER_ID, NAME) 
+    values
+        (?, ?)
+14:11:58,055 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:58,056 DEBUG SQL:104 - 
+    delete 
+    from
+        CONTENTS 
+    where
+        CONTAINER_ID=?
+14:11:58,056 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:58,056 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:58,056 DEBUG SQL:104 - 
+    delete 
+    from
+        Container 
+    where
+        id=?
+14:11:58,056 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container]: org.hibernate.test.collection.set.Container#1
+14:11:58,057 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:58,057 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:58,057 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container.contents]: org.hibernate.test.collection.set.Container.contents#1
+14:11:58,057 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Container]: org.hibernate.test.collection.set.Container#1
+14:11:58,057  INFO CustomRunner:139 - Test: testLoadChildCheckParentContainsChildCache
+14:11:58,058 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] lookup : key[org.hibernate.test.collection.set.Child#c2]
+14:11:58,059 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,059 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] lookup : key[org.hibernate.test.collection.set.Child#c1]
+14:11:58,060 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,060 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:11:58,078 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:58,080 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:58,081 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,081 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,082 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent] lookup : key[org.hibernate.test.collection.set.Parent#p1]
+14:11:58,082 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,083 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Parent#p1
+14:11:58,083 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Parent] : [org.hibernate.test.collection.set.Parent#p1] -> [CacheEntry(org.hibernate.test.collection.set.Parent)[p1]]
+14:11:58,115 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent.children] lookup : key[org.hibernate.test.collection.set.Parent.children#p1]
+14:11:58,116 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,116 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Child#c2
+14:11:58,116 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Child] : [org.hibernate.test.collection.set.Child#c2] -> [CacheEntry(org.hibernate.test.collection.set.Child)[p1,desc2]]
+14:11:58,116 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Child#c1
+14:11:58,117 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Child] : [org.hibernate.test.collection.set.Child#c1] -> [CacheEntry(org.hibernate.test.collection.set.Child)[p1,desc1]]
+14:11:58,117 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,117 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.collection.set.Parent.children] : [org.hibernate.test.collection.set.Parent.children#p1] -> [CollectionCacheEntry[c2,c1]]
+14:11:58,118 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] lookup : key[org.hibernate.test.collection.set.Child#c1]
+14:11:58,118 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] hit: org.hibernate.test.collection.set.Child#c1
+14:11:58,118 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent] lookup : key[org.hibernate.test.collection.set.Parent#p1]
+14:11:58,119 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent] hit: org.hibernate.test.collection.set.Parent#p1
+14:11:58,119 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent.children] lookup : key[org.hibernate.test.collection.set.Parent.children#p1]
+14:11:58,119 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.set.Parent.children] hit: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,119 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] lookup : key[org.hibernate.test.collection.set.Child#c2]
+14:11:58,119 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] hit: org.hibernate.test.collection.set.Child#c2
+14:11:58,120  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:11:58,122  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/collection/set/MappingsNonLazy.hbm.xml
+14:11:58,130  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:58,131  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:58,131  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:58,142  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:58,143  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:58,145  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:58,145  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:58,146  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:58,146  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:58,146  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:58,158  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:58,159 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:58,160 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        drop constraint FKCD54B1AF7EF8054
+14:11:58,160 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC5A7FE15A
+14:11:58,160 DEBUG SQL:104 - 
+    drop table CONTENTS if exists
+14:11:58,160 DEBUG SQL:104 - 
+    drop table Child if exists
+14:11:58,161 DEBUG SQL:104 - 
+    drop table Container if exists
+14:11:58,161 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:11:58,161 DEBUG SQL:104 - 
+    create table CONTENTS (
+        CONTAINER_ID bigint not null,
+        NAME varchar(255)
+    )
+14:11:58,162 DEBUG SQL:104 - 
+    create table Child (
+        NAME varchar(255) not null,
+        parent varchar(255),
+        description varchar(255),
+        primary key (NAME)
+    )
+14:11:58,162 DEBUG SQL:104 - 
+    create table Container (
+        id bigint not null,
+        NAME varchar(255),
+        primary key (id)
+    )
+14:11:58,162 DEBUG SQL:104 - 
+    create table Parent (
+        NAME varchar(255) not null,
+        primary key (NAME)
+    )
+14:11:58,172 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        add constraint FKCD54B1AF7EF8054 
+        foreign key (CONTAINER_ID) 
+        references Container
+14:11:58,174 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FC5A7FE15A 
+        foreign key (parent) 
+        references Parent
+14:11:58,175  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:58,175  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:58,176  INFO CustomRunner:139 - Test: testLoadChildCheckParentContainsChildNoCache
+14:11:58,178 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] lookup : key[org.hibernate.test.collection.set.Child#c1]
+14:11:58,178 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,179 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] lookup : key[org.hibernate.test.collection.set.Child#c2]
+14:11:58,179 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,180 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:11:58,181 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:58,181 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:58,182 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,182 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,182 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,195 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,198 DEBUG SQL:104 - 
+    select
+        child0_.NAME as NAME1_0_,
+        child0_.parent as parent1_0_,
+        child0_.description as descript3_1_0_ 
+    from
+        Child child0_ 
+    where
+        child0_.NAME=?
+14:11:58,198 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,210 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,213 DEBUG SQL:104 - 
+    select
+        this_.NAME as NAME1_0_,
+        this_.parent as parent1_0_,
+        this_.description as descript3_1_0_ 
+    from
+        Child this_ 
+    where
+        this_.NAME = ?
+14:11:58,214 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,215 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,242 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.collection.set.Child where name = 'c1'
+14:11:58,242 DEBUG ErrorCounter:63 - Keyword  'set' is being interpreted as an identifier due to: expecting IDENT, found 'set'
+14:11:58,244 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[DOT] Node: '.'
+    |           |  |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  |  \-[IDENT] Node: 'test'
+    |           |  |  \-[IDENT] Node: 'collection'
+    |           |  \-[WEIRD_IDENT] Node: 'set'
+    |           \-[IDENT] Node: 'Child'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''c1''
+
+14:11:58,276 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:58,277 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.collection.set.Child (<no alias>) -> child0_
+14:11:58,277 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:11:58,277 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:11:58,278 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> child0_.NAME
+14:11:58,278 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Child child0_ ) ( where ( = ( child0_.NAME {synthetic-alias} name ) 'c1' ) ) )
+14:11:58,278 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:58,278 DEBUG JoinProcessor:175 - Using FROM fragment [Child child0_]
+14:11:58,278 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Child)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'child0_.NAME as NAME1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.collection.set.Child}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'child0_.parent as parent1_, child0_.description as descript3_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[child0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Child child0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.collection.set.Child}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'child0_.NAME' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=child0_,className=org.hibernate.test.collection.set.Child,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''c1''
+
+14:11:58,301 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:58,302 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.collection.set.Child where name = 'c1'
+14:11:58,302 DEBUG QueryTranslatorImpl:236 - SQL: select child0_.NAME as NAME1_, child0_.parent as parent1_, child0_.description as descript3_1_ from Child child0_ where child0_.NAME='c1'
+14:11:58,302 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:58,302 DEBUG SQL:104 - 
+    select
+        child0_.NAME as NAME1_,
+        child0_.parent as parent1_,
+        child0_.description as descript3_1_ 
+    from
+        Child child0_ 
+    where
+        child0_.NAME='c1'
+14:11:58,303 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,303 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,305 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,305 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:58,305 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Child]: org.hibernate.test.collection.set.Child#c1
+14:11:58,305 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:58,306 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Child]: org.hibernate.test.collection.set.Child#c2
+14:11:58,306 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:11:58,335 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent]: org.hibernate.test.collection.set.Parent#p1
+14:11:58,335 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,335 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Child]: org.hibernate.test.collection.set.Child#c1
+14:11:58,335 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Child]: org.hibernate.test.collection.set.Child#c2
+14:11:58,335 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent]: org.hibernate.test.collection.set.Parent#p1
+14:11:58,336  INFO CustomRunner:139 - Test: testWriteMethodDirtying
+14:11:58,337 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.collection.set.Child] lookup : key[org.hibernate.test.collection.set.Child#c1]
+14:11:58,337 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,338 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:11:58,338 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:58,338 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,339 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,339 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:58,339 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Child]: org.hibernate.test.collection.set.Child#c1
+14:11:58,339 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,339 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:11:58,340 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent]: org.hibernate.test.collection.set.Parent#p1
+14:11:58,340 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,340 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,340 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Child]: org.hibernate.test.collection.set.Child#c1
+14:11:58,340 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent.children]: org.hibernate.test.collection.set.Parent.children#p1
+14:11:58,340 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.collection.set.Parent]: org.hibernate.test.collection.set.Parent#p1
+14:11:58,341  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:58,341 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:58,364 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        drop constraint FKCD54B1AF7EF8054
+14:11:58,365 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC5A7FE15A
+14:11:58,365 DEBUG SQL:104 - 
+    drop table CONTENTS if exists
+14:11:58,365 DEBUG SQL:104 - 
+    drop table Child if exists
+14:11:58,366 DEBUG SQL:104 - 
+    drop table Container if exists
+14:11:58,366 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:11:58,383  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:58,383  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

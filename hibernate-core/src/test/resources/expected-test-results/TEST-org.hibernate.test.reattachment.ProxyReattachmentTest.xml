@@ -1,0 +1,1537 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.reattachment.ProxyReattachmentTest" tests="6" time="0.554" timestamp="2013-02-28T20:19:15">
+  <properties />
+  <testcase classname="org.hibernate.test.reattachment.ProxyReattachmentTest" name="testIterateWithClearBottomOfLoop" time="0.135" />
+  <testcase classname="org.hibernate.test.reattachment.ProxyReattachmentTest" name="testIterateWithClearTopOfLoop" time="0.116" />
+  <testcase classname="org.hibernate.test.reattachment.ProxyReattachmentTest" name="testIterateWithEvictBottomOfLoop" time="0.121" />
+  <testcase classname="org.hibernate.test.reattachment.ProxyReattachmentTest" name="testIterateWithEvictTopOfLoop" time="0.123" />
+  <testcase classname="org.hibernate.test.reattachment.ProxyReattachmentTest" name="testUpdateAfterClear" time="0.01" />
+  <testcase classname="org.hibernate.test.reattachment.ProxyReattachmentTest" name="testUpdateAfterEvict" time="0.011" />
+  <system-out><![CDATA[14:19:15,443  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.reattachment.ProxyReattachmentTest
+14:19:15,444  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/reattachment/Mappings.hbm.xml
+14:19:15,450  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:15,451  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:15,451  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:15,451  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:15,451  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:15,452  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:15,453  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:15,453  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:15,454  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:15,454  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:15,459  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:15,459 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:15,460 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FCF706F0D6
+14:19:15,460 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Child drop constraint FK3E104FCF706F0D6
+14:19:15,460 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table Child 
+        drop constraint FK3E104FCF706F0D6 [42102-145]
+14:19:15,460 DEBUG SQL:104 - 
+    drop table Child if exists
+14:19:15,460 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:19:15,460 DEBUG SQL:104 - 
+    create table Child (
+        NAME varchar(255) not null,
+        parent varchar(255),
+        primary key (NAME)
+    )
+14:19:15,461 DEBUG SQL:104 - 
+    create table Parent (
+        NAME varchar(255) not null,
+        primary key (NAME)
+    )
+14:19:15,461 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FCF706F0D6 
+        foreign key (parent) 
+        references Parent
+14:19:15,463  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:15,463  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:15,463  INFO CustomRunner:139 - Test: testIterateWithClearBottomOfLoop
+14:19:15,464 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,465 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,466 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,466 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,473 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,474 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,474 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,474 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,484 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,485 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,485 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,486 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,486 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,486 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,486 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,487 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.reattachment.Parent
+14:19:15,488 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'reattachment'
+                \-[IDENT] Node: 'Parent'
+
+14:19:15,488 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,488 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.reattachment.Parent (<no alias>) -> parent0_
+14:19:15,488 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Parent parent0_ ) )
+14:19:15,488 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:15,488 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:19:15,489 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'parent0_.NAME as NAME1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.reattachment.Parent}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[parent0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.reattachment.Parent}}
+
+14:19:15,500 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,500 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.reattachment.Parent
+14:19:15,501 DEBUG QueryTranslatorImpl:236 - SQL: select parent0_.NAME as NAME1_ from Parent parent0_
+14:19:15,501 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,501 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.reattachment.Parent
+14:19:15,502 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'reattachment'
+                \-[IDENT] Node: 'Parent'
+
+14:19:15,502 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,502 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.reattachment.Parent (<no alias>) -> parent0_
+14:19:15,502 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Parent parent0_ ) )
+14:19:15,502 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:15,502 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:19:15,514 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'parent0_.NAME as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.reattachment.Parent}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[parent0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.reattachment.Parent}}
+
+14:19:15,514 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,514 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.reattachment.Parent
+14:19:15,514 DEBUG QueryTranslatorImpl:236 - SQL: select parent0_.NAME as col_0_0_ from Parent parent0_
+14:19:15,514 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,515 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as col_0_0_ 
+    from
+        Parent parent0_
+14:19:15,515 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,516 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,525 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,525 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,538 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,539 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,539 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,547 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,548 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,548 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,549 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,557 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,558 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,558 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,558 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,566 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,567 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,567 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,567 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,577 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,577 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,577 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,578 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,578 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,587 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,587 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,587 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,587 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,587 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,598 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,598  INFO CustomRunner:139 - Test: testIterateWithClearTopOfLoop
+14:19:15,599 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,601 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,601 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,608 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,609 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,611 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,620 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,621 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,621 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,621 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,621 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,621 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,622 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,622 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,622 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,633 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as col_0_0_ 
+    from
+        Parent parent0_
+14:19:15,633 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,634 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,634 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,645 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,646 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,646 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,656 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,656 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,666 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,667 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,667 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,668 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,676 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,676 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,677 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,677 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,686 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,686 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,686 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,686 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,696 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,696 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,696 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,696 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,697 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,705 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,705 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,705 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,706 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,706 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,716  INFO CustomRunner:139 - Test: testIterateWithEvictBottomOfLoop
+14:19:15,717 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,717 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,717 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,725 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,725 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,726 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,726 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,738 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,738 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,739 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,739 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,747 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,747 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,748 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,748 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,749 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as col_0_0_ 
+    from
+        Parent parent0_
+14:19:15,750 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,751 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,751 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,752 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,766 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,766 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,767 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,768 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,781 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,782 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,782 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,793 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,793 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,803 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,804 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,805 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,805 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,814 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,815 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,815 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,815 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,825 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,825 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,825 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,825 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,826 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,835 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,836 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,836 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,836 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,837  INFO CustomRunner:139 - Test: testIterateWithEvictTopOfLoop
+14:19:15,848 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,848 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,849 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,849 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,855 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,856 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,857 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,857 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,864 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,865 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,866 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,866 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,867 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,874 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,875 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, NAME) 
+    values
+        (?, ?)
+14:19:15,876 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as col_0_0_ 
+    from
+        Parent parent0_
+14:19:15,877 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,878 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,880 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,892 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,894 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,894 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,894 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,894 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,895 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,904 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,905 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,906 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,914 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,915 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,924 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,925 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,925 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,925 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,935 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:19:15,936 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent0_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:19:15,936 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,936 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,936 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,946 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,947 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,947 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,948 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,948 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,958 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:19:15,960 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,961  INFO CustomRunner:139 - Test: testUpdateAfterClear
+14:19:15,962 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,962 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,969 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,970 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,971  INFO CustomRunner:139 - Test: testUpdateAfterEvict
+14:19:15,972 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:19:15,972 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME1_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:19:15,981 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT1_1_,
+        children0_.NAME as NAME0_1_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:19:15,982 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:19:15,983  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:15,983 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:15,983 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FCF706F0D6
+14:19:15,984 DEBUG SQL:104 - 
+    drop table Child if exists
+14:19:15,984 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:19:15,984  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:15,984  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

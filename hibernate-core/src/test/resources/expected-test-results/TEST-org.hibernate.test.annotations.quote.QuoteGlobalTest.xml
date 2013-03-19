@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.quote.QuoteGlobalTest" tests="1" time="0.047" timestamp="2013-02-28T20:10:43">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.quote.QuoteGlobalTest" name="testQuoteManytoMany" time="0.007" />
+  <system-out><![CDATA[14:10:43,336  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.quote.QuoteGlobalTest
+14:10:43,341  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:43,341  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:43,342  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:43,342  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:43,342  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:43,343  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:43,344  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:43,344  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:43,344  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:43,344  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:43,354  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:43,354 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:43,355 DEBUG SQL:104 - 
+    alter table "User_Role" 
+        drop constraint FK8B9F886AE3539565
+14:10:43,355 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "User_Role" drop constraint FK8B9F886AE3539565
+14:10:43,355 ERROR SchemaExport:426 - Table "User_Role" not found; SQL statement:
+
+    alter table "User_Role" 
+        drop constraint FK8B9F886AE3539565 [42102-145]
+14:10:43,355 DEBUG SQL:104 - 
+    alter table "User_Role" 
+        drop constraint FK8B9F886A4D9E78CC
+14:10:43,355 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "User_Role" drop constraint FK8B9F886A4D9E78CC
+14:10:43,355 ERROR SchemaExport:426 - Table "User_Role" not found; SQL statement:
+
+    alter table "User_Role" 
+        drop constraint FK8B9F886A4D9E78CC [42102-145]
+14:10:43,355 DEBUG SQL:104 - 
+    drop table "PHONE" if exists
+14:10:43,356 DEBUG SQL:104 - 
+    drop table "Role" if exists
+14:10:43,356 DEBUG SQL:104 - 
+    drop table "User_Role" if exists
+14:10:43,356 DEBUG SQL:104 - 
+    drop table "User" if exists
+14:10:43,356 DEBUG SQL:104 - 
+    drop sequence "hibernate_sequence"
+14:10:43,356 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence "hibernate_sequence"
+14:10:43,356 ERROR SchemaExport:426 - Sequence "hibernate_sequence" not found; SQL statement:
+
+    drop sequence "hibernate_sequence" [90036-145]
+14:10:43,356 DEBUG SQL:104 - 
+    create table "PHONE" (
+        "ID" integer not null,
+        "BRANDNAME" varchar(255),
+        "PRICE" float,
+        primary key ("ID")
+    )
+14:10:43,357 DEBUG SQL:104 - 
+    create table "Role" (
+        "id" bigint not null,
+        primary key ("id")
+    )
+14:10:43,357 DEBUG SQL:104 - 
+    create table "User_Role" (
+        "User_id" bigint not null,
+        "roles_id" bigint not null,
+        primary key ("User_id", "roles_id")
+    )
+14:10:43,357 DEBUG SQL:104 - 
+    create table "User" (
+        "id" bigint not null,
+        primary key ("id")
+    )
+14:10:43,358 DEBUG SQL:104 - 
+    alter table "User_Role" 
+        add constraint FK8B9F886AE3539565 
+        foreign key ("roles_id") 
+        references "Role"
+14:10:43,358 DEBUG SQL:104 - 
+    alter table "User_Role" 
+        add constraint FK8B9F886A4D9E78CC 
+        foreign key ("User_id") 
+        references "User"
+14:10:43,359 DEBUG SQL:104 - 
+    create sequence "hibernate_sequence" start with 1 increment by 1
+14:10:43,359  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:43,360  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:43,360  INFO CustomRunner:139 - Test: testQuoteManytoMany
+14:10:43,361 DEBUG SQL:104 - 
+    call next value for "hibernate_sequence"
+14:10:43,361 DEBUG SQL:104 - 
+    call next value for "hibernate_sequence"
+14:10:43,362 DEBUG SQL:104 - 
+    insert 
+    into
+        "User"
+        ("id") 
+    values
+        (?)
+14:10:43,363 DEBUG SQL:104 - 
+    insert 
+    into
+        "Role"
+        ("id") 
+    values
+        (?)
+14:10:43,365 DEBUG SQL:104 - 
+    insert 
+    into
+        "User_Role"
+        ("User_id", "roles_id") 
+    values
+        (?, ?)
+14:10:43,365 DEBUG SQL:104 - 
+    select
+        user0_."id" as id1_3_0_ 
+    from
+        "User" user0_ 
+    where
+        user0_."id"=?
+14:10:43,366 DEBUG SQL:104 - 
+    select
+        roles0_."User_id" as User1_3_1_,
+        roles0_."roles_id" as roles2_2_1_,
+        role1_."id" as id1_1_0_ 
+    from
+        "User_Role" roles0_ 
+    inner join
+        "Role" role1_ 
+            on roles0_."roles_id"=role1_."id" 
+    where
+        roles0_."User_id"=?
+14:10:43,367  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:43,378 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:43,378 DEBUG SQL:104 - 
+    alter table "User_Role" 
+        drop constraint FK8B9F886AE3539565
+14:10:43,379 DEBUG SQL:104 - 
+    alter table "User_Role" 
+        drop constraint FK8B9F886A4D9E78CC
+14:10:43,379 DEBUG SQL:104 - 
+    drop table "PHONE" if exists
+14:10:43,379 DEBUG SQL:104 - 
+    drop table "Role" if exists
+14:10:43,380 DEBUG SQL:104 - 
+    drop table "User_Role" if exists
+14:10:43,380 DEBUG SQL:104 - 
+    drop table "User" if exists
+14:10:43,380 DEBUG SQL:104 - 
+    drop sequence "hibernate_sequence"
+14:10:43,380  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:43,381  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

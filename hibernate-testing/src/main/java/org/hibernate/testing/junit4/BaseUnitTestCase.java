@@ -32,6 +32,7 @@ import org.junit.rules.TestRule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
@@ -40,9 +41,15 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
  *
  * @author Steve Ebersole
  */
-@RunWith(CustomRunner.class)
+@RunWith( CustomRunner.class )
 public abstract class BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( BaseUnitTestCase.class );
+
+	/**
+	 * String that should be prepended to all standard output placed in tests.  Output without this prefix may cause test
+	 * subclasses of {@link BaseSqlOutputTest} to fail.
+	 */
+	protected static final String OUTPUT_PREFIX = SqlStatementLogger.OUTPUT_PREFIX;
 
 	@Rule
 	public TestRule globalTimeout = new Timeout( 30 * 60 * 1000 ); // no test should run longer than 30 minutes
@@ -53,8 +60,7 @@ public abstract class BaseUnitTestCase {
 			log.warn( "Cleaning up unfinished transaction" );
 			try {
 				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
-			}
-			catch ( SystemException ignored ) {
+			} catch ( SystemException ignored ) {
 			}
 		}
 	}

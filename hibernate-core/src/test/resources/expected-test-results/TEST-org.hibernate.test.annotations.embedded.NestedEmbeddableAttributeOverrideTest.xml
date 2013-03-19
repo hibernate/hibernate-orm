@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.embedded.NestedEmbeddableAttributeOverrideTest" tests="1" time="0.047" timestamp="2013-02-28T20:10:22">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.embedded.NestedEmbeddableAttributeOverrideTest" name="testAttributeOverride" time="0.02" />
+  <system-out><![CDATA[14:10:22,228  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.embedded.NestedEmbeddableAttributeOverrideTest
+14:10:22,234  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:22,235  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:22,235  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:22,236  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:22,236  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:22,237  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:22,237  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:22,238  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:22,239  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:22,239  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:22,247  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:22,248 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:22,248 DEBUG SQL:104 - 
+    alter table TableB 
+        drop constraint FK94DC2A54D3475925
+14:10:22,248 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TableB drop constraint FK94DC2A54D3475925
+14:10:22,249 ERROR SchemaExport:426 - Table "TABLEB" not found; SQL statement:
+
+    alter table TableB 
+        drop constraint FK94DC2A54D3475925 [42102-145]
+14:10:22,249 DEBUG SQL:104 - 
+    drop table TableA if exists
+14:10:22,249 DEBUG SQL:104 - 
+    drop table TableB if exists
+14:10:22,249 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:22,249 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:22,249 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:22,249 DEBUG SQL:104 - 
+    create table TableA (
+        id integer not null,
+        embedAttrA varchar(255),
+        primary key (id)
+    )
+14:10:22,250 DEBUG SQL:104 - 
+    create table TableB (
+        embedAttrB varchar(255),
+        id integer not null,
+        primary key (id)
+    )
+14:10:22,250 DEBUG SQL:104 - 
+    alter table TableB 
+        add constraint FK94DC2A54D3475925 
+        foreign key (id) 
+        references TableA
+14:10:22,251 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:22,251  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:22,251  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:22,252  INFO CustomRunner:139 - Test: testAttributeOverride
+14:10:22,253 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:22,254 DEBUG SQL:104 - 
+    insert 
+    into
+        TableA
+        (embedAttrA, embedAttrB, id) 
+    values
+        (?, ?, ?)
+14:10:22,254  WARN SqlExceptionHelper:143 - SQL Error: 42122, SQLState: 42S22
+14:10:22,254 ERROR SqlExceptionHelper:144 - Column "EMBEDATTRB" not found; SQL statement:
+insert into TableA (embedAttrA, embedAttrB, id) values (?, ?, ?) [42122-145]
+14:10:22,255  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:10:22,259  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:22,259  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:22,259  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:22,259  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:22,259  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:22,260  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:22,261  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:22,261  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:22,262  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:22,262  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:22,268  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:22,268 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:22,268 DEBUG SQL:104 - 
+    alter table TableB 
+        drop constraint FK94DC2A54D3475925
+14:10:22,269 DEBUG SQL:104 - 
+    drop table TableA if exists
+14:10:22,269 DEBUG SQL:104 - 
+    drop table TableB if exists
+14:10:22,269 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:22,269 DEBUG SQL:104 - 
+    create table TableA (
+        id integer not null,
+        embedAttrA varchar(255),
+        primary key (id)
+    )
+14:10:22,270 DEBUG SQL:104 - 
+    create table TableB (
+        embedAttrB varchar(255),
+        id integer not null,
+        primary key (id)
+    )
+14:10:22,270 DEBUG SQL:104 - 
+    alter table TableB 
+        add constraint FK94DC2A54D3475925 
+        foreign key (id) 
+        references TableA
+14:10:22,271 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:22,271  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:22,272  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:22,272  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:22,272 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:22,272 DEBUG SQL:104 - 
+    alter table TableB 
+        drop constraint FK94DC2A54D3475925
+14:10:22,273 DEBUG SQL:104 - 
+    drop table TableA if exists
+14:10:22,273 DEBUG SQL:104 - 
+    drop table TableB if exists
+14:10:22,273 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:22,273  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:22,274  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.metamodel.source.annotations.xml.mocker.OverrideTest" tests="8" time="1.487" timestamp="2013-02-28T20:10:01">
+  <properties />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.OverrideTest" name="testPersistenceUnitDefaultsCascadePersistInAnnotation" time="0.004" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.OverrideTest" name="testPersistenceUnitDefaultsCascadePersistInXML" time="0.337" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.OverrideTest" name="testAttributeOverride" time="0.224" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.OverrideTest" name="testSchemaInPersistenceMetadata" time="0.225" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.OverrideTest" name="testSchemaInEntityMapping" time="0.192" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.OverrideTest" name="testPersistenceUnitMetadataMetadataComplete" time="0.003" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.OverrideTest" name="testEntityMetadataComplete" time="0.265" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.OverrideTest" name="testOverrideToMappedSuperClass" time="0.231" />
+  <system-out><![CDATA[Annotations:
+javax.persistence.ElementCollection:
+    Field: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Book.topics
+        (isMocked = true)
+javax.persistence.AttributeOverrides:
+    Field: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Book.topics
+        (isMocked = true, value = [@javax.persistence.AttributeOverride(column = @javax.persistence.Column(isMocked = true,name = "TOPIC_SUMMARY"),isMocked = true,name = "summary"),@javax.persistence.AttributeOverride(column = @javax.persistence.Column(name = "TOC_TITLE"),isMocked = true,name = "title")])
+javax.persistence.ManyToOne:
+    Field: org.hibernate.metamodel.source.annotations.xml.mocker.Author org.hibernate.metamodel.source.annotations.xml.mocker.Book.author
+        (cascade = [PERSIST,DETACH], isMocked = true)
+javax.persistence.Embeddable:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Topic
+javax.persistence.Id:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.id
+    Method: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Author.getId()
+javax.persistence.OneToMany:
+    Method: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Author.getBooks()
+        (cascade = [PERSIST,ALL], isMocked = true)
+javax.persistence.Temporal:
+    Field: java.util.Date org.hibernate.metamodel.source.annotations.xml.mocker.Book.publishDate
+        (value = TIMESTAMP)
+javax.persistence.Entity:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Book
+        (isMocked = true)
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Author
+        (isMocked = true)
+javax.persistence.Version:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.version
+javax.persistence.GeneratedValue:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.id
+        (generator = "TABLE_GEN")
+    Method: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Author.getId()
+        (generator = "SEQ_GEN")
+Annotations:
+javax.persistence.ManyToOne:
+    Field: org.hibernate.metamodel.source.annotations.xml.mocker.Author org.hibernate.metamodel.source.annotations.xml.mocker.Book.author
+        (cascade = [DETACH])
+javax.persistence.ElementCollection:
+    Field: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Book.topics
+javax.persistence.Embeddable:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Topic
+javax.persistence.SequenceGenerator:
+    Method: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Author.getId()
+        (catalog = "XML_CATALOG", initialValue = 123, isMocked = true, name = "SEQ_GEN", schema = "XML_SCHEMA")
+javax.persistence.Table:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Book
+        (catalog = "XML_CATALOG", isMocked = true, isMocked = true, schema = "XML_SCHEMA")
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Author
+        (catalog = "XML_CATALOG", isMocked = true, isMocked = true, schema = "XML_SCHEMA")
+javax.persistence.Id:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.id
+    Method: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Author.getId()
+javax.persistence.Version:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.version
+javax.persistence.TableGenerator:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Book
+        (catalog = "ANNOTATION_CATALOG", name = "TABLE_GEN", schema = "ANNOTATION_SCHEMA")
+javax.persistence.OneToMany:
+    Method: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Author.getBooks()
+        (cascade = [MERGE], mappedBy = "author")
+javax.persistence.Temporal:
+    Field: java.util.Date org.hibernate.metamodel.source.annotations.xml.mocker.Book.publishDate
+        (value = TIMESTAMP)
+javax.persistence.Entity:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Book
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Author
+javax.persistence.AttributeOverride:
+    Field: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Book.topics
+        (column = @javax.persistence.Column(name = "TOC_TITLE"), name = "title")
+javax.persistence.GeneratedValue:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.id
+        (generator = "TABLE_GEN")
+    Method: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Author.getId()
+        (generator = "SEQ_GEN")
+Annotations:
+javax.persistence.ElementCollection:
+    Field: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Book.topics
+javax.persistence.ManyToOne:
+    Field: org.hibernate.metamodel.source.annotations.xml.mocker.Author org.hibernate.metamodel.source.annotations.xml.mocker.Book.author
+        (cascade = [DETACH])
+javax.persistence.SequenceGenerator:
+    Method: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Author.getId()
+        (initialValue = 123, name = "SEQ_GEN")
+javax.persistence.Embeddable:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Topic
+javax.persistence.TableGenerator:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Book
+        (catalog = "ANNOTATION_CATALOG", name = "TABLE_GEN", schema = "ANNOTATION_SCHEMA")
+javax.persistence.Id:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.id
+    Method: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Author.getId()
+javax.persistence.OneToMany:
+    Method: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Author.getBooks()
+        (cascade = [MERGE], mappedBy = "author")
+javax.persistence.Temporal:
+    Field: java.util.Date org.hibernate.metamodel.source.annotations.xml.mocker.Book.publishDate
+        (value = TIMESTAMP)
+javax.persistence.Entity:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Book
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Author
+javax.persistence.Version:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.version
+javax.persistence.AttributeOverride:
+    Field: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Book.topics
+        (column = @javax.persistence.Column(name = "TOC_TITLE"), name = "title")
+javax.persistence.GeneratedValue:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.id
+        (generator = "TABLE_GEN")
+    Method: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Author.getId()
+        (generator = "SEQ_GEN")
+Annotations:
+javax.persistence.ElementCollection:
+    Field: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Book.topics
+        (isMocked = true)
+javax.persistence.AttributeOverrides:
+    Field: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Book.topics
+        (isMocked = true, value = [@javax.persistence.AttributeOverride(column = @javax.persistence.Column(isMocked = true,name = "TOPIC_SUMMARY"),isMocked = true,name = "summary"),@javax.persistence.AttributeOverride(column = @javax.persistence.Column(name = "TOC_TITLE"),isMocked = true,name = "title")])
+javax.persistence.ManyToOne:
+    Field: org.hibernate.metamodel.source.annotations.xml.mocker.Author org.hibernate.metamodel.source.annotations.xml.mocker.Book.author
+        (cascade = [DETACH])
+javax.persistence.SequenceGenerator:
+    Method: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Author.getId()
+        (initialValue = 123, name = "SEQ_GEN")
+javax.persistence.Embeddable:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Topic
+javax.persistence.Id:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.id
+    Method: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Author.getId()
+javax.persistence.OneToMany:
+    Method: java.util.List org.hibernate.metamodel.source.annotations.xml.mocker.Author.getBooks()
+        (cascade = [MERGE], mappedBy = "author")
+javax.persistence.Temporal:
+    Field: java.util.Date org.hibernate.metamodel.source.annotations.xml.mocker.Book.publishDate
+        (value = TIMESTAMP)
+javax.persistence.Entity:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Author
+javax.persistence.Version:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.version
+javax.persistence.MappedSuperclass:
+    Class: org.hibernate.metamodel.source.annotations.xml.mocker.Book
+        (isMocked = true)
+javax.persistence.GeneratedValue:
+    Field: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Book.id
+        (generator = "TABLE_GEN")
+    Method: java.lang.Long org.hibernate.metamodel.source.annotations.xml.mocker.Author.getId()
+        (generator = "SEQ_GEN")
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

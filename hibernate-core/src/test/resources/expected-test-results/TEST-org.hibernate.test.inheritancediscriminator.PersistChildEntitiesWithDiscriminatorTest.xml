@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.inheritancediscriminator.PersistChildEntitiesWithDiscriminatorTest" tests="1" time="0.003" timestamp="2013-02-28T20:14:29">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.inheritancediscriminator.PersistChildEntitiesWithDiscriminatorTest" name="doIt" time="0.0" />
+  <system-out><![CDATA[14:14:29,282  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.inheritancediscriminator.PersistChildEntitiesWithDiscriminatorTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

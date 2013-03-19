@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.fileimport.MultiLineImportFileTest" tests="1" time="0.036" timestamp="2013-02-28T20:12:27">
+  <properties />
+  <testcase classname="org.hibernate.test.fileimport.MultiLineImportFileTest" name="testImportFile" time="0.004" />
+  <system-out><![CDATA[14:12:27,059  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.fileimport.MultiLineImportFileTest
+14:12:27,061  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:27,062  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:27,062  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:27,062  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:27,062  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:27,063  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:27,069  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:27,070  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:27,070  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:27,070  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:27,073  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:27,080 ERROR SchemaExport:385 - HHH000231: Schema export unsuccessful
+org.hibernate.tool.hbm2ddl.ImportScriptException: Error during statement execution (file: '/org/hibernate/test/fileimport/multi-line-statements.sql'): CREATE TABLE test_data (
+  id    NUMBER        NOT NULL   PRIMARY KEY 
+, text  VARCHAR2(100)                        
+)
+	at org.hibernate.tool.hbm2ddl.SchemaExport.importScript(SchemaExport.java:451)
+	at org.hibernate.tool.hbm2ddl.SchemaExport.execute(SchemaExport.java:378)
+	at org.hibernate.tool.hbm2ddl.SchemaExport.create(SchemaExport.java:304)
+	at org.hibernate.tool.hbm2ddl.SchemaExport.create(SchemaExport.java:293)
+	at org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:507)
+	at org.hibernate.cfg.Configuration.buildSessionFactory(Configuration.java:1789)
+	at org.hibernate.testing.junit4.BaseCoreFunctionalTestCase.buildSessionFactory(BaseCoreFunctionalTestCase.java:147)
+	at sun.reflect.GeneratedMethodAccessor55.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.hibernate.testing.junit4.TestClassMetadata.performCallbackInvocation(TestClassMetadata.java:209)
+	at org.hibernate.testing.junit4.TestClassMetadata.invokeCallback(TestClassMetadata.java:196)
+	at org.hibernate.testing.junit4.TestClassMetadata.performCallbacks(TestClassMetadata.java:190)
+	at org.hibernate.testing.junit4.TestClassMetadata.performBeforeClassCallbacks(TestClassMetadata.java:181)
+	at org.hibernate.testing.junit4.BeforeClassCallbackHandler.evaluate(BeforeClassCallbackHandler.java:42)
+	at org.hibernate.testing.junit4.AfterClassCallbackHandler.evaluate(AfterClassCallbackHandler.java:42)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:300)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecuter.runTestClass(JUnitTestClassExecuter.java:55)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecuter.execute(JUnitTestClassExecuter.java:42)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassProcessor.processTestClass(JUnitTestClassProcessor.java:75)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:49)
+	at sun.reflect.GeneratedMethodAccessor17.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.gradle.messaging.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:35)
+	at org.gradle.messaging.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)
+	at org.gradle.messaging.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:32)
+	at org.gradle.messaging.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:93)
+	at $Proxy2.processTestClass(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.processTestClass(TestWorker.java:103)
+	at sun.reflect.GeneratedMethodAccessor16.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.gradle.messaging.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:35)
+	at org.gradle.messaging.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)
+	at org.gradle.messaging.remote.internal.TypeCastDispatch.dispatch(TypeCastDispatch.java:30)
+	at org.gradle.messaging.remote.internal.WorkerProtocol.handleIncoming(WorkerProtocol.java:53)
+	at org.gradle.messaging.remote.internal.WorkerProtocol.handleIncoming(WorkerProtocol.java:31)
+	at org.gradle.messaging.remote.internal.ProtocolStack$ProtocolStage.handleIncoming(ProtocolStack.java:167)
+	at org.gradle.messaging.remote.internal.ProtocolStack$BottomStage.handleIncoming(ProtocolStack.java:277)
+	at org.gradle.messaging.remote.internal.ProtocolStack$BottomConnection$1.run(ProtocolStack.java:299)
+	at org.gradle.messaging.remote.internal.ProtocolStack$ExecuteRunnable.dispatch(ProtocolStack.java:120)
+	at org.gradle.messaging.remote.internal.ProtocolStack$ExecuteRunnable.dispatch(ProtocolStack.java:116)
+	at org.gradle.messaging.dispatch.AsyncDispatch.dispatchMessages(AsyncDispatch.java:132)
+	at org.gradle.messaging.dispatch.AsyncDispatch.access$000(AsyncDispatch.java:33)
+	at org.gradle.messaging.dispatch.AsyncDispatch$1.run(AsyncDispatch.java:72)
+	at org.gradle.internal.concurrent.DefaultExecutorFactory$StoppableExecutorImpl$1.run(DefaultExecutorFactory.java:66)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1110)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:603)
+	at java.lang.Thread.run(Thread.java:722)
+Caused by: org.h2.jdbc.JdbcSQLException: Table "TEST_DATA" already exists; SQL statement:
+CREATE TABLE test_data (
+  id    NUMBER        NOT NULL   PRIMARY KEY 
+, text  VARCHAR2(100)                        
+) [42101-145]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:327)
+	at org.h2.message.DbException.get(DbException.java:167)
+	at org.h2.message.DbException.get(DbException.java:144)
+	at org.h2.command.ddl.CreateTable.update(CreateTable.java:108)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:69)
+	at org.h2.command.Command.executeUpdate(Command.java:201)
+	at org.h2.jdbc.JdbcStatement.executeUpdateInternal(JdbcStatement.java:126)
+	at org.h2.jdbc.JdbcStatement.executeUpdate(JdbcStatement.java:111)
+	at org.hibernate.tool.hbm2ddl.DatabaseExporter.export(DatabaseExporter.java:64)
+	at org.hibernate.tool.hbm2ddl.SchemaExport.importScript(SchemaExport.java:446)
+	... 49 more
+14:12:27,087  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:27,088  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:27,088  INFO CustomRunner:139 - Test: testImportFile
+14:12:27,089 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        test_data
+14:12:27,090 DEBUG SQL:104 - 
+    SELECT
+        text 
+    FROM
+        test_data 
+    WHERE
+        id = 2
+14:12:27,090 DEBUG SQL:104 - 
+    SELECT
+        text 
+    FROM
+        test_data 
+    WHERE
+        id = 3
+14:12:27,093  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:27,093  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:27,094  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

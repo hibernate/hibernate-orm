@@ -1,0 +1,1641 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.hql.joinedSubclass.JoinedSubclassBulkManipTest" tests="2" time="0.544" timestamp="2013-02-28T20:13:58">
+  <properties />
+  <testcase classname="org.hibernate.test.hql.joinedSubclass.JoinedSubclassBulkManipTest" name="testHqlDeleteOnJoinedSubclass" time="0.211" />
+  <testcase classname="org.hibernate.test.hql.joinedSubclass.JoinedSubclassBulkManipTest" name="testHqlUpdateOnJoinedSubclass" time="0.208" />
+  <system-out><![CDATA[14:13:58,775  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.hql.joinedSubclass.JoinedSubclassBulkManipTest
+14:13:58,852  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:13:58,852  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:13:58,852  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:13:58,853  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:13:58,853  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:13:58,854  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:13:58,854  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:13:58,855  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:13:58,855  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:58,856  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:13:58,866  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:13:58,866 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:13:58,867 DEBUG SQL:104 - 
+    alter table Employee 
+        drop constraint FK4AFD4ACE947AECDC
+14:13:58,867 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Employee drop constraint FK4AFD4ACE947AECDC
+14:13:58,867 ERROR SchemaExport:426 - Table "EMPLOYEE" not found; SQL statement:
+
+    alter table Employee 
+        drop constraint FK4AFD4ACE947AECDC [42102-145]
+14:13:58,867 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:13:58,867 DEBUG SQL:104 - 
+    drop table Person if exists
+14:13:58,867 DEBUG SQL:104 - 
+    create table Employee (
+        employeeNumber varchar(255),
+        id integer not null,
+        primary key (id)
+    )
+14:13:58,868 DEBUG SQL:104 - 
+    create table Person (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:13:58,868 DEBUG SQL:104 - 
+    alter table Employee 
+        add constraint FK4AFD4ACE947AECDC 
+        foreign key (id) 
+        references Person
+14:13:58,868  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:13:58,869  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:13:58,869  INFO CustomRunner:139 - Test: testHqlDeleteOnJoinedSubclass
+14:13:58,871 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Employee
+14:13:58,924 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'hql'
+             |  \-[IDENT] Node: 'joinedSubclass'
+             \-[IDENT] Node: 'Employee'
+
+14:13:58,924 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,924 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Employee (<no alias>) -> employee0_
+14:13:58,925 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Employee,Person)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Employee' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Employee}}
+
+14:13:58,925 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,925 DEBUG DeleteStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:13:58,925 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Employee
+        select
+            employee0_.id as id 
+        from
+            Employee employee0_ 
+        inner join
+            Person employee0_1_ 
+                on employee0_.id=employee0_1_.id
+14:13:58,926 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:58,926 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:58,926 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Employee
+14:13:58,927 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Person
+14:13:58,927 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'hql'
+             |  \-[IDENT] Node: 'joinedSubclass'
+             \-[IDENT] Node: 'Person'
+
+14:13:58,928 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,928 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Person (<no alias>) -> person0_
+14:13:58,928 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Person)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Person' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Person}}
+
+14:13:58,928 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,928 DEBUG DeleteStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:13:58,928 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Person
+        select
+            person0_.id as id 
+        from
+            Person person0_
+14:13:58,929 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:58,929 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:58,929 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Person
+14:13:58,929 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Employee e
+14:13:58,930 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'hql'
+          |  |  \-[IDENT] Node: 'joinedSubclass'
+          |  \-[IDENT] Node: 'Employee'
+          \-[ALIAS] Node: 'e'
+
+14:13:58,930 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,930 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Employee (e) -> employee0_
+14:13:58,930 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Employee,Person)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Employee' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Employee}}
+
+14:13:58,931 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,931 DEBUG DeleteStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:13:58,931 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Employee
+        select
+            employee0_.id as id 
+        from
+            Employee employee0_ 
+        inner join
+            Person employee0_1_ 
+                on employee0_.id=employee0_1_.id
+14:13:58,931 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:58,931 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:58,932 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Employee
+14:13:58,932 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Person p
+14:13:58,933 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'hql'
+          |  |  \-[IDENT] Node: 'joinedSubclass'
+          |  \-[IDENT] Node: 'Person'
+          \-[ALIAS] Node: 'p'
+
+14:13:58,933 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,933 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Person (p) -> person0_
+14:13:58,933 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Person)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Person' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Person}}
+
+14:13:58,933 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,933 DEBUG DeleteStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:13:58,934 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Person
+        select
+            person0_.id as id 
+        from
+            Person person0_
+14:13:58,934 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:58,934 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:58,936 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Person
+14:13:58,936 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Employee where name like 'S%'
+14:13:58,937 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'hql'
+    |        |  \-[IDENT] Node: 'joinedSubclass'
+    |        \-[IDENT] Node: 'Employee'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''S%''
+
+14:13:58,937 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,937 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Employee (<no alias>) -> employee0_
+14:13:58,937 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:58,937 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:58,938 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> employee0_1_.name
+14:13:58,938 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Employee,Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'employee0_1_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''S%''
+
+14:13:58,938 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,938 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Employee
+        select
+            employee0_.id as id 
+        from
+            Employee employee0_ 
+        inner join
+            Person employee0_1_ 
+                on employee0_.id=employee0_1_.id 
+        where
+            employee0_1_.name like 'S%'
+14:13:58,938 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:58,939 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:58,939 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Employee
+14:13:58,939 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Employee e where e.name like 'S%'
+14:13:58,940 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     +-[DOT] Node: '.'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'hql'
+    |     |  |  \-[IDENT] Node: 'joinedSubclass'
+    |     |  \-[IDENT] Node: 'Employee'
+    |     \-[ALIAS] Node: 'e'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'e'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''S%''
+
+14:13:58,940 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,940 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Employee (e) -> employee0_
+14:13:58,940 DEBUG FromReferenceNode:74 - Resolved : e -> id
+14:13:58,940 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:58,940 DEBUG FromReferenceNode:74 - Resolved : e.name -> employee0_1_.name
+14:13:58,941 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Employee,Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'employee0_1_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=e.name,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=e}
+          |  +-[ALIAS_REF] IdentNode: 'id' {alias=e, className=org.hibernate.test.hql.joinedSubclass.Employee, tableAlias=employee0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''S%''
+
+14:13:58,941 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,941 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Employee
+        select
+            employee0_.id as id 
+        from
+            Employee employee0_ 
+        inner join
+            Person employee0_1_ 
+                on employee0_.id=employee0_1_.id 
+        where
+            employee0_1_.name like 'S%'
+14:13:58,941 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:58,941 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:58,942 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Employee
+14:13:58,942 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Person where name like 'S%'
+14:13:58,942 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'hql'
+    |        |  \-[IDENT] Node: 'joinedSubclass'
+    |        \-[IDENT] Node: 'Person'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''S%''
+
+14:13:59,006 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,007 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Person (<no alias>) -> person0_
+14:13:59,007 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:59,007 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,007 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> person0_.name
+14:13:59,007 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''S%''
+
+14:13:59,008 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,008 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Person
+        select
+            person0_.id as id 
+        from
+            Person person0_ 
+        where
+            person0_.name like 'S%'
+14:13:59,009 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,009 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,009 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Person
+14:13:59,010 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Person p where p.name like 'S%'
+14:13:59,011 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     +-[DOT] Node: '.'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'hql'
+    |     |  |  \-[IDENT] Node: 'joinedSubclass'
+    |     |  \-[IDENT] Node: 'Person'
+    |     \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''S%''
+
+14:13:59,011 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,011 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Person (p) -> person0_
+14:13:59,011 DEBUG FromReferenceNode:74 - Resolved : p -> id
+14:13:59,011 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,012 DEBUG FromReferenceNode:74 - Resolved : p.name -> person0_.name
+14:13:59,012 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'id' {alias=p, className=org.hibernate.test.hql.joinedSubclass.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''S%''
+
+14:13:59,012 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,012 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Person
+        select
+            person0_.id as id 
+        from
+            Person person0_ 
+        where
+            person0_.name like 'S%'
+14:13:59,013 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,013 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,013 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Person
+14:13:59,013 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Employee where id = 1
+14:13:59,014 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'hql'
+    |        |  \-[IDENT] Node: 'joinedSubclass'
+    |        \-[IDENT] Node: 'Employee'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:13:59,014 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,014 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Employee (<no alias>) -> employee0_
+14:13:59,014 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:59,014 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:13:59,014 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.id -> employee0_.id
+14:13:59,015 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Employee,Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'employee0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path={synthetic-alias}.id,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:13:59,015 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,015 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Employee
+        select
+            employee0_.id as id 
+        from
+            Employee employee0_ 
+        inner join
+            Person employee0_1_ 
+                on employee0_.id=employee0_1_.id 
+        where
+            employee0_.id=1
+14:13:59,016 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:59,016 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:59,016 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Employee
+14:13:59,016 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Employee e where e.id = 1
+14:13:59,017 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     +-[DOT] Node: '.'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'hql'
+    |     |  |  \-[IDENT] Node: 'joinedSubclass'
+    |     |  \-[IDENT] Node: 'Employee'
+    |     \-[ALIAS] Node: 'e'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'e'
+          |  \-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:13:59,017 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,017 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Employee (e) -> employee0_
+14:13:59,018 DEBUG FromReferenceNode:74 - Resolved : e -> id
+14:13:59,018 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:13:59,018 DEBUG FromReferenceNode:74 - Resolved : e.id -> employee0_.id
+14:13:59,018 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Employee,Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'employee0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=e.id,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=e}
+          |  +-[ALIAS_REF] IdentNode: 'id' {alias=e, className=org.hibernate.test.hql.joinedSubclass.Employee, tableAlias=employee0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:13:59,018 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,018 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Employee
+        select
+            employee0_.id as id 
+        from
+            Employee employee0_ 
+        inner join
+            Person employee0_1_ 
+                on employee0_.id=employee0_1_.id 
+        where
+            employee0_.id=1
+14:13:59,019 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:59,019 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:59,024 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Employee
+14:13:59,024 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Person where id = 1
+14:13:59,025 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'hql'
+    |        |  \-[IDENT] Node: 'joinedSubclass'
+    |        \-[IDENT] Node: 'Person'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:13:59,025 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,025 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Person (<no alias>) -> person0_
+14:13:59,026 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:59,026 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:13:59,026 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.id -> person0_.id
+14:13:59,026 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path={synthetic-alias}.id,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:13:59,026 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,026 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Person
+        select
+            person0_.id as id 
+        from
+            Person person0_ 
+        where
+            person0_.id=1
+14:13:59,027 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,035 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,036 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Person
+14:13:59,036 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.hql.joinedSubclass.Person p where p.id = 1
+14:13:59,038 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     +-[DOT] Node: '.'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'hql'
+    |     |  |  \-[IDENT] Node: 'joinedSubclass'
+    |     |  \-[IDENT] Node: 'Person'
+    |     \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:13:59,045 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,045 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Person (p) -> person0_
+14:13:59,046 DEBUG FromReferenceNode:74 - Resolved : p -> id
+14:13:59,046 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:13:59,046 DEBUG FromReferenceNode:74 - Resolved : p.id -> person0_.id
+14:13:59,078 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=p.id,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'id' {alias=p, className=org.hibernate.test.hql.joinedSubclass.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:13:59,078 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,079 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Person
+        select
+            person0_.id as id 
+        from
+            Person person0_ 
+        where
+            person0_.id=1
+14:13:59,079 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,079 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,080 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Person
+14:13:59,080  INFO CustomRunner:139 - Test: testHqlUpdateOnJoinedSubclass
+14:13:59,081 DEBUG QueryTranslatorImpl:265 - parse() - HQL: update org.hibernate.test.hql.joinedSubclass.Employee set name = 'Some Other Name' where employeeNumber like 'A%'
+14:13:59,082 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[UPDATE] Node: 'update'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'hql'
+    |        |  \-[IDENT] Node: 'joinedSubclass'
+    |        \-[IDENT] Node: 'Employee'
+    +-[SET] Node: 'set'
+    |  \-[EQ] Node: '='
+    |     +-[IDENT] Node: 'name'
+    |     \-[QUOTED_STRING] Node: ''Some Other Name''
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[IDENT] Node: 'employeeNumber'
+          \-[QUOTED_STRING] Node: ''A%''
+
+14:13:59,082 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,083 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Employee (<no alias>) -> employee0_
+14:13:59,084 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:59,085 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,085 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> name
+14:13:59,085 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:59,085 DEBUG DotNode:599 - getDataType() : employeeNumber -> org.hibernate.type.StringType@2dc8de40
+14:13:59,085 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.employeeNumber -> employee0_.employeeNumber
+14:13:59,085 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[UPDATE] UpdateStatement: 'update'  querySpaces (Employee,Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Employee}}
+    +-[SET] SqlNode: 'set'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=null}
+    |     |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     \-[QUOTED_STRING] LiteralNode: ''Some Other Name''
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'employee0_.employeeNumber' {propertyName=employeeNumber,dereferenceType=ALL,propertyPath=employeeNumber,path={synthetic-alias}.employeeNumber,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'employeeNumber' {originalText=employeeNumber}
+          \-[QUOTED_STRING] LiteralNode: ''A%''
+
+14:13:59,086 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,087 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Employee
+        select
+            employee0_.id as id 
+        from
+            Employee employee0_ 
+        inner join
+            Person employee0_1_ 
+                on employee0_.id=employee0_1_.id 
+        where
+            employee0_.employeeNumber like 'A%'
+14:13:59,094 DEBUG SQL:104 - 
+    update
+        Person 
+    set
+        name='Some Other Name' 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:59,095 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Employee
+14:13:59,095 DEBUG QueryTranslatorImpl:265 - parse() - HQL: update org.hibernate.test.hql.joinedSubclass.Employee e set e.name = 'Some Other Name' where e.employeeNumber like 'A%'
+14:13:59,096 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[UPDATE] Node: 'update'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     +-[DOT] Node: '.'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'hql'
+    |     |  |  \-[IDENT] Node: 'joinedSubclass'
+    |     |  \-[IDENT] Node: 'Employee'
+    |     \-[ALIAS] Node: 'e'
+    +-[SET] Node: 'set'
+    |  \-[EQ] Node: '='
+    |     +-[DOT] Node: '.'
+    |     |  +-[IDENT] Node: 'e'
+    |     |  \-[IDENT] Node: 'name'
+    |     \-[QUOTED_STRING] Node: ''Some Other Name''
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'e'
+          |  \-[IDENT] Node: 'employeeNumber'
+          \-[QUOTED_STRING] Node: ''A%''
+
+14:13:59,104 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,104 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Employee (e) -> employee0_
+14:13:59,104 DEBUG FromReferenceNode:74 - Resolved : e -> id
+14:13:59,104 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,104 DEBUG FromReferenceNode:74 - Resolved : e.name -> name
+14:13:59,113 DEBUG FromReferenceNode:74 - Resolved : e -> id
+14:13:59,113 DEBUG DotNode:599 - getDataType() : employeeNumber -> org.hibernate.type.StringType@2dc8de40
+14:13:59,113 DEBUG FromReferenceNode:74 - Resolved : e.employeeNumber -> employee0_.employeeNumber
+14:13:59,114 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[UPDATE] UpdateStatement: 'update'  querySpaces (Employee,Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Employee}}
+    +-[SET] SqlNode: 'set'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=e.name,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=e}
+    |     |  +-[ALIAS_REF] IdentNode: 'id' {alias=e, className=org.hibernate.test.hql.joinedSubclass.Employee, tableAlias=employee0_}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     \-[QUOTED_STRING] LiteralNode: ''Some Other Name''
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'employee0_.employeeNumber' {propertyName=employeeNumber,dereferenceType=ALL,propertyPath=employeeNumber,path=e.employeeNumber,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=e}
+          |  +-[ALIAS_REF] IdentNode: 'id' {alias=e, className=org.hibernate.test.hql.joinedSubclass.Employee, tableAlias=employee0_}
+          |  \-[IDENT] IdentNode: 'employeeNumber' {originalText=employeeNumber}
+          \-[QUOTED_STRING] LiteralNode: ''A%''
+
+14:13:59,114 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,115 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Employee
+        select
+            employee0_.id as id 
+        from
+            Employee employee0_ 
+        inner join
+            Person employee0_1_ 
+                on employee0_.id=employee0_1_.id 
+        where
+            employee0_.employeeNumber like 'A%'
+14:13:59,123 DEBUG SQL:104 - 
+    update
+        Person 
+    set
+        name='Some Other Name' 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:59,123 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Employee
+14:13:59,123 DEBUG QueryTranslatorImpl:265 - parse() - HQL: update org.hibernate.test.hql.joinedSubclass.Person set name = 'Some Other Name' where name like 'S%'
+14:13:59,124 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[UPDATE] Node: 'update'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'hql'
+    |        |  \-[IDENT] Node: 'joinedSubclass'
+    |        \-[IDENT] Node: 'Person'
+    +-[SET] Node: 'set'
+    |  \-[EQ] Node: '='
+    |     +-[IDENT] Node: 'name'
+    |     \-[QUOTED_STRING] Node: ''Some Other Name''
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''S%''
+
+14:13:59,132 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,133 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Person (<no alias>) -> person0_
+14:13:59,133 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:59,133 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,133 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> name
+14:13:59,133 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:59,133 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,133 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> person0_.name
+14:13:59,134 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[UPDATE] UpdateStatement: 'update'  querySpaces (Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Person}}
+    +-[SET] SqlNode: 'set'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=null}
+    |     |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     \-[QUOTED_STRING] LiteralNode: ''Some Other Name''
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''S%''
+
+14:13:59,142 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,143 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Person
+        select
+            person0_.id as id 
+        from
+            Person person0_ 
+        where
+            person0_.name like 'S%'
+14:13:59,143 DEBUG SQL:104 - 
+    update
+        Person 
+    set
+        name='Some Other Name' 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,143 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Person
+14:13:59,144 DEBUG QueryTranslatorImpl:265 - parse() - HQL: update org.hibernate.test.hql.joinedSubclass.Person p set p.name = 'Some Other Name' where p.name like 'S%'
+14:13:59,145 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[UPDATE] Node: 'update'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     +-[DOT] Node: '.'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'hql'
+    |     |  |  \-[IDENT] Node: 'joinedSubclass'
+    |     |  \-[IDENT] Node: 'Person'
+    |     \-[ALIAS] Node: 'p'
+    +-[SET] Node: 'set'
+    |  \-[EQ] Node: '='
+    |     +-[DOT] Node: '.'
+    |     |  +-[IDENT] Node: 'p'
+    |     |  \-[IDENT] Node: 'name'
+    |     \-[QUOTED_STRING] Node: ''Some Other Name''
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''S%''
+
+14:13:59,156 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,157 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Person (p) -> person0_
+14:13:59,157 DEBUG FromReferenceNode:74 - Resolved : p -> id
+14:13:59,157 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,157 DEBUG FromReferenceNode:74 - Resolved : p.name -> name
+14:13:59,157 DEBUG FromReferenceNode:74 - Resolved : p -> id
+14:13:59,157 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,158 DEBUG FromReferenceNode:74 - Resolved : p.name -> person0_.name
+14:13:59,158 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[UPDATE] UpdateStatement: 'update'  querySpaces (Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Person}}
+    +-[SET] SqlNode: 'set'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=p}
+    |     |  +-[ALIAS_REF] IdentNode: 'id' {alias=p, className=org.hibernate.test.hql.joinedSubclass.Person, tableAlias=person0_}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     \-[QUOTED_STRING] LiteralNode: ''Some Other Name''
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'id' {alias=p, className=org.hibernate.test.hql.joinedSubclass.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''S%''
+
+14:13:59,166 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,167 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Person
+        select
+            person0_.id as id 
+        from
+            Person person0_ 
+        where
+            person0_.name like 'S%'
+14:13:59,167 DEBUG SQL:104 - 
+    update
+        Person 
+    set
+        name='Some Other Name' 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,168 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Person
+14:13:59,168 DEBUG QueryTranslatorImpl:265 - parse() - HQL: update org.hibernate.test.hql.joinedSubclass.Employee set name = 'Some Other Name' where id = 1
+14:13:59,169 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[UPDATE] Node: 'update'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'hql'
+    |        |  \-[IDENT] Node: 'joinedSubclass'
+    |        \-[IDENT] Node: 'Employee'
+    +-[SET] Node: 'set'
+    |  \-[EQ] Node: '='
+    |     +-[IDENT] Node: 'name'
+    |     \-[QUOTED_STRING] Node: ''Some Other Name''
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:13:59,188 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,189 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Employee (<no alias>) -> employee0_
+14:13:59,189 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:59,189 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,190 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> name
+14:13:59,190 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:59,190 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:13:59,190 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.id -> employee0_.id
+14:13:59,191 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[UPDATE] UpdateStatement: 'update'  querySpaces (Employee,Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Employee}}
+    +-[SET] SqlNode: 'set'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=null}
+    |     |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     \-[QUOTED_STRING] LiteralNode: ''Some Other Name''
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'employee0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path={synthetic-alias}.id,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:13:59,199 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,200 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Employee
+        select
+            employee0_.id as id 
+        from
+            Employee employee0_ 
+        inner join
+            Person employee0_1_ 
+                on employee0_.id=employee0_1_.id 
+        where
+            employee0_.id=1
+14:13:59,200 DEBUG SQL:104 - 
+    update
+        Person 
+    set
+        name='Some Other Name' 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:59,200 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Employee
+14:13:59,201 DEBUG QueryTranslatorImpl:265 - parse() - HQL: update org.hibernate.test.hql.joinedSubclass.Employee e set e.name = 'Some Other Name' where e.id = 1
+14:13:59,202 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[UPDATE] Node: 'update'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     +-[DOT] Node: '.'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'hql'
+    |     |  |  \-[IDENT] Node: 'joinedSubclass'
+    |     |  \-[IDENT] Node: 'Employee'
+    |     \-[ALIAS] Node: 'e'
+    +-[SET] Node: 'set'
+    |  \-[EQ] Node: '='
+    |     +-[DOT] Node: '.'
+    |     |  +-[IDENT] Node: 'e'
+    |     |  \-[IDENT] Node: 'name'
+    |     \-[QUOTED_STRING] Node: ''Some Other Name''
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'e'
+          |  \-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:13:59,223 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,223 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Employee (e) -> employee0_
+14:13:59,224 DEBUG FromReferenceNode:74 - Resolved : e -> id
+14:13:59,224 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,224 DEBUG FromReferenceNode:74 - Resolved : e.name -> name
+14:13:59,224 DEBUG FromReferenceNode:74 - Resolved : e -> id
+14:13:59,224 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:13:59,225 DEBUG FromReferenceNode:74 - Resolved : e.id -> employee0_.id
+14:13:59,225 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[UPDATE] UpdateStatement: 'update'  querySpaces (Employee,Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Employee}}
+    +-[SET] SqlNode: 'set'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=e.name,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=e}
+    |     |  +-[ALIAS_REF] IdentNode: 'id' {alias=e, className=org.hibernate.test.hql.joinedSubclass.Employee, tableAlias=employee0_}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     \-[QUOTED_STRING] LiteralNode: ''Some Other Name''
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'employee0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=e.id,tableAlias=employee0_,className=org.hibernate.test.hql.joinedSubclass.Employee,classAlias=e}
+          |  +-[ALIAS_REF] IdentNode: 'id' {alias=e, className=org.hibernate.test.hql.joinedSubclass.Employee, tableAlias=employee0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:13:59,226 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,227 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Employee
+        select
+            employee0_.id as id 
+        from
+            Employee employee0_ 
+        inner join
+            Person employee0_1_ 
+                on employee0_.id=employee0_1_.id 
+        where
+            employee0_.id=1
+14:13:59,234 DEBUG SQL:104 - 
+    update
+        Person 
+    set
+        name='Some Other Name' 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Employee
+        )
+14:13:59,234 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Employee
+14:13:59,235 DEBUG QueryTranslatorImpl:265 - parse() - HQL: update org.hibernate.test.hql.joinedSubclass.Person set name = 'Some Other Name' where id = 1
+14:13:59,235 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[UPDATE] Node: 'update'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'hql'
+    |        |  \-[IDENT] Node: 'joinedSubclass'
+    |        \-[IDENT] Node: 'Person'
+    +-[SET] Node: 'set'
+    |  \-[EQ] Node: '='
+    |     +-[IDENT] Node: 'name'
+    |     \-[QUOTED_STRING] Node: ''Some Other Name''
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:13:59,245 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,245 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Person (<no alias>) -> person0_
+14:13:59,245 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:59,246 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,246 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> name
+14:13:59,246 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:59,246 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:13:59,246 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.id -> person0_.id
+14:13:59,255 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[UPDATE] UpdateStatement: 'update'  querySpaces (Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Person}}
+    +-[SET] SqlNode: 'set'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=null}
+    |     |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     \-[QUOTED_STRING] LiteralNode: ''Some Other Name''
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path={synthetic-alias}.id,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:13:59,255 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,255 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Person
+        select
+            person0_.id as id 
+        from
+            Person person0_ 
+        where
+            person0_.id=1
+14:13:59,256 DEBUG SQL:104 - 
+    update
+        Person 
+    set
+        name='Some Other Name' 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,265 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Person
+14:13:59,265 DEBUG QueryTranslatorImpl:265 - parse() - HQL: update org.hibernate.test.hql.joinedSubclass.Person p set p.name = 'Some Other Name' where p.id = 1
+14:13:59,267 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[UPDATE] Node: 'update'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     +-[DOT] Node: '.'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'hql'
+    |     |  |  \-[IDENT] Node: 'joinedSubclass'
+    |     |  \-[IDENT] Node: 'Person'
+    |     \-[ALIAS] Node: 'p'
+    +-[SET] Node: 'set'
+    |  \-[EQ] Node: '='
+    |     +-[DOT] Node: '.'
+    |     |  +-[IDENT] Node: 'p'
+    |     |  \-[IDENT] Node: 'name'
+    |     \-[QUOTED_STRING] Node: ''Some Other Name''
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:13:59,267 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,267 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.joinedSubclass.Person (p) -> person0_
+14:13:59,267 DEBUG FromReferenceNode:74 - Resolved : p -> id
+14:13:59,268 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:13:59,268 DEBUG FromReferenceNode:74 - Resolved : p.name -> name
+14:13:59,268 DEBUG FromReferenceNode:74 - Resolved : p -> id
+14:13:59,268 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:13:59,268 DEBUG FromReferenceNode:74 - Resolved : p.id -> person0_.id
+14:13:59,268 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[UPDATE] UpdateStatement: 'update'  querySpaces (Person)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.hql.joinedSubclass.Person}}
+    +-[SET] SqlNode: 'set'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=p}
+    |     |  +-[ALIAS_REF] IdentNode: 'id' {alias=p, className=org.hibernate.test.hql.joinedSubclass.Person, tableAlias=person0_}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     \-[QUOTED_STRING] LiteralNode: ''Some Other Name''
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=p.id,tableAlias=person0_,className=org.hibernate.test.hql.joinedSubclass.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'id' {alias=p, className=org.hibernate.test.hql.joinedSubclass.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:13:59,278 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:59,279 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Person
+        select
+            person0_.id as id 
+        from
+            Person person0_ 
+        where
+            person0_.id=1
+14:13:59,279 DEBUG SQL:104 - 
+    update
+        Person 
+    set
+        name='Some Other Name' 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Person
+        )
+14:13:59,288 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Person
+14:13:59,289  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:13:59,290 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:13:59,290 DEBUG SQL:104 - 
+    alter table Employee 
+        drop constraint FK4AFD4ACE947AECDC
+14:13:59,290 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:13:59,290 DEBUG SQL:104 - 
+    drop table Person if exists
+14:13:59,290  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:13:59,291  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

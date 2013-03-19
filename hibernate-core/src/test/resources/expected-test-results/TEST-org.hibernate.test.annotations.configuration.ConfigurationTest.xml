@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.configuration.ConfigurationTest" tests="1" time="0.042" timestamp="2013-02-28T20:10:17">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.configuration.ConfigurationTest" name="testMixPackageAndResourceOrdering" time="0.04" />
+  <system-out><![CDATA[14:10:17,635  INFO Configuration:725 - HHH000221: Reading mappings from resource: org/hibernate/test/annotations/configuration/orm.xml
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

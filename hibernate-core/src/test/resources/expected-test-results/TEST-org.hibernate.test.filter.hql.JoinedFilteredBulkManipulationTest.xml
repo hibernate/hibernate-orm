@@ -1,0 +1,1567 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.filter.hql.JoinedFilteredBulkManipulationTest" tests="6" time="0.796" timestamp="2013-02-28T20:12:31">
+  <properties />
+  <testcase classname="org.hibernate.test.filter.hql.JoinedFilteredBulkManipulationTest" name="testFilteredJoinedSubclassHqlDeleteLeaf" time="0.047" />
+  <testcase classname="org.hibernate.test.filter.hql.JoinedFilteredBulkManipulationTest" name="testFilteredJoinedSubclassHqlDeleteNonLeaf" time="0.127" />
+  <testcase classname="org.hibernate.test.filter.hql.JoinedFilteredBulkManipulationTest" name="testFilteredJoinedSubclassHqlDeleteRoot" time="0.108" />
+  <testcase classname="org.hibernate.test.filter.hql.JoinedFilteredBulkManipulationTest" name="testFilteredJoinedSubclassHqlUpdateLeaf" time="0.13" />
+  <testcase classname="org.hibernate.test.filter.hql.JoinedFilteredBulkManipulationTest" name="testFilteredJoinedSubclassHqlUpdateNonLeaf" time="0.202" />
+  <testcase classname="org.hibernate.test.filter.hql.JoinedFilteredBulkManipulationTest" name="testFilteredJoinedSubclassHqlUpdateRoot" time="0.111" />
+  <system-out><![CDATA[14:12:31,764  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.filter.hql.JoinedFilteredBulkManipulationTest
+14:12:31,766  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/filter/hql/filter-defs.hbm.xml
+14:12:31,770  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/filter/hql/Joined.hbm.xml
+14:12:31,779  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:31,779  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:31,780  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:31,780  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:31,780  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:31,781  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:31,781  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:31,782  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:31,782  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:31,782  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:31,798  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:31,799 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:31,799 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_CUST 
+        drop constraint FKA40B00E6EDD20DBD
+14:12:31,799 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FILTER_HQL_JOINED_CUST drop constraint FKA40B00E6EDD20DBD
+14:12:31,799 ERROR SchemaExport:426 - Table "FILTER_HQL_JOINED_CUST" not found; SQL statement:
+
+    alter table FILTER_HQL_JOINED_CUST 
+        drop constraint FKA40B00E6EDD20DBD [42102-145]
+14:12:31,800 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_EMP 
+        drop constraint FK8129ABB55D253B28
+14:12:31,800 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FILTER_HQL_JOINED_EMP drop constraint FK8129ABB55D253B28
+14:12:31,800 ERROR SchemaExport:426 - Table "FILTER_HQL_JOINED_EMP" not found; SQL statement:
+
+    alter table FILTER_HQL_JOINED_EMP 
+        drop constraint FK8129ABB55D253B28 [42102-145]
+14:12:31,800 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_USER 
+        drop constraint FKA413265E504DD60F
+14:12:31,800 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FILTER_HQL_JOINED_USER drop constraint FKA413265E504DD60F
+14:12:31,800 ERROR SchemaExport:426 - Table "FILTER_HQL_JOINED_USER" not found; SQL statement:
+
+    alter table FILTER_HQL_JOINED_USER 
+        drop constraint FKA413265E504DD60F [42102-145]
+14:12:31,800 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_CUST if exists
+14:12:31,801 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_EMP if exists
+14:12:31,801 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_PERSON if exists
+14:12:31,801 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_USER if exists
+14:12:31,801 DEBUG SQL:104 - 
+    create table FILTER_HQL_JOINED_CUST (
+        CUST_ID bigint not null,
+        company varchar(255),
+        primary key (CUST_ID)
+    )
+14:12:31,801 DEBUG SQL:104 - 
+    create table FILTER_HQL_JOINED_EMP (
+        EMP_ID bigint not null,
+        hireDate date,
+        primary key (EMP_ID)
+    )
+14:12:31,802 DEBUG SQL:104 - 
+    create table FILTER_HQL_JOINED_PERSON (
+        ID bigint not null,
+        name varchar(255),
+        SEX_CODE char(255),
+        primary key (ID)
+    )
+14:12:31,802 DEBUG SQL:104 - 
+    create table FILTER_HQL_JOINED_USER (
+        USER_ID bigint not null,
+        username varchar(255),
+        primary key (USER_ID)
+    )
+14:12:31,802 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_CUST 
+        add constraint FKA40B00E6EDD20DBD 
+        foreign key (CUST_ID) 
+        references FILTER_HQL_JOINED_USER
+14:12:31,803 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_EMP 
+        add constraint FK8129ABB55D253B28 
+        foreign key (EMP_ID) 
+        references FILTER_HQL_JOINED_USER
+14:12:31,803 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_USER 
+        add constraint FKA413265E504DD60F 
+        foreign key (USER_ID) 
+        references FILTER_HQL_JOINED_PERSON
+14:12:31,804  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:31,804  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:31,804  INFO CustomRunner:139 - Test: testFilteredJoinedSubclassHqlDeleteLeaf
+14:12:31,806 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        FILTER_HQL_JOINED_PERSON
+14:12:31,809 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:31,810 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:31,810 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:31,810 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:31,810 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:31,810 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:31,811 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:31,811 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:31,811 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:31,811 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:31,811 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:31,812 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:31,812 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.filter.hql.Employee
+14:12:31,813 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'filter'
+             |  \-[IDENT] Node: 'hql'
+             \-[IDENT] Node: 'Employee'
+
+14:12:31,813 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:31,813 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.filter.hql.Employee (<no alias>) -> employee0_
+14:12:31,813 DEBUG DeleteStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:12:31,813 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (FILTER_HQL_JOINED_PERSON,FILTER_HQL_JOINED_USER,FILTER_HQL_JOINED_EMP)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_EMP' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_EMP,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.filter.hql.Employee}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[SQL_TOKEN] SqlFragment: 'SEX_CODE = ?'
+
+14:12:31,814 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:31,814 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_EMP
+        select
+            employee0_.EMP_ID as EMP_ID 
+        from
+            FILTER_HQL_JOINED_EMP employee0_ 
+        inner join
+            FILTER_HQL_JOINED_USER employee0_1_ 
+                on employee0_.EMP_ID=employee0_1_.USER_ID 
+        inner join
+            FILTER_HQL_JOINED_PERSON employee0_2_ 
+                on employee0_.EMP_ID=employee0_2_.ID 
+        where
+            SEX_CODE = ?
+14:12:31,815 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_EMP 
+    where
+        (
+            EMP_ID
+        ) IN (
+            select
+                EMP_ID 
+            from
+                HT_FILTER_HQL_JOINED_EMP
+        )
+14:12:31,820 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_USER 
+    where
+        (
+            USER_ID
+        ) IN (
+            select
+                EMP_ID 
+            from
+                HT_FILTER_HQL_JOINED_EMP
+        )
+14:12:31,821 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_PERSON 
+    where
+        (
+            ID
+        ) IN (
+            select
+                EMP_ID 
+            from
+                HT_FILTER_HQL_JOINED_EMP
+        )
+14:12:31,821 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_EMP
+14:12:31,822 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.filter.hql.Person
+14:12:31,822 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'filter'
+             |  \-[IDENT] Node: 'hql'
+             \-[IDENT] Node: 'Person'
+
+14:12:31,823 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:31,823 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.filter.hql.Person (<no alias>) -> person0_
+14:12:31,823 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (FILTER_HQL_JOINED_PERSON)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_PERSON' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.filter.hql.Person}}
+
+14:12:31,823 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:31,823 DEBUG DeleteStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:12:31,824 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_PERSON
+        select
+            person0_.ID as ID 
+        from
+            FILTER_HQL_JOINED_PERSON person0_
+14:12:31,838 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_CUST 
+    where
+        (
+            CUST_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:31,838 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_EMP 
+    where
+        (
+            EMP_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:31,850 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_USER 
+    where
+        (
+            USER_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:31,851 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_PERSON 
+    where
+        (
+            ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:31,851 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_PERSON
+14:12:31,852  INFO CustomRunner:139 - Test: testFilteredJoinedSubclassHqlDeleteNonLeaf
+14:12:31,854 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:31,887 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:31,887 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:31,887 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:31,887 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:31,888 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:31,898 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:31,899 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:31,899 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:31,899 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:31,911 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:31,911 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:31,912 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.filter.hql.User
+14:12:31,913 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'filter'
+             |  \-[IDENT] Node: 'hql'
+             \-[IDENT] Node: 'User'
+
+14:12:31,924 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:31,925 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.filter.hql.User (<no alias>) -> user0_
+14:12:31,925 DEBUG DeleteStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:12:31,925 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (FILTER_HQL_JOINED_PERSON,FILTER_HQL_JOINED_USER)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_USER' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.filter.hql.User}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[SQL_TOKEN] SqlFragment: 'SEX_CODE = ?'
+
+14:12:31,925 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:31,926 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_USER
+        select
+            user0_.USER_ID as USER_ID 
+        from
+            FILTER_HQL_JOINED_USER user0_ 
+        inner join
+            FILTER_HQL_JOINED_PERSON user0_1_ 
+                on user0_.USER_ID=user0_1_.ID 
+        where
+            SEX_CODE = ?
+14:12:31,938 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_CUST 
+    where
+        (
+            CUST_ID
+        ) IN (
+            select
+                USER_ID 
+            from
+                HT_FILTER_HQL_JOINED_USER
+        )
+14:12:31,938 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_EMP 
+    where
+        (
+            EMP_ID
+        ) IN (
+            select
+                USER_ID 
+            from
+                HT_FILTER_HQL_JOINED_USER
+        )
+14:12:31,950 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_USER 
+    where
+        (
+            USER_ID
+        ) IN (
+            select
+                USER_ID 
+            from
+                HT_FILTER_HQL_JOINED_USER
+        )
+14:12:31,951 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_PERSON 
+    where
+        (
+            ID
+        ) IN (
+            select
+                USER_ID 
+            from
+                HT_FILTER_HQL_JOINED_USER
+        )
+14:12:31,951 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_USER
+14:12:31,952 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_PERSON
+        select
+            person0_.ID as ID 
+        from
+            FILTER_HQL_JOINED_PERSON person0_
+14:12:31,952 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_CUST 
+    where
+        (
+            CUST_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:31,952 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_EMP 
+    where
+        (
+            EMP_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:31,966 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_USER 
+    where
+        (
+            USER_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:31,967 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_PERSON 
+    where
+        (
+            ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:31,978 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_PERSON
+14:12:31,979  INFO CustomRunner:139 - Test: testFilteredJoinedSubclassHqlDeleteRoot
+14:12:31,981 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:31,981 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:31,981 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:31,982 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:31,982 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:31,982 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:32,007 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,007 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,007 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:32,008 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,019 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,020 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:32,020 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.filter.hql.Person
+14:12:32,021 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'filter'
+             |  \-[IDENT] Node: 'hql'
+             \-[IDENT] Node: 'Person'
+
+14:12:32,033 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,034 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.filter.hql.Person (<no alias>) -> person0_
+14:12:32,034 DEBUG DeleteStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:12:32,034 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (FILTER_HQL_JOINED_PERSON)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_PERSON' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.filter.hql.Person}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[SQL_TOKEN] SqlFragment: 'SEX_CODE = ?'
+
+14:12:32,034 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,035 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_PERSON
+        select
+            person0_.ID as ID 
+        from
+            FILTER_HQL_JOINED_PERSON person0_ 
+        where
+            SEX_CODE = ?
+14:12:32,035 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_CUST 
+    where
+        (
+            CUST_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,046 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_EMP 
+    where
+        (
+            EMP_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,046 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_USER 
+    where
+        (
+            USER_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,057 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_PERSON 
+    where
+        (
+            ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,058 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_PERSON
+14:12:32,058 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_PERSON
+        select
+            person0_.ID as ID 
+        from
+            FILTER_HQL_JOINED_PERSON person0_
+14:12:32,074 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_CUST 
+    where
+        (
+            CUST_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,074 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_EMP 
+    where
+        (
+            EMP_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,075 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_USER 
+    where
+        (
+            USER_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,086 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_PERSON 
+    where
+        (
+            ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,087 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_PERSON
+14:12:32,088  INFO CustomRunner:139 - Test: testFilteredJoinedSubclassHqlUpdateLeaf
+14:12:32,090 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,090 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,090 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:32,091 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,126 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,127 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:32,127 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,127 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,127 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:32,142 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,143 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,143 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:32,143 DEBUG QueryTranslatorImpl:265 - parse() - HQL: update org.hibernate.test.filter.hql.Customer c set c.company = 'XYZ'
+14:12:32,145 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[UPDATE] Node: 'update'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     +-[DOT] Node: '.'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'filter'
+    |     |  |  \-[IDENT] Node: 'hql'
+    |     |  \-[IDENT] Node: 'Customer'
+    |     \-[ALIAS] Node: 'c'
+    \-[SET] Node: 'set'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'c'
+          |  \-[IDENT] Node: 'company'
+          \-[QUOTED_STRING] Node: ''XYZ''
+
+14:12:32,166 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,166 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.filter.hql.Customer (c) -> customer0_
+14:12:32,166 DEBUG FromReferenceNode:74 - Resolved : c -> CUST_ID
+14:12:32,166 DEBUG DotNode:599 - getDataType() : company -> org.hibernate.type.StringType@2dc8de40
+14:12:32,167 DEBUG FromReferenceNode:74 - Resolved : c.company -> company
+14:12:32,193 DEBUG UpdateStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:12:32,194 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[UPDATE] UpdateStatement: 'update'  querySpaces (FILTER_HQL_JOINED_PERSON,FILTER_HQL_JOINED_CUST,FILTER_HQL_JOINED_USER)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[c], fromElementByTableAlias=[customer0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_CUST' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=FILTER_HQL_JOINED_CUST,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.filter.hql.Customer}}
+    +-[SET] SqlNode: 'set'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'company' {propertyName=company,dereferenceType=ALL,propertyPath=company,path=c.company,tableAlias=customer0_,className=org.hibernate.test.filter.hql.Customer,classAlias=c}
+    |     |  +-[ALIAS_REF] IdentNode: 'CUST_ID' {alias=c, className=org.hibernate.test.filter.hql.Customer, tableAlias=customer0_}
+    |     |  \-[IDENT] IdentNode: 'company' {originalText=company}
+    |     \-[QUOTED_STRING] LiteralNode: ''XYZ''
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[SQL_TOKEN] SqlFragment: 'SEX_CODE = ?'
+
+14:12:32,194 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,202 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_CUST
+        select
+            customer0_.CUST_ID as CUST_ID 
+        from
+            FILTER_HQL_JOINED_CUST customer0_ 
+        inner join
+            FILTER_HQL_JOINED_USER customer0_1_ 
+                on customer0_.CUST_ID=customer0_1_.USER_ID 
+        inner join
+            FILTER_HQL_JOINED_PERSON customer0_2_ 
+                on customer0_.CUST_ID=customer0_2_.ID 
+        where
+            SEX_CODE = ?
+14:12:32,203 DEBUG SQL:104 - 
+    update
+        FILTER_HQL_JOINED_CUST 
+    set
+        company='XYZ' 
+    where
+        (
+            CUST_ID
+        ) IN (
+            select
+                CUST_ID 
+            from
+                HT_FILTER_HQL_JOINED_CUST
+        )
+14:12:32,203 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_CUST
+14:12:32,204 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_PERSON
+        select
+            person0_.ID as ID 
+        from
+            FILTER_HQL_JOINED_PERSON person0_
+14:12:32,205 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_CUST 
+    where
+        (
+            CUST_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,205 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_EMP 
+    where
+        (
+            EMP_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,217 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_USER 
+    where
+        (
+            USER_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,217 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_PERSON 
+    where
+        (
+            ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,218 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_PERSON
+14:12:32,218  INFO CustomRunner:139 - Test: testFilteredJoinedSubclassHqlUpdateNonLeaf
+14:12:32,219 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,220 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,220 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:32,220 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,230 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,230 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:32,245 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,246 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,246 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:32,246 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,305 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,305 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:32,306 DEBUG QueryTranslatorImpl:265 - parse() - HQL: update org.hibernate.test.filter.hql.User u set u.username = :un where u.name = :n
+14:12:32,307 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[UPDATE] Node: 'update'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     +-[DOT] Node: '.'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'filter'
+    |     |  |  \-[IDENT] Node: 'hql'
+    |     |  \-[IDENT] Node: 'User'
+    |     \-[ALIAS] Node: 'u'
+    +-[SET] Node: 'set'
+    |  \-[EQ] Node: '='
+    |     +-[DOT] Node: '.'
+    |     |  +-[IDENT] Node: 'u'
+    |     |  \-[IDENT] Node: 'username'
+    |     \-[COLON] Node: ':'
+    |        \-[IDENT] Node: 'un'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'u'
+          |  \-[IDENT] Node: 'name'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'n'
+
+14:12:32,342 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,343 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.filter.hql.User (u) -> user0_
+14:12:32,343 DEBUG FromReferenceNode:74 - Resolved : u -> USER_ID
+14:12:32,343 DEBUG DotNode:599 - getDataType() : username -> org.hibernate.type.StringType@2dc8de40
+14:12:32,343 DEBUG FromReferenceNode:74 - Resolved : u.username -> username
+14:12:32,343 DEBUG FromReferenceNode:74 - Resolved : u -> USER_ID
+14:12:32,343 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:12:32,344 DEBUG FromReferenceNode:74 - Resolved : u.name -> user0_1_.name
+14:12:32,344 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[UPDATE] UpdateStatement: 'update'  querySpaces (FILTER_HQL_JOINED_PERSON,FILTER_HQL_JOINED_USER)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[u], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_USER' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=FILTER_HQL_JOINED_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.filter.hql.User}}
+    +-[SET] SqlNode: 'set'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'username' {propertyName=username,dereferenceType=ALL,propertyPath=username,path=u.username,tableAlias=user0_,className=org.hibernate.test.filter.hql.User,classAlias=u}
+    |     |  +-[ALIAS_REF] IdentNode: 'USER_ID' {alias=u, className=org.hibernate.test.filter.hql.User, tableAlias=user0_}
+    |     |  \-[IDENT] IdentNode: 'username' {originalText=username}
+    |     \-[NAMED_PARAM] ParameterNode: '?' {name=un, expectedType=org.hibernate.type.StringType@2dc8de40}
+    \-[WHERE] SqlNode: 'where'
+       \-[AND] SqlNode: '{and}'
+          +-[SQL_TOKEN] SqlFragment: 'SEX_CODE = ?'
+          \-[EQ] BinaryLogicOperatorNode: '='
+             +-[DOT] DotNode: 'user0_1_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=u.name,tableAlias=user0_,className=org.hibernate.test.filter.hql.User,classAlias=u}
+             |  +-[ALIAS_REF] IdentNode: 'USER_ID' {alias=u, className=org.hibernate.test.filter.hql.User, tableAlias=user0_}
+             |  \-[IDENT] IdentNode: 'name' {originalText=name}
+             \-[NAMED_PARAM] ParameterNode: '?' {name=n, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:12:32,344 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,345 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_USER
+        select
+            user0_.USER_ID as USER_ID 
+        from
+            FILTER_HQL_JOINED_USER user0_ 
+        inner join
+            FILTER_HQL_JOINED_PERSON user0_1_ 
+                on user0_.USER_ID=user0_1_.ID 
+        where
+            SEX_CODE = ? 
+            and user0_1_.name=?
+14:12:32,345 DEBUG SQL:104 - 
+    update
+        FILTER_HQL_JOINED_USER 
+    set
+        username=? 
+    where
+        (
+            USER_ID
+        ) IN (
+            select
+                USER_ID 
+            from
+                HT_FILTER_HQL_JOINED_USER
+        )
+14:12:32,345 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_USER
+14:12:32,385 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_PERSON
+        select
+            person0_.ID as ID 
+        from
+            FILTER_HQL_JOINED_PERSON person0_
+14:12:32,385 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_CUST 
+    where
+        (
+            CUST_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,386 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_EMP 
+    where
+        (
+            EMP_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,408 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_USER 
+    where
+        (
+            USER_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,408 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_PERSON 
+    where
+        (
+            ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,420 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_PERSON
+14:12:32,421  INFO CustomRunner:139 - Test: testFilteredJoinedSubclassHqlUpdateRoot
+14:12:32,423 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,423 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,436 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:32,437 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,437 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,437 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_EMP
+        (hireDate, EMP_ID) 
+    values
+        (?, ?)
+14:12:32,448 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,448 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,448 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:32,448 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_PERSON
+        (name, SEX_CODE, ID) 
+    values
+        (?, ?, ?)
+14:12:32,459 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_USER
+        (username, USER_ID) 
+    values
+        (?, ?)
+14:12:32,459 DEBUG SQL:104 - 
+    insert 
+    into
+        FILTER_HQL_JOINED_CUST
+        (company, CUST_ID) 
+    values
+        (?, ?)
+14:12:32,460 DEBUG QueryTranslatorImpl:265 - parse() - HQL: update org.hibernate.test.filter.hql.Person p set p.name = '<male>'
+14:12:32,461 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[UPDATE] Node: 'update'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     +-[DOT] Node: '.'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'filter'
+    |     |  |  \-[IDENT] Node: 'hql'
+    |     |  \-[IDENT] Node: 'Person'
+    |     \-[ALIAS] Node: 'p'
+    \-[SET] Node: 'set'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''<male>''
+
+14:12:32,462 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,462 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.filter.hql.Person (p) -> person0_
+14:12:32,463 DEBUG FromReferenceNode:74 - Resolved : p -> ID
+14:12:32,463 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:12:32,463 DEBUG FromReferenceNode:74 - Resolved : p.name -> name
+14:12:32,463 DEBUG UpdateStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:12:32,463 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[UPDATE] UpdateStatement: 'update'  querySpaces (FILTER_HQL_JOINED_PERSON)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_PERSON' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.filter.hql.Person}}
+    +-[SET] SqlNode: 'set'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=person0_,className=org.hibernate.test.filter.hql.Person,classAlias=p}
+    |     |  +-[ALIAS_REF] IdentNode: 'ID' {alias=p, className=org.hibernate.test.filter.hql.Person, tableAlias=person0_}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     \-[QUOTED_STRING] LiteralNode: ''<male>''
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[SQL_TOKEN] SqlFragment: 'SEX_CODE = ?'
+
+14:12:32,463 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,464 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_PERSON
+        select
+            person0_.ID as ID 
+        from
+            FILTER_HQL_JOINED_PERSON person0_ 
+        where
+            SEX_CODE = ?
+14:12:32,493 DEBUG SQL:104 - 
+    update
+        FILTER_HQL_JOINED_PERSON 
+    set
+        name='<male>' 
+    where
+        (
+            ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,493 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_PERSON
+14:12:32,494 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_FILTER_HQL_JOINED_PERSON
+        select
+            person0_.ID as ID 
+        from
+            FILTER_HQL_JOINED_PERSON person0_
+14:12:32,509 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_CUST 
+    where
+        (
+            CUST_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,509 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_EMP 
+    where
+        (
+            EMP_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,509 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_USER 
+    where
+        (
+            USER_ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,520 DEBUG SQL:104 - 
+    delete 
+    from
+        FILTER_HQL_JOINED_PERSON 
+    where
+        (
+            ID
+        ) IN (
+            select
+                ID 
+            from
+                HT_FILTER_HQL_JOINED_PERSON
+        )
+14:12:32,531 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_FILTER_HQL_JOINED_PERSON
+14:12:32,532  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:32,533 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:32,533 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_CUST 
+        drop constraint FKA40B00E6EDD20DBD
+14:12:32,533 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_EMP 
+        drop constraint FK8129ABB55D253B28
+14:12:32,533 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_USER 
+        drop constraint FKA413265E504DD60F
+14:12:32,533 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_CUST if exists
+14:12:32,534 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_EMP if exists
+14:12:32,544 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_PERSON if exists
+14:12:32,545 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_USER if exists
+14:12:32,545  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:32,545  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

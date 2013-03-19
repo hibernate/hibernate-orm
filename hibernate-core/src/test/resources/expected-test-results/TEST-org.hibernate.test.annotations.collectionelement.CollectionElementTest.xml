@@ -1,0 +1,1262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.collectionelement.CollectionElementTest" tests="8" time="0.773" timestamp="2013-02-28T20:10:16">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.collectionelement.CollectionElementTest" name="testAttributedJoin" time="0.088" />
+  <testcase classname="org.hibernate.test.annotations.collectionelement.CollectionElementTest" name="testCompositeElement" time="0.077" />
+  <testcase classname="org.hibernate.test.annotations.collectionelement.CollectionElementTest" name="testDefaultFKNameForElementCollection" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.collectionelement.CollectionElementTest" name="testDefaultValueColumnForBasic" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.collectionelement.CollectionElementTest" name="testFetchEagerAndFilter" time="0.069" />
+  <testcase classname="org.hibernate.test.annotations.collectionelement.CollectionElementTest" name="testLazyCollectionofElements" time="0.186" />
+  <testcase classname="org.hibernate.test.annotations.collectionelement.CollectionElementTest" name="testMapKeyType" time="0.018" />
+  <testcase classname="org.hibernate.test.annotations.collectionelement.CollectionElementTest" name="testSimpleElement" time="0.115" />
+  <system-out><![CDATA[14:10:16,324  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.collectionelement.CollectionElementTest
+14:10:16,368  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:16,368  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:16,369  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:16,369  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:16,369  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:16,370  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:16,371  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:16,371  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:16,372  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:16,372  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:16,405  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:16,408 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:16,408 DEBUG SQL:104 - 
+    alter table BoyFavoriteNumbers 
+        drop constraint FK4974B9C257B3F783
+14:10:16,408 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table BoyFavoriteNumbers drop constraint FK4974B9C257B3F783
+14:10:16,409 ERROR SchemaExport:426 - Table "BOYFAVORITENUMBERS" not found; SQL statement:
+
+    alter table BoyFavoriteNumbers 
+        drop constraint FK4974B9C257B3F783 [42102-145]
+14:10:16,409 DEBUG SQL:104 - 
+    alter table Boy_characters 
+        drop constraint FKD40EF6DDFFAA400A
+14:10:16,409 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Boy_characters drop constraint FKD40EF6DDFFAA400A
+14:10:16,409 ERROR SchemaExport:426 - Table "BOY_CHARACTERS" not found; SQL statement:
+
+    alter table Boy_characters 
+        drop constraint FKD40EF6DDFFAA400A [42102-145]
+14:10:16,410 DEBUG SQL:104 - 
+    alter table Boy_countryAttitudes 
+        drop constraint FK4F5B4C4690B6E71A
+14:10:16,410 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Boy_countryAttitudes drop constraint FK4F5B4C4690B6E71A
+14:10:16,410 ERROR SchemaExport:426 - Table "BOY_COUNTRYATTITUDES" not found; SQL statement:
+
+    alter table Boy_countryAttitudes 
+        drop constraint FK4F5B4C4690B6E71A [42102-145]
+14:10:16,410 DEBUG SQL:104 - 
+    alter table Boy_countryAttitudes 
+        drop constraint FK4F5B4C46FFAA400A
+14:10:16,410 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Boy_countryAttitudes drop constraint FK4F5B4C46FFAA400A
+14:10:16,410 ERROR SchemaExport:426 - Table "BOY_COUNTRYATTITUDES" not found; SQL statement:
+
+    alter table Boy_countryAttitudes 
+        drop constraint FK4F5B4C46FFAA400A [42102-145]
+14:10:16,410 DEBUG SQL:104 - 
+    alter table Boy_favoriteFood 
+        drop constraint FK817F17CDFFAA400A
+14:10:16,411 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Boy_favoriteFood drop constraint FK817F17CDFFAA400A
+14:10:16,411 ERROR SchemaExport:426 - Table "BOY_FAVORITEFOOD" not found; SQL statement:
+
+    alter table Boy_favoriteFood 
+        drop constraint FK817F17CDFFAA400A [42102-145]
+14:10:16,411 DEBUG SQL:104 - 
+    alter table Boy_favoriteToys 
+        drop constraint FK81857644FFAA400A
+14:10:16,411 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Boy_favoriteToys drop constraint FK81857644FFAA400A
+14:10:16,411 ERROR SchemaExport:426 - Table "BOY_FAVORITETOYS" not found; SQL statement:
+
+    alter table Boy_favoriteToys 
+        drop constraint FK81857644FFAA400A [42102-145]
+14:10:16,411 DEBUG SQL:104 - 
+    alter table Boy_hatedNames 
+        drop constraint FK95928B61FFAA400A
+14:10:16,411 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Boy_hatedNames drop constraint FK95928B61FFAA400A
+14:10:16,412 ERROR SchemaExport:426 - Table "BOY_HATEDNAMES" not found; SQL statement:
+
+    alter table Boy_hatedNames 
+        drop constraint FK95928B61FFAA400A [42102-145]
+14:10:16,412 DEBUG SQL:104 - 
+    alter table Boy_nickNames 
+        drop constraint FK5C034ED2FFAA400A
+14:10:16,412 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Boy_nickNames drop constraint FK5C034ED2FFAA400A
+14:10:16,412 ERROR SchemaExport:426 - Table "BOY_NICKNAMES" not found; SQL statement:
+
+    alter table Boy_nickNames 
+        drop constraint FK5C034ED2FFAA400A [42102-145]
+14:10:16,412 DEBUG SQL:104 - 
+    alter table Boy_preferredNames 
+        drop constraint FK38E45E3AFFAA400A
+14:10:16,412 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Boy_preferredNames drop constraint FK38E45E3AFFAA400A
+14:10:16,412 ERROR SchemaExport:426 - Table "BOY_PREFERREDNAMES" not found; SQL statement:
+
+    alter table Boy_preferredNames 
+        drop constraint FK38E45E3AFFAA400A [42102-145]
+14:10:16,412 DEBUG SQL:104 - 
+    alter table Boy_scorePerPreferredName 
+        drop constraint FKAC9B64EEFFAA400A
+14:10:16,413 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Boy_scorePerPreferredName drop constraint FKAC9B64EEFFAA400A
+14:10:16,413 ERROR SchemaExport:426 - Table "BOY_SCOREPERPREFERREDNAME" not found; SQL statement:
+
+    alter table Boy_scorePerPreferredName 
+        drop constraint FKAC9B64EEFFAA400A [42102-145]
+14:10:16,413 DEBUG SQL:104 - 
+    alter table Matrix_mvalues 
+        drop constraint FKAD619171DFC98A4A
+14:10:16,413 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Matrix_mvalues drop constraint FKAD619171DFC98A4A
+14:10:16,413 ERROR SchemaExport:426 - Table "MATRIX_MVALUES" not found; SQL statement:
+
+    alter table Matrix_mvalues 
+        drop constraint FKAD619171DFC98A4A [42102-145]
+14:10:16,413 DEBUG SQL:104 - 
+    alter table ScorePerNickName 
+        drop constraint FK7AC02F957B3F783
+14:10:16,413 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ScorePerNickName drop constraint FK7AC02F957B3F783
+14:10:16,414 ERROR SchemaExport:426 - Table "SCOREPERNICKNAME" not found; SQL statement:
+
+    alter table ScorePerNickName 
+        drop constraint FK7AC02F957B3F783 [42102-145]
+14:10:16,414 DEBUG SQL:104 - 
+    alter table TestCourse_variations 
+        drop constraint FK62D548D2D343057
+14:10:16,414 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TestCourse_variations drop constraint FK62D548D2D343057
+14:10:16,414 ERROR SchemaExport:426 - Table "TESTCOURSE_VARIATIONS" not found; SQL statement:
+
+    alter table TestCourse_variations 
+        drop constraint FK62D548D2D343057 [42102-145]
+14:10:16,414 DEBUG SQL:104 - 
+    drop table BoyFavoriteNumbers if exists
+14:10:16,414 DEBUG SQL:104 - 
+    drop table Boy_characters if exists
+14:10:16,414 DEBUG SQL:104 - 
+    drop table Boy_countryAttitudes if exists
+14:10:16,415 DEBUG SQL:104 - 
+    drop table Boy_favoriteFood if exists
+14:10:16,415 DEBUG SQL:104 - 
+    drop table Boy_favoriteToys if exists
+14:10:16,415 DEBUG SQL:104 - 
+    drop table Boy_hatedNames if exists
+14:10:16,415 DEBUG SQL:104 - 
+    drop table Boy_nickNames if exists
+14:10:16,415 DEBUG SQL:104 - 
+    drop table Boy_preferredNames if exists
+14:10:16,415 DEBUG SQL:104 - 
+    drop table Boy_scorePerPreferredName if exists
+14:10:16,415 DEBUG SQL:104 - 
+    drop table Country if exists
+14:10:16,416 DEBUG SQL:104 - 
+    drop table Matrix if exists
+14:10:16,416 DEBUG SQL:104 - 
+    drop table Matrix_mvalues if exists
+14:10:16,416 DEBUG SQL:104 - 
+    drop table ScorePerNickName if exists
+14:10:16,416 DEBUG SQL:104 - 
+    drop table TestCourse if exists
+14:10:16,416 DEBUG SQL:104 - 
+    drop table TestCourse_variations if exists
+14:10:16,416 DEBUG SQL:104 - 
+    drop table tbl_Boys if exists
+14:10:16,416 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:16,417 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:16,417 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:16,417 DEBUG SQL:104 - 
+    create table BoyFavoriteNumbers (
+        BoyId integer not null,
+        favoriteNumber integer not null,
+        nbr_index integer not null,
+        primary key (BoyId, nbr_index)
+    )
+14:10:16,417 DEBUG SQL:104 - 
+    create table Boy_characters (
+        Boy_id integer not null,
+        "characters" varchar(255)
+    )
+14:10:16,418 DEBUG SQL:104 - 
+    create table Boy_countryAttitudes (
+        Boy_id integer not null,
+        country_id integer not null,
+        b_likes boolean,
+        primary key (Boy_id, country_id)
+    )
+14:10:16,418 DEBUG SQL:104 - 
+    create table Boy_favoriteFood (
+        Boy_id integer not null,
+        favoriteFood varchar(255),
+        favoriteFood_KEY varchar(255) not null,
+        primary key (Boy_id, favoriteFood_KEY)
+    )
+14:10:16,418 DEBUG SQL:104 - 
+    create table Boy_favoriteToys (
+        Boy_id integer not null,
+        brand_name varchar(255),
+        surname varchar(255),
+        name varchar(255),
+        serial varchar(255)
+    )
+14:10:16,419 DEBUG SQL:104 - 
+    create table Boy_hatedNames (
+        Boy_id integer not null,
+        hatedNames varchar(255)
+    )
+14:10:16,419 DEBUG SQL:104 - 
+    create table Boy_nickNames (
+        Boy_id integer not null,
+        nickNames varchar(255)
+    )
+14:10:16,419 DEBUG SQL:104 - 
+    create table Boy_preferredNames (
+        Boy_id integer not null,
+        preferredNames varchar(255)
+    )
+14:10:16,419 DEBUG SQL:104 - 
+    create table Boy_scorePerPreferredName (
+        Boy_id integer not null,
+        scorePerPreferredName integer,
+        scorePerPreferredName_KEY varchar(255) not null,
+        primary key (Boy_id, scorePerPreferredName_KEY)
+    )
+14:10:16,420 DEBUG SQL:104 - 
+    create table Country (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:16,443 DEBUG SQL:104 - 
+    create table Matrix (
+        id integer not null,
+        primary key (id)
+    )
+14:10:16,444 DEBUG SQL:104 - 
+    create table Matrix_mvalues (
+        Matrix_id integer not null,
+        mvalues float,
+        mvalues_KEY integer not null,
+        primary key (Matrix_id, mvalues_KEY)
+    )
+14:10:16,444 DEBUG SQL:104 - 
+    create table ScorePerNickName (
+        BoyId integer not null,
+        score integer not null,
+        scorePerNickName_KEY varchar(255) not null,
+        primary key (BoyId, scorePerNickName_KEY)
+    )
+14:10:16,444 DEBUG SQL:104 - 
+    create table TestCourse (
+        testCourseId bigint not null,
+        primary key (testCourseId)
+    )
+14:10:16,445 DEBUG SQL:104 - 
+    create table TestCourse_variations (
+        TestCourse_testCourseId bigint not null,
+        variations varchar(255),
+        language_code varchar(255) not null,
+        primary key (TestCourse_testCourseId, language_code)
+    )
+14:10:16,458 DEBUG SQL:104 - 
+    create table tbl_Boys (
+        id integer not null,
+        firstName varchar(255),
+        lastName varchar(255),
+        primary key (id)
+    )
+14:10:16,458 DEBUG SQL:104 - 
+    alter table BoyFavoriteNumbers 
+        add constraint FK4974B9C257B3F783 
+        foreign key (BoyId) 
+        references tbl_Boys
+14:10:16,459 DEBUG SQL:104 - 
+    alter table Boy_characters 
+        add constraint FKD40EF6DDFFAA400A 
+        foreign key (Boy_id) 
+        references tbl_Boys
+14:10:16,460 DEBUG SQL:104 - 
+    alter table Boy_countryAttitudes 
+        add constraint FK4F5B4C4690B6E71A 
+        foreign key (country_id) 
+        references Country
+14:10:16,461 DEBUG SQL:104 - 
+    alter table Boy_countryAttitudes 
+        add constraint FK4F5B4C46FFAA400A 
+        foreign key (Boy_id) 
+        references tbl_Boys
+14:10:16,472 DEBUG SQL:104 - 
+    alter table Boy_favoriteFood 
+        add constraint FK817F17CDFFAA400A 
+        foreign key (Boy_id) 
+        references tbl_Boys
+14:10:16,473 DEBUG SQL:104 - 
+    alter table Boy_favoriteToys 
+        add constraint FK81857644FFAA400A 
+        foreign key (Boy_id) 
+        references tbl_Boys
+14:10:16,473 DEBUG SQL:104 - 
+    alter table Boy_hatedNames 
+        add constraint FK95928B61FFAA400A 
+        foreign key (Boy_id) 
+        references tbl_Boys
+14:10:16,474 DEBUG SQL:104 - 
+    alter table Boy_nickNames 
+        add constraint FK5C034ED2FFAA400A 
+        foreign key (Boy_id) 
+        references tbl_Boys
+14:10:16,475 DEBUG SQL:104 - 
+    alter table Boy_preferredNames 
+        add constraint FK38E45E3AFFAA400A 
+        foreign key (Boy_id) 
+        references tbl_Boys
+14:10:16,475 DEBUG SQL:104 - 
+    alter table Boy_scorePerPreferredName 
+        add constraint FKAC9B64EEFFAA400A 
+        foreign key (Boy_id) 
+        references tbl_Boys
+14:10:16,487 DEBUG SQL:104 - 
+    alter table Matrix_mvalues 
+        add constraint FKAD619171DFC98A4A 
+        foreign key (Matrix_id) 
+        references Matrix
+14:10:16,488 DEBUG SQL:104 - 
+    alter table ScorePerNickName 
+        add constraint FK7AC02F957B3F783 
+        foreign key (BoyId) 
+        references tbl_Boys
+14:10:16,488 DEBUG SQL:104 - 
+    alter table TestCourse_variations 
+        add constraint FK62D548D2D343057 
+        foreign key (TestCourse_testCourseId) 
+        references TestCourse
+14:10:16,489 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:16,489  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:16,490  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:16,491  INFO CustomRunner:139 - Test: testAttributedJoin
+14:10:16,511 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:16,512 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:16,513 DEBUG SQL:104 - 
+    insert 
+    into
+        Country
+        (name, id) 
+    values
+        (?, ?)
+14:10:16,516 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_Boys
+        (firstName, lastName, id) 
+    values
+        (?, ?, ?)
+14:10:16,517 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_countryAttitudes
+        (Boy_id, country_id, b_likes) 
+    values
+        (?, ?, ?)
+14:10:16,518 DEBUG SQL:104 - 
+    select
+        boy0_.id as id15_1_,
+        boy0_.firstName as firstName15_1_,
+        boy0_.lastName as lastName15_1_,
+        countryatt1_.Boy_id as Boy1_15_3_,
+        countryatt1_.country_id as country2_2_3_,
+        countryatt1_.b_likes as b3_2_3_,
+        country2_.id as id9_0_,
+        country2_.name as name9_0_ 
+    from
+        tbl_Boys boy0_ 
+    left outer join
+        Boy_countryAttitudes countryatt1_ 
+            on boy0_.id=countryatt1_.Boy_id 
+    left outer join
+        Country country2_ 
+            on countryatt1_.country_id=country2_.id 
+    where
+        boy0_.id=?
+14:10:16,538 DEBUG SQL:104 - 
+    select
+        favoritenu0_.BoyId as BoyId15_0_,
+        favoritenu0_.favoriteNumber as favorite2_0_0_,
+        favoritenu0_.nbr_index as nbr3_0_ 
+    from
+        BoyFavoriteNumbers favoritenu0_ 
+    where
+        favoritenu0_.BoyId=?
+14:10:16,556 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_characters 
+    where
+        Boy_id=?
+14:10:16,557 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_favoriteFood 
+    where
+        Boy_id=?
+14:10:16,563 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_favoriteToys 
+    where
+        Boy_id=?
+14:10:16,563 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_hatedNames 
+    where
+        Boy_id=?
+14:10:16,563 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_nickNames 
+    where
+        Boy_id=?
+14:10:16,563 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_preferredNames 
+    where
+        Boy_id=?
+14:10:16,564 DEBUG SQL:104 - 
+    delete 
+    from
+        ScorePerNickName 
+    where
+        BoyId=?
+14:10:16,577 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_scorePerPreferredName 
+    where
+        Boy_id=?
+14:10:16,578 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_countryAttitudes 
+    where
+        Boy_id=?
+14:10:16,578 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_Boys 
+    where
+        id=?
+14:10:16,579 DEBUG SQL:104 - 
+    delete 
+    from
+        Country 
+    where
+        id=?
+14:10:16,579  INFO CustomRunner:139 - Test: testCompositeElement
+14:10:16,580 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:16,581 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_Boys
+        (firstName, lastName, id) 
+    values
+        (?, ?, ?)
+14:10:16,582 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_favoriteToys
+        (Boy_id, brand_name, surname, name, serial) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:16,582 DEBUG SQL:104 - 
+    select
+        boy0_.id as id15_1_,
+        boy0_.firstName as firstName15_1_,
+        boy0_.lastName as lastName15_1_,
+        countryatt1_.Boy_id as Boy1_15_3_,
+        countryatt1_.country_id as country2_2_3_,
+        countryatt1_.b_likes as b3_2_3_,
+        country2_.id as id9_0_,
+        country2_.name as name9_0_ 
+    from
+        tbl_Boys boy0_ 
+    left outer join
+        Boy_countryAttitudes countryatt1_ 
+            on boy0_.id=countryatt1_.Boy_id 
+    left outer join
+        Country country2_ 
+            on countryatt1_.country_id=country2_.id 
+    where
+        boy0_.id=?
+14:10:16,613 DEBUG SQL:104 - 
+    select
+        favoritenu0_.BoyId as BoyId15_0_,
+        favoritenu0_.favoriteNumber as favorite2_0_0_,
+        favoritenu0_.nbr_index as nbr3_0_ 
+    from
+        BoyFavoriteNumbers favoritenu0_ 
+    where
+        favoritenu0_.BoyId=?
+14:10:16,614 DEBUG SQL:104 - 
+    select
+        favoriteto0_.Boy_id as Boy1_15_0_,
+        favoriteto0_.brand_name as brand2_4_0_,
+        favoriteto0_.surname as surname4_0_,
+        favoriteto0_.name as name4_0_,
+        favoriteto0_.serial as serial4_0_ 
+    from
+        Boy_favoriteToys favoriteto0_ 
+    where
+        favoriteto0_.Boy_id=?
+14:10:16,634 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_characters 
+    where
+        Boy_id=?
+14:10:16,634 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_favoriteFood 
+    where
+        Boy_id=?
+14:10:16,634 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_favoriteToys 
+    where
+        Boy_id=?
+14:10:16,635 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_hatedNames 
+    where
+        Boy_id=?
+14:10:16,635 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_nickNames 
+    where
+        Boy_id=?
+14:10:16,635 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_preferredNames 
+    where
+        Boy_id=?
+14:10:16,636 DEBUG SQL:104 - 
+    delete 
+    from
+        ScorePerNickName 
+    where
+        BoyId=?
+14:10:16,636 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_scorePerPreferredName 
+    where
+        Boy_id=?
+14:10:16,636 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_Boys 
+    where
+        id=?
+14:10:16,657  INFO CustomRunner:139 - Test: testDefaultFKNameForElementCollection
+14:10:16,660  INFO CustomRunner:139 - Test: testDefaultValueColumnForBasic
+14:10:16,661  INFO CustomRunner:139 - Test: testFetchEagerAndFilter
+14:10:16,662 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:16,663 DEBUG SQL:104 - 
+    insert 
+    into
+        TestCourse
+        (testCourseId) 
+    values
+        (?)
+14:10:16,663 DEBUG SQL:104 - 
+    insert 
+    into
+        TestCourse_variations
+        (TestCourse_testCourseId, language_code, variations) 
+    values
+        (?, ?, ?)
+14:10:16,664 DEBUG SQL:104 - 
+    insert 
+    into
+        TestCourse_variations
+        (TestCourse_testCourseId, language_code, variations) 
+    values
+        (?, ?, ?)
+14:10:16,691 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.collectionelement.TestCourse t
+14:10:16,693 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  |  \-[IDENT] Node: 'test'
+             |  |  |  \-[IDENT] Node: 'annotations'
+             |  |  \-[IDENT] Node: 'collectionelement'
+             |  \-[IDENT] Node: 'TestCourse'
+             \-[ALIAS] Node: 't'
+
+14:10:16,693 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,693 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.collectionelement.TestCourse (t) -> testcourse0_
+14:10:16,693 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} TestCourse testcourse0_ ) )
+14:10:16,694 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:16,694 DEBUG JoinProcessor:175 - Using FROM fragment [TestCourse testcourse0_]
+14:10:16,694 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (TestCourse)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'testcourse0_.testCourseId as testCour1_13_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=t,role=null,tableName=TestCourse,tableAlias=testcourse0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.TestCourse}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[t], fromElementByTableAlias=[testcourse0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'TestCourse testcourse0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=t,role=null,tableName=TestCourse,tableAlias=testcourse0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.TestCourse}}
+
+14:10:16,694 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,694 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.collectionelement.TestCourse t
+14:10:16,694 DEBUG QueryTranslatorImpl:236 - SQL: select testcourse0_.testCourseId as testCour1_13_ from TestCourse testcourse0_
+14:10:16,694 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,695 DEBUG SQL:104 - 
+    select
+        testcourse0_.testCourseId as testCour1_13_ 
+    from
+        TestCourse testcourse0_
+14:10:16,696 DEBUG SQL:104 - 
+    select
+        variations0_.TestCourse_testCourseId as TestCourse1_13_0_,
+        variations0_.variations as variations14_0_,
+        variations0_.language_code as language3_0_ 
+    from
+        TestCourse_variations variations0_ 
+    where
+        variations0_.language_code = ?  
+        and variations0_.TestCourse_testCourseId=?
+14:10:16,730  INFO CustomRunner:139 - Test: testLazyCollectionofElements
+14:10:16,743 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:16,744 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_Boys
+        (firstName, lastName, id) 
+    values
+        (?, ?, ?)
+14:10:16,744 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_characters
+        (Boy_id, "characters") 
+    values
+        (?, ?)
+14:10:16,745 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_characters
+        (Boy_id, "characters") 
+    values
+        (?, ?)
+14:10:16,745 DEBUG SQL:104 - 
+    insert 
+    into
+        BoyFavoriteNumbers
+        (BoyId, nbr_index, favoriteNumber) 
+    values
+        (?, ?, ?)
+14:10:16,745 DEBUG SQL:104 - 
+    insert 
+    into
+        BoyFavoriteNumbers
+        (BoyId, nbr_index, favoriteNumber) 
+    values
+        (?, ?, ?)
+14:10:16,746 DEBUG SQL:104 - 
+    insert 
+    into
+        BoyFavoriteNumbers
+        (BoyId, nbr_index, favoriteNumber) 
+    values
+        (?, ?, ?)
+14:10:16,746 DEBUG SQL:104 - 
+    insert 
+    into
+        BoyFavoriteNumbers
+        (BoyId, nbr_index, favoriteNumber) 
+    values
+        (?, ?, ?)
+14:10:16,749 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_nickNames
+        (Boy_id, nickNames) 
+    values
+        (?, ?)
+14:10:16,749 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_nickNames
+        (Boy_id, nickNames) 
+    values
+        (?, ?)
+14:10:16,749 DEBUG SQL:104 - 
+    insert 
+    into
+        ScorePerNickName
+        (BoyId, scorePerNickName_KEY, score) 
+    values
+        (?, ?, ?)
+14:10:16,750 DEBUG SQL:104 - 
+    insert 
+    into
+        ScorePerNickName
+        (BoyId, scorePerNickName_KEY, score) 
+    values
+        (?, ?, ?)
+14:10:16,764 DEBUG SQL:104 - 
+    select
+        boy0_.id as id15_1_,
+        boy0_.firstName as firstName15_1_,
+        boy0_.lastName as lastName15_1_,
+        countryatt1_.Boy_id as Boy1_15_3_,
+        countryatt1_.country_id as country2_2_3_,
+        countryatt1_.b_likes as b3_2_3_,
+        country2_.id as id9_0_,
+        country2_.name as name9_0_ 
+    from
+        tbl_Boys boy0_ 
+    left outer join
+        Boy_countryAttitudes countryatt1_ 
+            on boy0_.id=countryatt1_.Boy_id 
+    left outer join
+        Country country2_ 
+            on countryatt1_.country_id=country2_.id 
+    where
+        boy0_.id=?
+14:10:16,789 DEBUG SQL:104 - 
+    select
+        favoritenu0_.BoyId as BoyId15_0_,
+        favoritenu0_.favoriteNumber as favorite2_0_0_,
+        favoritenu0_.nbr_index as nbr3_0_ 
+    from
+        BoyFavoriteNumbers favoritenu0_ 
+    where
+        favoritenu0_.BoyId=?
+14:10:16,811 DEBUG SQL:104 - 
+    select
+        nicknames0_.Boy_id as Boy1_15_0_,
+        nicknames0_.nickNames as nickNames6_0_ 
+    from
+        Boy_nickNames nicknames0_ 
+    where
+        nicknames0_.Boy_id=?
+14:10:16,812 DEBUG SQL:104 - 
+    select
+        scoreperni0_.BoyId as BoyId15_0_,
+        scoreperni0_.score as score12_0_,
+        scoreperni0_.scorePerNickName_KEY as scorePer3_0_ 
+    from
+        ScorePerNickName scoreperni0_ 
+    where
+        scoreperni0_.BoyId=?
+14:10:16,813 DEBUG SQL:104 - 
+    select
+        characters0_.Boy_id as Boy1_15_0_,
+        characters0_."characters" as characters2_1_0_ 
+    from
+        Boy_characters characters0_ 
+    where
+        characters0_.Boy_id=?
+14:10:16,814 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select boy from org.hibernate.test.annotations.collectionelement.Boy boy join boy.nickNames names where names = :name
+14:10:16,816 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  +-[RANGE] Node: 'RANGE'
+    |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |  |  |  |  |  \-[IDENT] Node: 'annotations'
+    |  |  |  |  |  \-[IDENT] Node: 'collectionelement'
+    |  |  |  |  \-[IDENT] Node: 'Boy'
+    |  |  |  \-[ALIAS] Node: 'boy'
+    |  |  \-[JOIN] Node: 'join'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[IDENT] Node: 'boy'
+    |  |     |  \-[IDENT] Node: 'nickNames'
+    |  |     \-[ALIAS] Node: 'names'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'boy'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'names'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'name'
+
+14:10:16,844 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,844 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.collectionelement.Boy (boy) -> boy0_
+14:10:16,844 DEBUG FromReferenceNode:74 - Resolved : boy -> boy0_.id
+14:10:16,844 DEBUG DotNode:599 - getDataType() : nickNames -> org.hibernate.type.SetType(org.hibernate.test.annotations.collectionelement.Boy.nickNames)
+14:10:16,861 DEBUG FromElement:157 - FromClause{level=1} : null (names) -> nicknames1_
+14:10:16,861 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : boy.nickNames -> Boy_nickNames
+14:10:16,861 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for boy.nickNames : Boy_nickNames nicknames1_
+14:10:16,861 DEBUG FromReferenceNode:74 - Resolved : boy.nickNames -> .
+14:10:16,862 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Boy_nickNames nicknames1_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=names,role=org.hibernate.test.annotations.collectionelement.Boy.nickNames,tableName={none},tableAlias=nicknames1_,origin=null,columns={,className=null}}
+
+14:10:16,877 DEBUG FromReferenceNode:74 - Resolved : boy -> boy0_.id
+14:10:16,878 DEBUG FromReferenceNode:74 - Resolved : names -> nicknames1_.nickNames
+14:10:16,878 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} boy0_.id ) ( FromClause{level=1} (  Boy_nickNames nicknames1_ ) ) ( where ( = nicknames1_.nickNames ? ) ) )
+14:10:16,878 DEBUG JoinProcessor:175 - Using FROM fragment [tbl_Boys boy0_]
+14:10:16,886 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Boy_nickNames nicknames1_ on boy0_.id=nicknames1_.Boy_id]
+14:10:16,886 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Boy_nickNames,tbl_Boys)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'boy0_.id as id15_' {alias=boy, className=org.hibernate.test.annotations.collectionelement.Boy, tableAlias=boy0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'boy0_.firstName as firstName15_, boy0_.lastName as lastName15_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[names, boy], fromElementByTableAlias=[boy0_, nicknames1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[boy.nickNames], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'tbl_Boys boy0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=boy,role=null,tableName=tbl_Boys,tableAlias=boy0_,origin=null,columns={,className=org.hibernate.test.annotations.collectionelement.Boy}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join Boy_nickNames nicknames1_ on boy0_.id=nicknames1_.Boy_id' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=names,role=org.hibernate.test.annotations.collectionelement.Boy.nickNames,tableName={none},tableAlias=nicknames1_,origin=tbl_Boys boy0_,columns={,className=null}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[ALIAS_REF] IdentNode: 'nicknames1_.nickNames' {alias=names, className=null, tableAlias=nicknames1_}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:10:16,886 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,886 DEBUG QueryTranslatorImpl:235 - HQL: select boy from org.hibernate.test.annotations.collectionelement.Boy boy join boy.nickNames names where names = :name
+14:10:16,886 DEBUG QueryTranslatorImpl:236 - SQL: select boy0_.id as id15_, boy0_.firstName as firstName15_, boy0_.lastName as lastName15_ from tbl_Boys boy0_ inner join Boy_nickNames nicknames1_ on boy0_.id=nicknames1_.Boy_id where nicknames1_.nickNames=?
+14:10:16,886 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,887 DEBUG SQL:104 - 
+    select
+        boy0_.id as id15_,
+        boy0_.firstName as firstName15_,
+        boy0_.lastName as lastName15_ 
+    from
+        tbl_Boys boy0_ 
+    inner join
+        Boy_nickNames nicknames1_ 
+            on boy0_.id=nicknames1_.Boy_id 
+    where
+        nicknames1_.nickNames=?
+14:10:16,888 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_characters 
+    where
+        Boy_id=?
+14:10:16,889 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_favoriteFood 
+    where
+        Boy_id=?
+14:10:16,889 DEBUG SQL:104 - 
+    delete 
+    from
+        BoyFavoriteNumbers 
+    where
+        BoyId=?
+14:10:16,889 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_favoriteToys 
+    where
+        Boy_id=?
+14:10:16,889 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_hatedNames 
+    where
+        Boy_id=?
+14:10:16,890 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_nickNames 
+    where
+        Boy_id=?
+14:10:16,890 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_preferredNames 
+    where
+        Boy_id=?
+14:10:16,890 DEBUG SQL:104 - 
+    delete 
+    from
+        ScorePerNickName 
+    where
+        BoyId=?
+14:10:16,914 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_scorePerPreferredName 
+    where
+        Boy_id=?
+14:10:16,915 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_Boys 
+    where
+        id=?
+14:10:16,916  INFO CustomRunner:139 - Test: testMapKeyType
+14:10:16,917 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:16,919 DEBUG SQL:104 - 
+    insert 
+    into
+        Matrix
+        (id) 
+    values
+        (?)
+14:10:16,919 DEBUG SQL:104 - 
+    insert 
+    into
+        Matrix_mvalues
+        (Matrix_id, mvalues_KEY, mvalues) 
+    values
+        (?, ?, ?)
+14:10:16,932 DEBUG SQL:104 - 
+    select
+        matrix0_.id as id10_0_ 
+    from
+        Matrix matrix0_ 
+    where
+        matrix0_.id=?
+14:10:16,933 DEBUG SQL:104 - 
+    select
+        mvalues0_.Matrix_id as Matrix1_10_0_,
+        mvalues0_.mvalues as mvalues11_0_,
+        mvalues0_.mvalues_KEY as mvalues3_0_ 
+    from
+        Matrix_mvalues mvalues0_ 
+    where
+        mvalues0_.Matrix_id=?
+14:10:16,935  INFO CustomRunner:139 - Test: testSimpleElement
+14:10:16,936 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:16,937 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_Boys
+        (firstName, lastName, id) 
+    values
+        (?, ?, ?)
+14:10:16,944 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_characters
+        (Boy_id, "characters") 
+    values
+        (?, ?)
+14:10:16,945 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_characters
+        (Boy_id, "characters") 
+    values
+        (?, ?)
+14:10:16,946 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_favoriteFood
+        (Boy_id, favoriteFood_KEY, favoriteFood) 
+    values
+        (?, ?, ?)
+14:10:16,946 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_favoriteFood
+        (Boy_id, favoriteFood_KEY, favoriteFood) 
+    values
+        (?, ?, ?)
+14:10:16,946 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_favoriteFood
+        (Boy_id, favoriteFood_KEY, favoriteFood) 
+    values
+        (?, ?, ?)
+14:10:16,947 DEBUG SQL:104 - 
+    insert 
+    into
+        BoyFavoriteNumbers
+        (BoyId, nbr_index, favoriteNumber) 
+    values
+        (?, ?, ?)
+14:10:16,947 DEBUG SQL:104 - 
+    insert 
+    into
+        BoyFavoriteNumbers
+        (BoyId, nbr_index, favoriteNumber) 
+    values
+        (?, ?, ?)
+14:10:16,974 DEBUG SQL:104 - 
+    insert 
+    into
+        BoyFavoriteNumbers
+        (BoyId, nbr_index, favoriteNumber) 
+    values
+        (?, ?, ?)
+14:10:16,975 DEBUG SQL:104 - 
+    insert 
+    into
+        BoyFavoriteNumbers
+        (BoyId, nbr_index, favoriteNumber) 
+    values
+        (?, ?, ?)
+14:10:16,975 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_nickNames
+        (Boy_id, nickNames) 
+    values
+        (?, ?)
+14:10:16,976 DEBUG SQL:104 - 
+    insert 
+    into
+        Boy_nickNames
+        (Boy_id, nickNames) 
+    values
+        (?, ?)
+14:10:16,989 DEBUG SQL:104 - 
+    insert 
+    into
+        ScorePerNickName
+        (BoyId, scorePerNickName_KEY, score) 
+    values
+        (?, ?, ?)
+14:10:16,989 DEBUG SQL:104 - 
+    insert 
+    into
+        ScorePerNickName
+        (BoyId, scorePerNickName_KEY, score) 
+    values
+        (?, ?, ?)
+14:10:16,990 DEBUG SQL:104 - 
+    select
+        boy0_.id as id15_1_,
+        boy0_.firstName as firstName15_1_,
+        boy0_.lastName as lastName15_1_,
+        countryatt1_.Boy_id as Boy1_15_3_,
+        countryatt1_.country_id as country2_2_3_,
+        countryatt1_.b_likes as b3_2_3_,
+        country2_.id as id9_0_,
+        country2_.name as name9_0_ 
+    from
+        tbl_Boys boy0_ 
+    left outer join
+        Boy_countryAttitudes countryatt1_ 
+            on boy0_.id=countryatt1_.Boy_id 
+    left outer join
+        Country country2_ 
+            on countryatt1_.country_id=country2_.id 
+    where
+        boy0_.id=?
+14:10:17,000 DEBUG SQL:104 - 
+    select
+        favoritenu0_.BoyId as BoyId15_0_,
+        favoritenu0_.favoriteNumber as favorite2_0_0_,
+        favoritenu0_.nbr_index as nbr3_0_ 
+    from
+        BoyFavoriteNumbers favoritenu0_ 
+    where
+        favoritenu0_.BoyId=?
+14:10:17,001 DEBUG SQL:104 - 
+    select
+        nicknames0_.Boy_id as Boy1_15_0_,
+        nicknames0_.nickNames as nickNames6_0_ 
+    from
+        Boy_nickNames nicknames0_ 
+    where
+        nicknames0_.Boy_id=?
+14:10:17,002 DEBUG SQL:104 - 
+    select
+        scoreperni0_.BoyId as BoyId15_0_,
+        scoreperni0_.score as score12_0_,
+        scoreperni0_.scorePerNickName_KEY as scorePer3_0_ 
+    from
+        ScorePerNickName scoreperni0_ 
+    where
+        scoreperni0_.BoyId=?
+14:10:17,044 DEBUG SQL:104 - 
+    select
+        characters0_.Boy_id as Boy1_15_0_,
+        characters0_."characters" as characters2_1_0_ 
+    from
+        Boy_characters characters0_ 
+    where
+        characters0_.Boy_id=?
+14:10:17,045 DEBUG SQL:104 - 
+    select
+        favoritefo0_.Boy_id as Boy1_15_0_,
+        favoritefo0_.favoriteFood as favorite2_3_0_,
+        favoritefo0_.favoriteFood_KEY as favorite3_0_ 
+    from
+        Boy_favoriteFood favoritefo0_ 
+    where
+        favoritefo0_.Boy_id=?
+14:10:17,046 DEBUG SQL:104 - 
+    select
+        boy0_.id as id15_,
+        boy0_.firstName as firstName15_,
+        boy0_.lastName as lastName15_ 
+    from
+        tbl_Boys boy0_ 
+    inner join
+        Boy_nickNames nicknames1_ 
+            on boy0_.id=nicknames1_.Boy_id 
+    where
+        nicknames1_.nickNames=?
+14:10:17,047 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_characters 
+    where
+        Boy_id=?
+14:10:17,047 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_favoriteFood 
+    where
+        Boy_id=?
+14:10:17,048 DEBUG SQL:104 - 
+    delete 
+    from
+        BoyFavoriteNumbers 
+    where
+        BoyId=?
+14:10:17,048 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_favoriteToys 
+    where
+        Boy_id=?
+14:10:17,048 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_hatedNames 
+    where
+        Boy_id=?
+14:10:17,048 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_nickNames 
+    where
+        Boy_id=?
+14:10:17,049 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_preferredNames 
+    where
+        Boy_id=?
+14:10:17,049 DEBUG SQL:104 - 
+    delete 
+    from
+        ScorePerNickName 
+    where
+        BoyId=?
+14:10:17,049 DEBUG SQL:104 - 
+    delete 
+    from
+        Boy_scorePerPreferredName 
+    where
+        Boy_id=?
+14:10:17,050 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_Boys 
+    where
+        id=?
+14:10:17,051  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:17,051 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:17,051 DEBUG SQL:104 - 
+    alter table BoyFavoriteNumbers 
+        drop constraint FK4974B9C257B3F783
+14:10:17,052 DEBUG SQL:104 - 
+    alter table Boy_characters 
+        drop constraint FKD40EF6DDFFAA400A
+14:10:17,052 DEBUG SQL:104 - 
+    alter table Boy_countryAttitudes 
+        drop constraint FK4F5B4C4690B6E71A
+14:10:17,052 DEBUG SQL:104 - 
+    alter table Boy_countryAttitudes 
+        drop constraint FK4F5B4C46FFAA400A
+14:10:17,052 DEBUG SQL:104 - 
+    alter table Boy_favoriteFood 
+        drop constraint FK817F17CDFFAA400A
+14:10:17,053 DEBUG SQL:104 - 
+    alter table Boy_favoriteToys 
+        drop constraint FK81857644FFAA400A
+14:10:17,053 DEBUG SQL:104 - 
+    alter table Boy_hatedNames 
+        drop constraint FK95928B61FFAA400A
+14:10:17,053 DEBUG SQL:104 - 
+    alter table Boy_nickNames 
+        drop constraint FK5C034ED2FFAA400A
+14:10:17,053 DEBUG SQL:104 - 
+    alter table Boy_preferredNames 
+        drop constraint FK38E45E3AFFAA400A
+14:10:17,053 DEBUG SQL:104 - 
+    alter table Boy_scorePerPreferredName 
+        drop constraint FKAC9B64EEFFAA400A
+14:10:17,054 DEBUG SQL:104 - 
+    alter table Matrix_mvalues 
+        drop constraint FKAD619171DFC98A4A
+14:10:17,054 DEBUG SQL:104 - 
+    alter table ScorePerNickName 
+        drop constraint FK7AC02F957B3F783
+14:10:17,054 DEBUG SQL:104 - 
+    alter table TestCourse_variations 
+        drop constraint FK62D548D2D343057
+14:10:17,054 DEBUG SQL:104 - 
+    drop table BoyFavoriteNumbers if exists
+14:10:17,055 DEBUG SQL:104 - 
+    drop table Boy_characters if exists
+14:10:17,056 DEBUG SQL:104 - 
+    drop table Boy_countryAttitudes if exists
+14:10:17,056 DEBUG SQL:104 - 
+    drop table Boy_favoriteFood if exists
+14:10:17,056 DEBUG SQL:104 - 
+    drop table Boy_favoriteToys if exists
+14:10:17,056 DEBUG SQL:104 - 
+    drop table Boy_hatedNames if exists
+14:10:17,057 DEBUG SQL:104 - 
+    drop table Boy_nickNames if exists
+14:10:17,057 DEBUG SQL:104 - 
+    drop table Boy_preferredNames if exists
+14:10:17,057 DEBUG SQL:104 - 
+    drop table Boy_scorePerPreferredName if exists
+14:10:17,058 DEBUG SQL:104 - 
+    drop table Country if exists
+14:10:17,058 DEBUG SQL:104 - 
+    drop table Matrix if exists
+14:10:17,058 DEBUG SQL:104 - 
+    drop table Matrix_mvalues if exists
+14:10:17,059 DEBUG SQL:104 - 
+    drop table ScorePerNickName if exists
+14:10:17,059 DEBUG SQL:104 - 
+    drop table TestCourse if exists
+14:10:17,059 DEBUG SQL:104 - 
+    drop table TestCourse_variations if exists
+14:10:17,060 DEBUG SQL:104 - 
+    drop table tbl_Boys if exists
+14:10:17,094 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:17,094  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:17,094  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

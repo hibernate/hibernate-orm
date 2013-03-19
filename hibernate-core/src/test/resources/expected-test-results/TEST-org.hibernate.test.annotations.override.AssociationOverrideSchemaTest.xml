@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.override.AssociationOverrideSchemaTest" tests="3" time="0.037" timestamp="2013-02-28T20:10:41">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.override.AssociationOverrideSchemaTest" name="testJoinTableColumnName" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.override.AssociationOverrideSchemaTest" name="testJoinTableJoinColumnName" time="0.005" />
+  <testcase classname="org.hibernate.test.annotations.override.AssociationOverrideSchemaTest" name="testJoinTableSchemaName" time="0.003" />
+  <system-out><![CDATA[14:10:41,320  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.override.AssociationOverrideSchemaTest
+14:10:41,324  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:41,324  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:41,324  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:41,324  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE;INIT=CREATE SCHEMA IF NOT EXISTS OTHER_SCHEMA]
+14:10:41,325  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:41,326  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:41,326  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:41,327  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:41,327  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:41,327  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:41,338  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:41,339 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:41,339 DEBUG SQL:104 - 
+    alter table OTHER_SCHEMA.BLOG_TAGS 
+        drop constraint FKE214329695A4FC6
+14:10:41,339 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OTHER_SCHEMA.BLOG_TAGS drop constraint FKE214329695A4FC6
+14:10:41,339 ERROR SchemaExport:426 - Table "BLOG_TAGS" not found; SQL statement:
+
+    alter table OTHER_SCHEMA.BLOG_TAGS 
+        drop constraint FKE214329695A4FC6 [42102-145]
+14:10:41,339 DEBUG SQL:104 - 
+    drop table OTHER_SCHEMA.BLOG_TAGS if exists
+14:10:41,339 DEBUG SQL:104 - 
+    drop table OTHER_SCHEMA.BlogEntry if exists
+14:10:41,339 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:41,340 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:41,340 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:41,340 DEBUG SQL:104 - 
+    create table OTHER_SCHEMA.BLOG_TAGS (
+        BLOG_ID bigint not null,
+        BLOG_TAG varchar(255)
+    )
+14:10:41,340 DEBUG SQL:104 - 
+    create table OTHER_SCHEMA.BlogEntry (
+        id bigint not null,
+        text varchar(255),
+        primary key (id)
+    )
+14:10:41,340 DEBUG SQL:104 - 
+    alter table OTHER_SCHEMA.BLOG_TAGS 
+        add constraint FKE214329695A4FC6 
+        foreign key (BLOG_ID) 
+        references OTHER_SCHEMA.BlogEntry
+14:10:41,341 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:41,341  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:41,342  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:41,342  INFO CustomRunner:139 - Test: testJoinTableColumnName
+14:10:41,343  INFO CustomRunner:139 - Test: testJoinTableJoinColumnName
+14:10:41,348  INFO CustomRunner:139 - Test: testJoinTableSchemaName
+14:10:41,353  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:41,353 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:41,353 DEBUG SQL:104 - 
+    alter table OTHER_SCHEMA.BLOG_TAGS 
+        drop constraint FKE214329695A4FC6
+14:10:41,354 DEBUG SQL:104 - 
+    drop table OTHER_SCHEMA.BLOG_TAGS if exists
+14:10:41,354 DEBUG SQL:104 - 
+    drop table OTHER_SCHEMA.BlogEntry if exists
+14:10:41,354 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:41,354  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:41,355  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE;INIT=CREATE SCHEMA IF NOT EXISTS OTHER_SCHEMA]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

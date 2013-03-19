@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.keymanytoone.bidir.embedded.KeyManyToOneTest" tests="4" time="0.225" timestamp="2013-02-28T20:14:52">
+  <properties />
+  <testcase classname="org.hibernate.test.keymanytoone.bidir.embedded.KeyManyToOneTest" name="testCriteriaRestrictionOnKeyManyToOne" time="0.028" />
+  <testcase classname="org.hibernate.test.keymanytoone.bidir.embedded.KeyManyToOneTest" name="testLoadingStrategies" time="0.061" />
+  <testcase classname="org.hibernate.test.keymanytoone.bidir.embedded.KeyManyToOneTest" name="testQueryingOnMany2One" time="0.062" />
+  <testcase classname="org.hibernate.test.keymanytoone.bidir.embedded.KeyManyToOneTest" name="testSaveCascadedToKeyManyToOne" time="0.011" />
+  <system-out><![CDATA[14:14:52,573  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.keymanytoone.bidir.embedded.KeyManyToOneTest
+14:14:52,577  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/keymanytoone/bidir/embedded/Mapping.hbm.xml
+14:14:52,604  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.keymanytoone.bidir.embedded.Order
+14:14:52,604  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.keymanytoone.bidir.embedded.Order
+14:14:52,605  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:52,605  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:52,605  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:52,605  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:52,606  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:52,606  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:52,607  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:52,607  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:52,608  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:52,608  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:52,615  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:52,616 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:52,616 DEBUG SQL:104 - 
+    alter table EMBD_KM2O_ITEM 
+        drop constraint FK5DE800FE711880B9
+14:14:52,616 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMBD_KM2O_ITEM drop constraint FK5DE800FE711880B9
+14:14:52,617 ERROR SchemaExport:426 - Table "EMBD_KM2O_ITEM" not found; SQL statement:
+
+    alter table EMBD_KM2O_ITEM 
+        drop constraint FK5DE800FE711880B9 [42102-145]
+14:14:52,617 DEBUG SQL:104 - 
+    alter table EMBD_KM2O_ORDR 
+        drop constraint FK5DEAB39C74629836
+14:14:52,617 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMBD_KM2O_ORDR drop constraint FK5DEAB39C74629836
+14:14:52,617 ERROR SchemaExport:426 - Table "EMBD_KM2O_ORDR" not found; SQL statement:
+
+    alter table EMBD_KM2O_ORDR 
+        drop constraint FK5DEAB39C74629836 [42102-145]
+14:14:52,617 DEBUG SQL:104 - 
+    drop table EMBD_KM2O_CUST if exists
+14:14:52,617 DEBUG SQL:104 - 
+    drop table EMBD_KM2O_ITEM if exists
+14:14:52,617 DEBUG SQL:104 - 
+    drop table EMBD_KM2O_ORDR if exists
+14:14:52,618 DEBUG SQL:104 - 
+    create table EMBD_KM2O_CUST (
+        ID bigint not null,
+        NAME varchar(255),
+        primary key (ID)
+    )
+14:14:52,618 DEBUG SQL:104 - 
+    create table EMBD_KM2O_ITEM (
+        CUST_ID bigint not null,
+        ORDER_NUM bigint not null,
+        ITEM_DESC varchar(255)
+    )
+14:14:52,618 DEBUG SQL:104 - 
+    create table EMBD_KM2O_ORDR (
+        CUST_ID bigint not null,
+        ORDR_NUM bigint not null,
+        primary key (CUST_ID, ORDR_NUM)
+    )
+14:14:52,618 DEBUG SQL:104 - 
+    alter table EMBD_KM2O_ITEM 
+        add constraint FK5DE800FE711880B9 
+        foreign key (CUST_ID, ORDER_NUM) 
+        references EMBD_KM2O_ORDR
+14:14:52,619 DEBUG SQL:104 - 
+    alter table EMBD_KM2O_ORDR 
+        add constraint FK5DEAB39C74629836 
+        foreign key (CUST_ID) 
+        references EMBD_KM2O_CUST
+14:14:52,619  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:52,620  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:52,620  INFO CustomRunner:139 - Test: testCriteriaRestrictionOnKeyManyToOne
+14:14:52,621 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.keymanytoone.bidir.embedded.Order o where o.customer.name = 'Acme'
+14:14:52,621 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=53,possibleID=true]
+14:14:52,622 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  |  \-[IDENT] Node: 'keymanytoone'
+    |        |  |  |  \-[IDENT] Node: 'bidir'
+    |        |  |  \-[IDENT] Node: 'embedded'
+    |        |  \-[IDENT] Node: 'Order'
+    |        \-[ALIAS] Node: 'o'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'o'
+          |  |  \-[IDENT] Node: 'customer'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Acme''
+
+14:14:52,622 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,622 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.keymanytoone.bidir.embedded.Order (o) -> order0_
+14:14:52,627 DEBUG FromReferenceNode:74 - Resolved : o -> (order0_.CUST_ID, order0_.ORDR_NUM)
+14:14:52,628 DEBUG DotNode:599 - getDataType() : customer -> org.hibernate.type.ManyToOneType(org.hibernate.test.keymanytoone.bidir.embedded.Customer)
+14:14:52,628 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for customer in org.hibernate.test.keymanytoone.bidir.embedded.Order (<no alias>) parent = [  ( . ( . (order0_.CUST_ID, order0_.ORDR_NUM) customer ) name ) ]
+14:14:52,628 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.keymanytoone.bidir.embedded.Customer (<no alias>) -> customer1_
+14:14:52,628 DEBUG FromClause:282 - addJoinByPathMap() : o.customer -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=EMBD_KM2O_CUST,tableAlias=customer1_,origin=EMBD_KM2O_ORDR order0_,columns={order0_.CUST_ID ,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer}}
+14:14:52,628 DEBUG FromReferenceNode:74 - Resolved : o.customer -> order0_.CUST_ID
+14:14:52,628 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:14:52,628 DEBUG FromReferenceNode:74 - Resolved : o.customer.name -> customer1_.NAME
+14:14:52,628 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} EMBD_KM2O_ORDR order0_ EMBD_KM2O_CUST customer1_ ) ( where ( = ( customer1_.NAME ( order0_.CUST_ID (order0_.CUST_ID, order0_.ORDR_NUM) customer ) name ) 'Acme' ) ) )
+14:14:52,629 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:52,629 DEBUG JoinProcessor:175 - Using FROM fragment [EMBD_KM2O_ORDR order0_]
+14:14:52,629 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [order0_.CUST_ID=customer1_.ID]
+14:14:52,629 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [order0_.CUST_ID=customer1_.ID]
+14:14:52,629 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (EMBD_KM2O_CUST,EMBD_KM2O_ORDR)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'order0_.CUST_ID as CUST1_2_, order0_.ORDR_NUM as ORDR2_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=EMBD_KM2O_ORDR,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.keymanytoone.bidir.embedded.Order}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[o], fromElementByTableAlias=[customer1_, order0_], fromElementsByPath=[o.customer], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'EMBD_KM2O_ORDR order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=EMBD_KM2O_ORDR,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.keymanytoone.bidir.embedded.Order}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: 'EMBD_KM2O_CUST customer1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=EMBD_KM2O_CUST,tableAlias=customer1_,origin=EMBD_KM2O_ORDR order0_,columns={order0_.CUST_ID ,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer}}
+    \-[WHERE] SqlNode: 'where'
+       +-[THETA_JOINS] SqlNode: '{theta joins}'
+       |  \-[SQL_TOKEN] SqlFragment: 'order0_.CUST_ID=customer1_.ID'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'customer1_.NAME' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=o.customer.name,tableAlias=customer1_,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer,classAlias=null}
+          |  +-[DOT] DotNode: 'order0_.CUST_ID' {propertyName=customer,dereferenceType=EOF,propertyPath=customer,path=o.customer,tableAlias=customer1_,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer,classAlias=null}
+          |  |  +-[ALIAS_REF] IdentNode: '(order0_.CUST_ID, order0_.ORDR_NUM)' {alias=o, className=org.hibernate.test.keymanytoone.bidir.embedded.Order, tableAlias=order0_}
+          |  |  \-[IDENT] IdentNode: 'customer' {originalText=customer}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Acme''
+
+14:14:52,638 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,639 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.keymanytoone.bidir.embedded.Order o where o.customer.name = 'Acme'
+14:14:52,639 DEBUG QueryTranslatorImpl:236 - SQL: select order0_.CUST_ID as CUST1_2_, order0_.ORDR_NUM as ORDR2_2_ from EMBD_KM2O_ORDR order0_ cross join EMBD_KM2O_CUST customer1_ where order0_.CUST_ID=customer1_.ID and customer1_.NAME='Acme'
+14:14:52,639 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,639 DEBUG SQL:104 - 
+    select
+        order0_.CUST_ID as CUST1_2_,
+        order0_.ORDR_NUM as ORDR2_2_ 
+    from
+        EMBD_KM2O_ORDR order0_ cross 
+    join
+        EMBD_KM2O_CUST customer1_ 
+    where
+        order0_.CUST_ID=customer1_.ID 
+        and customer1_.NAME='Acme'
+14:14:52,640 DEBUG SQL:104 - 
+    select
+        this_.CUST_ID as CUST1_2_1_,
+        this_.ORDR_NUM as ORDR2_2_1_,
+        customer1_.ID as ID0_0_,
+        customer1_.NAME as NAME0_0_ 
+    from
+        EMBD_KM2O_ORDR this_ 
+    inner join
+        EMBD_KM2O_CUST customer1_ 
+            on this_.CUST_ID=customer1_.ID 
+    where
+        customer1_.NAME=?
+14:14:52,648  INFO CustomRunner:139 - Test: testLoadingStrategies
+14:14:52,649 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        EMBD_KM2O_CUST
+14:14:52,649 DEBUG SQL:104 - 
+    select
+        order_.CUST_ID,
+        order_.ORDR_NUM 
+    from
+        EMBD_KM2O_ORDR order_ 
+    where
+        order_.CUST_ID=? 
+        and order_.ORDR_NUM=?
+14:14:52,650 DEBUG SQL:104 - 
+    insert 
+    into
+        EMBD_KM2O_CUST
+        (NAME, ID) 
+    values
+        (?, ?)
+14:14:52,650 DEBUG SQL:104 - 
+    insert 
+    into
+        EMBD_KM2O_ORDR
+        (CUST_ID, ORDR_NUM) 
+    values
+        (?, ?)
+14:14:52,658 DEBUG SQL:104 - 
+    select
+        customer0_.ID as ID0_0_,
+        customer0_.NAME as NAME0_0_ 
+    from
+        EMBD_KM2O_CUST customer0_ 
+    where
+        customer0_.ID=?
+14:14:52,658 DEBUG SQL:104 - 
+    select
+        orders0_.CUST_ID as CUST1_0_1_,
+        orders0_.CUST_ID as CUST1_2_1_,
+        orders0_.ORDR_NUM as ORDR2_2_1_,
+        orders0_.CUST_ID as CUST1_2_0_,
+        orders0_.ORDR_NUM as ORDR2_2_0_ 
+    from
+        EMBD_KM2O_ORDR orders0_ 
+    where
+        orders0_.CUST_ID=?
+14:14:52,659 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.keymanytoone.bidir.embedded.Customer
+14:14:52,660 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  |  \-[IDENT] Node: 'test'
+                |  |  |  \-[IDENT] Node: 'keymanytoone'
+                |  |  \-[IDENT] Node: 'bidir'
+                |  \-[IDENT] Node: 'embedded'
+                \-[IDENT] Node: 'Customer'
+
+14:14:52,667 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,668 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.keymanytoone.bidir.embedded.Customer (<no alias>) -> customer0_
+14:14:52,668 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} EMBD_KM2O_CUST customer0_ ) )
+14:14:52,668 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:52,668 DEBUG JoinProcessor:175 - Using FROM fragment [EMBD_KM2O_CUST customer0_]
+14:14:52,668 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (EMBD_KM2O_CUST)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'customer0_.ID as ID0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=EMBD_KM2O_CUST,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'customer0_.NAME as NAME0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[customer0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'EMBD_KM2O_CUST customer0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=EMBD_KM2O_CUST,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer}}
+
+14:14:52,668 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,668 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.keymanytoone.bidir.embedded.Customer
+14:14:52,669 DEBUG QueryTranslatorImpl:236 - SQL: select customer0_.ID as ID0_, customer0_.NAME as NAME0_ from EMBD_KM2O_CUST customer0_
+14:14:52,677 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,677 DEBUG SQL:104 - 
+    select
+        customer0_.ID as ID0_,
+        customer0_.NAME as NAME0_ 
+    from
+        EMBD_KM2O_CUST customer0_
+14:14:52,677 DEBUG SQL:104 - 
+    select
+        orders0_.CUST_ID as CUST1_0_1_,
+        orders0_.CUST_ID as CUST1_2_1_,
+        orders0_.ORDR_NUM as ORDR2_2_1_,
+        orders0_.CUST_ID as CUST1_2_0_,
+        orders0_.ORDR_NUM as ORDR2_2_0_ 
+    from
+        EMBD_KM2O_ORDR orders0_ 
+    where
+        orders0_.CUST_ID=?
+14:14:52,679 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.keymanytoone.bidir.embedded.Customer c join fetch c.orders
+14:14:52,680 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  |  \-[IDENT] Node: 'keymanytoone'
+          |  |  |  |  \-[IDENT] Node: 'bidir'
+          |  |  |  \-[IDENT] Node: 'embedded'
+          |  |  \-[IDENT] Node: 'Customer'
+          |  \-[ALIAS] Node: 'c'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'c'
+                \-[IDENT] Node: 'orders'
+
+14:14:52,686 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,686 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.keymanytoone.bidir.embedded.Customer (c) -> customer0_
+14:14:52,686 DEBUG FromReferenceNode:74 - Resolved : c -> customer0_.ID
+14:14:52,686 DEBUG DotNode:599 - getDataType() : orders -> org.hibernate.type.BagType(org.hibernate.test.keymanytoone.bidir.embedded.Customer.orders)
+14:14:52,686 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = c.orders role = org.hibernate.test.keymanytoone.bidir.embedded.Customer.orders associatedEntityName = org.hibernate.test.keymanytoone.bidir.embedded.Order
+14:14:52,687 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.keymanytoone.bidir.embedded.Order (<no alias>) -> orders1_
+14:14:52,687 DEBUG FromClause:282 - addJoinByPathMap() : c.orders -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=EMBD_KM2O_ORDR,tableAlias=orders1_,origin=EMBD_KM2O_CUST customer0_,columns={customer0_.ID ,className=org.hibernate.test.keymanytoone.bidir.embedded.Order}}
+14:14:52,687 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for c.orders : EMBD_KM2O_ORDR orders1_
+14:14:52,687 DEBUG FromReferenceNode:74 - Resolved : c.orders -> .
+14:14:52,687 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'EMBD_KM2O_ORDR orders1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.keymanytoone.bidir.embedded.Customer.orders,tableName=EMBD_KM2O_ORDR,tableAlias=orders1_,origin=EMBD_KM2O_CUST customer0_,columns={customer0_.ID ,className=org.hibernate.test.keymanytoone.bidir.embedded.Order}}
+
+14:14:52,687 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( EMBD_KM2O_CUST customer0_ EMBD_KM2O_ORDR orders1_ ) ) )
+14:14:52,687 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:52,687 DEBUG JoinProcessor:175 - Using FROM fragment [EMBD_KM2O_CUST customer0_]
+14:14:52,688 DEBUG JoinProcessor:175 - Using FROM fragment [inner join EMBD_KM2O_ORDR orders1_ on customer0_.ID=orders1_.CUST_ID]
+14:14:52,688 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (EMBD_KM2O_CUST,EMBD_KM2O_ORDR)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'customer0_.ID as ID0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=EMBD_KM2O_CUST,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'orders1_.CUST_ID as CUST1_2_1_, orders1_.ORDR_NUM as ORDR2_2_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.keymanytoone.bidir.embedded.Customer.orders,tableName=EMBD_KM2O_ORDR,tableAlias=orders1_,origin=EMBD_KM2O_CUST customer0_,columns={customer0_.ID ,className=org.hibernate.test.keymanytoone.bidir.embedded.Order}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'customer0_.NAME as NAME0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'orders1_.CUST_ID as CUST1_0_0__, orders1_.CUST_ID as CUST1_2_0__, orders1_.ORDR_NUM as ORDR2_2_0__'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[c], fromElementByTableAlias=[orders1_, customer0_], fromElementsByPath=[c.orders], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'EMBD_KM2O_CUST customer0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=EMBD_KM2O_CUST,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join EMBD_KM2O_ORDR orders1_ on customer0_.ID=orders1_.CUST_ID' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.keymanytoone.bidir.embedded.Customer.orders,tableName=EMBD_KM2O_ORDR,tableAlias=orders1_,origin=EMBD_KM2O_CUST customer0_,columns={customer0_.ID ,className=org.hibernate.test.keymanytoone.bidir.embedded.Order}}
+
+14:14:52,697 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,697 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.keymanytoone.bidir.embedded.Customer c join fetch c.orders
+14:14:52,697 DEBUG QueryTranslatorImpl:236 - SQL: select customer0_.ID as ID0_0_, orders1_.CUST_ID as CUST1_2_1_, orders1_.ORDR_NUM as ORDR2_2_1_, customer0_.NAME as NAME0_0_, orders1_.CUST_ID as CUST1_0_0__, orders1_.CUST_ID as CUST1_2_0__, orders1_.ORDR_NUM as ORDR2_2_0__ from EMBD_KM2O_CUST customer0_ inner join EMBD_KM2O_ORDR orders1_ on customer0_.ID=orders1_.CUST_ID
+14:14:52,697 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,698 DEBUG SQL:104 - 
+    select
+        customer0_.ID as ID0_0_,
+        orders1_.CUST_ID as CUST1_2_1_,
+        orders1_.ORDR_NUM as ORDR2_2_1_,
+        customer0_.NAME as NAME0_0_,
+        orders1_.CUST_ID as CUST1_0_0__,
+        orders1_.CUST_ID as CUST1_2_0__,
+        orders1_.ORDR_NUM as ORDR2_2_0__ 
+    from
+        EMBD_KM2O_CUST customer0_ 
+    inner join
+        EMBD_KM2O_ORDR orders1_ 
+            on customer0_.ID=orders1_.CUST_ID
+14:14:52,698 DEBUG SQL:104 - 
+    select
+        customer0_.ID as ID0_0_,
+        customer0_.NAME as NAME0_0_ 
+    from
+        EMBD_KM2O_CUST customer0_ 
+    where
+        customer0_.ID=?
+14:14:52,699 DEBUG SQL:104 - 
+    select
+        order_.CUST_ID,
+        order_.ORDR_NUM 
+    from
+        EMBD_KM2O_ORDR order_ 
+    where
+        order_.CUST_ID=? 
+        and order_.ORDR_NUM=?
+14:14:52,700 DEBUG SQL:104 - 
+    delete 
+    from
+        EMBD_KM2O_ITEM 
+    where
+        CUST_ID=? 
+        and ORDER_NUM=?
+14:14:52,700 DEBUG SQL:104 - 
+    delete 
+    from
+        EMBD_KM2O_ORDR 
+    where
+        CUST_ID=? 
+        and ORDR_NUM=?
+14:14:52,709 DEBUG SQL:104 - 
+    delete 
+    from
+        EMBD_KM2O_CUST 
+    where
+        ID=?
+14:14:52,710  INFO CustomRunner:139 - Test: testQueryingOnMany2One
+14:14:52,711 DEBUG SQL:104 - 
+    select
+        order_.CUST_ID,
+        order_.ORDR_NUM 
+    from
+        EMBD_KM2O_ORDR order_ 
+    where
+        order_.CUST_ID=? 
+        and order_.ORDR_NUM=?
+14:14:52,711 DEBUG SQL:104 - 
+    insert 
+    into
+        EMBD_KM2O_CUST
+        (NAME, ID) 
+    values
+        (?, ?)
+14:14:52,712 DEBUG SQL:104 - 
+    insert 
+    into
+        EMBD_KM2O_ORDR
+        (CUST_ID, ORDR_NUM) 
+    values
+        (?, ?)
+14:14:52,721 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.keymanytoone.bidir.embedded.Order o where o.customer.name = :name
+14:14:52,721 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=53,possibleID=true]
+14:14:52,722 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  |  \-[IDENT] Node: 'keymanytoone'
+    |        |  |  |  \-[IDENT] Node: 'bidir'
+    |        |  |  \-[IDENT] Node: 'embedded'
+    |        |  \-[IDENT] Node: 'Order'
+    |        \-[ALIAS] Node: 'o'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'o'
+          |  |  \-[IDENT] Node: 'customer'
+          |  \-[IDENT] Node: 'name'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'name'
+
+14:14:52,722 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,723 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.keymanytoone.bidir.embedded.Order (o) -> order0_
+14:14:52,723 DEBUG FromReferenceNode:74 - Resolved : o -> (order0_.CUST_ID, order0_.ORDR_NUM)
+14:14:52,723 DEBUG DotNode:599 - getDataType() : customer -> org.hibernate.type.ManyToOneType(org.hibernate.test.keymanytoone.bidir.embedded.Customer)
+14:14:52,723 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for customer in org.hibernate.test.keymanytoone.bidir.embedded.Order (<no alias>) parent = [  ( . ( . (order0_.CUST_ID, order0_.ORDR_NUM) customer ) name ) ]
+14:14:52,723 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.keymanytoone.bidir.embedded.Customer (<no alias>) -> customer1_
+14:14:52,723 DEBUG FromClause:282 - addJoinByPathMap() : o.customer -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=EMBD_KM2O_CUST,tableAlias=customer1_,origin=EMBD_KM2O_ORDR order0_,columns={order0_.CUST_ID ,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer}}
+14:14:52,723 DEBUG FromReferenceNode:74 - Resolved : o.customer -> order0_.CUST_ID
+14:14:52,723 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:14:52,724 DEBUG FromReferenceNode:74 - Resolved : o.customer.name -> customer1_.NAME
+14:14:52,724 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} EMBD_KM2O_ORDR order0_ EMBD_KM2O_CUST customer1_ ) ( where ( = ( customer1_.NAME ( order0_.CUST_ID (order0_.CUST_ID, order0_.ORDR_NUM) customer ) name ) ? ) ) )
+14:14:52,724 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:52,745 DEBUG JoinProcessor:175 - Using FROM fragment [EMBD_KM2O_ORDR order0_]
+14:14:52,745 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [order0_.CUST_ID=customer1_.ID]
+14:14:52,745 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [order0_.CUST_ID=customer1_.ID]
+14:14:52,746 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (EMBD_KM2O_CUST,EMBD_KM2O_ORDR)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'order0_.CUST_ID as CUST1_2_, order0_.ORDR_NUM as ORDR2_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=EMBD_KM2O_ORDR,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.keymanytoone.bidir.embedded.Order}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[o], fromElementByTableAlias=[customer1_, order0_], fromElementsByPath=[o.customer], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'EMBD_KM2O_ORDR order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=EMBD_KM2O_ORDR,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.keymanytoone.bidir.embedded.Order}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: 'EMBD_KM2O_CUST customer1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=EMBD_KM2O_CUST,tableAlias=customer1_,origin=EMBD_KM2O_ORDR order0_,columns={order0_.CUST_ID ,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer}}
+    \-[WHERE] SqlNode: 'where'
+       +-[THETA_JOINS] SqlNode: '{theta joins}'
+       |  \-[SQL_TOKEN] SqlFragment: 'order0_.CUST_ID=customer1_.ID'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'customer1_.NAME' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=o.customer.name,tableAlias=customer1_,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer,classAlias=null}
+          |  +-[DOT] DotNode: 'order0_.CUST_ID' {propertyName=customer,dereferenceType=EOF,propertyPath=customer,path=o.customer,tableAlias=customer1_,className=org.hibernate.test.keymanytoone.bidir.embedded.Customer,classAlias=null}
+          |  |  +-[ALIAS_REF] IdentNode: '(order0_.CUST_ID, order0_.ORDR_NUM)' {alias=o, className=org.hibernate.test.keymanytoone.bidir.embedded.Order, tableAlias=order0_}
+          |  |  \-[IDENT] IdentNode: 'customer' {originalText=customer}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:14:52,746 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,746 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.keymanytoone.bidir.embedded.Order o where o.customer.name = :name
+14:14:52,746 DEBUG QueryTranslatorImpl:236 - SQL: select order0_.CUST_ID as CUST1_2_, order0_.ORDR_NUM as ORDR2_2_ from EMBD_KM2O_ORDR order0_ cross join EMBD_KM2O_CUST customer1_ where order0_.CUST_ID=customer1_.ID and customer1_.NAME=?
+14:14:52,746 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,746 DEBUG SQL:104 - 
+    select
+        order0_.CUST_ID as CUST1_2_,
+        order0_.ORDR_NUM as ORDR2_2_ 
+    from
+        EMBD_KM2O_ORDR order0_ cross 
+    join
+        EMBD_KM2O_CUST customer1_ 
+    where
+        order0_.CUST_ID=customer1_.ID 
+        and customer1_.NAME=?
+14:14:52,760 DEBUG SQL:104 - 
+    select
+        customer0_.ID as ID0_0_,
+        customer0_.NAME as NAME0_0_ 
+    from
+        EMBD_KM2O_CUST customer0_ 
+    where
+        customer0_.ID=?
+14:14:52,762 DEBUG SQL:104 - 
+    select
+        order_.CUST_ID,
+        order_.ORDR_NUM 
+    from
+        EMBD_KM2O_ORDR order_ 
+    where
+        order_.CUST_ID=? 
+        and order_.ORDR_NUM=?
+14:14:52,762 DEBUG SQL:104 - 
+    delete 
+    from
+        EMBD_KM2O_ORDR 
+    where
+        CUST_ID=? 
+        and ORDR_NUM=?
+14:14:52,771 DEBUG SQL:104 - 
+    delete 
+    from
+        EMBD_KM2O_CUST 
+    where
+        ID=?
+14:14:52,772  INFO CustomRunner:139 - Test: testSaveCascadedToKeyManyToOne
+14:14:52,773 DEBUG SQL:104 - 
+    select
+        order_.CUST_ID,
+        order_.ORDR_NUM 
+    from
+        EMBD_KM2O_ORDR order_ 
+    where
+        order_.CUST_ID=? 
+        and order_.ORDR_NUM=?
+14:14:52,774 DEBUG SQL:104 - 
+    insert 
+    into
+        EMBD_KM2O_CUST
+        (NAME, ID) 
+    values
+        (?, ?)
+14:14:52,774 DEBUG SQL:104 - 
+    insert 
+    into
+        EMBD_KM2O_ORDR
+        (CUST_ID, ORDR_NUM) 
+    values
+        (?, ?)
+14:14:52,782 DEBUG SQL:104 - 
+    delete 
+    from
+        EMBD_KM2O_ORDR 
+    where
+        CUST_ID=? 
+        and ORDR_NUM=?
+14:14:52,783 DEBUG SQL:104 - 
+    delete 
+    from
+        EMBD_KM2O_CUST 
+    where
+        ID=?
+14:14:52,783  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:52,784 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:52,784 DEBUG SQL:104 - 
+    alter table EMBD_KM2O_ITEM 
+        drop constraint FK5DE800FE711880B9
+14:14:52,785 DEBUG SQL:104 - 
+    alter table EMBD_KM2O_ORDR 
+        drop constraint FK5DEAB39C74629836
+14:14:52,785 DEBUG SQL:104 - 
+    drop table EMBD_KM2O_CUST if exists
+14:14:52,785 DEBUG SQL:104 - 
+    drop table EMBD_KM2O_ITEM if exists
+14:14:52,795 DEBUG SQL:104 - 
+    drop table EMBD_KM2O_ORDR if exists
+14:14:52,795  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:52,795  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

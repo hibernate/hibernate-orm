@@ -1,0 +1,3788 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" tests="19" time="1.709" timestamp="2013-02-28T20:10:22">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testCache" time="0.152" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testCascadedDeleteOfChildEntitiesBug2" time="0.084" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testCascadedDeleteOfChildOneToOne" time="0.087" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testCompositeType" time="0.028" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testEntity" time="0.061" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testFilter" time="0.127" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testFilterOnCollection" time="0.032" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testFormula" time="0.025" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testImportTypeDefinitions" time="0.034" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testInheritFiltersFromMappedSuperclass" time="0.212" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testNonLazy" time="0.035" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testParameterizedType" time="0.02" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testPolymorphism" time="0.378" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testSerialized" time="0.067" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testSetSimpleValueTypeNameInSecondPass" time="0.024" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testType" time="0.022" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testTypeDefNameAndDefaultForTypeAttributes" time="0.022" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testTypeDefWithoutNameAndDefaultForTypeAttributes" time="0.034" />
+  <testcase classname="org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest" name="testVersioning" time="0.079" />
+  <system-out><![CDATA[14:10:22,614  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.entity.BasicHibernateAnnotationsTest
+14:10:22,664  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:22,665  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:22,665  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:22,665  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:22,665  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:22,666  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:22,667  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:22,667  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:22,667  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:22,668  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:22,747  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:22,747 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:22,747 DEBUG SQL:104 - 
+    alter table Forest_near 
+        drop constraint FK337E16EADB495665
+14:10:22,748 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Forest_near drop constraint FK337E16EADB495665
+14:10:22,748 ERROR SchemaExport:426 - Table "FOREST_NEAR" not found; SQL statement:
+
+    alter table Forest_near 
+        drop constraint FK337E16EADB495665 [42102-145]
+14:10:22,748 DEBUG SQL:104 - 
+    alter table Narrative 
+        drop constraint FKDFC7E852E47C142F
+14:10:22,748 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Narrative drop constraint FKDFC7E852E47C142F
+14:10:22,748 ERROR SchemaExport:426 - Table "NARRATIVE" not found; SQL statement:
+
+    alter table Narrative 
+        drop constraint FKDFC7E852E47C142F [42102-145]
+14:10:22,748 DEBUG SQL:104 - 
+    alter table Player 
+        drop constraint FK8EA38701E975B798
+14:10:22,749 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Player drop constraint FK8EA38701E975B798
+14:10:22,749 ERROR SchemaExport:426 - Table "PLAYER" not found; SQL statement:
+
+    alter table Player 
+        drop constraint FK8EA38701E975B798 [42102-145]
+14:10:22,749 DEBUG SQL:104 - 
+    alter table Player 
+        drop constraint FK8EA38701366769EE
+14:10:22,749 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Player drop constraint FK8EA38701366769EE
+14:10:22,749 ERROR SchemaExport:426 - Table "PLAYER" not found; SQL statement:
+
+    alter table Player 
+        drop constraint FK8EA38701366769EE [42102-145]
+14:10:22,749 DEBUG SQL:104 - 
+    drop table Car if exists
+14:10:22,749 DEBUG SQL:104 - 
+    drop table ContactDetails if exists
+14:10:22,749 DEBUG SQL:104 - 
+    drop table Drill if exists
+14:10:22,750 DEBUG SQL:104 - 
+    drop table Forest if exists
+14:10:22,750 DEBUG SQL:104 - 
+    drop table Forest_near if exists
+14:10:22,750 DEBUG SQL:104 - 
+    drop table FormalLastName if exists
+14:10:22,750 DEBUG SQL:104 - 
+    drop table Formula_flight if exists
+14:10:22,750 DEBUG SQL:104 - 
+    drop table Name if exists
+14:10:22,750 DEBUG SQL:104 - 
+    drop table Narrative if exists
+14:10:22,751 DEBUG SQL:104 - 
+    drop table Player if exists
+14:10:22,751 DEBUG SQL:104 - 
+    drop table Ransom if exists
+14:10:22,751 DEBUG SQL:104 - 
+    drop table SoccerTeam if exists
+14:10:22,751 DEBUG SQL:104 - 
+    drop table Topic if exists
+14:10:22,751 DEBUG SQL:104 - 
+    drop table Tree if exists
+14:10:22,751 DEBUG SQL:104 - 
+    drop table ZipCode if exists
+14:10:22,751 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:22,752 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:22,752 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:22,752 DEBUG SQL:104 - 
+    create table Car (
+        DTYPE varchar(31) not null,
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:22,752 DEBUG SQL:104 - 
+    create table ContactDetails (
+        id integer not null,
+        localPhoneNumber varchar(255),
+        overseasPhoneNumber varchar(255),
+        primary key (id)
+    )
+14:10:22,753 DEBUG SQL:104 - 
+    create table Drill (
+        DRILL_TYPE varchar(31) not null,
+        id integer not null,
+        name varchar(255),
+        category varchar(255),
+        primary key (id)
+    )
+14:10:22,753 DEBUG SQL:104 - 
+    create table Forest (
+        id integer not null,
+        bigText varchar(255),
+        country blob,
+        length bigint not null,
+        longDescription longvarchar,
+        name varchar(255),
+        smallText varchar(255),
+        primary key (id)
+    )
+14:10:22,754 DEBUG SQL:104 - 
+    create table Forest_near (
+        Forest_id integer not null,
+        near blob
+    )
+14:10:22,754 DEBUG SQL:104 - 
+    create table FormalLastName (
+        id integer not null,
+        designation varchar(255),
+        lastName varchar(255),
+        primary key (id)
+    )
+14:10:22,754 DEBUG SQL:104 - 
+    create table Formula_flight (
+        id bigint not null,
+        maxAltitude bigint not null,
+        primary key (id)
+    )
+14:10:22,756 DEBUG SQL:104 - 
+    create table Name (
+        id integer not null,
+        firstName varchar(255),
+        lastName varchar(255),
+        primary key (id)
+    )
+14:10:22,757 DEBUG SQL:104 - 
+    create table Narrative (
+        id integer not null,
+        state varchar(255),
+        topic_id integer,
+        primary key (id)
+    )
+14:10:22,757 DEBUG SQL:104 - 
+    create table Player (
+        id integer not null,
+        name varchar(255),
+        oneVoneTeam_id integer,
+        team_id integer,
+        primary key (id)
+    )
+14:10:22,758 DEBUG SQL:104 - 
+    create table Ransom (
+        id integer not null,
+        r_amount decimal(19,2),
+        r_currency varchar(255),
+        ransom_date timestamp,
+        kidnapperName varchar(255),
+        primary key (id)
+    )
+14:10:22,758 DEBUG SQL:104 - 
+    create table SoccerTeam (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:22,758 DEBUG SQL:104 - 
+    create table Topic (
+        id integer not null,
+        primary key (id)
+    )
+14:10:22,759 DEBUG SQL:104 - 
+    create table Tree (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:22,759 DEBUG SQL:104 - 
+    create table ZipCode (
+        code varchar(255) not null,
+        primary key (code)
+    )
+14:10:22,759 DEBUG SQL:104 - 
+    create index idx on Forest (name, length)
+14:10:22,760 DEBUG SQL:104 - 
+    alter table Forest_near 
+        add constraint FK337E16EADB495665 
+        foreign key (Forest_id) 
+        references Forest
+14:10:22,761 DEBUG SQL:104 - 
+    alter table Narrative 
+        add constraint FKDFC7E852E47C142F 
+        foreign key (topic_id) 
+        references Topic
+14:10:22,762 DEBUG SQL:104 - 
+    alter table Player 
+        add constraint FK8EA38701E975B798 
+        foreign key (oneVoneTeam_id) 
+        references SoccerTeam
+14:10:22,763 DEBUG SQL:104 - 
+    alter table Player 
+        add constraint FK8EA38701366769EE 
+        foreign key (team_id) 
+        references SoccerTeam
+14:10:22,763 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:22,764  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:22,766  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:22,766  INFO CustomRunner:139 - Test: testCache
+14:10:22,767 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode] lookup : key[org.hibernate.test.annotations.entity.ZipCode#92400]
+14:10:22,768 DEBUG SQL:104 - 
+    insert 
+    into
+        ZipCode
+        (code) 
+    values
+        (?)
+14:10:22,770 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.annotations.entity.ZipCode] : [org.hibernate.test.annotations.entity.ZipCode#92400] -> [CacheEntry(org.hibernate.test.annotations.entity.ZipCode)[]]
+14:10:22,770 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:22,770 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode] lookup : key[org.hibernate.test.annotations.entity.ZipCode#92400]
+14:10:22,772 DEBUG SQL:104 - 
+    select
+        zipcode0_.code as code14_0_ 
+    from
+        ZipCode zipcode0_ 
+    where
+        zipcode0_.code=?
+14:10:22,772 DEBUG BaseRegionAccessStrategy:66 - Caching: org.hibernate.test.annotations.entity.ZipCode#92400
+14:10:22,773 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.annotations.entity.ZipCode] : [org.hibernate.test.annotations.entity.ZipCode#92400] -> [CacheEntry(org.hibernate.test.annotations.entity.ZipCode)[]]
+14:10:22,774 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode] lookup : key[org.hibernate.test.annotations.entity.ZipCode#92400]
+14:10:22,774 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode] hit: org.hibernate.test.annotations.entity.ZipCode#92400
+14:10:22,775 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.Car
+14:10:22,776 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'Car'
+
+14:10:22,776 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,778 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Car (<no alias>) -> car0_
+14:10:22,778 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Car)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[car0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Car' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Car,tableAlias=car0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Car}}
+
+14:10:22,778 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,779 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,779 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.Name
+14:10:22,780 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'Name'
+
+14:10:22,780 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,780 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Name (<no alias>) -> name0_
+14:10:22,780 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Name)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[name0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Name' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Name,tableAlias=name0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Name}}
+
+14:10:22,780 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,780 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,781 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.Narrative
+14:10:22,781 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'Narrative'
+
+14:10:22,781 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,782 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Narrative (<no alias>) -> narrative0_
+14:10:22,782 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Narrative)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[narrative0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Narrative' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Narrative,tableAlias=narrative0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Narrative}}
+
+14:10:22,787 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,788 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,788 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.Flight
+14:10:22,789 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'Flight'
+
+14:10:22,789 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,789 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Flight (<no alias>) -> flight0_
+14:10:22,789 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Formula_flight)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[flight0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Formula_flight' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Formula_flight,tableAlias=flight0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Flight}}
+
+14:10:22,789 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,789 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,790 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.Topic
+14:10:22,790 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'Topic'
+
+14:10:22,811 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,811 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Topic (<no alias>) -> topic0_
+14:10:22,811 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Topic)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[topic0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Topic' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Topic,tableAlias=topic0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Topic}}
+
+14:10:22,811 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,812 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,812 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.ZipCode
+14:10:22,813 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'ZipCode'
+
+14:10:22,813 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,821 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.ZipCode (<no alias>) -> zipcode0_
+14:10:22,822 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (ZipCode)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[zipcode0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ZipCode' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ZipCode,tableAlias=zipcode0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.ZipCode}}
+
+14:10:22,822 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,822 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,822 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.FormalLastName
+14:10:22,824 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'FormalLastName'
+
+14:10:22,824 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,824 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.FormalLastName (<no alias>) -> formallast0_
+14:10:22,834 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (FormalLastName)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[formallast0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'FormalLastName' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FormalLastName,tableAlias=formallast0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.FormalLastName}}
+
+14:10:22,834 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,834 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,834 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.Player
+14:10:22,835 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'Player'
+
+14:10:22,835 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,836 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Player (<no alias>) -> player0_
+14:10:22,836 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Player)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[player0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Player' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Player,tableAlias=player0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Player}}
+
+14:10:22,846 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,846 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,846 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.SoccerTeam
+14:10:22,847 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'SoccerTeam'
+
+14:10:22,847 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,847 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.SoccerTeam (<no alias>) -> soccerteam0_
+14:10:22,848 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (SoccerTeam)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[soccerteam0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'SoccerTeam' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=SoccerTeam,tableAlias=soccerteam0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.SoccerTeam}}
+
+14:10:22,848 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,848 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,858 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.ContactDetails
+14:10:22,858 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'ContactDetails'
+
+14:10:22,858 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,859 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.ContactDetails (<no alias>) -> contactdet0_
+14:10:22,859 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (ContactDetails)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[contactdet0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ContactDetails' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ContactDetails,tableAlias=contactdet0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.ContactDetails}}
+
+14:10:22,859 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,859 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,859 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.Tree
+14:10:22,860 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'Tree'
+
+14:10:22,869 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,869 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Tree (<no alias>) -> tree0_
+14:10:22,869 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Tree)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[tree0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Tree' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Tree,tableAlias=tree0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Tree}}
+
+14:10:22,869 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,870 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,870 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.Ransom
+14:10:22,870 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'Ransom'
+
+14:10:22,881 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,882 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Ransom (<no alias>) -> ransom0_
+14:10:22,882 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Ransom)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[ransom0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Ransom' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Ransom,tableAlias=ransom0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Ransom}}
+
+14:10:22,882 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,882 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,882 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.entity.Drill
+14:10:22,883 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'Drill'
+
+14:10:22,883 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,884 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Drill (<no alias>) -> drill0_
+14:10:22,884 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Drill)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[drill0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Drill' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=drill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Drill}}
+
+14:10:22,884 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,884 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,885  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:22,886 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:22,887 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:22,887 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:22,900 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:22,900 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:22,901 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:22,901 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:22,901 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:22,902 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:22,902 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:22,902 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:22,917 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:22,917 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:22,917 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:22,918 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:22,918  INFO CustomRunner:139 - Test: testCascadedDeleteOfChildEntitiesBug2
+14:10:22,919 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:22,920 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:22,921 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:22,921 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:22,922 DEBUG SQL:104 - 
+    insert 
+    into
+        SoccerTeam
+        (name, id) 
+    values
+        (?, ?)
+14:10:22,923 DEBUG SQL:104 - 
+    insert 
+    into
+        Player
+        (name, oneVoneTeam_id, team_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:22,923 DEBUG SQL:104 - 
+    insert 
+    into
+        Player
+        (name, oneVoneTeam_id, team_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:22,941 DEBUG SQL:104 - 
+    insert 
+    into
+        Player
+        (name, oneVoneTeam_id, team_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:22,943 DEBUG SQL:104 - 
+    select
+        soccerteam0_.id as id11_2_,
+        soccerteam0_.name as name11_2_,
+        players1_.team_id as team4_11_4_,
+        players1_.id as id9_4_,
+        players1_.id as id9_0_,
+        players1_.name as name9_0_,
+        players1_.oneVoneTeam_id as oneVoneT3_9_0_,
+        players1_.team_id as team4_9_0_,
+        player2_.id as id9_1_,
+        player2_.name as name9_1_,
+        player2_.oneVoneTeam_id as oneVoneT3_9_1_,
+        player2_.team_id as team4_9_1_ 
+    from
+        SoccerTeam soccerteam0_ 
+    left outer join
+        Player players1_ 
+            on soccerteam0_.id=players1_.team_id 
+    left outer join
+        Player player2_ 
+            on soccerteam0_.id=player2_.oneVoneTeam_id 
+    where
+        soccerteam0_.id=?
+14:10:22,954 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.Player
+14:10:22,955 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'Player'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:22,955 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,956 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Player (<no alias>) -> player0_
+14:10:22,956 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Player player0_ ) )
+14:10:22,956 DEBUG JoinProcessor:175 - Using FROM fragment [Player player0_]
+14:10:22,967 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Player)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[player0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Player player0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Player,tableAlias=player0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Player}}
+
+14:10:22,967 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,967 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.Player
+14:10:22,967 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Player player0_
+14:10:22,967 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,968 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.Player
+14:10:22,969 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'Player'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:22,977 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,978 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Player (<no alias>) -> player0_
+14:10:22,978 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Player player0_ ) )
+14:10:22,978 DEBUG JoinProcessor:175 - Using FROM fragment [Player player0_]
+14:10:22,979 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Player)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[player0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Player player0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Player,tableAlias=player0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Player}}
+
+14:10:22,979 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,979 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.Player
+14:10:22,979 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Player player0_
+14:10:22,979 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,980 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        Player player0_
+14:10:22,985 DEBUG SQL:104 - 
+    delete 
+    from
+        Player 
+    where
+        id=?
+14:10:22,989 DEBUG SQL:104 - 
+    delete 
+    from
+        Player 
+    where
+        id=?
+14:10:22,989 DEBUG SQL:104 - 
+    delete 
+    from
+        Player 
+    where
+        id=?
+14:10:22,990 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        Player player0_
+14:10:22,990  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:22,990 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:22,990 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:22,991 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:23,000 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:23,000 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:23,001 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,001 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:23,001 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:23,001 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:23,001 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:23,002 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:23,002 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:23,002 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:23,002 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,002 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,003  INFO CustomRunner:139 - Test: testCascadedDeleteOfChildOneToOne
+14:10:23,004 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,004 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,005 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,006 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,006 DEBUG SQL:104 - 
+    insert 
+    into
+        SoccerTeam
+        (name, id) 
+    values
+        (?, ?)
+14:10:23,017 DEBUG SQL:104 - 
+    insert 
+    into
+        Player
+        (name, oneVoneTeam_id, team_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:23,018 DEBUG SQL:104 - 
+    insert 
+    into
+        SoccerTeam
+        (name, id) 
+    values
+        (?, ?)
+14:10:23,018 DEBUG SQL:104 - 
+    insert 
+    into
+        Player
+        (name, oneVoneTeam_id, team_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:23,019 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        Player player0_
+14:10:23,019 DEBUG SQL:104 - 
+    select
+        soccerteam0_.id as id11_2_,
+        soccerteam0_.name as name11_2_,
+        player1_.id as id9_0_,
+        player1_.name as name9_0_,
+        player1_.oneVoneTeam_id as oneVoneT3_9_0_,
+        player1_.team_id as team4_9_0_,
+        soccerteam2_.id as id11_1_,
+        soccerteam2_.name as name11_1_ 
+    from
+        SoccerTeam soccerteam0_ 
+    left outer join
+        Player player1_ 
+            on soccerteam0_.id=player1_.oneVoneTeam_id 
+    left outer join
+        SoccerTeam soccerteam2_ 
+            on player1_.team_id=soccerteam2_.id 
+    where
+        soccerteam0_.id=?
+14:10:23,028 DEBUG SQL:104 - 
+    select
+        soccerteam0_.id as id11_2_,
+        soccerteam0_.name as name11_2_,
+        player1_.id as id9_0_,
+        player1_.name as name9_0_,
+        player1_.oneVoneTeam_id as oneVoneT3_9_0_,
+        player1_.team_id as team4_9_0_,
+        soccerteam2_.id as id11_1_,
+        soccerteam2_.name as name11_1_ 
+    from
+        SoccerTeam soccerteam0_ 
+    left outer join
+        Player player1_ 
+            on soccerteam0_.id=player1_.oneVoneTeam_id 
+    left outer join
+        SoccerTeam soccerteam2_ 
+            on player1_.team_id=soccerteam2_.id 
+    where
+        soccerteam0_.id=?
+14:10:23,030 DEBUG SQL:104 - 
+    delete 
+    from
+        Player 
+    where
+        id=?
+14:10:23,030 DEBUG SQL:104 - 
+    delete 
+    from
+        Player 
+    where
+        id=?
+14:10:23,061 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        Player player0_
+14:10:23,062  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:23,062 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:23,062 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:23,062 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:23,063 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:23,063 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:23,074 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,074 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:23,075 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:23,075 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:23,075 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:23,076 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:23,076 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:23,076 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:23,076 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,089 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,090  INFO CustomRunner:139 - Test: testCompositeType
+14:10:23,091 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,092 DEBUG SQL:104 - 
+    insert 
+    into
+        Ransom
+        (r_amount, r_currency, ransom_date, kidnapperName, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:23,094 DEBUG SQL:104 - 
+    select
+        ransom0_.id as id10_0_,
+        ransom0_.r_amount as r2_10_0_,
+        ransom0_.r_currency as r3_10_0_,
+        ransom0_.ransom_date as ransom4_10_0_,
+        ransom0_.kidnapperName as kidnappe5_10_0_ 
+    from
+        Ransom ransom0_ 
+    where
+        ransom0_.id=?
+14:10:23,095  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:23,095 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:23,106 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:23,106 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:23,106 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:23,107 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:23,107 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,107 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:23,107 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:23,107 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:23,117 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:23,117 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:23,117 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:23,117 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:23,118 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,118 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,119  INFO CustomRunner:139 - Test: testEntity
+14:10:23,120 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,123 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest
+        (length, name, id) 
+    values
+        (?, ?, ?)
+14:10:23,131 DEBUG SQL:104 - 
+    select
+        forest0_.id as id3_0_,
+        forest0_.bigText as bigText3_0_,
+        forest0_.country as country3_0_,
+        forest0_.length as length3_0_,
+        forest0_.longDescription as longDesc5_3_0_,
+        forest0_.name as name3_0_,
+        forest0_.smallText as smallText3_0_ 
+    from
+        Forest forest0_ 
+    where
+        forest0_.id=? 
+        and (
+            1=1
+        ) 
+14:10:23,133 DEBUG SQL:104 - 
+    select
+        forest0_.id as id3_0_,
+        forest0_.bigText as bigText3_0_,
+        forest0_.country as country3_0_,
+        forest0_.length as length3_0_,
+        forest0_.longDescription as longDesc5_3_0_,
+        forest0_.name as name3_0_,
+        forest0_.smallText as smallText3_0_ 
+    from
+        Forest forest0_ 
+    where
+        forest0_.id=? 
+        and (
+            1=1
+        ) 
+14:10:23,134 DEBUG SQL:104 - 
+    update
+        Forest 
+    set
+        length=? 
+    where
+        id=? 
+        and bigText is null 
+        and country is null 
+        and length=? 
+        and name=? 
+        and smallText is null
+14:10:23,134 DEBUG SQL:104 - 
+    select
+        forest0_.id as id3_0_,
+        forest0_.bigText as bigText3_0_,
+        forest0_.country as country3_0_,
+        forest0_.length as length3_0_,
+        forest0_.longDescription as longDesc5_3_0_,
+        forest0_.name as name3_0_,
+        forest0_.smallText as smallText3_0_ 
+    from
+        Forest forest0_ 
+    where
+        forest0_.id=? 
+        and (
+            1=1
+        ) 
+14:10:23,148 DEBUG SQL:104 - 
+    delete 
+    from
+        Forest_near 
+    where
+        Forest_id=?
+14:10:23,149 DEBUG SQL:104 - 
+    delete 
+    from
+        Forest 
+    where
+        id=? 
+        and bigText is null 
+        and country is null 
+        and length = ? 
+        and name = ? 
+        and smallText is null
+14:10:23,149  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:23,151 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:23,157 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:23,157 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:23,158 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:23,158 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:23,158 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,158 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:23,159 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:23,159 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:23,159 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:23,159 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:23,160 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:23,160 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:23,180 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,181 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,181  INFO CustomRunner:139 - Test: testFilter
+14:10:23,182 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.annotations.entity.Forest
+14:10:23,183 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'Forest'
+
+14:10:23,183 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,184 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Forest (<no alias>) -> forest0_
+14:10:23,184 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Forest)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[forest0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Forest' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Forest,tableAlias=forest0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Forest}}
+
+14:10:23,192 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,192 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,192 DEBUG SQL:104 - 
+    delete 
+    from
+        Forest
+14:10:23,193 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,193 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,193 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,194 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest
+        (length, id) 
+    values
+        (?, ?)
+14:10:23,194 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest
+        (length, id) 
+    values
+        (?, ?)
+14:10:23,195 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest
+        (length, id) 
+    values
+        (?, ?)
+14:10:23,195 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.Forest
+14:10:23,196 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'Forest'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,196 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,197 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Forest (<no alias>) -> forest0_
+14:10:23,197 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Forest forest0_ ) )
+14:10:23,197 DEBUG JoinProcessor:175 - Using FROM fragment [Forest forest0_]
+14:10:23,197 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:betweenLength.minLength <= forest0_.length and :betweenLength.maxLength >= forest0_.length and ( 1=1)]
+14:10:23,198 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? <= forest0_.length and ? >= forest0_.length and ( 1=1)]
+14:10:23,198 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,198 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Forest)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[forest0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Forest forest0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Forest,tableAlias=forest0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Forest}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? <= forest0_.length and ? >= forest0_.length and ( 1=1)'
+
+14:10:23,217 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,217 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.Forest
+14:10:23,217 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Forest forest0_ where ? <= forest0_.length and ? >= forest0_.length and ( 1=1)
+14:10:23,218 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,218 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.Forest
+14:10:23,219 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'Forest'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,268 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,268 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Forest (<no alias>) -> forest0_
+14:10:23,269 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Forest forest0_ ) )
+14:10:23,269 DEBUG JoinProcessor:175 - Using FROM fragment [Forest forest0_]
+14:10:23,269 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:betweenLength.minLength <= forest0_.length and :betweenLength.maxLength >= forest0_.length and ( 1=1)]
+14:10:23,269 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? <= forest0_.length and ? >= forest0_.length and ( 1=1)]
+14:10:23,269 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,269 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Forest)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[forest0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Forest forest0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Forest,tableAlias=forest0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Forest}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? <= forest0_.length and ? >= forest0_.length and ( 1=1)'
+
+14:10:23,270 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,270 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.Forest
+14:10:23,270 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Forest forest0_ where ? <= forest0_.length and ? >= forest0_.length and ( 1=1)
+14:10:23,270 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,270 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        Forest forest0_ 
+    where
+        ? <= forest0_.length 
+        and ? >= forest0_.length 
+        and (
+            1=1
+        )
+14:10:23,273 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.Forest
+14:10:23,275 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'Forest'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,275 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,275 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Forest (<no alias>) -> forest0_
+14:10:23,275 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Forest forest0_ ) )
+14:10:23,275 DEBUG JoinProcessor:175 - Using FROM fragment [Forest forest0_]
+14:10:23,275 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:minLength.minLength <= forest0_.length and ( 1=1)]
+14:10:23,276 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? <= forest0_.length and ( 1=1)]
+14:10:23,276 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,276 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Forest)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[forest0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Forest forest0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Forest,tableAlias=forest0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Forest}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? <= forest0_.length and ( 1=1)'
+
+14:10:23,276 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,276 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.Forest
+14:10:23,276 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Forest forest0_ where ? <= forest0_.length and ( 1=1)
+14:10:23,276 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,277 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.Forest
+14:10:23,278 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'Forest'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,278 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,278 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Forest (<no alias>) -> forest0_
+14:10:23,278 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Forest forest0_ ) )
+14:10:23,278 DEBUG JoinProcessor:175 - Using FROM fragment [Forest forest0_]
+14:10:23,279 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:minLength.minLength <= forest0_.length and ( 1=1)]
+14:10:23,279 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? <= forest0_.length and ( 1=1)]
+14:10:23,279 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,279 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Forest)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[forest0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Forest forest0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Forest,tableAlias=forest0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Forest}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? <= forest0_.length and ( 1=1)'
+
+14:10:23,279 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,279 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.Forest
+14:10:23,279 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Forest forest0_ where ? <= forest0_.length and ( 1=1)
+14:10:23,279 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,280 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        Forest forest0_ 
+    where
+        ? <= forest0_.length 
+        and (
+            1=1
+        )
+14:10:23,280  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:23,287 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:23,287 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:23,287 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:23,288 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:23,288 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:23,288 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,288 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:23,289 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:23,289 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:23,289 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:23,290 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:23,290 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:23,306 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:23,307 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,307 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,308  INFO CustomRunner:139 - Test: testFilterOnCollection
+14:10:23,309 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,309 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,310 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,311 DEBUG SQL:104 - 
+    insert 
+    into
+        Topic
+        (id) 
+    values
+        (?)
+14:10:23,312 DEBUG SQL:104 - 
+    insert 
+    into
+        Narrative
+        (state, topic_id, id) 
+    values
+        (?, ?, ?)
+14:10:23,312 DEBUG SQL:104 - 
+    insert 
+    into
+        Narrative
+        (state, topic_id, id) 
+    values
+        (?, ?, ?)
+14:10:23,313 DEBUG SQL:104 - 
+    select
+        topic0_.id as id12_0_ 
+    from
+        Topic topic0_ 
+    where
+        topic0_.id=?
+14:10:23,314 DEBUG SQL:104 - 
+    select
+        narratives0_.topic_id as topic3_12_1_,
+        narratives0_.id as id8_1_,
+        narratives0_.id as id8_0_,
+        narratives0_.state as state8_0_,
+        narratives0_.topic_id as topic3_8_0_ 
+    from
+        Narrative narratives0_ 
+    where
+        ? = narratives0_.state 
+        and narratives0_.topic_id=?
+14:10:23,315  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:23,315 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:23,315 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:23,316 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:23,316 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:23,328 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:23,329 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,329 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:23,329 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:23,330 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:23,330 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:23,330 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:23,330 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:23,331 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:23,339 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,340 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,340  INFO CustomRunner:139 - Test: testFormula
+14:10:23,342 DEBUG SQL:104 - 
+    insert 
+    into
+        Formula_flight
+        (maxAltitude, id) 
+    values
+        (?, ?)
+14:10:23,343 DEBUG SQL:104 - 
+    select
+        flight0_.id as id6_0_,
+        flight0_.maxAltitude as maxAltit2_6_0_,
+        flight0_.maxAltitude * 1000 as formula0_0_ 
+    from
+        Formula_flight flight0_ 
+    where
+        flight0_.id=?
+14:10:23,345 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight 
+    where
+        id=?
+14:10:23,353  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:23,353 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:23,353 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:23,354 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:23,354 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:23,354 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:23,354 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,354 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:23,355 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:23,364 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:23,364 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:23,364 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:23,365 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:23,365 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:23,365 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,366 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,366  INFO CustomRunner:139 - Test: testImportTypeDefinitions
+14:10:23,375 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,376 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,378 DEBUG SQL:104 - 
+    insert 
+    into
+        Name
+        (firstName, lastName, id) 
+    values
+        (?, ?, ?)
+14:10:23,378 DEBUG SQL:104 - 
+    insert 
+    into
+        FormalLastName
+        (designation, lastName, id) 
+    values
+        (?, ?, ?)
+14:10:23,379 DEBUG SQL:104 - 
+    select
+        name0_.id as id7_0_,
+        name0_.firstName as firstName7_0_,
+        name0_.lastName as lastName7_0_ 
+    from
+        Name name0_ 
+    where
+        name0_.id=?
+14:10:23,380 DEBUG SQL:104 - 
+    select
+        formallast0_.id as id5_0_,
+        formallast0_.designation as designat2_5_0_,
+        formallast0_.lastName as lastName5_0_ 
+    from
+        FormalLastName formallast0_ 
+    where
+        formallast0_.id=?
+14:10:23,388 DEBUG SQL:104 - 
+    delete 
+    from
+        Name 
+    where
+        id=?
+14:10:23,389 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName 
+    where
+        id=?
+14:10:23,390  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:23,390 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:23,390 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:23,390 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:23,390 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:23,391 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:23,391 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,391 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:23,391 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:23,391 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:23,392 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:23,392 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:23,392 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:23,399 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:23,400 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,400 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,400  INFO CustomRunner:139 - Test: testInheritFiltersFromMappedSuperclass
+14:10:23,402 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.annotations.entity.Drill
+14:10:23,403 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'entity'
+             \-[IDENT] Node: 'Drill'
+
+14:10:23,410 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,411 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Drill (<no alias>) -> drill0_
+14:10:23,411 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Drill)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[drill0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Drill' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=drill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Drill}}
+
+14:10:23,411 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,411 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,411 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,412 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,412 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,413 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,416 DEBUG SQL:104 - 
+    insert 
+    into
+        Drill
+        (name, category, DRILL_TYPE, id) 
+    values
+        (?, ?, 'Power', ?)
+14:10:23,417 DEBUG SQL:104 - 
+    insert 
+    into
+        Drill
+        (name, category, DRILL_TYPE, id) 
+    values
+        (?, ?, 'Power', ?)
+14:10:23,417 DEBUG SQL:104 - 
+    insert 
+    into
+        Drill
+        (name, category, DRILL_TYPE, id) 
+    values
+        (?, ?, 'Power', ?)
+14:10:23,418 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.Drill
+14:10:23,419 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'Drill'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,439 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,439 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Drill (<no alias>) -> drill0_
+14:10:23,440 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Drill drill0_ ) )
+14:10:23,440 DEBUG JoinProcessor:175 - Using FROM fragment [Drill drill0_]
+14:10:23,440 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:byName.name = drill0_.name]
+14:10:23,440 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? = drill0_.name]
+14:10:23,440 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,440 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Drill)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[drill0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Drill drill0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=drill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Drill}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? = drill0_.name'
+
+14:10:23,450 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,450 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.Drill
+14:10:23,450 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Drill drill0_ where ? = drill0_.name
+14:10:23,450 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,451 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.Drill
+14:10:23,452 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'Drill'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,461 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,462 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Drill (<no alias>) -> drill0_
+14:10:23,462 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Drill drill0_ ) )
+14:10:23,462 DEBUG JoinProcessor:175 - Using FROM fragment [Drill drill0_]
+14:10:23,462 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:byName.name = drill0_.name]
+14:10:23,462 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? = drill0_.name]
+14:10:23,462 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,463 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Drill)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[drill0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Drill drill0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=drill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Drill}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? = drill0_.name'
+
+14:10:23,463 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,463 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.Drill
+14:10:23,463 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Drill drill0_ where ? = drill0_.name
+14:10:23,463 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,463 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        Drill drill0_ 
+    where
+        ? = drill0_.name
+14:10:23,472 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.PowerDrill
+14:10:23,473 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'PowerDrill'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,473 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,474 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.PowerDrill (<no alias>) -> powerdrill0_
+14:10:23,474 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Drill powerdrill0_ ) )
+14:10:23,474 DEBUG JoinProcessor:175 - Using FROM fragment [Drill powerdrill0_]
+14:10:23,474 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:byName.name = powerdrill0_.name and :byName.name = powerdrill0_.name and powerdrill0_.DRILL_TYPE='Power']
+14:10:23,474 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? = powerdrill0_.name and ? = powerdrill0_.name and powerdrill0_.DRILL_TYPE='Power']
+14:10:23,474 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,476 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Drill)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[powerdrill0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Drill powerdrill0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=powerdrill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.PowerDrill}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? = powerdrill0_.name and ? = powerdrill0_.name and powerdrill0_.DRILL_TYPE='Power''
+
+14:10:23,498 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,498 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.PowerDrill
+14:10:23,498 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Drill powerdrill0_ where ? = powerdrill0_.name and ? = powerdrill0_.name and powerdrill0_.DRILL_TYPE='Power'
+14:10:23,499 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,499 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.PowerDrill
+14:10:23,500 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'PowerDrill'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,509 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,510 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.PowerDrill (<no alias>) -> powerdrill0_
+14:10:23,510 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Drill powerdrill0_ ) )
+14:10:23,511 DEBUG JoinProcessor:175 - Using FROM fragment [Drill powerdrill0_]
+14:10:23,511 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:byName.name = powerdrill0_.name and :byName.name = powerdrill0_.name and powerdrill0_.DRILL_TYPE='Power']
+14:10:23,512 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? = powerdrill0_.name and ? = powerdrill0_.name and powerdrill0_.DRILL_TYPE='Power']
+14:10:23,512 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,512 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Drill)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[powerdrill0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Drill powerdrill0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=powerdrill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.PowerDrill}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? = powerdrill0_.name and ? = powerdrill0_.name and powerdrill0_.DRILL_TYPE='Power''
+
+14:10:23,512 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,512 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.PowerDrill
+14:10:23,512 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Drill powerdrill0_ where ? = powerdrill0_.name and ? = powerdrill0_.name and powerdrill0_.DRILL_TYPE='Power'
+14:10:23,512 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,513 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        Drill powerdrill0_ 
+    where
+        ? = powerdrill0_.name 
+        and ? = powerdrill0_.name 
+        and powerdrill0_.DRILL_TYPE='Power'
+14:10:23,514 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.Drill
+14:10:23,515 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'Drill'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,515 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,516 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Drill (<no alias>) -> drill0_
+14:10:23,516 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Drill drill0_ ) )
+14:10:23,521 DEBUG JoinProcessor:175 - Using FROM fragment [Drill drill0_]
+14:10:23,521 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:byCategory.category = drill0_.CATEGORY]
+14:10:23,521 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? = drill0_.CATEGORY]
+14:10:23,521 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,522 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Drill)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[drill0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Drill drill0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=drill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Drill}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? = drill0_.CATEGORY'
+
+14:10:23,522 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,522 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.Drill
+14:10:23,522 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Drill drill0_ where ? = drill0_.CATEGORY
+14:10:23,522 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,523 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.Drill
+14:10:23,524 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'Drill'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,533 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,533 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Drill (<no alias>) -> drill0_
+14:10:23,534 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Drill drill0_ ) )
+14:10:23,534 DEBUG JoinProcessor:175 - Using FROM fragment [Drill drill0_]
+14:10:23,534 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:byCategory.category = drill0_.CATEGORY]
+14:10:23,534 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? = drill0_.CATEGORY]
+14:10:23,534 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,535 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Drill)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[drill0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Drill drill0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=drill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Drill}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? = drill0_.CATEGORY'
+
+14:10:23,535 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,535 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.Drill
+14:10:23,535 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Drill drill0_ where ? = drill0_.CATEGORY
+14:10:23,535 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,535 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        Drill drill0_ 
+    where
+        ? = drill0_.CATEGORY
+14:10:23,536 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.PowerDrill
+14:10:23,537 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'PowerDrill'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,558 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,559 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.PowerDrill (<no alias>) -> powerdrill0_
+14:10:23,559 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Drill powerdrill0_ ) )
+14:10:23,560 DEBUG JoinProcessor:175 - Using FROM fragment [Drill powerdrill0_]
+14:10:23,560 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:byCategory.category = powerdrill0_.CATEGORY and :byCategory.category = powerdrill0_.CATEGORY and powerdrill0_.DRILL_TYPE='Power']
+14:10:23,560 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? = powerdrill0_.CATEGORY and ? = powerdrill0_.CATEGORY and powerdrill0_.DRILL_TYPE='Power']
+14:10:23,560 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,560 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Drill)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[powerdrill0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Drill powerdrill0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=powerdrill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.PowerDrill}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? = powerdrill0_.CATEGORY and ? = powerdrill0_.CATEGORY and powerdrill0_.DRILL_TYPE='Power''
+
+14:10:23,569 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,569 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.PowerDrill
+14:10:23,569 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Drill powerdrill0_ where ? = powerdrill0_.CATEGORY and ? = powerdrill0_.CATEGORY and powerdrill0_.DRILL_TYPE='Power'
+14:10:23,570 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,570 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.annotations.entity.PowerDrill
+14:10:23,571 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[DOT] Node: '.'
+       |        |  |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  |  \-[IDENT] Node: 'test'
+       |        |  |  \-[IDENT] Node: 'annotations'
+       |        |  \-[IDENT] Node: 'entity'
+       |        \-[IDENT] Node: 'PowerDrill'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:10:23,581 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,582 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.PowerDrill (<no alias>) -> powerdrill0_
+14:10:23,582 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} Drill powerdrill0_ ) )
+14:10:23,582 DEBUG JoinProcessor:175 - Using FROM fragment [Drill powerdrill0_]
+14:10:23,582 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [:byCategory.category = powerdrill0_.CATEGORY and :byCategory.category = powerdrill0_.CATEGORY and powerdrill0_.DRILL_TYPE='Power']
+14:10:23,582 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [? = powerdrill0_.CATEGORY and ? = powerdrill0_.CATEGORY and powerdrill0_.DRILL_TYPE='Power']
+14:10:23,582 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:23,583 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Drill)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[powerdrill0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Drill powerdrill0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=powerdrill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.PowerDrill}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '? = powerdrill0_.CATEGORY and ? = powerdrill0_.CATEGORY and powerdrill0_.DRILL_TYPE='Power''
+
+14:10:23,583 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,583 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.annotations.entity.PowerDrill
+14:10:23,583 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from Drill powerdrill0_ where ? = powerdrill0_.CATEGORY and ? = powerdrill0_.CATEGORY and powerdrill0_.DRILL_TYPE='Power'
+14:10:23,583 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,583 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        Drill powerdrill0_ 
+    where
+        ? = powerdrill0_.CATEGORY 
+        and ? = powerdrill0_.CATEGORY 
+        and powerdrill0_.DRILL_TYPE='Power'
+14:10:23,593  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:23,593 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:23,593 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:23,594 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:23,594 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:23,594 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:23,594 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,602 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:23,603 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:23,603 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:23,603 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:23,604 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:23,604 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:23,604 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:23,604 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,613 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,614  INFO CustomRunner:139 - Test: testNonLazy
+14:10:23,615 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,616 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,617 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest
+        (length, id) 
+    values
+        (?, ?)
+14:10:23,618 DEBUG SQL:104 - 
+    insert 
+    into
+        Tree
+        (name, id) 
+    values
+        (?, ?)
+14:10:23,618 DEBUG SQL:104 - 
+    select
+        tree0_.id as id13_0_,
+        tree0_.name as name13_0_ 
+    from
+        Tree tree0_ 
+    where
+        tree0_.id=?
+14:10:23,628  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:23,629 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:23,629 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:23,630 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:23,630 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:23,631 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:23,631 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,631 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:23,631 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:23,640 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:23,640 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:23,641 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:23,641 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:23,641 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:23,641 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,649 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,649  INFO CustomRunner:139 - Test: testParameterizedType
+14:10:23,650 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,651 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest
+        (bigText, length, smallText, id) 
+    values
+        (?, ?, ?, ?)
+14:10:23,652 DEBUG SQL:104 - 
+    select
+        forest0_.id as id3_0_,
+        forest0_.bigText as bigText3_0_,
+        forest0_.country as country3_0_,
+        forest0_.length as length3_0_,
+        forest0_.longDescription as longDesc5_3_0_,
+        forest0_.name as name3_0_,
+        forest0_.smallText as smallText3_0_ 
+    from
+        Forest forest0_ 
+    where
+        forest0_.id=? 
+        and (
+            1=1
+        ) 
+14:10:23,653  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:23,653 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:23,654 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:23,657 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:23,657 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:23,657 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:23,658 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,658 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:23,658 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:23,658 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:23,658 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:23,668 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:23,669 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:23,669 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:23,669 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:23,670 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:23,670  INFO CustomRunner:139 - Test: testPolymorphism
+14:10:23,671 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:23,673 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest
+        (length, name, id) 
+    values
+        (?, ?, ?)
+14:10:23,673 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.Car
+14:10:23,674 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'Car'
+
+14:10:23,713 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,713 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Car (<no alias>) -> car0_
+14:10:23,714 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Car car0_ ) )
+14:10:23,714 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,715 DEBUG JoinProcessor:175 - Using FROM fragment [Car car0_]
+14:10:23,716 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Car)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'car0_.id as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Car,tableAlias=car0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Car}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'car0_.name as name0_, car0_.DTYPE as DTYPE0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[car0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Car car0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Car,tableAlias=car0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Car}}
+
+14:10:23,716 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,716 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.Car
+14:10:23,716 DEBUG QueryTranslatorImpl:236 - SQL: select car0_.id as id0_, car0_.name as name0_, car0_.DTYPE as DTYPE0_ from Car car0_
+14:10:23,716 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,717 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.Name
+14:10:23,718 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'Name'
+
+14:10:23,727 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,727 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Name (<no alias>) -> name0_
+14:10:23,727 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Name name0_ ) )
+14:10:23,727 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,727 DEBUG JoinProcessor:175 - Using FROM fragment [Name name0_]
+14:10:23,728 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Name)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'name0_.id as id7_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Name,tableAlias=name0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Name}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'name0_.firstName as firstName7_, name0_.lastName as lastName7_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[name0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Name name0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Name,tableAlias=name0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Name}}
+
+14:10:23,728 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,728 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.Name
+14:10:23,728 DEBUG QueryTranslatorImpl:236 - SQL: select name0_.id as id7_, name0_.firstName as firstName7_, name0_.lastName as lastName7_ from Name name0_
+14:10:23,728 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,728 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.Narrative
+14:10:23,729 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'Narrative'
+
+14:10:23,763 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,763 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Narrative (<no alias>) -> narrative0_
+14:10:23,763 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Narrative narrative0_ ) )
+14:10:23,764 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,764 DEBUG JoinProcessor:175 - Using FROM fragment [Narrative narrative0_]
+14:10:23,764 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Narrative)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'narrative0_.id as id8_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Narrative,tableAlias=narrative0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Narrative}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'narrative0_.state as state8_, narrative0_.topic_id as topic3_8_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[narrative0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Narrative narrative0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Narrative,tableAlias=narrative0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Narrative}}
+
+14:10:23,764 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,764 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.Narrative
+14:10:23,764 DEBUG QueryTranslatorImpl:236 - SQL: select narrative0_.id as id8_, narrative0_.state as state8_, narrative0_.topic_id as topic3_8_ from Narrative narrative0_
+14:10:23,764 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,765 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.Flight
+14:10:23,770 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'Flight'
+
+14:10:23,771 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,771 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Flight (<no alias>) -> flight0_
+14:10:23,771 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Formula_flight flight0_ ) )
+14:10:23,772 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,772 DEBUG JoinProcessor:175 - Using FROM fragment [Formula_flight flight0_]
+14:10:23,772 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Formula_flight)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'flight0_.id as id6_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Formula_flight,tableAlias=flight0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Flight}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'flight0_.maxAltitude as maxAltit2_6_, flight0_.maxAltitude * 1000 as formula0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[flight0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Formula_flight flight0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Formula_flight,tableAlias=flight0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Flight}}
+
+14:10:23,772 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,772 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.Flight
+14:10:23,772 DEBUG QueryTranslatorImpl:236 - SQL: select flight0_.id as id6_, flight0_.maxAltitude as maxAltit2_6_, flight0_.maxAltitude * 1000 as formula0_ from Formula_flight flight0_
+14:10:23,773 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,773 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.Topic
+14:10:23,775 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'Topic'
+
+14:10:23,775 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,775 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Topic (<no alias>) -> topic0_
+14:10:23,775 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Topic topic0_ ) )
+14:10:23,776 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,776 DEBUG JoinProcessor:175 - Using FROM fragment [Topic topic0_]
+14:10:23,776 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Topic)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'topic0_.id as id12_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Topic,tableAlias=topic0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Topic}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[topic0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Topic topic0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Topic,tableAlias=topic0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Topic}}
+
+14:10:23,783 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,783 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.Topic
+14:10:23,783 DEBUG QueryTranslatorImpl:236 - SQL: select topic0_.id as id12_ from Topic topic0_
+14:10:23,783 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,783 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.ZipCode
+14:10:23,785 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'ZipCode'
+
+14:10:23,785 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,786 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.ZipCode (<no alias>) -> zipcode0_
+14:10:23,786 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ZipCode zipcode0_ ) )
+14:10:23,786 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,786 DEBUG JoinProcessor:175 - Using FROM fragment [ZipCode zipcode0_]
+14:10:23,787 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ZipCode)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'zipcode0_.code as code14_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ZipCode,tableAlias=zipcode0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.ZipCode}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[zipcode0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ZipCode zipcode0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ZipCode,tableAlias=zipcode0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.ZipCode}}
+
+14:10:23,787 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,787 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.ZipCode
+14:10:23,787 DEBUG QueryTranslatorImpl:236 - SQL: select zipcode0_.code as code14_ from ZipCode zipcode0_
+14:10:23,787 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,787 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.FormalLastName
+14:10:23,788 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'FormalLastName'
+
+14:10:23,788 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,799 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.FormalLastName (<no alias>) -> formallast0_
+14:10:23,799 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} FormalLastName formallast0_ ) )
+14:10:23,800 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,800 DEBUG JoinProcessor:175 - Using FROM fragment [FormalLastName formallast0_]
+14:10:23,800 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (FormalLastName)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'formallast0_.id as id5_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FormalLastName,tableAlias=formallast0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.FormalLastName}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'formallast0_.designation as designat2_5_, formallast0_.lastName as lastName5_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[formallast0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'FormalLastName formallast0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FormalLastName,tableAlias=formallast0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.FormalLastName}}
+
+14:10:23,801 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,801 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.FormalLastName
+14:10:23,801 DEBUG QueryTranslatorImpl:236 - SQL: select formallast0_.id as id5_, formallast0_.designation as designat2_5_, formallast0_.lastName as lastName5_ from FormalLastName formallast0_
+14:10:23,801 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,801 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.Player
+14:10:23,802 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'Player'
+
+14:10:23,810 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,811 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Player (<no alias>) -> player0_
+14:10:23,811 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Player player0_ ) )
+14:10:23,812 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,812 DEBUG JoinProcessor:175 - Using FROM fragment [Player player0_]
+14:10:23,812 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Player)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'player0_.id as id9_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Player,tableAlias=player0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Player}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'player0_.name as name9_, player0_.oneVoneTeam_id as oneVoneT3_9_, player0_.team_id as team4_9_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[player0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Player player0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Player,tableAlias=player0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Player}}
+
+14:10:23,812 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,812 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.Player
+14:10:23,812 DEBUG QueryTranslatorImpl:236 - SQL: select player0_.id as id9_, player0_.name as name9_, player0_.oneVoneTeam_id as oneVoneT3_9_, player0_.team_id as team4_9_ from Player player0_
+14:10:23,812 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,813 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.SoccerTeam
+14:10:23,814 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'SoccerTeam'
+
+14:10:23,814 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,814 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.SoccerTeam (<no alias>) -> soccerteam0_
+14:10:23,814 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} SoccerTeam soccerteam0_ ) )
+14:10:23,814 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,814 DEBUG JoinProcessor:175 - Using FROM fragment [SoccerTeam soccerteam0_]
+14:10:23,849 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (SoccerTeam)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'soccerteam0_.id as id11_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=SoccerTeam,tableAlias=soccerteam0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.SoccerTeam}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'soccerteam0_.name as name11_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[soccerteam0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'SoccerTeam soccerteam0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=SoccerTeam,tableAlias=soccerteam0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.SoccerTeam}}
+
+14:10:23,849 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,849 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.SoccerTeam
+14:10:23,849 DEBUG QueryTranslatorImpl:236 - SQL: select soccerteam0_.id as id11_, soccerteam0_.name as name11_ from SoccerTeam soccerteam0_
+14:10:23,849 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,851 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.ContactDetails
+14:10:23,871 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'ContactDetails'
+
+14:10:23,875 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,876 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.ContactDetails (<no alias>) -> contactdet0_
+14:10:23,876 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ContactDetails contactdet0_ ) )
+14:10:23,876 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,877 DEBUG JoinProcessor:175 - Using FROM fragment [ContactDetails contactdet0_]
+14:10:23,877 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ContactDetails)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'contactdet0_.id as id1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ContactDetails,tableAlias=contactdet0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.ContactDetails}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'contactdet0_.localPhoneNumber as localPho2_1_, contactdet0_.overseasPhoneNumber as overseas3_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[contactdet0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ContactDetails contactdet0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ContactDetails,tableAlias=contactdet0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.ContactDetails}}
+
+14:10:23,877 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,877 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.ContactDetails
+14:10:23,877 DEBUG QueryTranslatorImpl:236 - SQL: select contactdet0_.id as id1_, contactdet0_.localPhoneNumber as localPho2_1_, contactdet0_.overseasPhoneNumber as overseas3_1_ from ContactDetails contactdet0_
+14:10:23,877 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,878 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.Tree
+14:10:23,878 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'Tree'
+
+14:10:23,903 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,903 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Tree (<no alias>) -> tree0_
+14:10:23,903 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Tree tree0_ ) )
+14:10:23,904 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,904 DEBUG JoinProcessor:175 - Using FROM fragment [Tree tree0_]
+14:10:23,904 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Tree)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'tree0_.id as id13_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Tree,tableAlias=tree0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Tree}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'tree0_.name as name13_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[tree0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Tree tree0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Tree,tableAlias=tree0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Tree}}
+
+14:10:23,904 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,904 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.Tree
+14:10:23,904 DEBUG QueryTranslatorImpl:236 - SQL: select tree0_.id as id13_, tree0_.name as name13_ from Tree tree0_
+14:10:23,904 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,905 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.Ransom
+14:10:23,905 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'Ransom'
+
+14:10:23,905 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,906 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Ransom (<no alias>) -> ransom0_
+14:10:23,906 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Ransom ransom0_ ) )
+14:10:23,906 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,906 DEBUG JoinProcessor:175 - Using FROM fragment [Ransom ransom0_]
+14:10:23,906 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Ransom)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'ransom0_.id as id10_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Ransom,tableAlias=ransom0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Ransom}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'ransom0_.r_amount as r2_10_, ransom0_.r_currency as r3_10_, ransom0_.ransom_date as ransom4_10_, ransom0_.kidnapperName as kidnappe5_10_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[ransom0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Ransom ransom0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Ransom,tableAlias=ransom0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Ransom}}
+
+14:10:23,906 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,906 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.Ransom
+14:10:23,906 DEBUG QueryTranslatorImpl:236 - SQL: select ransom0_.id as id10_, ransom0_.r_amount as r2_10_, ransom0_.r_currency as r3_10_, ransom0_.ransom_date as ransom4_10_, ransom0_.kidnapperName as kidnappe5_10_ from Ransom ransom0_
+14:10:23,907 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,907 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.Drill
+14:10:23,908 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'Drill'
+
+14:10:23,926 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,926 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Drill (<no alias>) -> drill0_
+14:10:23,926 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Drill drill0_ ) )
+14:10:23,926 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:23,926 DEBUG JoinProcessor:175 - Using FROM fragment [Drill drill0_]
+14:10:23,927 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Drill)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'drill0_.id as id2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=drill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Drill}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'drill0_.name as name2_, drill0_.category as category2_, drill0_.DRILL_TYPE as DRILL1_2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[drill0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Drill drill0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Drill,tableAlias=drill0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Drill}}
+
+14:10:23,927 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,927 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.Drill
+14:10:23,927 DEBUG QueryTranslatorImpl:236 - SQL: select drill0_.id as id2_, drill0_.name as name2_, drill0_.category as category2_, drill0_.DRILL_TYPE as DRILL1_2_ from Drill drill0_
+14:10:23,927 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:23,928 DEBUG SQL:104 - 
+    select
+        car0_.id as id0_,
+        car0_.name as name0_,
+        car0_.DTYPE as DTYPE0_ 
+    from
+        Car car0_
+14:10:23,970 DEBUG SQL:104 - 
+    select
+        name0_.id as id7_,
+        name0_.firstName as firstName7_,
+        name0_.lastName as lastName7_ 
+    from
+        Name name0_
+14:10:23,970 DEBUG SQL:104 - 
+    select
+        narrative0_.id as id8_,
+        narrative0_.state as state8_,
+        narrative0_.topic_id as topic3_8_ 
+    from
+        Narrative narrative0_
+14:10:23,971 DEBUG SQL:104 - 
+    select
+        flight0_.id as id6_,
+        flight0_.maxAltitude as maxAltit2_6_,
+        flight0_.maxAltitude * 1000 as formula0_ 
+    from
+        Formula_flight flight0_
+14:10:23,971 DEBUG SQL:104 - 
+    select
+        topic0_.id as id12_ 
+    from
+        Topic topic0_
+14:10:23,971 DEBUG SQL:104 - 
+    select
+        zipcode0_.code as code14_ 
+    from
+        ZipCode zipcode0_
+14:10:23,981 DEBUG SQL:104 - 
+    select
+        formallast0_.id as id5_,
+        formallast0_.designation as designat2_5_,
+        formallast0_.lastName as lastName5_ 
+    from
+        FormalLastName formallast0_
+14:10:23,981 DEBUG SQL:104 - 
+    select
+        player0_.id as id9_,
+        player0_.name as name9_,
+        player0_.oneVoneTeam_id as oneVoneT3_9_,
+        player0_.team_id as team4_9_ 
+    from
+        Player player0_
+14:10:23,982 DEBUG SQL:104 - 
+    select
+        soccerteam0_.id as id11_,
+        soccerteam0_.name as name11_ 
+    from
+        SoccerTeam soccerteam0_
+14:10:23,982 DEBUG SQL:104 - 
+    select
+        contactdet0_.id as id1_,
+        contactdet0_.localPhoneNumber as localPho2_1_,
+        contactdet0_.overseasPhoneNumber as overseas3_1_ 
+    from
+        ContactDetails contactdet0_
+14:10:23,982 DEBUG SQL:104 - 
+    select
+        tree0_.id as id13_,
+        tree0_.name as name13_ 
+    from
+        Tree tree0_
+14:10:23,983 DEBUG SQL:104 - 
+    select
+        ransom0_.id as id10_,
+        ransom0_.r_amount as r2_10_,
+        ransom0_.r_currency as r3_10_,
+        ransom0_.ransom_date as ransom4_10_,
+        ransom0_.kidnapperName as kidnappe5_10_ 
+    from
+        Ransom ransom0_
+14:10:24,010 DEBUG SQL:104 - 
+    select
+        drill0_.id as id2_,
+        drill0_.name as name2_,
+        drill0_.category as category2_,
+        drill0_.DRILL_TYPE as DRILL1_2_ 
+    from
+        Drill drill0_
+14:10:24,011 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.entity.Forest
+14:10:24,012 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'entity'
+                \-[IDENT] Node: 'Forest'
+
+14:10:24,012 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:24,013 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Forest (<no alias>) -> forest0_
+14:10:24,024 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Forest forest0_ ) )
+14:10:24,024 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:24,024 DEBUG JoinProcessor:175 - Using FROM fragment [Forest forest0_]
+14:10:24,025 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [( 1=1)]
+14:10:24,025 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [( 1=1)]
+14:10:24,025 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:24,025 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Forest)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'forest0_.id as id3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Forest,tableAlias=forest0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Forest}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'forest0_.bigText as bigText3_, forest0_.country as country3_, forest0_.length as length3_, forest0_.longDescription as longDesc5_3_, forest0_.name as name3_, forest0_.smallText as smallText3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[forest0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Forest forest0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Forest,tableAlias=forest0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Forest}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '( 1=1)'
+
+14:10:24,025 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:24,025 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.entity.Forest
+14:10:24,025 DEBUG QueryTranslatorImpl:236 - SQL: select forest0_.id as id3_, forest0_.bigText as bigText3_, forest0_.country as country3_, forest0_.length as length3_, forest0_.longDescription as longDesc5_3_, forest0_.name as name3_, forest0_.smallText as smallText3_ from Forest forest0_ where ( 1=1)
+14:10:24,025 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:24,026 DEBUG SQL:104 - 
+    select
+        forest0_.id as id3_,
+        forest0_.bigText as bigText3_,
+        forest0_.country as country3_,
+        forest0_.length as length3_,
+        forest0_.longDescription as longDesc5_3_,
+        forest0_.name as name3_,
+        forest0_.smallText as smallText3_ 
+    from
+        Forest forest0_ 
+    where
+        (
+            1=1
+        )
+14:10:24,036  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:24,037 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:24,037 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:24,037 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:24,037 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:24,038 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:24,038 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,038 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:24,045 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:24,045 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:24,045 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:24,046 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:24,046 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:24,046 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:24,047 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:24,047 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,048  INFO CustomRunner:139 - Test: testSerialized
+14:10:24,049 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:24,051 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest
+        (country, length, name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:24,051 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest_near
+        (Forest_id, near) 
+    values
+        (?, ?)
+14:10:24,052 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest_near
+        (Forest_id, near) 
+    values
+        (?, ?)
+14:10:24,052 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest_near
+        (Forest_id, near) 
+    values
+        (?, ?)
+14:10:24,060 DEBUG SQL:104 - 
+    select
+        forest0_.id as id3_0_,
+        forest0_.bigText as bigText3_0_,
+        forest0_.country as country3_0_,
+        forest0_.length as length3_0_,
+        forest0_.longDescription as longDesc5_3_0_,
+        forest0_.name as name3_0_,
+        forest0_.smallText as smallText3_0_ 
+    from
+        Forest forest0_ 
+    where
+        forest0_.id=? 
+        and (
+            1=1
+        ) 
+14:10:24,065 DEBUG SQL:104 - 
+    select
+        near0_.Forest_id as Forest1_3_0_,
+        near0_.near as near4_0_ 
+    from
+        Forest_near near0_ 
+    where
+        near0_.Forest_id=?
+14:10:24,067  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:24,067 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:24,070 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:24,071 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:24,088 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:24,088 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:24,088 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,088 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:24,088 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:24,089 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:24,089 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:24,089 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:24,089 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:24,090 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:24,114 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:24,115 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,115  INFO CustomRunner:139 - Test: testSetSimpleValueTypeNameInSecondPass
+14:10:24,116 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:24,117 DEBUG SQL:104 - 
+    insert 
+    into
+        Car
+        (name, DTYPE, id) 
+    values
+        (?, 'Peugot', ?)
+14:10:24,118 DEBUG SQL:104 - 
+    select
+        peugot0_.id as id0_0_,
+        peugot0_.name as name0_0_ 
+    from
+        Car peugot0_ 
+    where
+        peugot0_.id=? 
+        and peugot0_.DTYPE='Peugot'
+14:10:24,119 DEBUG SQL:104 - 
+    delete 
+    from
+        Car 
+    where
+        id=?
+14:10:24,126  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:24,126 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:24,127 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:24,127 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:24,128 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:24,128 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:24,129 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,129 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:24,130 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:24,138 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:24,138 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:24,139 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:24,139 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:24,139 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:24,139 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:24,140 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,140  INFO CustomRunner:139 - Test: testType
+14:10:24,149 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:24,150 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest
+        (length, longDescription, name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:24,151 DEBUG SQL:104 - 
+    select
+        forest0_.id as id3_0_,
+        forest0_.bigText as bigText3_0_,
+        forest0_.country as country3_0_,
+        forest0_.length as length3_0_,
+        forest0_.longDescription as longDesc5_3_0_,
+        forest0_.name as name3_0_,
+        forest0_.smallText as smallText3_0_ 
+    from
+        Forest forest0_ 
+    where
+        forest0_.id=? 
+        and (
+            1=1
+        ) 
+14:10:24,152 DEBUG SQL:104 - 
+    delete 
+    from
+        Forest_near 
+    where
+        Forest_id=?
+14:10:24,159 DEBUG SQL:104 - 
+    delete 
+    from
+        Forest 
+    where
+        id=? 
+        and bigText is null 
+        and country is null 
+        and length = ? 
+        and name = ? 
+        and smallText is null
+14:10:24,160  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:24,160 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:24,160 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:24,160 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:24,160 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:24,169 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:24,169 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,170 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:24,170 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:24,170 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:24,170 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:24,170 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:24,171 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:24,171 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:24,171 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:24,171 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,172  INFO CustomRunner:139 - Test: testTypeDefNameAndDefaultForTypeAttributes
+14:10:24,173 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:24,174 DEBUG SQL:104 - 
+    insert 
+    into
+        ContactDetails
+        (localPhoneNumber, overseasPhoneNumber, id) 
+    values
+        (?, ?, ?)
+14:10:24,174 DEBUG SQL:104 - 
+    select
+        contactdet0_.id as id1_0_,
+        contactdet0_.localPhoneNumber as localPho2_1_0_,
+        contactdet0_.overseasPhoneNumber as overseas3_1_0_ 
+    from
+        ContactDetails contactdet0_ 
+    where
+        contactdet0_.id=?
+14:10:24,182 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails 
+    where
+        id=?
+14:10:24,183  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:24,183 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:24,183 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:24,183 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:24,184 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:24,184 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:24,191 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,191 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:24,192 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:24,193 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:24,193 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:24,193 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:24,193 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:24,193 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:24,194 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:24,194 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,194  INFO CustomRunner:139 - Test: testTypeDefWithoutNameAndDefaultForTypeAttributes
+14:10:24,198  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:24,198 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:24,198 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:24,217 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:24,217 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:24,218 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:24,218 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,218 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:24,218 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:24,218 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:24,228 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:24,228 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:24,228 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:24,228 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:24,229 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:24,229 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,229  INFO CustomRunner:139 - Test: testVersioning
+14:10:24,230 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:24,231 DEBUG SQL:104 - 
+    insert 
+    into
+        Forest
+        (length, name, id) 
+    values
+        (?, ?, ?)
+14:10:24,238 DEBUG SQL:104 - 
+    select
+        forest0_.id as id3_0_,
+        forest0_.bigText as bigText3_0_,
+        forest0_.country as country3_0_,
+        forest0_.length as length3_0_,
+        forest0_.longDescription as longDesc5_3_0_,
+        forest0_.name as name3_0_,
+        forest0_.smallText as smallText3_0_ 
+    from
+        Forest forest0_ 
+    where
+        forest0_.id=? 
+        and (
+            1=1
+        ) 
+14:10:24,239 DEBUG SQL:104 - 
+    select
+        forest0_.id as id3_0_,
+        forest0_.bigText as bigText3_0_,
+        forest0_.country as country3_0_,
+        forest0_.length as length3_0_,
+        forest0_.longDescription as longDesc5_3_0_,
+        forest0_.name as name3_0_,
+        forest0_.smallText as smallText3_0_ 
+    from
+        Forest forest0_ 
+    where
+        forest0_.id=? 
+        and (
+            1=1
+        ) 
+14:10:24,253 DEBUG SQL:104 - 
+    update
+        Forest 
+    set
+        length=? 
+    where
+        id=? 
+        and bigText is null 
+        and country is null 
+        and length=? 
+        and name=? 
+        and smallText is null
+14:10:24,254 DEBUG SQL:104 - 
+    update
+        Forest 
+    set
+        length=? 
+    where
+        id=? 
+        and bigText is null 
+        and country is null 
+        and length=? 
+        and name=? 
+        and smallText is null
+14:10:24,270  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:24,271 DEBUG SQL:104 - 
+    select
+        forest0_.id as id3_0_,
+        forest0_.bigText as bigText3_0_,
+        forest0_.country as country3_0_,
+        forest0_.length as length3_0_,
+        forest0_.longDescription as longDesc5_3_0_,
+        forest0_.name as name3_0_,
+        forest0_.smallText as smallText3_0_ 
+    from
+        Forest forest0_ 
+    where
+        forest0_.id=? 
+        and (
+            1=1
+        ) 
+14:10:24,275 DEBUG SQL:104 - 
+    delete 
+    from
+        Forest_near 
+    where
+        Forest_id=?
+14:10:24,275 DEBUG SQL:104 - 
+    delete 
+    from
+        Forest 
+    where
+        id=? 
+        and bigText is null 
+        and country is null 
+        and length = ? 
+        and name = ? 
+        and smallText is null
+14:10:24,290  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [13] split queries
+14:10:24,291 DEBUG SQL:104 - 
+    delete 
+    from
+        Car
+14:10:24,292 DEBUG SQL:104 - 
+    delete 
+    from
+        Name
+14:10:24,292 DEBUG SQL:104 - 
+    delete 
+    from
+        Narrative
+14:10:24,292 DEBUG SQL:104 - 
+    delete 
+    from
+        Formula_flight
+14:10:24,292 DEBUG SQL:104 - 
+    delete 
+    from
+        Topic
+14:10:24,292 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,307 DEBUG SQL:104 - 
+    delete 
+    from
+        ZipCode
+14:10:24,307 DEBUG SQL:104 - 
+    delete 
+    from
+        FormalLastName
+14:10:24,307 DEBUG SQL:104 - 
+    delete 
+    from
+        Player
+14:10:24,308 DEBUG SQL:104 - 
+    delete 
+    from
+        SoccerTeam
+14:10:24,308 DEBUG SQL:104 - 
+    delete 
+    from
+        ContactDetails
+14:10:24,308 DEBUG SQL:104 - 
+    delete 
+    from
+        Tree
+14:10:24,308 DEBUG SQL:104 - 
+    delete 
+    from
+        Ransom
+14:10:24,308 DEBUG SQL:104 - 
+    delete 
+    from
+        Drill
+14:10:24,309 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.entity.ZipCode]
+14:10:24,309  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:24,310 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:24,310 DEBUG SQL:104 - 
+    alter table Forest_near 
+        drop constraint FK337E16EADB495665
+14:10:24,310 DEBUG SQL:104 - 
+    alter table Narrative 
+        drop constraint FKDFC7E852E47C142F
+14:10:24,310 DEBUG SQL:104 - 
+    alter table Player 
+        drop constraint FK8EA38701E975B798
+14:10:24,311 DEBUG SQL:104 - 
+    alter table Player 
+        drop constraint FK8EA38701366769EE
+14:10:24,311 DEBUG SQL:104 - 
+    drop table Car if exists
+14:10:24,311 DEBUG SQL:104 - 
+    drop table ContactDetails if exists
+14:10:24,311 DEBUG SQL:104 - 
+    drop table Drill if exists
+14:10:24,312 DEBUG SQL:104 - 
+    drop table Forest if exists
+14:10:24,312 DEBUG SQL:104 - 
+    drop table Forest_near if exists
+14:10:24,315 DEBUG SQL:104 - 
+    drop table FormalLastName if exists
+14:10:24,315 DEBUG SQL:104 - 
+    drop table Formula_flight if exists
+14:10:24,316 DEBUG SQL:104 - 
+    drop table Name if exists
+14:10:24,316 DEBUG SQL:104 - 
+    drop table Narrative if exists
+14:10:24,316 DEBUG SQL:104 - 
+    drop table Player if exists
+14:10:24,316 DEBUG SQL:104 - 
+    drop table Ransom if exists
+14:10:24,317 DEBUG SQL:104 - 
+    drop table SoccerTeam if exists
+14:10:24,317 DEBUG SQL:104 - 
+    drop table Topic if exists
+14:10:24,317 DEBUG SQL:104 - 
+    drop table Tree if exists
+14:10:24,318 DEBUG SQL:104 - 
+    drop table ZipCode if exists
+14:10:24,318 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:24,318  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:24,318  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

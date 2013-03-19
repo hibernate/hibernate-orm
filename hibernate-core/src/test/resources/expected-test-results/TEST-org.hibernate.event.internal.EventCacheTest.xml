@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.event.internal.EventCacheTest" tests="14" time="0.015" timestamp="2013-02-28T20:09:53">
+  <properties />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testEntityToCopyFillFollowedByCopyToEntityMappingOnRemove" time="0.001" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testEntityToCopyFillFollowedByCopyToEntityUsingPutAll" time="0.0" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testEntityToCopyFillFollowedByCopyToEntityMapping" time="0.0" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testEntityToCopyFillFollowedByCopyToEntityMappingUsingPutWithSetOperatedOnArg" time="0.0" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testEntityToCopyFillFollowedByIterateEntrySet" time="0.0" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testEntityToCopyFillFollowedByModifyEntrySet" time="0.001" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testEntityToCopyFillFollowedByModifyKeys" time="0.0" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testEntityToCopyFillFollowedByModifyValues" time="0.001" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testEntityToCopyFillFollowedByModifyKeyOfEntrySetElement" time="0.0" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testEntityToCopyFillFollowedByModifyValueOfEntrySetElement" time="0.0" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testReplaceEntityCopy" time="0.0" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testCopyAssociatedWithNewAndExistingEntity" time="0.0" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testCopyAssociatedWith2ExistingEntities" time="0.0" />
+  <testcase classname="org.hibernate.event.internal.EventCacheTest" name="testRemoveNonExistingEntity" time="0.0" />
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

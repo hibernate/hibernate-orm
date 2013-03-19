@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.manytoone.ManyToOneJoinTest" tests="2" time="0.14" timestamp="2013-02-28T20:10:36">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneJoinTest" name="testManyToOneJoinTable" time="0.028" />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneJoinTest" name="testOneToOneJoinTable" time="0.011" />
+  <system-out><![CDATA[14:10:36,558  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.manytoone.ManyToOneJoinTest
+14:10:36,566  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:36,566  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:36,566  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:36,566  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:36,566  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:36,567  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:36,568  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:36,568  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:36,568  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:36,569  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:36,583  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:36,583 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:36,583 DEBUG SQL:104 - 
+    alter table Atl_Forest_Type 
+        drop constraint FKD6DB0556846ABC76
+14:10:36,584 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Atl_Forest_Type drop constraint FKD6DB0556846ABC76
+14:10:36,584 ERROR SchemaExport:426 - Table "ATL_FOREST_TYPE" not found; SQL statement:
+
+    alter table Atl_Forest_Type 
+        drop constraint FKD6DB0556846ABC76 [42102-145]
+14:10:36,584 DEBUG SQL:104 - 
+    alter table Atl_Forest_Type 
+        drop constraint FKD6DB0556B91430D6
+14:10:36,584 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Atl_Forest_Type drop constraint FKD6DB0556B91430D6
+14:10:36,584 ERROR SchemaExport:426 - Table "ATL_FOREST_TYPE" not found; SQL statement:
+
+    alter table Atl_Forest_Type 
+        drop constraint FKD6DB0556B91430D6 [42102-145]
+14:10:36,584 DEBUG SQL:104 - 
+    alter table BiggestRepPerForestType 
+        drop constraint A_TYP_FK
+14:10:36,584 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table BiggestRepPerForestType drop constraint A_TYP_FK
+14:10:36,585 ERROR SchemaExport:426 - Table "BIGGESTREPPERFORESTTYPE" not found; SQL statement:
+
+    alter table BiggestRepPerForestType 
+        drop constraint A_TYP_FK [42102-145]
+14:10:36,585 DEBUG SQL:104 - 
+    alter table BiggestRepPerForestType 
+        drop constraint FKF6DB4B16F530EE15
+14:10:36,585 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table BiggestRepPerForestType drop constraint FKF6DB4B16F530EE15
+14:10:36,585 ERROR SchemaExport:426 - Table "BIGGESTREPPERFORESTTYPE" not found; SQL statement:
+
+    alter table BiggestRepPerForestType 
+        drop constraint FKF6DB4B16F530EE15 [42102-145]
+14:10:36,585 DEBUG SQL:104 - 
+    alter table Tree_Forest 
+        drop constraint FK3DCA4BDEAC13117C
+14:10:36,585 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Tree_Forest drop constraint FK3DCA4BDEAC13117C
+14:10:36,585 ERROR SchemaExport:426 - Table "TREE_FOREST" not found; SQL statement:
+
+    alter table Tree_Forest 
+        drop constraint FK3DCA4BDEAC13117C [42102-145]
+14:10:36,585 DEBUG SQL:104 - 
+    alter table Tree_Forest 
+        drop constraint FK3DCA4BDEF87A4C95
+14:10:36,586 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Tree_Forest drop constraint FK3DCA4BDEF87A4C95
+14:10:36,586 ERROR SchemaExport:426 - Table "TREE_FOREST" not found; SQL statement:
+
+    alter table Tree_Forest 
+        drop constraint FK3DCA4BDEF87A4C95 [42102-145]
+14:10:36,586 DEBUG SQL:104 - 
+    drop table Atl_Forest_Type if exists
+14:10:36,603 DEBUG SQL:104 - 
+    drop table BiggestForest if exists
+14:10:36,603 DEBUG SQL:104 - 
+    drop table BiggestRepPerForestType if exists
+14:10:36,603 DEBUG SQL:104 - 
+    drop table ForestType if exists
+14:10:36,603 DEBUG SQL:104 - 
+    drop table TreeType if exists
+14:10:36,603 DEBUG SQL:104 - 
+    drop table Tree_Forest if exists
+14:10:36,604 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:36,604 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:36,604 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:36,604 DEBUG SQL:104 - 
+    create table Atl_Forest_Type (
+        forest_id integer,
+        tree_id integer not null,
+        primary key (tree_id)
+    )
+14:10:36,604 DEBUG SQL:104 - 
+    create table BiggestForest (
+        id integer not null,
+        primary key (id)
+    )
+14:10:36,605 DEBUG SQL:104 - 
+    create table BiggestRepPerForestType (
+        forest integer,
+        forest_type integer not null,
+        primary key (forest_type)
+    )
+14:10:36,612 DEBUG SQL:104 - 
+    create table ForestType (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:36,612 DEBUG SQL:104 - 
+    create table TreeType (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:36,613 DEBUG SQL:104 - 
+    create table Tree_Forest (
+        forestType_id integer,
+        id integer not null,
+        primary key (id)
+    )
+14:10:36,613 DEBUG SQL:104 - 
+    alter table Atl_Forest_Type 
+        add constraint FKD6DB0556846ABC76 
+        foreign key (forest_id) 
+        references ForestType
+14:10:36,614 DEBUG SQL:104 - 
+    alter table Atl_Forest_Type 
+        add constraint FKD6DB0556B91430D6 
+        foreign key (tree_id) 
+        references TreeType
+14:10:36,614 DEBUG SQL:104 - 
+    alter table BiggestRepPerForestType 
+        add constraint A_TYP_FK 
+        foreign key (forest) 
+        references BiggestForest
+14:10:36,615 DEBUG SQL:104 - 
+    alter table BiggestRepPerForestType 
+        add constraint FKF6DB4B16F530EE15 
+        foreign key (forest_type) 
+        references ForestType
+14:10:36,615 DEBUG SQL:104 - 
+    alter table Tree_Forest 
+        add constraint FK3DCA4BDEAC13117C 
+        foreign key (forestType_id) 
+        references ForestType
+14:10:36,637 DEBUG SQL:104 - 
+    alter table Tree_Forest 
+        add constraint FK3DCA4BDEF87A4C95 
+        foreign key (id) 
+        references TreeType
+14:10:36,638 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:36,638  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:36,639  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:36,639  INFO CustomRunner:139 - Test: testManyToOneJoinTable
+14:10:36,640 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:36,640 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:36,641 DEBUG SQL:104 - 
+    insert 
+    into
+        ForestType
+        (name, id) 
+    values
+        (?, ?)
+14:10:36,642 DEBUG SQL:104 - 
+    insert 
+    into
+        TreeType
+        (name, id) 
+    values
+        (?, ?)
+14:10:36,642 DEBUG SQL:104 - 
+    insert 
+    into
+        Tree_Forest
+        (forestType_id, id) 
+    values
+        (?, ?)
+14:10:36,644 DEBUG SQL:104 - 
+    insert 
+    into
+        Atl_Forest_Type
+        (forest_id, tree_id) 
+    values
+        (?, ?)
+14:10:36,644 DEBUG SQL:104 - 
+    select
+        treetype0_.id as id4_0_,
+        treetype0_.name as name4_0_,
+        treetype0_1_.forestType_id as forestType1_5_0_,
+        treetype0_2_.forest_id as forest1_0_0_ 
+    from
+        TreeType treetype0_ 
+    left outer join
+        Tree_Forest treetype0_1_ 
+            on treetype0_.id=treetype0_1_.id 
+    left outer join
+        Atl_Forest_Type treetype0_2_ 
+            on treetype0_.id=treetype0_2_.tree_id 
+    where
+        treetype0_.id=?
+14:10:36,645 DEBUG SQL:104 - 
+    select
+        foresttype0_.id as id3_2_,
+        foresttype0_.name as name3_2_,
+        foresttype0_1_.forest as forest2_2_,
+        biggestfor1_.id as id1_0_,
+        biggestfor1_1_.forest_type as forest0_2_0_,
+        foresttype2_.id as id3_1_,
+        foresttype2_.name as name3_1_,
+        foresttype2_1_.forest as forest2_1_ 
+    from
+        ForestType foresttype0_ 
+    left outer join
+        BiggestRepPerForestType foresttype0_1_ 
+            on foresttype0_.id=foresttype0_1_.forest_type 
+    left outer join
+        BiggestForest biggestfor1_ 
+            on foresttype0_1_.forest=biggestfor1_.id 
+    left outer join
+        BiggestRepPerForestType biggestfor1_1_ 
+            on biggestfor1_.id=biggestfor1_1_.forest 
+    left outer join
+        ForestType foresttype2_ 
+            on biggestfor1_1_.forest_type=foresttype2_.id 
+    left outer join
+        BiggestRepPerForestType foresttype2_1_ 
+            on foresttype2_.id=foresttype2_1_.forest_type 
+    where
+        foresttype0_.id=?
+14:10:36,656 DEBUG SQL:104 - 
+    select
+        trees0_.forestType_id as forestType1_3_1_,
+        trees0_.id as id5_1_,
+        treetype1_.id as id4_0_,
+        treetype1_.name as name4_0_,
+        treetype1_1_.forestType_id as forestType1_5_0_,
+        treetype1_2_.forest_id as forest1_0_0_ 
+    from
+        Tree_Forest trees0_ 
+    inner join
+        TreeType treetype1_ 
+            on trees0_.id=treetype1_.id 
+    left outer join
+        Tree_Forest treetype1_1_ 
+            on treetype1_.id=treetype1_1_.id 
+    left outer join
+        Atl_Forest_Type treetype1_2_ 
+            on treetype1_.id=treetype1_2_.tree_id 
+    where
+        trees0_.forestType_id=?
+14:10:36,667  INFO CustomRunner:139 - Test: testOneToOneJoinTable
+14:10:36,668 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:36,668 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:36,669 DEBUG SQL:104 - 
+    insert 
+    into
+        ForestType
+        (name, id) 
+    values
+        (?, ?)
+14:10:36,676 DEBUG SQL:104 - 
+    insert 
+    into
+        BiggestForest
+        (id) 
+    values
+        (?)
+14:10:36,676 DEBUG SQL:104 - 
+    insert 
+    into
+        BiggestRepPerForestType
+        (forest, forest_type) 
+    values
+        (?, ?)
+14:10:36,677 DEBUG SQL:104 - 
+    select
+        foresttype0_.id as id3_2_,
+        foresttype0_.name as name3_2_,
+        foresttype0_1_.forest as forest2_2_,
+        biggestfor1_.id as id1_0_,
+        biggestfor1_1_.forest_type as forest0_2_0_,
+        foresttype2_.id as id3_1_,
+        foresttype2_.name as name3_1_,
+        foresttype2_1_.forest as forest2_1_ 
+    from
+        ForestType foresttype0_ 
+    left outer join
+        BiggestRepPerForestType foresttype0_1_ 
+            on foresttype0_.id=foresttype0_1_.forest_type 
+    left outer join
+        BiggestForest biggestfor1_ 
+            on foresttype0_1_.forest=biggestfor1_.id 
+    left outer join
+        BiggestRepPerForestType biggestfor1_1_ 
+            on biggestfor1_.id=biggestfor1_1_.forest 
+    left outer join
+        ForestType foresttype2_ 
+            on biggestfor1_1_.forest_type=foresttype2_.id 
+    left outer join
+        BiggestRepPerForestType foresttype2_1_ 
+            on foresttype2_.id=foresttype2_1_.forest_type 
+    where
+        foresttype0_.id=?
+14:10:36,678  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:36,679 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:36,679 DEBUG SQL:104 - 
+    alter table Atl_Forest_Type 
+        drop constraint FKD6DB0556846ABC76
+14:10:36,679 DEBUG SQL:104 - 
+    alter table Atl_Forest_Type 
+        drop constraint FKD6DB0556B91430D6
+14:10:36,679 DEBUG SQL:104 - 
+    alter table BiggestRepPerForestType 
+        drop constraint A_TYP_FK
+14:10:36,680 DEBUG SQL:104 - 
+    alter table BiggestRepPerForestType 
+        drop constraint FKF6DB4B16F530EE15
+14:10:36,680 DEBUG SQL:104 - 
+    alter table Tree_Forest 
+        drop constraint FK3DCA4BDEAC13117C
+14:10:36,693 DEBUG SQL:104 - 
+    alter table Tree_Forest 
+        drop constraint FK3DCA4BDEF87A4C95
+14:10:36,693 DEBUG SQL:104 - 
+    drop table Atl_Forest_Type if exists
+14:10:36,693 DEBUG SQL:104 - 
+    drop table BiggestForest if exists
+14:10:36,694 DEBUG SQL:104 - 
+    drop table BiggestRepPerForestType if exists
+14:10:36,694 DEBUG SQL:104 - 
+    drop table ForestType if exists
+14:10:36,694 DEBUG SQL:104 - 
+    drop table TreeType if exists
+14:10:36,695 DEBUG SQL:104 - 
+    drop table Tree_Forest if exists
+14:10:36,695 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:36,695  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:36,695  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -751,7 +751,6 @@ public class FooBarTest extends LegacyTestCase {
 		).list();
 		assertTrue( list.size()==1 );
 		list = s.createQuery( "select index(date) from Baz baz join baz.stringDateMap date" ).list();
-		System.out.println(list);
 		assertTrue( list.size()==2 );
 
 		s.createQuery(
@@ -3993,7 +3992,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testNewSessionLifecycle() throws Exception {
 		Session s = openSession();

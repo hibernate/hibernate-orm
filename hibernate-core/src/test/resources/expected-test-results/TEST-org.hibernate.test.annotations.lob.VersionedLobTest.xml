@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.lob.VersionedLobTest" tests="9" time="0.225" timestamp="2013-02-28T20:10:33">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.lob.VersionedLobTest" name="testBinary" time="0.005" />
+  <testcase classname="org.hibernate.test.annotations.lob.VersionedLobTest" name="testBlob" time="0.019" />
+  <testcase classname="org.hibernate.test.annotations.lob.VersionedLobTest" name="testClob" time="0.033" />
+  <testcase classname="org.hibernate.test.annotations.lob.VersionedLobTest" name="testSerializableToBlob" time="0.024" />
+  <testcase classname="org.hibernate.test.annotations.lob.VersionedLobTest" name="testVersionUnchangedByteArray" time="0.039" />
+  <testcase classname="org.hibernate.test.annotations.lob.VersionedLobTest" name="testVersionUnchangedCharArray" time="0.012" />
+  <testcase classname="org.hibernate.test.annotations.lob.VersionedLobTest" name="testVersionUnchangedPrimitiveByteArray" time="0.028" />
+  <testcase classname="org.hibernate.test.annotations.lob.VersionedLobTest" name="testVersionUnchangedPrimitiveCharArray" time="0.011" />
+  <testcase classname="org.hibernate.test.annotations.lob.VersionedLobTest" name="testVersionUnchangedString" time="0.014" />
+  <system-out><![CDATA[14:10:33,864  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.lob.VersionedLobTest
+14:10:33,869  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:33,869  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:33,869  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:33,870  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:33,870  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:33,871  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:33,871  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:33,872  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:33,872  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:33,872  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:33,882  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:33,883 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:33,883 DEBUG SQL:104 - 
+    drop table VersionedCompiledCode if exists
+14:10:33,883 DEBUG SQL:104 - 
+    drop table ver_lob_book if exists
+14:10:33,883 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:33,884 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:33,884 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:33,884 DEBUG SQL:104 - 
+    create table VersionedCompiledCode (
+        id integer not null,
+        fullCode blob,
+        header blob,
+        metadata binary(255),
+        ver integer,
+        primary key (id)
+    )
+14:10:33,884 DEBUG SQL:104 - 
+    create table ver_lob_book (
+        id integer not null,
+        fld_code clob,
+        code2 clob,
+        editor blob,
+        fld_fulltext clob,
+        shortDescription varchar(255),
+        ver integer,
+        primary key (id)
+    )
+14:10:33,893 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:33,893  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:33,894  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:33,894  INFO CustomRunner:139 - Test: testBinary
+14:10:33,895 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,897 DEBUG SQL:104 - 
+    insert 
+    into
+        VersionedCompiledCode
+        (fullCode, header, metadata, ver, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:33,898 DEBUG SQL:104 - 
+    select
+        versionedc0_.id as id0_0_,
+        versionedc0_.fullCode as fullCode0_0_,
+        versionedc0_.header as header0_0_,
+        versionedc0_.metadata as metadata0_0_,
+        versionedc0_.ver as ver0_0_ 
+    from
+        VersionedCompiledCode versionedc0_ 
+    where
+        versionedc0_.id=?
+14:10:33,899  INFO CustomRunner:139 - Test: testBlob
+14:10:33,908 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,909 DEBUG SQL:104 - 
+    insert 
+    into
+        VersionedCompiledCode
+        (fullCode, header, metadata, ver, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:33,909 DEBUG SQL:104 - 
+    update
+        VersionedCompiledCode 
+    set
+        fullCode=?,
+        header=?,
+        metadata=?,
+        ver=? 
+    where
+        id=? 
+        and ver=?
+14:10:33,910 DEBUG SQL:104 - 
+    select
+        versionedc0_.id as id0_0_,
+        versionedc0_.fullCode as fullCode0_0_,
+        versionedc0_.header as header0_0_,
+        versionedc0_.metadata as metadata0_0_,
+        versionedc0_.ver as ver0_0_ 
+    from
+        VersionedCompiledCode versionedc0_ 
+    where
+        versionedc0_.id=?
+14:10:33,917 DEBUG SQL:104 - 
+    update
+        VersionedCompiledCode 
+    set
+        fullCode=?,
+        header=?,
+        metadata=?,
+        ver=? 
+    where
+        id=? 
+        and ver=?
+14:10:33,918  INFO CustomRunner:139 - Test: testClob
+14:10:33,919 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,949 DEBUG SQL:104 - 
+    insert 
+    into
+        ver_lob_book
+        (fld_code, code2, editor, fld_fulltext, shortDescription, ver, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:10:33,950 DEBUG SQL:104 - 
+    select
+        versionedb0_.id as id1_0_,
+        versionedb0_.fld_code as fld2_1_0_,
+        versionedb0_.code2 as code3_1_0_,
+        versionedb0_.editor as editor1_0_,
+        versionedb0_.fld_fulltext as fld5_1_0_,
+        versionedb0_.shortDescription as shortDes6_1_0_,
+        versionedb0_.ver as ver1_0_ 
+    from
+        ver_lob_book versionedb0_ 
+    where
+        versionedb0_.id=?
+14:10:33,951  INFO CustomRunner:139 - Test: testSerializableToBlob
+14:10:33,952 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,954 DEBUG SQL:104 - 
+    insert 
+    into
+        ver_lob_book
+        (fld_code, code2, editor, fld_fulltext, shortDescription, ver, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:10:33,963 DEBUG SQL:104 - 
+    select
+        versionedb0_.id as id1_0_,
+        versionedb0_.fld_code as fld2_1_0_,
+        versionedb0_.code2 as code3_1_0_,
+        versionedb0_.editor as editor1_0_,
+        versionedb0_.fld_fulltext as fld5_1_0_,
+        versionedb0_.shortDescription as shortDes6_1_0_,
+        versionedb0_.ver as ver1_0_ 
+    from
+        ver_lob_book versionedb0_ 
+    where
+        versionedb0_.id=?
+14:10:33,965 DEBUG SQL:104 - 
+    update
+        ver_lob_book 
+    set
+        fld_code=?,
+        code2=?,
+        editor=?,
+        fld_fulltext=?,
+        shortDescription=?,
+        ver=? 
+    where
+        id=? 
+        and ver=?
+14:10:33,966 DEBUG SQL:104 - 
+    select
+        versionedb0_.id as id1_0_,
+        versionedb0_.fld_code as fld2_1_0_,
+        versionedb0_.code2 as code3_1_0_,
+        versionedb0_.editor as editor1_0_,
+        versionedb0_.fld_fulltext as fld5_1_0_,
+        versionedb0_.shortDescription as shortDes6_1_0_,
+        versionedb0_.ver as ver1_0_ 
+    from
+        ver_lob_book versionedb0_ 
+    where
+        versionedb0_.id=?
+14:10:33,975  INFO CustomRunner:139 - Test: testVersionUnchangedByteArray
+14:10:33,976 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:33,977 DEBUG SQL:104 - 
+    insert 
+    into
+        VersionedCompiledCode
+        (fullCode, header, metadata, ver, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:33,977 DEBUG SQL:104 - 
+    update
+        VersionedCompiledCode 
+    set
+        fullCode=?,
+        header=?,
+        metadata=?,
+        ver=? 
+    where
+        id=? 
+        and ver=?
+14:10:33,978 DEBUG SQL:104 - 
+    select
+        versionedc0_.id as id0_0_,
+        versionedc0_.fullCode as fullCode0_0_,
+        versionedc0_.header as header0_0_,
+        versionedc0_.metadata as metadata0_0_,
+        versionedc0_.ver as ver0_0_ 
+    from
+        VersionedCompiledCode versionedc0_ 
+    where
+        versionedc0_.id=?
+14:10:33,979  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:10:33,983  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:33,983  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:33,984  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:33,984  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:33,984  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:33,985  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:33,986  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:33,986  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:33,986  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:33,987  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:33,994  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:33,995 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:33,995 DEBUG SQL:104 - 
+    drop table VersionedCompiledCode if exists
+14:10:33,996 DEBUG SQL:104 - 
+    drop table ver_lob_book if exists
+14:10:34,013 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:34,014 DEBUG SQL:104 - 
+    create table VersionedCompiledCode (
+        id integer not null,
+        fullCode blob,
+        header blob,
+        metadata binary(255),
+        ver integer,
+        primary key (id)
+    )
+14:10:34,014 DEBUG SQL:104 - 
+    create table ver_lob_book (
+        id integer not null,
+        fld_code clob,
+        code2 clob,
+        editor blob,
+        fld_fulltext clob,
+        shortDescription varchar(255),
+        ver integer,
+        primary key (id)
+    )
+14:10:34,014 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:34,015  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:34,015  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:34,016  INFO CustomRunner:139 - Test: testVersionUnchangedCharArray
+14:10:34,018 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,025 DEBUG SQL:104 - 
+    insert 
+    into
+        ver_lob_book
+        (fld_code, code2, editor, fld_fulltext, shortDescription, ver, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:10:34,026 DEBUG SQL:104 - 
+    select
+        versionedb0_.id as id1_0_,
+        versionedb0_.fld_code as fld2_1_0_,
+        versionedb0_.code2 as code3_1_0_,
+        versionedb0_.editor as editor1_0_,
+        versionedb0_.fld_fulltext as fld5_1_0_,
+        versionedb0_.shortDescription as shortDes6_1_0_,
+        versionedb0_.ver as ver1_0_ 
+    from
+        ver_lob_book versionedb0_ 
+    where
+        versionedb0_.id=?
+14:10:34,027 DEBUG SQL:104 - 
+    delete 
+    from
+        ver_lob_book 
+    where
+        id=? 
+        and ver=?
+14:10:34,028  INFO CustomRunner:139 - Test: testVersionUnchangedPrimitiveByteArray
+14:10:34,028 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,030 DEBUG SQL:104 - 
+    insert 
+    into
+        VersionedCompiledCode
+        (fullCode, header, metadata, ver, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:34,031 DEBUG SQL:104 - 
+    select
+        versionedc0_.id as id0_0_,
+        versionedc0_.fullCode as fullCode0_0_,
+        versionedc0_.header as header0_0_,
+        versionedc0_.metadata as metadata0_0_,
+        versionedc0_.ver as ver0_0_ 
+    from
+        VersionedCompiledCode versionedc0_ 
+    where
+        versionedc0_.id=?
+14:10:34,055 DEBUG SQL:104 - 
+    delete 
+    from
+        VersionedCompiledCode 
+    where
+        id=? 
+        and ver=?
+14:10:34,056  INFO CustomRunner:139 - Test: testVersionUnchangedPrimitiveCharArray
+14:10:34,057 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,058 DEBUG SQL:104 - 
+    insert 
+    into
+        ver_lob_book
+        (fld_code, code2, editor, fld_fulltext, shortDescription, ver, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:10:34,059 DEBUG SQL:104 - 
+    select
+        versionedb0_.id as id1_0_,
+        versionedb0_.fld_code as fld2_1_0_,
+        versionedb0_.code2 as code3_1_0_,
+        versionedb0_.editor as editor1_0_,
+        versionedb0_.fld_fulltext as fld5_1_0_,
+        versionedb0_.shortDescription as shortDes6_1_0_,
+        versionedb0_.ver as ver1_0_ 
+    from
+        ver_lob_book versionedb0_ 
+    where
+        versionedb0_.id=?
+14:10:34,067 DEBUG SQL:104 - 
+    delete 
+    from
+        ver_lob_book 
+    where
+        id=? 
+        and ver=?
+14:10:34,068  INFO CustomRunner:139 - Test: testVersionUnchangedString
+14:10:34,069 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:34,071 DEBUG SQL:104 - 
+    insert 
+    into
+        ver_lob_book
+        (fld_code, code2, editor, fld_fulltext, shortDescription, ver, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:10:34,072 DEBUG SQL:104 - 
+    select
+        versionedb0_.id as id1_0_,
+        versionedb0_.fld_code as fld2_1_0_,
+        versionedb0_.code2 as code3_1_0_,
+        versionedb0_.editor as editor1_0_,
+        versionedb0_.fld_fulltext as fld5_1_0_,
+        versionedb0_.shortDescription as shortDes6_1_0_,
+        versionedb0_.ver as ver1_0_ 
+    from
+        ver_lob_book versionedb0_ 
+    where
+        versionedb0_.id=?
+14:10:34,082 DEBUG SQL:104 - 
+    delete 
+    from
+        ver_lob_book 
+    where
+        id=? 
+        and ver=?
+14:10:34,083  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:34,084 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:34,084 DEBUG SQL:104 - 
+    drop table VersionedCompiledCode if exists
+14:10:34,084 DEBUG SQL:104 - 
+    drop table ver_lob_book if exists
+14:10:34,084 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:34,085  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:34,085  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

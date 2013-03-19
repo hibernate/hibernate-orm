@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.dataTypes.BasicOperationsTest" tests="1" time="0.158" timestamp="2013-02-28T20:10:17">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.dataTypes.BasicOperationsTest" name="testCreateAndDelete" time="0.097" />
+  <system-out><![CDATA[14:10:17,677  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.dataTypes.BasicOperationsTest
+14:10:17,683  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:17,683  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:17,683  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:17,683  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:17,684  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:17,685  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:17,685  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:17,686  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:17,686  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:17,686  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:17,704  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:17,707 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:17,708 DEBUG SQL:104 - 
+    drop table SOMEENTITY if exists
+14:10:17,708 DEBUG SQL:104 - 
+    drop table SOMEOTHERENTITY if exists
+14:10:17,708 DEBUG SQL:104 - 
+    create table SOMEENTITY (
+        ID date not null,
+        byteData blob,
+        charData varchar(255),
+        TIMEDATA time,
+        TSDATA timestamp,
+        primary key (ID)
+    )
+14:10:17,717 DEBUG SQL:104 - 
+    create table SOMEOTHERENTITY (
+        id integer not null,
+        booleanData boolean not null,
+        byteData tinyint not null,
+        characterData char(255) not null,
+        doubleData double not null,
+        floatData float not null,
+        grade varchar(255),
+        integerData integer not null,
+        longData bigint not null,
+        shortData smallint not null,
+        primary key (id)
+    )
+14:10:17,725  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:17,726  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:17,726  INFO CustomRunner:139 - Test: testCreateAndDelete
+14:10:17,774 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEENTITY
+14:10:17,775 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEENTITY
+14:10:17,775 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEOTHERENTITY
+14:10:17,775 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEOTHERENTITY
+14:10:17,793 DEBUG SQL:104 - 
+    insert 
+    into
+        SOMEENTITY
+        (byteData, charData, TIMEDATA, TSDATA, ID) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:17,795 DEBUG SQL:104 - 
+    insert 
+    into
+        SOMEOTHERENTITY
+        (booleanData, byteData, characterData, doubleData, floatData, grade, integerData, longData, shortData, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+14:10:17,797 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEENTITY
+14:10:17,797 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEENTITY
+14:10:17,797 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEOTHERENTITY
+14:10:17,798 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEOTHERENTITY
+14:10:17,798 DEBUG SQL:104 - 
+    select
+        someentity_.ID,
+        someentity_.byteData as byteData0_,
+        someentity_.charData as charData0_,
+        someentity_.TIMEDATA as TIMEDATA0_,
+        someentity_.TSDATA as TSDATA0_ 
+    from
+        SOMEENTITY someentity_ 
+    where
+        someentity_.ID=?
+14:10:17,799 DEBUG SQL:104 - 
+    select
+        someothere_.id,
+        someothere_.booleanData as booleanD2_1_,
+        someothere_.byteData as byteData1_,
+        someothere_.characterData as characte4_1_,
+        someothere_.doubleData as doubleData1_,
+        someothere_.floatData as floatData1_,
+        someothere_.grade as grade1_,
+        someothere_.integerData as integerD8_1_,
+        someothere_.longData as longData1_,
+        someothere_.shortData as shortData1_ 
+    from
+        SOMEOTHERENTITY someothere_ 
+    where
+        someothere_.id=?
+14:10:17,814 DEBUG SQL:104 - 
+    delete 
+    from
+        SOMEENTITY 
+    where
+        ID=?
+14:10:17,815 DEBUG SQL:104 - 
+    delete 
+    from
+        SOMEOTHERENTITY 
+    where
+        id=?
+14:10:17,816 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEENTITY
+14:10:17,818 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEENTITY
+14:10:17,818 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEOTHERENTITY
+14:10:17,818 DEBUG SQL:104 - 
+    SELECT
+        COUNT(*) 
+    FROM
+        SOMEOTHERENTITY
+14:10:17,824  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:17,824 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:17,825 DEBUG SQL:104 - 
+    drop table SOMEENTITY if exists
+14:10:17,832 DEBUG SQL:104 - 
+    drop table SOMEOTHERENTITY if exists
+14:10:17,832  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:17,832  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

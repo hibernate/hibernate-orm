@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.dialect.function.AnsiTrimEmulationFunctionTest" tests="2" time="0.006" timestamp="2013-02-28T20:12:12">
+  <properties />
+  <testcase classname="org.hibernate.test.dialect.function.AnsiTrimEmulationFunctionTest" name="testBasicSybaseProcessing" time="0.002" />
+  <testcase classname="org.hibernate.test.dialect.function.AnsiTrimEmulationFunctionTest" name="testBasicSqlServerProcessing" time="0.002" />
+  <system-out><![CDATA[14:12:12,910  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,911  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,911  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,911  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,911  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,911  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,911  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,912  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 3 arguments, but 2 arguments encountered
+14:12:12,912  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 3 arguments, but 2 arguments encountered
+14:12:12,912  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 3 arguments, but 2 arguments encountered
+14:12:12,912  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 3 arguments, but 2 arguments encountered
+14:12:12,913  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,913  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,913  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,913  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,913  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,913  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,914  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 1 arguments, but 2 arguments encountered
+14:12:12,914  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 3 arguments, but 2 arguments encountered
+14:12:12,914  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 3 arguments, but 2 arguments encountered
+14:12:12,914  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 3 arguments, but 2 arguments encountered
+14:12:12,914  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 3 arguments, but 2 arguments encountered
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

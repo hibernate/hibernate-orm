@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.enumerated.mapkey.MapKeyEnumeratedTest" tests="1" time="0.072" timestamp="2013-02-28T20:10:25">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.enumerated.mapkey.MapKeyEnumeratedTest" name="testMapKeyEnumerated" time="0.029" />
+  <system-out><![CDATA[14:10:25,413  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.enumerated.mapkey.MapKeyEnumeratedTest
+14:10:25,419  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:25,419  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:25,420  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:25,420  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:25,420  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:25,421  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:25,422  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:25,422  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:25,436  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:25,436  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:25,447  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:25,448 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:25,448 DEBUG SQL:104 - 
+    alter table social_network_profile 
+        drop constraint FK35406FC652B2DD7
+14:10:25,448 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table social_network_profile drop constraint FK35406FC652B2DD7
+14:10:25,448 ERROR SchemaExport:426 - Table "SOCIAL_NETWORK_PROFILE" not found; SQL statement:
+
+    alter table social_network_profile 
+        drop constraint FK35406FC652B2DD7 [42102-145]
+14:10:25,448 DEBUG SQL:104 - 
+    drop table USER_TABLE if exists
+14:10:25,449 DEBUG SQL:104 - 
+    drop table social_network_profile if exists
+14:10:25,449 DEBUG SQL:104 - 
+    create table USER_TABLE (
+        id varchar(255) not null,
+        primary key (id)
+    )
+14:10:25,449 DEBUG SQL:104 - 
+    create table social_network_profile (
+        id varchar(255) not null,
+        network_id varchar(255) not null,
+        social_network varchar(255) not null,
+        user_id varchar(255) not null,
+        primary key (id)
+    )
+14:10:25,450 DEBUG SQL:104 - 
+    alter table social_network_profile 
+        add constraint UK_social_network_profile_1 unique (social_network, network_id)
+14:10:25,450 DEBUG SQL:104 - 
+    alter table social_network_profile 
+        add constraint FK35406FC652B2DD7 
+        foreign key (user_id) 
+        references USER_TABLE
+14:10:25,451  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:25,452  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:25,452  INFO CustomRunner:139 - Test: testMapKeyEnumerated
+14:10:25,476 DEBUG SQL:104 - 
+    insert 
+    into
+        USER_TABLE
+        (id) 
+    values
+        (?)
+14:10:25,477 DEBUG SQL:104 - 
+    insert 
+    into
+        social_network_profile
+        (network_id, social_network, user_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:25,478 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_ 
+    from
+        USER_TABLE user0_ 
+    where
+        user0_.id=?
+14:10:25,479 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_ 
+    from
+        USER_TABLE user0_ 
+    where
+        user0_.id=?
+14:10:25,479 DEBUG SQL:104 - 
+    select
+        socialnetw0_.user_id as user4_0_1_,
+        socialnetw0_.id as id1_1_,
+        socialnetw0_.social_network as social3_1_,
+        socialnetw0_.id as id1_0_,
+        socialnetw0_.network_id as network2_1_0_,
+        socialnetw0_.social_network as social3_1_0_,
+        socialnetw0_.user_id as user4_1_0_ 
+    from
+        social_network_profile socialnetw0_ 
+    where
+        socialnetw0_.user_id=?
+14:10:25,480 DEBUG SQL:104 - 
+    delete 
+    from
+        social_network_profile 
+    where
+        id=?
+14:10:25,480 DEBUG SQL:104 - 
+    delete 
+    from
+        USER_TABLE 
+    where
+        id=?
+14:10:25,481  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:25,482 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:25,482 DEBUG SQL:104 - 
+    alter table social_network_profile 
+        drop constraint FK35406FC652B2DD7
+14:10:25,482 DEBUG SQL:104 - 
+    drop table USER_TABLE if exists
+14:10:25,483 DEBUG SQL:104 - 
+    drop table social_network_profile if exists
+14:10:25,483  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:25,483  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

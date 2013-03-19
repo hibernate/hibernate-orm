@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.enums.TestEnumTypeSerialization" tests="1" time="0.022" timestamp="2013-02-28T20:12:16">
+  <properties />
+  <testcase classname="org.hibernate.test.enums.TestEnumTypeSerialization" name="testSerializability" time="0.02" />
+  <system-out><![CDATA[14:12:16,707  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.enums.TestEnumTypeSerialization
+14:12:16,707  INFO CustomRunner:139 - Test: testSerializability
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

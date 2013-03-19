@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.sql.TemplateTest" tests="15" time="0.098" timestamp="2013-02-28T20:10:03">
+  <properties />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testCollation" time="0.028" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testCollationAndOrdering" time="0.006" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testComplexNestedFunctionReferences" time="0.003" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testComponentDerefReferences" time="0.003" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testComponentReferences" time="0.001" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testDoubleQualifiedFunctionReference" time="0.002" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testFunctionReference" time="0.003" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testFunctionWithPropertyReferenceAsParam" time="0.003" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testNestedFunctionReferences" time="0.002" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testPropertyReference" time="0.003" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testQualifiedFunctionReference" time="0.002" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testQuotedSQLReferences" time="0.001" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testSQLReferences" time="0.001" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testSqlExtractFunction" time="0.001" />
+  <testcase classname="org.hibernate.sql.TemplateTest" name="testSqlTrimFunction" time="0.003" />
+  <system-out><![CDATA[14:10:03,800  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.HSQLDialect
+14:10:03,803  INFO CustomRunner:132 - BeforeClass: org.hibernate.sql.TemplateTest
+14:10:03,805  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:03,806  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:03,806  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:03,806  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:03,807  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:03,808  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.HSQLDialect
+14:10:03,809  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:03,812  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:03,812  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:03,812  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:03,816  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:03,816  INFO CustomRunner:139 - Test: testCollation
+14:10:03,845  INFO CustomRunner:139 - Test: testCollationAndOrdering
+14:10:03,853  INFO CustomRunner:139 - Test: testComplexNestedFunctionReferences
+14:10:03,856  INFO CustomRunner:139 - Test: testComponentDerefReferences
+14:10:03,860  INFO CustomRunner:139 - Test: testComponentReferences
+14:10:03,862  INFO CustomRunner:139 - Test: testDoubleQualifiedFunctionReference
+14:10:03,864  INFO CustomRunner:139 - Test: testFunctionReference
+14:10:03,872  INFO CustomRunner:139 - Test: testFunctionWithPropertyReferenceAsParam
+14:10:03,876  INFO CustomRunner:139 - Test: testNestedFunctionReferences
+14:10:03,879  INFO CustomRunner:139 - Test: testPropertyReference
+14:10:03,884  INFO CustomRunner:139 - Test: testQualifiedFunctionReference
+14:10:03,886  INFO CustomRunner:139 - Test: testQuotedSQLReferences
+14:10:03,888  INFO CustomRunner:139 - Test: testSQLReferences
+14:10:03,890  INFO CustomRunner:139 - Test: testSqlExtractFunction
+14:10:03,891  INFO CustomRunner:139 - Test: testSqlTrimFunction
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,3211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.hql.ScrollableCollectionFetchingTest" tests="6" time="1.927" timestamp="2013-02-28T20:13:54">
+  <properties />
+  <testcase classname="org.hibernate.test.hql.ScrollableCollectionFetchingTest" name="testScrollingJoinFetchesEmptyResultSet" time="0.054" />
+  <testcase classname="org.hibernate.test.hql.ScrollableCollectionFetchingTest" name="testScrollingJoinFetchesForward" time="0.126" />
+  <testcase classname="org.hibernate.test.hql.ScrollableCollectionFetchingTest" name="testScrollingJoinFetchesPositioning" time="0.37" />
+  <testcase classname="org.hibernate.test.hql.ScrollableCollectionFetchingTest" name="testScrollingJoinFetchesReverse" time="0.211" />
+  <testcase classname="org.hibernate.test.hql.ScrollableCollectionFetchingTest" name="testScrollingJoinFetchesSingleRowResultSet" time="0.625" />
+  <testcase classname="org.hibernate.test.hql.ScrollableCollectionFetchingTest" name="testTupleReturnFails" time="0.015" />
+  <system-out><![CDATA[14:13:55,064  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.hql.ScrollableCollectionFetchingTest
+14:13:55,067  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/Animal.hbm.xml
+14:13:55,168  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:13:55,168  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:13:55,168  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:13:55,169  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:13:55,169  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:13:55,170  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:13:55,171  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:13:55,171  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:13:55,172  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:55,172  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:13:55,198  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:13:55,199 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:13:55,199 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4
+14:13:55,199 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C1F3964B4
+14:13:55,200 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4 [42102-145]
+14:13:55,200 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B
+14:13:55,200 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C6309E77B
+14:13:55,200 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B [42102-145]
+14:13:55,200 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79
+14:13:55,201 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C4B485C79
+14:13:55,201 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79 [42102-145]
+14:13:55,201 DEBUG SQL:104 - 
+    alter table Cat 
+        drop constraint FK107B66D384BBA
+14:13:55,201 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Cat drop constraint FK107B66D384BBA
+14:13:55,201 ERROR SchemaExport:426 - Table "CAT" not found; SQL statement:
+
+    alter table Cat 
+        drop constraint FK107B66D384BBA [42102-145]
+14:13:55,201 DEBUG SQL:104 - 
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA
+14:13:55,202 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Dog drop constraint FK10D1C6D384BBA
+14:13:55,202 ERROR SchemaExport:426 - Table "DOG" not found; SQL statement:
+
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA [42102-145]
+14:13:55,202 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F
+14:13:55,202 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DomesticAnimal drop constraint FKE02638DA1733655F
+14:13:55,202 ERROR SchemaExport:426 - Table "DOMESTICANIMAL" not found; SQL statement:
+
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F [42102-145]
+14:13:55,202 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F
+14:13:55,203 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DomesticAnimal drop constraint FKE02638DA6C03411F
+14:13:55,203 ERROR SchemaExport:426 - Table "DOMESTICANIMAL" not found; SQL statement:
+
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F [42102-145]
+14:13:55,203 DEBUG SQL:104 - 
+    alter table Human 
+        drop constraint FK42D710D1733655F
+14:13:55,203 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human drop constraint FK42D710D1733655F
+14:13:55,203 ERROR SchemaExport:426 - Table "HUMAN" not found; SQL statement:
+
+    alter table Human 
+        drop constraint FK42D710D1733655F [42102-145]
+14:13:55,203 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311
+14:13:55,204 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_family drop constraint FK5F790ED61DCB1311
+14:13:55,204 ERROR SchemaExport:426 - Table "HUMAN_FAMILY" not found; SQL statement:
+
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311 [42102-145]
+14:13:55,204 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310
+14:13:55,204 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_family drop constraint FK5F790ED61DCB1310
+14:13:55,204 ERROR SchemaExport:426 - Table "HUMAN_FAMILY" not found; SQL statement:
+
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310 [42102-145]
+14:13:55,204 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311
+14:13:55,205 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_friends drop constraint FKAC7104631DCB1311
+14:13:55,205 ERROR SchemaExport:426 - Table "HUMAN_FRIENDS" not found; SQL statement:
+
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311 [42102-145]
+14:13:55,205 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310
+14:13:55,205 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_friends drop constraint FKAC7104631DCB1310
+14:13:55,205 ERROR SchemaExport:426 - Table "HUMAN_FRIENDS" not found; SQL statement:
+
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310 [42102-145]
+14:13:55,205 DEBUG SQL:104 - 
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13
+14:13:55,206 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table JOINED drop constraint FK82C23B49534E0F13
+14:13:55,206 ERROR SchemaExport:426 - Table "JOINED" not found; SQL statement:
+
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13 [42102-145]
+14:13:55,206 DEBUG SQL:104 - 
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315
+14:13:55,206 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Lizard drop constraint FK87B0E2B6EE398315
+14:13:55,206 ERROR SchemaExport:426 - Table "LIZARD" not found; SQL statement:
+
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315 [42102-145]
+14:13:55,206 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699
+14:13:55,207 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Mammal drop constraint FK88EF417FEFA9D699
+14:13:55,207 ERROR SchemaExport:426 - Table "MAMMAL" not found; SQL statement:
+
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699 [42102-145]
+14:13:55,207 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98
+14:13:55,207 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Mammal drop constraint FK88EF417FCE6EEE98
+14:13:55,207 ERROR SchemaExport:426 - Table "MAMMAL" not found; SQL statement:
+
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98 [42102-145]
+14:13:55,208 DEBUG SQL:104 - 
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699
+14:13:55,208 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Reptile drop constraint FKA4790CABEFA9D699
+14:13:55,208 ERROR SchemaExport:426 - Table "REPTILE" not found; SQL statement:
+
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699 [42102-145]
+14:13:55,208 DEBUG SQL:104 - 
+    alter table Zoo 
+        drop constraint FK15FBA55106523
+14:13:55,208 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo drop constraint FK15FBA55106523
+14:13:55,208 ERROR SchemaExport:426 - Table "ZOO" not found; SQL statement:
+
+    alter table Zoo 
+        drop constraint FK15FBA55106523 [42102-145]
+14:13:55,209 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719
+14:13:55,209 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo_directors drop constraint FK2D21982265B0D719
+14:13:55,209 ERROR SchemaExport:426 - Table "ZOO_DIRECTORS" not found; SQL statement:
+
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719 [42102-145]
+14:13:55,209 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705
+14:13:55,209 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo_directors drop constraint FK2D219822C590D705
+14:13:55,209 ERROR SchemaExport:426 - Table "ZOO_DIRECTORS" not found; SQL statement:
+
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705 [42102-145]
+14:13:55,210 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2
+14:13:55,210 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "User_permissions" drop constraint FKB4582A30F2810CD2
+14:13:55,210 ERROR SchemaExport:426 - Table "User_permissions" not found; SQL statement:
+
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2 [42102-145]
+14:13:55,210 DEBUG SQL:104 - 
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87
+14:13:55,210 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "User" drop constraint FK285FEB65AF5B87
+14:13:55,210 ERROR SchemaExport:426 - Table "User" not found; SQL statement:
+
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87 [42102-145]
+14:13:55,211 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA255106523
+14:13:55,211 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table addresses drop constraint FK34207BA255106523
+14:13:55,211 ERROR SchemaExport:426 - Table "ADDRESSES" not found; SQL statement:
+
+    alter table addresses 
+        drop constraint FK34207BA255106523 [42102-145]
+14:13:55,211 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99
+14:13:55,211 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table addresses drop constraint FK34207BA26B9FAF99
+14:13:55,211 ERROR SchemaExport:426 - Table "ADDRESSES" not found; SQL statement:
+
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99 [42102-145]
+14:13:55,212 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99
+14:13:55,212 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table human_nick_names drop constraint FK8718E1BE6B9FAF99
+14:13:55,212 ERROR SchemaExport:426 - Table "HUMAN_NICK_NAMES" not found; SQL statement:
+
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99 [42102-145]
+14:13:55,212 DEBUG SQL:104 - 
+    drop table Animal if exists
+14:13:55,212 DEBUG SQL:104 - 
+    drop table Cat if exists
+14:13:55,212 DEBUG SQL:104 - 
+    drop table Dog if exists
+14:13:55,212 DEBUG SQL:104 - 
+    drop table DomesticAnimal if exists
+14:13:55,213 DEBUG SQL:104 - 
+    drop table Human if exists
+14:13:55,213 DEBUG SQL:104 - 
+    drop table Human_family if exists
+14:13:55,213 DEBUG SQL:104 - 
+    drop table Human_friends if exists
+14:13:55,213 DEBUG SQL:104 - 
+    drop table JOINED if exists
+14:13:55,213 DEBUG SQL:104 - 
+    drop table Joiner if exists
+14:13:55,213 DEBUG SQL:104 - 
+    drop table Lizard if exists
+14:13:55,213 DEBUG SQL:104 - 
+    drop table Mammal if exists
+14:13:55,214 DEBUG SQL:104 - 
+    drop table Reptile if exists
+14:13:55,214 DEBUG SQL:104 - 
+    drop table StateProvince if exists
+14:13:55,214 DEBUG SQL:104 - 
+    drop table Zoo if exists
+14:13:55,214 DEBUG SQL:104 - 
+    drop table Zoo_directors if exists
+14:13:55,214 DEBUG SQL:104 - 
+    drop table "User_permissions" if exists
+14:13:55,214 DEBUG SQL:104 - 
+    drop table "User" if exists
+14:13:55,214 DEBUG SQL:104 - 
+    drop table addresses if exists
+14:13:55,214 DEBUG SQL:104 - 
+    drop table human_nick_names if exists
+14:13:55,215 DEBUG SQL:104 - 
+    create table Animal (
+        id bigint generated by default as identity,
+        description varchar(255),
+        body_weight float,
+        mother_id bigint,
+        father_id bigint,
+        zoo_id bigint,
+        serialNumber varchar(255),
+        primary key (id)
+    )
+14:13:55,215 DEBUG SQL:104 - 
+    create table Cat (
+        mammal bigint not null,
+        primary key (mammal)
+    )
+14:13:55,215 DEBUG SQL:104 - 
+    create table Dog (
+        mammal bigint not null,
+        primary key (mammal)
+    )
+14:13:55,215 DEBUG SQL:104 - 
+    create table DomesticAnimal (
+        mammal bigint not null,
+        owner bigint,
+        primary key (mammal)
+    )
+14:13:55,216 DEBUG SQL:104 - 
+    create table Human (
+        mammal bigint not null,
+        name_first varchar(255),
+        name_initial char(255),
+        name_last varchar(255),
+        nickName varchar(255),
+        height_centimeters double not null,
+        intValue integer,
+        floatValue float,
+        bigDecimalValue decimal(19,2),
+        bigIntegerValue decimal(19,2),
+        primary key (mammal)
+    )
+14:13:55,217 DEBUG SQL:104 - 
+    create table Human_family (
+        human1 bigint not null,
+        human2 bigint not null,
+        relationship varchar(255) not null,
+        primary key (human1, relationship)
+    )
+14:13:55,217 DEBUG SQL:104 - 
+    create table Human_friends (
+        human1 bigint not null,
+        human2 bigint not null
+    )
+14:13:55,217 DEBUG SQL:104 - 
+    create table JOINED (
+        ID bigint not null,
+        joinedName varchar(255),
+        primary key (ID)
+    )
+14:13:55,218 DEBUG SQL:104 - 
+    create table Joiner (
+        id bigint generated by default as identity,
+        name varchar(255),
+        primary key (id)
+    )
+14:13:55,218 DEBUG SQL:104 - 
+    create table Lizard (
+        reptile bigint not null,
+        primary key (reptile)
+    )
+14:13:55,218 DEBUG SQL:104 - 
+    create table Mammal (
+        animal bigint not null,
+        pregnant boolean,
+        birthdate date,
+        mammalZoo_id bigint,
+        name varchar(255),
+        primary key (animal)
+    )
+14:13:55,219 DEBUG SQL:104 - 
+    create table Reptile (
+        animal bigint not null,
+        bodyTemperature float,
+        primary key (animal)
+    )
+14:13:55,219 DEBUG SQL:104 - 
+    create table StateProvince (
+        id bigint generated by default as identity,
+        name varchar(255),
+        isoCode varchar(255),
+        primary key (id)
+    )
+14:13:55,219 DEBUG SQL:104 - 
+    create table Zoo (
+        id bigint generated by default as identity,
+        zooType char(255) not null,
+        name varchar(255),
+        classification tinyint,
+        street varchar(255),
+        city varchar(255),
+        postalCode varchar(255),
+        country varchar(255),
+        state_prov_id bigint,
+        primary key (id)
+    )
+14:13:55,220 DEBUG SQL:104 - 
+    create table Zoo_directors (
+        directorZoo_id bigint not null,
+        elt bigint not null,
+        title varchar(255) not null,
+        primary key (directorZoo_id, title)
+    )
+14:13:55,220 DEBUG SQL:104 - 
+    create table "User_permissions" (
+        userId bigint not null,
+        permissionName varchar(255),
+        permissionId integer not null,
+        primary key (userId, permissionId)
+    )
+14:13:55,220 DEBUG SQL:104 - 
+    create table "User" (
+        id bigint not null,
+        userName varchar(255),
+        primary key (id)
+    )
+14:13:55,221 DEBUG SQL:104 - 
+    create table addresses (
+        human bigint not null,
+        street varchar(255),
+        city varchar(255),
+        postalCode varchar(255),
+        country varchar(255),
+        state_prov_id bigint,
+        "type" varchar(255) not null,
+        primary key (human, "type")
+    )
+14:13:55,229 DEBUG SQL:104 - 
+    create table human_nick_names (
+        human bigint not null,
+        nick_name varchar(255) not null,
+        primary key (human, nick_name)
+    )
+14:13:55,229 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C1F3964B4 
+        foreign key (mother_id) 
+        references Animal
+14:13:55,230 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C6309E77B 
+        foreign key (father_id) 
+        references Animal
+14:13:55,230 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C4B485C79 
+        foreign key (zoo_id) 
+        references Zoo
+14:13:55,231 DEBUG SQL:104 - 
+    alter table Cat 
+        add constraint FK107B66D384BBA 
+        foreign key (mammal) 
+        references DomesticAnimal
+14:13:55,231 DEBUG SQL:104 - 
+    alter table Dog 
+        add constraint FK10D1C6D384BBA 
+        foreign key (mammal) 
+        references DomesticAnimal
+14:13:55,232 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        add constraint FKE02638DA1733655F 
+        foreign key (mammal) 
+        references Mammal
+14:13:55,232 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        add constraint FKE02638DA6C03411F 
+        foreign key (owner) 
+        references Human
+14:13:55,233 DEBUG SQL:104 - 
+    alter table Human 
+        add constraint FK42D710D1733655F 
+        foreign key (mammal) 
+        references Mammal
+14:13:55,233 DEBUG SQL:104 - 
+    alter table Human_family 
+        add constraint FK5F790ED61DCB1311 
+        foreign key (human2) 
+        references Human
+14:13:55,234 DEBUG SQL:104 - 
+    alter table Human_family 
+        add constraint FK5F790ED61DCB1310 
+        foreign key (human1) 
+        references Human
+14:13:55,234 DEBUG SQL:104 - 
+    alter table Human_friends 
+        add constraint FKAC7104631DCB1311 
+        foreign key (human2) 
+        references Human
+14:13:55,234 DEBUG SQL:104 - 
+    alter table Human_friends 
+        add constraint FKAC7104631DCB1310 
+        foreign key (human1) 
+        references Human
+14:13:55,235 DEBUG SQL:104 - 
+    alter table JOINED 
+        add constraint FK82C23B49534E0F13 
+        foreign key (ID) 
+        references Joiner
+14:13:55,235 DEBUG SQL:104 - 
+    alter table Lizard 
+        add constraint FK87B0E2B6EE398315 
+        foreign key (reptile) 
+        references Reptile
+14:13:55,236 DEBUG SQL:104 - 
+    alter table Mammal 
+        add constraint FK88EF417FEFA9D699 
+        foreign key (animal) 
+        references Animal
+14:13:55,236 DEBUG SQL:104 - 
+    alter table Mammal 
+        add constraint FK88EF417FCE6EEE98 
+        foreign key (mammalZoo_id) 
+        references Zoo
+14:13:55,237 DEBUG SQL:104 - 
+    alter table Reptile 
+        add constraint FKA4790CABEFA9D699 
+        foreign key (animal) 
+        references Animal
+14:13:55,237 DEBUG SQL:104 - 
+    alter table Zoo 
+        add constraint FK15FBA55106523 
+        foreign key (state_prov_id) 
+        references StateProvince
+14:13:55,238 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        add constraint FK2D21982265B0D719 
+        foreign key (elt) 
+        references Human
+14:13:55,238 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        add constraint FK2D219822C590D705 
+        foreign key (directorZoo_id) 
+        references Zoo
+14:13:55,239 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        add constraint FKB4582A30F2810CD2 
+        foreign key (userId) 
+        references "User"
+14:13:55,239 DEBUG SQL:104 - 
+    alter table "User" 
+        add constraint FK285FEB65AF5B87 
+        foreign key (id) 
+        references Human
+14:13:55,239 DEBUG SQL:104 - 
+    alter table addresses 
+        add constraint FK34207BA255106523 
+        foreign key (state_prov_id) 
+        references StateProvince
+14:13:55,240 DEBUG SQL:104 - 
+    alter table addresses 
+        add constraint FK34207BA26B9FAF99 
+        foreign key (human) 
+        references Human
+14:13:55,261 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        add constraint FK8718E1BE6B9FAF99 
+        foreign key (human) 
+        references Human
+14:13:55,264  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:13:55,265  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:13:55,265  INFO CustomRunner:139 - Test: testScrollingJoinFetchesEmptyResultSet
+14:13:55,266 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Animal a left join fetch a.offspring where a.description like :desc order by a.id
+14:13:55,266 DEBUG ErrorCounter:63 - Keyword  'desc' is being interpreted as an identifier due to: expecting IDENT, found 'desc'
+14:13:55,268 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'hql'
+    |     |  |  \-[IDENT] Node: 'Animal'
+    |     |  \-[ALIAS] Node: 'a'
+    |     \-[JOIN] Node: 'join'
+    |        +-[LEFT] Node: 'left'
+    |        +-[FETCH] Node: 'fetch'
+    |        \-[DOT] Node: '.'
+    |           +-[IDENT] Node: 'a'
+    |           \-[IDENT] Node: 'offspring'
+    +-[WHERE] Node: 'where'
+    |  \-[LIKE] Node: 'like'
+    |     +-[DOT] Node: '.'
+    |     |  +-[IDENT] Node: 'a'
+    |     |  \-[IDENT] Node: 'description'
+    |     \-[COLON] Node: ':'
+    |        \-[WEIRD_IDENT] Node: 'desc'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'a'
+          \-[IDENT] Node: 'id'
+
+14:13:55,268 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:55,268 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (a) -> animal0_
+14:13:55,268 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:55,268 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:55,269 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:55,269 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> offspring1_
+14:13:55,269 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:55,269 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:55,269 DEBUG FromReferenceNode:74 - Resolved : a.offspring -> .
+14:13:55,269 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Animal offspring1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+
+14:13:55,269 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:55,269 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:55,270 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:55,270 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:55,270 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:13:55,270 DEBUG FromReferenceNode:74 - Resolved : a.id -> animal0_.id
+14:13:55,270 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Animal animal0_ Animal offspring1_ ) ) ( where ( like ( animal0_.description animal0_.id description ) ? ) ) ( order ( animal0_.id animal0_.id id ) ) )
+14:13:55,270 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:55,270 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal]
+14:13:55,271 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Animal offspring1_ on animal0_.id=offspring1_.mother_id left outer join Reptile offspring1_1_ on offspring1_.id=offspring1_1_.animal left outer join Lizard offspring1_2_ on offspring1_.id=offspring1_2_.reptile left outer join Mammal offspring1_3_ on offspring1_.id=offspring1_3_.animal left outer join DomesticAnimal offspring1_4_ on offspring1_.id=offspring1_4_.mammal left outer join Cat offspring1_5_ on offspring1_.id=offspring1_5_.mammal left outer join Dog offspring1_6_ on offspring1_.id=offspring1_6_.mammal left outer join Human offspring1_7_ on offspring1_.id=offspring1_7_.mammal]
+14:13:55,271 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=org.hibernate.test.hql.Animal}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'offspring1_.id as id0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'animal0_.description as descript2_0_0_, animal0_.body_weight as body3_0_0_, animal0_.mother_id as mother4_0_0_, animal0_.father_id as father5_0_0_, animal0_.zoo_id as zoo6_0_0_, animal0_.serialNumber as serialNu7_0_0_, animal0_1_.bodyTemperature as bodyTemp2_11_0_, animal0_3_.pregnant as pregnant10_0_, animal0_3_.birthdate as birthdate10_0_, animal0_4_.owner as owner3_0_, animal0_7_.name_first as name2_4_0_, animal0_7_.name_initial as name3_4_0_, animal0_7_.name_last as name4_4_0_, animal0_7_.nickName as nickName4_0_, animal0_7_.height_centimeters / 2.54E0 as height6_4_0_, animal0_7_.intValue as intValue4_0_, animal0_7_.floatValue as floatValue4_0_, animal0_7_.bigDecimalValue as bigDecim9_4_0_, animal0_7_.bigIntegerValue as bigInte10_4_0_, case when animal0_2_.reptile is not null then 2 when animal0_5_.mammal is not null then 5 when animal0_6_.mammal is not null then 6 when animal0_4_.mammal is not null then 4 when animal0_7_.mammal is not null then 7 when animal0_1_.animal is not null then 1 when animal0_3_.animal is not null then 3 when animal0_.id is not null then 0 end as clazz_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'offspring1_.description as descript2_0_1_, offspring1_.body_weight as body3_0_1_, offspring1_.mother_id as mother4_0_1_, offspring1_.father_id as father5_0_1_, offspring1_.zoo_id as zoo6_0_1_, offspring1_.serialNumber as serialNu7_0_1_, offspring1_1_.bodyTemperature as bodyTemp2_11_1_, offspring1_3_.pregnant as pregnant10_1_, offspring1_3_.birthdate as birthdate10_1_, offspring1_4_.owner as owner3_1_, offspring1_7_.name_first as name2_4_1_, offspring1_7_.name_initial as name3_4_1_, offspring1_7_.name_last as name4_4_1_, offspring1_7_.nickName as nickName4_1_, offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_, offspring1_7_.intValue as intValue4_1_, offspring1_7_.floatValue as floatValue4_1_, offspring1_7_.bigDecimalValue as bigDecim9_4_1_, offspring1_7_.bigIntegerValue as bigInte10_4_1_, case when offspring1_2_.reptile is not null then 2 when offspring1_5_.mammal is not null then 5 when offspring1_6_.mammal is not null then 6 when offspring1_4_.mammal is not null then 4 when offspring1_7_.mammal is not null then 7 when offspring1_1_.animal is not null then 1 when offspring1_3_.animal is not null then 3 when offspring1_.id is not null then 0 end as clazz_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'offspring1_.mother_id as mother4_0_0__, offspring1_.id as id0_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_, offspring1_], fromElementsByPath=[a.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=org.hibernate.test.hql.Animal}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join Animal offspring1_ on animal0_.id=offspring1_.mother_id left outer join Reptile offspring1_1_ on offspring1_.id=offspring1_1_.animal left outer join Lizard offspring1_2_ on offspring1_.id=offspring1_2_.reptile left outer join Mammal offspring1_3_ on offspring1_.id=offspring1_3_.animal left outer join DomesticAnimal offspring1_4_ on offspring1_.id=offspring1_4_.mammal left outer join Cat offspring1_5_ on offspring1_.id=offspring1_5_.mammal left outer join Dog offspring1_6_ on offspring1_.id=offspring1_6_.mammal left outer join Human offspring1_7_ on offspring1_.id=offspring1_7_.mammal' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+    +-[WHERE] SqlNode: 'where'
+    |  \-[LIKE] BinaryLogicOperatorNode: 'like'
+    |     +-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=org.hibernate.test.hql.Animal,classAlias=a}
+    |     |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=org.hibernate.test.hql.Animal, tableAlias=animal0_}
+    |     |  \-[IDENT] IdentNode: 'description' {originalText=description}
+    |     \-[NAMED_PARAM] ParameterNode: '?' {name=desc, expectedType=org.hibernate.type.StringType@2dc8de40}
+    \-[ORDER] OrderByClause: 'order'
+       +-[DOT] DotNode: 'animal0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=a.id,tableAlias=animal0_,className=org.hibernate.test.hql.Animal,classAlias=a}
+       |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=org.hibernate.test.hql.Animal, tableAlias=animal0_}
+       |  \-[IDENT] IdentNode: 'id' {originalText=id}
+       \-[SQL_TOKEN] SqlFragment: 'offspring1_.father_id'
+
+14:13:55,271 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:55,271 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.Animal a left join fetch a.offspring where a.description like :desc order by a.id
+14:13:55,271 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as id0_0_, offspring1_.id as id0_1_, animal0_.description as descript2_0_0_, animal0_.body_weight as body3_0_0_, animal0_.mother_id as mother4_0_0_, animal0_.father_id as father5_0_0_, animal0_.zoo_id as zoo6_0_0_, animal0_.serialNumber as serialNu7_0_0_, animal0_1_.bodyTemperature as bodyTemp2_11_0_, animal0_3_.pregnant as pregnant10_0_, animal0_3_.birthdate as birthdate10_0_, animal0_4_.owner as owner3_0_, animal0_7_.name_first as name2_4_0_, animal0_7_.name_initial as name3_4_0_, animal0_7_.name_last as name4_4_0_, animal0_7_.nickName as nickName4_0_, animal0_7_.height_centimeters / 2.54E0 as height6_4_0_, animal0_7_.intValue as intValue4_0_, animal0_7_.floatValue as floatValue4_0_, animal0_7_.bigDecimalValue as bigDecim9_4_0_, animal0_7_.bigIntegerValue as bigInte10_4_0_, case when animal0_2_.reptile is not null then 2 when animal0_5_.mammal is not null then 5 when animal0_6_.mammal is not null then 6 when animal0_4_.mammal is not null then 4 when animal0_7_.mammal is not null then 7 when animal0_1_.animal is not null then 1 when animal0_3_.animal is not null then 3 when animal0_.id is not null then 0 end as clazz_0_, offspring1_.description as descript2_0_1_, offspring1_.body_weight as body3_0_1_, offspring1_.mother_id as mother4_0_1_, offspring1_.father_id as father5_0_1_, offspring1_.zoo_id as zoo6_0_1_, offspring1_.serialNumber as serialNu7_0_1_, offspring1_1_.bodyTemperature as bodyTemp2_11_1_, offspring1_3_.pregnant as pregnant10_1_, offspring1_3_.birthdate as birthdate10_1_, offspring1_4_.owner as owner3_1_, offspring1_7_.name_first as name2_4_1_, offspring1_7_.name_initial as name3_4_1_, offspring1_7_.name_last as name4_4_1_, offspring1_7_.nickName as nickName4_1_, offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_, offspring1_7_.intValue as intValue4_1_, offspring1_7_.floatValue as floatValue4_1_, offspring1_7_.bigDecimalValue as bigDecim9_4_1_, offspring1_7_.bigIntegerValue as bigInte10_4_1_, case when offspring1_2_.reptile is not null then 2 when offspring1_5_.mammal is not null then 5 when offspring1_6_.mammal is not null then 6 when offspring1_4_.mammal is not null then 4 when offspring1_7_.mammal is not null then 7 when offspring1_1_.animal is not null then 1 when offspring1_3_.animal is not null then 3 when offspring1_.id is not null then 0 end as clazz_1_, offspring1_.mother_id as mother4_0_0__, offspring1_.id as id0_0__ from Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal left outer join Animal offspring1_ on animal0_.id=offspring1_.mother_id left outer join Reptile offspring1_1_ on offspring1_.id=offspring1_1_.animal left outer join Lizard offspring1_2_ on offspring1_.id=offspring1_2_.reptile left outer join Mammal offspring1_3_ on offspring1_.id=offspring1_3_.animal left outer join DomesticAnimal offspring1_4_ on offspring1_.id=offspring1_4_.mammal left outer join Cat offspring1_5_ on offspring1_.id=offspring1_5_.mammal left outer join Dog offspring1_6_ on offspring1_.id=offspring1_6_.mammal left outer join Human offspring1_7_ on offspring1_.id=offspring1_7_.mammal where animal0_.description like ? order by animal0_.id, offspring1_.father_id
+14:13:55,272 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:55,272 DEBUG SQL:104 - 
+    select
+        animal0_.id as id0_0_,
+        offspring1_.id as id0_1_,
+        animal0_.description as descript2_0_0_,
+        animal0_.body_weight as body3_0_0_,
+        animal0_.mother_id as mother4_0_0_,
+        animal0_.father_id as father5_0_0_,
+        animal0_.zoo_id as zoo6_0_0_,
+        animal0_.serialNumber as serialNu7_0_0_,
+        animal0_1_.bodyTemperature as bodyTemp2_11_0_,
+        animal0_3_.pregnant as pregnant10_0_,
+        animal0_3_.birthdate as birthdate10_0_,
+        animal0_4_.owner as owner3_0_,
+        animal0_7_.name_first as name2_4_0_,
+        animal0_7_.name_initial as name3_4_0_,
+        animal0_7_.name_last as name4_4_0_,
+        animal0_7_.nickName as nickName4_0_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_4_0_,
+        animal0_7_.intValue as intValue4_0_,
+        animal0_7_.floatValue as floatValue4_0_,
+        animal0_7_.bigDecimalValue as bigDecim9_4_0_,
+        animal0_7_.bigIntegerValue as bigInte10_4_0_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_0_,
+        offspring1_.description as descript2_0_1_,
+        offspring1_.body_weight as body3_0_1_,
+        offspring1_.mother_id as mother4_0_1_,
+        offspring1_.father_id as father5_0_1_,
+        offspring1_.zoo_id as zoo6_0_1_,
+        offspring1_.serialNumber as serialNu7_0_1_,
+        offspring1_1_.bodyTemperature as bodyTemp2_11_1_,
+        offspring1_3_.pregnant as pregnant10_1_,
+        offspring1_3_.birthdate as birthdate10_1_,
+        offspring1_4_.owner as owner3_1_,
+        offspring1_7_.name_first as name2_4_1_,
+        offspring1_7_.name_initial as name3_4_1_,
+        offspring1_7_.name_last as name4_4_1_,
+        offspring1_7_.nickName as nickName4_1_,
+        offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_,
+        offspring1_7_.intValue as intValue4_1_,
+        offspring1_7_.floatValue as floatValue4_1_,
+        offspring1_7_.bigDecimalValue as bigDecim9_4_1_,
+        offspring1_7_.bigIntegerValue as bigInte10_4_1_,
+        case 
+            when offspring1_2_.reptile is not null then 2 
+            when offspring1_5_.mammal is not null then 5 
+            when offspring1_6_.mammal is not null then 6 
+            when offspring1_4_.mammal is not null then 4 
+            when offspring1_7_.mammal is not null then 7 
+            when offspring1_1_.animal is not null then 1 
+            when offspring1_3_.animal is not null then 3 
+            when offspring1_.id is not null then 0 
+        end as clazz_1_,
+        offspring1_.mother_id as mother4_0_0__,
+        offspring1_.id as id0_0__ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    left outer join
+        Animal offspring1_ 
+            on animal0_.id=offspring1_.mother_id 
+    left outer join
+        Reptile offspring1_1_ 
+            on offspring1_.id=offspring1_1_.animal 
+    left outer join
+        Lizard offspring1_2_ 
+            on offspring1_.id=offspring1_2_.reptile 
+    left outer join
+        Mammal offspring1_3_ 
+            on offspring1_.id=offspring1_3_.animal 
+    left outer join
+        DomesticAnimal offspring1_4_ 
+            on offspring1_.id=offspring1_4_.mammal 
+    left outer join
+        Cat offspring1_5_ 
+            on offspring1_.id=offspring1_5_.mammal 
+    left outer join
+        Dog offspring1_6_ 
+            on offspring1_.id=offspring1_6_.mammal 
+    left outer join
+        Human offspring1_7_ 
+            on offspring1_.id=offspring1_7_.mammal 
+    where
+        animal0_.description like ? 
+    order by
+        animal0_.id,
+        offspring1_.father_id
+14:13:55,274 DEBUG SQL:104 - 
+    select
+        animal0_.id as id0_0_,
+        offspring1_.id as id0_1_,
+        animal0_.description as descript2_0_0_,
+        animal0_.body_weight as body3_0_0_,
+        animal0_.mother_id as mother4_0_0_,
+        animal0_.father_id as father5_0_0_,
+        animal0_.zoo_id as zoo6_0_0_,
+        animal0_.serialNumber as serialNu7_0_0_,
+        animal0_1_.bodyTemperature as bodyTemp2_11_0_,
+        animal0_3_.pregnant as pregnant10_0_,
+        animal0_3_.birthdate as birthdate10_0_,
+        animal0_4_.owner as owner3_0_,
+        animal0_7_.name_first as name2_4_0_,
+        animal0_7_.name_initial as name3_4_0_,
+        animal0_7_.name_last as name4_4_0_,
+        animal0_7_.nickName as nickName4_0_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_4_0_,
+        animal0_7_.intValue as intValue4_0_,
+        animal0_7_.floatValue as floatValue4_0_,
+        animal0_7_.bigDecimalValue as bigDecim9_4_0_,
+        animal0_7_.bigIntegerValue as bigInte10_4_0_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_0_,
+        offspring1_.description as descript2_0_1_,
+        offspring1_.body_weight as body3_0_1_,
+        offspring1_.mother_id as mother4_0_1_,
+        offspring1_.father_id as father5_0_1_,
+        offspring1_.zoo_id as zoo6_0_1_,
+        offspring1_.serialNumber as serialNu7_0_1_,
+        offspring1_1_.bodyTemperature as bodyTemp2_11_1_,
+        offspring1_3_.pregnant as pregnant10_1_,
+        offspring1_3_.birthdate as birthdate10_1_,
+        offspring1_4_.owner as owner3_1_,
+        offspring1_7_.name_first as name2_4_1_,
+        offspring1_7_.name_initial as name3_4_1_,
+        offspring1_7_.name_last as name4_4_1_,
+        offspring1_7_.nickName as nickName4_1_,
+        offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_,
+        offspring1_7_.intValue as intValue4_1_,
+        offspring1_7_.floatValue as floatValue4_1_,
+        offspring1_7_.bigDecimalValue as bigDecim9_4_1_,
+        offspring1_7_.bigIntegerValue as bigInte10_4_1_,
+        case 
+            when offspring1_2_.reptile is not null then 2 
+            when offspring1_5_.mammal is not null then 5 
+            when offspring1_6_.mammal is not null then 6 
+            when offspring1_4_.mammal is not null then 4 
+            when offspring1_7_.mammal is not null then 7 
+            when offspring1_1_.animal is not null then 1 
+            when offspring1_3_.animal is not null then 3 
+            when offspring1_.id is not null then 0 
+        end as clazz_1_,
+        offspring1_.mother_id as mother4_0_0__,
+        offspring1_.id as id0_0__ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    left outer join
+        Animal offspring1_ 
+            on animal0_.id=offspring1_.mother_id 
+    left outer join
+        Reptile offspring1_1_ 
+            on offspring1_.id=offspring1_1_.animal 
+    left outer join
+        Lizard offspring1_2_ 
+            on offspring1_.id=offspring1_2_.reptile 
+    left outer join
+        Mammal offspring1_3_ 
+            on offspring1_.id=offspring1_3_.animal 
+    left outer join
+        DomesticAnimal offspring1_4_ 
+            on offspring1_.id=offspring1_4_.mammal 
+    left outer join
+        Cat offspring1_5_ 
+            on offspring1_.id=offspring1_5_.mammal 
+    left outer join
+        Dog offspring1_6_ 
+            on offspring1_.id=offspring1_6_.mammal 
+    left outer join
+        Human offspring1_7_ 
+            on offspring1_.id=offspring1_7_.mammal 
+    where
+        animal0_.description like ? 
+    order by
+        animal0_.id,
+        offspring1_.father_id
+14:13:55,319  INFO CustomRunner:139 - Test: testScrollingJoinFetchesForward
+14:13:55,322 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,322 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,323 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,323 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,323 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,324 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,324 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,324 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,325 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,325 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,326 DEBUG SQL:104 - 
+    select
+        animal0_.id as id0_0_,
+        offspring1_.id as id0_1_,
+        animal0_.description as descript2_0_0_,
+        animal0_.body_weight as body3_0_0_,
+        animal0_.mother_id as mother4_0_0_,
+        animal0_.father_id as father5_0_0_,
+        animal0_.zoo_id as zoo6_0_0_,
+        animal0_.serialNumber as serialNu7_0_0_,
+        animal0_1_.bodyTemperature as bodyTemp2_11_0_,
+        animal0_3_.pregnant as pregnant10_0_,
+        animal0_3_.birthdate as birthdate10_0_,
+        animal0_4_.owner as owner3_0_,
+        animal0_7_.name_first as name2_4_0_,
+        animal0_7_.name_initial as name3_4_0_,
+        animal0_7_.name_last as name4_4_0_,
+        animal0_7_.nickName as nickName4_0_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_4_0_,
+        animal0_7_.intValue as intValue4_0_,
+        animal0_7_.floatValue as floatValue4_0_,
+        animal0_7_.bigDecimalValue as bigDecim9_4_0_,
+        animal0_7_.bigIntegerValue as bigInte10_4_0_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_0_,
+        offspring1_.description as descript2_0_1_,
+        offspring1_.body_weight as body3_0_1_,
+        offspring1_.mother_id as mother4_0_1_,
+        offspring1_.father_id as father5_0_1_,
+        offspring1_.zoo_id as zoo6_0_1_,
+        offspring1_.serialNumber as serialNu7_0_1_,
+        offspring1_1_.bodyTemperature as bodyTemp2_11_1_,
+        offspring1_3_.pregnant as pregnant10_1_,
+        offspring1_3_.birthdate as birthdate10_1_,
+        offspring1_4_.owner as owner3_1_,
+        offspring1_7_.name_first as name2_4_1_,
+        offspring1_7_.name_initial as name3_4_1_,
+        offspring1_7_.name_last as name4_4_1_,
+        offspring1_7_.nickName as nickName4_1_,
+        offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_,
+        offspring1_7_.intValue as intValue4_1_,
+        offspring1_7_.floatValue as floatValue4_1_,
+        offspring1_7_.bigDecimalValue as bigDecim9_4_1_,
+        offspring1_7_.bigIntegerValue as bigInte10_4_1_,
+        case 
+            when offspring1_2_.reptile is not null then 2 
+            when offspring1_5_.mammal is not null then 5 
+            when offspring1_6_.mammal is not null then 6 
+            when offspring1_4_.mammal is not null then 4 
+            when offspring1_7_.mammal is not null then 7 
+            when offspring1_1_.animal is not null then 1 
+            when offspring1_3_.animal is not null then 3 
+            when offspring1_.id is not null then 0 
+        end as clazz_1_,
+        offspring1_.mother_id as mother4_0_0__,
+        offspring1_.id as id0_0__ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    left outer join
+        Animal offspring1_ 
+            on animal0_.id=offspring1_.mother_id 
+    left outer join
+        Reptile offspring1_1_ 
+            on offspring1_.id=offspring1_1_.animal 
+    left outer join
+        Lizard offspring1_2_ 
+            on offspring1_.id=offspring1_2_.reptile 
+    left outer join
+        Mammal offspring1_3_ 
+            on offspring1_.id=offspring1_3_.animal 
+    left outer join
+        DomesticAnimal offspring1_4_ 
+            on offspring1_.id=offspring1_4_.mammal 
+    left outer join
+        Cat offspring1_5_ 
+            on offspring1_.id=offspring1_5_.mammal 
+    left outer join
+        Dog offspring1_6_ 
+            on offspring1_.id=offspring1_6_.mammal 
+    left outer join
+        Human offspring1_7_ 
+            on offspring1_.id=offspring1_7_.mammal 
+    where
+        animal0_.description like ? 
+    order by
+        animal0_.id,
+        offspring1_.father_id
+14:13:55,329 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.hql.Animal where description like 'grand%'
+14:13:55,330 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'hql'
+    |        \-[IDENT] Node: 'Animal'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[IDENT] Node: 'description'
+          \-[QUOTED_STRING] Node: ''grand%''
+
+14:13:55,330 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:55,330 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> animal0_
+14:13:55,330 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:55,331 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:55,331 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.description -> animal0_.description
+14:13:55,331 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Animal)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=org.hibernate.test.hql.Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path={synthetic-alias}.description,tableAlias=animal0_,className=org.hibernate.test.hql.Animal,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[QUOTED_STRING] LiteralNode: ''grand%''
+
+14:13:55,331 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:55,331 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_ 
+        where
+            animal0_.description like 'grand%'
+14:13:55,332 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,332 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,332 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,332 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,332 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,333 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,333 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,333 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,334 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:55,335 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.hql.Animal where not description like 'root%'
+14:13:55,335 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'hql'
+    |        \-[IDENT] Node: 'Animal'
+    \-[WHERE] Node: 'where'
+       \-[NOT_LIKE] Node: '{not}like'
+          +-[IDENT] Node: 'description'
+          \-[QUOTED_STRING] Node: ''root%''
+
+14:13:55,336 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:55,348 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> animal0_
+14:13:55,348 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:55,348 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:55,349 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.description -> animal0_.description
+14:13:55,349 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Animal)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=org.hibernate.test.hql.Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[NOT_LIKE] BinaryLogicOperatorNode: '{not}like'
+          +-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path={synthetic-alias}.description,tableAlias=animal0_,className=org.hibernate.test.hql.Animal,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[QUOTED_STRING] LiteralNode: ''root%''
+
+14:13:55,349 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:55,350 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_ 
+        where
+            animal0_.description not like 'root%'
+14:13:55,350 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,359 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,360 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,370 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,370 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,380 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,381 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,381 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,391 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:55,392 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.hql.Animal
+14:13:55,393 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'hql'
+             \-[IDENT] Node: 'Animal'
+
+14:13:55,393 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:55,402 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> animal0_
+14:13:55,402 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Animal)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=org.hibernate.test.hql.Animal}}
+
+14:13:55,402 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:55,402 DEBUG DeleteStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:13:55,403 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_
+14:13:55,403 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,413 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,414 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,414 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,414 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,430 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,430 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,431 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,445 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:55,446  INFO CustomRunner:139 - Test: testScrollingJoinFetchesPositioning
+14:13:55,448 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,449 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,449 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,449 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,465 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,466 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,466 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,466 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,491 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,492 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,492 DEBUG SQL:104 - 
+    select
+        animal0_.id as id0_0_,
+        offspring1_.id as id0_1_,
+        animal0_.description as descript2_0_0_,
+        animal0_.body_weight as body3_0_0_,
+        animal0_.mother_id as mother4_0_0_,
+        animal0_.father_id as father5_0_0_,
+        animal0_.zoo_id as zoo6_0_0_,
+        animal0_.serialNumber as serialNu7_0_0_,
+        animal0_1_.bodyTemperature as bodyTemp2_11_0_,
+        animal0_3_.pregnant as pregnant10_0_,
+        animal0_3_.birthdate as birthdate10_0_,
+        animal0_4_.owner as owner3_0_,
+        animal0_7_.name_first as name2_4_0_,
+        animal0_7_.name_initial as name3_4_0_,
+        animal0_7_.name_last as name4_4_0_,
+        animal0_7_.nickName as nickName4_0_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_4_0_,
+        animal0_7_.intValue as intValue4_0_,
+        animal0_7_.floatValue as floatValue4_0_,
+        animal0_7_.bigDecimalValue as bigDecim9_4_0_,
+        animal0_7_.bigIntegerValue as bigInte10_4_0_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_0_,
+        offspring1_.description as descript2_0_1_,
+        offspring1_.body_weight as body3_0_1_,
+        offspring1_.mother_id as mother4_0_1_,
+        offspring1_.father_id as father5_0_1_,
+        offspring1_.zoo_id as zoo6_0_1_,
+        offspring1_.serialNumber as serialNu7_0_1_,
+        offspring1_1_.bodyTemperature as bodyTemp2_11_1_,
+        offspring1_3_.pregnant as pregnant10_1_,
+        offspring1_3_.birthdate as birthdate10_1_,
+        offspring1_4_.owner as owner3_1_,
+        offspring1_7_.name_first as name2_4_1_,
+        offspring1_7_.name_initial as name3_4_1_,
+        offspring1_7_.name_last as name4_4_1_,
+        offspring1_7_.nickName as nickName4_1_,
+        offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_,
+        offspring1_7_.intValue as intValue4_1_,
+        offspring1_7_.floatValue as floatValue4_1_,
+        offspring1_7_.bigDecimalValue as bigDecim9_4_1_,
+        offspring1_7_.bigIntegerValue as bigInte10_4_1_,
+        case 
+            when offspring1_2_.reptile is not null then 2 
+            when offspring1_5_.mammal is not null then 5 
+            when offspring1_6_.mammal is not null then 6 
+            when offspring1_4_.mammal is not null then 4 
+            when offspring1_7_.mammal is not null then 7 
+            when offspring1_1_.animal is not null then 1 
+            when offspring1_3_.animal is not null then 3 
+            when offspring1_.id is not null then 0 
+        end as clazz_1_,
+        offspring1_.mother_id as mother4_0_0__,
+        offspring1_.id as id0_0__ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    left outer join
+        Animal offspring1_ 
+            on animal0_.id=offspring1_.mother_id 
+    left outer join
+        Reptile offspring1_1_ 
+            on offspring1_.id=offspring1_1_.animal 
+    left outer join
+        Lizard offspring1_2_ 
+            on offspring1_.id=offspring1_2_.reptile 
+    left outer join
+        Mammal offspring1_3_ 
+            on offspring1_.id=offspring1_3_.animal 
+    left outer join
+        DomesticAnimal offspring1_4_ 
+            on offspring1_.id=offspring1_4_.mammal 
+    left outer join
+        Cat offspring1_5_ 
+            on offspring1_.id=offspring1_5_.mammal 
+    left outer join
+        Dog offspring1_6_ 
+            on offspring1_.id=offspring1_6_.mammal 
+    left outer join
+        Human offspring1_7_ 
+            on offspring1_.id=offspring1_7_.mammal 
+    where
+        animal0_.description like ? 
+    order by
+        animal0_.id,
+        offspring1_.father_id
+14:13:55,543 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_ 
+        where
+            animal0_.description like 'grand%'
+14:13:55,543 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,543 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,544 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,544 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,553 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,554 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,581 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,582 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,582 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:55,582 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_ 
+        where
+            animal0_.description not like 'root%'
+14:13:55,604 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,607 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,607 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,647 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,647 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,771 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,772 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,772 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,772 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:55,772 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_
+14:13:55,773 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,773 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,784 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,784 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,795 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,796 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,806 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,808 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,816 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:55,817  INFO CustomRunner:139 - Test: testScrollingJoinFetchesReverse
+14:13:55,818 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,819 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,827 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,828 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,828 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,828 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:55,839 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,840 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,840 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,840 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:55,841 DEBUG SQL:104 - 
+    select
+        animal0_.id as id0_0_,
+        offspring1_.id as id0_1_,
+        animal0_.description as descript2_0_0_,
+        animal0_.body_weight as body3_0_0_,
+        animal0_.mother_id as mother4_0_0_,
+        animal0_.father_id as father5_0_0_,
+        animal0_.zoo_id as zoo6_0_0_,
+        animal0_.serialNumber as serialNu7_0_0_,
+        animal0_1_.bodyTemperature as bodyTemp2_11_0_,
+        animal0_3_.pregnant as pregnant10_0_,
+        animal0_3_.birthdate as birthdate10_0_,
+        animal0_4_.owner as owner3_0_,
+        animal0_7_.name_first as name2_4_0_,
+        animal0_7_.name_initial as name3_4_0_,
+        animal0_7_.name_last as name4_4_0_,
+        animal0_7_.nickName as nickName4_0_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_4_0_,
+        animal0_7_.intValue as intValue4_0_,
+        animal0_7_.floatValue as floatValue4_0_,
+        animal0_7_.bigDecimalValue as bigDecim9_4_0_,
+        animal0_7_.bigIntegerValue as bigInte10_4_0_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_0_,
+        offspring1_.description as descript2_0_1_,
+        offspring1_.body_weight as body3_0_1_,
+        offspring1_.mother_id as mother4_0_1_,
+        offspring1_.father_id as father5_0_1_,
+        offspring1_.zoo_id as zoo6_0_1_,
+        offspring1_.serialNumber as serialNu7_0_1_,
+        offspring1_1_.bodyTemperature as bodyTemp2_11_1_,
+        offspring1_3_.pregnant as pregnant10_1_,
+        offspring1_3_.birthdate as birthdate10_1_,
+        offspring1_4_.owner as owner3_1_,
+        offspring1_7_.name_first as name2_4_1_,
+        offspring1_7_.name_initial as name3_4_1_,
+        offspring1_7_.name_last as name4_4_1_,
+        offspring1_7_.nickName as nickName4_1_,
+        offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_,
+        offspring1_7_.intValue as intValue4_1_,
+        offspring1_7_.floatValue as floatValue4_1_,
+        offspring1_7_.bigDecimalValue as bigDecim9_4_1_,
+        offspring1_7_.bigIntegerValue as bigInte10_4_1_,
+        case 
+            when offspring1_2_.reptile is not null then 2 
+            when offspring1_5_.mammal is not null then 5 
+            when offspring1_6_.mammal is not null then 6 
+            when offspring1_4_.mammal is not null then 4 
+            when offspring1_7_.mammal is not null then 7 
+            when offspring1_1_.animal is not null then 1 
+            when offspring1_3_.animal is not null then 3 
+            when offspring1_.id is not null then 0 
+        end as clazz_1_,
+        offspring1_.mother_id as mother4_0_0__,
+        offspring1_.id as id0_0__ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    left outer join
+        Animal offspring1_ 
+            on animal0_.id=offspring1_.mother_id 
+    left outer join
+        Reptile offspring1_1_ 
+            on offspring1_.id=offspring1_1_.animal 
+    left outer join
+        Lizard offspring1_2_ 
+            on offspring1_.id=offspring1_2_.reptile 
+    left outer join
+        Mammal offspring1_3_ 
+            on offspring1_.id=offspring1_3_.animal 
+    left outer join
+        DomesticAnimal offspring1_4_ 
+            on offspring1_.id=offspring1_4_.mammal 
+    left outer join
+        Cat offspring1_5_ 
+            on offspring1_.id=offspring1_5_.mammal 
+    left outer join
+        Dog offspring1_6_ 
+            on offspring1_.id=offspring1_6_.mammal 
+    left outer join
+        Human offspring1_7_ 
+            on offspring1_.id=offspring1_7_.mammal 
+    where
+        animal0_.description like ? 
+    order by
+        animal0_.id,
+        offspring1_.father_id
+14:13:55,885 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_ 
+        where
+            animal0_.description like 'grand%'
+14:13:55,894 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,894 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,894 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,895 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,895 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,908 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,909 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,923 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,923 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:55,923 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_ 
+        where
+            animal0_.description not like 'root%'
+14:13:55,924 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,933 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,956 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,971 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,971 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,971 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,972 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,972 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,972 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:55,972 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_
+14:13:55,999 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:55,999 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,014 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,015 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,015 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,027 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,027 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,028 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,028 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:56,028  INFO CustomRunner:139 - Test: testScrollingJoinFetchesSingleRowResultSet
+14:13:56,097 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:56,124 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:56,125 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:56,125 DEBUG SQL:104 - 
+    select
+        animal0_.id as id0_0_,
+        offspring1_.id as id0_1_,
+        animal0_.description as descript2_0_0_,
+        animal0_.body_weight as body3_0_0_,
+        animal0_.mother_id as mother4_0_0_,
+        animal0_.father_id as father5_0_0_,
+        animal0_.zoo_id as zoo6_0_0_,
+        animal0_.serialNumber as serialNu7_0_0_,
+        animal0_1_.bodyTemperature as bodyTemp2_11_0_,
+        animal0_3_.pregnant as pregnant10_0_,
+        animal0_3_.birthdate as birthdate10_0_,
+        animal0_4_.owner as owner3_0_,
+        animal0_7_.name_first as name2_4_0_,
+        animal0_7_.name_initial as name3_4_0_,
+        animal0_7_.name_last as name4_4_0_,
+        animal0_7_.nickName as nickName4_0_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_4_0_,
+        animal0_7_.intValue as intValue4_0_,
+        animal0_7_.floatValue as floatValue4_0_,
+        animal0_7_.bigDecimalValue as bigDecim9_4_0_,
+        animal0_7_.bigIntegerValue as bigInte10_4_0_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_0_,
+        offspring1_.description as descript2_0_1_,
+        offspring1_.body_weight as body3_0_1_,
+        offspring1_.mother_id as mother4_0_1_,
+        offspring1_.father_id as father5_0_1_,
+        offspring1_.zoo_id as zoo6_0_1_,
+        offspring1_.serialNumber as serialNu7_0_1_,
+        offspring1_1_.bodyTemperature as bodyTemp2_11_1_,
+        offspring1_3_.pregnant as pregnant10_1_,
+        offspring1_3_.birthdate as birthdate10_1_,
+        offspring1_4_.owner as owner3_1_,
+        offspring1_7_.name_first as name2_4_1_,
+        offspring1_7_.name_initial as name3_4_1_,
+        offspring1_7_.name_last as name4_4_1_,
+        offspring1_7_.nickName as nickName4_1_,
+        offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_,
+        offspring1_7_.intValue as intValue4_1_,
+        offspring1_7_.floatValue as floatValue4_1_,
+        offspring1_7_.bigDecimalValue as bigDecim9_4_1_,
+        offspring1_7_.bigIntegerValue as bigInte10_4_1_,
+        case 
+            when offspring1_2_.reptile is not null then 2 
+            when offspring1_5_.mammal is not null then 5 
+            when offspring1_6_.mammal is not null then 6 
+            when offspring1_4_.mammal is not null then 4 
+            when offspring1_7_.mammal is not null then 7 
+            when offspring1_1_.animal is not null then 1 
+            when offspring1_3_.animal is not null then 3 
+            when offspring1_.id is not null then 0 
+        end as clazz_1_,
+        offspring1_.mother_id as mother4_0_0__,
+        offspring1_.id as id0_0__ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    left outer join
+        Animal offspring1_ 
+            on animal0_.id=offspring1_.mother_id 
+    left outer join
+        Reptile offspring1_1_ 
+            on offspring1_.id=offspring1_1_.animal 
+    left outer join
+        Lizard offspring1_2_ 
+            on offspring1_.id=offspring1_2_.reptile 
+    left outer join
+        Mammal offspring1_3_ 
+            on offspring1_.id=offspring1_3_.animal 
+    left outer join
+        DomesticAnimal offspring1_4_ 
+            on offspring1_.id=offspring1_4_.mammal 
+    left outer join
+        Cat offspring1_5_ 
+            on offspring1_.id=offspring1_5_.mammal 
+    left outer join
+        Dog offspring1_6_ 
+            on offspring1_.id=offspring1_6_.mammal 
+    left outer join
+        Human offspring1_7_ 
+            on offspring1_.id=offspring1_7_.mammal 
+    where
+        animal0_.description like ? 
+    order by
+        animal0_.id,
+        offspring1_.father_id
+14:13:56,132 DEBUG SQL:104 - 
+    select
+        animal0_.id as id0_0_,
+        offspring1_.id as id0_1_,
+        animal0_.description as descript2_0_0_,
+        animal0_.body_weight as body3_0_0_,
+        animal0_.mother_id as mother4_0_0_,
+        animal0_.father_id as father5_0_0_,
+        animal0_.zoo_id as zoo6_0_0_,
+        animal0_.serialNumber as serialNu7_0_0_,
+        animal0_1_.bodyTemperature as bodyTemp2_11_0_,
+        animal0_3_.pregnant as pregnant10_0_,
+        animal0_3_.birthdate as birthdate10_0_,
+        animal0_4_.owner as owner3_0_,
+        animal0_7_.name_first as name2_4_0_,
+        animal0_7_.name_initial as name3_4_0_,
+        animal0_7_.name_last as name4_4_0_,
+        animal0_7_.nickName as nickName4_0_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_4_0_,
+        animal0_7_.intValue as intValue4_0_,
+        animal0_7_.floatValue as floatValue4_0_,
+        animal0_7_.bigDecimalValue as bigDecim9_4_0_,
+        animal0_7_.bigIntegerValue as bigInte10_4_0_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_0_,
+        offspring1_.description as descript2_0_1_,
+        offspring1_.body_weight as body3_0_1_,
+        offspring1_.mother_id as mother4_0_1_,
+        offspring1_.father_id as father5_0_1_,
+        offspring1_.zoo_id as zoo6_0_1_,
+        offspring1_.serialNumber as serialNu7_0_1_,
+        offspring1_1_.bodyTemperature as bodyTemp2_11_1_,
+        offspring1_3_.pregnant as pregnant10_1_,
+        offspring1_3_.birthdate as birthdate10_1_,
+        offspring1_4_.owner as owner3_1_,
+        offspring1_7_.name_first as name2_4_1_,
+        offspring1_7_.name_initial as name3_4_1_,
+        offspring1_7_.name_last as name4_4_1_,
+        offspring1_7_.nickName as nickName4_1_,
+        offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_,
+        offspring1_7_.intValue as intValue4_1_,
+        offspring1_7_.floatValue as floatValue4_1_,
+        offspring1_7_.bigDecimalValue as bigDecim9_4_1_,
+        offspring1_7_.bigIntegerValue as bigInte10_4_1_,
+        case 
+            when offspring1_2_.reptile is not null then 2 
+            when offspring1_5_.mammal is not null then 5 
+            when offspring1_6_.mammal is not null then 6 
+            when offspring1_4_.mammal is not null then 4 
+            when offspring1_7_.mammal is not null then 7 
+            when offspring1_1_.animal is not null then 1 
+            when offspring1_3_.animal is not null then 3 
+            when offspring1_.id is not null then 0 
+        end as clazz_1_,
+        offspring1_.mother_id as mother4_0_0__,
+        offspring1_.id as id0_0__ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    left outer join
+        Animal offspring1_ 
+            on animal0_.id=offspring1_.mother_id 
+    left outer join
+        Reptile offspring1_1_ 
+            on offspring1_.id=offspring1_1_.animal 
+    left outer join
+        Lizard offspring1_2_ 
+            on offspring1_.id=offspring1_2_.reptile 
+    left outer join
+        Mammal offspring1_3_ 
+            on offspring1_.id=offspring1_3_.animal 
+    left outer join
+        DomesticAnimal offspring1_4_ 
+            on offspring1_.id=offspring1_4_.mammal 
+    left outer join
+        Cat offspring1_5_ 
+            on offspring1_.id=offspring1_5_.mammal 
+    left outer join
+        Dog offspring1_6_ 
+            on offspring1_.id=offspring1_6_.mammal 
+    left outer join
+        Human offspring1_7_ 
+            on offspring1_.id=offspring1_7_.mammal 
+    where
+        animal0_.description like ? 
+    order by
+        animal0_.id,
+        offspring1_.father_id
+14:13:56,649 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_ 
+        where
+            animal0_.description not like 'root%'
+14:13:56,650 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,650 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,650 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,650 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,651 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,651 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,651 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,651 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,651 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:56,652 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_
+14:13:56,652 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,652 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,652 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,652 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,652 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,653 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,653 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,653 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:56,653 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:56,654  INFO CustomRunner:139 - Test: testTupleReturnFails
+14:13:56,665 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select a, a.weight from org.hibernate.test.hql.Animal a inner join fetch a.offspring
+14:13:56,667 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  +-[RANGE] Node: 'RANGE'
+       |  |  +-[DOT] Node: '.'
+       |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |  |  |  |  |  \-[IDENT] Node: 'test'
+       |  |  |  |  \-[IDENT] Node: 'hql'
+       |  |  |  \-[IDENT] Node: 'Animal'
+       |  |  \-[ALIAS] Node: 'a'
+       |  \-[JOIN] Node: 'join'
+       |     +-[INNER] Node: 'inner'
+       |     +-[FETCH] Node: 'fetch'
+       |     \-[DOT] Node: '.'
+       |        +-[IDENT] Node: 'a'
+       |        \-[IDENT] Node: 'offspring'
+       \-[SELECT] Node: 'select'
+          +-[IDENT] Node: 'a'
+          \-[DOT] Node: '.'
+             +-[IDENT] Node: 'a'
+             \-[IDENT] Node: 'weight'
+
+14:13:56,667 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:56,668 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (a) -> animal0_
+14:13:56,668 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:56,668 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:56,668 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:56,668 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> offspring1_
+14:13:56,669 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:56,669 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:56,669 DEBUG FromReferenceNode:74 - Resolved : a.offspring -> .
+14:13:56,669 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Animal offspring1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+
+14:13:56,669 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:56,669 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:56,670  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:13:56,723 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:13:56,724 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4
+14:13:56,724 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B
+14:13:56,724 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79
+14:13:56,724 DEBUG SQL:104 - 
+    alter table Cat 
+        drop constraint FK107B66D384BBA
+14:13:56,725 DEBUG SQL:104 - 
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA
+14:13:56,725 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F
+14:13:56,725 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F
+14:13:56,725 DEBUG SQL:104 - 
+    alter table Human 
+        drop constraint FK42D710D1733655F
+14:13:56,725 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311
+14:13:56,725 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310
+14:13:56,726 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311
+14:13:56,743 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310
+14:13:56,743 DEBUG SQL:104 - 
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13
+14:13:56,743 DEBUG SQL:104 - 
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315
+14:13:56,744 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699
+14:13:56,744 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98
+14:13:56,744 DEBUG SQL:104 - 
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699
+14:13:56,744 DEBUG SQL:104 - 
+    alter table Zoo 
+        drop constraint FK15FBA55106523
+14:13:56,744 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719
+14:13:56,744 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705
+14:13:56,745 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2
+14:13:56,799 DEBUG SQL:104 - 
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87
+14:13:56,799 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA255106523
+14:13:56,799 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99
+14:13:56,799 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99
+14:13:56,800 DEBUG SQL:104 - 
+    drop table Animal if exists
+14:13:56,800 DEBUG SQL:104 - 
+    drop table Cat if exists
+14:13:56,800 DEBUG SQL:104 - 
+    drop table Dog if exists
+14:13:56,800 DEBUG SQL:104 - 
+    drop table DomesticAnimal if exists
+14:13:56,800 DEBUG SQL:104 - 
+    drop table Human if exists
+14:13:56,801 DEBUG SQL:104 - 
+    drop table Human_family if exists
+14:13:56,801 DEBUG SQL:104 - 
+    drop table Human_friends if exists
+14:13:56,801 DEBUG SQL:104 - 
+    drop table JOINED if exists
+14:13:56,801 DEBUG SQL:104 - 
+    drop table Joiner if exists
+14:13:56,811 DEBUG SQL:104 - 
+    drop table Lizard if exists
+14:13:56,817 DEBUG SQL:104 - 
+    drop table Mammal if exists
+14:13:56,817 DEBUG SQL:104 - 
+    drop table Reptile if exists
+14:13:56,817 DEBUG SQL:104 - 
+    drop table StateProvince if exists
+14:13:56,818 DEBUG SQL:104 - 
+    drop table Zoo if exists
+14:13:56,818 DEBUG SQL:104 - 
+    drop table Zoo_directors if exists
+14:13:56,818 DEBUG SQL:104 - 
+    drop table "User_permissions" if exists
+14:13:56,818 DEBUG SQL:104 - 
+    drop table "User" if exists
+14:13:56,818 DEBUG SQL:104 - 
+    drop table addresses if exists
+14:13:56,819 DEBUG SQL:104 - 
+    drop table human_nick_names if exists
+14:13:56,819  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:13:56,819  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

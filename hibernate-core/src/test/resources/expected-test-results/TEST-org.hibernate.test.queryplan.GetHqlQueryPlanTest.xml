@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.queryplan.GetHqlQueryPlanTest" tests="2" time="0.519" timestamp="2013-02-28T20:19:01">
+  <properties />
+  <testcase classname="org.hibernate.test.queryplan.GetHqlQueryPlanTest" name="testHqlQueryPlan" time="0.089" />
+  <testcase classname="org.hibernate.test.queryplan.GetHqlQueryPlanTest" name="testHqlQueryPlanWithEnabledFilter" time="0.04" />
+  <system-out><![CDATA[14:19:01,796  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.queryplan.GetHqlQueryPlanTest
+14:19:01,797  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/queryplan/filter-defs.hbm.xml
+14:19:01,992  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/queryplan/Joined.hbm.xml
+14:19:02,015  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:02,016  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:02,016  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:02,016  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:02,016  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:02,017  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:02,017  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:02,018  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:02,018  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:02,018  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:02,128  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:02,129 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:02,129 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_CUST 
+        drop constraint FKA40B00E65E7B8A05
+14:19:02,130 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FILTER_HQL_JOINED_CUST drop constraint FKA40B00E65E7B8A05
+14:19:02,130 ERROR SchemaExport:426 - Table "FILTER_HQL_JOINED_CUST" not found; SQL statement:
+
+    alter table FILTER_HQL_JOINED_CUST 
+        drop constraint FKA40B00E65E7B8A05 [42102-145]
+14:19:02,130 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_EMP 
+        drop constraint FK8129ABB5CDCEB770
+14:19:02,130 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FILTER_HQL_JOINED_EMP drop constraint FK8129ABB5CDCEB770
+14:19:02,130 ERROR SchemaExport:426 - Table "FILTER_HQL_JOINED_EMP" not found; SQL statement:
+
+    alter table FILTER_HQL_JOINED_EMP 
+        drop constraint FK8129ABB5CDCEB770 [42102-145]
+14:19:02,130 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_USER 
+        drop constraint FKA413265E3C896057
+14:19:02,131 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FILTER_HQL_JOINED_USER drop constraint FKA413265E3C896057
+14:19:02,131 ERROR SchemaExport:426 - Table "FILTER_HQL_JOINED_USER" not found; SQL statement:
+
+    alter table FILTER_HQL_JOINED_USER 
+        drop constraint FKA413265E3C896057 [42102-145]
+14:19:02,131 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_CUST if exists
+14:19:02,131 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_EMP if exists
+14:19:02,131 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_PERSON if exists
+14:19:02,132 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_USER if exists
+14:19:02,132 DEBUG SQL:104 - 
+    create table FILTER_HQL_JOINED_CUST (
+        CUST_ID bigint not null,
+        company varchar(255),
+        primary key (CUST_ID)
+    )
+14:19:02,132 DEBUG SQL:104 - 
+    create table FILTER_HQL_JOINED_EMP (
+        EMP_ID bigint not null,
+        hireDate date,
+        primary key (EMP_ID)
+    )
+14:19:02,132 DEBUG SQL:104 - 
+    create table FILTER_HQL_JOINED_PERSON (
+        ID bigint not null,
+        name varchar(255),
+        SEX_CODE char(255),
+        primary key (ID)
+    )
+14:19:02,133 DEBUG SQL:104 - 
+    create table FILTER_HQL_JOINED_USER (
+        USER_ID bigint not null,
+        username varchar(255),
+        primary key (USER_ID)
+    )
+14:19:02,133 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_CUST 
+        add constraint FKA40B00E65E7B8A05 
+        foreign key (CUST_ID) 
+        references FILTER_HQL_JOINED_USER
+14:19:02,133 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_EMP 
+        add constraint FK8129ABB5CDCEB770 
+        foreign key (EMP_ID) 
+        references FILTER_HQL_JOINED_USER
+14:19:02,134 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_USER 
+        add constraint FKA413265E3C896057 
+        foreign key (USER_ID) 
+        references FILTER_HQL_JOINED_PERSON
+14:19:02,134  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:02,134  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:02,135  INFO CustomRunner:139 - Test: testHqlQueryPlan
+14:19:02,139 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.queryplan.Person
+14:19:02,213 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'queryplan'
+                \-[IDENT] Node: 'Person'
+
+14:19:02,213 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,213 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.queryplan.Person (<no alias>) -> person0_
+14:19:02,214 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} FILTER_HQL_JOINED_PERSON person0_ ) )
+14:19:02,214 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:02,214 DEBUG JoinProcessor:175 - Using FROM fragment [FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID]
+14:19:02,214 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (FILTER_HQL_JOINED_PERSON)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.ID as ID2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.SEX_CODE as SEX3_2_, person0_1_.username as username3_, person0_2_.hireDate as hireDate1_, person0_3_.company as company0_, case when person0_2_.EMP_ID is not null then 2 when person0_3_.CUST_ID is not null then 3 when person0_1_.USER_ID is not null then 1 when person0_.ID is not null then 0 end as clazz_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}
+
+14:19:02,214 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,214 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.queryplan.Person
+14:19:02,214 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.ID as ID2_, person0_.name as name2_, person0_.SEX_CODE as SEX3_2_, person0_1_.username as username3_, person0_2_.hireDate as hireDate1_, person0_3_.company as company0_, case when person0_2_.EMP_ID is not null then 2 when person0_3_.CUST_ID is not null then 3 when person0_1_.USER_ID is not null then 1 when person0_.ID is not null then 0 end as clazz_ from FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID
+14:19:02,215 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,215 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.queryplan.Person where name is null
+14:19:02,215 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'queryplan'
+    |           \-[IDENT] Node: 'Person'
+    \-[WHERE] Node: 'where'
+       \-[IS_NULL] Node: 'is null'
+          \-[IDENT] Node: 'name'
+
+14:19:02,215 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,216 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.queryplan.Person (<no alias>) -> person0_
+14:19:02,216 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:02,216 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:02,216 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> person0_.name
+14:19:02,216 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} FILTER_HQL_JOINED_PERSON person0_ ) ( where ( is null ( person0_.name {synthetic-alias} name ) ) ) )
+14:19:02,216 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:02,216 DEBUG JoinProcessor:175 - Using FROM fragment [FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID]
+14:19:02,217 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (FILTER_HQL_JOINED_PERSON)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.ID as ID2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.SEX_CODE as SEX3_2_, person0_1_.username as username3_, person0_2_.hireDate as hireDate1_, person0_3_.company as company0_, case when person0_2_.EMP_ID is not null then 2 when person0_3_.CUST_ID is not null then 3 when person0_1_.USER_ID is not null then 1 when person0_.ID is not null then 0 end as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NULL] IsNullLogicOperatorNode: 'is null'
+          \-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=person0_,className=org.hibernate.test.queryplan.Person,classAlias=null}
+             +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             \-[IDENT] IdentNode: 'name' {originalText=name}
+
+14:19:02,217 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,217 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.queryplan.Person where name is null
+14:19:02,217 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.ID as ID2_, person0_.name as name2_, person0_.SEX_CODE as SEX3_2_, person0_1_.username as username3_, person0_2_.hireDate as hireDate1_, person0_3_.company as company0_, case when person0_2_.EMP_ID is not null then 2 when person0_3_.CUST_ID is not null then 3 when person0_1_.USER_ID is not null then 1 when person0_.ID is not null then 0 end as clazz_ from FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID where person0_.name is null
+14:19:02,217 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,217 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.queryplan.Person where name = :name
+14:19:02,218 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'queryplan'
+    |           \-[IDENT] Node: 'Person'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'name'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'name'
+
+14:19:02,218 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,218 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.queryplan.Person (<no alias>) -> person0_
+14:19:02,218 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:02,218 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:02,218 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> person0_.name
+14:19:02,218 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} FILTER_HQL_JOINED_PERSON person0_ ) ( where ( = ( person0_.name {synthetic-alias} name ) ? ) ) )
+14:19:02,218 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:02,219 DEBUG JoinProcessor:175 - Using FROM fragment [FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID]
+14:19:02,219 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (FILTER_HQL_JOINED_PERSON)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.ID as ID2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.SEX_CODE as SEX3_2_, person0_1_.username as username3_, person0_2_.hireDate as hireDate1_, person0_3_.company as company0_, case when person0_2_.EMP_ID is not null then 2 when person0_3_.CUST_ID is not null then 3 when person0_1_.USER_ID is not null then 1 when person0_.ID is not null then 0 end as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=person0_,className=org.hibernate.test.queryplan.Person,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:19:02,219 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,219 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.queryplan.Person where name = :name
+14:19:02,219 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.ID as ID2_, person0_.name as name2_, person0_.SEX_CODE as SEX3_2_, person0_1_.username as username3_, person0_2_.hireDate as hireDate1_, person0_3_.company as company0_, case when person0_2_.EMP_ID is not null then 2 when person0_3_.CUST_ID is not null then 3 when person0_1_.USER_ID is not null then 1 when person0_.ID is not null then 0 end as clazz_ from FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID where person0_.name=?
+14:19:02,219 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,219 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.queryplan.Person where name = ?
+14:19:02,220 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'queryplan'
+    |           \-[IDENT] Node: 'Person'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'name'
+          \-[PARAM] Node: '?'
+
+14:19:02,220 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,220 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.queryplan.Person (<no alias>) -> person0_
+14:19:02,220 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:02,220 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:02,220 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> person0_.name
+14:19:02,221  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 55.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:19:02,221 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} FILTER_HQL_JOINED_PERSON person0_ ) ( where ( = ( person0_.name {synthetic-alias} name ) ? ) ) )
+14:19:02,221 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:02,221 DEBUG JoinProcessor:175 - Using FROM fragment [FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID]
+14:19:02,221 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (FILTER_HQL_JOINED_PERSON)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.ID as ID2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.SEX_CODE as SEX3_2_, person0_1_.username as username3_, person0_2_.hireDate as hireDate1_, person0_3_.company as company0_, case when person0_2_.EMP_ID is not null then 2 when person0_3_.CUST_ID is not null then 3 when person0_1_.USER_ID is not null then 1 when person0_.ID is not null then 0 end as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=person0_,className=org.hibernate.test.queryplan.Person,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[PARAM] ParameterNode: '?' {ordinal=0, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:19:02,221 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,221 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.queryplan.Person where name = ?
+14:19:02,221 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.ID as ID2_, person0_.name as name2_, person0_.SEX_CODE as SEX3_2_, person0_1_.username as username3_, person0_2_.hireDate as hireDate1_, person0_3_.company as company0_, case when person0_2_.EMP_ID is not null then 2 when person0_3_.CUST_ID is not null then 3 when person0_1_.USER_ID is not null then 1 when person0_.ID is not null then 0 end as clazz_ from FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID where person0_.name=?
+14:19:02,222 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,224  INFO CustomRunner:139 - Test: testHqlQueryPlanWithEnabledFilter
+14:19:02,226 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.queryplan.Person
+14:19:02,227 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'queryplan'
+                \-[IDENT] Node: 'Person'
+
+14:19:02,227 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,227 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.queryplan.Person (<no alias>) -> person0_
+14:19:02,227 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} FILTER_HQL_JOINED_PERSON person0_ ) )
+14:19:02,228 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:02,228 DEBUG JoinProcessor:175 - Using FROM fragment [FILTER_HQL_JOINED_PERSON person0_]
+14:19:02,228 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (FILTER_HQL_JOINED_PERSON)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'person0_.ID as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_PERSON person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}
+
+14:19:02,228 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,228 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.queryplan.Person
+14:19:02,228 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.ID as col_0_0_ from FILTER_HQL_JOINED_PERSON person0_
+14:19:02,228 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,229 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.queryplan.Person
+14:19:02,229 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'queryplan'
+                \-[IDENT] Node: 'Person'
+
+14:19:02,229 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,229 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.queryplan.Person (<no alias>) -> person0_
+14:19:02,229 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} FILTER_HQL_JOINED_PERSON person0_ ) )
+14:19:02,230 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:02,259 DEBUG JoinProcessor:175 - Using FROM fragment [FILTER_HQL_JOINED_PERSON person0_]
+14:19:02,260 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [person0_.SEX_CODE = :sex.sexCode]
+14:19:02,260 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [person0_.SEX_CODE = ?]
+14:19:02,260 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:19:02,260 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (FILTER_HQL_JOINED_PERSON)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'person0_.ID as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_PERSON person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'person0_.SEX_CODE = ?'
+
+14:19:02,261 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,261 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.queryplan.Person
+14:19:02,261 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.ID as col_0_0_ from FILTER_HQL_JOINED_PERSON person0_ where person0_.SEX_CODE = ?
+14:19:02,261 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,261 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.queryplan.Person
+14:19:02,262 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'queryplan'
+                \-[IDENT] Node: 'Person'
+
+14:19:02,262 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,262 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.queryplan.Person (<no alias>) -> person0_
+14:19:02,262 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} FILTER_HQL_JOINED_PERSON person0_ ) )
+14:19:02,262 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:02,262 DEBUG JoinProcessor:175 - Using FROM fragment [FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID]
+14:19:02,263 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [person0_.SEX_CODE = :sex.sexCode]
+14:19:02,263 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [person0_.SEX_CODE = ?]
+14:19:02,263 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:19:02,263 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (FILTER_HQL_JOINED_PERSON)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.ID as ID2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name2_, person0_.SEX_CODE as SEX3_2_, person0_1_.username as username3_, person0_2_.hireDate as hireDate1_, person0_3_.company as company0_, case when person0_2_.EMP_ID is not null then 2 when person0_3_.CUST_ID is not null then 3 when person0_1_.USER_ID is not null then 1 when person0_.ID is not null then 0 end as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=FILTER_HQL_JOINED_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.queryplan.Person}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'person0_.SEX_CODE = ?'
+
+14:19:02,263 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,263 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.queryplan.Person
+14:19:02,263 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.ID as ID2_, person0_.name as name2_, person0_.SEX_CODE as SEX3_2_, person0_1_.username as username3_, person0_2_.hireDate as hireDate1_, person0_3_.company as company0_, case when person0_2_.EMP_ID is not null then 2 when person0_3_.CUST_ID is not null then 3 when person0_1_.USER_ID is not null then 1 when person0_.ID is not null then 0 end as clazz_ from FILTER_HQL_JOINED_PERSON person0_ left outer join FILTER_HQL_JOINED_USER person0_1_ on person0_.ID=person0_1_.USER_ID left outer join FILTER_HQL_JOINED_EMP person0_2_ on person0_.ID=person0_2_.EMP_ID left outer join FILTER_HQL_JOINED_CUST person0_3_ on person0_.ID=person0_3_.CUST_ID where person0_.SEX_CODE = ?
+14:19:02,263 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:02,264  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:02,265 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:02,265 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_CUST 
+        drop constraint FKA40B00E65E7B8A05
+14:19:02,265 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_EMP 
+        drop constraint FK8129ABB5CDCEB770
+14:19:02,266 DEBUG SQL:104 - 
+    alter table FILTER_HQL_JOINED_USER 
+        drop constraint FKA413265E3C896057
+14:19:02,266 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_CUST if exists
+14:19:02,266 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_EMP if exists
+14:19:02,266 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_PERSON if exists
+14:19:02,266 DEBUG SQL:104 - 
+    drop table FILTER_HQL_JOINED_USER if exists
+14:19:02,267  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:02,267  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

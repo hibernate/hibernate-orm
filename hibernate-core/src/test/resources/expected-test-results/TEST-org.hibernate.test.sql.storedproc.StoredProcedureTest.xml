@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.sql.storedproc.StoredProcedureTest" tests="6" time="3.269" timestamp="2013-02-28T20:19:17">
+  <properties />
+  <testcase classname="org.hibernate.test.sql.storedproc.StoredProcedureTest" name="baseTest" time="0.213" />
+  <testcase classname="org.hibernate.test.sql.storedproc.StoredProcedureTest" name="testGetResultListTuple" time="0.008" />
+  <testcase classname="org.hibernate.test.sql.storedproc.StoredProcedureTest" name="testGetSingleResultTuple" time="0.002" />
+  <testcase classname="org.hibernate.test.sql.storedproc.StoredProcedureTest" name="testInParametersByName" time="0.1" />
+  <testcase classname="org.hibernate.test.sql.storedproc.StoredProcedureTest" name="testInParametersByPosition" time="0.003" />
+  <testcase classname="org.hibernate.test.sql.storedproc.StoredProcedureTest" name="testInParametersNotSet" time="0.002" />
+  <system-out><![CDATA[14:19:17,516  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.sql.storedproc.StoredProcedureTest
+14:19:17,519  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:17,520  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:17,520  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:17,520  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:17,520  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:17,521  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:17,521  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:17,522  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:17,522  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:17,522  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:17,525  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:17,526 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:17,526 DEBUG SQL:104 - 
+    DROP ALIAS findUser IF EXISTS
+14:19:17,526 DEBUG SQL:104 - 
+    DROP ALIAS findUser IF EXISTS
+14:19:17,526 DEBUG SQL:104 - 
+    DROP ALIAS findUser IF EXISTS
+14:19:17,527 DEBUG SQL:104 - 
+    CREATE ALIAS findOneUser AS $$
+import org.h2.tools.SimpleResultSet;
+import java.sql.*;
+@CODE
+ResultSet findOneUser() {
+    SimpleResultSet rs = new SimpleResultSet();
+    rs.addColumn("ID", Types.INTEGER, 10, 0);
+    rs.addColumn("NAME", Types.VARCHAR, 255, 0);
+    rs.addRow(1, "Steve");
+    return rs;
+}
+$$
+14:19:20,258 DEBUG SQL:104 - 
+    CREATE ALIAS findUsers AS $$
+import org.h2.tools.SimpleResultSet;
+import java.sql.*;
+@CODE
+ResultSet findUsers() {
+    SimpleResultSet rs = new SimpleResultSet();
+    rs.addColumn("ID", Types.INTEGER, 10, 0);
+    rs.addColumn("NAME", Types.VARCHAR, 255, 0);
+    rs.addRow(1, "Steve");
+    rs.addRow(2, "John");
+    rs.addRow(3, "Jane");
+    return rs;
+}
+$$
+14:19:20,258  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:20,340 DEBUG SQL:104 - 
+    CREATE ALIAS findUserRange AS $$
+import org.h2.tools.SimpleResultSet;
+import java.sql.*;
+@CODE
+ResultSet findUserRange(int start, int end) {
+    SimpleResultSet rs = new SimpleResultSet();
+    rs.addColumn("ID", Types.INTEGER, 10, 0);
+    rs.addColumn("NAME", Types.VARCHAR, 255, 0);
+    for ( int i = start; i < end; i++ ) {
+        rs.addRow(1, "User " + i );
+    }
+    return rs;
+}
+$$
+14:19:20,447  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:20,447  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:20,448  INFO CustomRunner:139 - Test: baseTest
+14:19:20,588 DEBUG SQL:104 - 
+    {call user()}
+14:19:20,661  INFO CustomRunner:139 - Test: testGetResultListTuple
+14:19:20,662 DEBUG SQL:104 - 
+    {call findUsers()}
+14:19:20,670  INFO CustomRunner:139 - Test: testGetSingleResultTuple
+14:19:20,671 DEBUG SQL:104 - 
+    {call findOneUser()}
+14:19:20,672  INFO CustomRunner:139 - Test: testInParametersByName
+14:19:20,771 DEBUG SQL:104 - 
+    {call findUserRange(?,?)}
+14:19:20,773  INFO CustomRunner:139 - Test: testInParametersByPosition
+14:19:20,775 DEBUG SQL:104 - 
+    {call findUserRange(?,?)}
+14:19:20,777  INFO CustomRunner:139 - Test: testInParametersNotSet
+14:19:20,778 DEBUG SQL:104 - 
+    {call findUserRange(?,?)}
+14:19:20,778  WARN SqlExceptionHelper:143 - SQL Error: 90012, SQLState: 90012
+14:19:20,778 ERROR SqlExceptionHelper:144 - Parameter "#1" is not set; SQL statement:
+ call findUserRange(?,?)  [90012-145]
+14:19:20,778 DEBUG SQL:104 - 
+    {call findUserRange(?,?)}
+14:19:20,779  WARN SqlExceptionHelper:143 - SQL Error: 90012, SQLState: 90012
+14:19:20,779 ERROR SqlExceptionHelper:144 - Parameter "#1" is not set; SQL statement:
+ call findUserRange(?,?)  [90012-145]
+14:19:20,780  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:20,781 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:20,781 DEBUG SQL:104 - 
+    DROP ALIAS findUser IF EXISTS
+14:19:20,781 DEBUG SQL:104 - 
+    DROP ALIAS findUser IF EXISTS
+14:19:20,781 DEBUG SQL:104 - 
+    DROP ALIAS findUser IF EXISTS
+14:19:20,782  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:20,782  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

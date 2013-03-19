@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.lob.LobMergeTest" tests="2" time="0.064" timestamp="2013-02-28T20:17:05">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.lob.LobMergeTest" name="testMergingBlobData" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.lob.LobMergeTest" name="testMergingClobData" time="0.0" />
+  <system-out><![CDATA[14:17:05,395  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.lob.LobMergeTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

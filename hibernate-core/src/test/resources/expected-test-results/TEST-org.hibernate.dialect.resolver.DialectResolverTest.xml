@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.dialect.resolver.DialectResolverTest" tests="3" time="0.028" timestamp="2013-02-28T20:09:53">
+  <properties />
+  <testcase classname="org.hibernate.dialect.resolver.DialectResolverTest" name="testBasicDialectResolver" time="0.006" />
+  <testcase classname="org.hibernate.dialect.resolver.DialectResolverTest" name="testDialects" time="0.007" />
+  <testcase classname="org.hibernate.dialect.resolver.DialectResolverTest" name="testErrorAndOrder" time="0.004" />
+  <system-out><![CDATA[14:09:53,215  INFO CustomRunner:132 - BeforeClass: org.hibernate.dialect.resolver.DialectResolverTest
+14:09:53,216  INFO CustomRunner:139 - Test: testBasicDialectResolver
+14:09:53,218  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect1
+14:09:53,218  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect1
+14:09:53,219  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect21
+14:09:53,220  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect22
+14:09:53,221  WARN AbstractDatabaseMetaDataDialectResolver:70 - HHH000316: Error executing resolver [org.hibernate.engine.jdbc.dialect.internal.BasicDialectResolver@675e8fe2] : Could not instantiate specified Dialect class [java.lang.Object]
+14:09:53,224  INFO CustomRunner:139 - Test: testDialects
+14:09:53,226  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect1
+14:09:53,226  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect1
+14:09:53,227  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect21
+14:09:53,228  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect22
+14:09:53,229  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect22
+14:09:53,229  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect1
+14:09:53,232  INFO CustomRunner:139 - Test: testErrorAndOrder
+14:09:53,234  WARN AbstractDatabaseMetaDataDialectResolver:66 - HHH000347: Unable to query java.sql.DatabaseMetaData : null
+14:09:53,235  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect1
+14:09:53,235  WARN AbstractDatabaseMetaDataDialectResolver:66 - HHH000347: Unable to query java.sql.DatabaseMetaData : null
+14:09:53,236  WARN AbstractDatabaseMetaDataDialectResolver:66 - HHH000347: Unable to query java.sql.DatabaseMetaData : null
+14:09:53,236  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect1
+14:09:53,237  WARN AbstractDatabaseMetaDataDialectResolver:66 - HHH000347: Unable to query java.sql.DatabaseMetaData : null
+14:09:53,237  WARN AbstractDatabaseMetaDataDialectResolver:66 - HHH000347: Unable to query java.sql.DatabaseMetaData : null
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

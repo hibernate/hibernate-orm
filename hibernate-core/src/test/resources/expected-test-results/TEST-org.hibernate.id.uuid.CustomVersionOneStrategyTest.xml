@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.id.uuid.CustomVersionOneStrategyTest" tests="2" time="0.009" timestamp="2013-02-28T20:09:54">
+  <properties />
+  <testcase classname="org.hibernate.id.uuid.CustomVersionOneStrategyTest" name="testRangeOfValues" time="0.002" />
+  <testcase classname="org.hibernate.id.uuid.CustomVersionOneStrategyTest" name="testUniqueCounter" time="0.003" />
+  <system-out><![CDATA[14:09:54,243  INFO CustomRunner:132 - BeforeClass: org.hibernate.id.uuid.CustomVersionOneStrategyTest
+14:09:54,243  INFO CustomRunner:139 - Test: testRangeOfValues
+14:09:54,247  INFO CustomRunner:139 - Test: testUniqueCounter
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

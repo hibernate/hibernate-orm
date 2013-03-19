@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.dialect.resolver.DialectFactoryTest" tests="6" time="0.268" timestamp="2013-02-28T20:09:52">
+  <properties />
+  <testcase classname="org.hibernate.dialect.resolver.DialectFactoryTest" name="testBuildDialectByProperties" time="0.034" />
+  <testcase classname="org.hibernate.dialect.resolver.DialectFactoryTest" name="testCustomDialects" time="0.093" />
+  <testcase classname="org.hibernate.dialect.resolver.DialectFactoryTest" name="testDialectNotFound" time="0.011" />
+  <testcase classname="org.hibernate.dialect.resolver.DialectFactoryTest" name="testExplicitShortNameUse" time="0.017" />
+  <testcase classname="org.hibernate.dialect.resolver.DialectFactoryTest" name="testExplicitlySuppliedDialectClassName" time="0.04" />
+  <testcase classname="org.hibernate.dialect.resolver.DialectFactoryTest" name="testPreregisteredDialects" time="0.05" />
+  <system-out><![CDATA[14:09:52,951  INFO CustomRunner:132 - BeforeClass: org.hibernate.dialect.resolver.DialectFactoryTest
+14:09:52,952  INFO CustomRunner:139 - Test: testBuildDialectByProperties
+14:09:52,986  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.HSQLDialect
+14:09:52,988  INFO CustomRunner:139 - Test: testCustomDialects
+14:09:53,072  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect1
+14:09:53,073  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect21
+14:09:53,073  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MyDialect1
+14:09:53,079  WARN AbstractDatabaseMetaDataDialectResolver:66 - HHH000347: Unable to query java.sql.DatabaseMetaData : null
+14:09:53,079  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.TestingDialects$MySpecialDB2Dialect
+14:09:53,080  WARN AbstractDatabaseMetaDataDialectResolver:66 - HHH000347: Unable to query java.sql.DatabaseMetaData : null
+14:09:53,080  WARN AbstractDatabaseMetaDataDialectResolver:66 - HHH000347: Unable to query java.sql.DatabaseMetaData : null
+14:09:53,081  WARN AbstractDatabaseMetaDataDialectResolver:66 - HHH000347: Unable to query java.sql.DatabaseMetaData : null
+14:09:53,081  WARN AbstractDatabaseMetaDataDialectResolver:70 - HHH000316: Error executing resolver [org.hibernate.dialect.TestingDialects$ErrorDialectResolver2@b92a5b8] : This is a trap!
+14:09:53,082  INFO CustomRunner:139 - Test: testDialectNotFound
+14:09:53,094  INFO CustomRunner:139 - Test: testExplicitShortNameUse
+14:09:53,100  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:53,103  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.Oracle10gDialect
+14:09:53,112  INFO CustomRunner:139 - Test: testExplicitlySuppliedDialectClassName
+14:09:53,150  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.HSQLDialect
+14:09:53,153  INFO CustomRunner:139 - Test: testPreregisteredDialects
+14:09:53,159  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.HSQLDialect
+14:09:53,160  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:53,161  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.MySQLDialect
+14:09:53,162  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL81Dialect
+14:09:53,163  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL82Dialect
+14:09:53,164  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DerbyDialect
+14:09:53,164  WARN DerbyDialect:60 - HHH000430: The DerbyDialect dialect has been deprecated; use one of the version-specific dialects instead
+14:09:53,165  WARN DerbyDialect:83 - HHH000328: Unable to load/access derby driver class sysinfo to check versions : org.apache.derby.tools.sysinfo
+14:09:53,165  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DerbyTenFiveDialect
+14:09:53,166  WARN DerbyDialect:83 - HHH000328: Unable to load/access derby driver class sysinfo to check versions : org.apache.derby.tools.sysinfo
+14:09:53,167  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DerbyTenSixDialect
+14:09:53,168  WARN DerbyDialect:83 - HHH000328: Unable to load/access derby driver class sysinfo to check versions : org.apache.derby.tools.sysinfo
+14:09:53,168  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DerbyTenSevenDialect
+14:09:53,169  WARN DerbyDialect:83 - HHH000328: Unable to load/access derby driver class sysinfo to check versions : org.apache.derby.tools.sysinfo
+14:09:53,170  WARN StandardDatabaseInfoDialectResolver:128 - HHH000383: Unknown Ingres major version [-9999]; using Ingres 9.2 dialect
+14:09:53,170  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.IngresDialect
+14:09:53,171  WARN StandardDatabaseInfoDialectResolver:128 - HHH000383: Unknown Ingres major version [-9999]; using Ingres 9.2 dialect
+14:09:53,171  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.IngresDialect
+14:09:53,172  WARN StandardDatabaseInfoDialectResolver:128 - HHH000383: Unknown Ingres major version [-9999]; using Ingres 9.2 dialect
+14:09:53,172  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.IngresDialect
+14:09:53,173  WARN StandardDatabaseInfoDialectResolver:145 - HHH000385: Unknown Microsoft SQL Server major version [-9999] using SQL Server 2000 dialect
+14:09:53,173  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServerDialect
+14:09:53,174  WARN StandardDatabaseInfoDialectResolver:145 - HHH000385: Unknown Microsoft SQL Server major version [-9999] using SQL Server 2000 dialect
+14:09:53,174  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SQLServerDialect
+14:09:53,176  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SybaseASE15Dialect
+14:09:53,179  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SybaseASE15Dialect
+14:09:53,183  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.SybaseAnywhereDialect
+14:09:53,185  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.InformixDialect
+14:09:53,186  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DB2Dialect
+14:09:53,187  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DB2Dialect
+14:09:53,189  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DB2Dialect
+14:09:53,190  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DB2Dialect
+14:09:53,191  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DB2Dialect
+14:09:53,192  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DB2Dialect
+14:09:53,193  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DB2Dialect
+14:09:53,195  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DB2400Dialect
+14:09:53,197  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.Oracle8iDialect
+14:09:53,198  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.Oracle9iDialect
+14:09:53,200  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.Oracle10gDialect
+14:09:53,201  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.Oracle10gDialect
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

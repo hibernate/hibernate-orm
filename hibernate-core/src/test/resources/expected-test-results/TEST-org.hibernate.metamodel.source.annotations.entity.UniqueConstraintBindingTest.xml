@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.metamodel.source.annotations.entity.UniqueConstraintBindingTest" tests="1" time="0.015" timestamp="2013-02-28T20:10:00">
+  <properties />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.UniqueConstraintBindingTest" name="testTableUniqueConstraints" time="0.011" />
+  <system-out><![CDATA[14:10:00,198  INFO CustomRunner:132 - BeforeClass: org.hibernate.metamodel.source.annotations.entity.UniqueConstraintBindingTest
+14:10:00,198  INFO CustomRunner:139 - Test: testTableUniqueConstraints
+14:10:00,201  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:00,202  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:00,202  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:00,202  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:00,202  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:00,203  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:00,204  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:00,206  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

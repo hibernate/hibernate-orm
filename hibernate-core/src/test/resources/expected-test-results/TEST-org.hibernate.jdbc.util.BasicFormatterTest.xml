@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.jdbc.util.BasicFormatterTest" tests="1" time="0.019" timestamp="2013-02-28T20:09:54">
+  <properties />
+  <testcase classname="org.hibernate.jdbc.util.BasicFormatterTest" name="testNoLoss" time="0.01" />
+  <system-out><![CDATA[14:09:54,312  INFO CustomRunner:132 - BeforeClass: org.hibernate.jdbc.util.BasicFormatterTest
+14:09:54,313  INFO CustomRunner:139 - Test: testNoLoss
+Original: insert into Address (city, state, zip, "from") values (?, ?, ?, 'insert value')
+Formatted: 
+    insert 
+    into
+        Address
+        (city, state, zip, "from") 
+    values
+        (?, ?, ?, 'insert value')
+Original: delete from Address where id = ? and version = ?
+Formatted: 
+    delete 
+    from
+        Address 
+    where
+        id = ? 
+        and version = ?
+Original: update Address set city = ?, state=?, zip=?, version = ? where id = ? and version = ?
+Formatted: 
+    update
+        Address 
+    set
+        city = ?,
+        state=?,
+        zip=?,
+        version = ? 
+    where
+        id = ? 
+        and version = ?
+Original: update Address set city = ?, state=?, zip=?, version = ? where id in (select aid from Person)
+Formatted: 
+    update
+        Address 
+    set
+        city = ?,
+        state=?,
+        zip=?,
+        version = ? 
+    where
+        id in (
+            select
+                aid 
+            from
+                Person
+        )
+Original: select p.name, a.zipCode, count(*) from Person p left outer join Employee e on e.id = p.id and p.type = 'E' and (e.effective>? or e.effective<?) join Address a on a.pid = p.id where upper(p.name) like 'G%' and p.age > 100 and (p.sex = 'M' or p.sex = 'F') and coalesce( trim(a.street), a.city, (a.zip) ) is not null order by p.name asc, a.zipCode asc
+Formatted: 
+    select
+        p.name,
+        a.zipCode,
+        count(*) 
+    from
+        Person p 
+    left outer join
+        Employee e 
+            on e.id = p.id 
+            and p.type = 'E' 
+            and (
+                e.effective>? 
+                or e.effective<?
+            ) 
+    join
+        Address a 
+            on a.pid = p.id 
+    where
+        upper(p.name) like 'G%' 
+        and p.age > 100 
+        and (
+            p.sex = 'M' 
+            or p.sex = 'F'
+        ) 
+        and coalesce( trim(a.street), a.city, (a.zip) ) is not null 
+    order by
+        p.name asc,
+        a.zipCode asc
+Original: select ( (m.age - p.age) * 12 ), trim(upper(p.name)) from Person p, Person m where p.mother = m.id and ( p.age = (select max(p0.age) from Person p0 where (p0.mother=m.id)) and p.name like ? )
+Formatted: 
+    select
+        ( (m.age - p.age) * 12 ),
+        trim(upper(p.name)) 
+    from
+        Person p,
+        Person m 
+    where
+        p.mother = m.id 
+        and (
+            p.age = (
+                select
+                    max(p0.age) 
+                from
+                    Person p0 
+                where
+                    (
+                        p0.mother=m.id
+                    )
+            ) 
+            and p.name like ? 
+        )
+Original: select * from Address a join Person p on a.pid = p.id, Person m join Address b on b.pid = m.id where p.mother = m.id and p.name like ?
+Formatted: 
+    select
+        * 
+    from
+        Address a 
+    join
+        Person p 
+            on a.pid = p.id,
+        Person m 
+    join
+        Address b 
+            on b.pid = m.id 
+    where
+        p.mother = m.id 
+        and p.name like ?
+Original: select case when p.age > 50 then 'old' when p.age > 18 then 'adult' else 'child' end from Person p where ( case when p.age > 50 then 'old' when p.age > 18 then 'adult' else 'child' end ) like ?
+Formatted: 
+    select
+        case 
+            when p.age > 50 then 'old' 
+            when p.age > 18 then 'adult' 
+            else 'child' 
+        end 
+    from
+        Person p 
+    where
+        (
+            case 
+                when p.age > 50 then 'old' 
+                when p.age > 18 then 'adult' 
+                else 'child' 
+            end 
+        ) like ?
+Original: /* Here we' go! */ select case when p.age > 50 then 'old' when p.age > 18 then 'adult' else 'child' end from Person p where ( case when p.age > 50 then 'old' when p.age > 18 then 'adult' else 'child' end ) like ?
+Formatted: 
+    /* Here we' go! */ select case when p.age > 50 then 'old' when p.age > 18 then 'adult' else 'child' end from Person p where ( case when p.age > 50 then 'old' when p.age > 18 then 'adult' else 'child' end ) like ?
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

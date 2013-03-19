@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.xml.ejb3.OrmVersion1SupportedTest" tests="1" time="2.018" timestamp="2013-02-28T20:10:45">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.OrmVersion1SupportedTest" name="testOrm1Support" time="1.975" />
+  <system-out><![CDATA[byteman jar is /Users/jpav/.gradle/caches/artifacts-14/filestore/org.jboss.byteman/byteman/2.1.2/jar/eb9651c6464c7f13e8c081d9605eda7054b050f1/byteman-2.1.2.jar
+14:10:47,657  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:47,658  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:47,659  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:47,659  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:47,660  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:47,686  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:47,690  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:47,694  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:47,696  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:47,699  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:47,722  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:47,725 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:47,726 DEBUG SQL:104 - 
+    drop table Light if exists
+14:10:47,729 DEBUG SQL:104 - 
+    create table Light (
+        fld_id varchar(255) not null,
+        power varchar(255),
+        primary key (fld_id)
+    )
+14:10:47,735  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:47,737  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:47,740 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select l from org.hibernate.test.annotations.xml.ejb3.Light l
+14:10:47,762 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  \-[IDENT] Node: 'xml'
+       |     |  |  \-[IDENT] Node: 'ejb3'
+       |     |  \-[IDENT] Node: 'Light'
+       |     \-[ALIAS] Node: 'l'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'l'
+
+14:10:47,768 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:47,771 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.xml.ejb3.Light (l) -> light0_
+14:10:47,773 DEBUG FromReferenceNode:74 - Resolved : l -> light0_.fld_id
+14:10:47,774 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} light0_.fld_id ) ( FromClause{level=1} Light light0_ ) )
+14:10:47,776 DEBUG JoinProcessor:175 - Using FROM fragment [Light light0_]
+14:10:47,781 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Light)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'light0_.fld_id as fld1_0_' {alias=l, className=org.hibernate.test.annotations.xml.ejb3.Light, tableAlias=light0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'light0_.power as power0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[l], fromElementByTableAlias=[light0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Light light0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=l,role=null,tableName=Light,tableAlias=light0_,origin=null,columns={,className=org.hibernate.test.annotations.xml.ejb3.Light}}
+
+14:10:47,786 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:47,788 DEBUG QueryTranslatorImpl:235 - HQL: select l from org.hibernate.test.annotations.xml.ejb3.Light l
+14:10:47,789 DEBUG QueryTranslatorImpl:236 - SQL: select light0_.fld_id as fld1_0_, light0_.power as power0_ from Light light0_
+14:10:47,790 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:47,818 DEBUG SQL:104 - 
+    insert 
+    into
+        Light
+        (power, fld_id) 
+    values
+        (?, ?)
+14:10:47,833 DEBUG SQL:104 - 
+    select
+        light0_.fld_id as fld1_0_,
+        light0_.power as power0_ 
+    from
+        Light light0_
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

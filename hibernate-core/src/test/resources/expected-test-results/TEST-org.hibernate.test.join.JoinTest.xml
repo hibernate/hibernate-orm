@@ -1,0 +1,1741 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.join.JoinTest" tests="3" time="0.377" timestamp="2013-02-28T20:14:48">
+  <properties />
+  <testcase classname="org.hibernate.test.join.JoinTest" name="testCustomColumnReadAndWrite" time="0.034" />
+  <testcase classname="org.hibernate.test.join.JoinTest" name="testSequentialSelects" time="0.138" />
+  <testcase classname="org.hibernate.test.join.JoinTest" name="testSequentialSelectsOptionalData" time="0.096" />
+  <system-out><![CDATA[14:14:48,633  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.join.JoinTest
+14:14:48,634  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/join/Person.hbm.xml
+14:14:48,681  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:48,682  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:48,682  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:48,682  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:48,683  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:48,684  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:48,685  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:48,685  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:48,686  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:48,686  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:48,702  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:48,703 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:48,703 DEBUG SQL:104 - 
+    alter table address 
+        drop constraint FKBB979BF4E4CA7E09
+14:14:48,703 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table address drop constraint FKBB979BF4E4CA7E09
+14:14:48,704 ERROR SchemaExport:426 - Table "ADDRESS" not found; SQL statement:
+
+    alter table address 
+        drop constraint FKBB979BF4E4CA7E09 [42102-145]
+14:14:48,707 DEBUG SQL:104 - 
+    alter table customer 
+        drop constraint FK24217FDE8F97811
+14:14:48,709 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table customer drop constraint FK24217FDE8F97811
+14:14:48,709 ERROR SchemaExport:426 - Table "CUSTOMER" not found; SQL statement:
+
+    alter table customer 
+        drop constraint FK24217FDE8F97811 [42102-145]
+14:14:48,710 DEBUG SQL:104 - 
+    alter table customer 
+        drop constraint FK24217FDE7CB62FFD
+14:14:48,710 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table customer drop constraint FK24217FDE7CB62FFD
+14:14:48,710 ERROR SchemaExport:426 - Table "CUSTOMER" not found; SQL statement:
+
+    alter table customer 
+        drop constraint FK24217FDE7CB62FFD [42102-145]
+14:14:48,710 DEBUG SQL:104 - 
+    alter table employee 
+        drop constraint FK4722E6AE2BFADEE1
+14:14:48,710 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table employee drop constraint FK4722E6AE2BFADEE1
+14:14:48,711 ERROR SchemaExport:426 - Table "EMPLOYEE" not found; SQL statement:
+
+    alter table employee 
+        drop constraint FK4722E6AE2BFADEE1 [42102-145]
+14:14:48,711 DEBUG SQL:104 - 
+    alter table employee 
+        drop constraint FK4722E6AE2AE95449
+14:14:48,711 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table employee drop constraint FK4722E6AE2AE95449
+14:14:48,712 ERROR SchemaExport:426 - Table "EMPLOYEE" not found; SQL statement:
+
+    alter table employee 
+        drop constraint FK4722E6AE2AE95449 [42102-145]
+14:14:48,712 DEBUG SQL:104 - 
+    alter table t_silly 
+        drop constraint FKA0F52958BE570AFE
+14:14:48,712 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table t_silly drop constraint FKA0F52958BE570AFE
+14:14:48,712 ERROR SchemaExport:426 - Table "T_SILLY" not found; SQL statement:
+
+    alter table t_silly 
+        drop constraint FKA0F52958BE570AFE [42102-145]
+14:14:48,712 DEBUG SQL:104 - 
+    alter table t_user 
+        drop constraint FKCB63CCB6BE570AFE
+14:14:48,713 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table t_user drop constraint FKCB63CCB6BE570AFE
+14:14:48,713 ERROR SchemaExport:426 - Table "T_USER" not found; SQL statement:
+
+    alter table t_user 
+        drop constraint FKCB63CCB6BE570AFE [42102-145]
+14:14:48,713 DEBUG SQL:104 - 
+    drop table address if exists
+14:14:48,713 DEBUG SQL:104 - 
+    drop table customer if exists
+14:14:48,714 DEBUG SQL:104 - 
+    drop table employee if exists
+14:14:48,714 DEBUG SQL:104 - 
+    drop table person if exists
+14:14:48,714 DEBUG SQL:104 - 
+    drop table t_silly if exists
+14:14:48,714 DEBUG SQL:104 - 
+    drop table t_user if exists
+14:14:48,715 DEBUG SQL:104 - 
+    create table address (
+        address_id bigint not null,
+        address varchar(255),
+        zip varchar(255),
+        country varchar(255),
+        primary key (address_id)
+    )
+14:14:48,715 DEBUG SQL:104 - 
+    create table customer (
+        person_id bigint not null,
+        comments varchar(255),
+        salesperson bigint,
+        primary key (person_id)
+    )
+14:14:48,716 DEBUG SQL:104 - 
+    create table employee (
+        person_id bigint not null,
+        "title" varchar(20) not null,
+        salary decimal(19,2),
+        manager bigint,
+        primary key (person_id)
+    )
+14:14:48,716 DEBUG SQL:104 - 
+    create table person (
+        person_id bigint generated by default as identity,
+        person_type varchar(1),
+        name varchar(80) not null,
+        sex char(255) not null,
+        height_centimeters double not null,
+        primary key (person_id)
+    )
+14:14:48,717 DEBUG SQL:104 - 
+    create table t_silly (
+        person_id bigint not null,
+        silly varchar(255),
+        primary key (person_id)
+    )
+14:14:48,717 DEBUG SQL:104 - 
+    create table t_user (
+        person_id bigint not null,
+        u_login varchar(255),
+        pwd_expiry_weeks double,
+        primary key (person_id)
+    )
+14:14:48,719 DEBUG SQL:104 - 
+    alter table address 
+        add constraint FKBB979BF4E4CA7E09 
+        foreign key (address_id) 
+        references person
+14:14:48,720 DEBUG SQL:104 - 
+    alter table customer 
+        add constraint FK24217FDE8F97811 
+        foreign key (person_id) 
+        references person
+14:14:48,720 DEBUG SQL:104 - 
+    alter table customer 
+        add constraint FK24217FDE7CB62FFD 
+        foreign key (salesperson) 
+        references person
+14:14:48,721 DEBUG SQL:104 - 
+    alter table employee 
+        add constraint FK4722E6AE2BFADEE1 
+        foreign key (person_id) 
+        references person
+14:14:48,721 DEBUG SQL:104 - 
+    alter table employee 
+        add constraint FK4722E6AE2AE95449 
+        foreign key (manager) 
+        references person
+14:14:48,722 DEBUG SQL:104 - 
+    alter table t_silly 
+        add constraint FKA0F52958BE570AFE 
+        foreign key (person_id) 
+        references person
+14:14:48,722 DEBUG SQL:104 - 
+    alter table t_user 
+        add constraint FKCB63CCB6BE570AFE 
+        foreign key (person_id) 
+        references person
+14:14:48,723  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:48,724  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:48,724  INFO CustomRunner:139 - Test: testCustomColumnReadAndWrite
+14:14:48,725 DEBUG SQL:104 - 
+    insert 
+    into
+        person
+        (person_id, name, sex, height_centimeters) 
+    values
+        (null, ?, ?, ? * 2.54E0)
+14:14:48,726 DEBUG SQL:104 - 
+    insert 
+    into
+        address
+        (address, zip, country, address_id) 
+    values
+        (?, ?, ?, ?)
+14:14:48,726 DEBUG SQL:104 - 
+    insert 
+    into
+        person
+        (person_id, name, sex, height_centimeters, person_type) 
+    values
+        (null, ?, ?, ? * 2.54E0, 'U')
+14:14:48,727 DEBUG SQL:104 - 
+    insert 
+    into
+        address
+        (address, zip, country, address_id) 
+    values
+        (?, ?, ?, ?)
+14:14:48,727 DEBUG SQL:104 - 
+    insert 
+    into
+        t_user
+        (u_login, pwd_expiry_weeks, person_id) 
+    values
+        (?, ? / 7.0E0, ?)
+14:14:48,727 DEBUG SQL:104 - 
+    select
+        height_centimeters 
+    from
+        person 
+    where
+        name='Emmanuel'
+14:14:48,728 DEBUG SQL:104 - 
+    select
+        pwd_expiry_weeks 
+    from
+        t_user 
+    where
+        person_id=?
+14:14:48,728 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select p.heightInches from org.hibernate.test.join.Person p where p.name = 'Emmanuel'
+14:14:48,728 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,730 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[WEIRD_IDENT] Node: 'join'
+    |  |     |  \-[IDENT] Node: 'Person'
+    |  |     \-[ALIAS] Node: 'p'
+    |  \-[SELECT] Node: 'select'
+    |     \-[DOT] Node: '.'
+    |        +-[IDENT] Node: 'p'
+    |        \-[IDENT] Node: 'heightInches'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Emmanuel''
+
+14:14:48,730 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,730 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.Person (p) -> person0_
+14:14:48,730 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:14:48,730 DEBUG DotNode:599 - getDataType() : heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:14:48,731 DEBUG FromReferenceNode:74 - Resolved : p.heightInches -> person0_.height_centimeters / 2.54E0
+14:14:48,731 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:14:48,731 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:14:48,731 DEBUG FromReferenceNode:74 - Resolved : p.name -> person0_.name
+14:14:48,731 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( person0_.height_centimeters / 2.54E0 person0_.person_id heightInches ) ) ( FromClause{level=1} person person0_ ) ( where ( = ( person0_.name person0_.person_id name ) 'Emmanuel' ) ) )
+14:14:48,731 DEBUG JoinProcessor:175 - Using FROM fragment [person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id]
+14:14:48,731 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,731 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,732 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,address)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'person0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=heightInches,path=p.heightInches,tableAlias=person0_,className=org.hibernate.test.join.Person,classAlias=p}
+    |  |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.join.Person, tableAlias=person0_}
+    |  |  \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}
+    \-[WHERE] SqlNode: 'where'
+       +-[FILTERS] SqlNode: '{filter conditions}'
+       |  \-[SQL_TOKEN] SqlFragment: '(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=person0_,className=org.hibernate.test.join.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.join.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Emmanuel''
+
+14:14:48,732 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,732 DEBUG QueryTranslatorImpl:235 - HQL: select p.heightInches from org.hibernate.test.join.Person p where p.name = 'Emmanuel'
+14:14:48,732 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.height_centimeters / 2.54E0 as col_0_0_ from person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id where (person0_.person_type is null or person0_.person_type in ('E', 'C', 'U')) and person0_.name='Emmanuel'
+14:14:48,732 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,732 DEBUG SQL:104 - 
+    select
+        person0_.height_centimeters / 2.54E0 as col_0_0_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        ) 
+        and person0_.name='Emmanuel'
+14:14:48,733 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select u.passwordExpiryDays from org.hibernate.test.join.User u where u.name = 'Steve'
+14:14:48,733 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,734 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[WEIRD_IDENT] Node: 'join'
+    |  |     |  \-[IDENT] Node: 'User'
+    |  |     \-[ALIAS] Node: 'u'
+    |  \-[SELECT] Node: 'select'
+    |     \-[DOT] Node: '.'
+    |        +-[IDENT] Node: 'u'
+    |        \-[IDENT] Node: 'passwordExpiryDays'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'u'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Steve''
+
+14:14:48,734 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,735 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.User (u) -> user0_
+14:14:48,735 DEBUG FromReferenceNode:74 - Resolved : u -> user0_.person_id
+14:14:48,735 DEBUG DotNode:599 - getDataType() : passwordExpiryDays -> org.hibernate.type.DoubleType@26e7f2ac
+14:14:48,735 DEBUG FromReferenceNode:74 - Resolved : u.passwordExpiryDays -> user0_2_.pwd_expiry_weeks * 7.0E0
+14:14:48,735 DEBUG FromReferenceNode:74 - Resolved : u -> user0_.person_id
+14:14:48,736 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:14:48,736 DEBUG FromReferenceNode:74 - Resolved : u.name -> user0_.name
+14:14:48,736 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( user0_2_.pwd_expiry_weeks * 7.0E0 user0_.person_id passwordExpiryDays ) ) ( FromClause{level=1} person user0_ ) ( where ( = ( user0_.name user0_.person_id name ) 'Steve' ) ) )
+14:14:48,736 DEBUG JoinProcessor:175 - Using FROM fragment [person user0_ inner join address user0_1_ on user0_.person_id=user0_1_.address_id left outer join t_user user0_2_ on user0_.person_id=user0_2_.person_id left outer join t_silly user0_3_ on user0_.person_id=user0_3_.person_id]
+14:14:48,736 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [user0_.person_type='U']
+14:14:48,736 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [user0_.person_type='U']
+14:14:48,737 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,t_user,address,t_silly)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'user0_2_.pwd_expiry_weeks * 7.0E0' {propertyName=passwordExpiryDays,dereferenceType=ALL,propertyPath=passwordExpiryDays,path=u.passwordExpiryDays,tableAlias=user0_,className=org.hibernate.test.join.User,classAlias=u}
+    |  |  +-[ALIAS_REF] IdentNode: 'user0_.person_id' {alias=u, className=org.hibernate.test.join.User, tableAlias=user0_}
+    |  |  \-[IDENT] IdentNode: 'passwordExpiryDays' {originalText=passwordExpiryDays}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[u], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person user0_ inner join address user0_1_ on user0_.person_id=user0_1_.address_id left outer join t_user user0_2_ on user0_.person_id=user0_2_.person_id left outer join t_silly user0_3_ on user0_.person_id=user0_3_.person_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=person,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.join.User}}
+    \-[WHERE] SqlNode: 'where'
+       +-[FILTERS] SqlNode: '{filter conditions}'
+       |  \-[SQL_TOKEN] SqlFragment: 'user0_.person_type='U''
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'user0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=u.name,tableAlias=user0_,className=org.hibernate.test.join.User,classAlias=u}
+          |  +-[ALIAS_REF] IdentNode: 'user0_.person_id' {alias=u, className=org.hibernate.test.join.User, tableAlias=user0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Steve''
+
+14:14:48,737 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,737 DEBUG QueryTranslatorImpl:235 - HQL: select u.passwordExpiryDays from org.hibernate.test.join.User u where u.name = 'Steve'
+14:14:48,737 DEBUG QueryTranslatorImpl:236 - SQL: select user0_2_.pwd_expiry_weeks * 7.0E0 as col_0_0_ from person user0_ inner join address user0_1_ on user0_.person_id=user0_1_.address_id left outer join t_user user0_2_ on user0_.person_id=user0_2_.person_id left outer join t_silly user0_3_ on user0_.person_id=user0_3_.person_id where user0_.person_type='U' and user0_.name='Steve'
+14:14:48,737 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,738 DEBUG SQL:104 - 
+    select
+        user0_2_.pwd_expiry_weeks * 7.0E0 as col_0_0_ 
+    from
+        person user0_ 
+    inner join
+        address user0_1_ 
+            on user0_.person_id=user0_1_.address_id 
+    left outer join
+        t_user user0_2_ 
+            on user0_.person_id=user0_2_.person_id 
+    left outer join
+        t_silly user0_3_ 
+            on user0_.person_id=user0_3_.person_id 
+    where
+        user0_.person_type='U' 
+        and user0_.name='Steve'
+14:14:48,739 DEBUG SQL:104 - 
+    select
+        this_.person_id as person1_3_0_,
+        this_.name as name3_0_,
+        this_.sex as sex3_0_,
+        this_.height_centimeters / 2.54E0 as height5_3_0_,
+        this_1_.address as address0_0_,
+        this_1_.zip as zip0_0_,
+        this_1_.country as country0_0_,
+        this_.person_type as person2_3_0_ 
+    from
+        person this_ 
+    inner join
+        address this_1_ 
+            on this_.person_id=this_1_.address_id 
+    where
+        (
+            this_.person_type is null 
+            or this_.person_type in (
+                'E', 'C', 'U'
+            )
+        ) 
+        and this_.height_centimeters / 2.54E0 between ? and ?
+14:14:48,740 DEBUG SQL:104 - 
+    select
+        this_.person_id as person1_3_0_,
+        this_.name as name3_0_,
+        this_.sex as sex3_0_,
+        this_.height_centimeters / 2.54E0 as height5_3_0_,
+        this_1_.address as address0_0_,
+        this_1_.zip as zip0_0_,
+        this_1_.country as country0_0_,
+        this_2_.u_login as u2_5_0_,
+        this_2_.pwd_expiry_weeks * 7.0E0 as pwd3_5_0_,
+        this_3_.silly as silly4_0_ 
+    from
+        person this_ 
+    inner join
+        address this_1_ 
+            on this_.person_id=this_1_.address_id 
+    left outer join
+        t_user this_2_ 
+            on this_.person_id=this_2_.person_id 
+    left outer join
+        t_silly this_3_ 
+            on this_.person_id=this_3_.person_id 
+    where
+        this_.person_type='U' 
+        and this_2_.pwd_expiry_weeks * 7.0E0 between ? and ?
+14:14:48,741 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.join.Person p where p.heightInches between ? and ?
+14:14:48,741 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,742 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[WEIRD_IDENT] Node: 'join'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[BETWEEN] Node: 'between'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'heightInches'
+          +-[PARAM] Node: '?'
+          \-[PARAM] Node: '?'
+
+14:14:48,743 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,743 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.Person (p) -> person0_
+14:14:48,743 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:14:48,744 DEBUG DotNode:599 - getDataType() : heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:14:48,744 DEBUG FromReferenceNode:74 - Resolved : p.heightInches -> person0_.height_centimeters / 2.54E0
+14:14:48,744  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 68.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:14:48,745  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 74.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:14:48,745 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} person person0_ ) ( where ( between ( person0_.height_centimeters / 2.54E0 person0_.person_id heightInches ) ? ? ) ) )
+14:14:48,745 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,745 DEBUG JoinProcessor:175 - Using FROM fragment [person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id]
+14:14:48,745 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,745 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,746 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,address)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}
+    \-[WHERE] SqlNode: 'where'
+       +-[FILTERS] SqlNode: '{filter conditions}'
+       |  \-[SQL_TOKEN] SqlFragment: '(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))'
+       \-[BETWEEN] BetweenOperatorNode: 'between'
+          +-[DOT] DotNode: 'person0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=heightInches,path=p.heightInches,tableAlias=person0_,className=org.hibernate.test.join.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.join.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+          +-[PARAM] ParameterNode: '?' {ordinal=0, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+          \-[PARAM] ParameterNode: '?' {ordinal=1, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+
+14:14:48,746 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,746 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.join.Person p where p.heightInches between ? and ?
+14:14:48,746 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_3_, person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_ from person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id where (person0_.person_type is null or person0_.person_type in ('E', 'C', 'U')) and (person0_.height_centimeters / 2.54E0 between ? and ?)
+14:14:48,746 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,747 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_,
+        person0_.name as name3_,
+        person0_.sex as sex3_,
+        person0_.height_centimeters / 2.54E0 as height5_3_,
+        person0_1_.address as address0_,
+        person0_1_.zip as zip0_,
+        person0_1_.country as country0_,
+        person0_.person_type as person2_3_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        ) 
+        and (
+            person0_.height_centimeters / 2.54E0 between ? and ?
+        )
+14:14:48,748 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.join.User u where u.passwordExpiryDays between ? and ?
+14:14:48,748 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,749 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[WEIRD_IDENT] Node: 'join'
+    |        |  \-[IDENT] Node: 'User'
+    |        \-[ALIAS] Node: 'u'
+    \-[WHERE] Node: 'where'
+       \-[BETWEEN] Node: 'between'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'u'
+          |  \-[IDENT] Node: 'passwordExpiryDays'
+          +-[PARAM] Node: '?'
+          \-[PARAM] Node: '?'
+
+14:14:48,749 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,749 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.User (u) -> user0_
+14:14:48,749 DEBUG FromReferenceNode:74 - Resolved : u -> user0_.person_id
+14:14:48,749 DEBUG DotNode:599 - getDataType() : passwordExpiryDays -> org.hibernate.type.DoubleType@26e7f2ac
+14:14:48,750 DEBUG FromReferenceNode:74 - Resolved : u.passwordExpiryDays -> user0_2_.pwd_expiry_weeks * 7.0E0
+14:14:48,750  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 72.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:14:48,750  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 78.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:14:48,750 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} person user0_ ) ( where ( between ( user0_2_.pwd_expiry_weeks * 7.0E0 user0_.person_id passwordExpiryDays ) ? ? ) ) )
+14:14:48,750 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,750 DEBUG JoinProcessor:175 - Using FROM fragment [person user0_ inner join address user0_1_ on user0_.person_id=user0_1_.address_id left outer join t_user user0_2_ on user0_.person_id=user0_2_.person_id left outer join t_silly user0_3_ on user0_.person_id=user0_3_.person_id]
+14:14:48,750 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [user0_.person_type='U']
+14:14:48,750 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [user0_.person_type='U']
+14:14:48,751 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,t_user,address,t_silly)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user0_.person_id as person1_3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=person,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.join.User}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'user0_.name as name3_, user0_.sex as sex3_, user0_.height_centimeters / 2.54E0 as height5_3_, user0_1_.address as address0_, user0_1_.zip as zip0_, user0_1_.country as country0_, user0_2_.u_login as u2_5_, user0_2_.pwd_expiry_weeks * 7.0E0 as pwd3_5_, user0_3_.silly as silly4_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[u], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person user0_ inner join address user0_1_ on user0_.person_id=user0_1_.address_id left outer join t_user user0_2_ on user0_.person_id=user0_2_.person_id left outer join t_silly user0_3_ on user0_.person_id=user0_3_.person_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=person,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.join.User}}
+    \-[WHERE] SqlNode: 'where'
+       +-[FILTERS] SqlNode: '{filter conditions}'
+       |  \-[SQL_TOKEN] SqlFragment: 'user0_.person_type='U''
+       \-[BETWEEN] BetweenOperatorNode: 'between'
+          +-[DOT] DotNode: 'user0_2_.pwd_expiry_weeks * 7.0E0' {propertyName=passwordExpiryDays,dereferenceType=ALL,propertyPath=passwordExpiryDays,path=u.passwordExpiryDays,tableAlias=user0_,className=org.hibernate.test.join.User,classAlias=u}
+          |  +-[ALIAS_REF] IdentNode: 'user0_.person_id' {alias=u, className=org.hibernate.test.join.User, tableAlias=user0_}
+          |  \-[IDENT] IdentNode: 'passwordExpiryDays' {originalText=passwordExpiryDays}
+          +-[PARAM] ParameterNode: '?' {ordinal=0, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+          \-[PARAM] ParameterNode: '?' {ordinal=1, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+
+14:14:48,751 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,751 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.join.User u where u.passwordExpiryDays between ? and ?
+14:14:48,751 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.person_id as person1_3_, user0_.name as name3_, user0_.sex as sex3_, user0_.height_centimeters / 2.54E0 as height5_3_, user0_1_.address as address0_, user0_1_.zip as zip0_, user0_1_.country as country0_, user0_2_.u_login as u2_5_, user0_2_.pwd_expiry_weeks * 7.0E0 as pwd3_5_, user0_3_.silly as silly4_ from person user0_ inner join address user0_1_ on user0_.person_id=user0_1_.address_id left outer join t_user user0_2_ on user0_.person_id=user0_2_.person_id left outer join t_silly user0_3_ on user0_.person_id=user0_3_.person_id where user0_.person_type='U' and (user0_2_.pwd_expiry_weeks * 7.0E0 between ? and ?)
+14:14:48,751 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,752 DEBUG SQL:104 - 
+    select
+        user0_.person_id as person1_3_,
+        user0_.name as name3_,
+        user0_.sex as sex3_,
+        user0_.height_centimeters / 2.54E0 as height5_3_,
+        user0_1_.address as address0_,
+        user0_1_.zip as zip0_,
+        user0_1_.country as country0_,
+        user0_2_.u_login as u2_5_,
+        user0_2_.pwd_expiry_weeks * 7.0E0 as pwd3_5_,
+        user0_3_.silly as silly4_ 
+    from
+        person user0_ 
+    inner join
+        address user0_1_ 
+            on user0_.person_id=user0_1_.address_id 
+    left outer join
+        t_user user0_2_ 
+            on user0_.person_id=user0_2_.person_id 
+    left outer join
+        t_silly user0_3_ 
+            on user0_.person_id=user0_3_.person_id 
+    where
+        user0_.person_type='U' 
+        and (
+            user0_2_.pwd_expiry_weeks * 7.0E0 between ? and ?
+        )
+14:14:48,752 DEBUG SQL:104 - 
+    update
+        person 
+    set
+        name=?,
+        height_centimeters=? * 2.54E0 
+    where
+        person_id=?
+14:14:48,753 DEBUG SQL:104 - 
+    update
+        t_user 
+    set
+        u_login=?,
+        pwd_expiry_weeks=? / 7.0E0 
+    where
+        person_id=?
+14:14:48,753 DEBUG SQL:104 - 
+    select
+        height_centimeters 
+    from
+        person 
+    where
+        name='Emmanuel'
+14:14:48,753 DEBUG SQL:104 - 
+    select
+        pwd_expiry_weeks 
+    from
+        t_user 
+    where
+        person_id=?
+14:14:48,754 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.join.Person
+14:14:48,754 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,755 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[WEIRD_IDENT] Node: 'join'
+                \-[IDENT] Node: 'Person'
+
+14:14:48,755 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,755 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.Person (<no alias>) -> person0_
+14:14:48,755 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} person person0_ ) )
+14:14:48,755 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,755 DEBUG JoinProcessor:175 - Using FROM fragment [person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id]
+14:14:48,755 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,755 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,756 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:14:48,756 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,address)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: '(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))'
+
+14:14:48,756 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,756 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.join.Person
+14:14:48,756 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_3_, person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_ from person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id where (person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))
+14:14:48,756 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,756 DEBUG SQL:104 - 
+    delete 
+    from
+        address 
+    where
+        address_id=?
+14:14:48,757 DEBUG SQL:104 - 
+    delete 
+    from
+        person 
+    where
+        person_id=?
+14:14:48,757 DEBUG SQL:104 - 
+    delete 
+    from
+        t_silly 
+    where
+        person_id=?
+14:14:48,757 DEBUG SQL:104 - 
+    delete 
+    from
+        t_user 
+    where
+        person_id=?
+14:14:48,757 DEBUG SQL:104 - 
+    delete 
+    from
+        address 
+    where
+        address_id=?
+14:14:48,757 DEBUG SQL:104 - 
+    delete 
+    from
+        person 
+    where
+        person_id=?
+14:14:48,758 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_,
+        person0_.name as name3_,
+        person0_.sex as sex3_,
+        person0_.height_centimeters / 2.54E0 as height5_3_,
+        person0_1_.address as address0_,
+        person0_1_.zip as zip0_,
+        person0_1_.country as country0_,
+        person0_.person_type as person2_3_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        )
+14:14:48,759  INFO CustomRunner:139 - Test: testSequentialSelects
+14:14:48,760 DEBUG SQL:104 - 
+    insert 
+    into
+        person
+        (person_id, name, sex, height_centimeters) 
+    values
+        (null, ?, ?, ? * 2.54E0)
+14:14:48,761 DEBUG SQL:104 - 
+    insert 
+    into
+        address
+        (address, zip, country, address_id) 
+    values
+        (?, ?, ?, ?)
+14:14:48,761 DEBUG SQL:104 - 
+    insert 
+    into
+        person
+        (person_id, name, sex, height_centimeters, person_type) 
+    values
+        (null, ?, ?, ? * 2.54E0, 'E')
+14:14:48,762 DEBUG SQL:104 - 
+    insert 
+    into
+        address
+        (address, zip, country, address_id) 
+    values
+        (?, ?, ?, ?)
+14:14:48,762 DEBUG SQL:104 - 
+    insert 
+    into
+        employee
+        ("title", salary, manager, person_id) 
+    values
+        (?, ?, ?, ?)
+14:14:48,762 DEBUG SQL:104 - 
+    insert 
+    into
+        person
+        (person_id, name, sex, height_centimeters, person_type) 
+    values
+        (null, ?, ?, ? * 2.54E0, 'C')
+14:14:48,762 DEBUG SQL:104 - 
+    insert 
+    into
+        address
+        (address, zip, country, address_id) 
+    values
+        (?, ?, ?, ?)
+14:14:48,763 DEBUG SQL:104 - 
+    insert 
+    into
+        customer
+        (comments, salesperson, person_id) 
+    values
+        (?, ?, ?)
+14:14:48,763  WARN QuerySplitter:128 - HHH000183: no persistent classes found for query class: from java.io.Serializable
+14:14:48,763 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_,
+        person0_.name as name3_,
+        person0_.sex as sex3_,
+        person0_.height_centimeters / 2.54E0 as height5_3_,
+        person0_1_.address as address0_,
+        person0_1_.zip as zip0_,
+        person0_1_.country as country0_,
+        person0_.person_type as person2_3_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        )
+14:14:48,764 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.join.Person p where p.class is null
+14:14:48,764 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,764 DEBUG HqlParser:378 - handleDotIdent() : new LT(2) token - [".",<15> previously: <15>,line=1,col=46,possibleID=false]
+14:14:48,765 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[WEIRD_IDENT] Node: 'join'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[IS_NULL] Node: 'is null'
+          \-[DOT] Node: '.'
+             +-[IDENT] Node: 'p'
+             \-[IDENT] Node: 'class'
+
+14:14:48,766 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,766 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.Person (p) -> person0_
+14:14:48,766 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:14:48,766 DEBUG DotNode:599 - getDataType() : class -> org.hibernate.type.StringType@2dc8de40
+14:14:48,766 DEBUG FromReferenceNode:74 - Resolved : p.class -> person0_.person_type
+14:14:48,766 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} person person0_ ) ( where ( is null ( person0_.person_type person0_.person_id class ) ) ) )
+14:14:48,766 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,767 DEBUG JoinProcessor:175 - Using FROM fragment [person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id]
+14:14:48,767 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,767 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,767 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,address)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}
+    \-[WHERE] SqlNode: 'where'
+       +-[FILTERS] SqlNode: '{filter conditions}'
+       |  \-[SQL_TOKEN] SqlFragment: '(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))'
+       \-[IS_NULL] IsNullLogicOperatorNode: 'is null'
+          \-[DOT] DotNode: 'person0_.person_type' {propertyName=class,dereferenceType=ALL,propertyPath=class,path=p.class,tableAlias=person0_,className=org.hibernate.test.join.Person,classAlias=p}
+             +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.join.Person, tableAlias=person0_}
+             \-[IDENT] IdentNode: 'class' {originalText=class}
+
+14:14:48,767 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,767 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.join.Person p where p.class is null
+14:14:48,767 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_3_, person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_ from person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id where (person0_.person_type is null or person0_.person_type in ('E', 'C', 'U')) and (person0_.person_type is null)
+14:14:48,767 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,768 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_,
+        person0_.name as name3_,
+        person0_.sex as sex3_,
+        person0_.height_centimeters / 2.54E0 as height5_3_,
+        person0_1_.address as address0_,
+        person0_1_.zip as zip0_,
+        person0_1_.country as country0_,
+        person0_.person_type as person2_3_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        ) 
+        and (
+            person0_.person_type is null
+        )
+14:14:48,768 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.join.Person p where p.class = Customer
+14:14:48,769 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,769 DEBUG HqlParser:378 - handleDotIdent() : new LT(2) token - [".",<15> previously: <15>,line=1,col=46,possibleID=false]
+14:14:48,770 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[WEIRD_IDENT] Node: 'join'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'class'
+          \-[IDENT] Node: 'Customer'
+
+14:14:48,770 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,770 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.Person (p) -> person0_
+14:14:48,770 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:14:48,770 DEBUG DotNode:599 - getDataType() : class -> org.hibernate.type.StringType@2dc8de40
+14:14:48,770 DEBUG FromReferenceNode:74 - Resolved : p.class -> person0_.person_type
+14:14:48,771 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} person person0_ ) ( where ( = ( person0_.person_type person0_.person_id class ) 'C' ) ) )
+14:14:48,771 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,771 DEBUG JoinProcessor:175 - Using FROM fragment [person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id]
+14:14:48,771 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,771 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,771 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,address)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}
+    \-[WHERE] SqlNode: 'where'
+       +-[FILTERS] SqlNode: '{filter conditions}'
+       |  \-[SQL_TOKEN] SqlFragment: '(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.person_type' {propertyName=class,dereferenceType=ALL,propertyPath=class,path=p.class,tableAlias=person0_,className=org.hibernate.test.join.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.join.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'class' {originalText=class}
+          \-[IDENT] IdentNode: ''C'' {originalText=Customer}
+
+14:14:48,772 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,772 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.join.Person p where p.class = Customer
+14:14:48,772 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_3_, person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_ from person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id where (person0_.person_type is null or person0_.person_type in ('E', 'C', 'U')) and person0_.person_type='C'
+14:14:48,772 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,772 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_,
+        person0_.name as name3_,
+        person0_.sex as sex3_,
+        person0_.height_centimeters / 2.54E0 as height5_3_,
+        person0_1_.address as address0_,
+        person0_1_.zip as zip0_,
+        person0_1_.country as country0_,
+        person0_.person_type as person2_3_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        ) 
+        and person0_.person_type='C'
+14:14:48,773 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.join.Customer c
+14:14:48,773 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,774 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[WEIRD_IDENT] Node: 'join'
+             |  \-[IDENT] Node: 'Customer'
+             \-[ALIAS] Node: 'c'
+
+14:14:48,774 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,774 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.Customer (c) -> customer0_
+14:14:48,774 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} person customer0_ ) )
+14:14:48,774 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,774 DEBUG JoinProcessor:175 - Using FROM fragment [person customer0_ inner join address customer0_1_ on customer0_.person_id=customer0_1_.address_id inner join customer customer0_2_ on customer0_.person_id=customer0_2_.person_id]
+14:14:48,774 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [customer0_.person_type='C']
+14:14:48,774 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [customer0_.person_type='C']
+14:14:48,775 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:14:48,775 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,address,customer)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'customer0_.person_id as person1_3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=person,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.join.Customer}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'customer0_.name as name3_, customer0_.sex as sex3_, customer0_.height_centimeters / 2.54E0 as height5_3_, customer0_1_.address as address0_, customer0_1_.zip as zip0_, customer0_1_.country as country0_, customer0_2_.comments as comments1_, customer0_2_.salesperson as salesper3_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[c], fromElementByTableAlias=[customer0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person customer0_ inner join address customer0_1_ on customer0_.person_id=customer0_1_.address_id inner join customer customer0_2_ on customer0_.person_id=customer0_2_.person_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=person,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.join.Customer}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'customer0_.person_type='C''
+
+14:14:48,775 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,775 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.join.Customer c
+14:14:48,775 DEBUG QueryTranslatorImpl:236 - SQL: select customer0_.person_id as person1_3_, customer0_.name as name3_, customer0_.sex as sex3_, customer0_.height_centimeters / 2.54E0 as height5_3_, customer0_1_.address as address0_, customer0_1_.zip as zip0_, customer0_1_.country as country0_, customer0_2_.comments as comments1_, customer0_2_.salesperson as salesper3_1_ from person customer0_ inner join address customer0_1_ on customer0_.person_id=customer0_1_.address_id inner join customer customer0_2_ on customer0_.person_id=customer0_2_.person_id where customer0_.person_type='C'
+14:14:48,775 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,775 DEBUG SQL:104 - 
+    select
+        customer0_.person_id as person1_3_,
+        customer0_.name as name3_,
+        customer0_.sex as sex3_,
+        customer0_.height_centimeters / 2.54E0 as height5_3_,
+        customer0_1_.address as address0_,
+        customer0_1_.zip as zip0_,
+        customer0_1_.country as country0_,
+        customer0_2_.comments as comments1_,
+        customer0_2_.salesperson as salesper3_1_ 
+    from
+        person customer0_ 
+    inner join
+        address customer0_1_ 
+            on customer0_.person_id=customer0_1_.address_id 
+    inner join
+        customer customer0_2_ 
+            on customer0_.person_id=customer0_2_.person_id 
+    where
+        customer0_.person_type='C'
+14:14:48,776 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.join.Customer c left join fetch c.salesperson
+14:14:48,776 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,777 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[WEIRD_IDENT] Node: 'join'
+          |  |  \-[IDENT] Node: 'Customer'
+          |  \-[ALIAS] Node: 'c'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'c'
+                \-[IDENT] Node: 'salesperson'
+
+14:14:48,777 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,777 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.Customer (c) -> customer0_
+14:14:48,777 DEBUG FromReferenceNode:74 - Resolved : c -> customer0_.person_id
+14:14:48,777 DEBUG DotNode:599 - getDataType() : salesperson -> org.hibernate.type.ManyToOneType(org.hibernate.test.join.Employee)
+14:14:48,777 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for salesperson in org.hibernate.test.join.Customer (<no alias>) parent = [ {null} ]
+14:14:48,778 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.Employee (<no alias>) -> employee1_
+14:14:48,778 DEBUG FromClause:282 - addJoinByPathMap() : c.salesperson -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=person,tableAlias=employee1_,origin=person customer0_,columns={customer0_2_.salesperson ,className=org.hibernate.test.join.Employee}}
+14:14:48,778 DEBUG FromReferenceNode:74 - Resolved : c.salesperson -> customer0_2_.salesperson
+14:14:48,778 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'person employee1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=person,tableAlias=employee1_,origin=person customer0_,columns={customer0_2_.salesperson ,className=org.hibernate.test.join.Employee}}
+
+14:14:48,778 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( person customer0_ person employee1_ ) ) )
+14:14:48,778 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,778 DEBUG JoinProcessor:175 - Using FROM fragment [person customer0_ inner join address customer0_1_ on customer0_.person_id=customer0_1_.address_id inner join customer customer0_2_ on customer0_.person_id=customer0_2_.person_id]
+14:14:48,778 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [customer0_.person_type='C']
+14:14:48,779 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [customer0_.person_type='C']
+14:14:48,779 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:14:48,779 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join person employee1_ on customer0_2_.salesperson=employee1_.person_id left outer join address employee1_1_ on employee1_.person_id=employee1_1_.address_id left outer join employee employee1_2_ on employee1_.person_id=employee1_2_.person_id]
+14:14:48,779 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,address,employee,customer)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'customer0_.person_id as person1_3_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=person,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.join.Customer}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee1_.person_id as person1_3_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=person,tableAlias=employee1_,origin=person customer0_ inner join address customer0_1_ on customer0_.person_id=customer0_1_.address_id inner join customer customer0_2_ on customer0_.person_id=customer0_2_.person_id,columns={customer0_2_.salesperson ,className=org.hibernate.test.join.Employee}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'customer0_.name as name3_0_, customer0_.sex as sex3_0_, customer0_.height_centimeters / 2.54E0 as height5_3_0_, customer0_1_.address as address0_0_, customer0_1_.zip as zip0_0_, customer0_1_.country as country0_0_, customer0_2_.comments as comments1_0_, customer0_2_.salesperson as salesper3_1_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'employee1_.name as name3_1_, employee1_.sex as sex3_1_, employee1_.height_centimeters / 2.54E0 as height5_3_1_, employee1_1_.address as address0_1_, employee1_1_.zip as zip0_1_, employee1_1_.country as country0_1_, employee1_2_."title" as title2_2_1_, employee1_2_.salary as salary2_1_, employee1_2_.manager as manager2_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[c], fromElementByTableAlias=[customer0_, employee1_], fromElementsByPath=[c.salesperson], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person customer0_ inner join address customer0_1_ on customer0_.person_id=customer0_1_.address_id inner join customer customer0_2_ on customer0_.person_id=customer0_2_.person_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=person,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.join.Customer}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join person employee1_ on customer0_2_.salesperson=employee1_.person_id left outer join address employee1_1_ on employee1_.person_id=employee1_1_.address_id left outer join employee employee1_2_ on employee1_.person_id=employee1_2_.person_id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=person,tableAlias=employee1_,origin=person customer0_ inner join address customer0_1_ on customer0_.person_id=customer0_1_.address_id inner join customer customer0_2_ on customer0_.person_id=customer0_2_.person_id,columns={customer0_2_.salesperson ,className=org.hibernate.test.join.Employee}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'customer0_.person_type='C''
+
+14:14:48,780 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,780 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.join.Customer c left join fetch c.salesperson
+14:14:48,780 DEBUG QueryTranslatorImpl:236 - SQL: select customer0_.person_id as person1_3_0_, employee1_.person_id as person1_3_1_, customer0_.name as name3_0_, customer0_.sex as sex3_0_, customer0_.height_centimeters / 2.54E0 as height5_3_0_, customer0_1_.address as address0_0_, customer0_1_.zip as zip0_0_, customer0_1_.country as country0_0_, customer0_2_.comments as comments1_0_, customer0_2_.salesperson as salesper3_1_0_, employee1_.name as name3_1_, employee1_.sex as sex3_1_, employee1_.height_centimeters / 2.54E0 as height5_3_1_, employee1_1_.address as address0_1_, employee1_1_.zip as zip0_1_, employee1_1_.country as country0_1_, employee1_2_."title" as title2_2_1_, employee1_2_.salary as salary2_1_, employee1_2_.manager as manager2_1_ from person customer0_ inner join address customer0_1_ on customer0_.person_id=customer0_1_.address_id inner join customer customer0_2_ on customer0_.person_id=customer0_2_.person_id left outer join person employee1_ on customer0_2_.salesperson=employee1_.person_id left outer join address employee1_1_ on employee1_.person_id=employee1_1_.address_id left outer join employee employee1_2_ on employee1_.person_id=employee1_2_.person_id where customer0_.person_type='C'
+14:14:48,780 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,781 DEBUG SQL:104 - 
+    select
+        customer0_.person_id as person1_3_0_,
+        employee1_.person_id as person1_3_1_,
+        customer0_.name as name3_0_,
+        customer0_.sex as sex3_0_,
+        customer0_.height_centimeters / 2.54E0 as height5_3_0_,
+        customer0_1_.address as address0_0_,
+        customer0_1_.zip as zip0_0_,
+        customer0_1_.country as country0_0_,
+        customer0_2_.comments as comments1_0_,
+        customer0_2_.salesperson as salesper3_1_0_,
+        employee1_.name as name3_1_,
+        employee1_.sex as sex3_1_,
+        employee1_.height_centimeters / 2.54E0 as height5_3_1_,
+        employee1_1_.address as address0_1_,
+        employee1_1_.zip as zip0_1_,
+        employee1_1_.country as country0_1_,
+        employee1_2_."title" as title2_2_1_,
+        employee1_2_.salary as salary2_1_,
+        employee1_2_.manager as manager2_1_ 
+    from
+        person customer0_ 
+    inner join
+        address customer0_1_ 
+            on customer0_.person_id=customer0_1_.address_id 
+    inner join
+        customer customer0_2_ 
+            on customer0_.person_id=customer0_2_.person_id 
+    left outer join
+        person employee1_ 
+            on customer0_2_.salesperson=employee1_.person_id 
+    left outer join
+        address employee1_1_ 
+            on employee1_.person_id=employee1_1_.address_id 
+    left outer join
+        employee employee1_2_ 
+            on employee1_.person_id=employee1_2_.person_id 
+    where
+        customer0_.person_type='C'
+14:14:48,791 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.join.Customer
+14:14:48,791 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,792 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[WEIRD_IDENT] Node: 'join'
+                \-[IDENT] Node: 'Customer'
+
+14:14:48,801 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,801 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.Customer (<no alias>) -> customer0_
+14:14:48,802 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} person customer0_ ) )
+14:14:48,802 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,802 DEBUG JoinProcessor:175 - Using FROM fragment [person customer0_ inner join address customer0_1_ on customer0_.person_id=customer0_1_.address_id inner join customer customer0_2_ on customer0_.person_id=customer0_2_.person_id]
+14:14:48,802 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [customer0_.person_type='C']
+14:14:48,802 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [customer0_.person_type='C']
+14:14:48,802 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:14:48,802 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,address,customer)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'customer0_.person_id as person1_3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=person,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.join.Customer}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'customer0_.name as name3_, customer0_.sex as sex3_, customer0_.height_centimeters / 2.54E0 as height5_3_, customer0_1_.address as address0_, customer0_1_.zip as zip0_, customer0_1_.country as country0_, customer0_2_.comments as comments1_, customer0_2_.salesperson as salesper3_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[customer0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person customer0_ inner join address customer0_1_ on customer0_.person_id=customer0_1_.address_id inner join customer customer0_2_ on customer0_.person_id=customer0_2_.person_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=person,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.join.Customer}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'customer0_.person_type='C''
+
+14:14:48,803 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,803 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.join.Customer
+14:14:48,803 DEBUG QueryTranslatorImpl:236 - SQL: select customer0_.person_id as person1_3_, customer0_.name as name3_, customer0_.sex as sex3_, customer0_.height_centimeters / 2.54E0 as height5_3_, customer0_1_.address as address0_, customer0_1_.zip as zip0_, customer0_1_.country as country0_, customer0_2_.comments as comments1_, customer0_2_.salesperson as salesper3_1_ from person customer0_ inner join address customer0_1_ on customer0_.person_id=customer0_1_.address_id inner join customer customer0_2_ on customer0_.person_id=customer0_2_.person_id where customer0_.person_type='C'
+14:14:48,803 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,803 DEBUG SQL:104 - 
+    select
+        customer0_.person_id as person1_3_,
+        customer0_.name as name3_,
+        customer0_.sex as sex3_,
+        customer0_.height_centimeters / 2.54E0 as height5_3_,
+        customer0_1_.address as address0_,
+        customer0_1_.zip as zip0_,
+        customer0_1_.country as country0_,
+        customer0_2_.comments as comments1_,
+        customer0_2_.salesperson as salesper3_1_ 
+    from
+        person customer0_ 
+    inner join
+        address customer0_1_ 
+            on customer0_.person_id=customer0_1_.address_id 
+    inner join
+        customer customer0_2_ 
+            on customer0_.person_id=customer0_2_.person_id 
+    where
+        customer0_.person_type='C'
+14:14:48,813 DEBUG SQL:104 - 
+    select
+        employee0_.person_id as person1_3_0_,
+        employee0_.name as name3_0_,
+        employee0_.sex as sex3_0_,
+        employee0_.height_centimeters / 2.54E0 as height5_3_0_,
+        employee0_1_.address as address0_0_,
+        employee0_1_.zip as zip0_0_,
+        employee0_1_.country as country0_0_,
+        employee0_2_."title" as title2_2_0_,
+        employee0_2_.salary as salary2_0_,
+        employee0_2_.manager as manager2_0_ 
+    from
+        person employee0_ 
+    inner join
+        address employee0_1_ 
+            on employee0_.person_id=employee0_1_.address_id 
+    inner join
+        employee employee0_2_ 
+            on employee0_.person_id=employee0_2_.person_id 
+    where
+        employee0_.person_id=? 
+        and employee0_.person_type='E'
+14:14:48,814 DEBUG SQL:104 - 
+    select
+        employee0_.person_id as person1_3_0_,
+        employee0_.name as name3_0_,
+        employee0_.sex as sex3_0_,
+        employee0_.height_centimeters / 2.54E0 as height5_3_0_,
+        employee0_1_.address as address0_0_,
+        employee0_1_.zip as zip0_0_,
+        employee0_1_.country as country0_0_,
+        employee0_2_."title" as title2_2_0_,
+        employee0_2_.salary as salary2_0_,
+        employee0_2_.manager as manager2_0_ 
+    from
+        person employee0_ 
+    inner join
+        address employee0_1_ 
+            on employee0_.person_id=employee0_1_.address_id 
+    inner join
+        employee employee0_2_ 
+            on employee0_.person_id=employee0_2_.person_id 
+    where
+        employee0_.person_id=? 
+        and employee0_.person_type='E'
+14:14:48,826 DEBUG SQL:104 - 
+    select
+        customer0_.person_id as person1_3_0_,
+        customer0_.name as name3_0_,
+        customer0_.sex as sex3_0_,
+        customer0_.height_centimeters / 2.54E0 as height5_3_0_,
+        customer0_1_.address as address0_0_,
+        customer0_1_.zip as zip0_0_,
+        customer0_1_.country as country0_0_,
+        customer0_2_.comments as comments1_0_,
+        customer0_2_.salesperson as salesper3_1_0_ 
+    from
+        person customer0_ 
+    inner join
+        address customer0_1_ 
+            on customer0_.person_id=customer0_1_.address_id 
+    inner join
+        customer customer0_2_ 
+            on customer0_.person_id=customer0_2_.person_id 
+    where
+        customer0_.person_id=? 
+        and customer0_.person_type='C'
+14:14:48,827 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.join.Person p where p.zip = '30306'
+14:14:48,827 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,828 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[WEIRD_IDENT] Node: 'join'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'zip'
+          \-[QUOTED_STRING] Node: ''30306''
+
+14:14:48,836 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,836 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.Person (p) -> person0_
+14:14:48,836 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:14:48,836 DEBUG DotNode:599 - getDataType() : zip -> org.hibernate.type.StringType@2dc8de40
+14:14:48,837 DEBUG FromReferenceNode:74 - Resolved : p.zip -> person0_1_.zip
+14:14:48,837 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} person person0_ ) ( where ( = ( person0_1_.zip person0_.person_id zip ) '30306' ) ) )
+14:14:48,837 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,837 DEBUG JoinProcessor:175 - Using FROM fragment [person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id]
+14:14:48,837 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,837 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,837 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,address)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}
+    \-[WHERE] SqlNode: 'where'
+       +-[FILTERS] SqlNode: '{filter conditions}'
+       |  \-[SQL_TOKEN] SqlFragment: '(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_1_.zip' {propertyName=zip,dereferenceType=ALL,propertyPath=zip,path=p.zip,tableAlias=person0_,className=org.hibernate.test.join.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.join.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'zip' {originalText=zip}
+          \-[QUOTED_STRING] LiteralNode: ''30306''
+
+14:14:48,856 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,857 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.join.Person p where p.zip = '30306'
+14:14:48,857 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_3_, person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_ from person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id where (person0_.person_type is null or person0_.person_type in ('E', 'C', 'U')) and person0_1_.zip='30306'
+14:14:48,857 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,857 DEBUG SQL:104 - 
+    update
+        address 
+    set
+        address=?,
+        zip=?,
+        country=? 
+    where
+        address_id=?
+14:14:48,858 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_,
+        person0_.name as name3_,
+        person0_.sex as sex3_,
+        person0_.height_centimeters / 2.54E0 as height5_3_,
+        person0_1_.address as address0_,
+        person0_1_.zip as zip0_,
+        person0_1_.country as country0_,
+        person0_.person_type as person2_3_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        ) 
+        and person0_1_.zip='30306'
+14:14:48,867 DEBUG SQL:104 - 
+    update
+        customer 
+    set
+        comments=?,
+        salesperson=? 
+    where
+        person_id=?
+14:14:48,867 DEBUG SQL:104 - 
+    delete 
+    from
+        employee 
+    where
+        person_id=?
+14:14:48,867 DEBUG SQL:104 - 
+    delete 
+    from
+        address 
+    where
+        address_id=?
+14:14:48,876 DEBUG SQL:104 - 
+    delete 
+    from
+        person 
+    where
+        person_id=?
+14:14:48,876 DEBUG SQL:104 - 
+    delete 
+    from
+        customer 
+    where
+        person_id=?
+14:14:48,876 DEBUG SQL:104 - 
+    delete 
+    from
+        address 
+    where
+        address_id=?
+14:14:48,877 DEBUG SQL:104 - 
+    delete 
+    from
+        person 
+    where
+        person_id=?
+14:14:48,877 DEBUG SQL:104 - 
+    delete 
+    from
+        address 
+    where
+        address_id=?
+14:14:48,886 DEBUG SQL:104 - 
+    delete 
+    from
+        person 
+    where
+        person_id=?
+14:14:48,886 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_,
+        person0_.name as name3_,
+        person0_.sex as sex3_,
+        person0_.height_centimeters / 2.54E0 as height5_3_,
+        person0_1_.address as address0_,
+        person0_1_.zip as zip0_,
+        person0_1_.country as country0_,
+        person0_.person_type as person2_3_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        )
+14:14:48,897  INFO CustomRunner:139 - Test: testSequentialSelectsOptionalData
+14:14:48,898 DEBUG SQL:104 - 
+    insert 
+    into
+        person
+        (person_id, name, sex, height_centimeters, person_type) 
+    values
+        (null, ?, ?, ? * 2.54E0, 'U')
+14:14:48,899 DEBUG SQL:104 - 
+    insert 
+    into
+        address
+        (address, zip, country, address_id) 
+    values
+        (?, ?, ?, ?)
+14:14:48,899 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_,
+        person0_.name as name3_,
+        person0_.sex as sex3_,
+        person0_.height_centimeters / 2.54E0 as height5_3_,
+        person0_1_.address as address0_,
+        person0_1_.zip as zip0_,
+        person0_1_.country as country0_,
+        person0_.person_type as person2_3_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        )
+14:14:48,906 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_,
+        person0_.name as name3_,
+        person0_.sex as sex3_,
+        person0_.height_centimeters / 2.54E0 as height5_3_,
+        person0_1_.address as address0_,
+        person0_1_.zip as zip0_,
+        person0_1_.country as country0_,
+        person0_.person_type as person2_3_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        ) 
+        and (
+            person0_.person_type is null
+        )
+14:14:48,926 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.join.Person p where p.class = User
+14:14:48,926 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,927 DEBUG HqlParser:378 - handleDotIdent() : new LT(2) token - [".",<15> previously: <15>,line=1,col=46,possibleID=false]
+14:14:48,927 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[WEIRD_IDENT] Node: 'join'
+    |        |  \-[IDENT] Node: 'Person'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'class'
+          \-[IDENT] Node: 'User'
+
+14:14:48,928 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,928 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.Person (p) -> person0_
+14:14:48,929 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.person_id
+14:14:48,929 DEBUG DotNode:599 - getDataType() : class -> org.hibernate.type.StringType@2dc8de40
+14:14:48,929 DEBUG FromReferenceNode:74 - Resolved : p.class -> person0_.person_type
+14:14:48,929 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} person person0_ ) ( where ( = ( person0_.person_type person0_.person_id class ) 'U' ) ) )
+14:14:48,929 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,930 DEBUG JoinProcessor:175 - Using FROM fragment [person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id]
+14:14:48,930 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,930 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))]
+14:14:48,930 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,address)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'person0_.person_id as person1_3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.join.Person}}
+    \-[WHERE] SqlNode: 'where'
+       +-[FILTERS] SqlNode: '{filter conditions}'
+       |  \-[SQL_TOKEN] SqlFragment: '(person0_.person_type is null or person0_.person_type in ('E', 'C', 'U'))'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.person_type' {propertyName=class,dereferenceType=ALL,propertyPath=class,path=p.class,tableAlias=person0_,className=org.hibernate.test.join.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.person_id' {alias=p, className=org.hibernate.test.join.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'class' {originalText=class}
+          \-[IDENT] IdentNode: ''U'' {originalText=User}
+
+14:14:48,930 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,930 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.join.Person p where p.class = User
+14:14:48,930 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.person_id as person1_3_, person0_.name as name3_, person0_.sex as sex3_, person0_.height_centimeters / 2.54E0 as height5_3_, person0_1_.address as address0_, person0_1_.zip as zip0_, person0_1_.country as country0_, person0_.person_type as person2_3_ from person person0_ inner join address person0_1_ on person0_.person_id=person0_1_.address_id where (person0_.person_type is null or person0_.person_type in ('E', 'C', 'U')) and person0_.person_type='U'
+14:14:48,930 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,940 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_,
+        person0_.name as name3_,
+        person0_.sex as sex3_,
+        person0_.height_centimeters / 2.54E0 as height5_3_,
+        person0_1_.address as address0_,
+        person0_1_.zip as zip0_,
+        person0_1_.country as country0_,
+        person0_.person_type as person2_3_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        ) 
+        and person0_.person_type='U'
+14:14:48,940 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.join.User u
+14:14:48,941 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:14:48,941 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[WEIRD_IDENT] Node: 'join'
+             |  \-[IDENT] Node: 'User'
+             \-[ALIAS] Node: 'u'
+
+14:14:48,941 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,942 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.join.User (u) -> user0_
+14:14:48,942 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} person user0_ ) )
+14:14:48,942 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:48,942 DEBUG JoinProcessor:175 - Using FROM fragment [person user0_ inner join address user0_1_ on user0_.person_id=user0_1_.address_id left outer join t_user user0_2_ on user0_.person_id=user0_2_.person_id left outer join t_silly user0_3_ on user0_.person_id=user0_3_.person_id]
+14:14:48,942 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [user0_.person_type='U']
+14:14:48,943 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [user0_.person_type='U']
+14:14:48,943 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:14:48,943 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (person,t_user,address,t_silly)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user0_.person_id as person1_3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=person,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.join.User}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'user0_.name as name3_, user0_.sex as sex3_, user0_.height_centimeters / 2.54E0 as height5_3_, user0_1_.address as address0_, user0_1_.zip as zip0_, user0_1_.country as country0_, user0_2_.u_login as u2_5_, user0_2_.pwd_expiry_weeks * 7.0E0 as pwd3_5_, user0_3_.silly as silly4_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[u], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'person user0_ inner join address user0_1_ on user0_.person_id=user0_1_.address_id left outer join t_user user0_2_ on user0_.person_id=user0_2_.person_id left outer join t_silly user0_3_ on user0_.person_id=user0_3_.person_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=person,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.join.User}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'user0_.person_type='U''
+
+14:14:48,943 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,951 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.join.User u
+14:14:48,951 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.person_id as person1_3_, user0_.name as name3_, user0_.sex as sex3_, user0_.height_centimeters / 2.54E0 as height5_3_, user0_1_.address as address0_, user0_1_.zip as zip0_, user0_1_.country as country0_, user0_2_.u_login as u2_5_, user0_2_.pwd_expiry_weeks * 7.0E0 as pwd3_5_, user0_3_.silly as silly4_ from person user0_ inner join address user0_1_ on user0_.person_id=user0_1_.address_id left outer join t_user user0_2_ on user0_.person_id=user0_2_.person_id left outer join t_silly user0_3_ on user0_.person_id=user0_3_.person_id where user0_.person_type='U'
+14:14:48,951 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:48,952 DEBUG SQL:104 - 
+    select
+        user0_.person_id as person1_3_,
+        user0_.name as name3_,
+        user0_.sex as sex3_,
+        user0_.height_centimeters / 2.54E0 as height5_3_,
+        user0_1_.address as address0_,
+        user0_1_.zip as zip0_,
+        user0_1_.country as country0_,
+        user0_2_.u_login as u2_5_,
+        user0_2_.pwd_expiry_weeks * 7.0E0 as pwd3_5_,
+        user0_3_.silly as silly4_ 
+    from
+        person user0_ 
+    inner join
+        address user0_1_ 
+            on user0_.person_id=user0_1_.address_id 
+    left outer join
+        t_user user0_2_ 
+            on user0_.person_id=user0_2_.person_id 
+    left outer join
+        t_silly user0_3_ 
+            on user0_.person_id=user0_3_.person_id 
+    where
+        user0_.person_type='U'
+14:14:48,953 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_0_,
+        person0_.name as name3_0_,
+        person0_.sex as sex3_0_,
+        person0_.height_centimeters / 2.54E0 as height5_3_0_,
+        person0_1_.address as address0_0_,
+        person0_1_.zip as zip0_0_,
+        person0_1_.country as country0_0_,
+        person0_.person_type as person2_3_0_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        person0_.person_id=? 
+        and (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        )
+14:14:48,962 DEBUG SQL:104 - 
+    select
+        person_4_.u_login as u2_5_,
+        person_4_.pwd_expiry_weeks * 7.0E0 as pwd3_5_,
+        person_5_.silly as silly4_ 
+    from
+        t_user person_4_ 
+    left outer join
+        t_silly person_5_ 
+            on person_4_.person_id=person_5_.person_id 
+    where
+        person_4_.person_id=?
+14:14:48,963 DEBUG SQL:104 - 
+    delete 
+    from
+        t_silly 
+    where
+        person_id=?
+14:14:48,963 DEBUG SQL:104 - 
+    delete 
+    from
+        t_user 
+    where
+        person_id=?
+14:14:48,984 DEBUG SQL:104 - 
+    delete 
+    from
+        address 
+    where
+        address_id=?
+14:14:48,984 DEBUG SQL:104 - 
+    delete 
+    from
+        person 
+    where
+        person_id=?
+14:14:48,985 DEBUG SQL:104 - 
+    select
+        person0_.person_id as person1_3_,
+        person0_.name as name3_,
+        person0_.sex as sex3_,
+        person0_.height_centimeters / 2.54E0 as height5_3_,
+        person0_1_.address as address0_,
+        person0_1_.zip as zip0_,
+        person0_1_.country as country0_,
+        person0_.person_type as person2_3_ 
+    from
+        person person0_ 
+    inner join
+        address person0_1_ 
+            on person0_.person_id=person0_1_.address_id 
+    where
+        (
+            person0_.person_type is null 
+            or person0_.person_type in (
+                'E', 'C', 'U'
+            )
+        )
+14:14:48,995  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:48,995 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:48,996 DEBUG SQL:104 - 
+    alter table address 
+        drop constraint FKBB979BF4E4CA7E09
+14:14:48,996 DEBUG SQL:104 - 
+    alter table customer 
+        drop constraint FK24217FDE8F97811
+14:14:48,996 DEBUG SQL:104 - 
+    alter table customer 
+        drop constraint FK24217FDE7CB62FFD
+14:14:48,996 DEBUG SQL:104 - 
+    alter table employee 
+        drop constraint FK4722E6AE2BFADEE1
+14:14:48,996 DEBUG SQL:104 - 
+    alter table employee 
+        drop constraint FK4722E6AE2AE95449
+14:14:48,996 DEBUG SQL:104 - 
+    alter table t_silly 
+        drop constraint FKA0F52958BE570AFE
+14:14:48,997 DEBUG SQL:104 - 
+    alter table t_user 
+        drop constraint FKCB63CCB6BE570AFE
+14:14:49,005 DEBUG SQL:104 - 
+    drop table address if exists
+14:14:49,006 DEBUG SQL:104 - 
+    drop table customer if exists
+14:14:49,006 DEBUG SQL:104 - 
+    drop table employee if exists
+14:14:49,006 DEBUG SQL:104 - 
+    drop table person if exists
+14:14:49,007 DEBUG SQL:104 - 
+    drop table t_silly if exists
+14:14:49,007 DEBUG SQL:104 - 
+    drop table t_user if exists
+14:14:49,007  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:49,007  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

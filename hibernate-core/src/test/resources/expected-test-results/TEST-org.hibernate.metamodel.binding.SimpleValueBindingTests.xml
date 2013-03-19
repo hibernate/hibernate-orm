@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.metamodel.binding.SimpleValueBindingTests" tests="1" time="0.004" timestamp="2013-02-28T20:09:58">
+  <properties />
+  <testcase classname="org.hibernate.metamodel.binding.SimpleValueBindingTests" name="testBasicMiddleOutBuilding" time="0.001" />
+  <system-out><![CDATA[14:09:58,140  INFO CustomRunner:132 - BeforeClass: org.hibernate.metamodel.binding.SimpleValueBindingTests
+14:09:58,140  INFO CustomRunner:139 - Test: testBasicMiddleOutBuilding
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

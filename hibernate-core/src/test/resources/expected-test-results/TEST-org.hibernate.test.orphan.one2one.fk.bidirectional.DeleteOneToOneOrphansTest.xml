@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.orphan.one2one.fk.bidirectional.DeleteOneToOneOrphansTest" tests="1" time="0.109" timestamp="2013-02-28T20:17:44">
+  <properties />
+  <testcase classname="org.hibernate.test.orphan.one2one.fk.bidirectional.DeleteOneToOneOrphansTest" name="testOrphanedWhileManaged" time="0.071" />
+  <system-out><![CDATA[14:17:44,097  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.orphan.one2one.fk.bidirectional.DeleteOneToOneOrphansTest
+14:17:44,099  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/orphan/one2one/fk/bidirectional/Mapping.hbm.xml
+14:17:44,107  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:44,107  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:44,107  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:44,107  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:44,108  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:44,109  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:44,109  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:44,110  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:44,110  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:44,110  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:44,118  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:44,118 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:44,119 DEBUG SQL:104 - 
+    alter table EmployeeInfo 
+        drop constraint FKA2C20C9C28D9B26A
+14:17:44,119 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EmployeeInfo drop constraint FKA2C20C9C28D9B26A
+14:17:44,119 ERROR SchemaExport:426 - Table "EMPLOYEEINFO" not found; SQL statement:
+
+    alter table EmployeeInfo 
+        drop constraint FKA2C20C9C28D9B26A [42102-145]
+14:17:44,119 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:17:44,119 DEBUG SQL:104 - 
+    drop table EmployeeInfo if exists
+14:17:44,119 DEBUG SQL:104 - 
+    create table Employee (
+        id bigint not null,
+        primary key (id)
+    )
+14:17:44,120 DEBUG SQL:104 - 
+    create table EmployeeInfo (
+        id bigint not null,
+        employee_id bigint not null,
+        primary key (id)
+    )
+14:17:44,120 DEBUG SQL:104 - 
+    alter table EmployeeInfo 
+        add constraint uc_EmployeeInfo_1 unique (employee_id)
+14:17:44,120 DEBUG SQL:104 - 
+    alter table EmployeeInfo 
+        add constraint FKA2C20C9C28D9B26A 
+        foreign key (employee_id) 
+        references Employee
+14:17:44,121  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:44,121  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:44,122  INFO CustomRunner:139 - Test: testOrphanedWhileManaged
+14:17:44,124 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Employee
+14:17:44,124 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        EmployeeInfo
+14:17:44,125 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (id) 
+    values
+        (?)
+14:17:44,125 DEBUG SQL:104 - 
+    insert 
+    into
+        EmployeeInfo
+        (employee_id, id) 
+    values
+        (?, ?)
+14:17:44,128 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.orphan.one2one.fk.bidirectional.EmployeeInfo
+14:17:44,145 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  |  |  \-[IDENT] Node: 'test'
+                |  |  |  |  \-[IDENT] Node: 'orphan'
+                |  |  |  \-[IDENT] Node: 'one2one'
+                |  |  \-[IDENT] Node: 'fk'
+                |  \-[IDENT] Node: 'bidirectional'
+                \-[IDENT] Node: 'EmployeeInfo'
+
+14:17:44,145 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,145 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.orphan.one2one.fk.bidirectional.EmployeeInfo (<no alias>) -> employeein0_
+14:17:44,145 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} EmployeeInfo employeein0_ ) )
+14:17:44,146 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:44,146 DEBUG JoinProcessor:175 - Using FROM fragment [EmployeeInfo employeein0_]
+14:17:44,146 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (EmployeeInfo)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employeein0_.id as id1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=EmployeeInfo,tableAlias=employeein0_,origin=null,columns={,className=org.hibernate.test.orphan.one2one.fk.bidirectional.EmployeeInfo}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'employeein0_.employee_id as employee2_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employeein0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'EmployeeInfo employeein0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=EmployeeInfo,tableAlias=employeein0_,origin=null,columns={,className=org.hibernate.test.orphan.one2one.fk.bidirectional.EmployeeInfo}}
+
+14:17:44,146 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,146 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.orphan.one2one.fk.bidirectional.EmployeeInfo
+14:17:44,146 DEBUG QueryTranslatorImpl:236 - SQL: select employeein0_.id as id1_, employeein0_.employee_id as employee2_1_ from EmployeeInfo employeein0_
+14:17:44,146 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,146 DEBUG SQL:104 - 
+    select
+        employeein0_.id as id1_,
+        employeein0_.employee_id as employee2_1_ 
+    from
+        EmployeeInfo employeein0_
+14:17:44,147 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.orphan.one2one.fk.bidirectional.Employee
+14:17:44,148 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  |  |  \-[IDENT] Node: 'test'
+                |  |  |  |  \-[IDENT] Node: 'orphan'
+                |  |  |  \-[IDENT] Node: 'one2one'
+                |  |  \-[IDENT] Node: 'fk'
+                |  \-[IDENT] Node: 'bidirectional'
+                \-[IDENT] Node: 'Employee'
+
+14:17:44,148 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,148 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.orphan.one2one.fk.bidirectional.Employee (<no alias>) -> employee0_
+14:17:44,148 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Employee employee0_ ) )
+14:17:44,148 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:44,148 DEBUG JoinProcessor:175 - Using FROM fragment [Employee employee0_]
+14:17:44,149 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Employee)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.id as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.orphan.one2one.fk.bidirectional.Employee}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Employee employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.orphan.one2one.fk.bidirectional.Employee}}
+
+14:17:44,149 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,149 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.orphan.one2one.fk.bidirectional.Employee
+14:17:44,149 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.id as id0_ from Employee employee0_
+14:17:44,149 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,149 DEBUG SQL:104 - 
+    select
+        employee0_.id as id0_ 
+    from
+        Employee employee0_
+14:17:44,150 DEBUG SQL:104 - 
+    select
+        employeein0_.id as id1_0_,
+        employeein0_.employee_id as employee2_1_0_ 
+    from
+        EmployeeInfo employeein0_ 
+    where
+        employeein0_.employee_id=?
+14:17:44,151 DEBUG SQL:104 - 
+    delete 
+    from
+        EmployeeInfo 
+    where
+        id=?
+14:17:44,151 DEBUG SQL:104 - 
+    select
+        employee0_.id as id0_1_,
+        employeein1_.id as id1_0_,
+        employeein1_.employee_id as employee2_1_0_ 
+    from
+        Employee employee0_ 
+    left outer join
+        EmployeeInfo employeein1_ 
+            on employee0_.id=employeein1_.employee_id 
+    where
+        employee0_.id=?
+14:17:44,151 DEBUG SQL:104 - 
+    select
+        employeein0_.id as id1_,
+        employeein0_.employee_id as employee2_1_ 
+    from
+        EmployeeInfo employeein0_
+14:17:44,152 DEBUG SQL:104 - 
+    select
+        employee0_.id as id0_ 
+    from
+        Employee employee0_
+14:17:44,152 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.orphan.one2one.fk.bidirectional.EmployeeInfo
+14:17:44,153 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  |  |  \-[IDENT] Node: 'test'
+             |  |  |  |  \-[IDENT] Node: 'orphan'
+             |  |  |  \-[IDENT] Node: 'one2one'
+             |  |  \-[IDENT] Node: 'fk'
+             |  \-[IDENT] Node: 'bidirectional'
+             \-[IDENT] Node: 'EmployeeInfo'
+
+14:17:44,173 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,174 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.orphan.one2one.fk.bidirectional.EmployeeInfo (<no alias>) -> employeein0_
+14:17:44,174 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (EmployeeInfo)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employeein0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'EmployeeInfo' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=EmployeeInfo,tableAlias=employeein0_,origin=null,columns={,className=org.hibernate.test.orphan.one2one.fk.bidirectional.EmployeeInfo}}
+
+14:17:44,174 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,174 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,175 DEBUG SQL:104 - 
+    delete 
+    from
+        EmployeeInfo
+14:17:44,175 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.orphan.one2one.fk.bidirectional.Employee
+14:17:44,176 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  |  |  \-[IDENT] Node: 'test'
+             |  |  |  |  \-[IDENT] Node: 'orphan'
+             |  |  |  \-[IDENT] Node: 'one2one'
+             |  |  \-[IDENT] Node: 'fk'
+             |  \-[IDENT] Node: 'bidirectional'
+             \-[IDENT] Node: 'Employee'
+
+14:17:44,192 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,192 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.orphan.one2one.fk.bidirectional.Employee (<no alias>) -> employee0_
+14:17:44,192 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Employee)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Employee' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.orphan.one2one.fk.bidirectional.Employee}}
+
+14:17:44,192 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,193 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:44,193 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee
+14:17:44,194  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:44,194 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:44,194 DEBUG SQL:104 - 
+    alter table EmployeeInfo 
+        drop constraint FKA2C20C9C28D9B26A
+14:17:44,202 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:17:44,203 DEBUG SQL:104 - 
+    drop table EmployeeInfo if exists
+14:17:44,203  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:44,204  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

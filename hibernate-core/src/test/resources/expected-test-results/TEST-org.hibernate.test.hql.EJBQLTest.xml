@@ -1,0 +1,2286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.hql.EJBQLTest" tests="7" time="1.178" timestamp="2013-02-28T20:13:22">
+  <properties />
+  <testcase classname="org.hibernate.test.hql.EJBQLTest" name="testCollectionMemberDeclaration" time="0.008" />
+  <testcase classname="org.hibernate.test.hql.EJBQLTest" name="testEJBQLFunctions" time="0.386" />
+  <testcase classname="org.hibernate.test.hql.EJBQLTest" name="testEjb3PositionalParameters" time="0.02" />
+  <testcase classname="org.hibernate.test.hql.EJBQLTest" name="testIsEmpty" time="0.095" />
+  <testcase classname="org.hibernate.test.hql.EJBQLTest" name="testMemberOf" time="0.109" />
+  <testcase classname="org.hibernate.test.hql.EJBQLTest" name="testSelectObjectClause" time="0.02" />
+  <testcase classname="org.hibernate.test.hql.EJBQLTest" name="testTrueFalse" time="0.088" />
+  <system-out><![CDATA[14:13:22,509  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.hql.EJBQLTest
+14:13:22,511  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/Animal.hbm.xml
+14:13:22,520  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/batchfetch/ProductLine.hbm.xml
+14:13:22,525  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Customer.hbm.xml
+14:13:22,530  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Order.hbm.xml
+14:13:22,535  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/LineItem.hbm.xml
+14:13:22,541  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Product.hbm.xml
+14:13:22,546  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Glarch.hbm.xml
+14:13:22,552  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Fee.hbm.xml
+14:13:22,557  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Qux.hbm.xml
+14:13:22,563  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Fum.hbm.xml
+14:13:22,569  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Holder.hbm.xml
+14:13:22,574  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/One.hbm.xml
+14:13:22,580  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/FooBar.hbm.xml
+14:13:22,588  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Many.hbm.xml
+14:13:22,593  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Baz.hbm.xml
+14:13:22,602  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Simple.hbm.xml
+14:13:22,608  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Middle.hbm.xml
+14:13:22,613  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Category.hbm.xml
+14:13:22,618  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Multi.hbm.xml
+14:13:22,624  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Commento.hbm.xml
+14:13:22,628  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Marelo.hbm.xml
+14:13:22,634  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/compositeelement/Parent.hbm.xml
+14:13:22,639  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Container.hbm.xml
+14:13:22,675  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:13:22,676  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:13:22,676  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:13:22,676  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:13:22,676  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:13:22,677  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:13:22,678  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:13:22,678  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:13:22,678  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:22,679  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:13:22,951  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:13:22,952  INFO CustomRunner:139 - Test: testCollectionMemberDeclaration
+14:13:22,953  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:22,954 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select o from Animal a inner join a.offspring o
+14:13:22,955 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  +-[RANGE] Node: 'RANGE'
+       |  |  +-[IDENT] Node: 'Animal'
+       |  |  \-[ALIAS] Node: 'a'
+       |  \-[JOIN] Node: 'join'
+       |     +-[INNER] Node: 'inner'
+       |     +-[DOT] Node: '.'
+       |     |  +-[IDENT] Node: 'a'
+       |     |  \-[IDENT] Node: 'offspring'
+       |     \-[ALIAS] Node: 'o'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'o'
+
+14:13:22,955 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,955 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:22,955 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,955 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:22,955 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:22,956 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (o) -> offspring1_
+14:13:22,956 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:22,956 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:22,956 DEBUG FromReferenceNode:74 - Resolved : a.offspring -> .
+14:13:22,956 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Animal offspring1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+
+14:13:22,956 DEBUG FromReferenceNode:74 - Resolved : o -> offspring1_.id
+14:13:22,956 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} offspring1_.id ) ( FromClause{level=1} ( Animal animal0_ Animal offspring1_ ) ) )
+14:13:22,956 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:22,956 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Animal offspring1_ on animal0_.id=offspring1_.mother_id]
+14:13:22,957 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'offspring1_.id as col_0_0_' {alias=o, className=org.hibernate.test.hql.Animal, tableAlias=offspring1_}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a, o], fromElementByTableAlias=[animal0_, offspring1_], fromElementsByPath=[a.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join Animal offspring1_ on animal0_.id=offspring1_.mother_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+
+14:13:22,957 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,957 DEBUG QueryTranslatorImpl:235 - HQL: select o from Animal a inner join a.offspring o
+14:13:22,957 DEBUG QueryTranslatorImpl:236 - SQL: select offspring1_.id as col_0_0_ from Animal animal0_ inner join Animal offspring1_ on animal0_.id=offspring1_.mother_id
+14:13:22,957 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,957 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(o) from Animal a, in(a.offspring) o
+14:13:22,958 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  +-[RANGE] Node: 'RANGE'
+       |  |  +-[IDENT] Node: 'Animal'
+       |  |  \-[ALIAS] Node: 'a'
+       |  \-[JOIN] Node: 'join'
+       |     +-[INNER] Node: 'inner'
+       |     +-[DOT] Node: '.'
+       |     |  +-[IDENT] Node: 'a'
+       |     |  \-[IDENT] Node: 'offspring'
+       |     \-[ALIAS] Node: 'o'
+       \-[SELECT] Node: 'select'
+          \-[OBJECT] Node: 'object'
+             \-[IDENT] Node: 'o'
+
+14:13:22,958 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,958 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:22,958 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,958 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:22,958 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:22,959 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (o) -> offspring1_
+14:13:22,959 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:22,959 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:22,959 DEBUG FromReferenceNode:74 - Resolved : a.offspring -> .
+14:13:22,959 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Animal offspring1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+
+14:13:22,959 DEBUG FromReferenceNode:74 - Resolved : o -> offspring1_.id
+14:13:22,959 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} offspring1_.id ) ( FromClause{level=1} ( Animal animal0_ Animal offspring1_ ) ) )
+14:13:22,959 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:22,960 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Animal offspring1_ on animal0_.id=offspring1_.mother_id]
+14:13:22,960 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'offspring1_.id as col_0_0_' {alias=o, className=org.hibernate.test.hql.Animal, tableAlias=offspring1_}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a, o], fromElementByTableAlias=[animal0_, offspring1_], fromElementsByPath=[a.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join Animal offspring1_ on animal0_.id=offspring1_.mother_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+
+14:13:22,960 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,960 DEBUG QueryTranslatorImpl:235 - HQL: select object(o) from Animal a, in(a.offspring) o
+14:13:22,960 DEBUG QueryTranslatorImpl:236 - SQL: select offspring1_.id as col_0_0_ from Animal animal0_ inner join Animal offspring1_ on animal0_.id=offspring1_.mother_id
+14:13:22,960 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,961  INFO CustomRunner:139 - Test: testEJBQLFunctions
+14:13:22,962  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:22,962 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where a.description = concat('1', concat('2','3'), '4'||'5')||0
+14:13:22,963 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'a'
+          |  \-[IDENT] Node: 'description'
+          \-[METHOD_CALL] Node: '||'
+             +-[IDENT] Node: 'concat'
+             \-[EXPR_LIST] Node: 'concatList'
+                +-[METHOD_CALL] Node: '('
+                |  +-[IDENT] Node: 'concat'
+                |  \-[EXPR_LIST] Node: 'exprList'
+                |     +-[QUOTED_STRING] Node: ''1''
+                |     +-[METHOD_CALL] Node: '('
+                |     |  +-[IDENT] Node: 'concat'
+                |     |  \-[EXPR_LIST] Node: 'exprList'
+                |     |     +-[QUOTED_STRING] Node: ''2''
+                |     |     \-[QUOTED_STRING] Node: ''3''
+                |     \-[METHOD_CALL] Node: '||'
+                |        +-[IDENT] Node: 'concat'
+                |        \-[EXPR_LIST] Node: 'concatList'
+                |           +-[QUOTED_STRING] Node: ''4''
+                |           \-[QUOTED_STRING] Node: ''5''
+                \-[NUM_INT] Node: '0'
+
+14:13:22,963 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,963 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:22,963 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,963 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,964 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:22,964 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:22,964 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( = ( animal0_.description animal0_.id description ) ( || concat ( concatList ( ( concat ( exprList '1' ( ( concat ( exprList '2' '3' ) ) ( || concat ( concatList '4' '5' ) ) ) ) 0 ) ) ) ) )
+14:13:22,964 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:22,964 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+          |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |  \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[METHOD_CALL] MethodNode: '||'
+             +-[METHOD_NAME] IdentNode: 'concat' {originalText=concat}
+             \-[EXPR_LIST] SqlNode: 'concatList'
+                +-[METHOD_CALL] MethodNode: '('
+                |  +-[METHOD_NAME] IdentNode: 'concat' {originalText=concat}
+                |  \-[EXPR_LIST] SqlNode: 'exprList'
+                |     +-[QUOTED_STRING] LiteralNode: ''1''
+                |     +-[METHOD_CALL] MethodNode: '('
+                |     |  +-[METHOD_NAME] IdentNode: 'concat' {originalText=concat}
+                |     |  \-[EXPR_LIST] SqlNode: 'exprList'
+                |     |     +-[QUOTED_STRING] LiteralNode: ''2''
+                |     |     \-[QUOTED_STRING] LiteralNode: ''3''
+                |     \-[METHOD_CALL] MethodNode: '||'
+                |        +-[METHOD_NAME] IdentNode: 'concat' {originalText=concat}
+                |        \-[EXPR_LIST] SqlNode: 'concatList'
+                |           +-[QUOTED_STRING] LiteralNode: ''4''
+                |           \-[QUOTED_STRING] LiteralNode: ''5''
+                \-[NUM_INT] LiteralNode: '0'
+
+14:13:22,965 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,965 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where a.description = concat('1', concat('2','3'), '4'||'5')||0
+14:13:22,965 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.description=(('1'||('2'||'3')||('4'||'5'))||0)
+14:13:22,965 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.description=(('1'||('2'||'3')||('4'||'5'))||0)
+14:13:22,965  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:22,965 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Animal a where substring(a.description, 1, 3) = :p1
+14:13:22,966 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Animal'
+    |        \-[ALIAS] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'substring'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     +-[DOT] Node: '.'
+          |     |  +-[IDENT] Node: 'a'
+          |     |  \-[IDENT] Node: 'description'
+          |     +-[NUM_INT] Node: '1'
+          |     \-[NUM_INT] Node: '3'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'p1'
+
+14:13:22,966 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,976 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:22,976 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,976 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:22,977 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:22,977 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Animal animal0_ ) ( where ( = ( ( substring ( exprList ( animal0_.description animal0_.id description ) 1 3 ) ) ? ) ) )
+14:13:22,977 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:22,977 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:22,977 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'substring' {originalText=substring}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     +-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+          |     |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |     |  \-[IDENT] IdentNode: 'description' {originalText=description}
+          |     +-[NUM_INT] LiteralNode: '1'
+          |     \-[NUM_INT] LiteralNode: '3'
+          \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:13:22,978 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,978 DEBUG QueryTranslatorImpl:235 - HQL: from Animal a where substring(a.description, 1, 3) = :p1
+14:13:22,978 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where substring(animal0_.description, 1, 3)=?
+14:13:22,978 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where substring(animal0_.description, 1, 3)=?
+14:13:22,978  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:22,978 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select substring(a.description, 1, 3) from Animal a
+14:13:22,979 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Animal'
+       |     \-[ALIAS] Node: 'a'
+       \-[SELECT] Node: 'select'
+          \-[METHOD_CALL] Node: '('
+             +-[IDENT] Node: 'substring'
+             \-[EXPR_LIST] Node: 'exprList'
+                +-[DOT] Node: '.'
+                |  +-[IDENT] Node: 'a'
+                |  \-[IDENT] Node: 'description'
+                +-[NUM_INT] Node: '1'
+                \-[NUM_INT] Node: '3'
+
+14:13:22,979 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,979 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:22,980 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,980 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:22,980 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:22,980 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( ( substring ( exprList ( animal0_.description animal0_.id description ) 1 3 ) ) ) ( FromClause{level=1} Animal animal0_ ) )
+14:13:22,980 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:22,980 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[METHOD_CALL] MethodNode: '('
+    |  |  +-[METHOD_NAME] IdentNode: 'substring' {originalText=substring}
+    |  |  \-[EXPR_LIST] SqlNode: 'exprList'
+    |  |     +-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+    |  |     |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+    |  |     |  \-[IDENT] IdentNode: 'description' {originalText=description}
+    |  |     +-[NUM_INT] LiteralNode: '1'
+    |  |     \-[NUM_INT] LiteralNode: '3'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+
+14:13:22,981 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,981 DEBUG QueryTranslatorImpl:235 - HQL: select substring(a.description, 1, 3) from Animal a
+14:13:22,981 DEBUG QueryTranslatorImpl:236 - SQL: select substring(animal0_.description, 1, 3) as col_0_0_ from Animal animal0_
+14:13:22,981 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select substring(animal0_.description, 1, 3) as col_0_0_ from Animal animal0_
+14:13:22,981  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:22,981 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Animal a where lower(a.description) = :p1
+14:13:22,982 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Animal'
+    |        \-[ALIAS] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'lower'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     \-[DOT] Node: '.'
+          |        +-[IDENT] Node: 'a'
+          |        \-[IDENT] Node: 'description'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'p1'
+
+14:13:22,982 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,983 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:22,983 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,983 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:22,983 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:22,983 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Animal animal0_ ) ( where ( = ( ( lower ( exprList ( animal0_.description animal0_.id description ) ) ) ? ) ) )
+14:13:22,983 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:22,983 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:22,984 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'lower' {originalText=lower}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     \-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+          |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |        \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:13:22,984 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,984 DEBUG QueryTranslatorImpl:235 - HQL: from Animal a where lower(a.description) = :p1
+14:13:22,984 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where lower(animal0_.description)=?
+14:13:22,984 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where lower(animal0_.description)=?
+14:13:22,985  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:22,985 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select lower(a.description) from Animal a
+14:13:22,985 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Animal'
+       |     \-[ALIAS] Node: 'a'
+       \-[SELECT] Node: 'select'
+          \-[METHOD_CALL] Node: '('
+             +-[IDENT] Node: 'lower'
+             \-[EXPR_LIST] Node: 'exprList'
+                \-[DOT] Node: '.'
+                   +-[IDENT] Node: 'a'
+                   \-[IDENT] Node: 'description'
+
+14:13:22,986 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,986 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:22,986 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,986 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:22,986 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:22,986 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( ( lower ( exprList ( animal0_.description animal0_.id description ) ) ) ) ( FromClause{level=1} Animal animal0_ ) )
+14:13:22,987 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:22,987 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[METHOD_CALL] MethodNode: '('
+    |  |  +-[METHOD_NAME] IdentNode: 'lower' {originalText=lower}
+    |  |  \-[EXPR_LIST] SqlNode: 'exprList'
+    |  |     \-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+    |  |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+    |  |        \-[IDENT] IdentNode: 'description' {originalText=description}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+
+14:13:22,987 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,987 DEBUG QueryTranslatorImpl:235 - HQL: select lower(a.description) from Animal a
+14:13:22,987 DEBUG QueryTranslatorImpl:236 - SQL: select lower(animal0_.description) as col_0_0_ from Animal animal0_
+14:13:22,987 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select lower(animal0_.description) as col_0_0_ from Animal animal0_
+14:13:22,988  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:22,988 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Animal a where upper(a.description) = :p1
+14:13:22,989 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Animal'
+    |        \-[ALIAS] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'upper'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     \-[DOT] Node: '.'
+          |        +-[IDENT] Node: 'a'
+          |        \-[IDENT] Node: 'description'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'p1'
+
+14:13:22,989 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,989 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:22,989 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,989 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:22,989 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:22,990 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Animal animal0_ ) ( where ( = ( ( upper ( exprList ( animal0_.description animal0_.id description ) ) ) ? ) ) )
+14:13:22,990 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:22,990 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:22,990 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'upper' {originalText=upper}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     \-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+          |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |        \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:13:22,990 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,990 DEBUG QueryTranslatorImpl:235 - HQL: from Animal a where upper(a.description) = :p1
+14:13:22,991 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where upper(animal0_.description)=?
+14:13:22,991 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where upper(animal0_.description)=?
+14:13:22,991  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:22,991 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select upper(a.description) from Animal a
+14:13:22,992 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Animal'
+       |     \-[ALIAS] Node: 'a'
+       \-[SELECT] Node: 'select'
+          \-[METHOD_CALL] Node: '('
+             +-[IDENT] Node: 'upper'
+             \-[EXPR_LIST] Node: 'exprList'
+                \-[DOT] Node: '.'
+                   +-[IDENT] Node: 'a'
+                   \-[IDENT] Node: 'description'
+
+14:13:22,992 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,992 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:22,992 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,992 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:22,992 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:22,992 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( ( upper ( exprList ( animal0_.description animal0_.id description ) ) ) ) ( FromClause{level=1} Animal animal0_ ) )
+14:13:22,993 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:22,993 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[METHOD_CALL] MethodNode: '('
+    |  |  +-[METHOD_NAME] IdentNode: 'upper' {originalText=upper}
+    |  |  \-[EXPR_LIST] SqlNode: 'exprList'
+    |  |     \-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+    |  |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+    |  |        \-[IDENT] IdentNode: 'description' {originalText=description}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+
+14:13:22,993 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,993 DEBUG QueryTranslatorImpl:235 - HQL: select upper(a.description) from Animal a
+14:13:22,993 DEBUG QueryTranslatorImpl:236 - SQL: select upper(animal0_.description) as col_0_0_ from Animal animal0_
+14:13:22,993 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select upper(animal0_.description) as col_0_0_ from Animal animal0_
+14:13:22,993  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:22,994 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Animal a where length(a.description) = :p1
+14:13:22,994 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Animal'
+    |        \-[ALIAS] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'length'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     \-[DOT] Node: '.'
+          |        +-[IDENT] Node: 'a'
+          |        \-[IDENT] Node: 'description'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'p1'
+
+14:13:22,994 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,994 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:22,994 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,995 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:22,995 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:22,995 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Animal animal0_ ) ( where ( = ( ( length ( exprList ( animal0_.description animal0_.id description ) ) ) ? ) ) )
+14:13:22,995 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:22,995 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:22,995 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'length' {originalText=length}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     \-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+          |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |        \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.IntegerType@42252fee}
+
+14:13:22,996 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,996 DEBUG QueryTranslatorImpl:235 - HQL: from Animal a where length(a.description) = :p1
+14:13:22,996 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where length(animal0_.description)=?
+14:13:22,996 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where length(animal0_.description)=?
+14:13:22,996  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:22,996 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select length(a.description) from Animal a
+14:13:22,997 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Animal'
+       |     \-[ALIAS] Node: 'a'
+       \-[SELECT] Node: 'select'
+          \-[METHOD_CALL] Node: '('
+             +-[IDENT] Node: 'length'
+             \-[EXPR_LIST] Node: 'exprList'
+                \-[DOT] Node: '.'
+                   +-[IDENT] Node: 'a'
+                   \-[IDENT] Node: 'description'
+
+14:13:22,997 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,997 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:22,997 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:22,997 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:22,998 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:22,998 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( ( length ( exprList ( animal0_.description animal0_.id description ) ) ) ) ( FromClause{level=1} Animal animal0_ ) )
+14:13:22,998 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:22,998 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[METHOD_CALL] MethodNode: '('
+    |  |  +-[METHOD_NAME] IdentNode: 'length' {originalText=length}
+    |  |  \-[EXPR_LIST] SqlNode: 'exprList'
+    |  |     \-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+    |  |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+    |  |        \-[IDENT] IdentNode: 'description' {originalText=description}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+
+14:13:22,998 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:22,998 DEBUG QueryTranslatorImpl:235 - HQL: select length(a.description) from Animal a
+14:13:22,998 DEBUG QueryTranslatorImpl:236 - SQL: select length(animal0_.description) as col_0_0_ from Animal animal0_
+14:13:22,998 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select length(animal0_.description) as col_0_0_ from Animal animal0_
+14:13:22,999  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,000 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Animal a where locate(a.description, 'abc', 2) = :p1
+14:13:23,000 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Animal'
+    |        \-[ALIAS] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'locate'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     +-[DOT] Node: '.'
+          |     |  +-[IDENT] Node: 'a'
+          |     |  \-[IDENT] Node: 'description'
+          |     +-[QUOTED_STRING] Node: ''abc''
+          |     \-[NUM_INT] Node: '2'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'p1'
+
+14:13:23,012 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,012 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,013 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,013 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:23,013 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:23,013 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Animal animal0_ ) ( where ( = ( ( locate ( exprList ( animal0_.description animal0_.id description ) 'abc' 2 ) ) ? ) ) )
+14:13:23,013 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,013 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,014 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'locate' {originalText=locate}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     +-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+          |     |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |     |  \-[IDENT] IdentNode: 'description' {originalText=description}
+          |     +-[QUOTED_STRING] LiteralNode: ''abc''
+          |     \-[NUM_INT] LiteralNode: '2'
+          \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.IntegerType@42252fee}
+
+14:13:23,014 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,014 DEBUG QueryTranslatorImpl:235 - HQL: from Animal a where locate(a.description, 'abc', 2) = :p1
+14:13:23,014 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where locate(animal0_.description, 'abc', 2)=?
+14:13:23,014 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where locate(animal0_.description, 'abc', 2)=?
+14:13:23,014  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,015 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select locate(a.description, :p1, 2) from Animal a
+14:13:23,015 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Animal'
+       |     \-[ALIAS] Node: 'a'
+       \-[SELECT] Node: 'select'
+          \-[METHOD_CALL] Node: '('
+             +-[IDENT] Node: 'locate'
+             \-[EXPR_LIST] Node: 'exprList'
+                +-[DOT] Node: '.'
+                |  +-[IDENT] Node: 'a'
+                |  \-[IDENT] Node: 'description'
+                +-[COLON] Node: ':'
+                |  \-[IDENT] Node: 'p1'
+                \-[NUM_INT] Node: '2'
+
+14:13:23,027 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,028 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,028 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,028 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:23,029 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:23,029 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( ( locate ( exprList ( animal0_.description animal0_.id description ) ? 2 ) ) ) ( FromClause{level=1} Animal animal0_ ) )
+14:13:23,029 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,029 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[METHOD_CALL] MethodNode: '('
+    |  |  +-[METHOD_NAME] IdentNode: 'locate' {originalText=locate}
+    |  |  \-[EXPR_LIST] SqlNode: 'exprList'
+    |  |     +-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+    |  |     |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+    |  |     |  \-[IDENT] IdentNode: 'description' {originalText=description}
+    |  |     +-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=null}
+    |  |     \-[NUM_INT] LiteralNode: '2'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+
+14:13:23,030 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,030 DEBUG QueryTranslatorImpl:235 - HQL: select locate(a.description, :p1, 2) from Animal a
+14:13:23,030 DEBUG QueryTranslatorImpl:236 - SQL: select locate(animal0_.description, ?, 2) as col_0_0_ from Animal animal0_
+14:13:23,030 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select locate(animal0_.description, ?, 2) as col_0_0_ from Animal animal0_
+14:13:23,030  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,044 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where trim(trailing '_' from a.description) = :p1
+14:13:23,045 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'trim'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     +-[IDENT] Node: 'trailing'
+          |     +-[QUOTED_STRING] Node: ''_''
+          |     +-[IDENT] Node: 'from'
+          |     \-[DOT] Node: '.'
+          |        +-[IDENT] Node: 'a'
+          |        \-[IDENT] Node: 'description'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'p1'
+
+14:13:23,045 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,046 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,046 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,047 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,047 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:23,092 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:23,093 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( = ( ( trim ( exprList trailing '_' from ( animal0_.description animal0_.id description ) ) ) ? ) ) )
+14:13:23,093 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,093 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'trim' {originalText=trim}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     +-[IDENT] IdentNode: 'trailing' {originalText=trailing}
+          |     +-[QUOTED_STRING] LiteralNode: ''_''
+          |     +-[IDENT] IdentNode: 'from' {originalText=from}
+          |     \-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+          |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |        \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:13:23,107 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,108 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where trim(trailing '_' from a.description) = :p1
+14:13:23,108 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where trim(trailing '_' from animal0_.description)=?
+14:13:23,108 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where trim(trailing '_' from animal0_.description)=?
+14:13:23,109  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,109 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select trim(trailing '_' from a.description) from Animal a
+14:13:23,110 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Animal'
+       |     \-[ALIAS] Node: 'a'
+       \-[SELECT] Node: 'select'
+          \-[METHOD_CALL] Node: '('
+             +-[IDENT] Node: 'trim'
+             \-[EXPR_LIST] Node: 'exprList'
+                +-[IDENT] Node: 'trailing'
+                +-[QUOTED_STRING] Node: ''_''
+                +-[IDENT] Node: 'from'
+                \-[DOT] Node: '.'
+                   +-[IDENT] Node: 'a'
+                   \-[IDENT] Node: 'description'
+
+14:13:23,126 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,127 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,128 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,128 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:23,128 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:23,129 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( ( trim ( exprList trailing '_' from ( animal0_.description animal0_.id description ) ) ) ) ( FromClause{level=1} Animal animal0_ ) )
+14:13:23,129 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,129 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[METHOD_CALL] MethodNode: '('
+    |  |  +-[METHOD_NAME] IdentNode: 'trim' {originalText=trim}
+    |  |  \-[EXPR_LIST] SqlNode: 'exprList'
+    |  |     +-[IDENT] IdentNode: 'trailing' {originalText=trailing}
+    |  |     +-[QUOTED_STRING] LiteralNode: ''_''
+    |  |     +-[IDENT] IdentNode: 'from' {originalText=from}
+    |  |     \-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+    |  |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+    |  |        \-[IDENT] IdentNode: 'description' {originalText=description}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+
+14:13:23,129 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,129 DEBUG QueryTranslatorImpl:235 - HQL: select trim(trailing '_' from a.description) from Animal a
+14:13:23,129 DEBUG QueryTranslatorImpl:236 - SQL: select trim(trailing '_' from animal0_.description) as col_0_0_ from Animal animal0_
+14:13:23,129 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select trim(trailing '_' from animal0_.description) as col_0_0_ from Animal animal0_
+14:13:23,136  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,136 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where trim(leading '_' from a.description) = :p1
+14:13:23,138 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'trim'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     +-[IDENT] Node: 'leading'
+          |     +-[QUOTED_STRING] Node: ''_''
+          |     +-[IDENT] Node: 'from'
+          |     \-[DOT] Node: '.'
+          |        +-[IDENT] Node: 'a'
+          |        \-[IDENT] Node: 'description'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'p1'
+
+14:13:23,138 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,138 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,138 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,139 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,140 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:23,140 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:23,140 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( = ( ( trim ( exprList leading '_' from ( animal0_.description animal0_.id description ) ) ) ? ) ) )
+14:13:23,140 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,140 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'trim' {originalText=trim}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     +-[IDENT] IdentNode: 'leading' {originalText=leading}
+          |     +-[QUOTED_STRING] LiteralNode: ''_''
+          |     +-[IDENT] IdentNode: 'from' {originalText=from}
+          |     \-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+          |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |        \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:13:23,141 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,141 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where trim(leading '_' from a.description) = :p1
+14:13:23,141 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where trim(leading '_' from animal0_.description)=?
+14:13:23,141 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where trim(leading '_' from animal0_.description)=?
+14:13:23,150  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,150 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where trim(both a.description) = :p1
+14:13:23,151 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'trim'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     +-[IDENT] Node: 'both'
+          |     \-[DOT] Node: '.'
+          |        +-[IDENT] Node: 'a'
+          |        \-[IDENT] Node: 'description'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'p1'
+
+14:13:23,153 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,153 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,153 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,154 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,175 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:23,175 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:23,175 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( = ( ( trim ( exprList both ( animal0_.description animal0_.id description ) ) ) ? ) ) )
+14:13:23,175 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,176 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'trim' {originalText=trim}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     +-[IDENT] IdentNode: 'both' {originalText=both}
+          |     \-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+          |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |        \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:13:23,176 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,176  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 4 arguments, but 2 arguments encountered
+14:13:23,176 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where trim(both a.description) = :p1
+14:13:23,176 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where trim(both animal0_.description)=?
+14:13:23,176 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where trim(both animal0_.description)=?
+14:13:23,177  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,177 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where trim(a.description) = :p1
+14:13:23,183 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'trim'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     \-[DOT] Node: '.'
+          |        +-[IDENT] Node: 'a'
+          |        \-[IDENT] Node: 'description'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'p1'
+
+14:13:23,193 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,193 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,194 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,194 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,194 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:23,194 DEBUG FromReferenceNode:74 - Resolved : a.description -> animal0_.description
+14:13:23,194 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( = ( ( trim ( exprList ( animal0_.description animal0_.id description ) ) ) ? ) ) )
+14:13:23,195 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,195 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'trim' {originalText=trim}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     \-[DOT] DotNode: 'animal0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=a.description,tableAlias=animal0_,className=Animal,classAlias=a}
+          |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |        \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:13:23,205 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,205  WARN TemplateRenderer:103 - HHH000174: Function template anticipated 4 arguments, but 1 arguments encountered
+14:13:23,205 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where trim(a.description) = :p1
+14:13:23,205 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where trim(animal0_.description)=?
+14:13:23,205 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where trim(animal0_.description)=?
+14:13:23,206  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,206 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where abs(a.bodyWeight) = sqrt(a.bodyWeight)
+14:13:23,207 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'abs'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     \-[DOT] Node: '.'
+          |        +-[IDENT] Node: 'a'
+          |        \-[IDENT] Node: 'bodyWeight'
+          \-[METHOD_CALL] Node: '('
+             +-[IDENT] Node: 'sqrt'
+             \-[EXPR_LIST] Node: 'exprList'
+                \-[DOT] Node: '.'
+                   +-[IDENT] Node: 'a'
+                   \-[IDENT] Node: 'bodyWeight'
+
+14:13:23,215 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,215 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,216 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,216 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,216 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:23,216 DEBUG FromReferenceNode:74 - Resolved : a.bodyWeight -> animal0_.body_weight
+14:13:23,216 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,216 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:23,217 DEBUG FromReferenceNode:74 - Resolved : a.bodyWeight -> animal0_.body_weight
+14:13:23,217 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( = ( ( abs ( exprList ( animal0_.body_weight animal0_.id bodyWeight ) ) ) ( ( sqrt ( exprList ( animal0_.body_weight animal0_.id bodyWeight ) ) ) ) ) )
+14:13:23,217 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,217 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'abs' {originalText=abs}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     \-[DOT] DotNode: 'animal0_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=a.bodyWeight,tableAlias=animal0_,className=Animal,classAlias=a}
+          |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |        \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+          \-[METHOD_CALL] MethodNode: '('
+             +-[METHOD_NAME] IdentNode: 'sqrt' {originalText=sqrt}
+             \-[EXPR_LIST] SqlNode: 'exprList'
+                \-[DOT] DotNode: 'animal0_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=a.bodyWeight,tableAlias=animal0_,className=Animal,classAlias=a}
+                   +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+                   \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+
+14:13:23,224 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,224 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where abs(a.bodyWeight) = sqrt(a.bodyWeight)
+14:13:23,224 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where abs(animal0_.body_weight)=sqrt(animal0_.body_weight)
+14:13:23,224 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where abs(animal0_.body_weight)=sqrt(animal0_.body_weight)
+14:13:23,225  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,225 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where mod(a.bodyWeight, a.mother.bodyWeight) = :p1
+14:13:23,226 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'mod'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     +-[DOT] Node: '.'
+          |     |  +-[IDENT] Node: 'a'
+          |     |  \-[IDENT] Node: 'bodyWeight'
+          |     \-[DOT] Node: '.'
+          |        +-[DOT] Node: '.'
+          |        |  +-[IDENT] Node: 'a'
+          |        |  \-[IDENT] Node: 'mother'
+          |        \-[IDENT] Node: 'bodyWeight'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'p1'
+
+14:13:23,233 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,233 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,234 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,234 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,234 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:23,234 DEBUG FromReferenceNode:74 - Resolved : a.bodyWeight -> animal0_.body_weight
+14:13:23,234 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,234 DEBUG DotNode:599 - getDataType() : mother -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:23,235 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for mother in Animal (<no alias>) parent = [  ( . ( . animal0_.id mother ) bodyWeight ) ]
+14:13:23,235 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> animal1_
+14:13:23,235 DEBUG FromClause:282 - addJoinByPathMap() : a.mother -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal1_,origin=Animal animal0_,columns={animal0_.mother_id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,235 DEBUG FromReferenceNode:74 - Resolved : a.mother -> animal0_.mother_id
+14:13:23,235 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:23,235 DEBUG FromReferenceNode:74 - Resolved : a.mother.bodyWeight -> animal1_.body_weight
+14:13:23,236 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ Animal animal1_ ) ( where ( = ( ( mod ( exprList ( animal0_.body_weight animal0_.id bodyWeight ) ( animal1_.body_weight ( animal0_.mother_id animal0_.id mother ) bodyWeight ) ) ) ? ) ) )
+14:13:23,236 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,242 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [animal0_.mother_id=animal1_.id]
+14:13:23,243 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [animal0_.mother_id=animal1_.id]
+14:13:23,243 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_, animal1_], fromElementsByPath=[a.mother], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: 'Animal animal1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal1_,origin=Animal animal0_,columns={animal0_.mother_id ,className=org.hibernate.test.hql.Animal}}
+    \-[WHERE] SqlNode: 'where'
+       +-[THETA_JOINS] SqlNode: '{theta joins}'
+       |  \-[SQL_TOKEN] SqlFragment: 'animal0_.mother_id=animal1_.id'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'mod' {originalText=mod}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     +-[DOT] DotNode: 'animal0_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=a.bodyWeight,tableAlias=animal0_,className=Animal,classAlias=a}
+          |     |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |     |  \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+          |     \-[DOT] DotNode: 'animal1_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=a.mother.bodyWeight,tableAlias=animal1_,className=org.hibernate.test.hql.Animal,classAlias=null}
+          |        +-[DOT] DotNode: 'animal0_.mother_id' {propertyName=mother,dereferenceType=EOF,propertyPath=mother,path=a.mother,tableAlias=animal1_,className=org.hibernate.test.hql.Animal,classAlias=null}
+          |        |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |        |  \-[IDENT] IdentNode: 'mother' {originalText=mother}
+          |        \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.IntegerType@42252fee}
+
+14:13:23,243 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,243 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where mod(a.bodyWeight, a.mother.bodyWeight) = :p1
+14:13:23,243 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ cross join Animal animal1_ where animal0_.mother_id=animal1_.id and mod(animal0_.body_weight, animal1_.body_weight)=?
+14:13:23,244 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ cross join Animal animal1_ where animal0_.mother_id=animal1_.id and mod(animal0_.body_weight, animal1_.body_weight)=?
+14:13:23,251  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,251 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where BIT_LENGTH(a.bodyWeight) = :p1
+14:13:23,252 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'BIT_LENGTH'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     \-[DOT] Node: '.'
+          |        +-[IDENT] Node: 'a'
+          |        \-[IDENT] Node: 'bodyWeight'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'p1'
+
+14:13:23,252 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,252 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,252 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,252 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,261 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:23,261 DEBUG FromReferenceNode:74 - Resolved : a.bodyWeight -> animal0_.body_weight
+14:13:23,262 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( = ( ( BIT_LENGTH ( exprList ( animal0_.body_weight animal0_.id bodyWeight ) ) ) ? ) ) )
+14:13:23,262 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,262 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'BIT_LENGTH' {originalText=BIT_LENGTH}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     \-[DOT] DotNode: 'animal0_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=a.bodyWeight,tableAlias=animal0_,className=Animal,classAlias=a}
+          |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |        \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.IntegerType@42252fee}
+
+14:13:23,262 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,262 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where BIT_LENGTH(a.bodyWeight) = :p1
+14:13:23,262 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where bit_length(animal0_.body_weight)=?
+14:13:23,262 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where bit_length(animal0_.body_weight)=?
+14:13:23,263  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,263 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select BIT_LENGTH(a.bodyWeight) from Animal a
+14:13:23,264 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Animal'
+       |     \-[ALIAS] Node: 'a'
+       \-[SELECT] Node: 'select'
+          \-[METHOD_CALL] Node: '('
+             +-[IDENT] Node: 'BIT_LENGTH'
+             \-[EXPR_LIST] Node: 'exprList'
+                \-[DOT] Node: '.'
+                   +-[IDENT] Node: 'a'
+                   \-[IDENT] Node: 'bodyWeight'
+
+14:13:23,264 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,264 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,264 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,264 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:23,264 DEBUG FromReferenceNode:74 - Resolved : a.bodyWeight -> animal0_.body_weight
+14:13:23,264 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( ( BIT_LENGTH ( exprList ( animal0_.body_weight animal0_.id bodyWeight ) ) ) ) ( FromClause{level=1} Animal animal0_ ) )
+14:13:23,265 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,265 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[METHOD_CALL] MethodNode: '('
+    |  |  +-[METHOD_NAME] IdentNode: 'BIT_LENGTH' {originalText=BIT_LENGTH}
+    |  |  \-[EXPR_LIST] SqlNode: 'exprList'
+    |  |     \-[DOT] DotNode: 'animal0_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=a.bodyWeight,tableAlias=animal0_,className=Animal,classAlias=a}
+    |  |        +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+    |  |        \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+
+14:13:23,274 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,274 DEBUG QueryTranslatorImpl:235 - HQL: select BIT_LENGTH(a.bodyWeight) from Animal a
+14:13:23,275 DEBUG QueryTranslatorImpl:236 - SQL: select bit_length(animal0_.body_weight) as col_0_0_ from Animal animal0_
+14:13:23,275 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select bit_length(animal0_.body_weight) as col_0_0_ from Animal animal0_
+14:13:23,275  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,275 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where CURRENT_DATE = :p1 or CURRENT_TIME = :p2 or CURRENT_TIMESTAMP = :p3
+14:13:23,275 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[OR] Node: 'or'
+          +-[OR] Node: 'or'
+          |  +-[EQ] Node: '='
+          |  |  +-[IDENT] Node: 'CURRENT_DATE'
+          |  |  \-[COLON] Node: ':'
+          |  |     \-[IDENT] Node: 'p1'
+          |  \-[EQ] Node: '='
+          |     +-[IDENT] Node: 'CURRENT_TIME'
+          |     \-[COLON] Node: ':'
+          |        \-[IDENT] Node: 'p2'
+          \-[EQ] Node: '='
+             +-[IDENT] Node: 'CURRENT_TIMESTAMP'
+             \-[COLON] Node: ':'
+                \-[IDENT] Node: 'p3'
+
+14:13:23,286 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,287 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,287 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,289 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( or ( or ( = CURRENT_DATE ? ) ( = CURRENT_TIME ? ) ) ( = CURRENT_TIMESTAMP ? ) ) ) )
+14:13:23,289 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,290 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[OR] SqlNode: 'or'
+          +-[OR] SqlNode: 'or'
+          |  +-[EQ] BinaryLogicOperatorNode: '='
+          |  |  +-[IDENT] IdentNode: 'CURRENT_DATE' {originalText=CURRENT_DATE}
+          |  |  \-[NAMED_PARAM] ParameterNode: '?' {name=p1, expectedType=org.hibernate.type.DateType@126554a2}
+          |  \-[EQ] BinaryLogicOperatorNode: '='
+          |     +-[IDENT] IdentNode: 'CURRENT_TIME' {originalText=CURRENT_TIME}
+          |     \-[NAMED_PARAM] ParameterNode: '?' {name=p2, expectedType=org.hibernate.type.TimeType@7ea2e345}
+          \-[EQ] BinaryLogicOperatorNode: '='
+             +-[IDENT] IdentNode: 'CURRENT_TIMESTAMP' {originalText=CURRENT_TIMESTAMP}
+             \-[NAMED_PARAM] ParameterNode: '?' {name=p3, expectedType=org.hibernate.type.TimestampType@54a68bb4}
+
+14:13:23,296 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,297 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where CURRENT_DATE = :p1 or CURRENT_TIME = :p2 or CURRENT_TIMESTAMP = :p3
+14:13:23,297 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where CURRENT_DATE=? or CURRENT_TIME=? or CURRENT_TIMESTAMP=?
+14:13:23,297 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where CURRENT_DATE=? or CURRENT_TIME=? or CURRENT_TIMESTAMP=?
+14:13:23,297  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,297 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where a.bodyWeight like '%a%'
+14:13:23,298 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'a'
+          |  \-[IDENT] Node: 'bodyWeight'
+          \-[QUOTED_STRING] Node: ''%a%''
+
+14:13:23,305 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,306 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,306 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,306 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,306 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:23,306 DEBUG FromReferenceNode:74 - Resolved : a.bodyWeight -> animal0_.body_weight
+14:13:23,307 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( like ( animal0_.body_weight animal0_.id bodyWeight ) '%a%' ) ) )
+14:13:23,307 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,307 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'animal0_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=a.bodyWeight,tableAlias=animal0_,className=Animal,classAlias=a}
+          |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |  \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+          \-[QUOTED_STRING] LiteralNode: ''%a%''
+
+14:13:23,315 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,316 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where a.bodyWeight like '%a%'
+14:13:23,316 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.body_weight like '%a%'
+14:13:23,316 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.body_weight like '%a%'
+14:13:23,316  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,316 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where a.bodyWeight not like '%a%'
+14:13:23,317 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[NOT_LIKE] Node: 'not like'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'a'
+          |  \-[IDENT] Node: 'bodyWeight'
+          \-[QUOTED_STRING] Node: ''%a%''
+
+14:13:23,317 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,326 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,326 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,326 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,326 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:23,327 DEBUG FromReferenceNode:74 - Resolved : a.bodyWeight -> animal0_.body_weight
+14:13:23,327 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( not like ( animal0_.body_weight animal0_.id bodyWeight ) '%a%' ) ) )
+14:13:23,327 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,327 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[NOT_LIKE] BinaryLogicOperatorNode: 'not like'
+          +-[DOT] DotNode: 'animal0_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=a.bodyWeight,tableAlias=animal0_,className=Animal,classAlias=a}
+          |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |  \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+          \-[QUOTED_STRING] LiteralNode: ''%a%''
+
+14:13:23,327 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,327 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where a.bodyWeight not like '%a%'
+14:13:23,327 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.body_weight not like '%a%'
+14:13:23,327 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.body_weight not like '%a%'
+14:13:23,328  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,328 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where a.bodyWeight like '%a%' escape '%'
+14:13:23,328 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'a'
+          |  \-[IDENT] Node: 'bodyWeight'
+          +-[QUOTED_STRING] Node: ''%a%''
+          \-[ESCAPE] Node: 'escape'
+             \-[QUOTED_STRING] Node: ''%''
+
+14:13:23,336 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,336 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,337 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,337 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,337 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:23,337 DEBUG FromReferenceNode:74 - Resolved : a.bodyWeight -> animal0_.body_weight
+14:13:23,337 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( like ( animal0_.body_weight animal0_.id bodyWeight ) '%a%' ( escape '%' ) ) ) )
+14:13:23,337 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,337 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'animal0_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=a.bodyWeight,tableAlias=animal0_,className=Animal,classAlias=a}
+          |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |  \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+          +-[QUOTED_STRING] LiteralNode: ''%a%''
+          \-[ESCAPE] SqlNode: 'escape'
+             \-[QUOTED_STRING] LiteralNode: ''%''
+
+14:13:23,346 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,347 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where a.bodyWeight like '%a%' escape '%'
+14:13:23,347 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.body_weight like '%a%' escape '%'
+14:13:23,347 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+sql: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.body_weight like '%a%' escape '%'
+14:13:23,347  INFO CustomRunner:139 - Test: testEjb3PositionalParameters
+14:13:23,348  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,348 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Animal a where a.bodyWeight = ?1
+14:13:23,349 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Animal'
+    |        \-[ALIAS] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'a'
+          |  \-[IDENT] Node: 'bodyWeight'
+          \-[PARAM] Node: '?'
+             \-[NUM_INT] Node: '1'
+
+14:13:23,357 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,358 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,358 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,358 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:23,358 DEBUG FromReferenceNode:74 - Resolved : a.bodyWeight -> animal0_.body_weight
+14:13:23,358 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Animal animal0_ ) ( where ( = ( animal0_.body_weight animal0_.id bodyWeight ) ? ) ) )
+14:13:23,359 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,359 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,359 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'animal0_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=a.bodyWeight,tableAlias=animal0_,className=Animal,classAlias=a}
+          |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |  \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=1, expectedType=org.hibernate.type.FloatType@39fd378e}
+
+14:13:23,359 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,367 DEBUG QueryTranslatorImpl:235 - HQL: from Animal a where a.bodyWeight = ?1
+14:13:23,367 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.body_weight=?
+14:13:23,367 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,368  INFO CustomRunner:139 - Test: testIsEmpty
+14:13:23,369  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,369 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Animal a where not exists elements(a.offspring)
+14:13:23,370 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Animal'
+    |        \-[ALIAS] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[NOT] Node: 'not'
+          \-[EXISTS] Node: 'exists'
+             \-[ELEMENTS] Node: 'elements'
+                \-[DOT] Node: '.'
+                   +-[IDENT] Node: 'a'
+                   \-[IDENT] Node: 'offspring'
+
+14:13:23,370 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,370 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,370 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,371 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:23,371 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:23,371 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> offspring1_
+14:13:23,378 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,378 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:23,378 DEBUG MethodNode:207 - Creating elements for a.offspring[].elements
+14:13:23,379 DEBUG FromElementType:347 - toColumns(offspring1_,elements) : subquery = select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id
+14:13:23,379 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Animal animal0_  ) ( where ( not ( exists ( select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id ( . animal0_.id offspring ) ) ) ) ) )
+14:13:23,379 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,379 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,380 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_, offspring1_], fromElementsByPath=[a.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: '' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[NOT] SqlNode: 'not'
+          \-[EXISTS] UnaryLogicOperatorNode: 'exists'
+             \-[SQL_TOKEN] CollectionFunction: 'select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id' {method=elements,selectColumns=[select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id],fromElement=offspring1_}
+                \-[DOT] DotNode: '.' {propertyName=offspring,dereferenceType=NULL_TREE_LOOKAHEAD,propertyPath=offspring,path=a.offspring,tableAlias=offspring1_,className=org.hibernate.test.hql.Animal,classAlias=null}
+                   +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+                   \-[IDENT] IdentNode: 'offspring' {originalText=offspring}
+
+14:13:23,380 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,380 DEBUG QueryTranslatorImpl:235 - HQL: from Animal a where not exists elements(a.offspring)
+14:13:23,380 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where  not (exists (select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id))
+14:13:23,380 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,380 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where a.offspring is empty
+14:13:23,381 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[NOT] Node: 'not'
+          \-[EXISTS] Node: 'exists'
+             \-[QUERY] Node: 'QUERY'
+                \-[SELECT_FROM] Node: 'SELECT_FROM'
+                   \-[FROM] Node: 'from'
+                      \-[RANGE] Node: 'RANGE'
+                         \-[DOT] Node: '.'
+                            +-[IDENT] Node: 'a'
+                            \-[IDENT] Node: 'offspring'
+
+14:13:23,389 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,389 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,389 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,389 DEBUG FromElementFactory:129 - createFromElementInSubselect() : path = a.offspring
+14:13:23,390 DEBUG PathHelper:68 - parsePath() : a.offspring -> [  ( . a offspring ) ]
+14:13:23,390 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,390 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:23,390 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:23,390 DEBUG FromElement:157 - FromClause{level=2} : org.hibernate.test.hql.Animal (<no alias>) -> offspring1_
+14:13:23,390 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,390 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:23,390 DEBUG FromReferenceNode:74 - Resolved : a.offspring -> .
+14:13:23,391 DEBUG FromElementFactory:158 - createFromElementInSubselect() : a.offspring -> Animal offspring1_
+14:13:23,391 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=2} Animal offspring1_ ) )
+14:13:23,391 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,391 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [animal0_.id=offspring1_.mother_id]
+14:13:23,391 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [animal0_.id=offspring1_.mother_id]
+14:13:23,391 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:13:23,391 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( not ( exists ( SELECT ( {derived select clause} offspring1_.id ) ( FromClause{level=2} Animal offspring1_ ) ( WHERE ( {theta joins} animal0_.id=offspring1_.mother_id ) ) ) ) ) ) )
+14:13:23,391 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,392 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[NOT] SqlNode: 'not'
+          \-[EXISTS] UnaryLogicOperatorNode: 'exists'
+             \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+                +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+                |  \-[SELECT_EXPR] SelectExpressionImpl: 'offspring1_.id' {ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}}
+                +-[FROM] FromClause: 'from' FromClause{level=2, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[offspring1_], fromElementsByPath=[a.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+                |  \-[FROM_FRAGMENT] ImpliedFromElement: 'Animal offspring1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+                \-[WHERE] SqlNode: 'WHERE'
+                   \-[THETA_JOINS] SqlNode: '{theta joins}'
+                      \-[SQL_TOKEN] SqlFragment: 'animal0_.id=offspring1_.mother_id'
+
+14:13:23,392 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,392 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where a.offspring is empty
+14:13:23,401 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where  not (exists (select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id))
+14:13:23,401 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,401  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,401 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Animal a where exists (from a.mother.father.offspring)
+14:13:23,402 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Animal'
+    |        \-[ALIAS] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EXISTS] Node: 'exists'
+          \-[QUERY] Node: 'query'
+             \-[SELECT_FROM] Node: 'SELECT_FROM'
+                \-[FROM] Node: 'from'
+                   \-[RANGE] Node: 'RANGE'
+                      \-[DOT] Node: '.'
+                         +-[DOT] Node: '.'
+                         |  +-[DOT] Node: '.'
+                         |  |  +-[IDENT] Node: 'a'
+                         |  |  \-[IDENT] Node: 'mother'
+                         |  \-[IDENT] Node: 'father'
+                         \-[IDENT] Node: 'offspring'
+
+14:13:23,402 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,402 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,402 DEBUG FromElementFactory:129 - createFromElementInSubselect() : path = a.mother.father.offspring
+14:13:23,402 DEBUG PathHelper:68 - parsePath() : a.mother.father.offspring -> [  ( . ( . ( . a mother ) father ) offspring ) ]
+14:13:23,412 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,413 DEBUG DotNode:599 - getDataType() : mother -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:23,413 DEBUG DotNode:539 - dereferenceEntity() : correlated subquery
+14:13:23,413 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for mother in Animal (<no alias>) parent = [  ( . ( . animal0_.id mother ) father ) ]
+14:13:23,413 DEBUG FromElement:157 - FromClause{level=2} : org.hibernate.test.hql.Animal (<no alias>) -> animal1_
+14:13:23,413 DEBUG FromClause:282 - addJoinByPathMap() : a.mother -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal1_,origin=Animal animal0_,columns={animal0_.mother_id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,413 DEBUG FromReferenceNode:74 - Resolved : a.mother -> animal0_.mother_id
+14:13:23,413 DEBUG DotNode:599 - getDataType() : father -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:23,414 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for father in org.hibernate.test.hql.Animal (<no alias>) parent = [  ( . ( . ( animal0_.mother_id animal0_.id mother ) father ) offspring ) ]
+14:13:23,414 DEBUG FromElement:157 - FromClause{level=2} : org.hibernate.test.hql.Animal (<no alias>) -> animal2_
+14:13:23,414 DEBUG FromClause:282 - addJoinByPathMap() : a.mother.father -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal2_,origin=Animal animal1_,columns={animal1_.father_id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,414 DEBUG FromReferenceNode:74 - Resolved : a.mother.father -> animal1_.father_id
+14:13:23,414 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:23,414 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.mother.father.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:23,414 DEBUG FromElement:157 - FromClause{level=2} : org.hibernate.test.hql.Animal (<no alias>) -> offspring3_
+14:13:23,414 DEBUG FromClause:282 - addJoinByPathMap() : a.mother.father.offspring -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=offspring3_,origin=Animal animal2_,columns={animal2_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,414 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.mother.father.offspring : Animal offspring3_
+14:13:23,415 DEBUG FromReferenceNode:74 - Resolved : a.mother.father.offspring -> .
+14:13:23,415 DEBUG FromElementFactory:158 - createFromElementInSubselect() : a.mother.father.offspring -> Animal animal1_
+14:13:23,415 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=2} ( Animal animal1_ ( Animal animal2_ Animal offspring3_ ) ) ) )
+14:13:23,415 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,415 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [animal0_.mother_id=animal1_.id]
+14:13:23,415 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [animal0_.mother_id=animal1_.id]
+14:13:23,415 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:13:23,415 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Animal animal2_ on animal1_.father_id=animal2_.id]
+14:13:23,415 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [animal2_.id=offspring3_.mother_id]
+14:13:23,416 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [animal2_.id=offspring3_.mother_id]
+14:13:23,416 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Animal animal0_ ) ( where ( exists ( SELECT ( {derived select clause} offspring3_.id ) ( FromClause{level=2} ( Animal animal1_ ( inner join Animal animal2_ on animal1_.father_id=animal2_.id Animal offspring3_ ) ) ) ( WHERE ( {theta joins} animal0_.mother_id=animal1_.id animal2_.id=offspring3_.mother_id ) ) ) ) ) )
+14:13:23,416 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,422 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,422 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EXISTS] UnaryLogicOperatorNode: 'exists'
+          \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+             +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+             |  \-[SELECT_EXPR] SelectExpressionImpl: 'offspring3_.id' {ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring3_,origin=inner join Animal animal2_ on animal1_.father_id=animal2_.id,columns={animal2_.id ,className=org.hibernate.test.hql.Animal}}}
+             +-[FROM] FromClause: 'from' FromClause{level=2, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[], fromElementByTableAlias=[offspring3_, animal1_, animal2_], fromElementsByPath=[a.mother.father, a.mother, a.mother.father.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+             |  \-[FROM_FRAGMENT] ImpliedFromElement: 'Animal animal1_' ImpliedFromElement{implied in FROM clause,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal1_,origin=Animal animal0_,columns={animal0_.mother_id ,className=org.hibernate.test.hql.Animal}}
+             |     \-[JOIN_FRAGMENT] ImpliedFromElement: 'inner join Animal animal2_ on animal1_.father_id=animal2_.id' ImpliedFromElement{implied in FROM clause,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal2_,origin=Animal animal1_,columns={animal1_.father_id ,className=org.hibernate.test.hql.Animal}}
+             |        \-[FROM_FRAGMENT] ImpliedFromElement: 'Animal offspring3_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring3_,origin=inner join Animal animal2_ on animal1_.father_id=animal2_.id,columns={animal2_.id ,className=org.hibernate.test.hql.Animal}}
+             \-[WHERE] SqlNode: 'WHERE'
+                \-[THETA_JOINS] SqlNode: '{theta joins}'
+                   +-[SQL_TOKEN] SqlFragment: 'animal0_.mother_id=animal1_.id'
+                   \-[SQL_TOKEN] SqlFragment: 'animal2_.id=offspring3_.mother_id'
+
+14:13:23,432 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,432 DEBUG QueryTranslatorImpl:235 - HQL: from Animal a where exists (from a.mother.father.offspring)
+14:13:23,432 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where exists (select offspring3_.id from Animal animal1_ inner join Animal animal2_ on animal1_.father_id=animal2_.id, Animal offspring3_ where animal0_.mother_id=animal1_.id and animal2_.id=offspring3_.mother_id)
+14:13:23,433 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,433 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where a.mother.father.offspring is not empty
+14:13:23,433 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EXISTS] Node: 'exists'
+          \-[QUERY] Node: 'QUERY'
+             \-[SELECT_FROM] Node: 'SELECT_FROM'
+                \-[FROM] Node: 'from'
+                   \-[RANGE] Node: 'RANGE'
+                      \-[DOT] Node: '.'
+                         +-[DOT] Node: '.'
+                         |  +-[DOT] Node: '.'
+                         |  |  +-[IDENT] Node: 'a'
+                         |  |  \-[IDENT] Node: 'mother'
+                         |  \-[IDENT] Node: 'father'
+                         \-[IDENT] Node: 'offspring'
+
+14:13:23,443 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,443 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,443 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,443 DEBUG FromElementFactory:129 - createFromElementInSubselect() : path = a.mother.father.offspring
+14:13:23,443 DEBUG PathHelper:68 - parsePath() : a.mother.father.offspring -> [  ( . ( . ( . a mother ) father ) offspring ) ]
+14:13:23,444 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,444 DEBUG DotNode:599 - getDataType() : mother -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:23,444 DEBUG DotNode:539 - dereferenceEntity() : correlated subquery
+14:13:23,444 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for mother in Animal (<no alias>) parent = [  ( . ( . animal0_.id mother ) father ) ]
+14:13:23,444 DEBUG FromElement:157 - FromClause{level=2} : org.hibernate.test.hql.Animal (<no alias>) -> animal1_
+14:13:23,444 DEBUG FromClause:282 - addJoinByPathMap() : a.mother -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal1_,origin=Animal animal0_,columns={animal0_.mother_id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,444 DEBUG FromReferenceNode:74 - Resolved : a.mother -> animal0_.mother_id
+14:13:23,444 DEBUG DotNode:599 - getDataType() : father -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:23,445 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for father in org.hibernate.test.hql.Animal (<no alias>) parent = [  ( . ( . ( animal0_.mother_id animal0_.id mother ) father ) offspring ) ]
+14:13:23,445 DEBUG FromElement:157 - FromClause{level=2} : org.hibernate.test.hql.Animal (<no alias>) -> animal2_
+14:13:23,445 DEBUG FromClause:282 - addJoinByPathMap() : a.mother.father -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal2_,origin=Animal animal1_,columns={animal1_.father_id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,445 DEBUG FromReferenceNode:74 - Resolved : a.mother.father -> animal1_.father_id
+14:13:23,445 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:23,445 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.mother.father.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:23,445 DEBUG FromElement:157 - FromClause{level=2} : org.hibernate.test.hql.Animal (<no alias>) -> offspring3_
+14:13:23,445 DEBUG FromClause:282 - addJoinByPathMap() : a.mother.father.offspring -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=offspring3_,origin=Animal animal2_,columns={animal2_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,446 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.mother.father.offspring : Animal offspring3_
+14:13:23,446 DEBUG FromReferenceNode:74 - Resolved : a.mother.father.offspring -> .
+14:13:23,453 DEBUG FromElementFactory:158 - createFromElementInSubselect() : a.mother.father.offspring -> Animal animal1_
+14:13:23,453 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=2} ( Animal animal1_ ( Animal animal2_ Animal offspring3_ ) ) ) )
+14:13:23,453 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,453 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [animal0_.mother_id=animal1_.id]
+14:13:23,453 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [animal0_.mother_id=animal1_.id]
+14:13:23,453 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:13:23,453 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Animal animal2_ on animal1_.father_id=animal2_.id]
+14:13:23,453 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [animal2_.id=offspring3_.mother_id]
+14:13:23,454 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [animal2_.id=offspring3_.mother_id]
+14:13:23,454 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_ ) ( where ( exists ( SELECT ( {derived select clause} offspring3_.id ) ( FromClause{level=2} ( Animal animal1_ ( inner join Animal animal2_ on animal1_.father_id=animal2_.id Animal offspring3_ ) ) ) ( WHERE ( {theta joins} animal0_.mother_id=animal1_.id animal2_.id=offspring3_.mother_id ) ) ) ) ) )
+14:13:23,454 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,454 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EXISTS] UnaryLogicOperatorNode: 'exists'
+          \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+             +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+             |  \-[SELECT_EXPR] SelectExpressionImpl: 'offspring3_.id' {ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring3_,origin=inner join Animal animal2_ on animal1_.father_id=animal2_.id,columns={animal2_.id ,className=org.hibernate.test.hql.Animal}}}
+             +-[FROM] FromClause: 'from' FromClause{level=2, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[], fromElementByTableAlias=[offspring3_, animal1_, animal2_], fromElementsByPath=[a.mother.father, a.mother, a.mother.father.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+             |  \-[FROM_FRAGMENT] ImpliedFromElement: 'Animal animal1_' ImpliedFromElement{implied in FROM clause,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal1_,origin=Animal animal0_,columns={animal0_.mother_id ,className=org.hibernate.test.hql.Animal}}
+             |     \-[JOIN_FRAGMENT] ImpliedFromElement: 'inner join Animal animal2_ on animal1_.father_id=animal2_.id' ImpliedFromElement{implied in FROM clause,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal2_,origin=Animal animal1_,columns={animal1_.father_id ,className=org.hibernate.test.hql.Animal}}
+             |        \-[FROM_FRAGMENT] ImpliedFromElement: 'Animal offspring3_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring3_,origin=inner join Animal animal2_ on animal1_.father_id=animal2_.id,columns={animal2_.id ,className=org.hibernate.test.hql.Animal}}
+             \-[WHERE] SqlNode: 'WHERE'
+                \-[THETA_JOINS] SqlNode: '{theta joins}'
+                   +-[SQL_TOKEN] SqlFragment: 'animal0_.mother_id=animal1_.id'
+                   \-[SQL_TOKEN] SqlFragment: 'animal2_.id=offspring3_.mother_id'
+
+14:13:23,463 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,464 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where a.mother.father.offspring is not empty
+14:13:23,464 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where exists (select offspring3_.id from Animal animal1_ inner join Animal animal2_ on animal1_.father_id=animal2_.id, Animal offspring3_ where animal0_.mother_id=animal1_.id and animal2_.id=offspring3_.mother_id)
+14:13:23,464 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,464  INFO CustomRunner:139 - Test: testMemberOf
+14:13:23,465  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,465 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Animal a where a.mother in (from a.offspring)
+14:13:23,466 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Animal'
+    |        \-[ALIAS] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[IN] Node: 'in'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'a'
+          |  \-[IDENT] Node: 'mother'
+          \-[IN_LIST] Node: 'inList'
+             \-[QUERY] Node: 'query'
+                \-[SELECT_FROM] Node: 'SELECT_FROM'
+                   \-[FROM] Node: 'from'
+                      \-[RANGE] Node: 'RANGE'
+                         \-[DOT] Node: '.'
+                            +-[IDENT] Node: 'a'
+                            \-[IDENT] Node: 'offspring'
+
+14:13:23,508 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,508 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,509 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,509 DEBUG DotNode:599 - getDataType() : mother -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:23,509 DEBUG DotNode:562 - dereferenceShortcut() : property mother in Animal does not require a join.
+14:13:23,509 DEBUG DotNode:588 - Terminal propertyPath = [mother]
+14:13:23,509 DEBUG FromReferenceNode:74 - Resolved : a.mother -> animal0_.mother_id
+14:13:23,509 DEBUG FromElementFactory:129 - createFromElementInSubselect() : path = a.offspring
+14:13:23,509 DEBUG PathHelper:68 - parsePath() : a.offspring -> [  ( . a offspring ) ]
+14:13:23,509 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,510 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:23,510 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:23,510 DEBUG FromElement:157 - FromClause{level=2} : org.hibernate.test.hql.Animal (<no alias>) -> offspring1_
+14:13:23,510 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,510 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:23,510 DEBUG FromReferenceNode:74 - Resolved : a.offspring -> .
+14:13:23,510 DEBUG FromElementFactory:158 - createFromElementInSubselect() : a.offspring -> Animal offspring1_
+14:13:23,510 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=2} Animal offspring1_ ) )
+14:13:23,510 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,511 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [animal0_.id=offspring1_.mother_id]
+14:13:23,511 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [animal0_.id=offspring1_.mother_id]
+14:13:23,511 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:13:23,511 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Animal animal0_ ) ( where ( in ( animal0_.mother_id animal0_.id mother ) ( inList ( SELECT ( {derived select clause} offspring1_.id ) ( FromClause{level=2} Animal offspring1_ ) ( WHERE ( {theta joins} animal0_.id=offspring1_.mother_id ) ) ) ) ) ) )
+14:13:23,511 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,511 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,511 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IN] InLogicOperatorNode: 'in'
+          +-[DOT] DotNode: 'animal0_.mother_id' {propertyName=mother,dereferenceType=0,propertyPath=mother,path=a.mother,tableAlias=animal0_,className=Animal,classAlias=a}
+          |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |  \-[IDENT] IdentNode: 'mother' {originalText=mother}
+          \-[IN_LIST] SqlNode: 'inList'
+             \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+                +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+                |  \-[SELECT_EXPR] SelectExpressionImpl: 'offspring1_.id' {ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}}
+                +-[FROM] FromClause: 'from' FromClause{level=2, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[offspring1_], fromElementsByPath=[a.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+                |  \-[FROM_FRAGMENT] ImpliedFromElement: 'Animal offspring1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+                \-[WHERE] SqlNode: 'WHERE'
+                   \-[THETA_JOINS] SqlNode: '{theta joins}'
+                      \-[SQL_TOKEN] SqlFragment: 'animal0_.id=offspring1_.mother_id'
+
+14:13:23,512 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,512 DEBUG QueryTranslatorImpl:235 - HQL: from Animal a where a.mother in (from a.offspring)
+14:13:23,512 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.mother_id in (select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id)
+14:13:23,512 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,512 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where a.mother member of a.offspring
+14:13:23,513 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[IN] Node: 'in'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'a'
+          |  \-[IDENT] Node: 'mother'
+          \-[IN_LIST] Node: 'inList'
+             \-[ELEMENTS] Node: 'elements'
+                \-[DOT] Node: '.'
+                   +-[IDENT] Node: 'a'
+                   \-[IDENT] Node: 'offspring'
+
+14:13:23,513 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,513 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,513 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,513 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,513 DEBUG DotNode:599 - getDataType() : mother -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:23,514 DEBUG DotNode:562 - dereferenceShortcut() : property mother in Animal does not require a join.
+14:13:23,514 DEBUG DotNode:588 - Terminal propertyPath = [mother]
+14:13:23,514 DEBUG FromReferenceNode:74 - Resolved : a.mother -> animal0_.mother_id
+14:13:23,514 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,514 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:23,514 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:23,514 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> offspring1_
+14:13:23,514 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,514 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:23,514 DEBUG MethodNode:207 - Creating elements for a.offspring[].elements
+14:13:23,515 DEBUG FromElementType:347 - toColumns(offspring1_,elements) : subquery = select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id
+14:13:23,515 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_  ) ( where ( in ( animal0_.mother_id animal0_.id mother ) ( inList ( select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id ( . animal0_.id offspring ) ) ) ) ) )
+14:13:23,515 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,515 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_, offspring1_], fromElementsByPath=[a.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: '' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IN] InLogicOperatorNode: 'in'
+          +-[DOT] DotNode: 'animal0_.mother_id' {propertyName=mother,dereferenceType=0,propertyPath=mother,path=a.mother,tableAlias=animal0_,className=Animal,classAlias=a}
+          |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |  \-[IDENT] IdentNode: 'mother' {originalText=mother}
+          \-[IN_LIST] SqlNode: 'inList'
+             \-[SQL_TOKEN] CollectionFunction: 'select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id' {method=elements,selectColumns=[select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id],fromElement=offspring1_}
+                \-[DOT] DotNode: '.' {propertyName=offspring,dereferenceType=NULL_TREE_LOOKAHEAD,propertyPath=offspring,path=a.offspring,tableAlias=offspring1_,className=org.hibernate.test.hql.Animal,classAlias=null}
+                   +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+                   \-[IDENT] IdentNode: 'offspring' {originalText=offspring}
+
+14:13:23,515 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,515 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where a.mother member of a.offspring
+14:13:23,515 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.mother_id in (select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id)
+14:13:23,515 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,516  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,516 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Animal a where a.mother not in (from a.offspring)
+14:13:23,516 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Animal'
+    |        \-[ALIAS] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[NOT_IN] Node: 'not in'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'a'
+          |  \-[IDENT] Node: 'mother'
+          \-[IN_LIST] Node: 'inList'
+             \-[QUERY] Node: 'query'
+                \-[SELECT_FROM] Node: 'SELECT_FROM'
+                   \-[FROM] Node: 'from'
+                      \-[RANGE] Node: 'RANGE'
+                         \-[DOT] Node: '.'
+                            +-[IDENT] Node: 'a'
+                            \-[IDENT] Node: 'offspring'
+
+14:13:23,527 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,527 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,527 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,527 DEBUG DotNode:599 - getDataType() : mother -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:23,527 DEBUG DotNode:562 - dereferenceShortcut() : property mother in Animal does not require a join.
+14:13:23,527 DEBUG DotNode:588 - Terminal propertyPath = [mother]
+14:13:23,527 DEBUG FromReferenceNode:74 - Resolved : a.mother -> animal0_.mother_id
+14:13:23,528 DEBUG FromElementFactory:129 - createFromElementInSubselect() : path = a.offspring
+14:13:23,528 DEBUG PathHelper:68 - parsePath() : a.offspring -> [  ( . a offspring ) ]
+14:13:23,528 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,528 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:23,528 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:23,528 DEBUG FromElement:157 - FromClause{level=2} : org.hibernate.test.hql.Animal (<no alias>) -> offspring1_
+14:13:23,528 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,528 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:23,528 DEBUG FromReferenceNode:74 - Resolved : a.offspring -> .
+14:13:23,529 DEBUG FromElementFactory:158 - createFromElementInSubselect() : a.offspring -> Animal offspring1_
+14:13:23,529 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=2} Animal offspring1_ ) )
+14:13:23,529 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,529 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [animal0_.id=offspring1_.mother_id]
+14:13:23,529 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [animal0_.id=offspring1_.mother_id]
+14:13:23,529 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:13:23,540 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Animal animal0_ ) ( where ( not in ( animal0_.mother_id animal0_.id mother ) ( inList ( SELECT ( {derived select clause} offspring1_.id ) ( FromClause{level=2} Animal offspring1_ ) ( WHERE ( {theta joins} animal0_.id=offspring1_.mother_id ) ) ) ) ) ) )
+14:13:23,540 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,540 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,540 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[NOT_IN] InLogicOperatorNode: 'not in'
+          +-[DOT] DotNode: 'animal0_.mother_id' {propertyName=mother,dereferenceType=0,propertyPath=mother,path=a.mother,tableAlias=animal0_,className=Animal,classAlias=a}
+          |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |  \-[IDENT] IdentNode: 'mother' {originalText=mother}
+          \-[IN_LIST] SqlNode: 'inList'
+             \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+                +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+                |  \-[SELECT_EXPR] SelectExpressionImpl: 'offspring1_.id' {ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}}
+                +-[FROM] FromClause: 'from' FromClause{level=2, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[offspring1_], fromElementsByPath=[a.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+                |  \-[FROM_FRAGMENT] ImpliedFromElement: 'Animal offspring1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+                \-[WHERE] SqlNode: 'WHERE'
+                   \-[THETA_JOINS] SqlNode: '{theta joins}'
+                      \-[SQL_TOKEN] SqlFragment: 'animal0_.id=offspring1_.mother_id'
+
+14:13:23,541 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,542 DEBUG QueryTranslatorImpl:235 - HQL: from Animal a where a.mother not in (from a.offspring)
+14:13:23,542 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.mother_id not in  (select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id)
+14:13:23,542 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,542 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(a) from Animal a where a.mother not member of a.offspring
+14:13:23,551 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[IDENT] Node: 'Animal'
+    |  |     \-[ALIAS] Node: 'a'
+    |  \-[SELECT] Node: 'select'
+    |     \-[OBJECT] Node: 'object'
+    |        \-[IDENT] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[NOT_IN] Node: 'not in'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'a'
+          |  \-[IDENT] Node: 'mother'
+          \-[IN_LIST] Node: 'inList'
+             \-[ELEMENTS] Node: 'elements'
+                \-[DOT] Node: '.'
+                   +-[IDENT] Node: 'a'
+                   \-[IDENT] Node: 'offspring'
+
+14:13:23,561 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,561 DEBUG FromElement:157 - FromClause{level=1} : Animal (a) -> animal0_
+14:13:23,561 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,562 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,562 DEBUG DotNode:599 - getDataType() : mother -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:23,562 DEBUG DotNode:562 - dereferenceShortcut() : property mother in Animal does not require a join.
+14:13:23,562 DEBUG DotNode:588 - Terminal propertyPath = [mother]
+14:13:23,562 DEBUG FromReferenceNode:74 - Resolved : a.mother -> animal0_.mother_id
+14:13:23,562 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:23,563 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:23,563 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:23,563 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> offspring1_
+14:13:23,563 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:23,563 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:23,563 DEBUG MethodNode:207 - Creating elements for a.offspring[].elements
+14:13:23,564 DEBUG FromElementType:347 - toColumns(offspring1_,elements) : subquery = select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id
+14:13:23,564 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} animal0_.id ) ( FromClause{level=1} Animal animal0_  ) ( where ( not in ( animal0_.mother_id animal0_.id mother ) ( inList ( select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id ( . animal0_.id offspring ) ) ) ) ) )
+14:13:23,564 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_]
+14:13:23,564 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'animal0_.id as col_0_0_' {alias=a, className=Animal, tableAlias=animal0_}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a], fromElementByTableAlias=[animal0_, offspring1_], fromElementsByPath=[a.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'Animal animal0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=Animal}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: '' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+    \-[WHERE] SqlNode: 'where'
+       \-[NOT_IN] InLogicOperatorNode: 'not in'
+          +-[DOT] DotNode: 'animal0_.mother_id' {propertyName=mother,dereferenceType=0,propertyPath=mother,path=a.mother,tableAlias=animal0_,className=Animal,classAlias=a}
+          |  +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+          |  \-[IDENT] IdentNode: 'mother' {originalText=mother}
+          \-[IN_LIST] SqlNode: 'inList'
+             \-[SQL_TOKEN] CollectionFunction: 'select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id' {method=elements,selectColumns=[select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id],fromElement=offspring1_}
+                \-[DOT] DotNode: '.' {propertyName=offspring,dereferenceType=NULL_TREE_LOOKAHEAD,propertyPath=offspring,path=a.offspring,tableAlias=offspring1_,className=org.hibernate.test.hql.Animal,classAlias=null}
+                   +-[ALIAS_REF] IdentNode: 'animal0_.id' {alias=a, className=Animal, tableAlias=animal0_}
+                   \-[IDENT] IdentNode: 'offspring' {originalText=offspring}
+
+14:13:23,573 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,574 DEBUG QueryTranslatorImpl:235 - HQL: select object(a) from Animal a where a.mother not member of a.offspring
+14:13:23,574 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as col_0_0_ from Animal animal0_ where animal0_.mother_id not in  (select offspring1_.id from Animal offspring1_ where animal0_.id=offspring1_.mother_id)
+14:13:23,574 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,574  INFO CustomRunner:139 - Test: testSelectObjectClause
+14:13:23,575  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,575 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Model m
+14:13:23,576 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[IDENT] Node: 'Model'
+             \-[ALIAS] Node: 'm'
+
+14:13:23,583 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,583 DEBUG FromElement:157 - FromClause{level=1} : Model (m) -> model0_
+14:13:23,583 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Model model0_ ) )
+14:13:23,584 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,584 DEBUG JoinProcessor:175 - Using FROM fragment [Model model0_]
+14:13:23,584 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Model)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'model0_.modelId as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Model,tableAlias=model0_,origin=null,columns={,className=Model}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[m], fromElementByTableAlias=[model0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Model model0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Model,tableAlias=model0_,origin=null,columns={,className=Model}}
+
+14:13:23,584 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,584 DEBUG QueryTranslatorImpl:235 - HQL: from Model m
+14:13:23,584 DEBUG QueryTranslatorImpl:236 - SQL: select model0_.modelId as col_0_0_ from Model model0_
+14:13:23,584 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,584 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select object(m) from Model m
+14:13:23,585 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[IDENT] Node: 'Model'
+       |     \-[ALIAS] Node: 'm'
+       \-[SELECT] Node: 'select'
+          \-[OBJECT] Node: 'object'
+             \-[IDENT] Node: 'm'
+
+14:13:23,593 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,594 DEBUG FromElement:157 - FromClause{level=1} : Model (m) -> model0_
+14:13:23,594 DEBUG FromReferenceNode:74 - Resolved : m -> model0_.modelId
+14:13:23,594 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} model0_.modelId ) ( FromClause{level=1} Model model0_ ) )
+14:13:23,594 DEBUG JoinProcessor:175 - Using FROM fragment [Model model0_]
+14:13:23,594 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Model)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'model0_.modelId as col_0_0_' {alias=m, className=Model, tableAlias=model0_}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[m], fromElementByTableAlias=[model0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Model model0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Model,tableAlias=model0_,origin=null,columns={,className=Model}}
+
+14:13:23,594 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,594 DEBUG QueryTranslatorImpl:235 - HQL: select object(m) from Model m
+14:13:23,594 DEBUG QueryTranslatorImpl:236 - SQL: select model0_.modelId as col_0_0_ from Model model0_
+14:13:23,594 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,595  INFO CustomRunner:139 - Test: testTrueFalse
+14:13:23,596  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,596 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Human h where h.pregnant = true
+14:13:23,597 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Human'
+    |        \-[ALIAS] Node: 'h'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'h'
+          |  \-[IDENT] Node: 'pregnant'
+          \-[TRUE] Node: 'true'
+
+14:13:23,605 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,605 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:23,605 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:23,605 DEBUG DotNode:599 - getDataType() : pregnant -> org.hibernate.type.BooleanType@c60b7e2
+14:13:23,605 DEBUG FromReferenceNode:74 - Resolved : h.pregnant -> human0_1_.pregnant
+14:13:23,605 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Human human0_ ) ( where ( = ( human0_1_.pregnant human0_.mammal pregnant ) 1 ) ) )
+14:13:23,606 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,606 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:23,606 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'human0_1_.pregnant' {propertyName=pregnant,dereferenceType=ALL,propertyPath=pregnant,path=h.pregnant,tableAlias=human0_,className=Human,classAlias=h}
+          |  +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+          |  \-[IDENT] IdentNode: 'pregnant' {originalText=pregnant}
+          \-[TRUE] BooleanLiteralNode: '1'
+
+14:13:23,606 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,606 DEBUG QueryTranslatorImpl:235 - HQL: from Human h where h.pregnant = true
+14:13:23,614 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id where human0_1_.pregnant=1
+14:13:23,615 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,615 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Human h where h.pregnant is true
+14:13:23,615 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Human'
+    |        \-[ALIAS] Node: 'h'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: 'is'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'h'
+          |  \-[IDENT] Node: 'pregnant'
+          \-[TRUE] Node: 'true'
+
+14:13:23,616 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,616 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:23,616 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:23,616 DEBUG DotNode:599 - getDataType() : pregnant -> org.hibernate.type.BooleanType@c60b7e2
+14:13:23,616 DEBUG FromReferenceNode:74 - Resolved : h.pregnant -> human0_1_.pregnant
+14:13:23,616 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Human human0_ ) ( where ( is ( human0_1_.pregnant human0_.mammal pregnant ) 1 ) ) )
+14:13:23,616 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,616 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:23,617 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: 'is'
+          +-[DOT] DotNode: 'human0_1_.pregnant' {propertyName=pregnant,dereferenceType=ALL,propertyPath=pregnant,path=h.pregnant,tableAlias=human0_,className=Human,classAlias=h}
+          |  +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+          |  \-[IDENT] IdentNode: 'pregnant' {originalText=pregnant}
+          \-[TRUE] BooleanLiteralNode: '1'
+
+14:13:23,626 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,626 DEBUG QueryTranslatorImpl:235 - HQL: from Human h where h.pregnant is true
+14:13:23,626 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id where human0_1_.pregnant=1
+14:13:23,627 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,627  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,627 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Human h where h.pregnant = false
+14:13:23,627 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Human'
+    |        \-[ALIAS] Node: 'h'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'h'
+          |  \-[IDENT] Node: 'pregnant'
+          \-[FALSE] Node: 'false'
+
+14:13:23,636 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,636 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:23,636 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:23,637 DEBUG DotNode:599 - getDataType() : pregnant -> org.hibernate.type.BooleanType@c60b7e2
+14:13:23,637 DEBUG FromReferenceNode:74 - Resolved : h.pregnant -> human0_1_.pregnant
+14:13:23,637 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Human human0_ ) ( where ( = ( human0_1_.pregnant human0_.mammal pregnant ) 0 ) ) )
+14:13:23,637 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,637 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:23,637 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'human0_1_.pregnant' {propertyName=pregnant,dereferenceType=ALL,propertyPath=pregnant,path=h.pregnant,tableAlias=human0_,className=Human,classAlias=h}
+          |  +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+          |  \-[IDENT] IdentNode: 'pregnant' {originalText=pregnant}
+          \-[FALSE] BooleanLiteralNode: '0'
+
+14:13:23,637 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,638 DEBUG QueryTranslatorImpl:235 - HQL: from Human h where h.pregnant = false
+14:13:23,638 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id where human0_1_.pregnant=0
+14:13:23,638 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,638 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Human h where h.pregnant is false
+14:13:23,639 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Human'
+    |        \-[ALIAS] Node: 'h'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: 'is'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'h'
+          |  \-[IDENT] Node: 'pregnant'
+          \-[FALSE] Node: 'false'
+
+14:13:23,639 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,639 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:23,639 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:23,639 DEBUG DotNode:599 - getDataType() : pregnant -> org.hibernate.type.BooleanType@c60b7e2
+14:13:23,639 DEBUG FromReferenceNode:74 - Resolved : h.pregnant -> human0_1_.pregnant
+14:13:23,639 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Human human0_ ) ( where ( is ( human0_1_.pregnant human0_.mammal pregnant ) 0 ) ) )
+14:13:23,639 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,639 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:23,640 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: 'is'
+          +-[DOT] DotNode: 'human0_1_.pregnant' {propertyName=pregnant,dereferenceType=ALL,propertyPath=pregnant,path=h.pregnant,tableAlias=human0_,className=Human,classAlias=h}
+          |  +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+          |  \-[IDENT] IdentNode: 'pregnant' {originalText=pregnant}
+          \-[FALSE] BooleanLiteralNode: '0'
+
+14:13:23,650 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,650 DEBUG QueryTranslatorImpl:235 - HQL: from Human h where h.pregnant is false
+14:13:23,650 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id where human0_1_.pregnant=0
+14:13:23,650 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,650  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:23,650 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Human h where not( h.pregnant=true )
+14:13:23,651 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Human'
+    |        \-[ALIAS] Node: 'h'
+    \-[WHERE] Node: 'where'
+       \-[NE] Node: '{not}='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'h'
+          |  \-[IDENT] Node: 'pregnant'
+          \-[TRUE] Node: 'true'
+
+14:13:23,651 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,651 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:23,651 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:23,651 DEBUG DotNode:599 - getDataType() : pregnant -> org.hibernate.type.BooleanType@c60b7e2
+14:13:23,652 DEBUG FromReferenceNode:74 - Resolved : h.pregnant -> human0_1_.pregnant
+14:13:23,652 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Human human0_ ) ( where ( {not}= ( human0_1_.pregnant human0_.mammal pregnant ) 1 ) ) )
+14:13:23,662 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,662 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:23,663 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+    \-[WHERE] SqlNode: 'where'
+       \-[NE] BinaryLogicOperatorNode: '{not}='
+          +-[DOT] DotNode: 'human0_1_.pregnant' {propertyName=pregnant,dereferenceType=ALL,propertyPath=pregnant,path=h.pregnant,tableAlias=human0_,className=Human,classAlias=h}
+          |  +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+          |  \-[IDENT] IdentNode: 'pregnant' {originalText=pregnant}
+          \-[TRUE] BooleanLiteralNode: '1'
+
+14:13:23,663 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,663 DEBUG QueryTranslatorImpl:235 - HQL: from Human h where not( h.pregnant=true )
+14:13:23,663 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id where human0_1_.pregnant<>1
+14:13:23,663 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,663 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Human h where not(h.pregnant is true)
+14:13:23,664 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'Human'
+    |        \-[ALIAS] Node: 'h'
+    \-[WHERE] Node: 'where'
+       \-[NE] Node: '{not}is'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'h'
+          |  \-[IDENT] Node: 'pregnant'
+          \-[TRUE] Node: 'true'
+
+14:13:23,673 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,673 DEBUG FromElement:157 - FromClause{level=1} : Human (h) -> human0_
+14:13:23,673 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:23,673 DEBUG DotNode:599 - getDataType() : pregnant -> org.hibernate.type.BooleanType@c60b7e2
+14:13:23,673 DEBUG FromReferenceNode:74 - Resolved : h.pregnant -> human0_1_.pregnant
+14:13:23,673 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Human human0_ ) ( where ( {not}is ( human0_1_.pregnant human0_.mammal pregnant ) 1 ) ) )
+14:13:23,673 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:23,674 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:23,674 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[h], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=Human}}
+    \-[WHERE] SqlNode: 'where'
+       \-[NE] BinaryLogicOperatorNode: '{not}is'
+          +-[DOT] DotNode: 'human0_1_.pregnant' {propertyName=pregnant,dereferenceType=ALL,propertyPath=pregnant,path=h.pregnant,tableAlias=human0_,className=Human,classAlias=h}
+          |  +-[ALIAS_REF] IdentNode: 'human0_.mammal' {alias=h, className=Human, tableAlias=human0_}
+          |  \-[IDENT] IdentNode: 'pregnant' {originalText=pregnant}
+          \-[TRUE] BooleanLiteralNode: '1'
+
+14:13:23,682 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,682 DEBUG QueryTranslatorImpl:235 - HQL: from Human h where not(h.pregnant is true)
+14:13:23,682 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as col_0_0_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id where human0_1_.pregnant<>1
+14:13:23,682 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:23,683  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

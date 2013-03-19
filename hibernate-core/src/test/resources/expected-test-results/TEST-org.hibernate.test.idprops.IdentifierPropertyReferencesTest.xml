@@ -1,0 +1,1096 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.idprops.IdentifierPropertyReferencesTest" tests="2" time="0.358" timestamp="2013-02-28T20:14:01">
+  <properties />
+  <testcase classname="org.hibernate.test.idprops.IdentifierPropertyReferencesTest" name="testCriteriaIdPropertyReferences" time="0.029" />
+  <testcase classname="org.hibernate.test.idprops.IdentifierPropertyReferencesTest" name="testHqlIdPropertyReferences" time="0.259" />
+  <system-out><![CDATA[14:14:02,001  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.idprops.IdentifierPropertyReferencesTest
+14:14:02,003  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/idprops/Mapping.hbm.xml
+14:14:02,035  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:02,035  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:02,035  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:02,036  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:02,036  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:02,038  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:02,038  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:02,039  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:02,039  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:02,039  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:02,058  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:02,059 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:02,059 DEBUG SQL:104 - 
+    alter table T_ID_LINE_ITEM 
+        drop constraint FK41D68C6534D50D28
+14:14:02,059 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_ID_LINE_ITEM drop constraint FK41D68C6534D50D28
+14:14:02,060 ERROR SchemaExport:426 - Table "T_ID_LINE_ITEM" not found; SQL statement:
+
+    alter table T_ID_LINE_ITEM 
+        drop constraint FK41D68C6534D50D28 [42102-145]
+14:14:02,060 DEBUG SQL:104 - 
+    alter table T_ID_ORDER 
+        drop constraint FK8077CA95D49D1672
+14:14:02,060 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_ID_ORDER drop constraint FK8077CA95D49D1672
+14:14:02,060 ERROR SchemaExport:426 - Table "T_ID_ORDER" not found; SQL statement:
+
+    alter table T_ID_ORDER 
+        drop constraint FK8077CA95D49D1672 [42102-145]
+14:14:02,060 DEBUG SQL:104 - 
+    drop table T_ID_LINE_ITEM if exists
+14:14:02,061 DEBUG SQL:104 - 
+    drop table T_ID_ORDER if exists
+14:14:02,061 DEBUG SQL:104 - 
+    drop table T_ID_PERSON if exists
+14:14:02,061 DEBUG SQL:104 - 
+    create table T_ID_LINE_ITEM (
+        ORDR_ID bigint not null,
+        PROD_CODE varchar(255) not null,
+        QTY integer,
+        ID_NON_ID2 varchar(255),
+        primary key (ORDR_ID, PROD_CODE)
+    )
+14:14:02,062 DEBUG SQL:104 - 
+    create table T_ID_ORDER (
+        PK bigint not null,
+        ORDR_DT timestamp,
+        ORDEREE bigint,
+        primary key (PK)
+    )
+14:14:02,063 DEBUG SQL:104 - 
+    create table T_ID_PERSON (
+        PK bigint not null,
+        NAME varchar(255),
+        ID_NON_ID integer,
+        primary key (PK)
+    )
+14:14:02,063 DEBUG SQL:104 - 
+    alter table T_ID_LINE_ITEM 
+        add constraint FK41D68C6534D50D28 
+        foreign key (ORDR_ID) 
+        references T_ID_ORDER
+14:14:02,064 DEBUG SQL:104 - 
+    alter table T_ID_ORDER 
+        add constraint FK8077CA95D49D1672 
+        foreign key (ORDEREE) 
+        references T_ID_PERSON
+14:14:02,064  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:02,065  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:02,065  INFO CustomRunner:139 - Test: testCriteriaIdPropertyReferences
+14:14:02,066 DEBUG SQL:104 - 
+    select
+        lineitem_.ORDR_ID,
+        lineitem_.PROD_CODE,
+        lineitem_.QTY as QTY0_,
+        lineitem_.ID_NON_ID2 as ID4_0_ 
+    from
+        T_ID_LINE_ITEM lineitem_ 
+    where
+        lineitem_.ORDR_ID=? 
+        and lineitem_.PROD_CODE=?
+14:14:02,067 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ID_PERSON
+        (NAME, ID_NON_ID, PK) 
+    values
+        (?, ?, ?)
+14:14:02,068 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ID_ORDER
+        (ORDR_DT, ORDEREE, PK) 
+    values
+        (?, ?, ?)
+14:14:02,068 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ID_LINE_ITEM
+        (QTY, ID_NON_ID2, ORDR_ID, PROD_CODE) 
+    values
+        (?, ?, ?, ?)
+14:14:02,069 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        T_ID_PERSON this_ 
+    where
+        this_.ID_NON_ID=?
+14:14:02,069 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        T_ID_PERSON this_ 
+    where
+        this_.PK=?
+14:14:02,069 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        T_ID_ORDER this_ 
+    where
+        this_.PK=?
+14:14:02,070 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        T_ID_ORDER this_ 
+    where
+        this_.PK=?
+14:14:02,070 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        T_ID_LINE_ITEM this_ 
+    where
+        this_.ID_NON_ID2=?
+14:14:02,071 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        T_ID_ORDER this_ 
+    inner join
+        T_ID_PERSON p1_ 
+            on this_.ORDEREE=p1_.PK 
+    where
+        p1_.ID_NON_ID=?
+14:14:02,071 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        T_ID_ORDER this_ 
+    inner join
+        T_ID_PERSON p1_ 
+            on this_.ORDEREE=p1_.PK 
+    where
+        p1_.PK=?
+14:14:02,086 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        T_ID_ORDER this_ 
+    inner join
+        T_ID_PERSON p1_ 
+            on this_.ORDEREE=p1_.PK 
+    where
+        p1_.ID_NON_ID=?
+14:14:02,087 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        T_ID_LINE_ITEM this_ 
+    where
+        this_.ORDR_ID=?
+14:14:02,087 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        T_ID_LINE_ITEM this_ 
+    where
+        this_.ORDR_ID=?
+14:14:02,091 DEBUG SQL:104 - 
+    select
+        order_.PK,
+        order_.ORDR_DT as ORDR2_1_,
+        order_.ORDEREE as ORDEREE1_ 
+    from
+        T_ID_ORDER order_ 
+    where
+        order_.PK=?
+14:14:02,091 DEBUG SQL:104 - 
+    select
+        lineitem_.ORDR_ID,
+        lineitem_.PROD_CODE,
+        lineitem_.QTY as QTY0_,
+        lineitem_.ID_NON_ID2 as ID4_0_ 
+    from
+        T_ID_LINE_ITEM lineitem_ 
+    where
+        lineitem_.ORDR_ID=? 
+        and lineitem_.PROD_CODE=?
+14:14:02,092 DEBUG SQL:104 - 
+    select
+        person_.PK,
+        person_.NAME as NAME2_,
+        person_.ID_NON_ID as ID3_2_ 
+    from
+        T_ID_PERSON person_ 
+    where
+        person_.PK=?
+14:14:02,092 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ID_LINE_ITEM 
+    where
+        ORDR_ID=? 
+        and PROD_CODE=?
+14:14:02,093 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ID_ORDER 
+    where
+        PK=?
+14:14:02,093 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ID_PERSON 
+    where
+        PK=?
+14:14:02,094  INFO CustomRunner:139 - Test: testHqlIdPropertyReferences
+14:14:02,096 DEBUG SQL:104 - 
+    select
+        lineitem_.ORDR_ID,
+        lineitem_.PROD_CODE,
+        lineitem_.QTY as QTY0_,
+        lineitem_.ID_NON_ID2 as ID4_0_ 
+    from
+        T_ID_LINE_ITEM lineitem_ 
+    where
+        lineitem_.ORDR_ID=? 
+        and lineitem_.PROD_CODE=?
+14:14:02,097 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ID_PERSON
+        (NAME, ID_NON_ID, PK) 
+    values
+        (?, ?, ?)
+14:14:02,098 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ID_ORDER
+        (ORDR_DT, ORDEREE, PK) 
+    values
+        (?, ?, ?)
+14:14:02,098 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ID_LINE_ITEM
+        (QTY, ID_NON_ID2, ORDR_ID, PROD_CODE) 
+    values
+        (?, ?, ?, ?)
+14:14:02,099 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.idprops.Person p where p.id = 123
+14:14:02,100 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'idprops'
+    |  |     |  \-[IDENT] Node: 'Person'
+    |  |     \-[ALIAS] Node: 'p'
+    |  \-[SELECT] Node: 'select'
+    |     \-[COUNT] Node: 'count'
+    |        \-[ROW_STAR] Node: '*'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '123'
+
+14:14:02,100 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,100 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.Person (p) -> person0_
+14:14:02,101 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.PK
+14:14:02,101 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:14:02,101 DEBUG FromReferenceNode:74 - Resolved : p.id -> person0_.ID_NON_ID
+14:14:02,101 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ID_PERSON person0_ ) ( where ( = ( person0_.ID_NON_ID person0_.PK id ) 123 ) ) )
+14:14:02,101 DEBUG JoinProcessor:175 - Using FROM fragment [T_ID_PERSON person0_]
+14:14:02,102 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ID_PERSON)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_ID_PERSON person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=T_ID_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.idprops.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.ID_NON_ID' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=p.id,tableAlias=person0_,className=org.hibernate.test.idprops.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.PK' {alias=p, className=org.hibernate.test.idprops.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '123'
+
+14:14:02,102 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,102 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.idprops.Person p where p.id = 123
+14:14:02,102 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ID_PERSON person0_ where person0_.ID_NON_ID=123
+14:14:02,102 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,102 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ID_PERSON person0_ 
+    where
+        person0_.ID_NON_ID=123
+14:14:02,103 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.idprops.Person p where p.pk = 1
+14:14:02,104 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'idprops'
+    |  |     |  \-[IDENT] Node: 'Person'
+    |  |     \-[ALIAS] Node: 'p'
+    |  \-[SELECT] Node: 'select'
+    |     \-[COUNT] Node: 'count'
+    |        \-[ROW_STAR] Node: '*'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'pk'
+          \-[NUM_INT] Node: '1'
+
+14:14:02,104 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,104 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.Person (p) -> person0_
+14:14:02,104 DEBUG FromReferenceNode:74 - Resolved : p -> person0_.PK
+14:14:02,104 DEBUG DotNode:599 - getDataType() : pk -> org.hibernate.type.LongType@4bf3f9d
+14:14:02,104 DEBUG FromReferenceNode:74 - Resolved : p.pk -> person0_.PK
+14:14:02,105 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ID_PERSON person0_ ) ( where ( = ( person0_.PK person0_.PK pk ) 1 ) ) )
+14:14:02,105 DEBUG JoinProcessor:175 - Using FROM fragment [T_ID_PERSON person0_]
+14:14:02,105 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ID_PERSON)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_ID_PERSON person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=T_ID_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.idprops.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.PK' {propertyName=pk,dereferenceType=ALL,propertyPath=pk,path=p.pk,tableAlias=person0_,className=org.hibernate.test.idprops.Person,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'person0_.PK' {alias=p, className=org.hibernate.test.idprops.Person, tableAlias=person0_}
+          |  \-[IDENT] IdentNode: 'pk' {originalText=pk}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:14:02,105 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,105 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.idprops.Person p where p.pk = 1
+14:14:02,105 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ID_PERSON person0_ where person0_.PK=1
+14:14:02,105 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,105 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ID_PERSON person0_ 
+    where
+        person0_.PK=1
+14:14:02,106 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.idprops.Order o where o.id = 1
+14:14:02,106 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=49,possibleID=true]
+14:14:02,107 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'idprops'
+    |  |     |  \-[IDENT] Node: 'Order'
+    |  |     \-[ALIAS] Node: 'o'
+    |  \-[SELECT] Node: 'select'
+    |     \-[COUNT] Node: 'count'
+    |        \-[ROW_STAR] Node: '*'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'o'
+          |  \-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:14:02,111 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,111 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.Order (o) -> order0_
+14:14:02,111 DEBUG FromReferenceNode:74 - Resolved : o -> order0_.PK
+14:14:02,111 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:14:02,112 DEBUG FromReferenceNode:74 - Resolved : o.id -> order0_.PK
+14:14:02,112 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ID_ORDER order0_ ) ( where ( = ( order0_.PK order0_.PK id ) 1 ) ) )
+14:14:02,112 DEBUG JoinProcessor:175 - Using FROM fragment [T_ID_ORDER order0_]
+14:14:02,112 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ID_ORDER)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[o], fromElementByTableAlias=[order0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_ID_ORDER order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=T_ID_ORDER,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.idprops.Order}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'order0_.PK' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=o.id,tableAlias=order0_,className=org.hibernate.test.idprops.Order,classAlias=o}
+          |  +-[ALIAS_REF] IdentNode: 'order0_.PK' {alias=o, className=org.hibernate.test.idprops.Order, tableAlias=order0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:14:02,121 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,122 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.idprops.Order o where o.id = 1
+14:14:02,122 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ID_ORDER order0_ where order0_.PK=1
+14:14:02,122 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,122 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ID_ORDER order0_ 
+    where
+        order0_.PK=1
+14:14:02,123 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.idprops.Order o where o.number = 1
+14:14:02,123 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=49,possibleID=true]
+14:14:02,124 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'idprops'
+    |  |     |  \-[IDENT] Node: 'Order'
+    |  |     \-[ALIAS] Node: 'o'
+    |  \-[SELECT] Node: 'select'
+    |     \-[COUNT] Node: 'count'
+    |        \-[ROW_STAR] Node: '*'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'o'
+          |  \-[IDENT] Node: 'number'
+          \-[NUM_INT] Node: '1'
+
+14:14:02,134 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,135 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.Order (o) -> order0_
+14:14:02,135 DEBUG FromReferenceNode:74 - Resolved : o -> order0_.PK
+14:14:02,135 DEBUG DotNode:599 - getDataType() : number -> org.hibernate.type.LongType@4bf3f9d
+14:14:02,135 DEBUG FromReferenceNode:74 - Resolved : o.number -> order0_.PK
+14:14:02,135 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ID_ORDER order0_ ) ( where ( = ( order0_.PK order0_.PK number ) 1 ) ) )
+14:14:02,135 DEBUG JoinProcessor:175 - Using FROM fragment [T_ID_ORDER order0_]
+14:14:02,136 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ID_ORDER)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[o], fromElementByTableAlias=[order0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_ID_ORDER order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=T_ID_ORDER,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.idprops.Order}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'order0_.PK' {propertyName=number,dereferenceType=ALL,propertyPath=number,path=o.number,tableAlias=order0_,className=org.hibernate.test.idprops.Order,classAlias=o}
+          |  +-[ALIAS_REF] IdentNode: 'order0_.PK' {alias=o, className=org.hibernate.test.idprops.Order, tableAlias=order0_}
+          |  \-[IDENT] IdentNode: 'number' {originalText=number}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:14:02,146 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,147 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.idprops.Order o where o.number = 1
+14:14:02,147 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ID_ORDER order0_ where order0_.PK=1
+14:14:02,147 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,147 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ID_ORDER order0_ 
+    where
+        order0_.PK=1
+14:14:02,148 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.idprops.LineItem l where l.id = '456'
+14:14:02,149 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'idprops'
+    |  |     |  \-[IDENT] Node: 'LineItem'
+    |  |     \-[ALIAS] Node: 'l'
+    |  \-[SELECT] Node: 'select'
+    |     \-[COUNT] Node: 'count'
+    |        \-[ROW_STAR] Node: '*'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'l'
+          |  \-[IDENT] Node: 'id'
+          \-[QUOTED_STRING] Node: ''456''
+
+14:14:02,149 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,149 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.LineItem (l) -> lineitem0_
+14:14:02,149 DEBUG FromReferenceNode:74 - Resolved : l -> (lineitem0_.ORDR_ID, lineitem0_.PROD_CODE)
+14:14:02,149 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.StringType@2dc8de40
+14:14:02,149 DEBUG FromReferenceNode:74 - Resolved : l.id -> lineitem0_.ID_NON_ID2
+14:14:02,150 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ID_LINE_ITEM lineitem0_ ) ( where ( = ( lineitem0_.ID_NON_ID2 (lineitem0_.ORDR_ID, lineitem0_.PROD_CODE) id ) '456' ) ) )
+14:14:02,150 DEBUG JoinProcessor:175 - Using FROM fragment [T_ID_LINE_ITEM lineitem0_]
+14:14:02,150 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ID_LINE_ITEM)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[l], fromElementByTableAlias=[lineitem0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_ID_LINE_ITEM lineitem0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=l,role=null,tableName=T_ID_LINE_ITEM,tableAlias=lineitem0_,origin=null,columns={,className=org.hibernate.test.idprops.LineItem}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'lineitem0_.ID_NON_ID2' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=l.id,tableAlias=lineitem0_,className=org.hibernate.test.idprops.LineItem,classAlias=l}
+          |  +-[ALIAS_REF] IdentNode: '(lineitem0_.ORDR_ID, lineitem0_.PROD_CODE)' {alias=l, className=org.hibernate.test.idprops.LineItem, tableAlias=lineitem0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[QUOTED_STRING] LiteralNode: ''456''
+
+14:14:02,160 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,160 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.idprops.LineItem l where l.id = '456'
+14:14:02,160 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ID_LINE_ITEM lineitem0_ where lineitem0_.ID_NON_ID2='456'
+14:14:02,160 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,161 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ID_LINE_ITEM lineitem0_ 
+    where
+        lineitem0_.ID_NON_ID2='456'
+14:14:02,161 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.idprops.Order o where o.orderee.id = 1
+14:14:02,161 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=49,possibleID=true]
+14:14:02,162 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'idprops'
+    |  |     |  \-[IDENT] Node: 'Order'
+    |  |     \-[ALIAS] Node: 'o'
+    |  \-[SELECT] Node: 'select'
+    |     \-[COUNT] Node: 'count'
+    |        \-[ROW_STAR] Node: '*'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'o'
+          |  |  \-[IDENT] Node: 'orderee'
+          |  \-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:14:02,170 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,171 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.Order (o) -> order0_
+14:14:02,171 DEBUG FromReferenceNode:74 - Resolved : o -> order0_.PK
+14:14:02,171 DEBUG DotNode:599 - getDataType() : orderee -> org.hibernate.type.ManyToOneType(org.hibernate.test.idprops.Person)
+14:14:02,171 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for orderee in org.hibernate.test.idprops.Order (<no alias>) parent = [  ( . ( . order0_.PK orderee ) id ) ]
+14:14:02,171 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.Person (<no alias>) -> person1_
+14:14:02,171 DEBUG FromClause:282 - addJoinByPathMap() : o.orderee -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_ID_PERSON,tableAlias=person1_,origin=T_ID_ORDER order0_,columns={order0_.ORDEREE ,className=org.hibernate.test.idprops.Person}}
+14:14:02,172 DEBUG FromReferenceNode:74 - Resolved : o.orderee -> order0_.ORDEREE
+14:14:02,172 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:14:02,172 DEBUG FromReferenceNode:74 - Resolved : o.orderee.id -> person1_.ID_NON_ID
+14:14:02,172 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ID_ORDER order0_ T_ID_PERSON person1_ ) ( where ( = ( person1_.ID_NON_ID ( order0_.ORDEREE order0_.PK orderee ) id ) 1 ) ) )
+14:14:02,172 DEBUG JoinProcessor:175 - Using FROM fragment [T_ID_ORDER order0_]
+14:14:02,172 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [order0_.ORDEREE=person1_.PK]
+14:14:02,172 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [order0_.ORDEREE=person1_.PK]
+14:14:02,173 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ID_ORDER,T_ID_PERSON)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[o], fromElementByTableAlias=[order0_, person1_], fromElementsByPath=[o.orderee], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'T_ID_ORDER order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=T_ID_ORDER,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.idprops.Order}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: 'T_ID_PERSON person1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_ID_PERSON,tableAlias=person1_,origin=T_ID_ORDER order0_,columns={order0_.ORDEREE ,className=org.hibernate.test.idprops.Person}}
+    \-[WHERE] SqlNode: 'where'
+       +-[THETA_JOINS] SqlNode: '{theta joins}'
+       |  \-[SQL_TOKEN] SqlFragment: 'order0_.ORDEREE=person1_.PK'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person1_.ID_NON_ID' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=o.orderee.id,tableAlias=person1_,className=org.hibernate.test.idprops.Person,classAlias=null}
+          |  +-[DOT] DotNode: 'order0_.ORDEREE' {propertyName=orderee,dereferenceType=EOF,propertyPath=orderee,path=o.orderee,tableAlias=person1_,className=org.hibernate.test.idprops.Person,classAlias=null}
+          |  |  +-[ALIAS_REF] IdentNode: 'order0_.PK' {alias=o, className=org.hibernate.test.idprops.Order, tableAlias=order0_}
+          |  |  \-[IDENT] IdentNode: 'orderee' {originalText=orderee}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:14:02,193 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,193 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.idprops.Order o where o.orderee.id = 1
+14:14:02,193 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ID_ORDER order0_ cross join T_ID_PERSON person1_ where order0_.ORDEREE=person1_.PK and person1_.ID_NON_ID=1
+14:14:02,193 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,194 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ID_ORDER order0_ cross 
+    join
+        T_ID_PERSON person1_ 
+    where
+        order0_.ORDEREE=person1_.PK 
+        and person1_.ID_NON_ID=1
+14:14:02,194 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.idprops.Order o where o.orderee.pk = 1
+14:14:02,194 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=49,possibleID=true]
+14:14:02,195 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'idprops'
+    |  |     |  \-[IDENT] Node: 'Order'
+    |  |     \-[ALIAS] Node: 'o'
+    |  \-[SELECT] Node: 'select'
+    |     \-[COUNT] Node: 'count'
+    |        \-[ROW_STAR] Node: '*'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'o'
+          |  |  \-[IDENT] Node: 'orderee'
+          |  \-[IDENT] Node: 'pk'
+          \-[NUM_INT] Node: '1'
+
+14:14:02,203 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,203 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.Order (o) -> order0_
+14:14:02,203 DEBUG FromReferenceNode:74 - Resolved : o -> order0_.PK
+14:14:02,203 DEBUG DotNode:599 - getDataType() : orderee -> org.hibernate.type.ManyToOneType(org.hibernate.test.idprops.Person)
+14:14:02,203 DEBUG DotNode:562 - dereferenceShortcut() : property pk in org.hibernate.test.idprops.Order does not require a join.
+14:14:02,204 DEBUG DotNode:585 - Unresolved property path is now 'orderee.pk'
+14:14:02,204 DEBUG FromReferenceNode:74 - Resolved : o.orderee -> order0_.ORDEREE
+14:14:02,213 DEBUG DotNode:599 - getDataType() : orderee.pk -> org.hibernate.type.LongType@4bf3f9d
+14:14:02,213 DEBUG FromReferenceNode:74 - Resolved : o.orderee.pk -> order0_.ORDEREE
+14:14:02,213 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ID_ORDER order0_ ) ( where ( = ( order0_.ORDEREE ( order0_.ORDEREE order0_.PK orderee ) pk ) 1 ) ) )
+14:14:02,213 DEBUG JoinProcessor:175 - Using FROM fragment [T_ID_ORDER order0_]
+14:14:02,214 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ID_ORDER)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[o], fromElementByTableAlias=[order0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_ID_ORDER order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=T_ID_ORDER,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.idprops.Order}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'order0_.ORDEREE' {propertyName=pk,dereferenceType=ALL,propertyPath=orderee.pk,path=o.orderee.pk,tableAlias=order0_,className=org.hibernate.test.idprops.Order,classAlias=o}
+          |  +-[DOT] DotNode: 'order0_.ORDEREE' {propertyName=pk,dereferenceType=0,propertyPath=orderee.pk,path=o.orderee,tableAlias=order0_,className=org.hibernate.test.idprops.Order,classAlias=o}
+          |  |  +-[ALIAS_REF] IdentNode: 'order0_.PK' {alias=o, className=org.hibernate.test.idprops.Order, tableAlias=order0_}
+          |  |  \-[IDENT] IdentNode: 'orderee' {originalText=orderee}
+          |  \-[IDENT] IdentNode: 'pk' {originalText=pk}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:14:02,214 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,214 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.idprops.Order o where o.orderee.pk = 1
+14:14:02,214 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ID_ORDER order0_ where order0_.ORDEREE=1
+14:14:02,214 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,214 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ID_ORDER order0_ 
+    where
+        order0_.ORDEREE=1
+14:14:02,223 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.idprops.Order o where o.orderee.id = 123
+14:14:02,224 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=49,possibleID=true]
+14:14:02,225 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'idprops'
+    |  |     |  \-[IDENT] Node: 'Order'
+    |  |     \-[ALIAS] Node: 'o'
+    |  \-[SELECT] Node: 'select'
+    |     \-[COUNT] Node: 'count'
+    |        \-[ROW_STAR] Node: '*'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'o'
+          |  |  \-[IDENT] Node: 'orderee'
+          |  \-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '123'
+
+14:14:02,232 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,233 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.Order (o) -> order0_
+14:14:02,233 DEBUG FromReferenceNode:74 - Resolved : o -> order0_.PK
+14:14:02,233 DEBUG DotNode:599 - getDataType() : orderee -> org.hibernate.type.ManyToOneType(org.hibernate.test.idprops.Person)
+14:14:02,233 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for orderee in org.hibernate.test.idprops.Order (<no alias>) parent = [  ( . ( . order0_.PK orderee ) id ) ]
+14:14:02,234 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.Person (<no alias>) -> person1_
+14:14:02,234 DEBUG FromClause:282 - addJoinByPathMap() : o.orderee -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_ID_PERSON,tableAlias=person1_,origin=T_ID_ORDER order0_,columns={order0_.ORDEREE ,className=org.hibernate.test.idprops.Person}}
+14:14:02,234 DEBUG FromReferenceNode:74 - Resolved : o.orderee -> order0_.ORDEREE
+14:14:02,234 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:14:02,234 DEBUG FromReferenceNode:74 - Resolved : o.orderee.id -> person1_.ID_NON_ID
+14:14:02,234 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ID_ORDER order0_ T_ID_PERSON person1_ ) ( where ( = ( person1_.ID_NON_ID ( order0_.ORDEREE order0_.PK orderee ) id ) 123 ) ) )
+14:14:02,234 DEBUG JoinProcessor:175 - Using FROM fragment [T_ID_ORDER order0_]
+14:14:02,234 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [order0_.ORDEREE=person1_.PK]
+14:14:02,234 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [order0_.ORDEREE=person1_.PK]
+14:14:02,235 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ID_ORDER,T_ID_PERSON)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[o], fromElementByTableAlias=[order0_, person1_], fromElementsByPath=[o.orderee], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'T_ID_ORDER order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=T_ID_ORDER,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.idprops.Order}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: 'T_ID_PERSON person1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_ID_PERSON,tableAlias=person1_,origin=T_ID_ORDER order0_,columns={order0_.ORDEREE ,className=org.hibernate.test.idprops.Person}}
+    \-[WHERE] SqlNode: 'where'
+       +-[THETA_JOINS] SqlNode: '{theta joins}'
+       |  \-[SQL_TOKEN] SqlFragment: 'order0_.ORDEREE=person1_.PK'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person1_.ID_NON_ID' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=o.orderee.id,tableAlias=person1_,className=org.hibernate.test.idprops.Person,classAlias=null}
+          |  +-[DOT] DotNode: 'order0_.ORDEREE' {propertyName=orderee,dereferenceType=EOF,propertyPath=orderee,path=o.orderee,tableAlias=person1_,className=org.hibernate.test.idprops.Person,classAlias=null}
+          |  |  +-[ALIAS_REF] IdentNode: 'order0_.PK' {alias=o, className=org.hibernate.test.idprops.Order, tableAlias=order0_}
+          |  |  \-[IDENT] IdentNode: 'orderee' {originalText=orderee}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '123'
+
+14:14:02,245 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,246 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.idprops.Order o where o.orderee.id = 123
+14:14:02,246 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ID_ORDER order0_ cross join T_ID_PERSON person1_ where order0_.ORDEREE=person1_.PK and person1_.ID_NON_ID=123
+14:14:02,246 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,246 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ID_ORDER order0_ cross 
+    join
+        T_ID_PERSON person1_ 
+    where
+        order0_.ORDEREE=person1_.PK 
+        and person1_.ID_NON_ID=123
+14:14:02,247 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.idprops.LineItem l where l.pk.order.id = 1
+14:14:02,247 DEBUG ErrorCounter:63 - Keyword  'order' is being interpreted as an identifier due to: expecting IDENT, found 'order'
+14:14:02,248 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'idprops'
+    |  |     |  \-[IDENT] Node: 'LineItem'
+    |  |     \-[ALIAS] Node: 'l'
+    |  \-[SELECT] Node: 'select'
+    |     \-[COUNT] Node: 'count'
+    |        \-[ROW_STAR] Node: '*'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[IDENT] Node: 'l'
+          |  |  |  \-[IDENT] Node: 'pk'
+          |  |  \-[WEIRD_IDENT] Node: 'order'
+          |  \-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:14:02,257 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,258 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.LineItem (l) -> lineitem0_
+14:14:02,258 DEBUG FromReferenceNode:74 - Resolved : l -> (lineitem0_.ORDR_ID, lineitem0_.PROD_CODE)
+14:14:02,258 DEBUG DotNode:599 - getDataType() : pk -> org.hibernate.type.ComponentType@5dd6e624
+14:14:02,258 DEBUG DotNode:585 - Unresolved property path is now 'pk.order'
+14:14:02,258 DEBUG FromReferenceNode:74 - Resolved : l.pk -> lineitem0_.ORDR_ID
+14:14:02,258 DEBUG DotNode:599 - getDataType() : pk.order -> org.hibernate.type.ManyToOneType(org.hibernate.test.idprops.Order)
+14:14:02,258 DEBUG DotNode:562 - dereferenceShortcut() : property id in org.hibernate.test.idprops.LineItem does not require a join.
+14:14:02,259 DEBUG DotNode:585 - Unresolved property path is now 'pk.order.id'
+14:14:02,269 DEBUG FromReferenceNode:74 - Resolved : l.pk.order -> lineitem0_.ORDR_ID
+14:14:02,269 DEBUG DotNode:599 - getDataType() : pk.order.id -> org.hibernate.type.LongType@4bf3f9d
+14:14:02,269 DEBUG FromReferenceNode:74 - Resolved : l.pk.order.id -> lineitem0_.ORDR_ID
+14:14:02,270 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ID_LINE_ITEM lineitem0_ ) ( where ( = ( lineitem0_.ORDR_ID ( lineitem0_.ORDR_ID ( lineitem0_.ORDR_ID (lineitem0_.ORDR_ID, lineitem0_.PROD_CODE) pk ) order ) id ) 1 ) ) )
+14:14:02,270 DEBUG JoinProcessor:175 - Using FROM fragment [T_ID_LINE_ITEM lineitem0_]
+14:14:02,270 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ID_LINE_ITEM)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[l], fromElementByTableAlias=[lineitem0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_ID_LINE_ITEM lineitem0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=l,role=null,tableName=T_ID_LINE_ITEM,tableAlias=lineitem0_,origin=null,columns={,className=org.hibernate.test.idprops.LineItem}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'lineitem0_.ORDR_ID' {propertyName=id,dereferenceType=ALL,propertyPath=pk.order.id,path=l.pk.order.id,tableAlias=lineitem0_,className=org.hibernate.test.idprops.LineItem,classAlias=l}
+          |  +-[DOT] DotNode: 'lineitem0_.ORDR_ID' {propertyName=id,dereferenceType=0,propertyPath=pk.order.id,path=l.pk.order,tableAlias=lineitem0_,className=org.hibernate.test.idprops.LineItem,classAlias=l}
+          |  |  +-[DOT] DotNode: 'lineitem0_.ORDR_ID' {propertyName=order,dereferenceType=2,propertyPath=pk.order,path=l.pk,tableAlias=lineitem0_,className=org.hibernate.test.idprops.LineItem,classAlias=l}
+          |  |  |  +-[ALIAS_REF] IdentNode: '(lineitem0_.ORDR_ID, lineitem0_.PROD_CODE)' {alias=l, className=org.hibernate.test.idprops.LineItem, tableAlias=lineitem0_}
+          |  |  |  \-[IDENT] IdentNode: 'pk' {originalText=pk}
+          |  |  \-[WEIRD_IDENT] SqlNode: 'order'
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:14:02,270 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,271 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.idprops.LineItem l where l.pk.order.id = 1
+14:14:02,271 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ID_LINE_ITEM lineitem0_ where lineitem0_.ORDR_ID=1
+14:14:02,271 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,271 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ID_LINE_ITEM lineitem0_ 
+    where
+        lineitem0_.ORDR_ID=1
+14:14:02,272 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.idprops.LineItem l where l.pk.order.number = 1
+14:14:02,272 DEBUG ErrorCounter:63 - Keyword  'order' is being interpreted as an identifier due to: expecting IDENT, found 'order'
+14:14:02,273 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'idprops'
+    |  |     |  \-[IDENT] Node: 'LineItem'
+    |  |     \-[ALIAS] Node: 'l'
+    |  \-[SELECT] Node: 'select'
+    |     \-[COUNT] Node: 'count'
+    |        \-[ROW_STAR] Node: '*'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[IDENT] Node: 'l'
+          |  |  |  \-[IDENT] Node: 'pk'
+          |  |  \-[WEIRD_IDENT] Node: 'order'
+          |  \-[IDENT] Node: 'number'
+          \-[NUM_INT] Node: '1'
+
+14:14:02,284 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,285 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.LineItem (l) -> lineitem0_
+14:14:02,285 DEBUG FromReferenceNode:74 - Resolved : l -> (lineitem0_.ORDR_ID, lineitem0_.PROD_CODE)
+14:14:02,285 DEBUG DotNode:599 - getDataType() : pk -> org.hibernate.type.ComponentType@5dd6e624
+14:14:02,285 DEBUG DotNode:585 - Unresolved property path is now 'pk.order'
+14:14:02,285 DEBUG FromReferenceNode:74 - Resolved : l.pk -> lineitem0_.ORDR_ID
+14:14:02,285 DEBUG DotNode:599 - getDataType() : pk.order -> org.hibernate.type.ManyToOneType(org.hibernate.test.idprops.Order)
+14:14:02,285 DEBUG DotNode:562 - dereferenceShortcut() : property number in org.hibernate.test.idprops.LineItem does not require a join.
+14:14:02,286 DEBUG DotNode:585 - Unresolved property path is now 'pk.order.number'
+14:14:02,286 DEBUG FromReferenceNode:74 - Resolved : l.pk.order -> lineitem0_.ORDR_ID
+14:14:02,286 DEBUG DotNode:599 - getDataType() : pk.order.number -> org.hibernate.type.LongType@4bf3f9d
+14:14:02,286 DEBUG FromReferenceNode:74 - Resolved : l.pk.order.number -> lineitem0_.ORDR_ID
+14:14:02,286 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ID_LINE_ITEM lineitem0_ ) ( where ( = ( lineitem0_.ORDR_ID ( lineitem0_.ORDR_ID ( lineitem0_.ORDR_ID (lineitem0_.ORDR_ID, lineitem0_.PROD_CODE) pk ) order ) number ) 1 ) ) )
+14:14:02,286 DEBUG JoinProcessor:175 - Using FROM fragment [T_ID_LINE_ITEM lineitem0_]
+14:14:02,286 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ID_LINE_ITEM)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[l], fromElementByTableAlias=[lineitem0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_ID_LINE_ITEM lineitem0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=l,role=null,tableName=T_ID_LINE_ITEM,tableAlias=lineitem0_,origin=null,columns={,className=org.hibernate.test.idprops.LineItem}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'lineitem0_.ORDR_ID' {propertyName=number,dereferenceType=ALL,propertyPath=pk.order.number,path=l.pk.order.number,tableAlias=lineitem0_,className=org.hibernate.test.idprops.LineItem,classAlias=l}
+          |  +-[DOT] DotNode: 'lineitem0_.ORDR_ID' {propertyName=number,dereferenceType=0,propertyPath=pk.order.number,path=l.pk.order,tableAlias=lineitem0_,className=org.hibernate.test.idprops.LineItem,classAlias=l}
+          |  |  +-[DOT] DotNode: 'lineitem0_.ORDR_ID' {propertyName=order,dereferenceType=2,propertyPath=pk.order,path=l.pk,tableAlias=lineitem0_,className=org.hibernate.test.idprops.LineItem,classAlias=l}
+          |  |  |  +-[ALIAS_REF] IdentNode: '(lineitem0_.ORDR_ID, lineitem0_.PROD_CODE)' {alias=l, className=org.hibernate.test.idprops.LineItem, tableAlias=lineitem0_}
+          |  |  |  \-[IDENT] IdentNode: 'pk' {originalText=pk}
+          |  |  \-[WEIRD_IDENT] SqlNode: 'order'
+          |  \-[IDENT] IdentNode: 'number' {originalText=number}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:14:02,295 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,296 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.idprops.LineItem l where l.pk.order.number = 1
+14:14:02,296 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ID_LINE_ITEM lineitem0_ where lineitem0_.ORDR_ID=1
+14:14:02,296 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,296 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ID_LINE_ITEM lineitem0_ 
+    where
+        lineitem0_.ORDR_ID=1
+14:14:02,297 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.idprops.LineItem l where l.pk.order.orderee.pk = 1
+14:14:02,297 DEBUG ErrorCounter:63 - Keyword  'order' is being interpreted as an identifier due to: expecting IDENT, found 'order'
+14:14:02,298 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'idprops'
+    |  |     |  \-[IDENT] Node: 'LineItem'
+    |  |     \-[ALIAS] Node: 'l'
+    |  \-[SELECT] Node: 'select'
+    |     \-[COUNT] Node: 'count'
+    |        \-[ROW_STAR] Node: '*'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[IDENT] Node: 'l'
+          |  |  |  |  \-[IDENT] Node: 'pk'
+          |  |  |  \-[WEIRD_IDENT] Node: 'order'
+          |  |  \-[IDENT] Node: 'orderee'
+          |  \-[IDENT] Node: 'pk'
+          \-[NUM_INT] Node: '1'
+
+14:14:02,317 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,317 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.LineItem (l) -> lineitem0_
+14:14:02,318 DEBUG FromReferenceNode:74 - Resolved : l -> (lineitem0_.ORDR_ID, lineitem0_.PROD_CODE)
+14:14:02,318 DEBUG DotNode:599 - getDataType() : pk -> org.hibernate.type.ComponentType@5dd6e624
+14:14:02,318 DEBUG DotNode:585 - Unresolved property path is now 'pk.order'
+14:14:02,318 DEBUG FromReferenceNode:74 - Resolved : l.pk -> lineitem0_.ORDR_ID
+14:14:02,318 DEBUG DotNode:599 - getDataType() : pk.order -> org.hibernate.type.ManyToOneType(org.hibernate.test.idprops.Order)
+14:14:02,318 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for order in org.hibernate.test.idprops.LineItem (<no alias>) parent = [  ( . ( . ( lineitem0_.ORDR_ID (lineitem0_.ORDR_ID, lineitem0_.PROD_CODE) pk ) order ) orderee ) ]
+14:14:02,318 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.idprops.Order (<no alias>) -> order1_
+14:14:02,319 DEBUG FromClause:282 - addJoinByPathMap() : l.pk.order -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_ID_ORDER,tableAlias=order1_,origin=T_ID_LINE_ITEM lineitem0_,columns={lineitem0_.ORDR_ID ,className=org.hibernate.test.idprops.Order}}
+14:14:02,319 DEBUG FromReferenceNode:74 - Resolved : l.pk.order -> lineitem0_.ORDR_ID
+14:14:02,319 DEBUG DotNode:599 - getDataType() : orderee -> org.hibernate.type.ManyToOneType(org.hibernate.test.idprops.Person)
+14:14:02,319 DEBUG DotNode:562 - dereferenceShortcut() : property pk in org.hibernate.test.idprops.Order does not require a join.
+14:14:02,319 DEBUG DotNode:585 - Unresolved property path is now 'orderee.pk'
+14:14:02,319 DEBUG FromReferenceNode:74 - Resolved : l.pk.order.orderee -> order1_.ORDEREE
+14:14:02,319 DEBUG DotNode:599 - getDataType() : orderee.pk -> org.hibernate.type.LongType@4bf3f9d
+14:14:02,319 DEBUG FromReferenceNode:74 - Resolved : l.pk.order.orderee.pk -> order1_.ORDEREE
+14:14:02,319 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ID_LINE_ITEM lineitem0_ T_ID_ORDER order1_ ) ( where ( = ( order1_.ORDEREE ( order1_.ORDEREE ( lineitem0_.ORDR_ID ( lineitem0_.ORDR_ID (lineitem0_.ORDR_ID, lineitem0_.PROD_CODE) pk ) order ) orderee ) pk ) 1 ) ) )
+14:14:02,320 DEBUG JoinProcessor:175 - Using FROM fragment [T_ID_LINE_ITEM lineitem0_]
+14:14:02,320 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [lineitem0_.ORDR_ID=order1_.PK]
+14:14:02,320 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [lineitem0_.ORDR_ID=order1_.PK]
+14:14:02,320 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ID_ORDER,T_ID_LINE_ITEM)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[l], fromElementByTableAlias=[order1_, lineitem0_], fromElementsByPath=[l.pk.order], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'T_ID_LINE_ITEM lineitem0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=l,role=null,tableName=T_ID_LINE_ITEM,tableAlias=lineitem0_,origin=null,columns={,className=org.hibernate.test.idprops.LineItem}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: 'T_ID_ORDER order1_' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_ID_ORDER,tableAlias=order1_,origin=T_ID_LINE_ITEM lineitem0_,columns={lineitem0_.ORDR_ID ,className=org.hibernate.test.idprops.Order}}
+    \-[WHERE] SqlNode: 'where'
+       +-[THETA_JOINS] SqlNode: '{theta joins}'
+       |  \-[SQL_TOKEN] SqlFragment: 'lineitem0_.ORDR_ID=order1_.PK'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'order1_.ORDEREE' {propertyName=pk,dereferenceType=ALL,propertyPath=orderee.pk,path=l.pk.order.orderee.pk,tableAlias=order1_,className=org.hibernate.test.idprops.Order,classAlias=null}
+          |  +-[DOT] DotNode: 'order1_.ORDEREE' {propertyName=pk,dereferenceType=0,propertyPath=orderee.pk,path=l.pk.order.orderee,tableAlias=order1_,className=org.hibernate.test.idprops.Order,classAlias=null}
+          |  |  +-[DOT] DotNode: 'lineitem0_.ORDR_ID' {propertyName=order,dereferenceType=EOF,propertyPath=pk.order,path=l.pk.order,tableAlias=order1_,className=org.hibernate.test.idprops.Order,classAlias=null}
+          |  |  |  +-[DOT] DotNode: 'lineitem0_.ORDR_ID' {propertyName=order,dereferenceType=2,propertyPath=pk.order,path=l.pk,tableAlias=lineitem0_,className=org.hibernate.test.idprops.LineItem,classAlias=l}
+          |  |  |  |  +-[ALIAS_REF] IdentNode: '(lineitem0_.ORDR_ID, lineitem0_.PROD_CODE)' {alias=l, className=org.hibernate.test.idprops.LineItem, tableAlias=lineitem0_}
+          |  |  |  |  \-[IDENT] IdentNode: 'pk' {originalText=pk}
+          |  |  |  \-[WEIRD_IDENT] SqlNode: 'order'
+          |  |  \-[IDENT] IdentNode: 'orderee' {originalText=orderee}
+          |  \-[IDENT] IdentNode: 'pk' {originalText=pk}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:14:02,329 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,329 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.idprops.LineItem l where l.pk.order.orderee.pk = 1
+14:14:02,329 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ID_LINE_ITEM lineitem0_ cross join T_ID_ORDER order1_ where lineitem0_.ORDR_ID=order1_.PK and order1_.ORDEREE=1
+14:14:02,329 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:02,329 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ID_LINE_ITEM lineitem0_ cross 
+    join
+        T_ID_ORDER order1_ 
+    where
+        lineitem0_.ORDR_ID=order1_.PK 
+        and order1_.ORDEREE=1
+14:14:02,341 DEBUG SQL:104 - 
+    select
+        order_.PK,
+        order_.ORDR_DT as ORDR2_1_,
+        order_.ORDEREE as ORDEREE1_ 
+    from
+        T_ID_ORDER order_ 
+    where
+        order_.PK=?
+14:14:02,342 DEBUG SQL:104 - 
+    select
+        lineitem_.ORDR_ID,
+        lineitem_.PROD_CODE,
+        lineitem_.QTY as QTY0_,
+        lineitem_.ID_NON_ID2 as ID4_0_ 
+    from
+        T_ID_LINE_ITEM lineitem_ 
+    where
+        lineitem_.ORDR_ID=? 
+        and lineitem_.PROD_CODE=?
+14:14:02,342 DEBUG SQL:104 - 
+    select
+        person_.PK,
+        person_.NAME as NAME2_,
+        person_.ID_NON_ID as ID3_2_ 
+    from
+        T_ID_PERSON person_ 
+    where
+        person_.PK=?
+14:14:02,353 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ID_LINE_ITEM 
+    where
+        ORDR_ID=? 
+        and PROD_CODE=?
+14:14:02,353 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ID_ORDER 
+    where
+        PK=?
+14:14:02,354 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ID_PERSON 
+    where
+        PK=?
+14:14:02,354  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:02,355 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:02,355 DEBUG SQL:104 - 
+    alter table T_ID_LINE_ITEM 
+        drop constraint FK41D68C6534D50D28
+14:14:02,355 DEBUG SQL:104 - 
+    alter table T_ID_ORDER 
+        drop constraint FK8077CA95D49D1672
+14:14:02,355 DEBUG SQL:104 - 
+    drop table T_ID_LINE_ITEM if exists
+14:14:02,356 DEBUG SQL:104 - 
+    drop table T_ID_ORDER if exists
+14:14:02,356 DEBUG SQL:104 - 
+    drop table T_ID_PERSON if exists
+14:14:02,356  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:02,356  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

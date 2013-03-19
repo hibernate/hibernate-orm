@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.array.ArrayTest" tests="1" time="0.065" timestamp="2013-02-28T20:10:09">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.array.ArrayTest" name="testOneToMany" time="0.016" />
+  <system-out><![CDATA[14:10:09,613  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.array.ArrayTest
+14:10:09,624  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:09,626  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:09,626  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:09,626  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:09,626  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:09,628  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:09,628  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:09,629  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:09,629  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:09,629  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:09,644  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:09,644 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:09,645 DEBUG SQL:104 - 
+    alter table Contest_Competitor 
+        drop constraint FK5A1505977664CE5
+14:10:09,645 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Contest_Competitor drop constraint FK5A1505977664CE5
+14:10:09,645 ERROR SchemaExport:426 - Table "CONTEST_COMPETITOR" not found; SQL statement:
+
+    alter table Contest_Competitor 
+        drop constraint FK5A1505977664CE5 [42102-145]
+14:10:09,645 DEBUG SQL:104 - 
+    alter table Contest_Competitor 
+        drop constraint FK5A15059737D337C5
+14:10:09,645 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Contest_Competitor drop constraint FK5A15059737D337C5
+14:10:09,646 ERROR SchemaExport:426 - Table "CONTEST_COMPETITOR" not found; SQL statement:
+
+    alter table Contest_Competitor 
+        drop constraint FK5A15059737D337C5 [42102-145]
+14:10:09,646 DEBUG SQL:104 - 
+    alter table Contest_heldIn 
+        drop constraint FKB43B54E537D337C5
+14:10:09,646 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Contest_heldIn drop constraint FKB43B54E537D337C5
+14:10:09,646 ERROR SchemaExport:426 - Table "CONTEST_HELDIN" not found; SQL statement:
+
+    alter table Contest_heldIn 
+        drop constraint FKB43B54E537D337C5 [42102-145]
+14:10:09,646 DEBUG SQL:104 - 
+    drop table Competitor if exists
+14:10:09,646 DEBUG SQL:104 - 
+    drop table Contest if exists
+14:10:09,647 DEBUG SQL:104 - 
+    drop table Contest_Competitor if exists
+14:10:09,647 DEBUG SQL:104 - 
+    drop table Contest_heldIn if exists
+14:10:09,647 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:09,647 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:09,647 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:09,648 DEBUG SQL:104 - 
+    create table Competitor (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:09,648 DEBUG SQL:104 - 
+    create table Contest (
+        id integer not null,
+        primary key (id)
+    )
+14:10:09,649 DEBUG SQL:104 - 
+    create table Contest_Competitor (
+        Contest_id integer not null,
+        results_id integer not null,
+        pos integer not null,
+        primary key (Contest_id, pos)
+    )
+14:10:09,649 DEBUG SQL:104 - 
+    create table Contest_heldIn (
+        Contest_id integer not null,
+        heldIn integer,
+        pos integer not null,
+        primary key (Contest_id, pos)
+    )
+14:10:09,650 DEBUG SQL:104 - 
+    alter table Contest_Competitor 
+        add constraint UK_5A150597DDF82A04 unique (results_id)
+14:10:09,650 DEBUG SQL:104 - 
+    alter table Contest_Competitor 
+        add constraint FK5A1505977664CE5 
+        foreign key (results_id) 
+        references Competitor
+14:10:09,652 DEBUG SQL:104 - 
+    alter table Contest_Competitor 
+        add constraint FK5A15059737D337C5 
+        foreign key (Contest_id) 
+        references Contest
+14:10:09,653 DEBUG SQL:104 - 
+    alter table Contest_heldIn 
+        add constraint FKB43B54E537D337C5 
+        foreign key (Contest_id) 
+        references Contest
+14:10:09,654 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:09,654  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:09,655  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:09,655  INFO CustomRunner:139 - Test: testOneToMany
+14:10:09,657 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,660 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,661 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,663 DEBUG SQL:104 - 
+    insert 
+    into
+        Contest
+        (id) 
+    values
+        (?)
+14:10:09,664 DEBUG SQL:104 - 
+    insert 
+    into
+        Competitor
+        (name, id) 
+    values
+        (?, ?)
+14:10:09,665 DEBUG SQL:104 - 
+    insert 
+    into
+        Competitor
+        (name, id) 
+    values
+        (?, ?)
+14:10:09,665 DEBUG SQL:104 - 
+    insert 
+    into
+        Contest_heldIn
+        (Contest_id, pos, heldIn) 
+    values
+        (?, ?, ?)
+14:10:09,666 DEBUG SQL:104 - 
+    insert 
+    into
+        Contest_heldIn
+        (Contest_id, pos, heldIn) 
+    values
+        (?, ?, ?)
+14:10:09,666 DEBUG SQL:104 - 
+    insert 
+    into
+        Contest_Competitor
+        (Contest_id, pos, results_id) 
+    values
+        (?, ?, ?)
+14:10:09,667 DEBUG SQL:104 - 
+    insert 
+    into
+        Contest_Competitor
+        (Contest_id, pos, results_id) 
+    values
+        (?, ?, ?)
+14:10:09,668 DEBUG SQL:104 - 
+    select
+        contest0_.id as id1_0_ 
+    from
+        Contest contest0_ 
+    where
+        contest0_.id=?
+14:10:09,668 DEBUG SQL:104 - 
+    select
+        heldin0_.Contest_id as Contest1_1_0_,
+        heldin0_.heldIn as heldIn3_0_,
+        heldin0_.pos as pos0_ 
+    from
+        Contest_heldIn heldin0_ 
+    where
+        heldin0_.Contest_id=?
+14:10:09,669 DEBUG SQL:104 - 
+    select
+        results0_.Contest_id as Contest1_1_1_,
+        results0_.results_id as results2_2_1_,
+        results0_.pos as pos1_,
+        competitor1_.id as id0_0_,
+        competitor1_.name as name0_0_ 
+    from
+        Contest_Competitor results0_ 
+    inner join
+        Competitor competitor1_ 
+            on results0_.results_id=competitor1_.id 
+    where
+        results0_.Contest_id=?
+14:10:09,672  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:09,672 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:09,673 DEBUG SQL:104 - 
+    alter table Contest_Competitor 
+        drop constraint FK5A1505977664CE5
+14:10:09,673 DEBUG SQL:104 - 
+    alter table Contest_Competitor 
+        drop constraint FK5A15059737D337C5
+14:10:09,673 DEBUG SQL:104 - 
+    alter table Contest_heldIn 
+        drop constraint FKB43B54E537D337C5
+14:10:09,674 DEBUG SQL:104 - 
+    drop table Competitor if exists
+14:10:09,674 DEBUG SQL:104 - 
+    drop table Contest if exists
+14:10:09,675 DEBUG SQL:104 - 
+    drop table Contest_Competitor if exists
+14:10:09,675 DEBUG SQL:104 - 
+    drop table Contest_heldIn if exists
+14:10:09,676 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:09,676  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:09,676  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

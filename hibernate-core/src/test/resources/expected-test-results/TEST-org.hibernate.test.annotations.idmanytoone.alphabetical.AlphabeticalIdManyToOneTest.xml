@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.idmanytoone.alphabetical.AlphabeticalIdManyToOneTest" tests="1" time="0.056" timestamp="2013-02-28T20:10:30">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.idmanytoone.alphabetical.AlphabeticalIdManyToOneTest" name="testAlphabeticalTest" time="0.001" />
+  <system-out><![CDATA[14:10:30,391  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.idmanytoone.alphabetical.AlphabeticalIdManyToOneTest
+14:10:30,400  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:30,404  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:30,405  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:30,405  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:30,405  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:30,406  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:30,406  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:30,407  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:30,408  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:30,409  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:30,426  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:30,426 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:30,427 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK427047D9F2
+14:10:30,427 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table B drop constraint FK427047D9F2
+14:10:30,427 ERROR SchemaExport:426 - Table "B" not found; SQL statement:
+
+    alter table B 
+        drop constraint FK427047D9F2 [42102-145]
+14:10:30,427 DEBUG SQL:104 - 
+    alter table C 
+        drop constraint FK4324626EC4
+14:10:30,427 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table C drop constraint FK4324626EC4
+14:10:30,427 ERROR SchemaExport:426 - Table "C" not found; SQL statement:
+
+    alter table C 
+        drop constraint FK4324626EC4 [42102-145]
+14:10:30,427 DEBUG SQL:104 - 
+    drop table A if exists
+14:10:30,428 DEBUG SQL:104 - 
+    drop table B if exists
+14:10:30,431 DEBUG SQL:104 - 
+    drop table C if exists
+14:10:30,431 DEBUG SQL:104 - 
+    create table A (
+        id integer not null,
+        primary key (id)
+    )
+14:10:30,431 DEBUG SQL:104 - 
+    create table B (
+        sequenceNumber integer not null,
+        aId integer not null,
+        bSequenceNumber integer not null,
+        primary key (aId, bSequenceNumber, sequenceNumber)
+    )
+14:10:30,432 DEBUG SQL:104 - 
+    create table C (
+        sequenceNumber integer not null,
+        aId integer not null,
+        primary key (aId, sequenceNumber)
+    )
+14:10:30,432 DEBUG SQL:104 - 
+    alter table B 
+        add constraint FK427047D9F2 
+        foreign key (aId, bSequenceNumber) 
+        references C
+14:10:30,433 DEBUG SQL:104 - 
+    alter table C 
+        add constraint FK4324626EC4 
+        foreign key (aId) 
+        references A
+14:10:30,442  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:30,442  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:30,443  INFO CustomRunner:139 - Test: testAlphabeticalTest
+14:10:30,444  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:30,444 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:30,444 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK427047D9F2
+14:10:30,445 DEBUG SQL:104 - 
+    alter table C 
+        drop constraint FK4324626EC4
+14:10:30,445 DEBUG SQL:104 - 
+    drop table A if exists
+14:10:30,445 DEBUG SQL:104 - 
+    drop table B if exists
+14:10:30,445 DEBUG SQL:104 - 
+    drop table C if exists
+14:10:30,445  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:30,446  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

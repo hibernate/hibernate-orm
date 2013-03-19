@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.jpa.cascade.CascadeTest" tests="1" time="0.191" timestamp="2013-02-28T20:14:50">
+  <properties />
+  <testcase classname="org.hibernate.test.jpa.cascade.CascadeTest" name="testManyToOneGeneratedIdsOnSave" time="0.048" />
+  <system-out><![CDATA[14:14:50,809  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.jpa.cascade.CascadeTest
+14:14:50,813  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/jpa/cascade/ParentChild.hbm.xml
+14:14:50,822  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:50,822  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:50,822  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:50,823  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:50,823  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:50,824  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:50,824  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:50,825  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:50,825  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:50,886  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:50,887 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:50,887 DEBUG SQL:104 - 
+    alter table CHILD 
+        drop constraint FK3D1FCFC60E58517
+14:14:50,887 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CHILD drop constraint FK3D1FCFC60E58517
+14:14:50,887 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table CHILD 
+        drop constraint FK3D1FCFC60E58517 [42102-145]
+14:14:50,888 DEBUG SQL:104 - 
+    alter table CHILD_A 
+        drop constraint FK5746B9BEBB9B3A05
+14:14:50,888 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CHILD_A drop constraint FK5746B9BEBB9B3A05
+14:14:50,888 ERROR SchemaExport:426 - Table "CHILD_A" not found; SQL statement:
+
+    alter table CHILD_A 
+        drop constraint FK5746B9BEBB9B3A05 [42102-145]
+14:14:50,888 DEBUG SQL:104 - 
+    alter table C_INFO 
+        drop constraint FK77B1C72A252F9417
+14:14:50,888 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table C_INFO drop constraint FK77B1C72A252F9417
+14:14:50,888 ERROR SchemaExport:426 - Table "C_INFO" not found; SQL statement:
+
+    alter table C_INFO 
+        drop constraint FK77B1C72A252F9417 [42102-145]
+14:14:50,888 DEBUG SQL:104 - 
+    alter table C_INFO_A 
+        drop constraint FK525CB06C5A51FD05
+14:14:50,889 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table C_INFO_A drop constraint FK525CB06C5A51FD05
+14:14:50,889 ERROR SchemaExport:426 - Table "C_INFO_A" not found; SQL statement:
+
+    alter table C_INFO_A 
+        drop constraint FK525CB06C5A51FD05 [42102-145]
+14:14:50,889 DEBUG SQL:104 - 
+    alter table OTHER 
+        drop constraint FK48086F0BD6F7504
+14:14:50,889 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OTHER drop constraint FK48086F0BD6F7504
+14:14:50,889 ERROR SchemaExport:426 - Table "OTHER" not found; SQL statement:
+
+    alter table OTHER 
+        drop constraint FK48086F0BD6F7504 [42102-145]
+14:14:50,889 DEBUG SQL:104 - 
+    alter table OTHER_A 
+        drop constraint FKE67A96B2182529F2
+14:14:50,889 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OTHER_A drop constraint FKE67A96B2182529F2
+14:14:50,890 ERROR SchemaExport:426 - Table "OTHER_A" not found; SQL statement:
+
+    alter table OTHER_A 
+        drop constraint FKE67A96B2182529F2 [42102-145]
+14:14:50,890 DEBUG SQL:104 - 
+    alter table P_INFO 
+        drop constraint FK8DE0C73D9C3A8988
+14:14:50,890 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table P_INFO drop constraint FK8DE0C73D9C3A8988
+14:14:50,890 ERROR SchemaExport:426 - Table "P_INFO" not found; SQL statement:
+
+    alter table P_INFO 
+        drop constraint FK8DE0C73D9C3A8988 [42102-145]
+14:14:50,890 DEBUG SQL:104 - 
+    alter table P_INFO_A 
+        drop constraint FK98CBF7BFF6F03E76
+14:14:50,890 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table P_INFO_A drop constraint FK98CBF7BFF6F03E76
+14:14:50,890 ERROR SchemaExport:426 - Table "P_INFO_A" not found; SQL statement:
+
+    alter table P_INFO_A 
+        drop constraint FK98CBF7BFF6F03E76 [42102-145]
+14:14:50,890 DEBUG SQL:104 - 
+    drop table CHILD if exists
+14:14:50,891 DEBUG SQL:104 - 
+    drop table CHILD_A if exists
+14:14:50,891 DEBUG SQL:104 - 
+    drop table C_INFO if exists
+14:14:50,892 DEBUG SQL:104 - 
+    drop table C_INFO_A if exists
+14:14:50,892 DEBUG SQL:104 - 
+    drop table OTHER if exists
+14:14:50,892 DEBUG SQL:104 - 
+    drop table OTHER_A if exists
+14:14:50,892 DEBUG SQL:104 - 
+    drop table PARENT if exists
+14:14:50,892 DEBUG SQL:104 - 
+    drop table PARENT_A if exists
+14:14:50,893 DEBUG SQL:104 - 
+    drop table P_INFO if exists
+14:14:50,893 DEBUG SQL:104 - 
+    drop table P_INFO_A if exists
+14:14:50,893 DEBUG SQL:104 - 
+    create table CHILD (
+        ID bigint not null,
+        name varchar(255),
+        parent bigint,
+        primary key (ID)
+    )
+14:14:50,893 DEBUG SQL:104 - 
+    create table CHILD_A (
+        ID bigint not null,
+        name varchar(255),
+        parent bigint,
+        primary key (ID)
+    )
+14:14:50,893 DEBUG SQL:104 - 
+    create table C_INFO (
+        ID bigint not null,
+        INFO varchar(255),
+        CHILD_ID bigint,
+        primary key (ID)
+    )
+14:14:50,894 DEBUG SQL:104 - 
+    create table C_INFO_A (
+        ID bigint not null,
+        INFO varchar(255),
+        CHILD_ID bigint,
+        primary key (ID)
+    )
+14:14:50,894 DEBUG SQL:104 - 
+    create table OTHER (
+        ID bigint not null,
+        OWNER_NAME varchar(255),
+        primary key (ID)
+    )
+14:14:50,894 DEBUG SQL:104 - 
+    create table OTHER_A (
+        ID bigint not null,
+        OWNER_NAME varchar(255),
+        primary key (ID)
+    )
+14:14:50,894 DEBUG SQL:104 - 
+    create table PARENT (
+        ID bigint not null,
+        name varchar(255),
+        primary key (ID)
+    )
+14:14:50,908 DEBUG SQL:104 - 
+    create table PARENT_A (
+        ID bigint not null,
+        name varchar(255),
+        primary key (ID)
+    )
+14:14:50,908 DEBUG SQL:104 - 
+    create table P_INFO (
+        ID bigint not null,
+        INFO varchar(255),
+        primary key (ID)
+    )
+14:14:50,909 DEBUG SQL:104 - 
+    create table P_INFO_A (
+        ID bigint not null,
+        INFO varchar(255),
+        primary key (ID)
+    )
+14:14:50,909 DEBUG SQL:104 - 
+    alter table CHILD 
+        add constraint FK3D1FCFC60E58517 
+        foreign key (parent) 
+        references PARENT
+14:14:50,922 DEBUG SQL:104 - 
+    alter table CHILD_A 
+        add constraint FK5746B9BEBB9B3A05 
+        foreign key (parent) 
+        references PARENT_A
+14:14:50,922 DEBUG SQL:104 - 
+    alter table C_INFO 
+        add constraint FK77B1C72A252F9417 
+        foreign key (CHILD_ID) 
+        references CHILD
+14:14:50,923 DEBUG SQL:104 - 
+    alter table C_INFO_A 
+        add constraint FK525CB06C5A51FD05 
+        foreign key (CHILD_ID) 
+        references CHILD_A
+14:14:50,923 DEBUG SQL:104 - 
+    alter table OTHER 
+        add constraint FK48086F0BD6F7504 
+        foreign key (OWNER_NAME) 
+        references PARENT (name)
+14:14:50,924 DEBUG SQL:104 - 
+    alter table OTHER_A 
+        add constraint FKE67A96B2182529F2 
+        foreign key (OWNER_NAME) 
+        references PARENT_A (name)
+14:14:50,924 DEBUG SQL:104 - 
+    alter table PARENT 
+        add constraint uc_PARENT_1 unique (name)
+14:14:50,924 DEBUG SQL:104 - 
+    alter table PARENT_A 
+        add constraint uc_PARENT_A_1 unique (name)
+14:14:50,924 DEBUG SQL:104 - 
+    alter table P_INFO 
+        add constraint FK8DE0C73D9C3A8988 
+        foreign key (ID) 
+        references PARENT
+14:14:50,925 DEBUG SQL:104 - 
+    alter table P_INFO_A 
+        add constraint FK98CBF7BFF6F03E76 
+        foreign key (ID) 
+        references PARENT_A
+14:14:50,925  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:50,926  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:50,926  INFO CustomRunner:139 - Test: testManyToOneGeneratedIdsOnSave
+14:14:50,928 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        CHILD
+14:14:50,929 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.jpa.cascade.ChildInfoAssigned
+14:14:50,948 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'jpa'
+             |  \-[IDENT] Node: 'cascade'
+             \-[IDENT] Node: 'ChildInfoAssigned'
+
+14:14:50,948 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,948 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.jpa.cascade.ChildInfoAssigned (<no alias>) -> childinfoa0_
+14:14:50,948 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (C_INFO_A)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[childinfoa0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'C_INFO_A' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=C_INFO_A,tableAlias=childinfoa0_,origin=null,columns={,className=org.hibernate.test.jpa.cascade.ChildInfoAssigned}}
+
+14:14:50,948 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,949 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,949 DEBUG SQL:104 - 
+    delete 
+    from
+        C_INFO_A
+14:14:50,949 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.jpa.cascade.ChildAssigned
+14:14:50,950 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'jpa'
+             |  \-[IDENT] Node: 'cascade'
+             \-[IDENT] Node: 'ChildAssigned'
+
+14:14:50,951 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,951 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.jpa.cascade.ChildAssigned (<no alias>) -> childassig0_
+14:14:50,951 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (CHILD_A)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[childassig0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CHILD_A' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=CHILD_A,tableAlias=childassig0_,origin=null,columns={,className=org.hibernate.test.jpa.cascade.ChildAssigned}}
+
+14:14:50,951 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,951 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,951 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD_A
+14:14:50,952 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.jpa.cascade.ParentAssigned
+14:14:50,952 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'jpa'
+             |  \-[IDENT] Node: 'cascade'
+             \-[IDENT] Node: 'ParentAssigned'
+
+14:14:50,971 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,971 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.jpa.cascade.ParentAssigned (<no alias>) -> parentassi0_
+14:14:50,972 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (PARENT_A)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[parentassi0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'PARENT_A' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=PARENT_A,tableAlias=parentassi0_,origin=null,columns={,className=org.hibernate.test.jpa.cascade.ParentAssigned}}
+
+14:14:50,972 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,972 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,973 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT_A
+14:14:50,973 DEBUG SQL:104 - 
+    delete 
+    from
+        C_INFO_A
+14:14:50,974 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD_A
+14:14:50,974 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT_A
+14:14:50,974  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:50,975 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:50,975 DEBUG SQL:104 - 
+    alter table CHILD 
+        drop constraint FK3D1FCFC60E58517
+14:14:50,982 DEBUG SQL:104 - 
+    alter table CHILD_A 
+        drop constraint FK5746B9BEBB9B3A05
+14:14:50,983 DEBUG SQL:104 - 
+    alter table C_INFO 
+        drop constraint FK77B1C72A252F9417
+14:14:50,983 DEBUG SQL:104 - 
+    alter table C_INFO_A 
+        drop constraint FK525CB06C5A51FD05
+14:14:50,983 DEBUG SQL:104 - 
+    alter table OTHER 
+        drop constraint FK48086F0BD6F7504
+14:14:50,983 DEBUG SQL:104 - 
+    alter table OTHER_A 
+        drop constraint FKE67A96B2182529F2
+14:14:50,983 DEBUG SQL:104 - 
+    alter table P_INFO 
+        drop constraint FK8DE0C73D9C3A8988
+14:14:50,983 DEBUG SQL:104 - 
+    alter table P_INFO_A 
+        drop constraint FK98CBF7BFF6F03E76
+14:14:50,984 DEBUG SQL:104 - 
+    drop table CHILD if exists
+14:14:50,984 DEBUG SQL:104 - 
+    drop table CHILD_A if exists
+14:14:50,984 DEBUG SQL:104 - 
+    drop table C_INFO if exists
+14:14:50,993 DEBUG SQL:104 - 
+    drop table C_INFO_A if exists
+14:14:50,993 DEBUG SQL:104 - 
+    drop table OTHER if exists
+14:14:50,993 DEBUG SQL:104 - 
+    drop table OTHER_A if exists
+14:14:50,994 DEBUG SQL:104 - 
+    drop table PARENT if exists
+14:14:50,994 DEBUG SQL:104 - 
+    drop table PARENT_A if exists
+14:14:50,994 DEBUG SQL:104 - 
+    drop table P_INFO if exists
+14:14:50,994 DEBUG SQL:104 - 
+    drop table P_INFO_A if exists
+14:14:50,995  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:50,995  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

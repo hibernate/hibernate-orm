@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.metamodel.source.annotations.util.JandexHelperTest" tests="9" time="0.069" timestamp="2013-02-28T20:10:00">
+  <properties />
+  <testcase classname="org.hibernate.metamodel.source.annotations.util.JandexHelperTest" name="testGetMemberAnnotations" time="0.007" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.util.JandexHelperTest" name="testGettingNestedAnnotation" time="0.003" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.util.JandexHelperTest" name="testRetrieveClassParameterAsClass" time="0.015" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.util.JandexHelperTest" name="testRetrieveClassParameterAsString" time="0.003" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.util.JandexHelperTest" name="testRetrieveDefaultEnumElement" time="0.01" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.util.JandexHelperTest" name="testRetrieveExplicitEnumElement" time="0.01" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.util.JandexHelperTest" name="testRetrieveStringArray" time="0.004" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.util.JandexHelperTest" name="testRetrieveUnknownParameter" time="0.004" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.util.JandexHelperTest" name="testTryingToRetrieveWrongType" time="0.003" />
+  <system-out><![CDATA[14:10:00,410  INFO CustomRunner:132 - BeforeClass: org.hibernate.metamodel.source.annotations.util.JandexHelperTest
+14:10:00,410  INFO CustomRunner:139 - Test: testGetMemberAnnotations
+14:10:00,418  INFO CustomRunner:139 - Test: testGettingNestedAnnotation
+14:10:00,422  INFO CustomRunner:139 - Test: testRetrieveClassParameterAsClass
+14:10:00,425 ERROR AssertionFailure:43 - HHH000099: an assertion failure occured (this may indicate a bug in Hibernate, but is more likely due to unsafe use of the session): org.hibernate.AssertionFailure: Annotation parameters of type Class should be retrieved as strings (fully qualified class names)
+14:10:00,438  INFO CustomRunner:139 - Test: testRetrieveClassParameterAsString
+14:10:00,441  INFO CustomRunner:139 - Test: testRetrieveDefaultEnumElement
+14:10:00,452  INFO CustomRunner:139 - Test: testRetrieveExplicitEnumElement
+14:10:00,463  INFO CustomRunner:139 - Test: testRetrieveStringArray
+14:10:00,468  INFO CustomRunner:139 - Test: testRetrieveUnknownParameter
+14:10:00,471 ERROR AssertionFailure:49 - HHH000099: an assertion failure occured (this may indicate a bug in Hibernate, but is more likely due to unsafe use of the session): java.lang.NoSuchMethodException: javax.persistence.Entity.foo()
+14:10:00,473  INFO CustomRunner:139 - Test: testTryingToRetrieveWrongType
+14:10:00,476 ERROR AssertionFailure:43 - HHH000099: an assertion failure occured (this may indicate a bug in Hibernate, but is more likely due to unsafe use of the session): org.hibernate.AssertionFailure: the annotation property name of annotation javax.persistence.AttributeOverride is not of type java.lang.Float
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

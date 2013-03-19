@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.cfg.CacheableFileTest" tests="1" time="1.134" timestamp="2013-02-28T20:11:49">
+  <properties />
+  <testcase classname="org.hibernate.test.cfg.CacheableFileTest" name="testCachedFiles" time="1.102" />
+  <system-out><![CDATA[14:11:49,935  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.cfg.CacheableFileTest
+14:11:49,936  INFO CustomRunner:139 - Test: testCachedFiles
+14:11:49,963  WARN Configuration:539 - HHH000023: I/O reported cached file could not be found : /Users/jpav/hibernate/orm/hibernate-core/target/classes/test/org/hibernate/test/cfg/Cacheable.hbm.xml.bin : java.io.FileNotFoundException: Cached file could not be found or could not be used
+14:11:49,963  INFO Configuration:551 - HHH000220: Reading mappings from file: /Users/jpav/hibernate/orm/hibernate-core/target/classes/test/org/hibernate/test/cfg/Cacheable.hbm.xml
+14:11:50,055  INFO Configuration:593 - HHH000219: Reading mappings from cache file: /Users/jpav/hibernate/orm/hibernate-core/target/classes/test/org/hibernate/test/cfg/Cacheable.hbm.xml.bin
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

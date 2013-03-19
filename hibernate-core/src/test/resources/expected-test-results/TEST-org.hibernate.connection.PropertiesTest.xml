@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.connection.PropertiesTest" tests="1" time="0.013" timestamp="2013-02-28T20:09:52">
+  <properties />
+  <testcase classname="org.hibernate.connection.PropertiesTest" name="testProperties" time="0.004" />
+  <system-out><![CDATA[14:09:52,766  INFO CustomRunner:132 - BeforeClass: org.hibernate.connection.PropertiesTest
+14:09:52,767  INFO CustomRunner:139 - Test: testProperties
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,2714 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.query.QueryAndSQLTest" tests="13" time="1.457" timestamp="2013-02-28T20:10:41">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testCache" time="0.22" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testClassQueries" time="0.073" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testCollectionSQLOverriding" time="0.079" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testDiscriminator" time="0.061" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testEntitySQLOverriding" time="0.076" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testImplicitNativeQuery" time="0.034" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testImportQueryFromMappedSuperclass" time="0.021" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testNativeQueryAndCompositePKAndComponents" time="0.051" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testNativeQueryWithFormulaAttribute" time="0.029" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testNativeQueryWithFormulaAttributeWithoutAlias" time="0.236" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testPackageQueries" time="0.125" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testSQLQuery" time="0.042" />
+  <testcase classname="org.hibernate.test.annotations.query.QueryAndSQLTest" name="testSQLQueryWithManyToOne" time="0.033" />
+  <system-out><![CDATA[14:10:41,867  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.query.QueryAndSQLTest
+14:10:41,955  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:41,956  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:41,956  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:41,956  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:41,956  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:41,957  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:41,957  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:41,958  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:41,958  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:41,958  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:41,958  INFO UpdateTimestampsCache:61 - HHH000250: Starting update timestamps cache at region: hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache
+14:10:41,959  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: hibernate.test.org.hibernate.cache.internal.StandardQueryCache
+14:10:42,018  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:42,022 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:42,023 DEBUG SQL:104 - 
+    alter table CASIMIR_PARTICULE 
+        drop constraint FK6F3D4FA44E330DDE
+14:10:42,023 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CASIMIR_PARTICULE drop constraint FK6F3D4FA44E330DDE
+14:10:42,023 ERROR SchemaExport:426 - Table "CASIMIR_PARTICULE" not found; SQL statement:
+
+    alter table CASIMIR_PARTICULE 
+        drop constraint FK6F3D4FA44E330DDE [42102-145]
+14:10:42,023 DEBUG SQL:104 - 
+    alter table Night 
+        drop constraint FK47C73F8702C46E0
+14:10:42,023 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Night drop constraint FK47C73F8702C46E0
+14:10:42,023 ERROR SchemaExport:426 - Table "NIGHT" not found; SQL statement:
+
+    alter table Night 
+        drop constraint FK47C73F8702C46E0 [42102-145]
+14:10:42,023 DEBUG SQL:104 - 
+    alter table SpaceShip 
+        drop constraint FK3E966C42C47F4E06
+14:10:42,024 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table SpaceShip drop constraint FK3E966C42C47F4E06
+14:10:42,024 ERROR SchemaExport:426 - Table "SPACESHIP" not found; SQL statement:
+
+    alter table SpaceShip 
+        drop constraint FK3E966C42C47F4E06 [42102-145]
+14:10:42,024 DEBUG SQL:104 - 
+    drop table ALL_TABLES if exists
+14:10:42,024 DEBUG SQL:104 - 
+    drop table CASIMIR_PARTICULE if exists
+14:10:42,024 DEBUG SQL:104 - 
+    drop table CHAOS if exists
+14:10:42,024 DEBUG SQL:104 - 
+    drop table Captain if exists
+14:10:42,024 DEBUG SQL:104 - 
+    drop table Dictionary if exists
+14:10:42,024 DEBUG SQL:104 - 
+    drop table Night if exists
+14:10:42,025 DEBUG SQL:104 - 
+    drop table Plane if exists
+14:10:42,025 DEBUG SQL:104 - 
+    drop table SpaceShip if exists
+14:10:42,025 DEBUG SQL:104 - 
+    drop table Twilight if exists
+14:10:42,025 DEBUG SQL:104 - 
+    drop table tbl_area if exists
+14:10:42,025 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:42,025 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:42,025 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:42,025 DEBUG SQL:104 - 
+    create table ALL_TABLES (
+        TABLE_NAME varchar(255) not null,
+        primary key (TABLE_NAME)
+    )
+14:10:42,026 DEBUG SQL:104 - 
+    create table CASIMIR_PARTICULE (
+        id bigint not null,
+        chaos_fk bigint,
+        primary key (id)
+    )
+14:10:42,026 DEBUG SQL:104 - 
+    create table CHAOS (
+        id bigint not null,
+        name varchar(255),
+        nick_name varchar(255),
+        chaos_size bigint,
+        primary key (id)
+    )
+14:10:42,026 DEBUG SQL:104 - 
+    create table Captain (
+        firstname varchar(255) not null,
+        lastname varchar(255) not null,
+        primary key (firstname, lastname)
+    )
+14:10:42,027 DEBUG SQL:104 - 
+    create table Dictionary (
+        disc varchar(31) not null,
+        id integer not null,
+        editor varchar(255),
+        name varchar(255),
+        primary key (id)
+    )
+14:10:42,027 DEBUG SQL:104 - 
+    create table Night (
+        id integer not null,
+        night_date timestamp,
+        night_duration bigint,
+        area_id integer,
+        primary key (id)
+    )
+14:10:42,027 DEBUG SQL:104 - 
+    create table Plane (
+        planetype varchar(100) not null,
+        id bigint not null,
+        alive boolean not null,
+        fld_altitude integer,
+        color varchar(255) not null,
+        serialnbr varchar(255),
+        nbrOfSeats integer not null,
+        javaEmbeddedVersion varchar(255),
+        primary key (id)
+    )
+14:10:42,028 DEBUG SQL:104 - 
+    create table SpaceShip (
+        name varchar(255) not null,
+        length integer not null,
+        width integer not null,
+        model varchar(255),
+        speed double not null,
+        fname varchar(255),
+        lname varchar(255),
+        primary key (name)
+    )
+14:10:42,028 DEBUG SQL:104 - 
+    create table Twilight (
+        id integer not null,
+        primary key (id)
+    )
+14:10:42,041 DEBUG SQL:104 - 
+    create table tbl_area (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:42,042 DEBUG SQL:104 - 
+    alter table CASIMIR_PARTICULE 
+        add constraint FK6F3D4FA44E330DDE 
+        foreign key (chaos_fk) 
+        references CHAOS
+14:10:42,043 DEBUG SQL:104 - 
+    alter table Night 
+        add constraint FK47C73F8702C46E0 
+        foreign key (area_id) 
+        references tbl_area
+14:10:42,043 DEBUG SQL:104 - 
+    alter table SpaceShip 
+        add constraint FK3E966C42C47F4E06 
+        foreign key (fname, lname) 
+        references Captain
+14:10:42,046 DEBUG SQL:104 - 
+    alter table tbl_area 
+        add constraint uc_tbl_area_1 unique (name)
+14:10:42,047 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:42,047  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:42,049  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:42,049 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select n from org.hibernate.test.annotations.query.Night n where n.date <= :date
+14:10:42,051 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[IDENT] Node: 'query'
+    |  |     |  \-[IDENT] Node: 'Night'
+    |  |     \-[ALIAS] Node: 'n'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'n'
+    \-[WHERE] Node: 'where'
+       \-[LE] Node: '<='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'n'
+          |  \-[IDENT] Node: 'date'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'date'
+
+14:10:42,065 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,065 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Night (n) -> night0_
+14:10:42,066 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:42,066 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:42,066 DEBUG DotNode:599 - getDataType() : date -> org.hibernate.type.TimestampType@54a68bb4
+14:10:42,066 DEBUG FromReferenceNode:74 - Resolved : n.date -> night0_.night_date
+14:10:42,066 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} night0_.id ) ( FromClause{level=1} Night night0_ ) ( where ( <= ( night0_.night_date night0_.id date ) ? ) ) )
+14:10:42,067 DEBUG JoinProcessor:175 - Using FROM fragment [Night night0_]
+14:10:42,067 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Night)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'night0_.id as id5_' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[n], fromElementByTableAlias=[night0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Night night0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=n,role=null,tableName=Night,tableAlias=night0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Night}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LE] BinaryLogicOperatorNode: '<='
+          +-[DOT] DotNode: 'night0_.night_date' {propertyName=date,dereferenceType=ALL,propertyPath=date,path=n.date,tableAlias=night0_,className=org.hibernate.test.annotations.query.Night,classAlias=n}
+          |  +-[ALIAS_REF] IdentNode: 'night0_.id' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+          |  \-[IDENT] IdentNode: 'date' {originalText=date}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=date, expectedType=org.hibernate.type.TimestampType@54a68bb4}
+
+14:10:42,072 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,073 DEBUG QueryTranslatorImpl:235 - HQL: select n from org.hibernate.test.annotations.query.Night n where n.date <= :date
+14:10:42,073 DEBUG QueryTranslatorImpl:236 - SQL: select night0_.id as id5_, night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_ from Night night0_ where night0_.night_date<=?
+14:10:42,073 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,073 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select n from org.hibernate.test.annotations.query.Night n where n.duration = :duration
+14:10:42,075 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[IDENT] Node: 'query'
+    |  |     |  \-[IDENT] Node: 'Night'
+    |  |     \-[ALIAS] Node: 'n'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'n'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'n'
+          |  \-[IDENT] Node: 'duration'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'duration'
+
+14:10:42,093 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,095 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Night (n) -> night0_
+14:10:42,095 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:42,095 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:42,095 DEBUG DotNode:599 - getDataType() : duration -> org.hibernate.type.LongType@4bf3f9d
+14:10:42,096 DEBUG FromReferenceNode:74 - Resolved : n.duration -> night0_.night_duration
+14:10:42,096 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} night0_.id ) ( FromClause{level=1} Night night0_ ) ( where ( = ( night0_.night_duration night0_.id duration ) ? ) ) )
+14:10:42,096 DEBUG JoinProcessor:175 - Using FROM fragment [Night night0_]
+14:10:42,096 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Night)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'night0_.id as id5_' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[n], fromElementByTableAlias=[night0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Night night0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=n,role=null,tableName=Night,tableAlias=night0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Night}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'night0_.night_duration' {propertyName=duration,dereferenceType=ALL,propertyPath=duration,path=n.duration,tableAlias=night0_,className=org.hibernate.test.annotations.query.Night,classAlias=n}
+          |  +-[ALIAS_REF] IdentNode: 'night0_.id' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+          |  \-[IDENT] IdentNode: 'duration' {originalText=duration}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=duration, expectedType=org.hibernate.type.LongType@4bf3f9d}
+
+14:10:42,097 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,097 DEBUG QueryTranslatorImpl:235 - HQL: select n from org.hibernate.test.annotations.query.Night n where n.duration = :duration
+14:10:42,097 DEBUG QueryTranslatorImpl:236 - SQL: select night0_.id as id5_, night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_ from Night night0_ where night0_.night_duration=?
+14:10:42,097 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,098 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.Plane where id = :id
+14:10:42,099 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'annotations'
+    |           \-[IDENT] Node: 'Plane'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'id'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'id'
+
+14:10:42,099 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,099 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.Plane (<no alias>) -> plane0_
+14:10:42,099 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:10:42,099 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:10:42,100 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.id -> plane0_.id
+14:10:42,100 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Plane plane0_ ) ( where ( = ( plane0_.id {synthetic-alias} id ) ? ) ) )
+14:10:42,100 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:42,100 DEBUG JoinProcessor:175 - Using FROM fragment [Plane plane0_]
+14:10:42,101 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Plane)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'plane0_.id as id6_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Plane,tableAlias=plane0_,origin=null,columns={,className=org.hibernate.test.annotations.Plane}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[plane0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Plane plane0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Plane,tableAlias=plane0_,origin=null,columns={,className=org.hibernate.test.annotations.Plane}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'plane0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path={synthetic-alias}.id,tableAlias=plane0_,className=org.hibernate.test.annotations.Plane,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=id, expectedType=org.hibernate.type.LongType@4bf3f9d}
+
+14:10:42,107 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,107 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.Plane where id = :id
+14:10:42,107 DEBUG QueryTranslatorImpl:236 - SQL: select plane0_.id as id6_, plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_ from Plane plane0_ where plane0_.id=?
+14:10:42,108 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,108 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select p from org.hibernate.test.annotations.Plane p
+14:10:42,109 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  \-[IDENT] Node: 'annotations'
+       |     |  \-[IDENT] Node: 'Plane'
+       |     \-[ALIAS] Node: 'p'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'p'
+
+14:10:42,109 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,109 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.Plane (p) -> plane0_
+14:10:42,110 DEBUG FromReferenceNode:74 - Resolved : p -> plane0_.id
+14:10:42,110 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} plane0_.id ) ( FromClause{level=1} Plane plane0_ ) )
+14:10:42,110 DEBUG JoinProcessor:175 - Using FROM fragment [Plane plane0_]
+14:10:42,110 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Plane)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'plane0_.id as id6_' {alias=p, className=org.hibernate.test.annotations.Plane, tableAlias=plane0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[plane0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Plane plane0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Plane,tableAlias=plane0_,origin=null,columns={,className=org.hibernate.test.annotations.Plane}}
+
+14:10:42,122 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,123 DEBUG QueryTranslatorImpl:235 - HQL: select p from org.hibernate.test.annotations.Plane p
+14:10:42,123 DEBUG QueryTranslatorImpl:236 - SQL: select plane0_.id as id6_, plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_ from Plane plane0_
+14:10:42,123 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,123 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select n from org.hibernate.test.annotations.query.Night n where n.date >= :date
+14:10:42,125 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[IDENT] Node: 'query'
+    |  |     |  \-[IDENT] Node: 'Night'
+    |  |     \-[ALIAS] Node: 'n'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'n'
+    \-[WHERE] Node: 'where'
+       \-[GE] Node: '>='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'n'
+          |  \-[IDENT] Node: 'date'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'date'
+
+14:10:42,169 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,169 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Night (n) -> night0_
+14:10:42,170 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:42,170 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:42,170 DEBUG DotNode:599 - getDataType() : date -> org.hibernate.type.TimestampType@54a68bb4
+14:10:42,170 DEBUG FromReferenceNode:74 - Resolved : n.date -> night0_.night_date
+14:10:42,170 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} night0_.id ) ( FromClause{level=1} Night night0_ ) ( where ( >= ( night0_.night_date night0_.id date ) ? ) ) )
+14:10:42,196 DEBUG JoinProcessor:175 - Using FROM fragment [Night night0_]
+14:10:42,196 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Night)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'night0_.id as id5_' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[n], fromElementByTableAlias=[night0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Night night0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=n,role=null,tableName=Night,tableAlias=night0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Night}}
+    \-[WHERE] SqlNode: 'where'
+       \-[GE] BinaryLogicOperatorNode: '>='
+          +-[DOT] DotNode: 'night0_.night_date' {propertyName=date,dereferenceType=ALL,propertyPath=date,path=n.date,tableAlias=night0_,className=org.hibernate.test.annotations.query.Night,classAlias=n}
+          |  +-[ALIAS_REF] IdentNode: 'night0_.id' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+          |  \-[IDENT] IdentNode: 'date' {originalText=date}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=date, expectedType=org.hibernate.type.TimestampType@54a68bb4}
+
+14:10:42,197 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,197 DEBUG QueryTranslatorImpl:235 - HQL: select n from org.hibernate.test.annotations.query.Night n where n.date >= :date
+14:10:42,197 DEBUG QueryTranslatorImpl:236 - SQL: select night0_.id as id5_, night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_ from Night night0_ where night0_.night_date>=?
+14:10:42,197 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,211  INFO CustomRunner:139 - Test: testCache
+14:10:42,212 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:42,214 DEBUG SQL:104 - 
+    insert 
+    into
+        Plane
+        (alive, fld_altitude, color, serialnbr, nbrOfSeats, planetype, id) 
+    values
+        (?, ?, ?, ?, ?, 'Plane', ?)
+14:10:42,224 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089109909504]
+14:10:42,225 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088864153600]
+14:10:42,225  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: hibernate.test.testedCacheRegion
+14:10:42,226 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.testedCacheRegion] lookup : key[sql: select plane0_.id as id6_, plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_ from Plane plane0_ where plane0_.id=?; parameters: ; named parameters: {id=1}; transformer: org.hibernate.transform.CacheableResultTransformer@110f2]
+14:10:42,226 DEBUG SQL:104 - 
+    select
+        plane0_.id as id6_,
+        plane0_.alive as alive6_,
+        plane0_.fld_altitude as fld4_6_,
+        plane0_.color as color6_,
+        plane0_.serialnbr as serialnbr6_,
+        plane0_.nbrOfSeats as nbrOfSeats6_,
+        plane0_.javaEmbeddedVersion as javaEmbe8_6_,
+        plane0_.planetype as planetype6_ 
+    from
+        Plane plane0_ 
+    where
+        plane0_.id=?
+14:10:42,227 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.testedCacheRegion] : [sql: select plane0_.id as id6_, plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_ from Plane plane0_ where plane0_.id=?; parameters: ; named parameters: {id=1}; transformer: org.hibernate.transform.CacheableResultTransformer@110f2] -> [[5579088864161792, 1]]
+14:10:42,227 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.testedCacheRegion] lookup : key[sql: select plane0_.id as id6_, plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_ from Plane plane0_ where plane0_.id=?; parameters: ; named parameters: {id=1}; transformer: org.hibernate.transform.CacheableResultTransformer@110f2]
+14:10:42,227 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.testedCacheRegion] hit: sql: select plane0_.id as id6_, plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_ from Plane plane0_ where plane0_.id=?; parameters: ; named parameters: {id=1}; transformer: org.hibernate.transform.CacheableResultTransformer@110f2
+14:10:42,227 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] lookup : key[Plane]
+14:10:42,227 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] hit: Plane
+14:10:42,228 DEBUG SQL:104 - 
+    select
+        plane0_.id as id6_0_,
+        plane0_.alive as alive6_0_,
+        plane0_.fld_altitude as fld4_6_0_,
+        plane0_.color as color6_0_,
+        plane0_.serialnbr as serialnbr6_0_,
+        plane0_.nbrOfSeats as nbrOfSeats6_0_,
+        plane0_.javaEmbeddedVersion as javaEmbe8_6_0_,
+        plane0_.planetype as planetype6_0_ 
+    from
+        Plane plane0_ 
+    where
+        plane0_.id=?
+14:10:42,228 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane 
+    where
+        id=?
+14:10:42,229 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089109929984]
+14:10:42,229 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088864169985]
+14:10:42,229 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.Plane
+14:10:42,230 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'annotations'
+             \-[IDENT] Node: 'Plane'
+
+14:10:42,238 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,238 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.Plane (<no alias>) -> plane0_
+14:10:42,239 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Plane)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[plane0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Plane' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Plane,tableAlias=plane0_,origin=null,columns={,className=org.hibernate.test.annotations.Plane}}
+
+14:10:42,239 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,239 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,239 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Captain
+14:10:42,240 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Captain'
+
+14:10:42,240 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,240 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Captain (<no alias>) -> captain0_
+14:10:42,240 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Captain)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[captain0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Captain' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Captain,tableAlias=captain0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Captain}}
+
+14:10:42,267 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,267 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,267 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Dictionary
+14:10:42,268 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Dictionary'
+
+14:10:42,268 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,268 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Dictionary (<no alias>) -> dictionary0_
+14:10:42,269 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Dictionary)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[dictionary0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Dictionary' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Dictionary,tableAlias=dictionary0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Dictionary}}
+
+14:10:42,280 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,280 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,281 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Twilight
+14:10:42,281 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Twilight'
+
+14:10:42,291 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,291 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Twilight (<no alias>) -> twilight0_
+14:10:42,292 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Twilight)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[twilight0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Twilight' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Twilight,tableAlias=twilight0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Twilight}}
+
+14:10:42,292 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,292 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,292 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Chaos
+14:10:42,293 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Chaos'
+
+14:10:42,322 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,323 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Chaos (<no alias>) -> chaos0_
+14:10:42,323 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (CHAOS)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[chaos0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CHAOS' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=CHAOS,tableAlias=chaos0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Chaos}}
+
+14:10:42,323 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,323 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,324 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.CasimirParticle
+14:10:42,324 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'CasimirParticle'
+
+14:10:42,324 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,325 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.CasimirParticle (<no alias>) -> casimirpar0_
+14:10:42,325 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (CASIMIR_PARTICULE)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[casimirpar0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CASIMIR_PARTICULE' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=CASIMIR_PARTICULE,tableAlias=casimirpar0_,origin=null,columns={,className=org.hibernate.test.annotations.query.CasimirParticle}}
+
+14:10:42,351 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,351 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,351 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Area
+14:10:42,356 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Area'
+
+14:10:42,357 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,357 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Area (<no alias>) -> area0_
+14:10:42,357 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (tbl_area)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[area0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'tbl_area' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=tbl_area,tableAlias=area0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Area}}
+
+14:10:42,357 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,357 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,357 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.SpaceShip
+14:10:42,358 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'SpaceShip'
+
+14:10:42,358 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,358 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.SpaceShip (<no alias>) -> spaceship0_
+14:10:42,359 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (SpaceShip)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[spaceship0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'SpaceShip' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=SpaceShip,tableAlias=spaceship0_,origin=null,columns={,className=org.hibernate.test.annotations.query.SpaceShip}}
+
+14:10:42,359 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,359 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,359 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Night
+14:10:42,373 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Night'
+
+14:10:42,373 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,374 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Night (<no alias>) -> night0_
+14:10:42,374 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Night)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[night0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Night' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Night,tableAlias=night0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Night}}
+
+14:10:42,374 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,374 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,374 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.AllTables
+14:10:42,375 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'AllTables'
+
+14:10:42,388 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,389 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.AllTables (<no alias>) -> alltables0_
+14:10:42,391 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (ALL_TABLES)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[alltables0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ALL_TABLES' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ALL_TABLES,tableAlias=alltables0_,origin=null,columns={,className=org.hibernate.test.annotations.query.AllTables}}
+
+14:10:42,391 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,391 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:42,391  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:42,391 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089110593536]
+14:10:42,391 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:42,392 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089110597632]
+14:10:42,392 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:42,400 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089110630400]
+14:10:42,400 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:42,401 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089110634496]
+14:10:42,401 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:42,401 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089110634497]
+14:10:42,401 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:42,412 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089110675456]
+14:10:42,412 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:42,412 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089110679552]
+14:10:42,412 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:42,412 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089110679553]
+14:10:42,412 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:42,413 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089110683648]
+14:10:42,413 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:42,413 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089110683649]
+14:10:42,413 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:42,413 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088864923650]
+14:10:42,413 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088864923650]
+14:10:42,430 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088864923650]
+14:10:42,430 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088864923650]
+14:10:42,430 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088864923650]
+14:10:42,430 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088864923650]
+14:10:42,431 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088864923650]
+14:10:42,431 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088864923650]
+14:10:42,431 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088864923650]
+14:10:42,431 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088864923650]
+14:10:42,431  INFO CustomRunner:139 - Test: testClassQueries
+14:10:42,432 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:42,435 DEBUG SQL:104 - 
+    insert 
+    into
+        Night
+        (area_id, night_date, night_duration, id) 
+    values
+        (?, ?, ?, ?)
+14:10:42,436 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089110777856]
+14:10:42,436 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088865017857]
+14:10:42,436 DEBUG SQL:104 - 
+    select
+        night0_.id as id5_,
+        night0_.area_id as area4_5_,
+        night0_.night_date as night2_5_,
+        night0_.night_duration as night3_5_ 
+    from
+        Night night0_ 
+    where
+        night0_.night_date>=?
+14:10:42,452 DEBUG SQL:104 - 
+    select
+        night0_.id as id5_,
+        night0_.area_id as area4_5_,
+        night0_.night_date as night2_5_,
+        night0_.night_duration as night3_5_ 
+    from
+        Night night0_ 
+    where
+        night0_.night_date>=?
+14:10:42,453  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: hibernate.test.nightQuery
+14:10:42,453 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.nightQuery] lookup : key[sql: select night0_.id as id5_, night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_ from Night night0_ where night0_.night_duration=?; parameters: ; named parameters: {duration=14}; transformer: org.hibernate.transform.CacheableResultTransformer@110f2]
+14:10:42,453 DEBUG SQL:104 - 
+    select
+        night0_.id as id5_,
+        night0_.area_id as area4_5_,
+        night0_.night_date as night2_5_,
+        night0_.night_duration as night3_5_ 
+    from
+        Night night0_ 
+    where
+        night0_.night_duration=?
+14:10:42,454 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.nightQuery] : [sql: select night0_.id as id5_, night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_ from Night night0_ where night0_.night_duration=?; parameters: ; named parameters: {duration=14}; transformer: org.hibernate.transform.CacheableResultTransformer@110f2] -> [[5579088865091584, 2]]
+14:10:42,454 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.nightQuery] lookup : key[sql: select night0_.id as id5_, night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_ from Night night0_ where night0_.night_duration=?; parameters: ; named parameters: {duration=14}; transformer: org.hibernate.transform.CacheableResultTransformer@110f2]
+14:10:42,454 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.nightQuery] hit: sql: select night0_.id as id5_, night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_ from Night night0_ where night0_.night_duration=?; parameters: ; named parameters: {duration=14}; transformer: org.hibernate.transform.CacheableResultTransformer@110f2
+14:10:42,454 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] lookup : key[Night]
+14:10:42,454 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] hit: Night
+14:10:42,480 DEBUG SQL:104 - 
+    delete 
+    from
+        Night 
+    where
+        id=?
+14:10:42,480 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089110958080]
+14:10:42,480 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088865198081]
+14:10:42,481  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:42,481 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089110962177]
+14:10:42,481 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:42,481 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089110962178]
+14:10:42,481 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:42,481 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089110962179]
+14:10:42,481 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:42,482 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089110966272]
+14:10:42,482 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:42,482 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089110966273]
+14:10:42,482 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:42,482 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089110966274]
+14:10:42,482 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:42,482 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089110966275]
+14:10:42,482 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:42,483 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089110970368]
+14:10:42,483 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:42,483 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089110970369]
+14:10:42,483 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:42,483 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089110970370]
+14:10:42,483 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:42,483 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088865210371]
+14:10:42,504 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088865210371]
+14:10:42,504 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088865210371]
+14:10:42,504 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088865210371]
+14:10:42,504 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088865210371]
+14:10:42,504 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088865210371]
+14:10:42,504 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088865210371]
+14:10:42,504 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088865210371]
+14:10:42,504 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088865210371]
+14:10:42,505 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088865210371]
+14:10:42,505  INFO CustomRunner:139 - Test: testCollectionSQLOverriding
+14:10:42,507 DEBUG SQL:104 - 
+    INSERT 
+    INTO
+        CHAOS
+        (name, nick_name, chaos_size, id) 
+    VALUES
+        (upper(?),?,?,?)
+14:10:42,508 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089111072768]
+14:10:42,508 DEBUG SQL:104 - 
+    insert 
+    into
+        CASIMIR_PARTICULE
+        (id) 
+    values
+        (?)
+14:10:42,509 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089111076864]
+14:10:42,509 DEBUG SQL:104 - 
+    insert 
+    into
+        CASIMIR_PARTICULE
+        (id) 
+    values
+        (?)
+14:10:42,530 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089111162880]
+14:10:42,530 DEBUG SQL:104 - 
+    UPDATE
+        CASIMIR_PARTICULE 
+    SET
+        chaos_fk = ? 
+    where
+        id = ?
+14:10:42,530 DEBUG SQL:104 - 
+    UPDATE
+        CASIMIR_PARTICULE 
+    SET
+        chaos_fk = ? 
+    where
+        id = ?
+14:10:42,531 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089111166976]
+14:10:42,531 DEBUG SQL:104 - 
+    select
+        id,
+        chaos_size,
+        name,
+        lower( nick_name ) as nick_name 
+    from
+        CHAOS 
+    where
+        id= ?
+14:10:42,540 DEBUG SQL:104 - 
+    select
+        particles0_.chaos_fk as chaos2_2_1_,
+        particles0_.id as id1_1_,
+        particles0_.id as id1_0_ 
+    from
+        CASIMIR_PARTICULE particles0_ 
+    where
+        particles0_.chaos_fk=?
+14:10:42,541 DEBUG SQL:104 - 
+    update
+        CASIMIR_PARTICULE 
+    set
+        chaos_fk=null 
+    where
+        chaos_fk=?
+14:10:42,552 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089111252992]
+14:10:42,553 DEBUG SQL:104 - 
+    select
+        id,
+        chaos_size,
+        name,
+        lower( nick_name ) as nick_name 
+    from
+        CHAOS 
+    where
+        id= ?
+14:10:42,554 DEBUG SQL:104 - 
+    select
+        particles0_.chaos_fk as chaos2_2_1_,
+        particles0_.id as id1_1_,
+        particles0_.id as id1_0_ 
+    from
+        CASIMIR_PARTICULE particles0_ 
+    where
+        particles0_.chaos_fk=?
+14:10:42,554 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088865501184]
+14:10:42,554 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088865501184]
+14:10:42,554  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:42,554 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089111261186]
+14:10:42,555 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:42,566 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089111310336]
+14:10:42,567 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:42,567 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089111314432]
+14:10:42,567 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:42,567 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089111314433]
+14:10:42,567 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:42,567 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089111314434]
+14:10:42,568 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:42,568 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089111318528]
+14:10:42,568 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:42,568 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089111318529]
+14:10:42,568 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:42,582 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089111375872]
+14:10:42,583 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:42,583 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089111379968]
+14:10:42,583 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:42,583 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089111379969]
+14:10:42,583 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:42,583 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088865619970]
+14:10:42,583 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088865619970]
+14:10:42,583 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088865619970]
+14:10:42,584 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088865619970]
+14:10:42,584 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088865619970]
+14:10:42,584 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088865619970]
+14:10:42,584 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088865619970]
+14:10:42,584 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088865619970]
+14:10:42,584 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088865619970]
+14:10:42,584 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088865619970]
+14:10:42,584  INFO CustomRunner:139 - Test: testDiscriminator
+14:10:42,597 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:42,598 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:42,599 DEBUG SQL:104 - 
+    insert 
+    into
+        Dictionary
+        (editor, name, disc, id) 
+    values
+        (?, ?, 'Dic', ?)
+14:10:42,599 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089111445504]
+14:10:42,600 DEBUG SQL:104 - 
+    insert 
+    into
+        Dictionary
+        (editor, name, disc, id) 
+    values
+        (?, ?, 'Syn', ?)
+14:10:42,600 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089111449600]
+14:10:42,600 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088865689601]
+14:10:42,600 DEBUG SQL:104 - 
+    select
+        id,
+        name,
+        editor,
+        disc as type 
+    from
+        Dictionary
+14:10:42,610 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary 
+    where
+        id=?
+14:10:42,611 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089111490560]
+14:10:42,611 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary 
+    where
+        id=?
+14:10:42,611 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089111494656]
+14:10:42,611 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088865734657]
+14:10:42,611  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:42,611 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089111494659]
+14:10:42,611 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:42,612 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089111498752]
+14:10:42,612 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:42,612 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089111498753]
+14:10:42,612 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:42,612 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089111498754]
+14:10:42,612 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:42,612 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089111498755]
+14:10:42,613 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:42,613 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089111502848]
+14:10:42,613 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:42,613 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089111502849]
+14:10:42,613 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:42,613 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089111502850]
+14:10:42,613 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:42,613 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089111502851]
+14:10:42,614 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:42,644 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089111629824]
+14:10:42,645 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:42,645 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088865873920]
+14:10:42,645 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088865873920]
+14:10:42,645 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088865873920]
+14:10:42,645 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088865873920]
+14:10:42,645 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088865873920]
+14:10:42,645 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088865873920]
+14:10:42,645 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088865873920]
+14:10:42,645 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088865873920]
+14:10:42,645 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088865873920]
+14:10:42,645 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088865873920]
+14:10:42,646  INFO CustomRunner:139 - Test: testEntitySQLOverriding
+14:10:42,647 DEBUG SQL:104 - 
+    INSERT 
+    INTO
+        CHAOS
+        (name, nick_name, chaos_size, id) 
+    VALUES
+        (upper(?),?,?,?)
+14:10:42,661 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089111699456]
+14:10:42,661 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089111699457]
+14:10:42,661 DEBUG SQL:104 - 
+    select
+        id,
+        chaos_size,
+        name,
+        lower( nick_name ) as nick_name 
+    from
+        CHAOS 
+    where
+        id= ?
+14:10:42,662 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088865943552]
+14:10:42,662 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088865943552]
+14:10:42,662  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:42,662 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089111703554]
+14:10:42,662 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:42,663 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089111707648]
+14:10:42,663 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:42,663 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089111707649]
+14:10:42,663 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:42,676 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089111760896]
+14:10:42,676 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:42,677 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089111764992]
+14:10:42,677 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:42,677 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089111764993]
+14:10:42,677 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:42,709 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089111896064]
+14:10:42,710 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:42,717 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089111928832]
+14:10:42,718 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:42,718 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089111932928]
+14:10:42,718 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:42,718 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089111932929]
+14:10:42,718 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:42,718 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088866172930]
+14:10:42,718 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088866172930]
+14:10:42,719 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088866172930]
+14:10:42,719 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088866172930]
+14:10:42,719 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088866172930]
+14:10:42,719 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088866172930]
+14:10:42,719 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088866172930]
+14:10:42,721 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088866172930]
+14:10:42,721 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088866172930]
+14:10:42,721 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088866172930]
+14:10:42,722  INFO CustomRunner:139 - Test: testImplicitNativeQuery
+14:10:42,724 DEBUG SQL:104 - 
+    insert 
+    into
+        SpaceShip
+        (fname, lname, length, width, model, speed, name) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:10:42,724 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089111957504]
+14:10:42,724 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088866197505]
+14:10:42,725 DEBUG SQL:104 - 
+    select
+        * 
+    from
+        SpaceShip
+14:10:42,726 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip 
+    where
+        name=?
+14:10:42,726 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089111965696]
+14:10:42,726 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088866205697]
+14:10:42,726  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:42,727 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089111969792]
+14:10:42,742 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:42,743 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089112031232]
+14:10:42,743 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:42,743 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089112035328]
+14:10:42,743 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:42,743 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089112035329]
+14:10:42,743 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:42,743 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089112035330]
+14:10:42,744 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:42,744 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089112039424]
+14:10:42,744 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:42,744 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089112039425]
+14:10:42,744 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:42,744 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089112039426]
+14:10:42,744 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:42,744 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089112039427]
+14:10:42,745 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:42,745 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089112043520]
+14:10:42,745 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:42,745 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088866283521]
+14:10:42,745 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088866283521]
+14:10:42,745 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088866283521]
+14:10:42,745 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088866283521]
+14:10:42,745 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088866283521]
+14:10:42,745 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088866283521]
+14:10:42,745 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088866283521]
+14:10:42,745 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088866283521]
+14:10:42,746 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088866283521]
+14:10:42,756 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088866283521]
+14:10:42,756  INFO CustomRunner:139 - Test: testImportQueryFromMappedSuperclass
+14:10:42,757  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:42,757 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089112092674]
+14:10:42,757 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:42,758 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089112096768]
+14:10:42,758 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:42,758 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089112096769]
+14:10:42,758 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:42,758 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089112096770]
+14:10:42,758 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:42,758 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089112096771]
+14:10:42,758 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:42,768 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089112137728]
+14:10:42,768 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:42,768 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089112137729]
+14:10:42,768 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:42,768 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089112137730]
+14:10:42,769 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:42,769 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089112141824]
+14:10:42,769 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:42,769 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089112141825]
+14:10:42,769 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:42,769 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088866381826]
+14:10:42,769 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088866381826]
+14:10:42,769 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088866381826]
+14:10:42,769 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088866381826]
+14:10:42,777 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088866381826]
+14:10:42,778 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088866381826]
+14:10:42,778 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088866381826]
+14:10:42,778 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088866381826]
+14:10:42,778 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088866381826]
+14:10:42,778 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088866381826]
+14:10:42,778  INFO CustomRunner:139 - Test: testNativeQueryAndCompositePKAndComponents
+14:10:42,781 DEBUG SQL:104 - 
+    insert 
+    into
+        Captain
+        (firstname, lastname) 
+    values
+        (?, ?)
+14:10:42,788 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089112219648]
+14:10:42,788 DEBUG SQL:104 - 
+    insert 
+    into
+        SpaceShip
+        (fname, lname, length, width, model, speed, name) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:10:42,789 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089112223744]
+14:10:42,789 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088866463745]
+14:10:42,789 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088866463745]
+14:10:42,789 DEBUG SQL:104 - 
+    select
+        name,
+        model,
+        speed,
+        lname as lastn,
+        fname as firstn,
+        length,
+        width,
+        length * width as surface,
+        length * width *10 as volume 
+    from
+        SpaceShip
+14:10:42,790 DEBUG SQL:104 - 
+    select
+        captain0_.firstname as firstname3_0_,
+        captain0_.lastname as lastname3_0_ 
+    from
+        Captain captain0_ 
+    where
+        captain0_.firstname=? 
+        and captain0_.lastname=?
+14:10:42,799 DEBUG SQL:104 - 
+    update
+        SpaceShip 
+    set
+        fname=?,
+        lname=?,
+        length=?,
+        width=?,
+        model=?,
+        speed=? 
+    where
+        name=?
+14:10:42,800 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089112268800]
+14:10:42,800 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain 
+    where
+        firstname=? 
+        and lastname=?
+14:10:42,800 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089112268801]
+14:10:42,800 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip 
+    where
+        name=?
+14:10:42,808 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089112301568]
+14:10:42,808 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088866541569]
+14:10:42,808 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088866541569]
+14:10:42,809  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:42,809 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089112305664]
+14:10:42,809 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:42,809 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089112305665]
+14:10:42,809 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:42,809 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089112305666]
+14:10:42,809 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:42,809 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089112305667]
+14:10:42,810 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:42,810 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089112309760]
+14:10:42,810 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:42,818 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089112342528]
+14:10:42,818 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:42,818 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089112342529]
+14:10:42,818 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:42,819 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089112342530]
+14:10:42,819 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:42,819 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089112346624]
+14:10:42,819 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:42,819 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089112346625]
+14:10:42,819 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:42,819 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088866586626]
+14:10:42,819 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088866586626]
+14:10:42,829 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088866586626]
+14:10:42,829 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088866586626]
+14:10:42,829 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088866586626]
+14:10:42,829 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088866586626]
+14:10:42,829 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088866586626]
+14:10:42,829 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088866586626]
+14:10:42,829 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088866586626]
+14:10:42,829 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088866586626]
+14:10:42,830  INFO CustomRunner:139 - Test: testNativeQueryWithFormulaAttribute
+14:10:42,831 DEBUG SQL:104 - 
+    select
+        t.table_name as TABLE1_0_0_,
+        current_date() as formula35_0_ 
+    from
+        ALL_TABLES t  
+    where
+        t.table_name = 'AUDIT_ACTIONS' 
+14:10:42,832 DEBUG SQL:104 - 
+    select
+        table_name as t_name,
+        current_date() as t_time 
+    from
+        ALL_TABLES   
+    where
+        table_name = 'AUDIT_ACTIONS' 
+14:10:42,833 DEBUG SQL:104 - 
+    select
+        table_name as t_name,
+        current_date() as t_time 
+    from
+        ALL_TABLES   
+    where
+        table_name = 'AUDIT_ACTIONS' 
+14:10:42,840  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:42,840 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089112432642]
+14:10:42,840 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:42,840 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089112432643]
+14:10:42,840 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:42,841 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089112436736]
+14:10:42,841 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:42,841 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089112436737]
+14:10:42,841 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:42,841 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089112436738]
+14:10:42,841 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:42,849 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089112469504]
+14:10:42,849 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:42,849 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089112469505]
+14:10:42,850 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:42,850 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089112473600]
+14:10:42,850 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:42,850 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089112473601]
+14:10:42,850 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:42,850 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089112473602]
+14:10:42,850 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:42,850 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088866713603]
+14:10:42,851 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088866713603]
+14:10:42,859 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088866713603]
+14:10:42,859 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088866713603]
+14:10:42,859 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088866713603]
+14:10:42,859 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088866713603]
+14:10:42,859 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088866713603]
+14:10:42,859 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088866713603]
+14:10:42,859 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088866713603]
+14:10:42,859 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088866713603]
+14:10:42,860  INFO CustomRunner:139 - Test: testNativeQueryWithFormulaAttributeWithoutAlias
+14:10:42,861  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:42,861 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089112518657]
+14:10:42,861 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:42,862 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089112522752]
+14:10:42,862 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:42,862 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089112522753]
+14:10:42,862 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:42,862 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089112522754]
+14:10:42,862 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:42,870 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089112555520]
+14:10:42,870 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:42,870 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089112555521]
+14:10:42,870 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:42,870 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089112555522]
+14:10:42,871 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:42,871 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089112559616]
+14:10:42,871 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:42,871 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089112559617]
+14:10:42,871 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:42,871 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089112559618]
+14:10:42,871 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:42,871 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088866799619]
+14:10:42,872 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088866799619]
+14:10:42,872 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088866799619]
+14:10:42,872 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088866799619]
+14:10:42,872 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088866799619]
+14:10:42,872 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088866799619]
+14:10:42,872 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088866799619]
+14:10:42,872 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088866799619]
+14:10:42,872 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088866799619]
+14:10:42,872 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088866799619]
+14:10:42,872  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:10:42,916  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:42,916  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:42,916  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:42,917  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:42,917  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:42,918  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:42,918  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:42,919  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:42,919  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:42,919  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:42,920  INFO UpdateTimestampsCache:61 - HHH000250: Starting update timestamps cache at region: hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache
+14:10:42,920  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: hibernate.test.org.hibernate.cache.internal.StandardQueryCache
+14:10:42,945  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:42,945 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:42,945 DEBUG SQL:104 - 
+    alter table CASIMIR_PARTICULE 
+        drop constraint FK6F3D4FA44E330DDE
+14:10:42,946 DEBUG SQL:104 - 
+    alter table Night 
+        drop constraint FK47C73F8702C46E0
+14:10:42,946 DEBUG SQL:104 - 
+    alter table SpaceShip 
+        drop constraint FK3E966C42C47F4E06
+14:10:42,946 DEBUG SQL:104 - 
+    drop table ALL_TABLES if exists
+14:10:42,946 DEBUG SQL:104 - 
+    drop table CASIMIR_PARTICULE if exists
+14:10:42,947 DEBUG SQL:104 - 
+    drop table CHAOS if exists
+14:10:42,947 DEBUG SQL:104 - 
+    drop table Captain if exists
+14:10:42,947 DEBUG SQL:104 - 
+    drop table Dictionary if exists
+14:10:42,947 DEBUG SQL:104 - 
+    drop table Night if exists
+14:10:42,947 DEBUG SQL:104 - 
+    drop table Plane if exists
+14:10:42,948 DEBUG SQL:104 - 
+    drop table SpaceShip if exists
+14:10:42,948 DEBUG SQL:104 - 
+    drop table Twilight if exists
+14:10:42,948 DEBUG SQL:104 - 
+    drop table tbl_area if exists
+14:10:42,948 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:42,948 DEBUG SQL:104 - 
+    create table ALL_TABLES (
+        TABLE_NAME varchar(255) not null,
+        primary key (TABLE_NAME)
+    )
+14:10:42,949 DEBUG SQL:104 - 
+    create table CASIMIR_PARTICULE (
+        id bigint not null,
+        chaos_fk bigint,
+        primary key (id)
+    )
+14:10:42,949 DEBUG SQL:104 - 
+    create table CHAOS (
+        id bigint not null,
+        name varchar(255),
+        nick_name varchar(255),
+        chaos_size bigint,
+        primary key (id)
+    )
+14:10:42,950 DEBUG SQL:104 - 
+    create table Captain (
+        firstname varchar(255) not null,
+        lastname varchar(255) not null,
+        primary key (firstname, lastname)
+    )
+14:10:42,950 DEBUG SQL:104 - 
+    create table Dictionary (
+        disc varchar(31) not null,
+        id integer not null,
+        editor varchar(255),
+        name varchar(255),
+        primary key (id)
+    )
+14:10:42,950 DEBUG SQL:104 - 
+    create table Night (
+        id integer not null,
+        night_date timestamp,
+        night_duration bigint,
+        area_id integer,
+        primary key (id)
+    )
+14:10:42,950 DEBUG SQL:104 - 
+    create table Plane (
+        planetype varchar(100) not null,
+        id bigint not null,
+        alive boolean not null,
+        fld_altitude integer,
+        color varchar(255) not null,
+        serialnbr varchar(255),
+        nbrOfSeats integer not null,
+        javaEmbeddedVersion varchar(255),
+        primary key (id)
+    )
+14:10:42,955 DEBUG SQL:104 - 
+    create table SpaceShip (
+        name varchar(255) not null,
+        length integer not null,
+        width integer not null,
+        model varchar(255),
+        speed double not null,
+        fname varchar(255),
+        lname varchar(255),
+        primary key (name)
+    )
+14:10:42,955 DEBUG SQL:104 - 
+    create table Twilight (
+        id integer not null,
+        primary key (id)
+    )
+14:10:42,955 DEBUG SQL:104 - 
+    create table tbl_area (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:42,968 DEBUG SQL:104 - 
+    alter table CASIMIR_PARTICULE 
+        add constraint FK6F3D4FA44E330DDE 
+        foreign key (chaos_fk) 
+        references CHAOS
+14:10:42,969 DEBUG SQL:104 - 
+    alter table Night 
+        add constraint FK47C73F8702C46E0 
+        foreign key (area_id) 
+        references tbl_area
+14:10:42,970 DEBUG SQL:104 - 
+    alter table SpaceShip 
+        add constraint FK3E966C42C47F4E06 
+        foreign key (fname, lname) 
+        references Captain
+14:10:42,970 DEBUG SQL:104 - 
+    alter table tbl_area 
+        add constraint uc_tbl_area_1 unique (name)
+14:10:42,971 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:42,971  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:42,972  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:42,972 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select n from org.hibernate.test.annotations.query.Night n where n.date <= :date
+14:10:42,974 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[IDENT] Node: 'query'
+    |  |     |  \-[IDENT] Node: 'Night'
+    |  |     \-[ALIAS] Node: 'n'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'n'
+    \-[WHERE] Node: 'where'
+       \-[LE] Node: '<='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'n'
+          |  \-[IDENT] Node: 'date'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'date'
+
+14:10:43,002 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,002 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Night (n) -> night0_
+14:10:43,003 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:43,003 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:43,003 DEBUG DotNode:599 - getDataType() : date -> org.hibernate.type.TimestampType@54a68bb4
+14:10:43,003 DEBUG FromReferenceNode:74 - Resolved : n.date -> night0_.night_date
+14:10:43,003 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} night0_.id ) ( FromClause{level=1} Night night0_ ) ( where ( <= ( night0_.night_date night0_.id date ) ? ) ) )
+14:10:43,004 DEBUG JoinProcessor:175 - Using FROM fragment [Night night0_]
+14:10:43,004 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Night)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'night0_.id as id5_' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[n], fromElementByTableAlias=[night0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Night night0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=n,role=null,tableName=Night,tableAlias=night0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Night}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LE] BinaryLogicOperatorNode: '<='
+          +-[DOT] DotNode: 'night0_.night_date' {propertyName=date,dereferenceType=ALL,propertyPath=date,path=n.date,tableAlias=night0_,className=org.hibernate.test.annotations.query.Night,classAlias=n}
+          |  +-[ALIAS_REF] IdentNode: 'night0_.id' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+          |  \-[IDENT] IdentNode: 'date' {originalText=date}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=date, expectedType=org.hibernate.type.TimestampType@54a68bb4}
+
+14:10:43,016 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,018 DEBUG QueryTranslatorImpl:235 - HQL: select n from org.hibernate.test.annotations.query.Night n where n.date <= :date
+14:10:43,018 DEBUG QueryTranslatorImpl:236 - SQL: select night0_.id as id5_, night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_ from Night night0_ where night0_.night_date<=?
+14:10:43,018 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,018 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select n from org.hibernate.test.annotations.query.Night n where n.duration = :duration
+14:10:43,020 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[IDENT] Node: 'query'
+    |  |     |  \-[IDENT] Node: 'Night'
+    |  |     \-[ALIAS] Node: 'n'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'n'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'n'
+          |  \-[IDENT] Node: 'duration'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'duration'
+
+14:10:43,020 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,020 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Night (n) -> night0_
+14:10:43,021 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:43,021 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:43,021 DEBUG DotNode:599 - getDataType() : duration -> org.hibernate.type.LongType@4bf3f9d
+14:10:43,021 DEBUG FromReferenceNode:74 - Resolved : n.duration -> night0_.night_duration
+14:10:43,021 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} night0_.id ) ( FromClause{level=1} Night night0_ ) ( where ( = ( night0_.night_duration night0_.id duration ) ? ) ) )
+14:10:43,022 DEBUG JoinProcessor:175 - Using FROM fragment [Night night0_]
+14:10:43,022 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Night)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'night0_.id as id5_' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[n], fromElementByTableAlias=[night0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Night night0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=n,role=null,tableName=Night,tableAlias=night0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Night}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'night0_.night_duration' {propertyName=duration,dereferenceType=ALL,propertyPath=duration,path=n.duration,tableAlias=night0_,className=org.hibernate.test.annotations.query.Night,classAlias=n}
+          |  +-[ALIAS_REF] IdentNode: 'night0_.id' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+          |  \-[IDENT] IdentNode: 'duration' {originalText=duration}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=duration, expectedType=org.hibernate.type.LongType@4bf3f9d}
+
+14:10:43,036 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,036 DEBUG QueryTranslatorImpl:235 - HQL: select n from org.hibernate.test.annotations.query.Night n where n.duration = :duration
+14:10:43,036 DEBUG QueryTranslatorImpl:236 - SQL: select night0_.id as id5_, night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_ from Night night0_ where night0_.night_duration=?
+14:10:43,036 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,037 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.Plane where id = :id
+14:10:43,038 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'annotations'
+    |           \-[IDENT] Node: 'Plane'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'id'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'id'
+
+14:10:43,048 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,049 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.Plane (<no alias>) -> plane0_
+14:10:43,050 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:10:43,050 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:10:43,050 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.id -> plane0_.id
+14:10:43,050 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Plane plane0_ ) ( where ( = ( plane0_.id {synthetic-alias} id ) ? ) ) )
+14:10:43,051 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:43,051 DEBUG JoinProcessor:175 - Using FROM fragment [Plane plane0_]
+14:10:43,051 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Plane)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'plane0_.id as id6_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Plane,tableAlias=plane0_,origin=null,columns={,className=org.hibernate.test.annotations.Plane}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[plane0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Plane plane0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Plane,tableAlias=plane0_,origin=null,columns={,className=org.hibernate.test.annotations.Plane}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'plane0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path={synthetic-alias}.id,tableAlias=plane0_,className=org.hibernate.test.annotations.Plane,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=id, expectedType=org.hibernate.type.LongType@4bf3f9d}
+
+14:10:43,051 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,052 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.Plane where id = :id
+14:10:43,052 DEBUG QueryTranslatorImpl:236 - SQL: select plane0_.id as id6_, plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_ from Plane plane0_ where plane0_.id=?
+14:10:43,052 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,052 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select p from org.hibernate.test.annotations.Plane p
+14:10:43,053 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  \-[IDENT] Node: 'annotations'
+       |     |  \-[IDENT] Node: 'Plane'
+       |     \-[ALIAS] Node: 'p'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'p'
+
+14:10:43,071 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,082 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.Plane (p) -> plane0_
+14:10:43,083 DEBUG FromReferenceNode:74 - Resolved : p -> plane0_.id
+14:10:43,084 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} plane0_.id ) ( FromClause{level=1} Plane plane0_ ) )
+14:10:43,084 DEBUG JoinProcessor:175 - Using FROM fragment [Plane plane0_]
+14:10:43,084 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Plane)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'plane0_.id as id6_' {alias=p, className=org.hibernate.test.annotations.Plane, tableAlias=plane0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[plane0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Plane plane0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Plane,tableAlias=plane0_,origin=null,columns={,className=org.hibernate.test.annotations.Plane}}
+
+14:10:43,084 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,085 DEBUG QueryTranslatorImpl:235 - HQL: select p from org.hibernate.test.annotations.Plane p
+14:10:43,085 DEBUG QueryTranslatorImpl:236 - SQL: select plane0_.id as id6_, plane0_.alive as alive6_, plane0_.fld_altitude as fld4_6_, plane0_.color as color6_, plane0_.serialnbr as serialnbr6_, plane0_.nbrOfSeats as nbrOfSeats6_, plane0_.javaEmbeddedVersion as javaEmbe8_6_, plane0_.planetype as planetype6_ from Plane plane0_
+14:10:43,085 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,085 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select n from org.hibernate.test.annotations.query.Night n where n.date >= :date
+14:10:43,087 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[IDENT] Node: 'query'
+    |  |     |  \-[IDENT] Node: 'Night'
+    |  |     \-[ALIAS] Node: 'n'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'n'
+    \-[WHERE] Node: 'where'
+       \-[GE] Node: '>='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'n'
+          |  \-[IDENT] Node: 'date'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'date'
+
+14:10:43,087 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,087 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Night (n) -> night0_
+14:10:43,087 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:43,088 DEBUG FromReferenceNode:74 - Resolved : n -> night0_.id
+14:10:43,088 DEBUG DotNode:599 - getDataType() : date -> org.hibernate.type.TimestampType@54a68bb4
+14:10:43,088 DEBUG FromReferenceNode:74 - Resolved : n.date -> night0_.night_date
+14:10:43,088 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} night0_.id ) ( FromClause{level=1} Night night0_ ) ( where ( >= ( night0_.night_date night0_.id date ) ? ) ) )
+14:10:43,088 DEBUG JoinProcessor:175 - Using FROM fragment [Night night0_]
+14:10:43,089 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Night)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'night0_.id as id5_' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[n], fromElementByTableAlias=[night0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Night night0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=n,role=null,tableName=Night,tableAlias=night0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Night}}
+    \-[WHERE] SqlNode: 'where'
+       \-[GE] BinaryLogicOperatorNode: '>='
+          +-[DOT] DotNode: 'night0_.night_date' {propertyName=date,dereferenceType=ALL,propertyPath=date,path=n.date,tableAlias=night0_,className=org.hibernate.test.annotations.query.Night,classAlias=n}
+          |  +-[ALIAS_REF] IdentNode: 'night0_.id' {alias=n, className=org.hibernate.test.annotations.query.Night, tableAlias=night0_}
+          |  \-[IDENT] IdentNode: 'date' {originalText=date}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=date, expectedType=org.hibernate.type.TimestampType@54a68bb4}
+
+14:10:43,095 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,095 DEBUG QueryTranslatorImpl:235 - HQL: select n from org.hibernate.test.annotations.query.Night n where n.date >= :date
+14:10:43,095 DEBUG QueryTranslatorImpl:236 - SQL: select night0_.id as id5_, night0_.area_id as area4_5_, night0_.night_date as night2_5_, night0_.night_duration as night3_5_ from Night night0_ where night0_.night_date>=?
+14:10:43,096 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,097  INFO CustomRunner:139 - Test: testPackageQueries
+14:10:43,097 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,100 DEBUG SQL:104 - 
+    insert 
+    into
+        Plane
+        (alive, fld_altitude, color, serialnbr, nbrOfSeats, planetype, id) 
+    values
+        (?, ?, ?, ?, ?, 'Plane', ?)
+14:10:43,101 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089113501696]
+14:10:43,101 DEBUG SQL:104 - 
+    select
+        plane0_.id as id6_,
+        plane0_.alive as alive6_,
+        plane0_.fld_altitude as fld4_6_,
+        plane0_.color as color6_,
+        plane0_.serialnbr as serialnbr6_,
+        plane0_.nbrOfSeats as nbrOfSeats6_,
+        plane0_.javaEmbeddedVersion as javaEmbe8_6_,
+        plane0_.planetype as planetype6_ 
+    from
+        Plane plane0_
+14:10:43,106 DEBUG SQL:104 - 
+    select
+        plane0_.id as id6_,
+        plane0_.alive as alive6_,
+        plane0_.fld_altitude as fld4_6_,
+        plane0_.color as color6_,
+        plane0_.serialnbr as serialnbr6_,
+        plane0_.nbrOfSeats as nbrOfSeats6_,
+        plane0_.javaEmbeddedVersion as javaEmbe8_6_,
+        plane0_.planetype as planetype6_ 
+    from
+        Plane plane0_
+14:10:43,107 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane 
+    where
+        id=?
+14:10:43,107 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089113526272]
+14:10:43,115 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088867799040]
+14:10:43,116 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.Plane
+14:10:43,116 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'annotations'
+             \-[IDENT] Node: 'Plane'
+
+14:10:43,116 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,117 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.Plane (<no alias>) -> plane0_
+14:10:43,117 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Plane)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[plane0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Plane' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Plane,tableAlias=plane0_,origin=null,columns={,className=org.hibernate.test.annotations.Plane}}
+
+14:10:43,117 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,117 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,117 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Captain
+14:10:43,118 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Captain'
+
+14:10:43,126 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,126 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Captain (<no alias>) -> captain0_
+14:10:43,127 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Captain)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[captain0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Captain' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Captain,tableAlias=captain0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Captain}}
+
+14:10:43,127 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,127 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,127 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Dictionary
+14:10:43,128 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Dictionary'
+
+14:10:43,137 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,137 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Dictionary (<no alias>) -> dictionary0_
+14:10:43,137 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Dictionary)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[dictionary0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Dictionary' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Dictionary,tableAlias=dictionary0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Dictionary}}
+
+14:10:43,137 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,138 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,138 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Twilight
+14:10:43,138 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Twilight'
+
+14:10:43,148 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,148 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Twilight (<no alias>) -> twilight0_
+14:10:43,148 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Twilight)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[twilight0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Twilight' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Twilight,tableAlias=twilight0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Twilight}}
+
+14:10:43,148 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,148 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,149 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Chaos
+14:10:43,149 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Chaos'
+
+14:10:43,149 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,149 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Chaos (<no alias>) -> chaos0_
+14:10:43,150 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (CHAOS)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[chaos0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CHAOS' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=CHAOS,tableAlias=chaos0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Chaos}}
+
+14:10:43,150 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,150 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,150 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.CasimirParticle
+14:10:43,150 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'CasimirParticle'
+
+14:10:43,151 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,151 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.CasimirParticle (<no alias>) -> casimirpar0_
+14:10:43,159 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (CASIMIR_PARTICULE)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[casimirpar0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CASIMIR_PARTICULE' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=CASIMIR_PARTICULE,tableAlias=casimirpar0_,origin=null,columns={,className=org.hibernate.test.annotations.query.CasimirParticle}}
+
+14:10:43,159 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,159 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,159 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Area
+14:10:43,160 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Area'
+
+14:10:43,160 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,160 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Area (<no alias>) -> area0_
+14:10:43,160 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (tbl_area)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[area0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'tbl_area' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=tbl_area,tableAlias=area0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Area}}
+
+14:10:43,169 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,169 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,169 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.SpaceShip
+14:10:43,170 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'SpaceShip'
+
+14:10:43,170 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,170 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.SpaceShip (<no alias>) -> spaceship0_
+14:10:43,171 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (SpaceShip)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[spaceship0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'SpaceShip' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=SpaceShip,tableAlias=spaceship0_,origin=null,columns={,className=org.hibernate.test.annotations.query.SpaceShip}}
+
+14:10:43,171 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,171 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,171 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.Night
+14:10:43,171 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'Night'
+
+14:10:43,193 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,194 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.Night (<no alias>) -> night0_
+14:10:43,194 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Night)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[night0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Night' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Night,tableAlias=night0_,origin=null,columns={,className=org.hibernate.test.annotations.query.Night}}
+
+14:10:43,194 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,194 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,194 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.annotations.query.AllTables
+14:10:43,195 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'query'
+             \-[IDENT] Node: 'AllTables'
+
+14:10:43,195 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,202 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.query.AllTables (<no alias>) -> alltables0_
+14:10:43,202 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (ALL_TABLES)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[alltables0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'ALL_TABLES' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=ALL_TABLES,tableAlias=alltables0_,origin=null,columns={,className=org.hibernate.test.annotations.query.AllTables}}
+
+14:10:43,202 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,202 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:43,203  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:43,203 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089113919488]
+14:10:43,203 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:43,203 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089113919489]
+14:10:43,203 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:43,203 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089113919490]
+14:10:43,204 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:43,204 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089113923584]
+14:10:43,204 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:43,204 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089113923585]
+14:10:43,211 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:43,211 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089113952256]
+14:10:43,212 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:43,212 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089113956352]
+14:10:43,212 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:43,212 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089113956353]
+14:10:43,212 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:43,212 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089113956354]
+14:10:43,212 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:43,212 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089113956355]
+14:10:43,212 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:43,221 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088868229120]
+14:10:43,221 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088868229120]
+14:10:43,221 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088868229120]
+14:10:43,221 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088868229120]
+14:10:43,221 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088868229120]
+14:10:43,221 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088868229120]
+14:10:43,221 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088868229120]
+14:10:43,221 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088868229120]
+14:10:43,221 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088868229120]
+14:10:43,221 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088868229120]
+14:10:43,222  INFO CustomRunner:139 - Test: testSQLQuery
+14:10:43,223 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,223 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,224 DEBUG SQL:104 - 
+    insert 
+    into
+        Night
+        (area_id, night_date, night_duration, id) 
+    values
+        (?, ?, ?, ?)
+14:10:43,224 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089114005504]
+14:10:43,225 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_area
+        (name, id) 
+    values
+        (?, ?)
+14:10:43,231 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089114034176]
+14:10:43,231 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088868274177]
+14:10:43,231 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088868274177]
+14:10:43,232 DEBUG SQL:104 - 
+    select
+        id,
+        night_duration,
+        night_date as dte,
+        area_id 
+    from
+        Night 
+    where
+        night_duration > ?
+14:10:43,233 DEBUG SQL:104 - 
+    select
+        * 
+    from
+        tbl_area
+14:10:43,234 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area 
+    where
+        id=?
+14:10:43,234 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089114046464]
+14:10:43,234 DEBUG SQL:104 - 
+    delete 
+    from
+        Night 
+    where
+        id=?
+14:10:43,242 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089114079232]
+14:10:43,243 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088868319233]
+14:10:43,243 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088868319233]
+14:10:43,243  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:43,243 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089114083329]
+14:10:43,243 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:43,243 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089114083330]
+14:10:43,243 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:43,243 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089114083331]
+14:10:43,244 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:43,244 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089114087424]
+14:10:43,244 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:43,244 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089114087425]
+14:10:43,253 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:43,253 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089114124288]
+14:10:43,253 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:43,254 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089114128384]
+14:10:43,254 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:43,254 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089114128385]
+14:10:43,254 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:43,254 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089114128386]
+14:10:43,254 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:43,254 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089114128387]
+14:10:43,254 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:43,255 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088868372480]
+14:10:43,263 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088868372480]
+14:10:43,263 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088868372480]
+14:10:43,264 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088868372480]
+14:10:43,264 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088868372480]
+14:10:43,264 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088868372480]
+14:10:43,264 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088868372480]
+14:10:43,264 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088868372480]
+14:10:43,264 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088868372480]
+14:10:43,264 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088868372480]
+14:10:43,264  INFO CustomRunner:139 - Test: testSQLQueryWithManyToOne
+14:10:43,265 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.cache.internal.StandardQueryCache]
+14:10:43,266 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,266 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:43,266 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_area
+        (name, id) 
+    values
+        (?, ?)
+14:10:43,267 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089114181632]
+14:10:43,267 DEBUG SQL:104 - 
+    insert 
+    into
+        Night
+        (area_id, night_date, night_duration, id) 
+    values
+        (?, ?, ?, ?)
+14:10:43,276 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089114214400]
+14:10:43,276 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088868458496]
+14:10:43,276 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088868458496]
+14:10:43,276 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.cache.internal.StandardQueryCache] lookup : key[sql: select night.id as nid, night.night_duration, night.night_date, area.id as aid, night.area_id, area.name from Night night, tbl_area area where night.area_id = area.id; parameters: ; named parameters: {}; transformer: org.hibernate.transform.CacheableResultTransformer@1406bf]
+14:10:43,276 DEBUG SQL:104 - 
+    select
+        night.id as nid,
+        night.night_duration,
+        night.night_date,
+        area.id as aid,
+        night.area_id,
+        area.name 
+    from
+        Night night,
+        tbl_area area 
+    where
+        night.area_id = area.id
+14:10:43,277 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.internal.StandardQueryCache] : [sql: select night.id as nid, night.night_duration, night.night_date, area.id as aid, night.area_id, area.name from Night night, tbl_area area where night.area_id = area.id; parameters: ; named parameters: {}; transformer: org.hibernate.transform.CacheableResultTransformer@1406bf] -> [[5579088868462592, [Ljava.io.Serializable;@7c90e0cf]]
+14:10:43,277 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.cache.internal.StandardQueryCache] lookup : key[sql: select night.id as nid, night.night_duration, night.night_date, area.id as aid, night.area_id, area.name from Night night, tbl_area area where night.area_id = area.id; parameters: ; named parameters: {}; transformer: org.hibernate.transform.CacheableResultTransformer@1406bf]
+14:10:43,277 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.cache.internal.StandardQueryCache] hit: sql: select night.id as nid, night.night_duration, night.night_date, area.id as aid, night.area_id, area.name from Night night, tbl_area area where night.area_id = area.id; parameters: ; named parameters: {}; transformer: org.hibernate.transform.CacheableResultTransformer@1406bf
+14:10:43,277 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] lookup : key[tbl_area]
+14:10:43,278 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] hit: tbl_area
+14:10:43,278 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] lookup : key[Night]
+14:10:43,278 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] hit: Night
+14:10:43,278 DEBUG SQL:104 - 
+    update
+        Night 
+    set
+        area_id=?,
+        night_date=?,
+        night_duration=? 
+    where
+        id=?
+14:10:43,279 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089114230784]
+14:10:43,279 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area 
+    where
+        id=?
+14:10:43,279 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089114230785]
+14:10:43,279 DEBUG SQL:104 - 
+    delete 
+    from
+        Night 
+    where
+        id=?
+14:10:43,279 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089114230786]
+14:10:43,280 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088868474880]
+14:10:43,280 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088868474880]
+14:10:43,280  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [10] split queries
+14:10:43,280 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579089114234882]
+14:10:43,280 DEBUG SQL:104 - 
+    delete 
+    from
+        Plane
+14:10:43,280 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579089114234883]
+14:10:43,281 DEBUG SQL:104 - 
+    delete 
+    from
+        Captain
+14:10:43,287 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579089114259456]
+14:10:43,287 DEBUG SQL:104 - 
+    delete 
+    from
+        Dictionary
+14:10:43,287 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579089114263552]
+14:10:43,287 DEBUG SQL:104 - 
+    delete 
+    from
+        Twilight
+14:10:43,287 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579089114263553]
+14:10:43,287 DEBUG SQL:104 - 
+    delete 
+    from
+        CHAOS
+14:10:43,287 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579089114263554]
+14:10:43,287 DEBUG SQL:104 - 
+    delete 
+    from
+        CASIMIR_PARTICULE
+14:10:43,288 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579089114267648]
+14:10:43,288 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_area
+14:10:43,288 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579089114267649]
+14:10:43,288 DEBUG SQL:104 - 
+    delete 
+    from
+        SpaceShip
+14:10:43,297 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579089114304512]
+14:10:43,297 DEBUG SQL:104 - 
+    delete 
+    from
+        Night
+14:10:43,297 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579089114304513]
+14:10:43,297 DEBUG SQL:104 - 
+    delete 
+    from
+        ALL_TABLES
+14:10:43,298 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CHAOS] -> [5579088868548608]
+14:10:43,298 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [ALL_TABLES] -> [5579088868548608]
+14:10:43,298 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [tbl_area] -> [5579088868548608]
+14:10:43,298 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Plane] -> [5579088868548608]
+14:10:43,298 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Night] -> [5579088868548608]
+14:10:43,298 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Captain] -> [5579088868548608]
+14:10:43,298 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [SpaceShip] -> [5579088868548608]
+14:10:43,298 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Twilight] -> [5579088868548608]
+14:10:43,298 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Dictionary] -> [5579088868548608]
+14:10:43,298 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [CASIMIR_PARTICULE] -> [5579088868548608]
+14:10:43,299  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:43,299 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:43,299 DEBUG SQL:104 - 
+    alter table CASIMIR_PARTICULE 
+        drop constraint FK6F3D4FA44E330DDE
+14:10:43,300 DEBUG SQL:104 - 
+    alter table Night 
+        drop constraint FK47C73F8702C46E0
+14:10:43,300 DEBUG SQL:104 - 
+    alter table SpaceShip 
+        drop constraint FK3E966C42C47F4E06
+14:10:43,300 DEBUG SQL:104 - 
+    drop table ALL_TABLES if exists
+14:10:43,300 DEBUG SQL:104 - 
+    drop table CASIMIR_PARTICULE if exists
+14:10:43,300 DEBUG SQL:104 - 
+    drop table CHAOS if exists
+14:10:43,300 DEBUG SQL:104 - 
+    drop table Captain if exists
+14:10:43,301 DEBUG SQL:104 - 
+    drop table Dictionary if exists
+14:10:43,320 DEBUG SQL:104 - 
+    drop table Night if exists
+14:10:43,321 DEBUG SQL:104 - 
+    drop table Plane if exists
+14:10:43,321 DEBUG SQL:104 - 
+    drop table SpaceShip if exists
+14:10:43,321 DEBUG SQL:104 - 
+    drop table Twilight if exists
+14:10:43,321 DEBUG SQL:104 - 
+    drop table tbl_area if exists
+14:10:43,321 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:43,322  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:43,322  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

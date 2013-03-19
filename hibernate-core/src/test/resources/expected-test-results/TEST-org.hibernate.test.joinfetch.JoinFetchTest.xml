@@ -1,0 +1,1368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.joinfetch.JoinFetchTest" tests="4" time="0.672" timestamp="2013-02-28T20:14:50">
+  <properties />
+  <testcase classname="org.hibernate.test.joinfetch.JoinFetchTest" name="testCollectionFilter" time="0.067" />
+  <testcase classname="org.hibernate.test.joinfetch.JoinFetchTest" name="testJoinFetch" time="0.428" />
+  <testcase classname="org.hibernate.test.joinfetch.JoinFetchTest" name="testJoinFetchManyToMany" time="0.073" />
+  <testcase classname="org.hibernate.test.joinfetch.JoinFetchTest" name="testProjection" time="0.013" />
+  <system-out><![CDATA[14:14:50,130  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.joinfetch.JoinFetchTest
+14:14:50,132  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/joinfetch/ItemBid.hbm.xml
+14:14:50,138  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/joinfetch/UserGroup.hbm.xml
+14:14:50,150  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:50,150  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:50,151  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:50,151  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:50,151  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:50,152  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:50,152  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:50,153  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:50,153  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:50,168  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:50,169 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:50,169 DEBUG SQL:104 - 
+    alter table AuctionBids 
+        drop constraint FK522743D940B2AD5A
+14:14:50,169 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AuctionBids drop constraint FK522743D940B2AD5A
+14:14:50,169 ERROR SchemaExport:426 - Table "AUCTIONBIDS" not found; SQL statement:
+
+    alter table AuctionBids 
+        drop constraint FK522743D940B2AD5A [42102-145]
+14:14:50,169 DEBUG SQL:104 - 
+    alter table AuctionComments 
+        drop constraint FK573CE53740B2AD5A
+14:14:50,170 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AuctionComments drop constraint FK573CE53740B2AD5A
+14:14:50,170 ERROR SchemaExport:426 - Table "AUCTIONCOMMENTS" not found; SQL statement:
+
+    alter table AuctionComments 
+        drop constraint FK573CE53740B2AD5A [42102-145]
+14:14:50,170 DEBUG SQL:104 - 
+    alter table AuctionItems 
+        drop constraint FKF328DF5D9C7E7730
+14:14:50,170 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AuctionItems drop constraint FKF328DF5D9C7E7730
+14:14:50,170 ERROR SchemaExport:426 - Table "AUCTIONITEMS" not found; SQL statement:
+
+    alter table AuctionItems 
+        drop constraint FKF328DF5D9C7E7730 [42102-145]
+14:14:50,170 DEBUG SQL:104 - 
+    alter table AuctionUsersGroups 
+        drop constraint FK47E0BBD9772F3F55
+14:14:50,170 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AuctionUsersGroups drop constraint FK47E0BBD9772F3F55
+14:14:50,171 ERROR SchemaExport:426 - Table "AUCTIONUSERSGROUPS" not found; SQL statement:
+
+    alter table AuctionUsersGroups 
+        drop constraint FK47E0BBD9772F3F55 [42102-145]
+14:14:50,171 DEBUG SQL:104 - 
+    alter table AuctionUsersGroups 
+        drop constraint FK47E0BBD930A19FF5
+14:14:50,171 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AuctionUsersGroups drop constraint FK47E0BBD930A19FF5
+14:14:50,171 ERROR SchemaExport:426 - Table "AUCTIONUSERSGROUPS" not found; SQL statement:
+
+    alter table AuctionUsersGroups 
+        drop constraint FK47E0BBD930A19FF5 [42102-145]
+14:14:50,171 DEBUG SQL:104 - 
+    drop table AuctionBids if exists
+14:14:50,171 DEBUG SQL:104 - 
+    drop table AuctionCategories if exists
+14:14:50,171 DEBUG SQL:104 - 
+    drop table AuctionComments if exists
+14:14:50,172 DEBUG SQL:104 - 
+    drop table AuctionGroups if exists
+14:14:50,172 DEBUG SQL:104 - 
+    drop table AuctionItems if exists
+14:14:50,172 DEBUG SQL:104 - 
+    drop table AuctionUsers if exists
+14:14:50,172 DEBUG SQL:104 - 
+    drop table AuctionUsersGroups if exists
+14:14:50,172 DEBUG SQL:104 - 
+    create table AuctionBids (
+        id bigint not null,
+        amount float not null,
+        "timestamp" timestamp not null,
+        item bigint not null,
+        primary key (id)
+    )
+14:14:50,183 DEBUG SQL:104 - 
+    create table AuctionCategories (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:14:50,184 DEBUG SQL:104 - 
+    create table AuctionComments (
+        id bigint not null,
+        text varchar(255) not null,
+        "timestamp" timestamp not null,
+        item bigint not null,
+        primary key (id)
+    )
+14:14:50,184 DEBUG SQL:104 - 
+    create table AuctionGroups (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:14:50,184 DEBUG SQL:104 - 
+    create table AuctionItems (
+        id bigint not null,
+        description varchar(255) not null,
+        category varchar(255) not null,
+        primary key (id)
+    )
+14:14:50,184 DEBUG SQL:104 - 
+    create table AuctionUsers (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:14:50,195 DEBUG SQL:104 - 
+    create table AuctionUsersGroups (
+        "userName" varchar(255) not null,
+        groupName varchar(255) not null,
+        primary key ("userName", groupName)
+    )
+14:14:50,196 DEBUG SQL:104 - 
+    alter table AuctionBids 
+        add constraint FK522743D940B2AD5A 
+        foreign key (item) 
+        references AuctionItems
+14:14:50,197 DEBUG SQL:104 - 
+    alter table AuctionComments 
+        add constraint FK573CE53740B2AD5A 
+        foreign key (item) 
+        references AuctionItems
+14:14:50,198 DEBUG SQL:104 - 
+    alter table AuctionItems 
+        add constraint FKF328DF5D9C7E7730 
+        foreign key (category) 
+        references AuctionCategories
+14:14:50,198 DEBUG SQL:104 - 
+    alter table AuctionUsersGroups 
+        add constraint FK47E0BBD9772F3F55 
+        foreign key (groupName) 
+        references AuctionGroups
+14:14:50,199 DEBUG SQL:104 - 
+    alter table AuctionUsersGroups 
+        add constraint FK47E0BBD930A19FF5 
+        foreign key ("userName") 
+        references AuctionUsers
+14:14:50,199  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:50,200  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:50,200  INFO CustomRunner:139 - Test: testCollectionFilter
+14:14:50,204 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionGroups
+        (name) 
+    values
+        (?)
+14:14:50,219 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionUsers
+        (name) 
+    values
+        (?)
+14:14:50,220 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionUsers
+        (name) 
+    values
+        (?)
+14:14:50,220 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionUsersGroups
+        ("userName", groupName) 
+    values
+        (?, ?)
+14:14:50,220 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionUsersGroups
+        ("userName", groupName) 
+    values
+        (?, ?)
+14:14:50,230 DEBUG SQL:104 - 
+    select
+        this_.name as name3_0_ 
+    from
+        AuctionGroups this_ 
+    where
+        this_.name = ?
+14:14:50,230 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*)
+14:14:50,231 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: '{filter-implied FROM}'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:14:50,231 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,231 DEBUG HqlSqlWalker:254 - prepareFromClauseInputTree() : Filter - Added 'this' as a from element...
+14:14:50,231 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: '{filter-implied FROM}'
+       |  +-[FILTER_ENTITY] Node: 'org.hibernate.test.joinfetch.User'
+       |  \-[ALIAS] Node: 'this'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:14:50,231 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.User (this) -> user0_
+14:14:50,240 DEBUG HqlSqlWalker:351 - createFromFilterElement() : processed filter FROM element.
+14:14:50,241 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} AuctionUsers user0_ ) )
+14:14:50,241 DEBUG JoinProcessor:175 - Using FROM fragment [AuctionUsersGroups users1_ inner join AuctionUsers user0_ on users1_."userName"=user0_.name]
+14:14:50,241 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [users1_.groupName = ?]
+14:14:50,241 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [users1_.groupName = ?]
+14:14:50,241 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:14:50,242 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (AuctionUsers)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: '{filter-implied FROM}' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[this], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'AuctionUsersGroups users1_ inner join AuctionUsers user0_ on users1_."userName"=user0_.name' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=this,role=null,tableName=AuctionUsers,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.joinfetch.User}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'users1_.groupName = ?'
+
+14:14:50,242 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,242 DEBUG QueryTranslatorImpl:235 - HQL: select count(*)
+14:14:50,242 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from AuctionUsersGroups users1_ inner join AuctionUsers user0_ on users1_."userName"=user0_.name where users1_.groupName = ?
+14:14:50,242 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,242 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        AuctionUsersGroups users1_ 
+    inner join
+        AuctionUsers user0_ 
+            on users1_."userName"=user0_.name 
+    where
+        users1_.groupName = ?
+14:14:50,253 DEBUG SQL:104 - 
+    select
+        users0_.groupName as groupName3_1_,
+        users0_."userName" as userName1_6_1_,
+        users0_."userName" as formula87_1_,
+        user1_.name as name5_0_ 
+    from
+        AuctionUsersGroups users0_ 
+    inner join
+        AuctionUsers user1_ 
+            on users0_."userName"=user1_.name 
+    where
+        users0_.groupName=? 
+    order by
+        users0_."userName"
+14:14:50,254 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionUsersGroups 
+    where
+        "userName"=?
+14:14:50,254 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionUsersGroups 
+    where
+        "userName"=?
+14:14:50,255 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionUsers 
+    where
+        name=?
+14:14:50,266 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionUsers 
+    where
+        name=?
+14:14:50,266 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionGroups 
+    where
+        name=?
+14:14:50,267  INFO CustomRunner:139 - Test: testJoinFetch
+14:14:50,268 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.joinfetch.Bid
+14:14:50,269 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'joinfetch'
+             \-[IDENT] Node: 'Bid'
+
+14:14:50,269 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,269 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Bid (<no alias>) -> bid0_
+14:14:50,269 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (AuctionBids)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[bid0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'AuctionBids' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionBids,tableAlias=bid0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Bid}}
+
+14:14:50,269 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,270 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,270 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionBids
+14:14:50,270 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.joinfetch.Comment
+14:14:50,271 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'joinfetch'
+             \-[IDENT] Node: 'Comment'
+
+14:14:50,284 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,284 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Comment (<no alias>) -> comment0_
+14:14:50,285 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (AuctionComments)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[comment0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'AuctionComments' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionComments,tableAlias=comment0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Comment}}
+
+14:14:50,285 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,285 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,285 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionComments
+14:14:50,286 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.joinfetch.Item
+14:14:50,286 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'joinfetch'
+             \-[IDENT] Node: 'Item'
+
+14:14:50,296 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,296 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Item (<no alias>) -> item0_
+14:14:50,297 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (AuctionItems)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[item0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'AuctionItems' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionItems,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Item}}
+
+14:14:50,297 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,297 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,297 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionItems
+java.util.GregorianCalendar[time=1362082490298,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2013,MONTH=1,WEEK_OF_YEAR=9,WEEK_OF_MONTH=5,DAY_OF_MONTH=28,DAY_OF_YEAR=59,DAY_OF_WEEK=5,DAY_OF_WEEK_IN_MONTH=4,AM_PM=1,HOUR=2,HOUR_OF_DAY=14,MINUTE=14,SECOND=50,MILLISECOND=298,ZONE_OFFSET=-21600000,DST_OFFSET=0]
+14:14:50,298 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        AuctionItems
+14:14:50,298 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        AuctionBids
+14:14:50,299 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        AuctionComments
+14:14:50,300 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionCategories
+        (name) 
+    values
+        (?)
+14:14:50,300 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionItems
+        (description, category, id) 
+    values
+        (?, ?, ?)
+14:14:50,325 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionBids
+        (amount, "timestamp", item, id) 
+    values
+        (?, ?, ?, ?)
+14:14:50,326 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionBids
+        (amount, "timestamp", item, id) 
+    values
+        (?, ?, ?, ?)
+14:14:50,326 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionComments
+        (text, "timestamp", item, id) 
+    values
+        (?, ?, ?, ?)
+14:14:50,326 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionComments
+        (text, "timestamp", item, id) 
+    values
+        (?, ?, ?, ?)
+14:14:50,339 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionComments
+        (text, "timestamp", item, id) 
+    values
+        (?, ?, ?, ?)
+14:14:50,339 DEBUG SQL:104 - 
+    select
+        item0_.id as id4_2_,
+        item0_.description as descript2_4_2_,
+        item0_.category as category4_2_,
+        bids1_.item as item4_4_,
+        bids1_.id as id0_4_,
+        bids1_.id as id0_0_,
+        bids1_.amount as amount0_0_,
+        bids1_."timestamp" as timestamp3_0_0_,
+        bids1_.item as item0_0_,
+        comments2_.item as item4_5_,
+        comments2_.id as id2_5_,
+        comments2_.id as id2_1_,
+        comments2_.text as text2_1_,
+        comments2_."timestamp" as timestamp3_2_1_,
+        comments2_.item as item2_1_ 
+    from
+        AuctionItems item0_ 
+    left outer join
+        AuctionBids bids1_ 
+            on item0_.id=bids1_.item 
+    left outer join
+        AuctionComments comments2_ 
+            on item0_.id=comments2_.item 
+    where
+        item0_.id=? 
+    order by
+        bids1_."timestamp",
+        comments2_."timestamp"
+14:14:50,341 DEBUG SQL:104 - 
+    select
+        bid0_.id as id0_2_,
+        bid0_.amount as amount0_2_,
+        bid0_."timestamp" as timestamp3_0_2_,
+        bid0_.item as item0_2_,
+        item1_.id as id4_0_,
+        item1_.description as descript2_4_0_,
+        item1_.category as category4_0_,
+        comments2_.item as item4_4_,
+        comments2_.id as id2_4_,
+        comments2_.id as id2_1_,
+        comments2_.text as text2_1_,
+        comments2_."timestamp" as timestamp3_2_1_,
+        comments2_.item as item2_1_ 
+    from
+        AuctionBids bid0_ 
+    inner join
+        AuctionItems item1_ 
+            on bid0_.item=item1_.id 
+    left outer join
+        AuctionComments comments2_ 
+            on item1_.id=comments2_.item 
+    where
+        bid0_.id=? 
+    order by
+        comments2_."timestamp"
+java.util.GregorianCalendar[time=1362082490298,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2013,MONTH=1,WEEK_OF_YEAR=9,WEEK_OF_MONTH=5,DAY_OF_MONTH=28,DAY_OF_YEAR=59,DAY_OF_WEEK=5,DAY_OF_WEEK_IN_MONTH=4,AM_PM=1,HOUR=2,HOUR_OF_DAY=14,MINUTE=14,SECOND=50,MILLISECOND=298,ZONE_OFFSET=-21600000,DST_OFFSET=0]
+14:14:50,343 DEBUG SQL:104 - 
+    select
+        this_.id as id4_0_,
+        this_.description as descript2_4_0_,
+        this_.category as category4_0_ 
+    from
+        AuctionItems this_
+14:14:50,343 DEBUG SQL:104 - 
+    select
+        bids0_.item as item4_1_,
+        bids0_.id as id0_1_,
+        bids0_.id as id0_0_,
+        bids0_.amount as amount0_0_,
+        bids0_."timestamp" as timestamp3_0_0_,
+        bids0_.item as item0_0_ 
+    from
+        AuctionBids bids0_ 
+    where
+        bids0_.item=? 
+    order by
+        bids0_."timestamp"
+14:14:50,370 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.joinfetch.Item i left join fetch i.bids left join fetch i.comments
+14:14:50,372 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'joinfetch'
+          |  |  \-[IDENT] Node: 'Item'
+          |  \-[ALIAS] Node: 'i'
+          +-[JOIN] Node: 'join'
+          |  +-[LEFT] Node: 'left'
+          |  +-[FETCH] Node: 'fetch'
+          |  \-[DOT] Node: '.'
+          |     +-[IDENT] Node: 'i'
+          |     \-[IDENT] Node: 'bids'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'i'
+                \-[IDENT] Node: 'comments'
+
+14:14:50,382 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,382 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Item (i) -> item0_
+14:14:50,383 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.id
+14:14:50,383 DEBUG DotNode:599 - getDataType() : bids -> org.hibernate.type.OrderedSetType(org.hibernate.test.joinfetch.Item.bids)
+14:14:50,383 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = i.bids role = org.hibernate.test.joinfetch.Item.bids associatedEntityName = org.hibernate.test.joinfetch.Bid
+14:14:50,383 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Bid (<no alias>) -> bids1_
+14:14:50,383 DEBUG FromClause:282 - addJoinByPathMap() : i.bids -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}
+14:14:50,383 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for i.bids : AuctionBids bids1_
+14:14:50,383 DEBUG FromReferenceNode:74 - Resolved : i.bids -> .
+14:14:50,384 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionBids bids1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.joinfetch.Item.bids,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}
+
+14:14:50,384 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.id
+14:14:50,384 DEBUG DotNode:599 - getDataType() : comments -> org.hibernate.type.OrderedSetType(org.hibernate.test.joinfetch.Item.comments)
+14:14:50,384 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = i.comments role = org.hibernate.test.joinfetch.Item.comments associatedEntityName = org.hibernate.test.joinfetch.Comment
+14:14:50,384 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Comment (<no alias>) -> comments2_
+14:14:50,384 DEBUG FromClause:282 - addJoinByPathMap() : i.comments -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionComments,tableAlias=comments2_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Comment}}
+14:14:50,384 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for i.comments : AuctionComments comments2_
+14:14:50,384 DEBUG FromReferenceNode:74 - Resolved : i.comments -> .
+14:14:50,384 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionComments comments2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.joinfetch.Item.comments,tableName=AuctionComments,tableAlias=comments2_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Comment}}
+
+14:14:50,397 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( AuctionItems item0_ AuctionBids bids1_ AuctionComments comments2_ ) ) )
+14:14:50,397 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:50,397 DEBUG JoinProcessor:175 - Using FROM fragment [AuctionItems item0_]
+14:14:50,398 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionBids bids1_ on item0_.id=bids1_.item]
+14:14:50,398 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionComments comments2_ on item0_.id=comments2_.item]
+14:14:50,398 DEBUG QueryNode:101 - getOrderByClause() : Creating a new ORDER BY clause
+14:14:50,398 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (AuctionComments,AuctionItems,AuctionBids)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'item0_.id as id4_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Item}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'bids1_.id as id0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.joinfetch.Item.bids,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'comments2_.id as id2_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.joinfetch.Item.comments,tableName=AuctionComments,tableAlias=comments2_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Comment}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'item0_.description as descript2_4_0_, item0_.category as category4_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'bids1_.amount as amount0_1_, bids1_."timestamp" as timestamp3_0_1_, bids1_.item as item0_1_'
+    |  +-[SQL_TOKEN] SqlFragment: 'bids1_.item as item4_0__, bids1_.id as id0_0__'
+    |  +-[SQL_TOKEN] SqlFragment: 'comments2_.text as text2_2_, comments2_."timestamp" as timestamp3_2_2_, comments2_.item as item2_2_'
+    |  \-[SQL_TOKEN] SqlFragment: 'comments2_.item as item4_1__, comments2_.id as id2_1__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[i], fromElementByTableAlias=[item0_, bids1_, comments2_], fromElementsByPath=[i.comments, i.bids], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'AuctionItems item0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Item}}
+    |     +-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionBids bids1_ on item0_.id=bids1_.item' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.joinfetch.Item.bids,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionComments comments2_ on item0_.id=comments2_.item' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.joinfetch.Item.comments,tableName=AuctionComments,tableAlias=comments2_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Comment}}
+    \-[ORDER] OrderByClause: 'ORDER'
+       +-[SQL_TOKEN] SqlFragment: 'bids1_."timestamp"'
+       \-[SQL_TOKEN] SqlFragment: 'comments2_."timestamp"'
+
+14:14:50,398 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,398 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.joinfetch.Item i left join fetch i.bids left join fetch i.comments
+14:14:50,399 DEBUG QueryTranslatorImpl:236 - SQL: select item0_.id as id4_0_, bids1_.id as id0_1_, comments2_.id as id2_2_, item0_.description as descript2_4_0_, item0_.category as category4_0_, bids1_.amount as amount0_1_, bids1_."timestamp" as timestamp3_0_1_, bids1_.item as item0_1_, bids1_.item as item4_0__, bids1_.id as id0_0__, comments2_.text as text2_2_, comments2_."timestamp" as timestamp3_2_2_, comments2_.item as item2_2_, comments2_.item as item4_1__, comments2_.id as id2_1__ from AuctionItems item0_ left outer join AuctionBids bids1_ on item0_.id=bids1_.item left outer join AuctionComments comments2_ on item0_.id=comments2_.item order by bids1_."timestamp", comments2_."timestamp"
+14:14:50,399 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,399 DEBUG SQL:104 - 
+    select
+        item0_.id as id4_0_,
+        bids1_.id as id0_1_,
+        comments2_.id as id2_2_,
+        item0_.description as descript2_4_0_,
+        item0_.category as category4_0_,
+        bids1_.amount as amount0_1_,
+        bids1_."timestamp" as timestamp3_0_1_,
+        bids1_.item as item0_1_,
+        bids1_.item as item4_0__,
+        bids1_.id as id0_0__,
+        comments2_.text as text2_2_,
+        comments2_."timestamp" as timestamp3_2_2_,
+        comments2_.item as item2_2_,
+        comments2_.item as item4_1__,
+        comments2_.id as id2_1__ 
+    from
+        AuctionItems item0_ 
+    left outer join
+        AuctionBids bids1_ 
+            on item0_.id=bids1_.item 
+    left outer join
+        AuctionComments comments2_ 
+            on item0_.id=comments2_.item 
+    order by
+        bids1_."timestamp",
+        comments2_."timestamp"
+14:14:50,417 DEBUG SQL:104 - 
+    select
+        item.id as id4_0_,
+        item.description as descript2_4_0_,
+        item.category as category4_0_,
+        bid.item as item4_0__,
+        bid.id as id0_0__,
+        bid.id as id0_1_,
+        bid.amount as amount0_1_,
+        bid."timestamp" as timestamp3_0_1_,
+        bid.item as item0_1_,
+        commnt.item as item4_1__,
+        commnt.id as id2_1__,
+        commnt.id as id2_2_,
+        commnt.text as text2_2_,
+        commnt."timestamp" as timestamp3_2_2_,
+        commnt.item as item2_2_     
+    from
+        AuctionItems item     
+    left outer join
+        AuctionBids bid 
+            on bid.item = item.id     
+    left outer join
+        AuctionComments commnt 
+            on commnt.item = item.id
+14:14:50,418 DEBUG SQL:104 - 
+    select
+        this_.id as id4_2_,
+        this_.description as descript2_4_2_,
+        this_.category as category4_2_,
+        bids2_.item as item4_4_,
+        bids2_.id as id0_4_,
+        bids2_.id as id0_0_,
+        bids2_.amount as amount0_0_,
+        bids2_."timestamp" as timestamp3_0_0_,
+        bids2_.item as item0_0_,
+        comments3_.item as item4_5_,
+        comments3_.id as id2_5_,
+        comments3_.id as id2_1_,
+        comments3_.text as text2_1_,
+        comments3_."timestamp" as timestamp3_2_1_,
+        comments3_.item as item2_1_ 
+    from
+        AuctionItems this_ 
+    left outer join
+        AuctionBids bids2_ 
+            on this_.id=bids2_.item 
+    left outer join
+        AuctionComments comments3_ 
+            on this_.id=comments3_.item 
+    order by
+        bids2_."timestamp",
+        comments3_."timestamp"
+14:14:50,433 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.joinfetch.Bid b left join fetch b.item i left join fetch i.category
+14:14:50,434 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'joinfetch'
+          |  |  \-[IDENT] Node: 'Bid'
+          |  \-[ALIAS] Node: 'b'
+          +-[JOIN] Node: 'join'
+          |  +-[LEFT] Node: 'left'
+          |  +-[FETCH] Node: 'fetch'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'b'
+          |  |  \-[IDENT] Node: 'item'
+          |  \-[ALIAS] Node: 'i'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'i'
+                \-[IDENT] Node: 'category'
+
+14:14:50,461 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,462 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Bid (b) -> bid0_
+14:14:50,462 DEBUG FromReferenceNode:74 - Resolved : b -> bid0_.id
+14:14:50,462 DEBUG DotNode:599 - getDataType() : item -> org.hibernate.type.ManyToOneType(org.hibernate.test.joinfetch.Item)
+14:14:50,462 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for item in org.hibernate.test.joinfetch.Bid (i) parent = [ {null} ]
+14:14:50,462 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Item (i) -> item1_
+14:14:50,463 DEBUG FromClause:282 - addJoinByPathMap() : b.item -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}
+14:14:50,463 DEBUG FromReferenceNode:74 - Resolved : b.item -> bid0_.item
+14:14:50,463 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionItems item1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}
+
+14:14:50,463 DEBUG FromReferenceNode:74 - Resolved : i -> item1_.id
+14:14:50,463 DEBUG DotNode:599 - getDataType() : category -> org.hibernate.type.ManyToOneType(org.hibernate.test.joinfetch.Category)
+14:14:50,463 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for category in org.hibernate.test.joinfetch.Item (<no alias>) parent = [ {null} ]
+14:14:50,463 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Category (<no alias>) -> category2_
+14:14:50,463 DEBUG FromClause:282 - addJoinByPathMap() : i.category -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item1_,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}
+14:14:50,464 DEBUG FromReferenceNode:74 - Resolved : i.category -> item1_.category
+14:14:50,477 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionCategories category2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item1_,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}
+
+14:14:50,477 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( AuctionBids bid0_ ( AuctionItems item1_ AuctionCategories category2_ ) ) ) )
+14:14:50,477 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:50,477 DEBUG JoinProcessor:175 - Using FROM fragment [AuctionBids bid0_]
+14:14:50,477 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionItems item1_ on bid0_.item=item1_.id]
+14:14:50,478 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionCategories category2_ on item1_.category=category2_.name]
+14:14:50,478 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (AuctionCategories,AuctionItems,AuctionBids)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'bid0_.id as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=AuctionBids,tableAlias=bid0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Bid}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'item1_.id as id4_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'category2_.name as name1_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=left outer join AuctionItems item1_ on bid0_.item=item1_.id,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'bid0_.amount as amount0_0_, bid0_."timestamp" as timestamp3_0_0_, bid0_.item as item0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'item1_.description as descript2_4_1_, item1_.category as category4_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[b, i], fromElementByTableAlias=[bid0_, item1_, category2_], fromElementsByPath=[i.category, b.item], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'AuctionBids bid0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=AuctionBids,tableAlias=bid0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Bid}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionItems item1_ on bid0_.item=item1_.id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}
+             \-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionCategories category2_ on item1_.category=category2_.name' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=left outer join AuctionItems item1_ on bid0_.item=item1_.id,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}
+
+14:14:50,478 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,478 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.joinfetch.Bid b left join fetch b.item i left join fetch i.category
+14:14:50,478 DEBUG QueryTranslatorImpl:236 - SQL: select bid0_.id as id0_0_, item1_.id as id4_1_, category2_.name as name1_2_, bid0_.amount as amount0_0_, bid0_."timestamp" as timestamp3_0_0_, bid0_.item as item0_0_, item1_.description as descript2_4_1_, item1_.category as category4_1_ from AuctionBids bid0_ left outer join AuctionItems item1_ on bid0_.item=item1_.id left outer join AuctionCategories category2_ on item1_.category=category2_.name
+14:14:50,478 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,479 DEBUG SQL:104 - 
+    select
+        bid0_.id as id0_0_,
+        item1_.id as id4_1_,
+        category2_.name as name1_2_,
+        bid0_.amount as amount0_0_,
+        bid0_."timestamp" as timestamp3_0_0_,
+        bid0_.item as item0_0_,
+        item1_.description as descript2_4_1_,
+        item1_.category as category4_1_ 
+    from
+        AuctionBids bid0_ 
+    left outer join
+        AuctionItems item1_ 
+            on bid0_.item=item1_.id 
+    left outer join
+        AuctionCategories category2_ 
+            on item1_.category=category2_.name
+14:14:50,495 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.joinfetch.Item i left join i.bids b left join fetch i.category
+14:14:50,496 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'joinfetch'
+          |  |  \-[IDENT] Node: 'Item'
+          |  \-[ALIAS] Node: 'i'
+          +-[JOIN] Node: 'join'
+          |  +-[LEFT] Node: 'left'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'i'
+          |  |  \-[IDENT] Node: 'bids'
+          |  \-[ALIAS] Node: 'b'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'i'
+                \-[IDENT] Node: 'category'
+
+14:14:50,508 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,509 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Item (i) -> item0_
+14:14:50,510 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.id
+14:14:50,510 DEBUG DotNode:599 - getDataType() : bids -> org.hibernate.type.OrderedSetType(org.hibernate.test.joinfetch.Item.bids)
+14:14:50,510 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = i.bids role = org.hibernate.test.joinfetch.Item.bids associatedEntityName = org.hibernate.test.joinfetch.Bid
+14:14:50,510 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Bid (b) -> bids1_
+14:14:50,510 DEBUG FromClause:282 - addJoinByPathMap() : i.bids -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}
+14:14:50,510 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for i.bids : AuctionBids bids1_
+14:14:50,510 DEBUG FromReferenceNode:74 - Resolved : i.bids -> .
+14:14:50,511 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionBids bids1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=org.hibernate.test.joinfetch.Item.bids,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}
+
+14:14:50,511 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.id
+14:14:50,511 DEBUG DotNode:599 - getDataType() : category -> org.hibernate.type.ManyToOneType(org.hibernate.test.joinfetch.Category)
+14:14:50,511 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for category in org.hibernate.test.joinfetch.Item (<no alias>) parent = [ {null} ]
+14:14:50,511 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Category (<no alias>) -> category2_
+14:14:50,511 DEBUG FromClause:282 - addJoinByPathMap() : i.category -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item0_,columns={item0_.category ,className=org.hibernate.test.joinfetch.Category}}
+14:14:50,511 DEBUG FromReferenceNode:74 - Resolved : i.category -> item0_.category
+14:14:50,521 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionCategories category2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item0_,columns={item0_.category ,className=org.hibernate.test.joinfetch.Category}}
+
+14:14:50,521 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( AuctionItems item0_ AuctionBids bids1_ AuctionCategories category2_ ) ) )
+14:14:50,521 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:50,521 DEBUG JoinProcessor:175 - Using FROM fragment [AuctionItems item0_]
+14:14:50,522 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionBids bids1_ on item0_.id=bids1_.item]
+14:14:50,522 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionCategories category2_ on item0_.category=category2_.name]
+14:14:50,522 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (AuctionCategories,AuctionItems,AuctionBids)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'item0_.id as id4_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Item}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'bids1_.id as id0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=org.hibernate.test.joinfetch.Item.bids,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'category2_.name as name1_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item0_,columns={item0_.category ,className=org.hibernate.test.joinfetch.Category}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'item0_.description as descript2_4_0_, item0_.category as category4_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'bids1_.amount as amount0_1_, bids1_."timestamp" as timestamp3_0_1_, bids1_.item as item0_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[b, i], fromElementByTableAlias=[item0_, category2_, bids1_], fromElementsByPath=[i.category, i.bids], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'AuctionItems item0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Item}}
+          +-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionBids bids1_ on item0_.id=bids1_.item' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=org.hibernate.test.joinfetch.Item.bids,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionCategories category2_ on item0_.category=category2_.name' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item0_,columns={item0_.category ,className=org.hibernate.test.joinfetch.Category}}
+
+14:14:50,522 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,522 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.joinfetch.Item i left join i.bids b left join fetch i.category
+14:14:50,522 DEBUG QueryTranslatorImpl:236 - SQL: select item0_.id as id4_0_, bids1_.id as id0_1_, category2_.name as name1_2_, item0_.description as descript2_4_0_, item0_.category as category4_0_, bids1_.amount as amount0_1_, bids1_."timestamp" as timestamp3_0_1_, bids1_.item as item0_1_ from AuctionItems item0_ left outer join AuctionBids bids1_ on item0_.id=bids1_.item left outer join AuctionCategories category2_ on item0_.category=category2_.name
+14:14:50,522 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,523 DEBUG SQL:104 - 
+    select
+        item0_.id as id4_0_,
+        bids1_.id as id0_1_,
+        category2_.name as name1_2_,
+        item0_.description as descript2_4_0_,
+        item0_.category as category4_0_,
+        bids1_.amount as amount0_1_,
+        bids1_."timestamp" as timestamp3_0_1_,
+        bids1_.item as item0_1_ 
+    from
+        AuctionItems item0_ 
+    left outer join
+        AuctionBids bids1_ 
+            on item0_.id=bids1_.item 
+    left outer join
+        AuctionCategories category2_ 
+            on item0_.category=category2_.name
+14:14:50,535 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.joinfetch.Item i left join i.bids b left join i.category
+14:14:50,537 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'joinfetch'
+          |  |  \-[IDENT] Node: 'Item'
+          |  \-[ALIAS] Node: 'i'
+          +-[JOIN] Node: 'join'
+          |  +-[LEFT] Node: 'left'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'i'
+          |  |  \-[IDENT] Node: 'bids'
+          |  \-[ALIAS] Node: 'b'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'i'
+                \-[IDENT] Node: 'category'
+
+14:14:50,537 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,537 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Item (i) -> item0_
+14:14:50,537 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.id
+14:14:50,537 DEBUG DotNode:599 - getDataType() : bids -> org.hibernate.type.OrderedSetType(org.hibernate.test.joinfetch.Item.bids)
+14:14:50,537 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = i.bids role = org.hibernate.test.joinfetch.Item.bids associatedEntityName = org.hibernate.test.joinfetch.Bid
+14:14:50,537 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Bid (b) -> bids1_
+14:14:50,537 DEBUG FromClause:282 - addJoinByPathMap() : i.bids -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}
+14:14:50,538 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for i.bids : AuctionBids bids1_
+14:14:50,538 DEBUG FromReferenceNode:74 - Resolved : i.bids -> .
+14:14:50,538 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionBids bids1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=org.hibernate.test.joinfetch.Item.bids,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}
+
+14:14:50,538 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.id
+14:14:50,538 DEBUG DotNode:599 - getDataType() : category -> org.hibernate.type.ManyToOneType(org.hibernate.test.joinfetch.Category)
+14:14:50,538 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for category in org.hibernate.test.joinfetch.Item (<no alias>) parent = [ {null} ]
+14:14:50,538 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Category (<no alias>) -> category2_
+14:14:50,538 DEBUG FromClause:282 - addJoinByPathMap() : i.category -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item0_,columns={item0_.category ,className=org.hibernate.test.joinfetch.Category}}
+14:14:50,539 DEBUG FromReferenceNode:74 - Resolved : i.category -> item0_.category
+14:14:50,549 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionCategories category2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item0_,columns={item0_.category ,className=org.hibernate.test.joinfetch.Category}}
+
+14:14:50,549 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( AuctionItems item0_ AuctionBids bids1_ AuctionCategories category2_ ) ) )
+14:14:50,549 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:50,549 DEBUG JoinProcessor:175 - Using FROM fragment [AuctionItems item0_]
+14:14:50,549 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionBids bids1_ on item0_.id=bids1_.item]
+14:14:50,549 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionCategories category2_ on item0_.category=category2_.name]
+14:14:50,550 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (AuctionCategories,AuctionItems,AuctionBids)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'item0_.id as id4_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Item}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'bids1_.id as id0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=org.hibernate.test.joinfetch.Item.bids,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'category2_.name as name1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item0_,columns={item0_.category ,className=org.hibernate.test.joinfetch.Category}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'item0_.description as descript2_4_0_, item0_.category as category4_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'bids1_.amount as amount0_1_, bids1_."timestamp" as timestamp3_0_1_, bids1_.item as item0_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[b, i], fromElementByTableAlias=[item0_, category2_, bids1_], fromElementsByPath=[i.category, i.bids], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'AuctionItems item0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Item}}
+          +-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionBids bids1_ on item0_.id=bids1_.item' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=org.hibernate.test.joinfetch.Item.bids,tableName=AuctionBids,tableAlias=bids1_,origin=AuctionItems item0_,columns={item0_.id ,className=org.hibernate.test.joinfetch.Bid}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionCategories category2_ on item0_.category=category2_.name' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item0_,columns={item0_.category ,className=org.hibernate.test.joinfetch.Category}}
+
+14:14:50,550 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,550 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.joinfetch.Item i left join i.bids b left join i.category
+14:14:50,550 DEBUG QueryTranslatorImpl:236 - SQL: select item0_.id as id4_0_, bids1_.id as id0_1_, category2_.name as name1_2_, item0_.description as descript2_4_0_, item0_.category as category4_0_, bids1_.amount as amount0_1_, bids1_."timestamp" as timestamp3_0_1_, bids1_.item as item0_1_ from AuctionItems item0_ left outer join AuctionBids bids1_ on item0_.id=bids1_.item left outer join AuctionCategories category2_ on item0_.category=category2_.name
+14:14:50,550 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,551 DEBUG SQL:104 - 
+    select
+        item0_.id as id4_0_,
+        bids1_.id as id0_1_,
+        category2_.name as name1_2_,
+        item0_.description as descript2_4_0_,
+        item0_.category as category4_0_,
+        bids1_.amount as amount0_1_,
+        bids1_."timestamp" as timestamp3_0_1_,
+        bids1_.item as item0_1_ 
+    from
+        AuctionItems item0_ 
+    left outer join
+        AuctionBids bids1_ 
+            on item0_.id=bids1_.item 
+    left outer join
+        AuctionCategories category2_ 
+            on item0_.category=category2_.name
+14:14:50,563 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.joinfetch.Bid b left join b.item i left join fetch i.category
+14:14:50,565 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'joinfetch'
+          |  |  \-[IDENT] Node: 'Bid'
+          |  \-[ALIAS] Node: 'b'
+          +-[JOIN] Node: 'join'
+          |  +-[LEFT] Node: 'left'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'b'
+          |  |  \-[IDENT] Node: 'item'
+          |  \-[ALIAS] Node: 'i'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'i'
+                \-[IDENT] Node: 'category'
+
+14:14:50,565 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,565 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Bid (b) -> bid0_
+14:14:50,565 DEBUG FromReferenceNode:74 - Resolved : b -> bid0_.id
+14:14:50,565 DEBUG DotNode:599 - getDataType() : item -> org.hibernate.type.ManyToOneType(org.hibernate.test.joinfetch.Item)
+14:14:50,596 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for item in org.hibernate.test.joinfetch.Bid (i) parent = [ {null} ]
+14:14:50,596 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Item (i) -> item1_
+14:14:50,597 DEBUG FromClause:282 - addJoinByPathMap() : b.item -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}
+14:14:50,598 DEBUG FromReferenceNode:74 - Resolved : b.item -> bid0_.item
+14:14:50,608 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionItems item1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}
+
+14:14:50,608 DEBUG FromReferenceNode:74 - Resolved : i -> item1_.id
+14:14:50,609 DEBUG DotNode:599 - getDataType() : category -> org.hibernate.type.ManyToOneType(org.hibernate.test.joinfetch.Category)
+14:14:50,609 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for category in org.hibernate.test.joinfetch.Item (<no alias>) parent = [ {null} ]
+14:14:50,609 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Category (<no alias>) -> category2_
+14:14:50,609 DEBUG FromClause:282 - addJoinByPathMap() : i.category -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item1_,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}
+14:14:50,609 DEBUG FromReferenceNode:74 - Resolved : i.category -> item1_.category
+14:14:50,609 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionCategories category2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item1_,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}
+
+14:14:50,609 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( AuctionBids bid0_ ( AuctionItems item1_ AuctionCategories category2_ ) ) ) )
+14:14:50,610 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:50,610 DEBUG JoinProcessor:175 - Using FROM fragment [AuctionBids bid0_]
+14:14:50,610 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionItems item1_ on bid0_.item=item1_.id]
+14:14:50,610 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionCategories category2_ on item1_.category=category2_.name]
+14:14:50,610 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (AuctionCategories,AuctionItems,AuctionBids)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'bid0_.id as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=AuctionBids,tableAlias=bid0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Bid}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'item1_.id as id4_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'category2_.name as name1_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=left outer join AuctionItems item1_ on bid0_.item=item1_.id,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'bid0_.amount as amount0_0_, bid0_."timestamp" as timestamp3_0_0_, bid0_.item as item0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'item1_.description as descript2_4_1_, item1_.category as category4_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[b, i], fromElementByTableAlias=[bid0_, item1_, category2_], fromElementsByPath=[i.category, b.item], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'AuctionBids bid0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=AuctionBids,tableAlias=bid0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Bid}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionItems item1_ on bid0_.item=item1_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}
+             \-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionCategories category2_ on item1_.category=category2_.name' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=left outer join AuctionItems item1_ on bid0_.item=item1_.id,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}
+
+14:14:50,632 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,633 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.joinfetch.Bid b left join b.item i left join fetch i.category
+14:14:50,633 DEBUG QueryTranslatorImpl:236 - SQL: select bid0_.id as id0_0_, item1_.id as id4_1_, category2_.name as name1_2_, bid0_.amount as amount0_0_, bid0_."timestamp" as timestamp3_0_0_, bid0_.item as item0_0_, item1_.description as descript2_4_1_, item1_.category as category4_1_ from AuctionBids bid0_ left outer join AuctionItems item1_ on bid0_.item=item1_.id left outer join AuctionCategories category2_ on item1_.category=category2_.name
+14:14:50,633 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,633 DEBUG SQL:104 - 
+    select
+        bid0_.id as id0_0_,
+        item1_.id as id4_1_,
+        category2_.name as name1_2_,
+        bid0_.amount as amount0_0_,
+        bid0_."timestamp" as timestamp3_0_0_,
+        bid0_.item as item0_0_,
+        item1_.description as descript2_4_1_,
+        item1_.category as category4_1_ 
+    from
+        AuctionBids bid0_ 
+    left outer join
+        AuctionItems item1_ 
+            on bid0_.item=item1_.id 
+    left outer join
+        AuctionCategories category2_ 
+            on item1_.category=category2_.name
+14:14:50,634 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.joinfetch.Bid b left join b.item i left join i.category
+14:14:50,636 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'joinfetch'
+          |  |  \-[IDENT] Node: 'Bid'
+          |  \-[ALIAS] Node: 'b'
+          +-[JOIN] Node: 'join'
+          |  +-[LEFT] Node: 'left'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'b'
+          |  |  \-[IDENT] Node: 'item'
+          |  \-[ALIAS] Node: 'i'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'i'
+                \-[IDENT] Node: 'category'
+
+14:14:50,648 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,648 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Bid (b) -> bid0_
+14:14:50,648 DEBUG FromReferenceNode:74 - Resolved : b -> bid0_.id
+14:14:50,649 DEBUG DotNode:599 - getDataType() : item -> org.hibernate.type.ManyToOneType(org.hibernate.test.joinfetch.Item)
+14:14:50,649 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for item in org.hibernate.test.joinfetch.Bid (i) parent = [ {null} ]
+14:14:50,660 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Item (i) -> item1_
+14:14:50,661 DEBUG FromClause:282 - addJoinByPathMap() : b.item -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}
+14:14:50,661 DEBUG FromReferenceNode:74 - Resolved : b.item -> bid0_.item
+14:14:50,661 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionItems item1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}
+
+14:14:50,662 DEBUG FromReferenceNode:74 - Resolved : i -> item1_.id
+14:14:50,662 DEBUG DotNode:599 - getDataType() : category -> org.hibernate.type.ManyToOneType(org.hibernate.test.joinfetch.Category)
+14:14:50,662 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for category in org.hibernate.test.joinfetch.Item (<no alias>) parent = [ {null} ]
+14:14:50,662 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Category (<no alias>) -> category2_
+14:14:50,662 DEBUG FromClause:282 - addJoinByPathMap() : i.category -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item1_,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}
+14:14:50,662 DEBUG FromReferenceNode:74 - Resolved : i.category -> item1_.category
+14:14:50,662 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'AuctionCategories category2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=AuctionItems item1_,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}
+
+14:14:50,662 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( AuctionBids bid0_ ( AuctionItems item1_ AuctionCategories category2_ ) ) ) )
+14:14:50,663 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:50,663 DEBUG JoinProcessor:175 - Using FROM fragment [AuctionBids bid0_]
+14:14:50,663 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionItems item1_ on bid0_.item=item1_.id]
+14:14:50,663 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join AuctionCategories category2_ on item1_.category=category2_.name]
+14:14:50,663 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (AuctionCategories,AuctionItems,AuctionBids)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'bid0_.id as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=AuctionBids,tableAlias=bid0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Bid}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'item1_.id as id4_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'category2_.name as name1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=left outer join AuctionItems item1_ on bid0_.item=item1_.id,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'bid0_.amount as amount0_0_, bid0_."timestamp" as timestamp3_0_0_, bid0_.item as item0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'item1_.description as descript2_4_1_, item1_.category as category4_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[b, i], fromElementByTableAlias=[bid0_, item1_, category2_], fromElementsByPath=[i.category, b.item], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'AuctionBids bid0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=AuctionBids,tableAlias=bid0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Bid}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionItems item1_ on bid0_.item=item1_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=AuctionItems,tableAlias=item1_,origin=AuctionBids bid0_,columns={bid0_.item ,className=org.hibernate.test.joinfetch.Item}}
+             \-[JOIN_FRAGMENT] FromElement: 'left outer join AuctionCategories category2_ on item1_.category=category2_.name' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category2_,origin=left outer join AuctionItems item1_ on bid0_.item=item1_.id,columns={item1_.category ,className=org.hibernate.test.joinfetch.Category}}
+
+14:14:50,663 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,663 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.joinfetch.Bid b left join b.item i left join i.category
+14:14:50,664 DEBUG QueryTranslatorImpl:236 - SQL: select bid0_.id as id0_0_, item1_.id as id4_1_, category2_.name as name1_2_, bid0_.amount as amount0_0_, bid0_."timestamp" as timestamp3_0_0_, bid0_.item as item0_0_, item1_.description as descript2_4_1_, item1_.category as category4_1_ from AuctionBids bid0_ left outer join AuctionItems item1_ on bid0_.item=item1_.id left outer join AuctionCategories category2_ on item1_.category=category2_.name
+14:14:50,664 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,664 DEBUG SQL:104 - 
+    select
+        bid0_.id as id0_0_,
+        item1_.id as id4_1_,
+        category2_.name as name1_2_,
+        bid0_.amount as amount0_0_,
+        bid0_."timestamp" as timestamp3_0_0_,
+        bid0_.item as item0_0_,
+        item1_.description as descript2_4_1_,
+        item1_.category as category4_1_ 
+    from
+        AuctionBids bid0_ 
+    left outer join
+        AuctionItems item1_ 
+            on bid0_.item=item1_.id 
+    left outer join
+        AuctionCategories category2_ 
+            on item1_.category=category2_.name
+14:14:50,665 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionBids
+14:14:50,665 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionComments
+14:14:50,679 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionItems
+14:14:50,680 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.joinfetch.Category
+14:14:50,681 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'joinfetch'
+             \-[IDENT] Node: 'Category'
+
+14:14:50,681 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,681 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.joinfetch.Category (<no alias>) -> category0_
+14:14:50,681 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (AuctionCategories)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[category0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'AuctionCategories' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=AuctionCategories,tableAlias=category0_,origin=null,columns={,className=org.hibernate.test.joinfetch.Category}}
+
+14:14:50,694 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,694 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:50,694 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionCategories
+14:14:50,695  INFO CustomRunner:139 - Test: testJoinFetchManyToMany
+14:14:50,696 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionGroups
+        (name) 
+    values
+        (?)
+14:14:50,697 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionUsers
+        (name) 
+    values
+        (?)
+14:14:50,697 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionUsers
+        (name) 
+    values
+        (?)
+14:14:50,697 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionUsersGroups
+        ("userName", groupName) 
+    values
+        (?, ?)
+14:14:50,697 DEBUG SQL:104 - 
+    insert 
+    into
+        AuctionUsersGroups
+        ("userName", groupName) 
+    values
+        (?, ?)
+14:14:50,698 DEBUG SQL:104 - 
+    select
+        group0_.name as name3_1_,
+        users1_.groupName as groupName3_3_,
+        user2_.name as userName1_6_3_,
+        users1_."userName" as formula87_3_,
+        user2_.name as name5_0_ 
+    from
+        AuctionGroups group0_ 
+    left outer join
+        AuctionUsersGroups users1_ 
+            on group0_.name=users1_.groupName 
+    left outer join
+        AuctionUsers user2_ 
+            on users1_."userName"=user2_.name 
+    where
+        group0_.name=? 
+    order by
+        users1_."userName"
+14:14:50,728 DEBUG SQL:104 - 
+    select
+        this_.name as name3_2_,
+        users2_.groupName as groupName3_4_,
+        user3_.name as userName1_6_4_,
+        users2_."userName" as formula87_4_,
+        user3_.name as name5_0_,
+        groups4_."userName" as userName1_5_5_,
+        group5_.name as groupName6_5_,
+        groups4_.groupName as formula86_5_,
+        group5_.name as name3_1_ 
+    from
+        AuctionGroups this_ 
+    left outer join
+        AuctionUsersGroups users2_ 
+            on this_.name=users2_.groupName 
+    left outer join
+        AuctionUsers user3_ 
+            on users2_."userName"=user3_.name 
+    left outer join
+        AuctionUsersGroups groups4_ 
+            on user3_.name=groups4_."userName" 
+    left outer join
+        AuctionGroups group5_ 
+            on groups4_.groupName=group5_.name 
+    order by
+        users2_."userName",
+        groups4_.groupName
+14:14:50,742 DEBUG SQL:104 - 
+    select
+        group_.name 
+    from
+        AuctionGroups group_ 
+    where
+        group_.name=?
+14:14:50,742 DEBUG SQL:104 - 
+    select
+        user_.name 
+    from
+        AuctionUsers user_ 
+    where
+        user_.name=?
+14:14:50,753 DEBUG SQL:104 - 
+    select
+        user_.name 
+    from
+        AuctionUsers user_ 
+    where
+        user_.name=?
+14:14:50,754 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionUsersGroups 
+    where
+        "userName"=?
+14:14:50,755 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionUsersGroups 
+    where
+        "userName"=?
+14:14:50,755 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionUsers 
+    where
+        name=?
+14:14:50,755 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionUsers 
+    where
+        name=?
+14:14:50,766 DEBUG SQL:104 - 
+    delete 
+    from
+        AuctionGroups 
+    where
+        name=?
+14:14:50,769  INFO CustomRunner:139 - Test: testProjection
+14:14:50,770 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        AuctionItems this_
+14:14:50,771 DEBUG SQL:104 - 
+    select
+        this_.id as id4_2_,
+        this_.description as descript2_4_2_,
+        this_.category as category4_2_,
+        bids2_.item as item4_4_,
+        bids2_.id as id0_4_,
+        bids2_.id as id0_0_,
+        bids2_.amount as amount0_0_,
+        bids2_."timestamp" as timestamp3_0_0_,
+        bids2_.item as item0_0_,
+        comments3_.item as item4_5_,
+        comments3_.id as id2_5_,
+        comments3_.id as id2_1_,
+        comments3_.text as text2_1_,
+        comments3_."timestamp" as timestamp3_2_1_,
+        comments3_.item as item2_1_ 
+    from
+        AuctionItems this_ 
+    left outer join
+        AuctionBids bids2_ 
+            on this_.id=bids2_.item 
+    left outer join
+        AuctionComments comments3_ 
+            on this_.id=comments3_.item 
+    order by
+        bids2_."timestamp",
+        comments3_."timestamp"
+14:14:50,782  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:50,783 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:50,783 DEBUG SQL:104 - 
+    alter table AuctionBids 
+        drop constraint FK522743D940B2AD5A
+14:14:50,784 DEBUG SQL:104 - 
+    alter table AuctionComments 
+        drop constraint FK573CE53740B2AD5A
+14:14:50,784 DEBUG SQL:104 - 
+    alter table AuctionItems 
+        drop constraint FKF328DF5D9C7E7730
+14:14:50,784 DEBUG SQL:104 - 
+    alter table AuctionUsersGroups 
+        drop constraint FK47E0BBD9772F3F55
+14:14:50,784 DEBUG SQL:104 - 
+    alter table AuctionUsersGroups 
+        drop constraint FK47E0BBD930A19FF5
+14:14:50,795 DEBUG SQL:104 - 
+    drop table AuctionBids if exists
+14:14:50,796 DEBUG SQL:104 - 
+    drop table AuctionCategories if exists
+14:14:50,797 DEBUG SQL:104 - 
+    drop table AuctionComments if exists
+14:14:50,797 DEBUG SQL:104 - 
+    drop table AuctionGroups if exists
+14:14:50,797 DEBUG SQL:104 - 
+    drop table AuctionItems if exists
+14:14:50,798 DEBUG SQL:104 - 
+    drop table AuctionUsers if exists
+14:14:50,798 DEBUG SQL:104 - 
+    drop table AuctionUsersGroups if exists
+14:14:50,798  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:50,798  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.sql.hand.quotedidentifiers.NativeSqlAndQuotedIdentifiersTest" tests="4" time="0.094" timestamp="2013-02-28T20:19:17">
+  <properties />
+  <testcase classname="org.hibernate.test.sql.hand.quotedidentifiers.NativeSqlAndQuotedIdentifiersTest" name="testBasicEntityMapping" time="0.004" />
+  <testcase classname="org.hibernate.test.sql.hand.quotedidentifiers.NativeSqlAndQuotedIdentifiersTest" name="testCompleteScalarDiscovery" time="0.002" />
+  <testcase classname="org.hibernate.test.sql.hand.quotedidentifiers.NativeSqlAndQuotedIdentifiersTest" name="testExpandedEntityMapping" time="0.002" />
+  <testcase classname="org.hibernate.test.sql.hand.quotedidentifiers.NativeSqlAndQuotedIdentifiersTest" name="testPartialScalarDiscovery" time="0.002" />
+  <system-out><![CDATA[14:19:17,425  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.sql.hand.quotedidentifiers.NativeSqlAndQuotedIdentifiersTest
+14:19:17,427  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/sql/hand/quotedidentifiers/Mappings.hbm.xml
+14:19:17,487  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:17,487  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:17,488  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:17,488  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:17,488  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:17,489  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:17,490  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:17,490  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:17,490  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:17,491  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:17,496  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:17,497 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:17,497 DEBUG SQL:104 - 
+    drop table "Person" if exists
+14:19:17,497 DEBUG SQL:104 - 
+    create table "Person" (
+        "pId" bigint not null,
+        "pName" varchar(255) not null,
+        primary key ("pId")
+    )
+14:19:17,498  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:17,498  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:17,499  INFO CustomRunner:139 - Test: testBasicEntityMapping
+14:19:17,500 DEBUG SQL:104 - 
+    select
+        max("pId") 
+    from
+        "Person"
+14:19:17,500 DEBUG SQL:104 - 
+    insert 
+    into
+        "Person"
+        ("pName", "pId") 
+    values
+        (?, ?)
+14:19:17,501 DEBUG SQL:104 - 
+    select
+        p."pId",
+        p."pName" 
+    from
+        "Person" p
+14:19:17,502 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.sql.hand.quotedidentifiers.Person
+14:19:17,502 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  |  \-[IDENT] Node: 'test'
+             |  |  |  \-[IDENT] Node: 'sql'
+             |  |  \-[IDENT] Node: 'hand'
+             |  \-[IDENT] Node: 'quotedidentifiers'
+             \-[IDENT] Node: 'Person'
+
+14:19:17,502 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:17,503 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.sql.hand.quotedidentifiers.Person (<no alias>) -> person0_
+14:19:17,503 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces ("Person")
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: '"Person"' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName="Person",tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.sql.hand.quotedidentifiers.Person}}
+
+14:19:17,503 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:17,503 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:17,503 DEBUG SQL:104 - 
+    delete 
+    from
+        "Person"
+14:19:17,504  INFO CustomRunner:139 - Test: testCompleteScalarDiscovery
+14:19:17,505 DEBUG SQL:104 - 
+    insert 
+    into
+        "Person"
+        ("pName", "pId") 
+    values
+        (?, ?)
+14:19:17,505 DEBUG SQL:104 - 
+    select
+        p."pId",
+        p."pName" 
+    from
+        "Person" p
+14:19:17,506 DEBUG SQL:104 - 
+    delete 
+    from
+        "Person"
+14:19:17,507  INFO CustomRunner:139 - Test: testExpandedEntityMapping
+14:19:17,508 DEBUG SQL:104 - 
+    insert 
+    into
+        "Person"
+        ("pName", "pId") 
+    values
+        (?, ?)
+14:19:17,508 DEBUG SQL:104 - 
+    select
+        p."pId",
+        p."pName" 
+    from
+        "Person" p
+14:19:17,509 DEBUG SQL:104 - 
+    delete 
+    from
+        "Person"
+14:19:17,509  INFO CustomRunner:139 - Test: testPartialScalarDiscovery
+14:19:17,510 DEBUG SQL:104 - 
+    insert 
+    into
+        "Person"
+        ("pName", "pId") 
+    values
+        (?, ?)
+14:19:17,510 DEBUG SQL:104 - 
+    select
+        p."pId",
+        p."pName" 
+    from
+        "Person" p
+14:19:17,511 DEBUG SQL:104 - 
+    delete 
+    from
+        "Person"
+14:19:17,511  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:17,511 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:17,512 DEBUG SQL:104 - 
+    drop table "Person" if exists
+14:19:17,512  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:17,512  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

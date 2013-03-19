@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.StatisticsTest" tests="1" time="0.069" timestamp="2013-02-28T20:16:48">
+  <properties />
+  <testcase classname="org.hibernate.test.legacy.StatisticsTest" name="testSessionStats" time="0.023" />
+  <system-out><![CDATA[14:16:48,379  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.StatisticsTest
+14:16:48,381  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:48,382  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/ABC.hbm.xml
+14:16:48,387  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/ABCExtends.hbm.xml
+14:16:48,393  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:16:48,393  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:16:48,393  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:16:48,393  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:16:48,394  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:16:48,395  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:48,395  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:16:48,395  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:16:48,396  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:16:48,404  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:48,405 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:48,405 DEBUG SQL:104 - 
+    alter table B2 
+        drop constraint FK830435E2490
+14:16:48,405 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table B2 drop constraint FK830435E2490
+14:16:48,405 ERROR SchemaExport:426 - Table "B2" not found; SQL statement:
+
+    alter table B2 
+        drop constraint FK830435E2490 [42102-145]
+14:16:48,405 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA70333C1F67
+14:16:48,406 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TD drop constraint FKA70333C1F67
+14:16:48,406 ERROR SchemaExport:426 - Table "TD" not found; SQL statement:
+
+    alter table TD 
+        drop constraint FKA70333C1F67 [42102-145]
+14:16:48,406 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA706869A0D9
+14:16:48,406 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TD drop constraint FKA706869A0D9
+14:16:48,406 ERROR SchemaExport:426 - Table "TD" not found; SQL statement:
+
+    alter table TD 
+        drop constraint FKA706869A0D9 [42102-145]
+14:16:48,406 DEBUG SQL:104 - 
+    alter table c2more 
+        drop constraint FKABE398042838574D
+14:16:48,406 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table c2more drop constraint FKABE398042838574D
+14:16:48,406 ERROR SchemaExport:426 - Table "C2MORE" not found; SQL statement:
+
+    alter table c2more 
+        drop constraint FKABE398042838574D [42102-145]
+14:16:48,407 DEBUG SQL:104 - 
+    alter table cmore 
+        drop constraint FK5A652382838574B
+14:16:48,407 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table cmore drop constraint FK5A652382838574B
+14:16:48,407 ERROR SchemaExport:426 - Table "CMORE" not found; SQL statement:
+
+    alter table cmore 
+        drop constraint FK5A652382838574B [42102-145]
+14:16:48,407 DEBUG SQL:104 - 
+    drop table B2 if exists
+14:16:48,407 DEBUG SQL:104 - 
+    drop table TA if exists
+14:16:48,407 DEBUG SQL:104 - 
+    drop table TD if exists
+14:16:48,407 DEBUG SQL:104 - 
+    drop table c2more if exists
+14:16:48,408 DEBUG SQL:104 - 
+    drop table cmore if exists
+14:16:48,408 DEBUG SQL:104 - 
+    create table B2 (
+        bid bigint not null,
+        BName varchar(255) not null,
+        primary key (bid)
+    )
+14:16:48,408 DEBUG SQL:104 - 
+    create table TA (
+        identifier_column bigint not null,
+        clazz_discriminata integer,
+        name varchar(255),
+        count_ integer,
+        c1 varchar(255),
+        c2 varchar(255),
+        primary key (identifier_column)
+    )
+14:16:48,408 DEBUG SQL:104 - 
+    create table TD (
+        id bigint not null,
+        amount float,
+        rev_a_id bigint,
+        inv_a_id bigint,
+        primary key (id)
+    )
+14:16:48,409 DEBUG SQL:104 - 
+    create table c2more (
+        c2 bigint not null,
+        C2Name varchar(255),
+        primary key (c2)
+    )
+14:16:48,415 DEBUG SQL:104 - 
+    create table cmore (
+        c1 bigint not null,
+        C1Name varchar(255),
+        primary key (c1)
+    )
+14:16:48,416 DEBUG SQL:104 - 
+    alter table B2 
+        add constraint FK830435E2490 
+        foreign key (bid) 
+        references TA
+14:16:48,416 DEBUG SQL:104 - 
+    create index indx_a_name2 on TA (name)
+14:16:48,416 DEBUG SQL:104 - 
+    create index indx_a_name on TA (name)
+14:16:48,416 DEBUG SQL:104 - 
+    alter table TD 
+        add constraint FKA70333C1F67 
+        foreign key (rev_a_id) 
+        references TA
+14:16:48,417 DEBUG SQL:104 - 
+    alter table TD 
+        add constraint FKA706869A0D9 
+        foreign key (inv_a_id) 
+        references TA
+14:16:48,417 DEBUG SQL:104 - 
+    alter table c2more 
+        add constraint FKABE398042838574D 
+        foreign key (c2) 
+        references TA
+14:16:48,417 DEBUG SQL:104 - 
+    alter table cmore 
+        add constraint FK5A652382838574B 
+        foreign key (c1) 
+        references TA 
+        on delete cascade
+14:16:48,418  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:48,418  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:16:48,419  INFO CustomRunner:139 - Test: testSessionStats
+14:16:48,420 DEBUG SQL:104 - 
+    select
+        max(identifier_column) 
+    from
+        TA
+14:16:48,440 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, clazz_discriminata, identifier_column) 
+    values
+        (?, 0, ?)
+14:16:48,441 DEBUG SQL:104 - 
+    update
+        TA 
+    set
+        name=? 
+    where
+        identifier_column=?
+14:16:48,442 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_1_,
+        a0_.name as name1_,
+        a0_.count_ as count4_1_,
+        a0_.c1 as c5_1_,
+        a0_.c2 as c6_1_,
+        a0_.clazz_discriminata as clazz2_1_ 
+    from
+        TA a0_
+14:16:48,442  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:48,443 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:48,444 DEBUG SQL:104 - 
+    alter table B2 
+        drop constraint FK830435E2490
+14:16:48,444 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA70333C1F67
+14:16:48,444 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA706869A0D9
+14:16:48,444 DEBUG SQL:104 - 
+    alter table c2more 
+        drop constraint FKABE398042838574D
+14:16:48,444 DEBUG SQL:104 - 
+    alter table cmore 
+        drop constraint FK5A652382838574B
+14:16:48,445 DEBUG SQL:104 - 
+    drop table B2 if exists
+14:16:48,445 DEBUG SQL:104 - 
+    drop table TA if exists
+14:16:48,445 DEBUG SQL:104 - 
+    drop table TD if exists
+14:16:48,445 DEBUG SQL:104 - 
+    drop table c2more if exists
+14:16:48,445 DEBUG SQL:104 - 
+    drop table cmore if exists
+14:16:48,445  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:48,446  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

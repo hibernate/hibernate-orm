@@ -1,0 +1,792 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.criteria.OuterJoinCriteriaTest" tests="8" time="0.332" timestamp="2013-02-28T20:12:11">
+  <properties />
+  <testcase classname="org.hibernate.test.criteria.OuterJoinCriteriaTest" name="testAliasWithNonNullRestrictions" time="0.013" />
+  <testcase classname="org.hibernate.test.criteria.OuterJoinCriteriaTest" name="testAliasWithNullOrNonNullRestrictions" time="0.028" />
+  <testcase classname="org.hibernate.test.criteria.OuterJoinCriteriaTest" name="testNonNullSubcriteriaRestrictionsOnRootCriteria" time="0.007" />
+  <testcase classname="org.hibernate.test.criteria.OuterJoinCriteriaTest" name="testSubcriteriaWithClauseAliasToEntityMap" time="0.023" />
+  <testcase classname="org.hibernate.test.criteria.OuterJoinCriteriaTest" name="testSubcriteriaWithNonNullRestrictions" time="0.01" />
+  <testcase classname="org.hibernate.test.criteria.OuterJoinCriteriaTest" name="testSubcriteriaWithNonNullRestrictionsAliasToEntityMap" time="0.007" />
+  <testcase classname="org.hibernate.test.criteria.OuterJoinCriteriaTest" name="testSubcriteriaWithNullOrNonNullRestrictions" time="0.009" />
+  <testcase classname="org.hibernate.test.criteria.OuterJoinCriteriaTest" name="testSubcriteriaWithNullOrNonNullRestrictionsAliasToEntityMap" time="0.008" />
+  <system-out><![CDATA[14:12:11,490  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.criteria.OuterJoinCriteriaTest
+14:12:11,493  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/criteria/Order.hbm.xml
+14:12:11,536  WARN DTDEntityResolver:74 - HHH000223: Recognized obsolete hibernate namespace http://hibernate.sourceforge.net/. Use namespace http://www.hibernate.org/dtd/ instead. Refer to Hibernate 3.6 Migration Guide!
+14:12:11,541  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:11,541  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:11,541  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:11,542  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:11,542  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:11,544  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:11,548  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:11,585  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:11,585  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:11,586  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:11,638  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:11,639 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:11,640 DEBUG SQL:104 - 
+    alter table order_line 
+        drop constraint FK2D124245F7891B41
+14:12:11,640 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table order_line drop constraint FK2D124245F7891B41
+14:12:11,640 ERROR SchemaExport:426 - Table "ORDER_LINE" not found; SQL statement:
+
+    alter table order_line 
+        drop constraint FK2D124245F7891B41 [42102-145]
+14:12:11,641 DEBUG SQL:104 - 
+    drop table order_line if exists
+14:12:11,642 DEBUG SQL:104 - 
+    drop table t_order if exists
+14:12:11,642 DEBUG SQL:104 - 
+    create table order_line (
+        order_line_id integer not null,
+        order_id integer,
+        article_id varchar(255),
+        primary key (order_line_id)
+    )
+14:12:11,643 DEBUG SQL:104 - 
+    create table t_order (
+        order_id integer not null,
+        primary key (order_id)
+    )
+14:12:11,644 DEBUG SQL:104 - 
+    alter table order_line 
+        add constraint FK2D124245F7891B41 
+        foreign key (order_id) 
+        references t_order
+14:12:11,647  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:11,648  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:11,649  INFO CustomRunner:139 - Test: testAliasWithNonNullRestrictions
+14:12:11,652 DEBUG SQL:104 - 
+    select
+        max(order_id) 
+    from
+        t_order
+14:12:11,653 DEBUG SQL:104 - 
+    select
+        max(order_line_id) 
+    from
+        order_line
+14:12:11,654 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,655 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,655 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,655 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,655 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,656 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,657 DEBUG SQL:104 - 
+    select
+        this_.order_id as order1_1_1_,
+        ol1_.order_id as order2_1_3_,
+        ol1_.order_line_id as order1_0_3_,
+        ol1_.order_line_id as order1_0_0_,
+        ol1_.order_id as order2_0_0_,
+        ol1_.article_id as article3_0_0_ 
+    from
+        t_order this_ 
+    left outer join
+        order_line ol1_ 
+            on this_.order_id=ol1_.order_id 
+    where
+        ol1_.article_id=?
+14:12:11,658 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.criteria.OrderLine
+14:12:11,660 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'criteria'
+             \-[IDENT] Node: 'OrderLine'
+
+14:12:11,660 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,660 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.criteria.OrderLine (<no alias>) -> orderline0_
+14:12:11,660 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (order_line)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[orderline0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'order_line' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=order_line,tableAlias=orderline0_,origin=null,columns={,className=org.hibernate.test.criteria.OrderLine}}
+
+14:12:11,660 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,660 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,661 DEBUG SQL:104 - 
+    delete 
+    from
+        order_line
+14:12:11,661 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.criteria.Order
+14:12:11,662 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=41,possibleID=true]
+14:12:11,663 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'criteria'
+             \-[IDENT] Node: 'Order'
+
+14:12:11,663 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,663 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.criteria.Order (<no alias>) -> order0_
+14:12:11,663 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (t_order)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[order0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 't_order' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_order,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.criteria.Order}}
+
+14:12:11,663 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,663 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:11,664 DEBUG SQL:104 - 
+    delete 
+    from
+        t_order
+14:12:11,664  INFO CustomRunner:139 - Test: testAliasWithNullOrNonNullRestrictions
+14:12:11,666 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,666 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,667 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,667 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,667 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,667 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,668 DEBUG SQL:104 - 
+    select
+        this_.order_id as order1_1_1_,
+        ol1_.order_id as order2_1_3_,
+        ol1_.order_line_id as order1_0_3_,
+        ol1_.order_line_id as order1_0_0_,
+        ol1_.order_id as order2_0_0_,
+        ol1_.article_id as article3_0_0_ 
+    from
+        t_order this_ 
+    left outer join
+        order_line ol1_ 
+            on this_.order_id=ol1_.order_id 
+    where
+        (
+            ol1_.article_id is null 
+            or ol1_.article_id=?
+        )
+14:12:11,671 DEBUG SQL:104 - 
+    delete 
+    from
+        order_line
+14:12:11,671 DEBUG SQL:104 - 
+    delete 
+    from
+        t_order
+14:12:11,693  INFO CustomRunner:139 - Test: testNonNullSubcriteriaRestrictionsOnRootCriteria
+14:12:11,696 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,696 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,697 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,697 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,697 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,697 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,699 DEBUG SQL:104 - 
+    select
+        this_.order_id as order1_1_1_,
+        ol1_.order_id as order2_1_3_,
+        ol1_.order_line_id as order1_0_3_,
+        ol1_.order_line_id as order1_0_0_,
+        ol1_.order_id as order2_0_0_,
+        ol1_.article_id as article3_0_0_ 
+    from
+        t_order this_ 
+    left outer join
+        order_line ol1_ 
+            on this_.order_id=ol1_.order_id 
+    where
+        ol1_.article_id=?
+14:12:11,700 DEBUG SQL:104 - 
+    delete 
+    from
+        order_line
+14:12:11,700 DEBUG SQL:104 - 
+    delete 
+    from
+        t_order
+14:12:11,701  INFO CustomRunner:139 - Test: testSubcriteriaWithClauseAliasToEntityMap
+14:12:11,714 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,714 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,715 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,715 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,715 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,715 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,716 DEBUG SQL:104 - 
+    select
+        this_.order_id as order1_1_1_,
+        ol1_.order_id as order2_1_,
+        ol1_.order_line_id as order1_0_,
+        ol1_.order_line_id as order1_0_0_,
+        ol1_.order_id as order2_0_0_,
+        ol1_.article_id as article3_0_0_ 
+    from
+        t_order this_ 
+    left outer join
+        order_line ol1_ 
+            on this_.order_id=ol1_.order_id 
+            and (
+                (
+                    ol1_.article_id is null 
+                    or ol1_.article_id=?
+                ) 
+            )
+14:12:11,717 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_id as order2_1_1_,
+        orderlines0_.order_line_id as order1_0_1_,
+        orderlines0_.order_line_id as order1_0_0_,
+        orderlines0_.order_id as order2_0_0_,
+        orderlines0_.article_id as article3_0_0_ 
+    from
+        order_line orderlines0_ 
+    where
+        orderlines0_.order_id=?
+14:12:11,718 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_id as order2_1_1_,
+        orderlines0_.order_line_id as order1_0_1_,
+        orderlines0_.order_line_id as order1_0_0_,
+        orderlines0_.order_id as order2_0_0_,
+        orderlines0_.article_id as article3_0_0_ 
+    from
+        order_line orderlines0_ 
+    where
+        orderlines0_.order_id=?
+14:12:11,718 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_id as order2_1_1_,
+        orderlines0_.order_line_id as order1_0_1_,
+        orderlines0_.order_line_id as order1_0_0_,
+        orderlines0_.order_id as order2_0_0_,
+        orderlines0_.article_id as article3_0_0_ 
+    from
+        order_line orderlines0_ 
+    where
+        orderlines0_.order_id=?
+14:12:11,719 DEBUG SQL:104 - 
+    delete 
+    from
+        order_line
+14:12:11,720 DEBUG SQL:104 - 
+    delete 
+    from
+        t_order
+14:12:11,726  INFO CustomRunner:139 - Test: testSubcriteriaWithNonNullRestrictions
+14:12:11,730 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,731 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,731 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,731 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,732 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,732 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,733 DEBUG SQL:104 - 
+    select
+        this_.order_id as order1_1_1_,
+        orderline1_.order_id as order2_1_,
+        orderline1_.order_line_id as order1_0_,
+        orderline1_.order_line_id as order1_0_0_,
+        orderline1_.order_id as order2_0_0_,
+        orderline1_.article_id as article3_0_0_ 
+    from
+        t_order this_ 
+    left outer join
+        order_line orderline1_ 
+            on this_.order_id=orderline1_.order_id 
+    where
+        orderline1_.article_id=?
+14:12:11,733 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_id as order2_1_1_,
+        orderlines0_.order_line_id as order1_0_1_,
+        orderlines0_.order_line_id as order1_0_0_,
+        orderlines0_.order_id as order2_0_0_,
+        orderlines0_.article_id as article3_0_0_ 
+    from
+        order_line orderlines0_ 
+    where
+        orderlines0_.order_id=?
+14:12:11,734 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_id as order2_1_1_,
+        orderlines0_.order_line_id as order1_0_1_,
+        orderlines0_.order_line_id as order1_0_0_,
+        orderlines0_.order_id as order2_0_0_,
+        orderlines0_.article_id as article3_0_0_ 
+    from
+        order_line orderlines0_ 
+    where
+        orderlines0_.order_id=?
+14:12:11,735 DEBUG SQL:104 - 
+    delete 
+    from
+        order_line
+14:12:11,735 DEBUG SQL:104 - 
+    delete 
+    from
+        t_order
+14:12:11,736  INFO CustomRunner:139 - Test: testSubcriteriaWithNonNullRestrictionsAliasToEntityMap
+14:12:11,737 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,738 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,738 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,739 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,739 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,739 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,740 DEBUG SQL:104 - 
+    select
+        this_.order_id as order1_1_1_,
+        ol1_.order_id as order2_1_,
+        ol1_.order_line_id as order1_0_,
+        ol1_.order_line_id as order1_0_0_,
+        ol1_.order_id as order2_0_0_,
+        ol1_.article_id as article3_0_0_ 
+    from
+        t_order this_ 
+    left outer join
+        order_line ol1_ 
+            on this_.order_id=ol1_.order_id 
+    where
+        ol1_.article_id=?
+14:12:11,741 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_id as order2_1_1_,
+        orderlines0_.order_line_id as order1_0_1_,
+        orderlines0_.order_line_id as order1_0_0_,
+        orderlines0_.order_id as order2_0_0_,
+        orderlines0_.article_id as article3_0_0_ 
+    from
+        order_line orderlines0_ 
+    where
+        orderlines0_.order_id=?
+14:12:11,741 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_id as order2_1_1_,
+        orderlines0_.order_line_id as order1_0_1_,
+        orderlines0_.order_line_id as order1_0_0_,
+        orderlines0_.order_id as order2_0_0_,
+        orderlines0_.article_id as article3_0_0_ 
+    from
+        order_line orderlines0_ 
+    where
+        orderlines0_.order_id=?
+14:12:11,742 DEBUG SQL:104 - 
+    delete 
+    from
+        order_line
+14:12:11,743 DEBUG SQL:104 - 
+    delete 
+    from
+        t_order
+14:12:11,743  INFO CustomRunner:139 - Test: testSubcriteriaWithNullOrNonNullRestrictions
+14:12:11,747 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,747 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,748 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,748 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,748 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,749 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,749 DEBUG SQL:104 - 
+    select
+        this_.order_id as order1_1_1_,
+        orderline1_.order_id as order2_1_,
+        orderline1_.order_line_id as order1_0_,
+        orderline1_.order_line_id as order1_0_0_,
+        orderline1_.order_id as order2_0_0_,
+        orderline1_.article_id as article3_0_0_ 
+    from
+        t_order this_ 
+    left outer join
+        order_line orderline1_ 
+            on this_.order_id=orderline1_.order_id 
+    where
+        (
+            orderline1_.article_id is null 
+            or orderline1_.article_id=?
+        )
+14:12:11,750 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_id as order2_1_1_,
+        orderlines0_.order_line_id as order1_0_1_,
+        orderlines0_.order_line_id as order1_0_0_,
+        orderlines0_.order_id as order2_0_0_,
+        orderlines0_.article_id as article3_0_0_ 
+    from
+        order_line orderlines0_ 
+    where
+        orderlines0_.order_id=?
+14:12:11,751 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_id as order2_1_1_,
+        orderlines0_.order_line_id as order1_0_1_,
+        orderlines0_.order_line_id as order1_0_0_,
+        orderlines0_.order_id as order2_0_0_,
+        orderlines0_.article_id as article3_0_0_ 
+    from
+        order_line orderlines0_ 
+    where
+        orderlines0_.order_id=?
+14:12:11,753 DEBUG SQL:104 - 
+    delete 
+    from
+        order_line
+14:12:11,753 DEBUG SQL:104 - 
+    delete 
+    from
+        t_order
+14:12:11,753  INFO CustomRunner:139 - Test: testSubcriteriaWithNullOrNonNullRestrictionsAliasToEntityMap
+14:12:11,756 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,756 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,757 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,757 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,757 DEBUG SQL:104 - 
+    insert 
+    into
+        t_order
+        (order_id) 
+    values
+        (?)
+14:12:11,757 DEBUG SQL:104 - 
+    insert 
+    into
+        order_line
+        (order_id, article_id, order_line_id) 
+    values
+        (?, ?, ?)
+14:12:11,758 DEBUG SQL:104 - 
+    select
+        this_.order_id as order1_1_1_,
+        ol1_.order_id as order2_1_,
+        ol1_.order_line_id as order1_0_,
+        ol1_.order_line_id as order1_0_0_,
+        ol1_.order_id as order2_0_0_,
+        ol1_.article_id as article3_0_0_ 
+    from
+        t_order this_ 
+    left outer join
+        order_line ol1_ 
+            on this_.order_id=ol1_.order_id 
+    where
+        (
+            ol1_.article_id is null 
+            or ol1_.article_id=?
+        )
+14:12:11,759 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_id as order2_1_1_,
+        orderlines0_.order_line_id as order1_0_1_,
+        orderlines0_.order_line_id as order1_0_0_,
+        orderlines0_.order_id as order2_0_0_,
+        orderlines0_.article_id as article3_0_0_ 
+    from
+        order_line orderlines0_ 
+    where
+        orderlines0_.order_id=?
+14:12:11,760 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_id as order2_1_1_,
+        orderlines0_.order_line_id as order1_0_1_,
+        orderlines0_.order_line_id as order1_0_0_,
+        orderlines0_.order_id as order2_0_0_,
+        orderlines0_.article_id as article3_0_0_ 
+    from
+        order_line orderlines0_ 
+    where
+        orderlines0_.order_id=?
+14:12:11,761 DEBUG SQL:104 - 
+    delete 
+    from
+        order_line
+14:12:11,761 DEBUG SQL:104 - 
+    delete 
+    from
+        t_order
+14:12:11,762  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:11,763 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:11,763 DEBUG SQL:104 - 
+    alter table order_line 
+        drop constraint FK2D124245F7891B41
+14:12:11,763 DEBUG SQL:104 - 
+    drop table order_line if exists
+14:12:11,763 DEBUG SQL:104 - 
+    drop table t_order if exists
+14:12:11,764  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:11,764  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

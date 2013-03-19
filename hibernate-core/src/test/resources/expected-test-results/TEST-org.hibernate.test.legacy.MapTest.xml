@@ -1,0 +1,610 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.MapTest" tests="3" time="0.383" timestamp="2013-02-28T20:16:28">
+  <properties />
+  <testcase classname="org.hibernate.test.legacy.MapTest" name="testMap" time="0.112" />
+  <testcase classname="org.hibernate.test.legacy.MapTest" name="testMapOneToOne" time="0.07" />
+  <testcase classname="org.hibernate.test.legacy.MapTest" name="testOneToOnePropertyRef" time="0.085" />
+  <system-out><![CDATA[14:16:28,114  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.MapTest
+14:16:28,114  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:28,115  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Map.hbm.xml
+14:16:28,122  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Commento.hbm.xml
+14:16:28,145  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Marelo.hbm.xml
+14:16:28,153  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:16:28,154  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:16:28,154  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:16:28,154  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:16:28,154  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:16:28,157  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:28,157  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:16:28,158  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:16:28,158  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:16:28,165  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:28,166 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:28,166 DEBUG SQL:104 - 
+    alter table ChildMap 
+        drop constraint FK66C436C038E41F77
+14:16:28,166 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ChildMap drop constraint FK66C436C038E41F77
+14:16:28,166 ERROR SchemaExport:426 - Table "CHILDMAP" not found; SQL statement:
+
+    alter table ChildMap 
+        drop constraint FK66C436C038E41F77 [42102-145]
+14:16:28,166 DEBUG SQL:104 - 
+    alter table MARELO 
+        drop constraint FK871F728AE624DD92
+14:16:28,167 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table MARELO drop constraint FK871F728AE624DD92
+14:16:28,167 ERROR SchemaExport:426 - Table "MARELO" not found; SQL statement:
+
+    alter table MARELO 
+        drop constraint FK871F728AE624DD92 [42102-145]
+14:16:28,167 DEBUG SQL:104 - 
+    alter table TestMap 
+        drop constraint FKE6F5F4AD31A67F4
+14:16:28,167 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TestMap drop constraint FKE6F5F4AD31A67F4
+14:16:28,167 ERROR SchemaExport:426 - Table "TESTMAP" not found; SQL statement:
+
+    alter table TestMap 
+        drop constraint FKE6F5F4AD31A67F4 [42102-145]
+14:16:28,167 DEBUG SQL:104 - 
+    drop table ChildMap if exists
+14:16:28,167 DEBUG SQL:104 - 
+    drop table MARECM if exists
+14:16:28,168 DEBUG SQL:104 - 
+    drop table MARELO if exists
+14:16:28,168 DEBUG SQL:104 - 
+    drop table ParentMap if exists
+14:16:28,168 DEBUG SQL:104 - 
+    drop table TestMap if exists
+14:16:28,168 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:16:28,168 DEBUG SQL:104 - 
+    create table ChildMap (
+        ChildId bigint not null,
+        Field varchar(50),
+        ParentId bigint not null,
+        primary key (ChildId)
+    )
+14:16:28,168 DEBUG SQL:104 - 
+    create table MARECM (
+        MCLINK bigint not null,
+        MCOMPR varchar(1),
+        MCOMME varchar(30),
+        primary key (MCLINK)
+    )
+14:16:28,169 DEBUG SQL:104 - 
+    create table MARELO (
+        MLMAG integer not null,
+        MLOCA varchar(11) not null,
+        MLINK bigint,
+        MLART varchar(13),
+        MLIDO bigint,
+        MLDTC timestamp,
+        MLTOP varchar(10),
+        MLRAG varchar(2),
+        MLROP smallint,
+        MLCOM bigint,
+        MATRI varchar(14),
+        SOCOD varchar(10),
+        primary key (MLMAG, MLOCA)
+    )
+14:16:28,188 DEBUG SQL:104 - 
+    create table ParentMap (
+        ParentId bigint not null,
+        version integer not null,
+        Field varchar(50),
+        primary key (ParentId)
+    )
+14:16:28,189 DEBUG SQL:104 - 
+    create table TestMap (
+        id_ bigint not null,
+        name varchar(255),
+        address varchar(255),
+        parent bigint,
+        a integer,
+        b float,
+        primary key (id_)
+    )
+14:16:28,189 DEBUG SQL:104 - 
+    alter table ChildMap 
+        add constraint FK66C436C038E41F77 
+        foreign key (ParentId) 
+        references ParentMap
+14:16:28,190 DEBUG SQL:104 - 
+    alter table MARELO 
+        add constraint FK871F728AE624DD92 
+        foreign key (MLCOM) 
+        references MARECM
+14:16:28,190 DEBUG SQL:104 - 
+    alter table TestMap 
+        add constraint FKE6F5F4AD31A67F4 
+        foreign key (parent) 
+        references TestMap
+14:16:28,191 DEBUG SQL:104 - 
+    create table hibernate_unique_key (
+         next_hi integer 
+    )
+14:16:28,191 DEBUG SQL:104 - 
+    insert into hibernate_unique_key values ( 0 )
+14:16:28,200  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:28,201  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:16:28,201  INFO CustomRunner:139 - Test: testMap
+14:16:28,203 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:16:28,203 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:16:28,204 DEBUG SQL:104 - 
+    insert 
+    into
+        TestMap
+        (name, address, parent, a, b, id_) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:16:28,249 DEBUG SQL:104 - 
+    select
+        testmap0_.id_ as id1_4_1_,
+        testmap0_.name as name4_1_,
+        testmap0_.address as address4_1_,
+        testmap0_.parent as parent4_1_,
+        testmap0_.a as a4_1_,
+        testmap0_.b as b4_1_,
+        testmap1_.id_ as id1_4_0_,
+        testmap1_.name as name4_0_,
+        testmap1_.address as address4_0_,
+        testmap1_.parent as parent4_0_,
+        testmap1_.a as a4_0_,
+        testmap1_.b as b4_0_ 
+    from
+        TestMap testmap0_ 
+    left outer join
+        TestMap testmap1_ 
+            on testmap0_.parent=testmap1_.id_ 
+    where
+        testmap0_.id_=?
+14:16:28,249 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent4_1_,
+        children0_.id_ as id1_4_1_,
+        children0_.id_ as id1_4_0_,
+        children0_.name as name4_0_,
+        children0_.address as address4_0_,
+        children0_.parent as parent4_0_,
+        children0_.a as a4_0_,
+        children0_.b as b4_0_ 
+    from
+        TestMap children0_ 
+    where
+        children0_.parent=?
+14:16:28,268 DEBUG SQL:104 - 
+    select
+        this_.id_ as id1_4_1_,
+        this_.name as name4_1_,
+        this_.address as address4_1_,
+        this_.parent as parent4_1_,
+        this_.a as a4_1_,
+        this_.b as b4_1_,
+        testmap2_.id_ as id1_4_0_,
+        testmap2_.name as name4_0_,
+        testmap2_.address as address4_0_,
+        testmap2_.parent as parent4_0_,
+        testmap2_.a as a4_0_,
+        testmap2_.b as b4_0_ 
+    from
+        TestMap this_ 
+    left outer join
+        TestMap testmap2_ 
+            on this_.parent=testmap2_.id_ 
+    where
+        (
+            this_.name=? 
+            and this_.address=? 
+            and this_.a=? 
+            and this_.b=?
+        )
+14:16:28,269 DEBUG SQL:104 - 
+    select
+        testmap0_.id_ as id1_4_,
+        testmap0_.name as name4_,
+        testmap0_.address as address4_,
+        testmap0_.parent as parent4_,
+        testmap0_.a as a4_,
+        testmap0_.b as b4_ 
+    from
+        TestMap testmap0_
+14:16:28,294 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent4_1_,
+        children0_.id_ as id1_4_1_,
+        children0_.id_ as id1_4_0_,
+        children0_.name as name4_0_,
+        children0_.address as address4_0_,
+        children0_.parent as parent4_0_,
+        children0_.a as a4_0_,
+        children0_.b as b4_0_ 
+    from
+        TestMap children0_ 
+    where
+        children0_.parent=?
+14:16:28,295 DEBUG SQL:104 - 
+    update
+        TestMap 
+    set
+        name=?,
+        address=?,
+        parent=?,
+        a=?,
+        b=? 
+    where
+        id_=?
+14:16:28,296 DEBUG SQL:104 - 
+    select
+        testmap0_.id_ as id1_4_,
+        testmap0_.name as name4_,
+        testmap0_.address as address4_,
+        testmap0_.parent as parent4_,
+        testmap0_.a as a4_,
+        testmap0_.b as b4_ 
+    from
+        TestMap testmap0_ 
+    where
+        (
+            testmap0_.address='bar' 
+        )
+14:16:28,297 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent4_1_,
+        children0_.id_ as id1_4_1_,
+        children0_.id_ as id1_4_0_,
+        children0_.name as name4_0_,
+        children0_.address as address4_0_,
+        children0_.parent as parent4_0_,
+        children0_.a as a4_0_,
+        children0_.b as b4_0_ 
+    from
+        TestMap children0_ 
+    where
+        children0_.parent=?
+14:16:28,298 DEBUG SQL:104 - 
+    select
+        this_.id_ as id1_4_2_,
+        this_.name as name4_2_,
+        this_.address as address4_2_,
+        this_.parent as parent4_2_,
+        this_.a as a4_2_,
+        this_.b as b4_2_,
+        testmap1_.id_ as id1_4_0_,
+        testmap1_.name as name4_0_,
+        testmap1_.address as address4_0_,
+        testmap1_.parent as parent4_0_,
+        testmap1_.a as a4_0_,
+        testmap1_.b as b4_0_,
+        testmap4_.id_ as id1_4_1_,
+        testmap4_.name as name4_1_,
+        testmap4_.address as address4_1_,
+        testmap4_.parent as parent4_1_,
+        testmap4_.a as a4_1_,
+        testmap4_.b as b4_1_ 
+    from
+        TestMap this_ 
+    inner join
+        TestMap testmap1_ 
+            on this_.parent=testmap1_.id_ 
+    left outer join
+        TestMap testmap4_ 
+            on testmap1_.parent=testmap4_.id_ 
+    where
+        this_.address=? 
+        and testmap1_.name=?
+14:16:28,312 DEBUG SQL:104 - 
+    delete 
+    from
+        TestMap 
+    where
+        id_=?
+14:16:28,313  INFO CustomRunner:139 - Test: testMapOneToOne
+14:16:28,337 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:16:28,338 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:16:28,338 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:16:28,338 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:16:28,339 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentMap
+        (version, Field, ParentId) 
+    values
+        (?, ?, ?)
+14:16:28,339 DEBUG SQL:104 - 
+    insert 
+    into
+        ChildMap
+        (Field, ParentId, ChildId) 
+    values
+        (?, ?, ?)
+14:16:28,341 DEBUG SQL:104 - 
+    select
+        childmap0_.ChildId as ChildId0_,
+        childmap0_.Field as Field0_,
+        childmap0_.ParentId as ParentId0_ 
+    from
+        ChildMap childmap0_ 
+    where
+        (
+            childmap0_.ParentId is not null 
+        )
+14:16:28,372 DEBUG SQL:104 - 
+    select
+        parentmap0_.ParentId as ParentId3_0_,
+        parentmap0_.version as version3_0_,
+        parentmap0_.Field as Field3_0_ 
+    from
+        ParentMap parentmap0_ 
+    where
+        parentmap0_.ParentId=?
+14:16:28,373 DEBUG SQL:104 - 
+    select
+        childmap0_.ChildId as ChildId0_0_,
+        childmap0_.Field as Field0_0_,
+        childmap0_.ParentId as ParentId0_0_ 
+    from
+        ChildMap childmap0_ 
+    where
+        childmap0_.ParentId=?
+14:16:28,373 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildMap 
+    where
+        ChildId=?
+14:16:28,386 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentMap 
+    where
+        ParentId=? 
+        and version=?
+14:16:28,387 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentMap
+        (version, Field, ParentId) 
+    values
+        (?, ?, ?)
+14:16:28,387 DEBUG SQL:104 - 
+    insert 
+    into
+        ChildMap
+        (Field, ParentId, ChildId) 
+    values
+        (?, ?, ?)
+14:16:28,389 DEBUG SQL:104 - 
+    select
+        parentmap0_.ParentId as ParentId3_,
+        parentmap0_.version as version3_,
+        parentmap0_.Field as Field3_ 
+    from
+        ParentMap parentmap0_ 
+    where
+        (
+            parentmap0_.ParentId is not null 
+        )
+14:16:28,402 DEBUG SQL:104 - 
+    select
+        childmap0_.ChildId as ChildId0_0_,
+        childmap0_.Field as Field0_0_,
+        childmap0_.ParentId as ParentId0_0_ 
+    from
+        ChildMap childmap0_ 
+    where
+        childmap0_.ParentId=?
+14:16:28,406 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildMap 
+    where
+        ChildId=?
+14:16:28,406 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentMap 
+    where
+        ParentId=? 
+        and version=?
+14:16:28,407  INFO CustomRunner:139 - Test: testOneToOnePropertyRef
+14:16:28,413 DEBUG SQL:104 - 
+    select
+        commento0_.MCLINK as MCLINK1_,
+        commento0_.MCOMPR as MCOMPR1_,
+        commento0_.MCOMME as MCOMME1_ 
+    from
+        MARECM commento0_,
+        MARELO marelo1_ 
+    where
+        (
+            marelo1_.MLMAG=0  
+            and commento0_.MCLINK=marelo1_.MLCOM
+        )
+14:16:28,422 DEBUG SQL:104 - 
+    select
+        commento0_.MCLINK as MCLINK1_,
+        commento0_.MCOMPR as MCOMPR1_,
+        commento0_.MCOMME as MCOMME1_ 
+    from
+        MARECM commento0_,
+        MARELO marelo1_,
+        MARECM commento2_ 
+    where
+        (
+            commento2_.MCOMPR is null  
+            and commento0_.MCLINK=marelo1_.MLCOM 
+            and marelo1_.MLCOM=commento2_.MCLINK
+        )
+14:16:28,424 DEBUG SQL:104 - 
+    select
+        commento0_.MCLINK as MCLINK1_,
+        commento0_.MCOMPR as MCOMPR1_,
+        commento0_.MCOMME as MCOMME1_ 
+    from
+        MARECM commento0_,
+        MARELO marelo1_ 
+    where
+        (
+            marelo1_.MLINK=0  
+            and commento0_.MCLINK=marelo1_.MLCOM
+        )
+14:16:28,427 DEBUG SQL:104 - 
+    select
+        commento0_.MCLINK as MCLINK1_,
+        commento0_.MCOMPR as MCOMPR1_,
+        commento0_.MCOMME as MCOMME1_ 
+    from
+        MARECM commento0_,
+        MARELO marelo1_ 
+    where
+        (
+            marelo1_.MLCOM=commento0_.MCLINK  
+            and commento0_.MCLINK=marelo1_.MLCOM
+        )
+14:16:28,428 DEBUG SQL:104 - 
+    select
+        commento0_.MCLINK as MCLINK1_,
+        commento0_.MCOMPR as MCOMPR1_,
+        commento0_.MCOMME as MCOMME1_ 
+    from
+        MARECM commento0_,
+        MARELO marelo1_ 
+    where
+        (
+            marelo1_.MLMAG=0  
+            and commento0_.MCLINK=marelo1_.MLCOM
+        )
+14:16:28,445 DEBUG SQL:104 - 
+    select
+        commento0_.MCLINK as MCLINK1_,
+        commento0_.MCOMPR as MCOMPR1_,
+        commento0_.MCOMME as MCOMME1_ 
+    from
+        MARECM commento0_,
+        MARELO marelo1_ 
+    where
+        (
+            marelo1_.MLCOM=commento0_.MCLINK  
+            and commento0_.MCLINK=marelo1_.MLCOM
+        )
+14:16:28,447 DEBUG SQL:104 - 
+    select
+        commento0_.MCLINK as MCLINK1_,
+        commento0_.MCOMPR as MCOMPR1_,
+        commento0_.MCOMME as MCOMME1_ 
+    from
+        MARECM commento0_,
+        MARELO marelo1_ 
+    where
+        (
+            marelo1_.MLCOM=commento0_.MCLINK  
+            and commento0_.MCLINK=marelo1_.MLCOM
+        )
+14:16:28,448 DEBUG SQL:104 - 
+    select
+        marelo0_.MLMAG as MLMAG2_,
+        marelo0_.MLOCA as MLOCA2_,
+        marelo0_.MLINK as MLINK2_,
+        marelo0_.MLART as MLART2_,
+        marelo0_.MLIDO as MLIDO2_,
+        marelo0_.MLDTC as MLDTC2_,
+        marelo0_.MLTOP as MLTOP2_,
+        marelo0_.MLRAG as MLRAG2_,
+        marelo0_.MLROP as MLROP2_,
+        marelo0_.MLCOM as MLCOM2_,
+        marelo0_.MATRI as MATRI2_,
+        marelo0_.SOCOD as SOCOD2_ 
+    from
+        MARELO marelo0_ 
+    where
+        (
+            marelo0_.MLCOM>0 
+        )
+14:16:28,466 DEBUG SQL:104 - 
+    select
+        marelo0_.MLMAG as MLMAG2_,
+        marelo0_.MLOCA as MLOCA2_,
+        marelo0_.MLINK as MLINK2_,
+        marelo0_.MLART as MLART2_,
+        marelo0_.MLIDO as MLIDO2_,
+        marelo0_.MLDTC as MLDTC2_,
+        marelo0_.MLTOP as MLTOP2_,
+        marelo0_.MLRAG as MLRAG2_,
+        marelo0_.MLROP as MLROP2_,
+        marelo0_.MLCOM as MLCOM2_,
+        marelo0_.MATRI as MATRI2_,
+        marelo0_.SOCOD as SOCOD2_ 
+    from
+        MARELO marelo0_,
+        MARECM commento1_,
+        MARELO marelo2_,
+        MARECM commento3_,
+        MARELO marelo4_ 
+    where
+        (
+            marelo4_.MLMAG is not null  
+            and marelo0_.MLCOM=commento1_.MCLINK 
+            and commento1_.MCLINK=marelo2_.MLCOM 
+            and marelo2_.MLCOM=commento3_.MCLINK 
+            and commento3_.MCLINK=marelo4_.MLCOM
+        )
+14:16:28,493  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:28,493 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:28,493 DEBUG SQL:104 - 
+    alter table ChildMap 
+        drop constraint FK66C436C038E41F77
+14:16:28,494 DEBUG SQL:104 - 
+    alter table MARELO 
+        drop constraint FK871F728AE624DD92
+14:16:28,494 DEBUG SQL:104 - 
+    alter table TestMap 
+        drop constraint FKE6F5F4AD31A67F4
+14:16:28,494 DEBUG SQL:104 - 
+    drop table ChildMap if exists
+14:16:28,494 DEBUG SQL:104 - 
+    drop table MARECM if exists
+14:16:28,494 DEBUG SQL:104 - 
+    drop table MARELO if exists
+14:16:28,495 DEBUG SQL:104 - 
+    drop table ParentMap if exists
+14:16:28,495 DEBUG SQL:104 - 
+    drop table TestMap if exists
+14:16:28,495 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:16:28,495  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:28,495  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

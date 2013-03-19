@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.cid.keymanytoone.EagerKeyManyToOneTest" tests="1" time="0.106" timestamp="2013-02-28T20:10:16">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.cid.keymanytoone.EagerKeyManyToOneTest" name="testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelf" time="0.036" />
+  <system-out><![CDATA[14:10:16,217  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.cid.keymanytoone.EagerKeyManyToOneTest
+14:10:16,224  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.cid.keymanytoone.PrimaryKey
+14:10:16,224  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.cid.keymanytoone.PrimaryKey
+14:10:16,225  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:16,225  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:16,225  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:16,225  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:16,225  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:16,227  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:16,227  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:16,227  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:16,228  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:16,228  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:16,240  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:16,240 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:16,240 DEBUG SQL:104 - 
+    alter table CardField 
+        drop constraint FK6771BFAA88E53DAB
+14:10:16,241 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CardField drop constraint FK6771BFAA88E53DAB
+14:10:16,241 ERROR SchemaExport:426 - Table "CARDFIELD" not found; SQL statement:
+
+    alter table CardField 
+        drop constraint FK6771BFAA88E53DAB [42102-145]
+14:10:16,241 DEBUG SQL:104 - 
+    alter table CardField 
+        drop constraint FK6771BFAAE0C07949
+14:10:16,247 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CardField drop constraint FK6771BFAAE0C07949
+14:10:16,248 ERROR SchemaExport:426 - Table "CARDFIELD" not found; SQL statement:
+
+    alter table CardField 
+        drop constraint FK6771BFAAE0C07949 [42102-145]
+14:10:16,248 DEBUG SQL:104 - 
+    drop table Card if exists
+14:10:16,248 DEBUG SQL:104 - 
+    drop table CardField if exists
+14:10:16,248 DEBUG SQL:104 - 
+    drop table "key" if exists
+14:10:16,248 DEBUG SQL:104 - 
+    create table Card (
+        id varchar(255) not null,
+        primary key (id)
+    )
+14:10:16,249 DEBUG SQL:104 - 
+    create table CardField (
+        card_id varchar(255) not null,
+        "key_id" varchar(255) not null,
+        primary key (card_id, "key_id")
+    )
+14:10:16,249 DEBUG SQL:104 - 
+    create table "key" (
+        id varchar(255) not null,
+        primary key (id)
+    )
+14:10:16,249 DEBUG SQL:104 - 
+    alter table CardField 
+        add constraint FK6771BFAA88E53DAB 
+        foreign key (card_id) 
+        references Card
+14:10:16,272 DEBUG SQL:104 - 
+    alter table CardField 
+        add constraint FK6771BFAAE0C07949 
+        foreign key ("key_id") 
+        references "key"
+14:10:16,273  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:16,273  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:16,274  INFO CustomRunner:139 - Test: testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelf
+14:10:16,276 DEBUG SQL:104 - 
+    insert 
+    into
+        "key"
+        (id) 
+    values
+        (?)
+14:10:16,277 DEBUG SQL:104 - 
+    insert 
+    into
+        Card
+        (id) 
+    values
+        (?)
+14:10:16,277 DEBUG SQL:104 - 
+    insert 
+    into
+        CardField
+        (card_id, "key_id") 
+    values
+        (?, ?)
+14:10:16,285 DEBUG SQL:104 - 
+    select
+        card0_.id as id0_1_,
+        fields1_.card_id as card1_0_3_,
+        fields1_.card_id as card1_1_3_,
+        fields1_."key_id" as key2_1_3_,
+        fields1_.card_id as card1_1_0_,
+        fields1_."key_id" as key2_1_0_ 
+    from
+        Card card0_ 
+    left outer join
+        CardField fields1_ 
+            on card0_.id=fields1_.card_id 
+    where
+        card0_.id=?
+14:10:16,286 DEBUG SQL:104 - 
+    select
+        key0_.id as id2_0_ 
+    from
+        "key" key0_ 
+    where
+        key0_.id=?
+14:10:16,287 DEBUG SQL:104 - 
+    select
+        card0_.id as id0_1_,
+        fields1_.card_id as card1_0_3_,
+        fields1_.card_id as card1_1_3_,
+        fields1_."key_id" as key2_1_3_,
+        fields1_.card_id as card1_1_0_,
+        fields1_."key_id" as key2_1_0_ 
+    from
+        Card card0_ 
+    left outer join
+        CardField fields1_ 
+            on card0_.id=fields1_.card_id 
+    where
+        card0_.id=?
+14:10:16,287 DEBUG SQL:104 - 
+    select
+        key0_.id as id2_0_ 
+    from
+        "key" key0_ 
+    where
+        key0_.id=?
+14:10:16,309 DEBUG SQL:104 - 
+    delete 
+    from
+        CardField 
+    where
+        card_id=? 
+        and "key_id"=?
+14:10:16,309 DEBUG SQL:104 - 
+    delete 
+    from
+        Card 
+    where
+        id=?
+14:10:16,310 DEBUG SQL:104 - 
+    delete 
+    from
+        "key" 
+    where
+        id=?
+14:10:16,311  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:16,311 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:16,311 DEBUG SQL:104 - 
+    alter table CardField 
+        drop constraint FK6771BFAA88E53DAB
+14:10:16,312 DEBUG SQL:104 - 
+    alter table CardField 
+        drop constraint FK6771BFAAE0C07949
+14:10:16,319 DEBUG SQL:104 - 
+    drop table Card if exists
+14:10:16,320 DEBUG SQL:104 - 
+    drop table CardField if exists
+14:10:16,320 DEBUG SQL:104 - 
+    drop table "key" if exists
+14:10:16,320  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:16,320  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

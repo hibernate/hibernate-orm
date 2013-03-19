@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.naturalid.immutable.ImmutableEntityNaturalIdTest" tests="2" time="0.069" timestamp="2013-02-28T20:17:31">
+  <properties />
+  <testcase classname="org.hibernate.test.naturalid.immutable.ImmutableEntityNaturalIdTest" name="testNaturalIdCheck" time="0.005" />
+  <testcase classname="org.hibernate.test.naturalid.immutable.ImmutableEntityNaturalIdTest" name="testSaveParentWithDetachedChildren" time="0.007" />
+  <system-out><![CDATA[14:17:31,308  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.naturalid.immutable.ImmutableEntityNaturalIdTest
+14:17:31,310  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/naturalid/immutable/ParentChildWithManyToOne.hbm.xml
+14:17:31,327  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:31,328  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:31,328  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:31,328  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:31,328  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:31,329  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:31,330  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:31,330  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:31,331  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:31,331  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:31,331  INFO UpdateTimestampsCache:61 - HHH000250: Starting update timestamps cache at region: hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache
+14:17:31,332  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: hibernate.test.org.hibernate.cache.internal.StandardQueryCache
+14:17:31,339  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,342 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,342 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC93A8DBC0
+14:17:31,342 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Child drop constraint FK3E104FC93A8DBC0
+14:17:31,342 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table Child 
+        drop constraint FK3E104FC93A8DBC0 [42102-145]
+14:17:31,342 DEBUG SQL:104 - 
+    drop table Child if exists
+14:17:31,343 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:17:31,344 DEBUG SQL:104 - 
+    create table Child (
+        id bigint not null,
+        parent bigint not null,
+        name varchar(255) not null,
+        primary key (id)
+    )
+14:17:31,344 DEBUG SQL:104 - 
+    create table Parent (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:17:31,345 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint _UniqueKey unique (parent, name)
+14:17:31,345 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FC93A8DBC0 
+        foreign key (parent) 
+        references Parent
+14:17:31,346  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,347  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:31,347  INFO CustomRunner:139 - Test: testNaturalIdCheck
+14:17:31,348 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Parent
+14:17:31,348 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Child
+14:17:31,349 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name, id) 
+    values
+        (?, ?)
+14:17:31,349 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Parent] -> [5579090785685504]
+14:17:31,349 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, name, id) 
+    values
+        (?, ?, ?)
+14:17:31,350 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785689600]
+14:17:31,350 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785689601]
+14:17:31,350 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Parent] -> [5579090539929602]
+14:17:31,350 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090539929602]
+14:17:31,350 DEBUG SQL:104 - 
+    select
+        child_.parent as parent0_,
+        child_.name as name0_ 
+    from
+        Child child_ 
+    where
+        child_.id=?
+14:17:31,351 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785693698]
+14:17:31,351 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        id=?
+14:17:31,351 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785693699]
+14:17:31,352 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        id=?
+14:17:31,352 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Parent] -> [5579090785697792]
+14:17:31,352 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Parent] -> [5579090539937793]
+14:17:31,352 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090539937793]
+14:17:31,353  INFO CustomRunner:139 - Test: testSaveParentWithDetachedChildren
+14:17:31,354 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name, id) 
+    values
+        (?, ?)
+14:17:31,354 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Parent] -> [5579090785705984]
+14:17:31,354 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, name, id) 
+    values
+        (?, ?, ?)
+14:17:31,354 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785705985]
+14:17:31,354 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785705986]
+14:17:31,355 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Parent] -> [5579090539950080]
+14:17:31,355 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090539950080]
+14:17:31,355 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.cache.internal.StandardQueryCache] lookup : key[sql: select this_.id as id1_1_, this_.name as name1_1_, children2_.parent as parent1_3_, children2_.id as id0_3_, children2_.id as id0_0_, children2_.parent as parent0_0_, children2_.name as name0_0_ from Parent this_ left outer join Child children2_ on this_.id=children2_.parent where this_.name=?; parameters: alex, ; transformer: org.hibernate.transform.CacheableResultTransformer@13a525]
+14:17:31,356 DEBUG SQL:104 - 
+    select
+        this_.id as id1_1_,
+        this_.name as name1_1_,
+        children2_.parent as parent1_3_,
+        children2_.id as id0_3_,
+        children2_.id as id0_0_,
+        children2_.parent as parent0_0_,
+        children2_.name as name0_0_ 
+    from
+        Parent this_ 
+    left outer join
+        Child children2_ 
+            on this_.id=children2_.parent 
+    where
+        this_.name=?
+14:17:31,356 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.internal.StandardQueryCache] : [sql: select this_.id as id1_1_, this_.name as name1_1_, children2_.parent as parent1_3_, children2_.id as id0_3_, children2_.id as id0_0_, children2_.parent as parent0_0_, children2_.name as name0_0_ from Parent this_ left outer join Child children2_ on this_.id=children2_.parent where this_.name=?; parameters: alex, ; transformer: org.hibernate.transform.CacheableResultTransformer@13a525] -> [[5579090539954176, 2]]
+14:17:31,357 DEBUG SQL:104 - 
+    select
+        child_.parent as parent0_,
+        child_.name as name0_ 
+    from
+        Child child_ 
+    where
+        child_.id=?
+14:17:31,358 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, name, id) 
+    values
+        (?, ?, ?)
+14:17:31,358 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785722368]
+14:17:31,358 DEBUG SQL:104 - 
+    update
+        Parent 
+    set
+        name=? 
+    where
+        id=?
+14:17:31,358 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Parent] -> [5579090785722369]
+14:17:31,358 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785722370]
+14:17:31,358 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785722371]
+14:17:31,359 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785726464]
+14:17:31,359 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        id=?
+14:17:31,359 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785726465]
+14:17:31,359 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        id=?
+14:17:31,359 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090785726466]
+14:17:31,359 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        id=?
+14:17:31,360 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Parent] -> [5579090785730560]
+14:17:31,360 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Parent] -> [5579090539970561]
+14:17:31,360 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Child] -> [5579090539970561]
+14:17:31,360  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,361 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,361 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC93A8DBC0
+14:17:31,361 DEBUG SQL:104 - 
+    drop table Child if exists
+14:17:31,361 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:17:31,362  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,362  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

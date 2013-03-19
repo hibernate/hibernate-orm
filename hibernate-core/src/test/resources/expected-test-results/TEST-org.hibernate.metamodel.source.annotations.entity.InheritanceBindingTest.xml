@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" tests="16" time="0.487" timestamp="2013-02-28T20:09:58">
+  <properties />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testDefaultDiscriminatorOptions" time="0.02" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testDiscriminatorFormula" time="0.015" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testDiscriminatorValue" time="0.027" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testExplicitDiscriminatorOptions" time="0.019" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testLeafSubclassOfRoot" time="0.029" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testLeafSubclassOfSubclassOfRootPolymporhism" time="0.03" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testNoInheritance" time="0.012" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testNoPolymorphism" time="0.123" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testNonLeafSubclassOfRootPolymporhism" time="0.022" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testPostOrderRootSubEntityClosure" time="0.046" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testPreOrderRootSubEntityClosure" time="0.026" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testRootDiscriminatorMatchValue" time="0.019" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testRootEntityBinding" time="0.017" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testRootEntitySuperType" time="0.016" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testRootPolymporhism" time="0.021" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest" name="testSubclassEntitySuperType" time="0.017" />
+  <system-out><![CDATA[14:09:58,699  INFO CustomRunner:132 - BeforeClass: org.hibernate.metamodel.source.annotations.entity.InheritanceBindingTest
+14:09:58,700  INFO CustomRunner:139 - Test: testDefaultDiscriminatorOptions
+14:09:58,708  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,708  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,708  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,709  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,709  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,713  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,713  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,715  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,721  INFO CustomRunner:139 - Test: testDiscriminatorFormula
+14:09:58,726  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,726  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,726  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,726  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,726  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,730  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,731  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,732  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,737  INFO CustomRunner:139 - Test: testDiscriminatorValue
+14:09:58,747  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,747  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,747  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,748  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,748  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,751  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,752  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,753  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,764  INFO CustomRunner:139 - Test: testExplicitDiscriminatorOptions
+14:09:58,774  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,774  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,774  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,775  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,775  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,779  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,779  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,781  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,784  INFO CustomRunner:139 - Test: testLeafSubclassOfRoot
+14:09:58,789  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,789  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,790  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,790  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,790  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,794  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,794  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,797  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,815  INFO CustomRunner:139 - Test: testLeafSubclassOfSubclassOfRootPolymporhism
+14:09:58,819  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,819  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,820  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,820  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,820  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,824  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,824  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,827  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,845  INFO CustomRunner:139 - Test: testNoInheritance
+14:09:58,850  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,850  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,850  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,850  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,851  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,854  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,855  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,856  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,858  INFO CustomRunner:139 - Test: testNoPolymorphism
+14:09:58,872  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,873  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,873  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,873  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,873  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,877  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,877  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,881  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,982  INFO CustomRunner:139 - Test: testNonLeafSubclassOfRootPolymporhism
+14:09:58,987  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,987  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,987  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,988  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,988  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,991  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,992  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,995  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:59,006  INFO CustomRunner:139 - Test: testPostOrderRootSubEntityClosure
+14:09:59,008  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,008  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,008  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,009  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,022  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,026  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:59,026  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:59,027  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:59,027  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,027  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:59,028  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,029  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,031  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,035  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,035  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,036  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,036  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,036  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,036  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,037  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,037  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,039  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:59,039  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:59,042  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:59,048  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,054  INFO CustomRunner:139 - Test: testPreOrderRootSubEntityClosure
+14:09:59,054  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,058  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,059  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,059  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,059  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,059  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,059  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,060  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,060  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,060  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,060  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,060  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,060  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,061  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,061  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,061  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,061  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,063  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:59,063  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:59,063  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:59,063  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,064  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:59,067  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:59,068  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:59,070  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:59,082  INFO CustomRunner:139 - Test: testRootDiscriminatorMatchValue
+14:09:59,092  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:59,093  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:59,093  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:59,093  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,093  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:59,097  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:59,097  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:59,099  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:59,101  INFO CustomRunner:139 - Test: testRootEntityBinding
+14:09:59,106  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:59,106  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:59,106  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:59,106  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,107  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:59,110  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:59,111  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:59,113  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:59,120  INFO CustomRunner:139 - Test: testRootEntitySuperType
+14:09:59,125  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:59,126  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:59,126  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:59,126  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,126  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:59,130  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:59,130  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:59,132  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:59,136  INFO CustomRunner:139 - Test: testRootPolymporhism
+14:09:59,140  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:59,140  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:59,140  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:59,141  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,141  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:59,144  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:59,144  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:59,147  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:59,158  INFO CustomRunner:139 - Test: testSubclassEntitySuperType
+14:09:59,163  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:59,163  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:59,163  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:59,163  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:59,163  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:59,166  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:59,167  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:59,169  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

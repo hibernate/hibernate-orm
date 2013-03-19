@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.manytoonewithformula.ManyToOneWithFormulaTest" tests="6" time="0.242" timestamp="2013-02-28T20:10:37">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.manytoonewithformula.ManyToOneWithFormulaTest" name="testManyToOneFromNonPk" time="0.026" />
+  <testcase classname="org.hibernate.test.annotations.manytoonewithformula.ManyToOneWithFormulaTest" name="testManyToOneFromNonPkToNonPk" time="0.034" />
+  <ignored-testcase classname="org.hibernate.test.annotations.manytoonewithformula.ManyToOneWithFormulaTest" name="testManyToOneFromNonPkToNonPkSqlServer" time="0.0" />
+  <testcase classname="org.hibernate.test.annotations.manytoonewithformula.ManyToOneWithFormulaTest" name="testManyToOneFromPk" time="0.015" />
+  <testcase classname="org.hibernate.test.annotations.manytoonewithformula.ManyToOneWithFormulaTest" name="testManyToOneToPkWithOnlyFormula" time="0.027" />
+  <testcase classname="org.hibernate.test.annotations.manytoonewithformula.ManyToOneWithFormulaTest" name="testReferencedColumnNameBelongsToEmbeddedIdOfReferencedEntity" time="0.016" />
+  <system-out><![CDATA[14:10:37,365  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.manytoonewithformula.ManyToOneWithFormulaTest
+14:10:37,382  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.manytoonewithformula.ManufacturerId
+14:10:37,382  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.manytoonewithformula.ManufacturerId
+14:10:37,383  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:37,383  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:37,384  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:37,384  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:37,384  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:37,385  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:37,386  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:37,386  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:37,387  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:37,387  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:37,438  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:37,439 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:37,439 DEBUG SQL:104 - 
+    drop table CONTRACT if exists
+14:10:37,439 DEBUG SQL:104 - 
+    drop table Company if exists
+14:10:37,440 DEBUG SQL:104 - 
+    drop table FoodItem if exists
+14:10:37,440 DEBUG SQL:104 - 
+    drop table MANUFACTURER if exists
+14:10:37,440 DEBUG SQL:104 - 
+    drop table MODEL if exists
+14:10:37,440 DEBUG SQL:104 - 
+    drop table Menu if exists
+14:10:37,440 DEBUG SQL:104 - 
+    drop table Message if exists
+14:10:37,440 DEBUG SQL:104 - 
+    drop table Person if exists
+14:10:37,440 DEBUG SQL:104 - 
+    drop table "Language" if exists
+14:10:37,440 DEBUG SQL:104 - 
+    drop table product if exists
+14:10:37,441 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:37,441 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:37,441 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:37,441 DEBUG SQL:104 - 
+    create table CONTRACT (
+        CDT_COMPANY_CODE integer not null,
+        CDT_NBR bigint not null,
+        CDT_SEQ_NBR integer not null,
+        CDT_CONTRACT_NBR varchar(255),
+        CDT_MFG_CODE integer,
+        CDT_MDL_CODE varchar(255),
+        primary key (CDT_COMPANY_CODE, CDT_NBR, CDT_SEQ_NBR)
+    )
+14:10:37,441 DEBUG SQL:104 - 
+    create table Company (
+        id integer not null,
+        primary key (id)
+    )
+14:10:37,442 DEBUG SQL:104 - 
+    create table FoodItem (
+        id integer not null,
+        item varchar(255),
+        order_nbr varchar(255),
+        primary key (id)
+    )
+14:10:37,442 DEBUG SQL:104 - 
+    create table MANUFACTURER (
+        MFG_COMPANY_CODE integer not null,
+        MFG_CODE integer not null,
+        MFG_NAME varchar(255),
+        primary key (MFG_COMPANY_CODE, MFG_CODE)
+    )
+14:10:37,442 DEBUG SQL:104 - 
+    create table MODEL (
+        MDL_COMPANY_CODE integer not null,
+        MDL_MFG_CODE integer not null,
+        MDL_CODE varchar(255) not null,
+        name varchar(255),
+        primary key (MDL_COMPANY_CODE, MDL_MFG_CODE, MDL_CODE)
+    )
+14:10:37,456 DEBUG SQL:104 - 
+    create table Menu (
+        id integer not null,
+        is_default varchar(255),
+        order_nbr varchar(255),
+        primary key (id)
+    )
+14:10:37,456 DEBUG SQL:104 - 
+    create table Message (
+        id integer not null,
+        lang_code varchar(255),
+        lang_name varchar(255),
+        primary key (id)
+    )
+14:10:37,457 DEBUG SQL:104 - 
+    create table Person (
+        id integer not null,
+        company_id integer,
+        is_default varchar(255),
+        primary key (id)
+    )
+14:10:37,457 DEBUG SQL:104 - 
+    create table "Language" (
+        code varchar(255) not null,
+        name varchar(255),
+        primary key (code)
+    )
+14:10:37,457 DEBUG SQL:104 - 
+    create table product (
+        id integer not null,
+        description varchar(255) not null,
+        product_idnf char(18) not null,
+        primary key (id)
+    )
+14:10:37,457 DEBUG SQL:104 - 
+    alter table Menu 
+        add constraint UK_24897F9E2EC8F9 unique (order_nbr, is_default)
+14:10:37,458 DEBUG SQL:104 - 
+    alter table Person 
+        add constraint UK_8E48877582FA4849 unique (company_id, is_default)
+14:10:37,458 DEBUG SQL:104 - 
+    alter table product 
+        add constraint uc_product_1 unique (product_idnf)
+14:10:37,458 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:37,458  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:37,459  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:37,460  INFO CustomRunner:139 - Test: testManyToOneFromNonPk
+14:10:37,482 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,483 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,484 DEBUG SQL:104 - 
+    insert 
+    into
+        Menu
+        (is_default, order_nbr, id) 
+    values
+        (?, ?, ?)
+14:10:37,484 DEBUG SQL:104 - 
+    insert 
+    into
+        FoodItem
+        (item, order_nbr, id) 
+    values
+        (?, ?, ?)
+14:10:37,485 DEBUG SQL:104 - 
+    select
+        fooditem0_.id as id2_1_,
+        fooditem0_.item as item2_1_,
+        fooditem0_.order_nbr as order3_2_1_,
+        'F' as formula25_1_,
+        menu1_.id as id5_0_,
+        menu1_.is_default as is2_5_0_,
+        menu1_.order_nbr as order3_5_0_ 
+    from
+        FoodItem fooditem0_ 
+    left outer join
+        Menu menu1_ 
+            on fooditem0_.order_nbr=menu1_.order_nbr 
+            and 'F'=menu1_.is_default 
+    where
+        fooditem0_.id=?
+14:10:37,486  INFO CustomRunner:139 - Test: testManyToOneFromNonPkToNonPk
+14:10:37,494 DEBUG SQL:104 - 
+    insert 
+    into
+        product
+        (description, product_idnf, id) 
+    values
+        (?, ?, ?)
+14:10:37,495 DEBUG SQL:104 - 
+    insert 
+    into
+        product
+        (description, product_idnf, id) 
+    values
+        (?, ?, ?)
+14:10:37,495 DEBUG SQL:104 - 
+    select
+        product0_.id as id9_1_,
+        product0_.description as descript2_9_1_,
+        product0_.product_idnf as product3_9_1_,
+        SUBSTRING(product0_.product_idnf,
+        1,
+        3) as formula31_1_,
+        product1_.id as id9_0_,
+        product1_.description as descript2_9_0_,
+        product1_.product_idnf as product3_9_0_,
+        SUBSTRING(product1_.product_idnf,
+        1,
+        3) as formula31_0_ 
+    from
+        product product0_ 
+    left outer join
+        product product1_ 
+            on SUBSTRING(product0_.product_idnf,
+        1,
+        3)=product1_.product_idnf 
+    where
+        product0_.id=?
+14:10:37,496 DEBUG SQL:104 - 
+    select
+        product0_.id as id9_1_,
+        product0_.description as descript2_9_1_,
+        product0_.product_idnf as product3_9_1_,
+        SUBSTRING(product0_.product_idnf,
+        1,
+        3) as formula31_1_,
+        product1_.id as id9_0_,
+        product1_.description as descript2_9_0_,
+        product1_.product_idnf as product3_9_0_,
+        SUBSTRING(product1_.product_idnf,
+        1,
+        3) as formula31_0_ 
+    from
+        product product0_ 
+    left outer join
+        product product1_ 
+            on SUBSTRING(product0_.product_idnf,
+        1,
+        3)=product1_.product_idnf 
+    where
+        product0_.id=?
+Chocolate
+14:10:37,527  INFO CustomRunner:139 - Test: testManyToOneFromPk
+14:10:37,529 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,529 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,530 DEBUG SQL:104 - 
+    insert 
+    into
+        Company
+        (id) 
+    values
+        (?)
+14:10:37,539 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (company_id, is_default, id) 
+    values
+        (?, ?, ?)
+14:10:37,540 DEBUG SQL:104 - 
+    select
+        company0_.id as id1_1_,
+        'T' as formula26_1_,
+        person1_.id as id7_0_,
+        person1_.company_id as company2_7_0_,
+        person1_.is_default as is3_7_0_ 
+    from
+        Company company0_ 
+    left outer join
+        Person person1_ 
+            on company0_.id=person1_.company_id 
+            and 'T'=person1_.is_default 
+    where
+        company0_.id=?
+14:10:37,542  INFO CustomRunner:139 - Test: testManyToOneToPkWithOnlyFormula
+14:10:37,544 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,545 DEBUG SQL:104 - 
+    insert 
+    into
+        "Language"
+        (name, code) 
+    values
+        (?, ?)
+14:10:37,560 DEBUG SQL:104 - 
+    insert 
+    into
+        Message
+        (lang_code, lang_name, id) 
+    values
+        (?, ?, ?)
+14:10:37,561 DEBUG SQL:104 - 
+    select
+        message0_.id as id6_1_,
+        message0_.lang_code as lang2_6_1_,
+        message0_.lang_name as lang3_6_1_,
+        UPPER(message0_.lang_code) as formula27_1_,
+        language1_.code as code8_0_,
+        language1_.name as name8_0_ 
+    from
+        Message message0_ 
+    left outer join
+        "Language" language1_ 
+            on UPPER(message0_.lang_code)=language1_.code 
+    where
+        message0_.id=?
+14:10:37,570  INFO CustomRunner:139 - Test: testReferencedColumnNameBelongsToEmbeddedIdOfReferencedEntity
+14:10:37,572 DEBUG SQL:104 - 
+    insert 
+    into
+        MANUFACTURER
+        (MFG_NAME, MFG_COMPANY_CODE, MFG_CODE) 
+    values
+        (?, ?, ?)
+14:10:37,573 DEBUG SQL:104 - 
+    insert 
+    into
+        MODEL
+        (name, MDL_COMPANY_CODE, MDL_MFG_CODE, MDL_CODE) 
+    values
+        (?, ?, ?, ?)
+14:10:37,574 DEBUG SQL:104 - 
+    insert 
+    into
+        CONTRACT
+        (CDT_CONTRACT_NBR, CDT_MFG_CODE, CDT_MDL_CODE, CDT_COMPANY_CODE, CDT_NBR, CDT_SEQ_NBR) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:37,575 DEBUG SQL:104 - 
+    select
+        contract0_.CDT_COMPANY_CODE as CDT1_0_2_,
+        contract0_.CDT_NBR as CDT2_0_2_,
+        contract0_.CDT_SEQ_NBR as CDT3_0_2_,
+        contract0_.CDT_CONTRACT_NBR as CDT4_0_2_,
+        contract0_.CDT_MFG_CODE as CDT5_0_2_,
+        contract0_.CDT_MDL_CODE as CDT6_0_2_,
+        contract0_.CDT_COMPANY_CODE as formula28_2_,
+        contract0_.CDT_COMPANY_CODE as formula29_2_,
+        contract0_.CDT_MFG_CODE as formula30_2_,
+        manufactur1_.MFG_COMPANY_CODE as MFG1_3_0_,
+        manufactur1_.MFG_CODE as MFG2_3_0_,
+        manufactur1_.MFG_NAME as MFG3_3_0_,
+        model2_.MDL_COMPANY_CODE as MDL1_4_1_,
+        model2_.MDL_MFG_CODE as MDL2_4_1_,
+        model2_.MDL_CODE as MDL3_4_1_,
+        model2_.name as name4_1_ 
+    from
+        CONTRACT contract0_ 
+    left outer join
+        MANUFACTURER manufactur1_ 
+            on contract0_.CDT_COMPANY_CODE=manufactur1_.MFG_COMPANY_CODE 
+            and contract0_.CDT_MFG_CODE=manufactur1_.MFG_CODE 
+    left outer join
+        MODEL model2_ 
+            on contract0_.CDT_COMPANY_CODE=model2_.MDL_COMPANY_CODE 
+            and contract0_.CDT_MFG_CODE=model2_.MDL_MFG_CODE 
+            and contract0_.CDT_MDL_CODE=model2_.MDL_CODE 
+    where
+        contract0_.CDT_COMPANY_CODE=? 
+        and contract0_.CDT_NBR=? 
+        and contract0_.CDT_SEQ_NBR=?
+14:10:37,587  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:37,588 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:37,588 DEBUG SQL:104 - 
+    drop table CONTRACT if exists
+14:10:37,588 DEBUG SQL:104 - 
+    drop table Company if exists
+14:10:37,589 DEBUG SQL:104 - 
+    drop table FoodItem if exists
+14:10:37,589 DEBUG SQL:104 - 
+    drop table MANUFACTURER if exists
+14:10:37,589 DEBUG SQL:104 - 
+    drop table MODEL if exists
+14:10:37,589 DEBUG SQL:104 - 
+    drop table Menu if exists
+14:10:37,589 DEBUG SQL:104 - 
+    drop table Message if exists
+14:10:37,590 DEBUG SQL:104 - 
+    drop table Person if exists
+14:10:37,590 DEBUG SQL:104 - 
+    drop table "Language" if exists
+14:10:37,603 DEBUG SQL:104 - 
+    drop table product if exists
+14:10:37,604 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:37,604  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:37,604  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

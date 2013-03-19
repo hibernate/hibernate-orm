@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.onetoone.basic.OneToOneSchemaTest" tests="1" time="0.121" timestamp="2013-02-28T20:17:38">
+  <properties />
+  <testcase classname="org.hibernate.test.onetoone.basic.OneToOneSchemaTest" name="testUniqueKeyNotGeneratedViaAnnotations" time="0.099" />
+  <system-out><![CDATA[14:17:38,469  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.onetoone.basic.OneToOneSchemaTest
+14:17:38,469  INFO CustomRunner:139 - Test: testUniqueKeyNotGeneratedViaAnnotations
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.type.TypeTest" tests="25" time="0.052" timestamp="2013-02-28T20:19:33">
+  <properties />
+  <testcase classname="org.hibernate.type.TypeTest" name="testBigDecimalType" time="0.02" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testBigIntegerType" time="0.0" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testBinaryType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testBooleanType" time="0.0" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testByteType" time="0.0" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testCalendarDateType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testCalendarType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testCharArrayType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testCharacterArrayType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testCharacterType" time="0.0" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testClassType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testCurrencyType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testDateType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testDates" time="0.002" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testDoubleType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testFloatType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testIntegerType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testLocaleType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testLongType" time="0.0" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testSerializableType" time="0.002" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testShortType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testStringType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testTimeType" time="0.0" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testTimeZoneType" time="0.001" />
+  <testcase classname="org.hibernate.type.TypeTest" name="testTimestampType" time="0.0" />
+  <system-out><![CDATA[14:19:33,448  INFO CustomRunner:132 - BeforeClass: org.hibernate.type.TypeTest
+14:19:33,448  INFO CustomRunner:139 - Test: testBigDecimalType
+14:19:33,470  INFO CustomRunner:139 - Test: testBigIntegerType
+14:19:33,471  INFO CustomRunner:139 - Test: testBinaryType
+14:19:33,472  INFO CustomRunner:139 - Test: testBooleanType
+14:19:33,472  INFO CustomRunner:139 - Test: testByteType
+14:19:33,473  INFO CustomRunner:139 - Test: testCalendarDateType
+14:19:33,475  INFO CustomRunner:139 - Test: testCalendarType
+14:19:33,476  INFO CustomRunner:139 - Test: testCharArrayType
+14:19:33,477  INFO CustomRunner:139 - Test: testCharacterArrayType
+14:19:33,478  INFO CustomRunner:139 - Test: testCharacterType
+14:19:33,478  INFO CustomRunner:139 - Test: testClassType
+14:19:33,479  INFO CustomRunner:139 - Test: testCurrencyType
+14:19:33,480  INFO CustomRunner:139 - Test: testDateType
+14:19:33,481  INFO CustomRunner:139 - Test: testDates
+14:19:33,483  INFO CustomRunner:139 - Test: testDoubleType
+14:19:33,484  INFO CustomRunner:139 - Test: testFloatType
+14:19:33,485  INFO CustomRunner:139 - Test: testIntegerType
+14:19:33,486  INFO CustomRunner:139 - Test: testLocaleType
+14:19:33,487  INFO CustomRunner:139 - Test: testLongType
+14:19:33,487  INFO CustomRunner:139 - Test: testSerializableType
+14:19:33,490  INFO CustomRunner:139 - Test: testShortType
+14:19:33,491  INFO CustomRunner:139 - Test: testStringType
+14:19:33,492  INFO CustomRunner:139 - Test: testTimeType
+14:19:33,493  INFO CustomRunner:139 - Test: testTimeZoneType
+14:19:33,495  INFO CustomRunner:139 - Test: testTimestampType
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

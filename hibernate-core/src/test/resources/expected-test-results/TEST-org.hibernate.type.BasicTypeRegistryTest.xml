@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.type.BasicTypeRegistryTest" tests="3" time="0.01" timestamp="2013-02-28T20:19:33">
+  <properties />
+  <testcase classname="org.hibernate.type.BasicTypeRegistryTest" name="testExpanding" time="0.002" />
+  <testcase classname="org.hibernate.type.BasicTypeRegistryTest" name="testOverriding" time="0.002" />
+  <testcase classname="org.hibernate.type.BasicTypeRegistryTest" name="testRegisteringUserTypes" time="0.002" />
+  <system-out><![CDATA[14:19:33,435  INFO CustomRunner:132 - BeforeClass: org.hibernate.type.BasicTypeRegistryTest
+14:19:33,436  INFO CustomRunner:139 - Test: testExpanding
+14:19:33,438  INFO CustomRunner:139 - Test: testOverriding
+14:19:33,439  INFO BasicTypeRegistry:150 - HHH000270: Type registration [uuid-char] overrides previous : org.hibernate.type.UUIDCharType@2055658c
+14:19:33,440  INFO BasicTypeRegistry:150 - HHH000270: Type registration [java.util.UUID] overrides previous : org.hibernate.type.UUIDBinaryType@40201d86
+14:19:33,440  INFO CustomRunner:139 - Test: testRegisteringUserTypes
+14:19:33,443  INFO BasicTypeRegistry:150 - HHH000270: Type registration [key] overrides previous : org.hibernate.type.CustomType@2d2ec98d
+14:19:33,443  INFO BasicTypeRegistry:150 - HHH000270: Type registration [java.util.UUID] overrides previous : org.hibernate.type.UUIDBinaryType@40201d86
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

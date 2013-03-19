@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.inheritance.discriminatoroptions.DiscriminatorOptionsTest" tests="3" time="0.013" timestamp="2013-02-28T20:10:32">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.inheritance.discriminatoroptions.DiscriminatorOptionsTest" name="testBaseline" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.inheritance.discriminatoroptions.DiscriminatorOptionsTest" name="testNonDefaultOptions" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.inheritance.discriminatoroptions.DiscriminatorOptionsTest" name="testPropertyBasedDiscriminatorForcing" time="0.005" />
+  <system-out><![CDATA[14:10:32,034  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.inheritance.discriminatoroptions.DiscriminatorOptionsTest
+14:10:32,035  INFO CustomRunner:139 - Test: testBaseline
+14:10:32,038  INFO CustomRunner:139 - Test: testNonDefaultOptions
+14:10:32,041  INFO CustomRunner:139 - Test: testPropertyBasedDiscriminatorForcing
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.fetchprofile.FetchProfileTest" tests="6" time="0.144" timestamp="2013-02-28T20:10:26">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.fetchprofile.FetchProfileTest" name="testFetchProfileConfigured" time="0.061" />
+  <testcase classname="org.hibernate.test.annotations.fetchprofile.FetchProfileTest" name="testPackageConfiguredFetchProfile" time="0.026" />
+  <testcase classname="org.hibernate.test.annotations.fetchprofile.FetchProfileTest" name="testUnsupportedFetchMode" time="0.008" />
+  <testcase classname="org.hibernate.test.annotations.fetchprofile.FetchProfileTest" name="testWrongAssociationName" time="0.006" />
+  <testcase classname="org.hibernate.test.annotations.fetchprofile.FetchProfileTest" name="testWrongClass" time="0.006" />
+  <testcase classname="org.hibernate.test.annotations.fetchprofile.FetchProfileTest" name="testXmlOverride" time="0.033" />
+  <system-out><![CDATA[14:10:26,028  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.fetchprofile.FetchProfileTest
+14:10:26,029  INFO CustomRunner:139 - Test: testFetchProfileConfigured
+14:10:26,040  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:26,041  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:26,041  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:26,041  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:26,069  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:26,071  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:26,071  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:26,071  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:26,072  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:26,072  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:26,088  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:26,090  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:26,091  INFO CustomRunner:139 - Test: testPackageConfiguredFetchProfile
+14:10:26,098  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:26,098  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:26,098  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:26,098  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:26,098  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:26,099  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:26,100  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:26,100  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:26,100  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:26,100  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:26,115  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:26,116  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:26,117  INFO CustomRunner:139 - Test: testUnsupportedFetchMode
+14:10:26,126  INFO CustomRunner:139 - Test: testWrongAssociationName
+14:10:26,132  INFO CustomRunner:139 - Test: testWrongClass
+14:10:26,138  INFO CustomRunner:139 - Test: testXmlOverride
+14:10:26,153  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:26,154  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:26,154  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:26,154  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:26,154  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:26,155  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:26,155  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:26,156  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:26,156  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:26,156  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:26,166  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:26,169  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

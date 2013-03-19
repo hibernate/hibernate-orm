@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.stateless.fetching.StatelessSessionFetchingTest" tests="1" time="0.074" timestamp="2013-02-28T20:19:21">
+  <properties />
+  <testcase classname="org.hibernate.test.stateless.fetching.StatelessSessionFetchingTest" name="testDynamicFetch" time="0.035" />
+  <system-out><![CDATA[14:19:21,016  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.stateless.fetching.StatelessSessionFetchingTest
+14:19:21,018  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/stateless/fetching/Mappings.hbm.xml
+14:19:21,027  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:21,028  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:21,028  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:21,028  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:21,028  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:21,029  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:21,030  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:21,030  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:21,031  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:21,031  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:21,042  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:21,043 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:21,044 DEBUG SQL:104 - 
+    alter table OHTSFS_Resource 
+        drop constraint FKE1F12648F732CDAA
+14:19:21,044 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OHTSFS_Resource drop constraint FKE1F12648F732CDAA
+14:19:21,044 ERROR SchemaExport:426 - Table "OHTSFS_RESOURCE" not found; SQL statement:
+
+    alter table OHTSFS_Resource 
+        drop constraint FKE1F12648F732CDAA [42102-145]
+14:19:21,044 DEBUG SQL:104 - 
+    alter table OHTSFS_Task 
+        drop constraint FK5A9C4BFF115C6C2
+14:19:21,044 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OHTSFS_Task drop constraint FK5A9C4BFF115C6C2
+14:19:21,045 ERROR SchemaExport:426 - Table "OHTSFS_TASK" not found; SQL statement:
+
+    alter table OHTSFS_Task 
+        drop constraint FK5A9C4BFF115C6C2 [42102-145]
+14:19:21,045 DEBUG SQL:104 - 
+    alter table OHTSFS_Task 
+        drop constraint FK5A9C4BF46DC0148
+14:19:21,045 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OHTSFS_Task drop constraint FK5A9C4BF46DC0148
+14:19:21,045 ERROR SchemaExport:426 - Table "OHTSFS_TASK" not found; SQL statement:
+
+    alter table OHTSFS_Task 
+        drop constraint FK5A9C4BF46DC0148 [42102-145]
+14:19:21,045 DEBUG SQL:104 - 
+    drop table OHTSFS_Resource if exists
+14:19:21,046 DEBUG SQL:104 - 
+    drop table OHTSFS_Task if exists
+14:19:21,046 DEBUG SQL:104 - 
+    drop table OHTSFS_User if exists
+14:19:21,046 DEBUG SQL:104 - 
+    create table OHTSFS_Resource (
+        id bigint not null,
+        name varchar(255),
+        owner bigint,
+        primary key (id)
+    )
+14:19:21,046 DEBUG SQL:104 - 
+    create table OHTSFS_Task (
+        id bigint not null,
+        description varchar(255),
+        "user" bigint,
+        "resource" bigint,
+        dueDate timestamp,
+        startDate timestamp,
+        completionDate timestamp,
+        primary key (id)
+    )
+14:19:21,047 DEBUG SQL:104 - 
+    create table OHTSFS_User (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:19:21,047 DEBUG SQL:104 - 
+    alter table OHTSFS_Resource 
+        add constraint FKE1F12648F732CDAA 
+        foreign key (owner) 
+        references OHTSFS_User
+14:19:21,048 DEBUG SQL:104 - 
+    alter table OHTSFS_Task 
+        add constraint FK5A9C4BFF115C6C2 
+        foreign key ("user") 
+        references OHTSFS_User
+14:19:21,048 DEBUG SQL:104 - 
+    alter table OHTSFS_Task 
+        add constraint FK5A9C4BF46DC0148 
+        foreign key ("resource") 
+        references OHTSFS_Resource
+14:19:21,049  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:21,049  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:21,050  INFO CustomRunner:139 - Test: testDynamicFetch
+14:19:21,051 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        OHTSFS_User
+14:19:21,052 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        OHTSFS_Resource
+14:19:21,052 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        OHTSFS_Task
+14:19:21,052 DEBUG SQL:104 - 
+    insert 
+    into
+        OHTSFS_User
+        (name, id) 
+    values
+        (?, ?)
+14:19:21,053 DEBUG SQL:104 - 
+    insert 
+    into
+        OHTSFS_User
+        (name, id) 
+    values
+        (?, ?)
+14:19:21,053 DEBUG SQL:104 - 
+    insert 
+    into
+        OHTSFS_Resource
+        (name, owner, id) 
+    values
+        (?, ?, ?)
+14:19:21,053 DEBUG SQL:104 - 
+    insert 
+    into
+        OHTSFS_Task
+        (description, "user", "resource", dueDate, startDate, completionDate, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:19:21,054 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.stateless.fetching.Task t join fetch t.resource join fetch t.user
+14:19:21,074 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  |  \-[IDENT] Node: 'stateless'
+          |  |  |  \-[IDENT] Node: 'fetching'
+          |  |  \-[IDENT] Node: 'Task'
+          |  \-[ALIAS] Node: 't'
+          +-[JOIN] Node: 'join'
+          |  +-[FETCH] Node: 'fetch'
+          |  \-[DOT] Node: '.'
+          |     +-[IDENT] Node: 't'
+          |     \-[IDENT] Node: 'resource'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 't'
+                \-[IDENT] Node: 'user'
+
+14:19:21,075 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,075 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.stateless.fetching.Task (t) -> task0_
+14:19:21,075 DEBUG FromReferenceNode:74 - Resolved : t -> task0_.id
+14:19:21,075 DEBUG DotNode:599 - getDataType() : resource -> org.hibernate.type.ManyToOneType(org.hibernate.test.stateless.fetching.Resource)
+14:19:21,075 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for resource in org.hibernate.test.stateless.fetching.Task (<no alias>) parent = [ {null} ]
+14:19:21,076 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.stateless.fetching.Resource (<no alias>) -> resource1_
+14:19:21,076 DEBUG FromClause:282 - addJoinByPathMap() : t.resource -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=OHTSFS_Resource,tableAlias=resource1_,origin=OHTSFS_Task task0_,columns={task0_."resource" ,className=org.hibernate.test.stateless.fetching.Resource}}
+14:19:21,076 DEBUG FromReferenceNode:74 - Resolved : t.resource -> task0_."resource"
+14:19:21,076 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'OHTSFS_Resource resource1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=OHTSFS_Resource,tableAlias=resource1_,origin=OHTSFS_Task task0_,columns={task0_."resource" ,className=org.hibernate.test.stateless.fetching.Resource}}
+
+14:19:21,076 DEBUG FromReferenceNode:74 - Resolved : t -> task0_.id
+14:19:21,076 DEBUG DotNode:599 - getDataType() : user -> org.hibernate.type.ManyToOneType(org.hibernate.test.stateless.fetching.User)
+14:19:21,076 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for user in org.hibernate.test.stateless.fetching.Task (<no alias>) parent = [ {null} ]
+14:19:21,076 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.stateless.fetching.User (<no alias>) -> user2_
+14:19:21,076 DEBUG FromClause:282 - addJoinByPathMap() : t.user -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=OHTSFS_User,tableAlias=user2_,origin=OHTSFS_Task task0_,columns={task0_."user" ,className=org.hibernate.test.stateless.fetching.User}}
+14:19:21,077 DEBUG FromReferenceNode:74 - Resolved : t.user -> task0_."user"
+14:19:21,077 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'OHTSFS_User user2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=OHTSFS_User,tableAlias=user2_,origin=OHTSFS_Task task0_,columns={task0_."user" ,className=org.hibernate.test.stateless.fetching.User}}
+
+14:19:21,077 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( OHTSFS_Task task0_ OHTSFS_Resource resource1_ OHTSFS_User user2_ ) ) )
+14:19:21,077 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:21,077 DEBUG JoinProcessor:175 - Using FROM fragment [OHTSFS_Task task0_]
+14:19:21,077 DEBUG JoinProcessor:175 - Using FROM fragment [inner join OHTSFS_Resource resource1_ on task0_."resource"=resource1_.id]
+14:19:21,077 DEBUG JoinProcessor:175 - Using FROM fragment [inner join OHTSFS_User user2_ on task0_."user"=user2_.id]
+14:19:21,078 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (OHTSFS_Task,OHTSFS_User,OHTSFS_Resource)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'task0_.id as id1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=t,role=null,tableName=OHTSFS_Task,tableAlias=task0_,origin=null,columns={,className=org.hibernate.test.stateless.fetching.Task}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'resource1_.id as id0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=OHTSFS_Resource,tableAlias=resource1_,origin=OHTSFS_Task task0_,columns={task0_."resource" ,className=org.hibernate.test.stateless.fetching.Resource}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user2_.id as id2_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=OHTSFS_User,tableAlias=user2_,origin=OHTSFS_Task task0_,columns={task0_."user" ,className=org.hibernate.test.stateless.fetching.User}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'task0_.description as descript2_1_0_, task0_."user" as user3_1_0_, task0_."resource" as resource4_1_0_, task0_.dueDate as dueDate1_0_, task0_.startDate as startDate1_0_, task0_.completionDate as completi7_1_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'resource1_.name as name0_1_, resource1_.owner as owner0_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'user2_.name as name2_2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[t], fromElementByTableAlias=[user2_, task0_, resource1_], fromElementsByPath=[t.resource, t.user], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'OHTSFS_Task task0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=t,role=null,tableName=OHTSFS_Task,tableAlias=task0_,origin=null,columns={,className=org.hibernate.test.stateless.fetching.Task}}
+          +-[JOIN_FRAGMENT] FromElement: 'inner join OHTSFS_Resource resource1_ on task0_."resource"=resource1_.id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=OHTSFS_Resource,tableAlias=resource1_,origin=OHTSFS_Task task0_,columns={task0_."resource" ,className=org.hibernate.test.stateless.fetching.Resource}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join OHTSFS_User user2_ on task0_."user"=user2_.id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=OHTSFS_User,tableAlias=user2_,origin=OHTSFS_Task task0_,columns={task0_."user" ,className=org.hibernate.test.stateless.fetching.User}}
+
+14:19:21,078 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,078 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.stateless.fetching.Task t join fetch t.resource join fetch t.user
+14:19:21,078 DEBUG QueryTranslatorImpl:236 - SQL: select task0_.id as id1_0_, resource1_.id as id0_1_, user2_.id as id2_2_, task0_.description as descript2_1_0_, task0_."user" as user3_1_0_, task0_."resource" as resource4_1_0_, task0_.dueDate as dueDate1_0_, task0_.startDate as startDate1_0_, task0_.completionDate as completi7_1_0_, resource1_.name as name0_1_, resource1_.owner as owner0_1_, user2_.name as name2_2_ from OHTSFS_Task task0_ inner join OHTSFS_Resource resource1_ on task0_."resource"=resource1_.id inner join OHTSFS_User user2_ on task0_."user"=user2_.id
+14:19:21,078 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,078 DEBUG SQL:104 - 
+    select
+        task0_.id as id1_0_,
+        resource1_.id as id0_1_,
+        user2_.id as id2_2_,
+        task0_.description as descript2_1_0_,
+        task0_."user" as user3_1_0_,
+        task0_."resource" as resource4_1_0_,
+        task0_.dueDate as dueDate1_0_,
+        task0_.startDate as startDate1_0_,
+        task0_.completionDate as completi7_1_0_,
+        resource1_.name as name0_1_,
+        resource1_.owner as owner0_1_,
+        user2_.name as name2_2_ 
+    from
+        OHTSFS_Task task0_ 
+    inner join
+        OHTSFS_Resource resource1_ 
+            on task0_."resource"=resource1_.id 
+    inner join
+        OHTSFS_User user2_ 
+            on task0_."user"=user2_.id
+14:19:21,080 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.stateless.fetching.Task
+14:19:21,080 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'stateless'
+             |  \-[IDENT] Node: 'fetching'
+             \-[IDENT] Node: 'Task'
+
+14:19:21,080 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,081 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.stateless.fetching.Task (<no alias>) -> task0_
+14:19:21,081 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (OHTSFS_Task)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[task0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'OHTSFS_Task' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=OHTSFS_Task,tableAlias=task0_,origin=null,columns={,className=org.hibernate.test.stateless.fetching.Task}}
+
+14:19:21,081 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,081 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,081 DEBUG SQL:104 - 
+    delete 
+    from
+        OHTSFS_Task
+14:19:21,082 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.stateless.fetching.Resource
+14:19:21,082 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'stateless'
+             |  \-[IDENT] Node: 'fetching'
+             \-[IDENT] Node: 'Resource'
+
+14:19:21,082 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,082 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.stateless.fetching.Resource (<no alias>) -> resource0_
+14:19:21,082 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (OHTSFS_Resource)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[resource0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'OHTSFS_Resource' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=OHTSFS_Resource,tableAlias=resource0_,origin=null,columns={,className=org.hibernate.test.stateless.fetching.Resource}}
+
+14:19:21,083 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,083 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,083 DEBUG SQL:104 - 
+    delete 
+    from
+        OHTSFS_Resource
+14:19:21,083 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.stateless.fetching.User
+14:19:21,084 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'stateless'
+             |  \-[IDENT] Node: 'fetching'
+             \-[IDENT] Node: 'User'
+
+14:19:21,084 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,084 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.stateless.fetching.User (<no alias>) -> user0_
+14:19:21,084 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (OHTSFS_User)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'OHTSFS_User' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=OHTSFS_User,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.stateless.fetching.User}}
+
+14:19:21,085 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,085 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:21,085 DEBUG SQL:104 - 
+    delete 
+    from
+        OHTSFS_User
+14:19:21,086  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:21,086 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:21,086 DEBUG SQL:104 - 
+    alter table OHTSFS_Resource 
+        drop constraint FKE1F12648F732CDAA
+14:19:21,087 DEBUG SQL:104 - 
+    alter table OHTSFS_Task 
+        drop constraint FK5A9C4BFF115C6C2
+14:19:21,087 DEBUG SQL:104 - 
+    alter table OHTSFS_Task 
+        drop constraint FK5A9C4BF46DC0148
+14:19:21,087 DEBUG SQL:104 - 
+    drop table OHTSFS_Resource if exists
+14:19:21,087 DEBUG SQL:104 - 
+    drop table OHTSFS_Task if exists
+14:19:21,088 DEBUG SQL:104 - 
+    drop table OHTSFS_User if exists
+14:19:21,088  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:21,088  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

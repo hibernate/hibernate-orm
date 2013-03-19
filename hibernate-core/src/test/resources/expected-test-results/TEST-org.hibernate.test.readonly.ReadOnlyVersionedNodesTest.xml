@@ -1,0 +1,1715 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" tests="14" time="0.596" timestamp="2013-02-28T20:19:14">
+  <properties />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testAddNewChildToReadOnlyParent" time="0.012" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testAddNewParentToReadOnlyChild" time="0.018" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testGetChildMakeReadOnlyThenMergeDetachedChildWithNewParent" time="0.05" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testGetParentMakeReadOnlyThenMergeDetachedParentWithNewChildC" time="0.063" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testMergeDetachedChildWithNewParentCommitWithReadOnlyChild" time="0.008" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testMergeDetachedParentWithNewChildCommitWithReadOnlyParent" time="0.051" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testMergeUnchangedDetachedParentChildren" time="0.063" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testSetReadOnlyTrueAndFalse" time="0.033" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testSetReadOnlyUpdateSetModifiable" time="0.035" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testUpdateChildWithNewParentCommitWithReadOnlyChild" time="0.048" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testUpdateParentWithNewChildCommitWithReadOnlyParent" time="0.046" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testUpdateSetModifiable" time="0.022" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testUpdateSetReadOnlySetModifiable" time="0.029" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyVersionedNodesTest" name="testUpdateSetReadOnlyTwice" time="0.043" />
+  <system-out><![CDATA[14:19:14,778  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.readonly.ReadOnlyVersionedNodesTest
+14:19:14,779  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/readonly/VersionedNode.hbm.xml
+14:19:14,818  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:14,819  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:14,819  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:14,819  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:14,819  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:14,820  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:14,821  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:14,821  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:14,821  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:14,822  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:14,828  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:14,829 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:14,829 DEBUG SQL:104 - 
+    alter table V_NODE 
+        drop constraint FK9820244B9518DDAD
+14:19:14,830 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table V_NODE drop constraint FK9820244B9518DDAD
+14:19:14,830 ERROR SchemaExport:426 - Table "V_NODE" not found; SQL statement:
+
+    alter table V_NODE 
+        drop constraint FK9820244B9518DDAD [42102-145]
+14:19:14,830 DEBUG SQL:104 - 
+    drop table V_NODE if exists
+14:19:14,830 DEBUG SQL:104 - 
+    create table V_NODE (
+        ID varchar(255) not null,
+        VERS bigint not null,
+        NAME varchar(255),
+        parent varchar(255),
+        primary key (ID)
+    )
+14:19:14,831 DEBUG SQL:104 - 
+    alter table V_NODE 
+        add constraint FK9820244B9518DDAD 
+        foreign key (parent) 
+        references V_NODE
+14:19:14,831  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:14,831  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:14,832  INFO CustomRunner:139 - Test: testAddNewChildToReadOnlyParent
+14:19:14,833 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:14,834 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,835 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:14,835 DEBUG SQL:104 - 
+    select
+        versionedn_.ID,
+        versionedn_.VERS as VERS0_,
+        versionedn_.NAME as NAME0_,
+        versionedn_.parent as parent0_ 
+    from
+        V_NODE versionedn_ 
+    where
+        versionedn_.ID=?
+14:19:14,835 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:14,836 DEBUG SQL:104 - 
+    update
+        V_NODE 
+    set
+        VERS=? 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,836 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,836 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:14,837 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:14,837 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,837 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,838 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.readonly.VersionedNode where parent is not null
+14:19:14,839 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'readonly'
+    |        \-[IDENT] Node: 'VersionedNode'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[IDENT] Node: 'parent'
+
+14:19:14,839 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:14,839 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.VersionedNode (<no alias>) -> versionedn0_
+14:19:14,839 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:14,839 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.readonly.VersionedNode)
+14:19:14,839 DEBUG DotNode:562 - dereferenceShortcut() : property parent in org.hibernate.test.readonly.VersionedNode does not require a join.
+14:19:14,840 DEBUG DotNode:588 - Terminal propertyPath = [parent]
+14:19:14,840 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.parent -> parent
+14:19:14,840 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (V_NODE)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[versionedn0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'V_NODE' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=V_NODE,tableAlias=versionedn0_,origin=null,columns={,className=org.hibernate.test.readonly.VersionedNode}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[DOT] DotNode: 'parent' {propertyName=parent,dereferenceType=0,propertyPath=parent,path={synthetic-alias}.parent,tableAlias=versionedn0_,className=org.hibernate.test.readonly.VersionedNode,classAlias=null}
+             +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             \-[IDENT] IdentNode: 'parent' {originalText=parent}
+
+14:19:14,841 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:14,841 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:14,842 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:14,842 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.readonly.VersionedNode
+14:19:14,843 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'readonly'
+             \-[IDENT] Node: 'VersionedNode'
+
+14:19:14,843 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:14,843 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.VersionedNode (<no alias>) -> versionedn0_
+14:19:14,843 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (V_NODE)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[versionedn0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'V_NODE' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=V_NODE,tableAlias=versionedn0_,origin=null,columns={,className=org.hibernate.test.readonly.VersionedNode}}
+
+14:19:14,843 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:14,843 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:14,843 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:14,844  INFO CustomRunner:139 - Test: testAddNewParentToReadOnlyChild
+14:19:14,846 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:14,846 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,847 DEBUG SQL:104 - 
+    select
+        versionedn_.ID,
+        versionedn_.VERS as VERS0_,
+        versionedn_.NAME as NAME0_,
+        versionedn_.parent as parent0_ 
+    from
+        V_NODE versionedn_ 
+    where
+        versionedn_.ID=?
+14:19:14,849 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:14,850 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,850 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,860 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:14,861 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,862 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:14,862 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:14,862  INFO CustomRunner:139 - Test: testGetChildMakeReadOnlyThenMergeDetachedChildWithNewParent
+14:19:14,863 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:14,864 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,884 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_1_,
+        versionedn0_.VERS as VERS0_1_,
+        versionedn0_.NAME as NAME0_1_,
+        versionedn0_.parent as parent0_1_,
+        versionedn1_.ID as ID0_0_,
+        versionedn1_.VERS as VERS0_0_,
+        versionedn1_.NAME as NAME0_0_,
+        versionedn1_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    left outer join
+        V_NODE versionedn1_ 
+            on versionedn0_.parent=versionedn1_.ID 
+    where
+        versionedn0_.ID=?
+14:19:14,886 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:14,886 DEBUG SQL:104 - 
+    update
+        V_NODE 
+    set
+        VERS=?,
+        NAME=?,
+        parent=? 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,887 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,887 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,888 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:14,888 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:14,903 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,904 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,904 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:14,913 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:14,913  INFO CustomRunner:139 - Test: testGetParentMakeReadOnlyThenMergeDetachedParentWithNewChildC
+14:19:14,915 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:14,915 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,916 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_1_,
+        versionedn0_.VERS as VERS0_1_,
+        versionedn0_.NAME as NAME0_1_,
+        versionedn0_.parent as parent0_1_,
+        versionedn1_.ID as ID0_0_,
+        versionedn1_.VERS as VERS0_0_,
+        versionedn1_.NAME as NAME0_0_,
+        versionedn1_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    left outer join
+        V_NODE versionedn1_ 
+            on versionedn0_.parent=versionedn1_.ID 
+    where
+        versionedn0_.ID=?
+14:19:14,922 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:14,923 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:14,923 DEBUG SQL:104 - 
+    update
+        V_NODE 
+    set
+        VERS=? 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,931 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,932 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,932 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:14,974 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:14,974 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,975 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,975 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:14,977 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:14,977  INFO CustomRunner:139 - Test: testMergeDetachedChildWithNewParentCommitWithReadOnlyChild
+14:19:14,978 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:14,979 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_1_,
+        versionedn0_.VERS as VERS0_1_,
+        versionedn0_.NAME as NAME0_1_,
+        versionedn0_.parent as parent0_1_,
+        versionedn1_.ID as ID0_0_,
+        versionedn1_.VERS as VERS0_0_,
+        versionedn1_.NAME as NAME0_0_,
+        versionedn1_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    left outer join
+        V_NODE versionedn1_ 
+            on versionedn0_.parent=versionedn1_.ID 
+    where
+        versionedn0_.ID=?
+14:19:14,980 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_1_,
+        versionedn0_.VERS as VERS0_1_,
+        versionedn0_.NAME as NAME0_1_,
+        versionedn0_.parent as parent0_1_,
+        versionedn1_.ID as ID0_0_,
+        versionedn1_.VERS as VERS0_0_,
+        versionedn1_.NAME as NAME0_0_,
+        versionedn1_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    left outer join
+        V_NODE versionedn1_ 
+            on versionedn0_.parent=versionedn1_.ID 
+    where
+        versionedn0_.ID=?
+14:19:14,981 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:14,981 DEBUG SQL:104 - 
+    update
+        V_NODE 
+    set
+        VERS=?,
+        NAME=?,
+        parent=? 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,982 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,982 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:14,983 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:14,983 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:14,985 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,985 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:14,985 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:14,985 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:14,986  INFO CustomRunner:139 - Test: testMergeDetachedParentWithNewChildCommitWithReadOnlyParent
+14:19:14,987 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,009 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_1_,
+        versionedn0_.VERS as VERS0_1_,
+        versionedn0_.NAME as NAME0_1_,
+        versionedn0_.parent as parent0_1_,
+        versionedn1_.ID as ID0_0_,
+        versionedn1_.VERS as VERS0_0_,
+        versionedn1_.NAME as NAME0_0_,
+        versionedn1_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    left outer join
+        V_NODE versionedn1_ 
+            on versionedn0_.parent=versionedn1_.ID 
+    where
+        versionedn0_.ID=?
+14:19:15,010 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_1_,
+        versionedn0_.VERS as VERS0_1_,
+        versionedn0_.NAME as NAME0_1_,
+        versionedn0_.parent as parent0_1_,
+        versionedn1_.ID as ID0_0_,
+        versionedn1_.VERS as VERS0_0_,
+        versionedn1_.NAME as NAME0_0_,
+        versionedn1_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    left outer join
+        V_NODE versionedn1_ 
+            on versionedn0_.parent=versionedn1_.ID 
+    where
+        versionedn0_.ID=?
+14:19:15,011 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,011 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,011 DEBUG SQL:104 - 
+    update
+        V_NODE 
+    set
+        VERS=? 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,012 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,012 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,026 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,027 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,036 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,036 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,036 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:15,037 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:15,037  INFO CustomRunner:139 - Test: testMergeUnchangedDetachedParentChildren
+14:19:15,045 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,046 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,046 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_1_,
+        versionedn0_.VERS as VERS0_1_,
+        versionedn0_.NAME as NAME0_1_,
+        versionedn0_.parent as parent0_1_,
+        versionedn1_.ID as ID0_0_,
+        versionedn1_.VERS as VERS0_0_,
+        versionedn1_.NAME as NAME0_0_,
+        versionedn1_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    left outer join
+        V_NODE versionedn1_ 
+            on versionedn0_.parent=versionedn1_.ID 
+    where
+        versionedn0_.ID=?
+14:19:15,056 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_1_,
+        versionedn0_.VERS as VERS0_1_,
+        versionedn0_.NAME as NAME0_1_,
+        versionedn0_.parent as parent0_1_,
+        versionedn1_.ID as ID0_0_,
+        versionedn1_.VERS as VERS0_0_,
+        versionedn1_.NAME as NAME0_0_,
+        versionedn1_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    left outer join
+        V_NODE versionedn1_ 
+            on versionedn0_.parent=versionedn1_.ID 
+    where
+        versionedn0_.ID=?
+14:19:15,056 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,065 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,066 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_1_,
+        versionedn0_.VERS as VERS0_1_,
+        versionedn0_.NAME as NAME0_1_,
+        versionedn0_.parent as parent0_1_,
+        versionedn1_.ID as ID0_0_,
+        versionedn1_.VERS as VERS0_0_,
+        versionedn1_.NAME as NAME0_0_,
+        versionedn1_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    left outer join
+        V_NODE versionedn1_ 
+            on versionedn0_.parent=versionedn1_.ID 
+    where
+        versionedn0_.ID=?
+14:19:15,066 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,074 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_1_,
+        versionedn0_.VERS as VERS0_1_,
+        versionedn0_.NAME as NAME0_1_,
+        versionedn0_.parent as parent0_1_,
+        versionedn1_.ID as ID0_0_,
+        versionedn1_.VERS as VERS0_0_,
+        versionedn1_.NAME as NAME0_0_,
+        versionedn1_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    left outer join
+        V_NODE versionedn1_ 
+            on versionedn0_.parent=versionedn1_.ID 
+    where
+        versionedn0_.ID=?
+14:19:15,075 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_1_,
+        versionedn0_.VERS as VERS0_1_,
+        versionedn0_.NAME as NAME0_1_,
+        versionedn0_.parent as parent0_1_,
+        versionedn1_.ID as ID0_0_,
+        versionedn1_.VERS as VERS0_0_,
+        versionedn1_.NAME as NAME0_0_,
+        versionedn1_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    left outer join
+        V_NODE versionedn1_ 
+            on versionedn0_.parent=versionedn1_.ID 
+    where
+        versionedn0_.ID=?
+14:19:15,083 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,084 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,094 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,095 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,095 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,096 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,096 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,097 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:15,107 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:15,107  INFO CustomRunner:139 - Test: testSetReadOnlyTrueAndFalse
+14:19:15,108 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,109 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,110 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,117 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,117 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,117 DEBUG SQL:104 - 
+    update
+        V_NODE 
+    set
+        VERS=?,
+        NAME=?,
+        parent=? 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,118 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,118 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,140 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,140 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:15,141 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:15,141  INFO CustomRunner:139 - Test: testSetReadOnlyUpdateSetModifiable
+14:19:15,151 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,151 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,152 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:15,152 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:15,153  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:19:15,154  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/readonly/VersionedNode.hbm.xml
+14:19:15,159  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:15,163  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:15,163  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:15,163  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:15,163  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:15,164  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:15,165  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:15,165  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:15,166  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:15,166  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:15,170  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:15,171 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:15,172 DEBUG SQL:104 - 
+    alter table V_NODE 
+        drop constraint FK9820244B9518DDAD
+14:19:15,172 DEBUG SQL:104 - 
+    drop table V_NODE if exists
+14:19:15,172 DEBUG SQL:104 - 
+    create table V_NODE (
+        ID varchar(255) not null,
+        VERS bigint not null,
+        NAME varchar(255),
+        parent varchar(255),
+        primary key (ID)
+    )
+14:19:15,172 DEBUG SQL:104 - 
+    alter table V_NODE 
+        add constraint FK9820244B9518DDAD 
+        foreign key (parent) 
+        references V_NODE
+14:19:15,173  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:15,173  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:15,176  INFO CustomRunner:139 - Test: testUpdateChildWithNewParentCommitWithReadOnlyChild
+14:19:15,178 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,178 DEBUG SQL:104 - 
+    select
+        versionedn_.ID,
+        versionedn_.VERS as VERS0_,
+        versionedn_.NAME as NAME0_,
+        versionedn_.parent as parent0_ 
+    from
+        V_NODE versionedn_ 
+    where
+        versionedn_.ID=?
+14:19:15,179 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,179 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,188 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,189 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,192 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,201 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,202 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,202 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.readonly.VersionedNode where parent is not null
+14:19:15,203 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'readonly'
+    |        \-[IDENT] Node: 'VersionedNode'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[IDENT] Node: 'parent'
+
+14:19:15,211 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,212 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.VersionedNode (<no alias>) -> versionedn0_
+14:19:15,212 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:15,212 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.readonly.VersionedNode)
+14:19:15,212 DEBUG DotNode:562 - dereferenceShortcut() : property parent in org.hibernate.test.readonly.VersionedNode does not require a join.
+14:19:15,212 DEBUG DotNode:588 - Terminal propertyPath = [parent]
+14:19:15,212 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.parent -> parent
+14:19:15,212 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (V_NODE)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[versionedn0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'V_NODE' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=V_NODE,tableAlias=versionedn0_,origin=null,columns={,className=org.hibernate.test.readonly.VersionedNode}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[DOT] DotNode: 'parent' {propertyName=parent,dereferenceType=0,propertyPath=parent,path={synthetic-alias}.parent,tableAlias=versionedn0_,className=org.hibernate.test.readonly.VersionedNode,classAlias=null}
+             +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             \-[IDENT] IdentNode: 'parent' {originalText=parent}
+
+14:19:15,213 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,221 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,222 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:15,223 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.readonly.VersionedNode
+14:19:15,223 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'readonly'
+             \-[IDENT] Node: 'VersionedNode'
+
+14:19:15,223 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,224 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.VersionedNode (<no alias>) -> versionedn0_
+14:19:15,224 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (V_NODE)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[versionedn0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'V_NODE' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=V_NODE,tableAlias=versionedn0_,origin=null,columns={,className=org.hibernate.test.readonly.VersionedNode}}
+
+14:19:15,224 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,224 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,224 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:15,225  INFO CustomRunner:139 - Test: testUpdateParentWithNewChildCommitWithReadOnlyParent
+14:19:15,226 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,226 DEBUG SQL:104 - 
+    select
+        versionedn_.ID,
+        versionedn_.VERS as VERS0_,
+        versionedn_.NAME as NAME0_,
+        versionedn_.parent as parent0_ 
+    from
+        V_NODE versionedn_ 
+    where
+        versionedn_.ID=?
+14:19:15,227 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,236 DEBUG SQL:104 - 
+    update
+        V_NODE 
+    set
+        VERS=? 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,237 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,237 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,238 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,246 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,247 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,248 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,249 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:15,249 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:15,271  INFO CustomRunner:139 - Test: testUpdateSetModifiable
+14:19:15,272 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,273 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,274 DEBUG SQL:104 - 
+    update
+        V_NODE 
+    set
+        VERS=?,
+        NAME=?,
+        parent=? 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,281 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,282 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,283 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,283 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:15,292 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:15,293  INFO CustomRunner:139 - Test: testUpdateSetReadOnlySetModifiable
+14:19:15,294 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,295 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,296 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:15,304 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:15,305  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:19:15,306  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/readonly/VersionedNode.hbm.xml
+14:19:15,312  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:15,313  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:15,313  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:15,313  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:15,313  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:15,314  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:15,315  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:15,315  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:15,316  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:15,316  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:15,320  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:15,321 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:15,321 DEBUG SQL:104 - 
+    alter table V_NODE 
+        drop constraint FK9820244B9518DDAD
+14:19:15,321 DEBUG SQL:104 - 
+    drop table V_NODE if exists
+14:19:15,322 DEBUG SQL:104 - 
+    create table V_NODE (
+        ID varchar(255) not null,
+        VERS bigint not null,
+        NAME varchar(255),
+        parent varchar(255),
+        primary key (ID)
+    )
+14:19:15,322 DEBUG SQL:104 - 
+    alter table V_NODE 
+        add constraint FK9820244B9518DDAD 
+        foreign key (parent) 
+        references V_NODE
+14:19:15,322  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:15,323  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:15,323  INFO CustomRunner:139 - Test: testUpdateSetReadOnlyTwice
+14:19:15,324 DEBUG SQL:104 - 
+    insert 
+    into
+        V_NODE
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:19:15,325 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,334 DEBUG SQL:104 - 
+    select
+        versionedn0_.ID as ID0_0_,
+        versionedn0_.VERS as VERS0_0_,
+        versionedn0_.NAME as NAME0_0_,
+        versionedn0_.parent as parent0_0_ 
+    from
+        V_NODE versionedn0_ 
+    where
+        versionedn0_.ID=?
+14:19:15,335 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent0_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.VERS as VERS0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent as parent0_0_ 
+    from
+        V_NODE children0_ 
+    where
+        children0_.parent=?
+14:19:15,337 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        ID=? 
+        and VERS=?
+14:19:15,351 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.readonly.VersionedNode where parent is not null
+14:19:15,352 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'readonly'
+    |        \-[IDENT] Node: 'VersionedNode'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[IDENT] Node: 'parent'
+
+14:19:15,352 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,352 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.VersionedNode (<no alias>) -> versionedn0_
+14:19:15,352 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:15,352 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.readonly.VersionedNode)
+14:19:15,352 DEBUG DotNode:562 - dereferenceShortcut() : property parent in org.hibernate.test.readonly.VersionedNode does not require a join.
+14:19:15,352 DEBUG DotNode:588 - Terminal propertyPath = [parent]
+14:19:15,352 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.parent -> parent
+14:19:15,353 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (V_NODE)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[versionedn0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'V_NODE' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=V_NODE,tableAlias=versionedn0_,origin=null,columns={,className=org.hibernate.test.readonly.VersionedNode}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[DOT] DotNode: 'parent' {propertyName=parent,dereferenceType=0,propertyPath=parent,path={synthetic-alias}.parent,tableAlias=versionedn0_,className=org.hibernate.test.readonly.VersionedNode,classAlias=null}
+             +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             \-[IDENT] IdentNode: 'parent' {originalText=parent}
+
+14:19:15,353 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,353 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,353 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE 
+    where
+        parent is not null
+14:19:15,354 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.readonly.VersionedNode
+14:19:15,354 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'readonly'
+             \-[IDENT] Node: 'VersionedNode'
+
+14:19:15,354 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,354 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.VersionedNode (<no alias>) -> versionedn0_
+14:19:15,364 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (V_NODE)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[versionedn0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'V_NODE' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=V_NODE,tableAlias=versionedn0_,origin=null,columns={,className=org.hibernate.test.readonly.VersionedNode}}
+
+14:19:15,365 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,365 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:15,365 DEBUG SQL:104 - 
+    delete 
+    from
+        V_NODE
+14:19:15,367  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:15,368 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:15,368 DEBUG SQL:104 - 
+    alter table V_NODE 
+        drop constraint FK9820244B9518DDAD
+14:19:15,368 DEBUG SQL:104 - 
+    drop table V_NODE if exists
+14:19:15,369  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:15,369  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

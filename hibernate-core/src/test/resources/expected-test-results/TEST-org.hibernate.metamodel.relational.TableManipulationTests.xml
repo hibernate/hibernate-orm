@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.metamodel.relational.TableManipulationTests" tests="4" time="0.008" timestamp="2013-02-28T20:09:58">
+  <properties />
+  <testcase classname="org.hibernate.metamodel.relational.TableManipulationTests" name="testBasicForeignKeyDefinition" time="0.001" />
+  <testcase classname="org.hibernate.metamodel.relational.TableManipulationTests" name="testQualifiedName" time="0.002" />
+  <testcase classname="org.hibernate.metamodel.relational.TableManipulationTests" name="testTableCreation" time="0.001" />
+  <testcase classname="org.hibernate.metamodel.relational.TableManipulationTests" name="testTableSpecificationCounter" time="0.001" />
+  <system-out><![CDATA[14:09:58,150  INFO CustomRunner:132 - BeforeClass: org.hibernate.metamodel.relational.TableManipulationTests
+14:09:58,150  INFO CustomRunner:139 - Test: testBasicForeignKeyDefinition
+14:09:58,152  INFO CustomRunner:139 - Test: testQualifiedName
+14:09:58,153  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,154  INFO CustomRunner:139 - Test: testTableCreation
+14:09:58,155  INFO CustomRunner:139 - Test: testTableSpecificationCounter
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

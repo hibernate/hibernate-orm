@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.util.StringHelperTest" tests="3" time="0.014" timestamp="2013-02-28T20:19:29">
+  <properties />
+  <testcase classname="org.hibernate.test.util.StringHelperTest" name="testBasePackageCollapsing" time="0.01" />
+  <testcase classname="org.hibernate.test.util.StringHelperTest" name="testNameCollapsing" time="0.0" />
+  <testcase classname="org.hibernate.test.util.StringHelperTest" name="testPartialNameUnqualification" time="0.001" />
+  <system-out><![CDATA[14:19:29,900  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.util.StringHelperTest
+14:19:29,900  INFO CustomRunner:139 - Test: testBasePackageCollapsing
+14:19:29,911  INFO CustomRunner:139 - Test: testNameCollapsing
+14:19:29,912  INFO CustomRunner:139 - Test: testPartialNameUnqualification
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

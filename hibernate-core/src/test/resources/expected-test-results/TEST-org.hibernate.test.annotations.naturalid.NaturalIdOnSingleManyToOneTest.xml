@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.naturalid.NaturalIdOnSingleManyToOneTest" tests="2" time="0.183" timestamp="2013-02-28T20:10:38">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.naturalid.NaturalIdOnSingleManyToOneTest" name="testManyToOneNaturalIdCached" time="0.093" />
+  <testcase classname="org.hibernate.test.annotations.naturalid.NaturalIdOnSingleManyToOneTest" name="testMappingProperties" time="0.013" />
+  <system-out><![CDATA[14:10:38,301  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.naturalid.NaturalIdOnSingleManyToOneTest
+14:10:38,307  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:38,307  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:38,307  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:38,307  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:38,307  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:38,308  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:38,309  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:38,309  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:38,310  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:38,310  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:38,310  INFO UpdateTimestampsCache:61 - HHH000250: Starting update timestamps cache at region: hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache
+14:10:38,310  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: hibernate.test.org.hibernate.cache.internal.StandardQueryCache
+14:10:38,321  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:38,321 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:38,322 DEBUG SQL:104 - 
+    alter table Citizen 
+        drop constraint FK92029348A5911D0
+14:10:38,322 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Citizen drop constraint FK92029348A5911D0
+14:10:38,322 ERROR SchemaExport:426 - Table "CITIZEN" not found; SQL statement:
+
+    alter table Citizen 
+        drop constraint FK92029348A5911D0 [42102-145]
+14:10:38,322 DEBUG SQL:104 - 
+    alter table NaturalIdOnManyToOne 
+        drop constraint FKAB4A3E0968B078F0
+14:10:38,322 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table NaturalIdOnManyToOne drop constraint FKAB4A3E0968B078F0
+14:10:38,322 ERROR SchemaExport:426 - Table "NATURALIDONMANYTOONE" not found; SQL statement:
+
+    alter table NaturalIdOnManyToOne 
+        drop constraint FKAB4A3E0968B078F0 [42102-145]
+14:10:38,337 DEBUG SQL:104 - 
+    drop table Citizen if exists
+14:10:38,337 DEBUG SQL:104 - 
+    drop table NaturalIdOnManyToOne if exists
+14:10:38,338 DEBUG SQL:104 - 
+    drop table State if exists
+14:10:38,338 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:38,338 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:38,338 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:38,338 DEBUG SQL:104 - 
+    create table Citizen (
+        id integer not null,
+        firstname varchar(255),
+        lastname varchar(255),
+        ssn varchar(255),
+        state_id integer,
+        primary key (id)
+    )
+14:10:38,339 DEBUG SQL:104 - 
+    create table NaturalIdOnManyToOne (
+        id integer not null,
+        citizen_id integer,
+        primary key (id)
+    )
+14:10:38,350 DEBUG SQL:104 - 
+    create table State (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:38,351 DEBUG SQL:104 - 
+    alter table Citizen 
+        add constraint _UniqueKey unique (ssn, state_id)
+14:10:38,351 DEBUG SQL:104 - 
+    alter table Citizen 
+        add constraint FK92029348A5911D0 
+        foreign key (state_id) 
+        references State
+14:10:38,359 DEBUG SQL:104 - 
+    alter table NaturalIdOnManyToOne 
+        add constraint _UniqueKey unique (citizen_id)
+14:10:38,360 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table NaturalIdOnManyToOne add constraint _UniqueKey unique (citizen_id)
+14:10:38,360 ERROR SchemaExport:426 - Constraint "_UNIQUEKEY" already exists; SQL statement:
+
+    alter table NaturalIdOnManyToOne 
+        add constraint _UniqueKey unique (citizen_id) [90045-145]
+14:10:38,360 DEBUG SQL:104 - 
+    alter table NaturalIdOnManyToOne 
+        add constraint FKAB4A3E0968B078F0 
+        foreign key (citizen_id) 
+        references Citizen
+14:10:38,361 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:38,361  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:38,362  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:38,362  INFO CustomRunner:139 - Test: testManyToOneNaturalIdCached
+14:10:38,363 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:38,364 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:38,364 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:38,365 DEBUG SQL:104 - 
+    insert 
+    into
+        State
+        (name, id) 
+    values
+        (?, ?)
+14:10:38,370 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [State] -> [5579089094123520]
+14:10:38,370 DEBUG SQL:104 - 
+    insert 
+    into
+        Citizen
+        (firstname, lastname, ssn, state_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:38,371 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Citizen] -> [5579089094127616]
+14:10:38,371 DEBUG SQL:104 - 
+    insert 
+    into
+        NaturalIdOnManyToOne
+        (citizen_id, id) 
+    values
+        (?, ?)
+14:10:38,372 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [NaturalIdOnManyToOne] -> [5579089094131712]
+14:10:38,372 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId] lookup : key[org.hibernate.test.annotations.naturalid.Citizen##NaturalId[1234, 1]]
+14:10:38,372 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId] : [org.hibernate.test.annotations.naturalid.Citizen##NaturalId[1234, 1]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@5eda9e16]
+14:10:38,372 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId] lookup : key[org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]]
+14:10:38,372 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId] : [org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@62c0e700]
+14:10:38,372 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Citizen] -> [5579088848371715]
+14:10:38,372 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [State] -> [5579088848371715]
+14:10:38,372 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [NaturalIdOnManyToOne] -> [5579088848371715]
+14:10:38,373 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId]
+14:10:38,373 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,373  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:10:38,383 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]] from region[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,383 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId] lookup : key[org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]]
+14:10:38,383 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]] in region[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,384 DEBUG SQL:104 - 
+    select
+        naturalido_.id as id1_ 
+    from
+        NaturalIdOnManyToOne naturalido_ 
+    where
+        naturalido_.citizen_id=?
+14:10:38,384 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]] from region[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,384 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId] lookup : key[org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]]
+14:10:38,384 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]] in region[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,385 DEBUG AbstractReadWriteAccessStrategy:68 - putting key[org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]] -> value[3] into region[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,385 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId] lookup : key[org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]]
+14:10:38,385 DEBUG AbstractReadWriteAccessStrategy:73 - putting key[org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]] -> value[3] into region[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId] success
+14:10:38,385 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId] : [org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId[2]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@c1abd88]
+14:10:38,385 DEBUG SQL:104 - 
+    select
+        naturalido0_.id as id1_2_,
+        naturalido0_.citizen_id as citizen2_1_2_,
+        citizen1_.id as id0_0_,
+        citizen1_.firstname as firstname0_0_,
+        citizen1_.lastname as lastname0_0_,
+        citizen1_.ssn as ssn0_0_,
+        citizen1_.state_id as state5_0_0_,
+        state2_.id as id2_1_,
+        state2_.name as name2_1_ 
+    from
+        NaturalIdOnManyToOne naturalido0_ 
+    left outer join
+        Citizen citizen1_ 
+            on naturalido0_.citizen_id=citizen1_.id 
+    left outer join
+        State state2_ 
+            on citizen1_.state_id=state2_.id 
+    where
+        naturalido0_.id=?
+14:10:38,386 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.annotations.naturalid.Citizen##NaturalId[1234, 1]] from region[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId]
+14:10:38,386 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId] lookup : key[org.hibernate.test.annotations.naturalid.Citizen##NaturalId[1234, 1]]
+14:10:38,386 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.annotations.naturalid.Citizen##NaturalId[1234, 1]] in region[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId]
+14:10:38,386 DEBUG AbstractReadWriteAccessStrategy:68 - putting key[org.hibernate.test.annotations.naturalid.Citizen##NaturalId[1234, 1]] -> value[2] into region[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId]
+14:10:38,386 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId] lookup : key[org.hibernate.test.annotations.naturalid.Citizen##NaturalId[1234, 1]]
+14:10:38,386 DEBUG AbstractReadWriteAccessStrategy:73 - putting key[org.hibernate.test.annotations.naturalid.Citizen##NaturalId[1234, 1]] -> value[2] into region[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId] success
+14:10:38,387 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId] : [org.hibernate.test.annotations.naturalid.Citizen##NaturalId[1234, 1]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@e2061a7]
+14:10:38,387  WARN SessionImpl:1695 - Session.byNaturalId(org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne) should be used for naturalId queries instead of Restrictions.naturalId() from a Criteria
+14:10:38,387 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.cache.internal.StandardQueryCache]
+14:10:38,387 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId]
+14:10:38,387 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,388 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne
+14:10:38,389 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'naturalid'
+             \-[IDENT] Node: 'NaturalIdOnManyToOne'
+
+14:10:38,408 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:38,409 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne (<no alias>) -> naturalido0_
+14:10:38,409 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (NaturalIdOnManyToOne)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[naturalido0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'NaturalIdOnManyToOne' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=NaturalIdOnManyToOne,tableAlias=naturalido0_,origin=null,columns={,className=org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne}}
+
+14:10:38,409 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:38,409 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:38,410 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,410 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [NaturalIdOnManyToOne] -> [5579089094287360]
+14:10:38,410 DEBUG SQL:104 - 
+    delete 
+    from
+        NaturalIdOnManyToOne
+14:10:38,411 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.annotations.naturalid.Citizen
+14:10:38,411 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'naturalid'
+             \-[IDENT] Node: 'Citizen'
+
+14:10:38,426 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:38,426 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.naturalid.Citizen (<no alias>) -> citizen0_
+14:10:38,427 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Citizen)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[citizen0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Citizen' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Citizen,tableAlias=citizen0_,origin=null,columns={,className=org.hibernate.test.annotations.naturalid.Citizen}}
+
+14:10:38,427 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:38,427 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:38,427 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId]
+14:10:38,427 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Citizen] -> [5579089094356992]
+14:10:38,427 DEBUG SQL:104 - 
+    delete 
+    from
+        Citizen
+14:10:38,428 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.annotations.naturalid.State
+14:10:38,428 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'naturalid'
+             \-[IDENT] Node: 'State'
+
+14:10:38,452 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:38,453 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.naturalid.State (<no alias>) -> state0_
+14:10:38,453 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (State)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[state0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'State' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=State,tableAlias=state0_,origin=null,columns={,className=org.hibernate.test.annotations.naturalid.State}}
+
+14:10:38,453 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:38,453 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:38,454 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [State] -> [5579089094467584]
+14:10:38,454 DEBUG SQL:104 - 
+    delete 
+    from
+        State
+14:10:38,454 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,454 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId]
+14:10:38,454 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Citizen] -> [5579088848707585]
+14:10:38,455 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [State] -> [5579088848707585]
+14:10:38,455 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [NaturalIdOnManyToOne] -> [5579088848707585]
+14:10:38,455  INFO CustomRunner:139 - Test: testMappingProperties
+14:10:38,456  WARN NaturalIdOnSingleManyToOneTest:72 - Commented out test
+14:10:38,456 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.cache.internal.StandardQueryCache]
+14:10:38,456 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId]
+14:10:38,456 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,456 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,456 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [NaturalIdOnManyToOne] -> [5579089094475777]
+14:10:38,465 DEBUG SQL:104 - 
+    delete 
+    from
+        NaturalIdOnManyToOne
+14:10:38,465 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId]
+14:10:38,466 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Citizen] -> [5579089094516736]
+14:10:38,466 DEBUG SQL:104 - 
+    delete 
+    from
+        Citizen
+14:10:38,466 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [State] -> [5579089094516737]
+14:10:38,466 DEBUG SQL:104 - 
+    delete 
+    from
+        State
+14:10:38,467 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.NaturalIdOnManyToOne##NaturalId]
+14:10:38,467 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.annotations.naturalid.Citizen##NaturalId]
+14:10:38,467 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Citizen] -> [5579088848760832]
+14:10:38,467 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [State] -> [5579088848760832]
+14:10:38,467 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [NaturalIdOnManyToOne] -> [5579088848760832]
+14:10:38,468  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:38,469 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:38,469 DEBUG SQL:104 - 
+    alter table Citizen 
+        drop constraint FK92029348A5911D0
+14:10:38,469 DEBUG SQL:104 - 
+    alter table NaturalIdOnManyToOne 
+        drop constraint FKAB4A3E0968B078F0
+14:10:38,481 DEBUG SQL:104 - 
+    drop table Citizen if exists
+14:10:38,481 DEBUG SQL:104 - 
+    drop table NaturalIdOnManyToOne if exists
+14:10:38,482 DEBUG SQL:104 - 
+    drop table State if exists
+14:10:38,482 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:38,482  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:38,482  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

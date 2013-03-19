@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.metamodel.source.internal.MetadataImplTest" tests="6" time="0.046" timestamp="2013-02-28T20:10:03">
+  <properties />
+  <testcase classname="org.hibernate.metamodel.source.internal.MetadataImplTest" name="testAddingNonExistingPackageName" time="0.006" />
+  <testcase classname="org.hibernate.metamodel.source.internal.MetadataImplTest" name="testAddingNullClass" time="0.003" />
+  <testcase classname="org.hibernate.metamodel.source.internal.MetadataImplTest" name="testAddingNullPackageName" time="0.003" />
+  <testcase classname="org.hibernate.metamodel.source.internal.MetadataImplTest" name="testAddingPackageName" time="0.01" />
+  <testcase classname="org.hibernate.metamodel.source.internal.MetadataImplTest" name="testAddingPackageNameWithTrailingDot" time="0.006" />
+  <testcase classname="org.hibernate.metamodel.source.internal.MetadataImplTest" name="testGettingSessionFactoryBuilder" time="0.013" />
+  <system-out><![CDATA[14:10:03,487  INFO CustomRunner:132 - BeforeClass: org.hibernate.metamodel.source.internal.MetadataImplTest
+14:10:03,487  INFO CustomRunner:139 - Test: testAddingNonExistingPackageName
+14:10:03,489  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:03,490  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:03,490  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:03,490  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:03,490  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:03,492  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:03,492  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:03,494  INFO CustomRunner:139 - Test: testAddingNullClass
+14:10:03,497  INFO CustomRunner:139 - Test: testAddingNullPackageName
+14:10:03,500  INFO CustomRunner:139 - Test: testAddingPackageName
+14:10:03,505  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:03,505  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:03,505  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:03,505  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:03,506  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:03,507  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:03,507  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:03,510  INFO CustomRunner:139 - Test: testAddingPackageNameWithTrailingDot
+14:10:03,513  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:03,513  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:03,513  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:03,513  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:03,514  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:03,515  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:03,515  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:03,517  INFO CustomRunner:139 - Test: testGettingSessionFactoryBuilder
+14:10:03,521  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:03,521  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:03,522  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:03,522  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:03,522  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:03,523  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:03,524  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:03,526  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:03,526  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:03,526  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:03,528  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

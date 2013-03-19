@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.sql.autodiscovery.AutoDiscoveryTest" tests="3" time="0.046" timestamp="2013-02-28T20:19:16">
+  <properties />
+  <testcase classname="org.hibernate.test.sql.autodiscovery.AutoDiscoveryTest" name="testAutoDiscoveryWithDuplicateColumnLabels" time="0.003" />
+  <testcase classname="org.hibernate.test.sql.autodiscovery.AutoDiscoveryTest" name="testDialectGetColumnAliasExtractor" time="0.001" />
+  <testcase classname="org.hibernate.test.sql.autodiscovery.AutoDiscoveryTest" name="testSqlQueryAutoDiscovery" time="0.005" />
+  <system-out><![CDATA[14:19:16,755  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.sql.autodiscovery.AutoDiscoveryTest
+14:19:16,763  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:16,764  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:16,764  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:16,764  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:16,764  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:16,765  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:16,765  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:16,766  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:16,766  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:16,766  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:16,776  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:16,777 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:16,777 DEBUG SQL:104 - 
+    alter table t_membership 
+        drop constraint FK6D7ACC81769F3AD7
+14:19:16,778 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table t_membership drop constraint FK6D7ACC81769F3AD7
+14:19:16,778 ERROR SchemaExport:426 - Table "T_MEMBERSHIP" not found; SQL statement:
+
+    alter table t_membership 
+        drop constraint FK6D7ACC81769F3AD7 [42102-145]
+14:19:16,778 DEBUG SQL:104 - 
+    alter table t_membership 
+        drop constraint FK6D7ACC8173E9A38E
+14:19:16,779 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table t_membership drop constraint FK6D7ACC8173E9A38E
+14:19:16,779 ERROR SchemaExport:426 - Table "T_MEMBERSHIP" not found; SQL statement:
+
+    alter table t_membership 
+        drop constraint FK6D7ACC8173E9A38E [42102-145]
+14:19:16,779 DEBUG SQL:104 - 
+    drop table t_group if exists
+14:19:16,779 DEBUG SQL:104 - 
+    drop table t_membership if exists
+14:19:16,779 DEBUG SQL:104 - 
+    drop table t_user if exists
+14:19:16,780 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:19:16,780 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:19:16,780 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:19:16,780 DEBUG SQL:104 - 
+    create table t_group (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:19:16,781 DEBUG SQL:104 - 
+    create table t_membership (
+        id bigint not null,
+        dues float,
+        joinDate timestamp,
+        group_id bigint,
+        member_id bigint,
+        primary key (id)
+    )
+14:19:16,781 DEBUG SQL:104 - 
+    create table t_user (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:19:16,782 DEBUG SQL:104 - 
+    alter table t_membership 
+        add constraint FK6D7ACC81769F3AD7 
+        foreign key (group_id) 
+        references t_group
+14:19:16,783 DEBUG SQL:104 - 
+    alter table t_membership 
+        add constraint FK6D7ACC8173E9A38E 
+        foreign key (member_id) 
+        references t_user
+14:19:16,783 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:19:16,783  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:16,784  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:16,784  INFO CustomRunner:139 - Test: testAutoDiscoveryWithDuplicateColumnLabels
+14:19:16,785 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:19:16,786 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:19:16,787 DEBUG SQL:104 - 
+    insert 
+    into
+        t_user
+        (name, id) 
+    values
+        (?, ?)
+14:19:16,787 DEBUG SQL:104 - 
+    insert 
+    into
+        t_user
+        (name, id) 
+    values
+        (?, ?)
+14:19:16,787 DEBUG SQL:104 - 
+    select
+        u.name,
+        u2.name 
+    from
+        t_user u,
+        t_user u2 
+    where
+        u.name='steve'
+14:19:16,788  INFO CustomRunner:139 - Test: testDialectGetColumnAliasExtractor
+14:19:16,790 DEBUG SQL:104 - 
+    select
+        u.name as username,
+        g.name as groupname,
+        m.joindate 
+    from
+        t_membership m         
+    inner join
+        t_user u 
+            on m.member_id = u.id         
+    inner join
+        t_group g 
+            on m.group_id = g.id
+14:19:16,791  INFO CustomRunner:139 - Test: testSqlQueryAutoDiscovery
+14:19:16,792 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:19:16,792 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:19:16,792 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:19:16,792 DEBUG SQL:104 - 
+    insert 
+    into
+        t_user
+        (name, id) 
+    values
+        (?, ?)
+14:19:16,793 DEBUG SQL:104 - 
+    insert 
+    into
+        t_group
+        (name, id) 
+    values
+        (?, ?)
+14:19:16,794 DEBUG SQL:104 - 
+    insert 
+    into
+        t_membership
+        (dues, group_id, joinDate, member_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:19:16,794 DEBUG SQL:104 - 
+    select
+        u.name as username,
+        g.name as groupname,
+        m.joindate 
+    from
+        t_membership m         
+    inner join
+        t_user u 
+            on m.member_id = u.id         
+    inner join
+        t_group g 
+            on m.group_id = g.id
+14:19:16,795 DEBUG SQL:104 - 
+    delete 
+    from
+        t_membership 
+    where
+        id=?
+14:19:16,795 DEBUG SQL:104 - 
+    delete 
+    from
+        t_user 
+    where
+        id=?
+14:19:16,795 DEBUG SQL:104 - 
+    delete 
+    from
+        t_group 
+    where
+        id=?
+14:19:16,796  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:16,796 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:16,797 DEBUG SQL:104 - 
+    alter table t_membership 
+        drop constraint FK6D7ACC81769F3AD7
+14:19:16,797 DEBUG SQL:104 - 
+    alter table t_membership 
+        drop constraint FK6D7ACC8173E9A38E
+14:19:16,797 DEBUG SQL:104 - 
+    drop table t_group if exists
+14:19:16,797 DEBUG SQL:104 - 
+    drop table t_membership if exists
+14:19:16,798 DEBUG SQL:104 - 
+    drop table t_user if exists
+14:19:16,798 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:19:16,798  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:16,798  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.dialect.DerbyDialectTestCase" tests="5" time="0.028" timestamp="2013-02-28T20:09:52">
+  <properties />
+  <testcase classname="org.hibernate.dialect.DerbyDialectTestCase" name="testInsertLimitClause" time="0.006" />
+  <testcase classname="org.hibernate.dialect.DerbyDialectTestCase" name="testInsertLimitWithForUpdateAndWithClauses" time="0.003" />
+  <testcase classname="org.hibernate.dialect.DerbyDialectTestCase" name="testInsertLimitWithForUpdateClause" time="0.002" />
+  <testcase classname="org.hibernate.dialect.DerbyDialectTestCase" name="testInsertLimitWithOffsetClause" time="0.004" />
+  <testcase classname="org.hibernate.dialect.DerbyDialectTestCase" name="testInsertLimitWithWithClause" time="0.003" />
+  <system-out><![CDATA[14:09:52,794  INFO CustomRunner:132 - BeforeClass: org.hibernate.dialect.DerbyDialectTestCase
+14:09:52,794  INFO CustomRunner:139 - Test: testInsertLimitClause
+14:09:52,797  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DerbyDialectTestCase$LocalDerbyDialect
+14:09:52,800  WARN DerbyDialect:83 - HHH000328: Unable to load/access derby driver class sysinfo to check versions : org.apache.derby.tools.sysinfo
+14:09:52,803  INFO CustomRunner:139 - Test: testInsertLimitWithForUpdateAndWithClauses
+14:09:52,804  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DerbyDialectTestCase$LocalDerbyDialect
+14:09:52,806  WARN DerbyDialect:83 - HHH000328: Unable to load/access derby driver class sysinfo to check versions : org.apache.derby.tools.sysinfo
+14:09:52,808  INFO CustomRunner:139 - Test: testInsertLimitWithForUpdateClause
+14:09:52,809  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DerbyDialectTestCase$LocalDerbyDialect
+14:09:52,810  WARN DerbyDialect:83 - HHH000328: Unable to load/access derby driver class sysinfo to check versions : org.apache.derby.tools.sysinfo
+14:09:52,811  INFO CustomRunner:139 - Test: testInsertLimitWithOffsetClause
+14:09:52,812  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DerbyDialectTestCase$LocalDerbyDialect
+14:09:52,814  WARN DerbyDialect:83 - HHH000328: Unable to load/access derby driver class sysinfo to check versions : org.apache.derby.tools.sysinfo
+14:09:52,815  INFO CustomRunner:139 - Test: testInsertLimitWithWithClause
+14:09:52,816  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.DerbyDialectTestCase$LocalDerbyDialect
+14:09:52,817  WARN DerbyDialect:83 - HHH000328: Unable to load/access derby driver class sysinfo to check versions : org.apache.derby.tools.sysinfo
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

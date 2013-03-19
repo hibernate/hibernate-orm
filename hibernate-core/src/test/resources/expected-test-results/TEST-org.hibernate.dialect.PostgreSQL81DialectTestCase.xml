@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.dialect.PostgreSQL81DialectTestCase" tests="2" time="0.032" timestamp="2013-02-28T20:09:52">
+  <properties />
+  <testcase classname="org.hibernate.dialect.PostgreSQL81DialectTestCase" name="testDeadlockException" time="0.01" />
+  <testcase classname="org.hibernate.dialect.PostgreSQL81DialectTestCase" name="testTimeoutException" time="0.005" />
+  <system-out><![CDATA[14:09:52,825  INFO CustomRunner:132 - BeforeClass: org.hibernate.dialect.PostgreSQL81DialectTestCase
+14:09:52,825  INFO CustomRunner:139 - Test: testDeadlockException
+14:09:52,829  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL81Dialect
+14:09:52,838  INFO CustomRunner:139 - Test: testTimeoutException
+14:09:52,843  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL81Dialect
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

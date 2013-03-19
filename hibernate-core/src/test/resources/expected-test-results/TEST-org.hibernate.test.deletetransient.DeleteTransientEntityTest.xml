@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.deletetransient.DeleteTransientEntityTest" tests="7" time="0.352" timestamp="2013-02-28T20:12:12">
+  <properties />
+  <testcase classname="org.hibernate.test.deletetransient.DeleteTransientEntityTest" name="testCascadeAllDeleteOrphanFromClearedPersistentAssnToTransientEntity" time="0.125" />
+  <testcase classname="org.hibernate.test.deletetransient.DeleteTransientEntityTest" name="testCascadeAllFromClearedPersistentAssnToTransientEntity" time="0.064" />
+  <testcase classname="org.hibernate.test.deletetransient.DeleteTransientEntityTest" name="testTransientEntityDeleteCascadingToCircularity" time="0.01" />
+  <testcase classname="org.hibernate.test.deletetransient.DeleteTransientEntityTest" name="testTransientEntityDeletionCascadingToDetachedAssociation" time="0.011" />
+  <testcase classname="org.hibernate.test.deletetransient.DeleteTransientEntityTest" name="testTransientEntityDeletionCascadingToPersistentAssociation" time="0.02" />
+  <testcase classname="org.hibernate.test.deletetransient.DeleteTransientEntityTest" name="testTransientEntityDeletionCascadingToTransientAssociation" time="0.009" />
+  <testcase classname="org.hibernate.test.deletetransient.DeleteTransientEntityTest" name="testTransientEntityDeletionNoCascades" time="0.002" />
+  <system-out><![CDATA[14:12:12,558  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.deletetransient.DeleteTransientEntityTest
+14:12:12,561  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/deletetransient/Person.hbm.xml
+14:12:12,570  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:12,570  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:12,570  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:12,571  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:12,571  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:12,572  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:12,572  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:12,573  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:12,573  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:12,573  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:12,614  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:12,615 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:12,615 DEBUG SQL:104 - 
+    alter table T_ADDRESS 
+        drop constraint FK19673AE9C09CCAFF
+14:12:12,615 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_ADDRESS drop constraint FK19673AE9C09CCAFF
+14:12:12,615 ERROR SchemaExport:426 - Table "T_ADDRESS" not found; SQL statement:
+
+    alter table T_ADDRESS 
+        drop constraint FK19673AE9C09CCAFF [42102-145]
+14:12:12,615 DEBUG SQL:104 - 
+    alter table T_FRIENDS 
+        drop constraint FK3A0AE88AE07C0FC9
+14:12:12,615 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_FRIENDS drop constraint FK3A0AE88AE07C0FC9
+14:12:12,616 ERROR SchemaExport:426 - Table "T_FRIENDS" not found; SQL statement:
+
+    alter table T_FRIENDS 
+        drop constraint FK3A0AE88AE07C0FC9 [42102-145]
+14:12:12,616 DEBUG SQL:104 - 
+    alter table T_FRIENDS 
+        drop constraint FK3A0AE88AE07C0FC8
+14:12:12,616 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_FRIENDS drop constraint FK3A0AE88AE07C0FC8
+14:12:12,616 ERROR SchemaExport:426 - Table "T_FRIENDS" not found; SQL statement:
+
+    alter table T_FRIENDS 
+        drop constraint FK3A0AE88AE07C0FC8 [42102-145]
+14:12:12,616 DEBUG SQL:104 - 
+    alter table T_NOTE 
+        drop constraint FK94B674FD8DA118B5
+14:12:12,616 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_NOTE drop constraint FK94B674FD8DA118B5
+14:12:12,629 ERROR SchemaExport:426 - Table "T_NOTE" not found; SQL statement:
+
+    alter table T_NOTE 
+        drop constraint FK94B674FD8DA118B5 [42102-145]
+14:12:12,629 DEBUG SQL:104 - 
+    alter table T_SUITE 
+        drop constraint FK261332D5E7A9475
+14:12:12,630 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_SUITE drop constraint FK261332D5E7A9475
+14:12:12,630 ERROR SchemaExport:426 - Table "T_SUITE" not found; SQL statement:
+
+    alter table T_SUITE 
+        drop constraint FK261332D5E7A9475 [42102-145]
+14:12:12,630 DEBUG SQL:104 - 
+    drop table T_ADDRESS if exists
+14:12:12,630 DEBUG SQL:104 - 
+    drop table T_FRIENDS if exists
+14:12:12,630 DEBUG SQL:104 - 
+    drop table T_NOTE if exists
+14:12:12,630 DEBUG SQL:104 - 
+    drop table T_PERSON if exists
+14:12:12,631 DEBUG SQL:104 - 
+    drop table T_SUITE if exists
+14:12:12,631 DEBUG SQL:104 - 
+    create table T_ADDRESS (
+        id bigint not null,
+        info varchar(255),
+        PERSON_ID bigint,
+        primary key (id)
+    )
+14:12:12,642 DEBUG SQL:104 - 
+    create table T_FRIENDS (
+        FRIEND_ID_1 bigint not null,
+        FRIEND_ID_2 bigint not null
+    )
+14:12:12,643 DEBUG SQL:104 - 
+    create table T_NOTE (
+        id bigint not null,
+        description varchar(255),
+        SUITE_ID bigint,
+        primary key (id)
+    )
+14:12:12,643 DEBUG SQL:104 - 
+    create table T_PERSON (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:12,643 DEBUG SQL:104 - 
+    create table T_SUITE (
+        id bigint not null,
+        location varchar(255),
+        ADDRESS_ID bigint,
+        primary key (id)
+    )
+14:12:12,644 DEBUG SQL:104 - 
+    alter table T_ADDRESS 
+        add constraint FK19673AE9C09CCAFF 
+        foreign key (PERSON_ID) 
+        references T_PERSON
+14:12:12,644 DEBUG SQL:104 - 
+    alter table T_FRIENDS 
+        add constraint FK3A0AE88AE07C0FC9 
+        foreign key (FRIEND_ID_2) 
+        references T_PERSON
+14:12:12,645 DEBUG SQL:104 - 
+    alter table T_FRIENDS 
+        add constraint FK3A0AE88AE07C0FC8 
+        foreign key (FRIEND_ID_1) 
+        references T_PERSON
+14:12:12,645 DEBUG SQL:104 - 
+    alter table T_NOTE 
+        add constraint FK94B674FD8DA118B5 
+        foreign key (SUITE_ID) 
+        references T_SUITE
+14:12:12,646 DEBUG SQL:104 - 
+    alter table T_SUITE 
+        add constraint FK261332D5E7A9475 
+        foreign key (ADDRESS_ID) 
+        references T_ADDRESS
+14:12:12,647  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:12,648  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:12,648  INFO CustomRunner:139 - Test: testCascadeAllDeleteOrphanFromClearedPersistentAssnToTransientEntity
+14:12:12,649 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        T_ADDRESS
+14:12:12,664 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        T_SUITE
+14:12:12,665 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ADDRESS
+        (info, id) 
+    values
+        (?, ?)
+14:12:12,666 DEBUG SQL:104 - 
+    insert 
+    into
+        T_SUITE
+        (location, id) 
+    values
+        (?, ?)
+14:12:12,666 DEBUG SQL:104 - 
+    update
+        T_SUITE 
+    set
+        ADDRESS_ID=? 
+    where
+        id=?
+14:12:12,679  INFO DefaultDeleteEventListener:202 - HHH000114: Handling transient entity in delete processing
+14:12:12,681 DEBUG SQL:104 - 
+    update
+        T_ADDRESS 
+    set
+        info=? 
+    where
+        id=?
+14:12:12,681 DEBUG SQL:104 - 
+    update
+        T_SUITE 
+    set
+        ADDRESS_ID=null 
+    where
+        ADDRESS_ID=?
+14:12:12,681 DEBUG SQL:104 - 
+    delete 
+    from
+        T_SUITE 
+    where
+        id=?
+14:12:12,682 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.deletetransient.Suite
+14:12:12,683 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  \-[IDENT] Node: 'test'
+       |        |  \-[IDENT] Node: 'deletetransient'
+       |        \-[IDENT] Node: 'Suite'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:12:12,683 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,683 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.deletetransient.Suite (<no alias>) -> suite0_
+14:12:12,683 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_SUITE suite0_ ) )
+14:12:12,683 DEBUG JoinProcessor:175 - Using FROM fragment [T_SUITE suite0_]
+14:12:12,683 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_SUITE)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[suite0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'T_SUITE suite0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_SUITE,tableAlias=suite0_,origin=null,columns={,className=org.hibernate.test.deletetransient.Suite}}
+
+14:12:12,708 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,709 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.deletetransient.Suite
+14:12:12,709 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_SUITE suite0_
+14:12:12,709 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,709 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_SUITE suite0_
+14:12:12,710 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.deletetransient.Note
+14:12:12,710 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  \-[IDENT] Node: 'test'
+       |        |  \-[IDENT] Node: 'deletetransient'
+       |        \-[IDENT] Node: 'Note'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:12:12,719 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,720 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.deletetransient.Note (<no alias>) -> note0_
+14:12:12,720 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_NOTE note0_ ) )
+14:12:12,720 DEBUG JoinProcessor:175 - Using FROM fragment [T_NOTE note0_]
+14:12:12,720 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_NOTE)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[note0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'T_NOTE note0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_NOTE,tableAlias=note0_,origin=null,columns={,className=org.hibernate.test.deletetransient.Note}}
+
+14:12:12,720 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,720 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.deletetransient.Note
+14:12:12,721 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_NOTE note0_
+14:12:12,721 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,721 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_NOTE note0_
+14:12:12,722 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ADDRESS 
+    where
+        id=?
+14:12:12,733 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.deletetransient.Note
+14:12:12,733 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'deletetransient'
+             \-[IDENT] Node: 'Note'
+
+14:12:12,734 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,734 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.deletetransient.Note (<no alias>) -> note0_
+14:12:12,734 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (T_NOTE)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[note0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'T_NOTE' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_NOTE,tableAlias=note0_,origin=null,columns={,className=org.hibernate.test.deletetransient.Note}}
+
+14:12:12,734 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,734 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,744 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.deletetransient.Suite
+14:12:12,746 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'deletetransient'
+             \-[IDENT] Node: 'Suite'
+
+14:12:12,746 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,746 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.deletetransient.Suite (<no alias>) -> suite0_
+14:12:12,746 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (T_SUITE)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[suite0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'T_SUITE' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_SUITE,tableAlias=suite0_,origin=null,columns={,className=org.hibernate.test.deletetransient.Suite}}
+
+14:12:12,746 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,746 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,747 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.deletetransient.Person
+14:12:12,747 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'deletetransient'
+             \-[IDENT] Node: 'Person'
+
+14:12:12,757 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,758 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.deletetransient.Person (<no alias>) -> person0_
+14:12:12,758 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (T_PERSON)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'T_PERSON' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_PERSON,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.deletetransient.Person}}
+
+14:12:12,758 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,758 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,759 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.deletetransient.Address
+14:12:12,759 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'deletetransient'
+             \-[IDENT] Node: 'Address'
+
+14:12:12,771 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,771 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.deletetransient.Address (<no alias>) -> address0_
+14:12:12,772 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (T_ADDRESS)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[address0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'T_ADDRESS' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_ADDRESS,tableAlias=address0_,origin=null,columns={,className=org.hibernate.test.deletetransient.Address}}
+
+14:12:12,772 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,772 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,772  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [4] split queries
+14:12:12,772 DEBUG SQL:104 - 
+    delete 
+    from
+        T_NOTE
+14:12:12,772 DEBUG SQL:104 - 
+    delete 
+    from
+        T_SUITE
+14:12:12,773 DEBUG SQL:104 - 
+    delete 
+    from
+        T_PERSON
+14:12:12,773 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ADDRESS
+14:12:12,774  INFO CustomRunner:139 - Test: testCascadeAllFromClearedPersistentAssnToTransientEntity
+14:12:12,775 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        T_PERSON
+14:12:12,777 DEBUG SQL:104 - 
+    insert 
+    into
+        T_PERSON
+        (name, id) 
+    values
+        (?, ?)
+14:12:12,778 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ADDRESS
+        (info, id) 
+    values
+        (?, ?)
+14:12:12,778 DEBUG SQL:104 - 
+    update
+        T_ADDRESS 
+    set
+        PERSON_ID=? 
+    where
+        id=?
+14:12:12,791 DEBUG SQL:104 - 
+    update
+        T_PERSON 
+    set
+        name=? 
+    where
+        id=?
+14:12:12,792 DEBUG SQL:104 - 
+    update
+        T_ADDRESS 
+    set
+        PERSON_ID=null 
+    where
+        PERSON_ID=?
+14:12:12,792 DEBUG SQL:104 - 
+    select
+        person0_.id as id3_0_,
+        person0_.name as name3_0_ 
+    from
+        T_PERSON person0_ 
+    where
+        person0_.id=?
+14:12:12,793 DEBUG SQL:104 - 
+    select
+        addresses0_.PERSON_ID as PERSON3_3_1_,
+        addresses0_.id as id0_1_,
+        addresses0_.id as id0_0_,
+        addresses0_.info as info0_0_ 
+    from
+        T_ADDRESS addresses0_ 
+    where
+        addresses0_.PERSON_ID=?
+14:12:12,806 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(*) from org.hibernate.test.deletetransient.Address
+14:12:12,807 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     \-[DOT] Node: '.'
+       |        +-[DOT] Node: '.'
+       |        |  +-[DOT] Node: '.'
+       |        |  |  +-[DOT] Node: '.'
+       |        |  |  |  +-[IDENT] Node: 'org'
+       |        |  |  |  \-[IDENT] Node: 'hibernate'
+       |        |  |  \-[IDENT] Node: 'test'
+       |        |  \-[IDENT] Node: 'deletetransient'
+       |        \-[IDENT] Node: 'Address'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[ROW_STAR] Node: '*'
+
+14:12:12,807 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,810 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.deletetransient.Address (<no alias>) -> address0_
+14:12:12,810 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count * ) ) ( FromClause{level=1} T_ADDRESS address0_ ) )
+14:12:12,810 DEBUG JoinProcessor:175 - Using FROM fragment [T_ADDRESS address0_]
+14:12:12,810 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_ADDRESS)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ROW_STAR] SqlNode: '*'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[address0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'T_ADDRESS address0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_ADDRESS,tableAlias=address0_,origin=null,columns={,className=org.hibernate.test.deletetransient.Address}}
+
+14:12:12,810 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,811 DEBUG QueryTranslatorImpl:235 - HQL: select count(*) from org.hibernate.test.deletetransient.Address
+14:12:12,811 DEBUG QueryTranslatorImpl:236 - SQL: select count(*) as col_0_0_ from T_ADDRESS address0_
+14:12:12,811 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:12,811 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ADDRESS address0_
+14:12:12,828 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_SUITE suite0_
+14:12:12,828 DEBUG SQL:104 - 
+    select
+        friends0_.FRIEND_ID_1 as FRIEND1_3_1_,
+        friends0_.FRIEND_ID_2 as FRIEND2_1_1_,
+        person1_.id as id3_0_,
+        person1_.name as name3_0_ 
+    from
+        T_FRIENDS friends0_ 
+    inner join
+        T_PERSON person1_ 
+            on friends0_.FRIEND_ID_2=person1_.id 
+    where
+        friends0_.FRIEND_ID_1=?
+14:12:12,829 DEBUG SQL:104 - 
+    delete 
+    from
+        T_PERSON 
+    where
+        id=?
+14:12:12,829  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [4] split queries
+14:12:12,830 DEBUG SQL:104 - 
+    delete 
+    from
+        T_NOTE
+14:12:12,837 DEBUG SQL:104 - 
+    delete 
+    from
+        T_SUITE
+14:12:12,837 DEBUG SQL:104 - 
+    delete 
+    from
+        T_PERSON
+14:12:12,837 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ADDRESS
+14:12:12,838  INFO CustomRunner:139 - Test: testTransientEntityDeleteCascadingToCircularity
+14:12:12,839  INFO DefaultDeleteEventListener:202 - HHH000114: Handling transient entity in delete processing
+14:12:12,840  INFO DefaultDeleteEventListener:202 - HHH000114: Handling transient entity in delete processing
+14:12:12,840  INFO DefaultDeleteEventListener:202 - HHH000114: Handling transient entity in delete processing
+14:12:12,840  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [4] split queries
+14:12:12,840 DEBUG SQL:104 - 
+    delete 
+    from
+        T_NOTE
+14:12:12,840 DEBUG SQL:104 - 
+    delete 
+    from
+        T_SUITE
+14:12:12,840 DEBUG SQL:104 - 
+    delete 
+    from
+        T_PERSON
+14:12:12,847 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ADDRESS
+14:12:12,848  INFO CustomRunner:139 - Test: testTransientEntityDeletionCascadingToDetachedAssociation
+14:12:12,849 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ADDRESS
+        (info, id) 
+    values
+        (?, ?)
+14:12:12,850  INFO DefaultDeleteEventListener:202 - HHH000114: Handling transient entity in delete processing
+14:12:12,850 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ADDRESS 
+    where
+        id=?
+14:12:12,850 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ADDRESS address0_
+14:12:12,858  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [4] split queries
+14:12:12,859 DEBUG SQL:104 - 
+    delete 
+    from
+        T_NOTE
+14:12:12,859 DEBUG SQL:104 - 
+    delete 
+    from
+        T_SUITE
+14:12:12,859 DEBUG SQL:104 - 
+    delete 
+    from
+        T_PERSON
+14:12:12,859 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ADDRESS
+14:12:12,860  INFO CustomRunner:139 - Test: testTransientEntityDeletionCascadingToPersistentAssociation
+14:12:12,861 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ADDRESS
+        (info, id) 
+    values
+        (?, ?)
+14:12:12,861 DEBUG SQL:104 - 
+    select
+        address0_.id as id0_0_,
+        address0_.info as info0_0_ 
+    from
+        T_ADDRESS address0_ 
+    where
+        address0_.id=?
+14:12:12,868  INFO DefaultDeleteEventListener:202 - HHH000114: Handling transient entity in delete processing
+14:12:12,868 DEBUG SQL:104 - 
+    select
+        suites0_.ADDRESS_ID as ADDRESS3_0_1_,
+        suites0_.id as id4_1_,
+        suites0_.id as id4_0_,
+        suites0_.location as location4_0_ 
+    from
+        T_SUITE suites0_ 
+    where
+        suites0_.ADDRESS_ID=?
+14:12:12,869 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ADDRESS 
+    where
+        id=?
+14:12:12,870 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        T_ADDRESS address0_
+14:12:12,870  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [4] split queries
+14:12:12,879 DEBUG SQL:104 - 
+    delete 
+    from
+        T_NOTE
+14:12:12,880 DEBUG SQL:104 - 
+    delete 
+    from
+        T_SUITE
+14:12:12,880 DEBUG SQL:104 - 
+    delete 
+    from
+        T_PERSON
+14:12:12,880 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ADDRESS
+14:12:12,881  INFO CustomRunner:139 - Test: testTransientEntityDeletionCascadingToTransientAssociation
+14:12:12,881  INFO DefaultDeleteEventListener:202 - HHH000114: Handling transient entity in delete processing
+14:12:12,882  INFO DefaultDeleteEventListener:202 - HHH000114: Handling transient entity in delete processing
+14:12:12,882  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [4] split queries
+14:12:12,882 DEBUG SQL:104 - 
+    delete 
+    from
+        T_NOTE
+14:12:12,882 DEBUG SQL:104 - 
+    delete 
+    from
+        T_SUITE
+14:12:12,882 DEBUG SQL:104 - 
+    delete 
+    from
+        T_PERSON
+14:12:12,890 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ADDRESS
+14:12:12,891  INFO CustomRunner:139 - Test: testTransientEntityDeletionNoCascades
+14:12:12,891  INFO DefaultDeleteEventListener:202 - HHH000114: Handling transient entity in delete processing
+14:12:12,892  WARN HQLQueryPlan:278 - HHH000245: Manipulation query [delete from java.lang.Object] resulted in [4] split queries
+14:12:12,892 DEBUG SQL:104 - 
+    delete 
+    from
+        T_NOTE
+14:12:12,892 DEBUG SQL:104 - 
+    delete 
+    from
+        T_SUITE
+14:12:12,892 DEBUG SQL:104 - 
+    delete 
+    from
+        T_PERSON
+14:12:12,892 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ADDRESS
+14:12:12,901  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:12,903 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:12,903 DEBUG SQL:104 - 
+    alter table T_ADDRESS 
+        drop constraint FK19673AE9C09CCAFF
+14:12:12,904 DEBUG SQL:104 - 
+    alter table T_FRIENDS 
+        drop constraint FK3A0AE88AE07C0FC9
+14:12:12,904 DEBUG SQL:104 - 
+    alter table T_FRIENDS 
+        drop constraint FK3A0AE88AE07C0FC8
+14:12:12,904 DEBUG SQL:104 - 
+    alter table T_NOTE 
+        drop constraint FK94B674FD8DA118B5
+14:12:12,904 DEBUG SQL:104 - 
+    alter table T_SUITE 
+        drop constraint FK261332D5E7A9475
+14:12:12,904 DEBUG SQL:104 - 
+    drop table T_ADDRESS if exists
+14:12:12,905 DEBUG SQL:104 - 
+    drop table T_FRIENDS if exists
+14:12:12,905 DEBUG SQL:104 - 
+    drop table T_NOTE if exists
+14:12:12,905 DEBUG SQL:104 - 
+    drop table T_PERSON if exists
+14:12:12,905 DEBUG SQL:104 - 
+    drop table T_SUITE if exists
+14:12:12,905  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:12,905  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

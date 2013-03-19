@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.jpa.version.JpaSpecVersionValueUpdatingTest" tests="2" time="0.662" timestamp="2013-02-28T20:09:54">
+  <properties />
+  <testcase classname="org.hibernate.jpa.version.JpaSpecVersionValueUpdatingTest" name="testVersionNotIncrementedOnModificationOfNonOwningCollectionCascaded" time="0.186" />
+  <testcase classname="org.hibernate.jpa.version.JpaSpecVersionValueUpdatingTest" name="testVersionNotIncrementedOnModificationOfNonOwningCollectionNonCascaded" time="0.032" />
+  <system-out><![CDATA[14:09:54,340  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:54,352  INFO CustomRunner:132 - BeforeClass: org.hibernate.jpa.version.JpaSpecVersionValueUpdatingTest
+14:09:54,591  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:54,591  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:54,591  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:54,592  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:54,592  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:54,598  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:54,599  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:54,600  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:09:54,601  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:09:54,602  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:09:54,745  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:09:54,746 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:09:54,746 DEBUG SQL:104 - 
+    alter table T_ORDER 
+        drop constraint FK227638342DBFF89
+14:09:54,747 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_ORDER drop constraint FK227638342DBFF89
+14:09:54,748 ERROR SchemaExport:426 - Table "T_ORDER" not found; SQL statement:
+
+    alter table T_ORDER 
+        drop constraint FK227638342DBFF89 [42102-145]
+14:09:54,749 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:09:54,749 DEBUG SQL:104 - 
+    drop table T_ORDER if exists
+14:09:54,750 DEBUG SQL:104 - 
+    create table Customer (
+        id bigint not null,
+        version bigint not null,
+        primary key (id)
+    )
+14:09:54,756 DEBUG SQL:104 - 
+    create table T_ORDER (
+        id bigint not null,
+        version bigint not null,
+        customer_id bigint,
+        primary key (id)
+    )
+14:09:54,760 DEBUG SQL:104 - 
+    alter table T_ORDER 
+        add constraint FK227638342DBFF89 
+        foreign key (customer_id) 
+        references Customer
+14:09:54,774  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:09:54,775  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:09:54,776  INFO CustomRunner:139 - Test: testVersionNotIncrementedOnModificationOfNonOwningCollectionCascaded
+14:09:54,826 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (version, id) 
+    values
+        (?, ?)
+14:09:54,855 DEBUG SQL:104 - 
+    select
+        customer0_.id as id0_1_,
+        customer0_.version as version0_1_,
+        orders1_.customer_id as customer3_0_3_,
+        orders1_.id as id1_3_,
+        orders1_.id as id1_0_,
+        orders1_.customer_id as customer3_1_0_,
+        orders1_.version as version1_0_ 
+    from
+        Customer customer0_ 
+    left outer join
+        T_ORDER orders1_ 
+            on customer0_.id=orders1_.customer_id 
+    where
+        customer0_.id=?
+14:09:54,870 DEBUG SQL:104 - 
+    select
+        order_.id,
+        order_.customer_id as customer3_1_,
+        order_.version as version1_ 
+    from
+        T_ORDER order_ 
+    where
+        order_.id=?
+14:09:54,876 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ORDER
+        (customer_id, version, id) 
+    values
+        (?, ?, ?)
+14:09:54,880 DEBUG SQL:104 - 
+    select
+        customer0_.id as id0_1_,
+        customer0_.version as version0_1_,
+        orders1_.customer_id as customer3_0_3_,
+        orders1_.id as id1_3_,
+        orders1_.id as id1_0_,
+        orders1_.customer_id as customer3_1_0_,
+        orders1_.version as version1_0_ 
+    from
+        Customer customer0_ 
+    left outer join
+        T_ORDER orders1_ 
+            on customer0_.id=orders1_.customer_id 
+    where
+        customer0_.id=?
+14:09:54,905 DEBUG SQL:104 - 
+    select
+        order_.id,
+        order_.customer_id as customer3_1_,
+        order_.version as version1_ 
+    from
+        T_ORDER order_ 
+    where
+        order_.id=?
+14:09:54,909 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ORDER
+        (customer_id, version, id) 
+    values
+        (?, ?, ?)
+14:09:54,927 DEBUG SQL:104 - 
+    select
+        customer0_.id as id0_1_,
+        customer0_.version as version0_1_,
+        orders1_.customer_id as customer3_0_3_,
+        orders1_.id as id1_3_,
+        orders1_.id as id1_0_,
+        orders1_.customer_id as customer3_1_0_,
+        orders1_.version as version1_0_ 
+    from
+        Customer customer0_ 
+    left outer join
+        T_ORDER orders1_ 
+            on customer0_.id=orders1_.customer_id 
+    where
+        customer0_.id=?
+14:09:54,943 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ORDER 
+    where
+        id=? 
+        and version=?
+14:09:54,956 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ORDER 
+    where
+        id=? 
+        and version=?
+14:09:54,958 DEBUG SQL:104 - 
+    delete 
+    from
+        Customer 
+    where
+        id=? 
+        and version=?
+14:09:54,964  INFO CustomRunner:139 - Test: testVersionNotIncrementedOnModificationOfNonOwningCollectionNonCascaded
+14:09:54,967 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (version, id) 
+    values
+        (?, ?)
+14:09:54,969 DEBUG SQL:104 - 
+    select
+        customer0_.id as id0_1_,
+        customer0_.version as version0_1_,
+        orders1_.customer_id as customer3_0_3_,
+        orders1_.id as id1_3_,
+        orders1_.id as id1_0_,
+        orders1_.customer_id as customer3_1_0_,
+        orders1_.version as version1_0_ 
+    from
+        Customer customer0_ 
+    left outer join
+        T_ORDER orders1_ 
+            on customer0_.id=orders1_.customer_id 
+    where
+        customer0_.id=?
+14:09:54,974 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ORDER
+        (customer_id, version, id) 
+    values
+        (?, ?, ?)
+14:09:54,976 DEBUG SQL:104 - 
+    select
+        customer0_.id as id0_1_,
+        customer0_.version as version0_1_,
+        orders1_.customer_id as customer3_0_3_,
+        orders1_.id as id1_3_,
+        orders1_.id as id1_0_,
+        orders1_.customer_id as customer3_1_0_,
+        orders1_.version as version1_0_ 
+    from
+        Customer customer0_ 
+    left outer join
+        T_ORDER orders1_ 
+            on customer0_.id=orders1_.customer_id 
+    where
+        customer0_.id=?
+14:09:54,979 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ORDER
+        (customer_id, version, id) 
+    values
+        (?, ?, ?)
+14:09:54,981 DEBUG SQL:104 - 
+    select
+        customer0_.id as id0_1_,
+        customer0_.version as version0_1_,
+        orders1_.customer_id as customer3_0_3_,
+        orders1_.id as id1_3_,
+        orders1_.id as id1_0_,
+        orders1_.customer_id as customer3_1_0_,
+        orders1_.version as version1_0_ 
+    from
+        Customer customer0_ 
+    left outer join
+        T_ORDER orders1_ 
+            on customer0_.id=orders1_.customer_id 
+    where
+        customer0_.id=?
+14:09:54,987 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ORDER 
+    where
+        id=? 
+        and version=?
+14:09:54,989 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ORDER 
+    where
+        id=? 
+        and version=?
+14:09:54,992 DEBUG SQL:104 - 
+    delete 
+    from
+        Customer 
+    where
+        id=? 
+        and version=?
+14:09:54,996  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:09:54,997 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:09:54,997 DEBUG SQL:104 - 
+    alter table T_ORDER 
+        drop constraint FK227638342DBFF89
+14:09:54,998 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:09:54,999 DEBUG SQL:104 - 
+    drop table T_ORDER if exists
+14:09:54,999  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:09:55,000  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

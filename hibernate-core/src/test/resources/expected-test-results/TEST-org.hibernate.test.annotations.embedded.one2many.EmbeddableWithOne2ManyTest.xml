@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.embedded.one2many.EmbeddableWithOne2ManyTest" tests="2" time="0.044" timestamp="2013-02-28T20:10:22">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.embedded.one2many.EmbeddableWithOne2ManyTest" name="testBasicOps" time="0.015" />
+  <testcase classname="org.hibernate.test.annotations.embedded.one2many.EmbeddableWithOne2ManyTest" name="testJoinAcrossEmbedded" time="0.016" />
+  <system-out><![CDATA[14:10:22,496  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.embedded.one2many.EmbeddableWithOne2ManyTest
+14:10:22,498  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:22,498  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:22,499  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:22,499  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:22,499  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:22,500  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:22,500  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:22,501  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:22,501  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:22,501  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:22,506  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:22,506 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:22,506  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:22,507  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:22,507  INFO CustomRunner:139 - Test: testBasicOps
+14:10:22,510  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:10:22,512  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:22,513  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:22,513  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:22,513  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:22,513  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:22,515  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:22,515  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:22,517  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:22,517  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:22,517  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:22,520  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:22,521 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:22,521  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:22,522  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:22,522  INFO CustomRunner:139 - Test: testJoinAcrossEmbedded
+14:10:22,525 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Person p join p.name.aliases a where a.source = 'FBI'
+14:10:22,527 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[IDENT] Node: 'Person'
+    |     |  \-[ALIAS] Node: 'p'
+    |     \-[JOIN] Node: 'join'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[IDENT] Node: 'p'
+    |        |  |  \-[IDENT] Node: 'name'
+    |        |  \-[IDENT] Node: 'aliases'
+    |        \-[ALIAS] Node: 'a'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'a'
+          |  \-[IDENT] Node: 'source'
+          \-[QUOTED_STRING] Node: ''FBI''
+
+14:10:22,527 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:22,528  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:10:22,530  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:22,530  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:22,530  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:22,530  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:22,530  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:22,532  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:22,532  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:22,533  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:22,533  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:22,533  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:22,536  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:22,537 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:22,537  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:22,538  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:22,538  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:22,538 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:22,539  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:22,539  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

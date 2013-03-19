@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.unconstrained.UnconstrainedTest" tests="3" time="0.075" timestamp="2013-02-28T20:19:26">
+  <properties />
+  <testcase classname="org.hibernate.test.unconstrained.UnconstrainedTest" name="testUnconstrained" time="0.018" />
+  <testcase classname="org.hibernate.test.unconstrained.UnconstrainedTest" name="testUnconstrainedNoCache" time="0.006" />
+  <testcase classname="org.hibernate.test.unconstrained.UnconstrainedTest" name="testUnconstrainedOuterJoinFetch" time="0.006" />
+  <system-out><![CDATA[14:19:26,473  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.unconstrained.UnconstrainedTest
+14:19:26,475  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/unconstrained/Person.hbm.xml
+14:19:26,499  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:26,500  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:26,500  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:26,501  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:26,501  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:26,502  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:26,503  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:26,503  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:26,504  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:26,504  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:26,511  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:26,511 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:26,512 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:19:26,512 DEBUG SQL:104 - 
+    drop table Person if exists
+14:19:26,512 DEBUG SQL:104 - 
+    create table Employee (
+        id varchar(255) not null,
+        primary key (id)
+    )
+14:19:26,512 DEBUG SQL:104 - 
+    create table Person (
+        name varchar(255) not null,
+        employeeId varchar(255),
+        primary key (name)
+    )
+14:19:26,513 DEBUG SQL:104 - 
+    alter table Person 
+        add constraint uc_Person_1 unique (employeeId)
+14:19:26,513  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:26,513  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:26,513  INFO CustomRunner:139 - Test: testUnconstrained
+14:19:26,523 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (employeeId, name) 
+    values
+        (?, ?)
+14:19:26,524 DEBUG SQL:104 - 
+    select
+        person0_.name as name1_0_,
+        person0_.employeeId as employeeId1_0_,
+        person0_.employeeId as formula108_0_ 
+    from
+        Person person0_ 
+    where
+        person0_.name=?
+14:19:26,526 DEBUG SQL:104 - 
+    select
+        employee0_.id as id0_0_ 
+    from
+        Employee employee0_ 
+    where
+        employee0_.id=?
+14:19:26,526 DEBUG SQL:104 - 
+    select
+        employee_.id 
+    from
+        Employee employee_ 
+    where
+        employee_.id=?
+14:19:26,526 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (id) 
+    values
+        (?)
+14:19:26,527 DEBUG SQL:104 - 
+    select
+        person0_.name as name1_0_,
+        person0_.employeeId as employeeId1_0_,
+        person0_.employeeId as formula108_0_ 
+    from
+        Person person0_ 
+    where
+        person0_.name=?
+14:19:26,529 DEBUG SQL:104 - 
+    select
+        employee0_.id as id0_0_ 
+    from
+        Employee employee0_ 
+    where
+        employee0_.id=?
+14:19:26,530 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        name=?
+14:19:26,530 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        id=?
+14:19:26,531  INFO CustomRunner:139 - Test: testUnconstrainedNoCache
+14:19:26,532 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (employeeId, name) 
+    values
+        (?, ?)
+14:19:26,532 DEBUG SQL:104 - 
+    select
+        person0_.name as name1_0_,
+        person0_.employeeId as employeeId1_0_,
+        person0_.employeeId as formula108_0_ 
+    from
+        Person person0_ 
+    where
+        person0_.name=?
+14:19:26,533 DEBUG SQL:104 - 
+    select
+        employee0_.id as id0_0_ 
+    from
+        Employee employee0_ 
+    where
+        employee0_.id=?
+14:19:26,534 DEBUG SQL:104 - 
+    select
+        employee_.id 
+    from
+        Employee employee_ 
+    where
+        employee_.id=?
+14:19:26,534 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (id) 
+    values
+        (?)
+14:19:26,534 DEBUG SQL:104 - 
+    select
+        person0_.name as name1_0_,
+        person0_.employeeId as employeeId1_0_,
+        person0_.employeeId as formula108_0_ 
+    from
+        Person person0_ 
+    where
+        person0_.name=?
+14:19:26,535 DEBUG SQL:104 - 
+    select
+        employee0_.id as id0_0_ 
+    from
+        Employee employee0_ 
+    where
+        employee0_.id=?
+14:19:26,536 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        name=?
+14:19:26,536 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        id=?
+14:19:26,537  INFO CustomRunner:139 - Test: testUnconstrainedOuterJoinFetch
+14:19:26,538 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (employeeId, name) 
+    values
+        (?, ?)
+14:19:26,538 DEBUG SQL:104 - 
+    select
+        this_.name as name1_1_,
+        this_.employeeId as employeeId1_1_,
+        this_.employeeId as formula108_1_,
+        employee2_.id as id0_0_ 
+    from
+        Person this_ 
+    left outer join
+        Employee employee2_ 
+            on this_.employeeId=employee2_.id 
+    where
+        this_.name = ?
+14:19:26,539 DEBUG SQL:104 - 
+    select
+        employee0_.id as id0_0_ 
+    from
+        Employee employee0_ 
+    where
+        employee0_.id=?
+14:19:26,539 DEBUG SQL:104 - 
+    select
+        employee_.id 
+    from
+        Employee employee_ 
+    where
+        employee_.id=?
+14:19:26,539 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (id) 
+    values
+        (?)
+14:19:26,540 DEBUG SQL:104 - 
+    select
+        this_.name as name1_1_,
+        this_.employeeId as employeeId1_1_,
+        this_.employeeId as formula108_1_,
+        employee2_.id as id0_0_ 
+    from
+        Person this_ 
+    left outer join
+        Employee employee2_ 
+            on this_.employeeId=employee2_.id 
+    where
+        this_.name = ?
+14:19:26,540 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        name=?
+14:19:26,541 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        id=?
+14:19:26,543  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:26,544 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:26,545 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:19:26,545 DEBUG SQL:104 - 
+    drop table Person if exists
+14:19:26,545  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:26,546  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

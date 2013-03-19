@@ -1,0 +1,1019 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.fetchprofiles.join.JoinFetchProfileTest" tests="9" time="0.385" timestamp="2013-02-28T20:12:26">
+  <properties />
+  <testcase classname="org.hibernate.test.fetchprofiles.join.JoinFetchProfileTest" name="testBasicFetchProfileOperation" time="0.001" />
+  <testcase classname="org.hibernate.test.fetchprofiles.join.JoinFetchProfileTest" name="testCriteriaManyToOneFetchProfile" time="0.03" />
+  <testcase classname="org.hibernate.test.fetchprofiles.join.JoinFetchProfileTest" name="testHQL" time="0.053" />
+  <testcase classname="org.hibernate.test.fetchprofiles.join.JoinFetchProfileTest" name="testLoadComponentDerefFetchProfile" time="0.031" />
+  <testcase classname="org.hibernate.test.fetchprofiles.join.JoinFetchProfileTest" name="testLoadDeepFetchProfile" time="0.036" />
+  <testcase classname="org.hibernate.test.fetchprofiles.join.JoinFetchProfileTest" name="testLoadManyToOneFetchProfile" time="0.045" />
+  <testcase classname="org.hibernate.test.fetchprofiles.join.JoinFetchProfileTest" name="testLoadOneToManyFetchProfile" time="0.032" />
+  <testcase classname="org.hibernate.test.fetchprofiles.join.JoinFetchProfileTest" name="testNormalCriteria" time="0.007" />
+  <testcase classname="org.hibernate.test.fetchprofiles.join.JoinFetchProfileTest" name="testNormalLoading" time="0.044" />
+  <system-out><![CDATA[14:12:26,556  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.fetchprofiles.join.JoinFetchProfileTest
+14:12:26,557  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/fetchprofiles/join/Mappings.hbm.xml
+14:12:26,577  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:26,578  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:26,578  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:26,578  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:26,578  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:26,579  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:26,580  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:26,580  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:26,580  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:26,581  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:26,603  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:26,604 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:26,604 DEBUG SQL:104 - 
+    alter table Course 
+        drop constraint FK78A7CC3B5BAE444B
+14:12:26,605 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Course drop constraint FK78A7CC3B5BAE444B
+14:12:26,605 ERROR SchemaExport:426 - Table "COURSE" not found; SQL statement:
+
+    alter table Course 
+        drop constraint FK78A7CC3B5BAE444B [42102-145]
+14:12:26,605 DEBUG SQL:104 - 
+    alter table Enrollment 
+        drop constraint FK7DBD3F2493F5D39A
+14:12:26,605 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Enrollment drop constraint FK7DBD3F2493F5D39A
+14:12:26,605 ERROR SchemaExport:426 - Table "ENROLLMENT" not found; SQL statement:
+
+    alter table Enrollment 
+        drop constraint FK7DBD3F2493F5D39A [42102-145]
+14:12:26,605 DEBUG SQL:104 - 
+    alter table Enrollment 
+        drop constraint FK7DBD3F2472F8D6B6
+14:12:26,605 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Enrollment drop constraint FK7DBD3F2472F8D6B6
+14:12:26,606 ERROR SchemaExport:426 - Table "ENROLLMENT" not found; SQL statement:
+
+    alter table Enrollment 
+        drop constraint FK7DBD3F2472F8D6B6 [42102-145]
+14:12:26,606 DEBUG SQL:104 - 
+    alter table "SECTION" 
+        drop constraint FKA03B0AC5F72A197E
+14:12:26,606 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "SECTION" drop constraint FKA03B0AC5F72A197E
+14:12:26,606 ERROR SchemaExport:426 - Table "SECTION" not found; SQL statement:
+
+    alter table "SECTION" 
+        drop constraint FKA03B0AC5F72A197E [42102-145]
+14:12:26,606 DEBUG SQL:104 - 
+    drop table Course if exists
+14:12:26,606 DEBUG SQL:104 - 
+    drop table Department if exists
+14:12:26,606 DEBUG SQL:104 - 
+    drop table Enrollment if exists
+14:12:26,606 DEBUG SQL:104 - 
+    drop table Student if exists
+14:12:26,607 DEBUG SQL:104 - 
+    drop table "SECTION" if exists
+14:12:26,607 DEBUG SQL:104 - 
+    create table Course (
+        id bigint not null,
+        NAME varchar(255),
+        DEPT_ID bigint,
+        CODE_NUMBER integer,
+        primary key (id)
+    )
+14:12:26,607 DEBUG SQL:104 - 
+    create table Department (
+        id bigint not null,
+        CODE varchar(255),
+        NAME varchar(255),
+        primary key (id)
+    )
+14:12:26,607 DEBUG SQL:104 - 
+    create table Enrollment (
+        id bigint not null,
+        SECTION_ID bigint,
+        STUDENT_ID bigint,
+        FINAL_GRADE integer,
+        primary key (id)
+    )
+14:12:26,608 DEBUG SQL:104 - 
+    create table Student (
+        id bigint not null,
+        NAME varchar(255),
+        primary key (id)
+    )
+14:12:26,608 DEBUG SQL:104 - 
+    create table "SECTION" (
+        id bigint not null,
+        COURSE_ID bigint,
+        SEMESTER integer,
+        "YEAR" integer,
+        primary key (id)
+    )
+14:12:26,608 DEBUG SQL:104 - 
+    alter table Course 
+        add constraint FK78A7CC3B5BAE444B 
+        foreign key (DEPT_ID) 
+        references Department
+14:12:26,609 DEBUG SQL:104 - 
+    alter table Enrollment 
+        add constraint FK7DBD3F2493F5D39A 
+        foreign key (SECTION_ID) 
+        references "SECTION"
+14:12:26,609 DEBUG SQL:104 - 
+    alter table Enrollment 
+        add constraint FK7DBD3F2472F8D6B6 
+        foreign key (STUDENT_ID) 
+        references Student
+14:12:26,610 DEBUG SQL:104 - 
+    alter table "SECTION" 
+        add constraint FKA03B0AC5F72A197E 
+        foreign key (COURSE_ID) 
+        references Course
+14:12:26,610  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:26,611  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:26,611  INFO CustomRunner:139 - Test: testBasicFetchProfileOperation
+14:12:26,612  INFO CustomRunner:139 - Test: testCriteriaManyToOneFetchProfile
+14:12:26,614 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Department
+14:12:26,614 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Course
+14:12:26,616 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        "SECTION"
+14:12:26,617 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Student
+14:12:26,617 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Enrollment
+14:12:26,618 DEBUG SQL:104 - 
+    insert 
+    into
+        Department
+        (CODE, NAME, id) 
+    values
+        (?, ?, ?)
+14:12:26,618 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (NAME, DEPT_ID, CODE_NUMBER, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,618 DEBUG SQL:104 - 
+    insert 
+    into
+        "SECTION"
+        (COURSE_ID, SEMESTER, "YEAR", id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,619 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (NAME, id) 
+    values
+        (?, ?)
+14:12:26,619 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrollment
+        (SECTION_ID, STUDENT_ID, FINAL_GRADE, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,619 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=? 
+    where
+        id=?
+14:12:26,631 DEBUG SQL:104 - 
+    select
+        this_.id as id2_2_,
+        this_.SECTION_ID as SECTION2_2_2_,
+        this_.STUDENT_ID as STUDENT3_2_2_,
+        this_.FINAL_GRADE as FINAL4_2_2_,
+        courseoffe2_.id as id4_0_,
+        courseoffe2_.COURSE_ID as COURSE2_4_0_,
+        courseoffe2_.SEMESTER as SEMESTER4_0_,
+        courseoffe2_."YEAR" as YEAR4_4_0_,
+        student3_.id as id3_1_,
+        student3_.NAME as NAME3_1_ 
+    from
+        Enrollment this_ 
+    left outer join
+        "SECTION" courseoffe2_ 
+            on this_.SECTION_ID=courseoffe2_.id 
+    left outer join
+        Student student3_ 
+            on this_.STUDENT_ID=student3_.id
+14:12:26,633 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=null 
+    where
+        SECTION_ID=?
+14:12:26,634 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrollment 
+    where
+        id=?
+14:12:26,641 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        id=?
+14:12:26,641 DEBUG SQL:104 - 
+    delete 
+    from
+        "SECTION" 
+    where
+        id=?
+14:12:26,642 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        id=?
+14:12:26,642 DEBUG SQL:104 - 
+    delete 
+    from
+        Department 
+    where
+        id=?
+14:12:26,643  INFO CustomRunner:139 - Test: testHQL
+14:12:26,645 DEBUG SQL:104 - 
+    insert 
+    into
+        Department
+        (CODE, NAME, id) 
+    values
+        (?, ?, ?)
+14:12:26,646 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (NAME, DEPT_ID, CODE_NUMBER, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,646 DEBUG SQL:104 - 
+    insert 
+    into
+        "SECTION"
+        (COURSE_ID, SEMESTER, "YEAR", id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,664 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (NAME, id) 
+    values
+        (?, ?)
+14:12:26,664 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrollment
+        (SECTION_ID, STUDENT_ID, FINAL_GRADE, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,665 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=? 
+    where
+        id=?
+14:12:26,665 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.fetchprofiles.join.CourseOffering
+14:12:26,666 DEBUG ErrorCounter:63 - Keyword  'join' is being interpreted as an identifier due to: expecting IDENT, found 'join'
+14:12:26,687 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'fetchprofiles'
+                |  \-[WEIRD_IDENT] Node: 'join'
+                \-[IDENT] Node: 'CourseOffering'
+
+14:12:26,687 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:26,688 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.fetchprofiles.join.CourseOffering (<no alias>) -> courseoffe0_
+14:12:26,688 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} "SECTION" courseoffe0_ ) )
+14:12:26,688 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:26,688 DEBUG JoinProcessor:175 - Using FROM fragment ["SECTION" courseoffe0_]
+14:12:26,688 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces ("SECTION")
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'courseoffe0_.id as id4_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName="SECTION",tableAlias=courseoffe0_,origin=null,columns={,className=org.hibernate.test.fetchprofiles.join.CourseOffering}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'courseoffe0_.COURSE_ID as COURSE2_4_, courseoffe0_.SEMESTER as SEMESTER4_, courseoffe0_."YEAR" as YEAR4_4_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[courseoffe0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: '"SECTION" courseoffe0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName="SECTION",tableAlias=courseoffe0_,origin=null,columns={,className=org.hibernate.test.fetchprofiles.join.CourseOffering}}
+
+14:12:26,688 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:26,689 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.fetchprofiles.join.CourseOffering
+14:12:26,689 DEBUG QueryTranslatorImpl:236 - SQL: select courseoffe0_.id as id4_, courseoffe0_.COURSE_ID as COURSE2_4_, courseoffe0_.SEMESTER as SEMESTER4_, courseoffe0_."YEAR" as YEAR4_4_ from "SECTION" courseoffe0_
+14:12:26,689 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:26,689 DEBUG SQL:104 - 
+    select
+        courseoffe0_.id as id4_,
+        courseoffe0_.COURSE_ID as COURSE2_4_,
+        courseoffe0_.SEMESTER as SEMESTER4_,
+        courseoffe0_."YEAR" as YEAR4_4_ 
+    from
+        "SECTION" courseoffe0_
+14:12:26,691 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=null 
+    where
+        SECTION_ID=?
+14:12:26,691 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrollment 
+    where
+        id=?
+14:12:26,692 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        id=?
+14:12:26,692 DEBUG SQL:104 - 
+    delete 
+    from
+        "SECTION" 
+    where
+        id=?
+14:12:26,695 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        id=?
+14:12:26,696 DEBUG SQL:104 - 
+    delete 
+    from
+        Department 
+    where
+        id=?
+14:12:26,696  INFO CustomRunner:139 - Test: testLoadComponentDerefFetchProfile
+14:12:26,699 DEBUG SQL:104 - 
+    insert 
+    into
+        Department
+        (CODE, NAME, id) 
+    values
+        (?, ?, ?)
+14:12:26,699 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (NAME, DEPT_ID, CODE_NUMBER, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,706 DEBUG SQL:104 - 
+    insert 
+    into
+        "SECTION"
+        (COURSE_ID, SEMESTER, "YEAR", id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,707 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (NAME, id) 
+    values
+        (?, ?)
+14:12:26,707 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrollment
+        (SECTION_ID, STUDENT_ID, FINAL_GRADE, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,707 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=? 
+    where
+        id=?
+14:12:26,717 DEBUG SQL:104 - 
+    select
+        course0_.id as id0_1_,
+        course0_.NAME as NAME0_1_,
+        course0_.DEPT_ID as DEPT3_0_1_,
+        course0_.CODE_NUMBER as CODE4_0_1_,
+        department1_.id as id1_0_,
+        department1_.CODE as CODE1_0_,
+        department1_.NAME as NAME1_0_ 
+    from
+        Course course0_ 
+    left outer join
+        Department department1_ 
+            on course0_.DEPT_ID=department1_.id 
+    where
+        course0_.id=?
+14:12:26,718 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=null 
+    where
+        SECTION_ID=?
+14:12:26,719 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrollment 
+    where
+        id=?
+14:12:26,719 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        id=?
+14:12:26,727 DEBUG SQL:104 - 
+    delete 
+    from
+        "SECTION" 
+    where
+        id=?
+14:12:26,727 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        id=?
+14:12:26,727 DEBUG SQL:104 - 
+    delete 
+    from
+        Department 
+    where
+        id=?
+14:12:26,728  INFO CustomRunner:139 - Test: testLoadDeepFetchProfile
+14:12:26,731 DEBUG SQL:104 - 
+    insert 
+    into
+        Department
+        (CODE, NAME, id) 
+    values
+        (?, ?, ?)
+14:12:26,738 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (NAME, DEPT_ID, CODE_NUMBER, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,738 DEBUG SQL:104 - 
+    insert 
+    into
+        "SECTION"
+        (COURSE_ID, SEMESTER, "YEAR", id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,738 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (NAME, id) 
+    values
+        (?, ?)
+14:12:26,739 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrollment
+        (SECTION_ID, STUDENT_ID, FINAL_GRADE, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,748 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=? 
+    where
+        id=?
+14:12:26,749 DEBUG SQL:104 - 
+    select
+        courseoffe0_.id as id4_3_,
+        courseoffe0_.COURSE_ID as COURSE2_4_3_,
+        courseoffe0_.SEMESTER as SEMESTER4_3_,
+        courseoffe0_."YEAR" as YEAR4_4_3_,
+        course1_.id as id0_0_,
+        course1_.NAME as NAME0_0_,
+        course1_.DEPT_ID as DEPT3_0_0_,
+        course1_.CODE_NUMBER as CODE4_0_0_,
+        enrollment2_.SECTION_ID as SECTION2_4_5_,
+        enrollment2_.id as id2_5_,
+        enrollment2_.id as id2_1_,
+        enrollment2_.SECTION_ID as SECTION2_2_1_,
+        enrollment2_.STUDENT_ID as STUDENT3_2_1_,
+        enrollment2_.FINAL_GRADE as FINAL4_2_1_,
+        student3_.id as id3_2_,
+        student3_.NAME as NAME3_2_ 
+    from
+        "SECTION" courseoffe0_ 
+    left outer join
+        Course course1_ 
+            on courseoffe0_.COURSE_ID=course1_.id 
+    left outer join
+        Enrollment enrollment2_ 
+            on courseoffe0_.id=enrollment2_.SECTION_ID 
+    left outer join
+        Student student3_ 
+            on enrollment2_.STUDENT_ID=student3_.id 
+    where
+        courseoffe0_.id=?
+14:12:26,753 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=null 
+    where
+        SECTION_ID=?
+14:12:26,754 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrollment 
+    where
+        id=?
+14:12:26,754 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        id=?
+14:12:26,754 DEBUG SQL:104 - 
+    delete 
+    from
+        "SECTION" 
+    where
+        id=?
+14:12:26,763 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        id=?
+14:12:26,763 DEBUG SQL:104 - 
+    delete 
+    from
+        Department 
+    where
+        id=?
+14:12:26,764  INFO CustomRunner:139 - Test: testLoadManyToOneFetchProfile
+14:12:26,767 DEBUG SQL:104 - 
+    insert 
+    into
+        Department
+        (CODE, NAME, id) 
+    values
+        (?, ?, ?)
+14:12:26,767 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (NAME, DEPT_ID, CODE_NUMBER, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,775 DEBUG SQL:104 - 
+    insert 
+    into
+        "SECTION"
+        (COURSE_ID, SEMESTER, "YEAR", id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,775 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (NAME, id) 
+    values
+        (?, ?)
+14:12:26,775 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrollment
+        (SECTION_ID, STUDENT_ID, FINAL_GRADE, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,776 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=? 
+    where
+        id=?
+14:12:26,777 DEBUG SQL:104 - 
+    select
+        enrollment0_.id as id2_2_,
+        enrollment0_.SECTION_ID as SECTION2_2_2_,
+        enrollment0_.STUDENT_ID as STUDENT3_2_2_,
+        enrollment0_.FINAL_GRADE as FINAL4_2_2_,
+        courseoffe1_.id as id4_0_,
+        courseoffe1_.COURSE_ID as COURSE2_4_0_,
+        courseoffe1_.SEMESTER as SEMESTER4_0_,
+        courseoffe1_."YEAR" as YEAR4_4_0_,
+        student2_.id as id3_1_,
+        student2_.NAME as NAME3_1_ 
+    from
+        Enrollment enrollment0_ 
+    left outer join
+        "SECTION" courseoffe1_ 
+            on enrollment0_.SECTION_ID=courseoffe1_.id 
+    left outer join
+        Student student2_ 
+            on enrollment0_.STUDENT_ID=student2_.id 
+    where
+        enrollment0_.id=?
+14:12:26,799 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=null 
+    where
+        SECTION_ID=?
+14:12:26,799 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrollment 
+    where
+        id=?
+14:12:26,799 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        id=?
+14:12:26,799 DEBUG SQL:104 - 
+    delete 
+    from
+        "SECTION" 
+    where
+        id=?
+14:12:26,800 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        id=?
+14:12:26,808 DEBUG SQL:104 - 
+    delete 
+    from
+        Department 
+    where
+        id=?
+14:12:26,809  INFO CustomRunner:139 - Test: testLoadOneToManyFetchProfile
+14:12:26,812 DEBUG SQL:104 - 
+    insert 
+    into
+        Department
+        (CODE, NAME, id) 
+    values
+        (?, ?, ?)
+14:12:26,812 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (NAME, DEPT_ID, CODE_NUMBER, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,812 DEBUG SQL:104 - 
+    insert 
+    into
+        "SECTION"
+        (COURSE_ID, SEMESTER, "YEAR", id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,819 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (NAME, id) 
+    values
+        (?, ?)
+14:12:26,819 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrollment
+        (SECTION_ID, STUDENT_ID, FINAL_GRADE, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,819 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=? 
+    where
+        id=?
+14:12:26,820 DEBUG SQL:104 - 
+    select
+        courseoffe0_.id as id4_2_,
+        courseoffe0_.COURSE_ID as COURSE2_4_2_,
+        courseoffe0_.SEMESTER as SEMESTER4_2_,
+        courseoffe0_."YEAR" as YEAR4_4_2_,
+        course1_.id as id0_0_,
+        course1_.NAME as NAME0_0_,
+        course1_.DEPT_ID as DEPT3_0_0_,
+        course1_.CODE_NUMBER as CODE4_0_0_,
+        enrollment2_.SECTION_ID as SECTION2_4_4_,
+        enrollment2_.id as id2_4_,
+        enrollment2_.id as id2_1_,
+        enrollment2_.SECTION_ID as SECTION2_2_1_,
+        enrollment2_.STUDENT_ID as STUDENT3_2_1_,
+        enrollment2_.FINAL_GRADE as FINAL4_2_1_ 
+    from
+        "SECTION" courseoffe0_ 
+    left outer join
+        Course course1_ 
+            on courseoffe0_.COURSE_ID=course1_.id 
+    left outer join
+        Enrollment enrollment2_ 
+            on courseoffe0_.id=enrollment2_.SECTION_ID 
+    where
+        courseoffe0_.id=?
+14:12:26,831 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=null 
+    where
+        SECTION_ID=?
+14:12:26,832 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrollment 
+    where
+        id=?
+14:12:26,840 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        id=?
+14:12:26,840 DEBUG SQL:104 - 
+    delete 
+    from
+        "SECTION" 
+    where
+        id=?
+14:12:26,840 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        id=?
+14:12:26,841 DEBUG SQL:104 - 
+    delete 
+    from
+        Department 
+    where
+        id=?
+14:12:26,880  INFO CustomRunner:139 - Test: testNormalCriteria
+14:12:26,883 DEBUG SQL:104 - 
+    insert 
+    into
+        Department
+        (CODE, NAME, id) 
+    values
+        (?, ?, ?)
+14:12:26,883 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (NAME, DEPT_ID, CODE_NUMBER, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,884 DEBUG SQL:104 - 
+    insert 
+    into
+        "SECTION"
+        (COURSE_ID, SEMESTER, "YEAR", id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,884 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (NAME, id) 
+    values
+        (?, ?)
+14:12:26,884 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrollment
+        (SECTION_ID, STUDENT_ID, FINAL_GRADE, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,884 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=? 
+    where
+        id=?
+14:12:26,885 DEBUG SQL:104 - 
+    select
+        this_.id as id4_0_,
+        this_.COURSE_ID as COURSE2_4_0_,
+        this_.SEMESTER as SEMESTER4_0_,
+        this_."YEAR" as YEAR4_4_0_ 
+    from
+        "SECTION" this_
+14:12:26,885 DEBUG SQL:104 - 
+    select
+        course0_.id as id0_0_,
+        course0_.NAME as NAME0_0_,
+        course0_.DEPT_ID as DEPT3_0_0_,
+        course0_.CODE_NUMBER as CODE4_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.id=?
+14:12:26,886 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=null 
+    where
+        SECTION_ID=?
+14:12:26,887 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrollment 
+    where
+        id=?
+14:12:26,887 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        id=?
+14:12:26,887 DEBUG SQL:104 - 
+    delete 
+    from
+        "SECTION" 
+    where
+        id=?
+14:12:26,887 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        id=?
+14:12:26,887 DEBUG SQL:104 - 
+    delete 
+    from
+        Department 
+    where
+        id=?
+14:12:26,888  INFO CustomRunner:139 - Test: testNormalLoading
+14:12:26,891 DEBUG SQL:104 - 
+    insert 
+    into
+        Department
+        (CODE, NAME, id) 
+    values
+        (?, ?, ?)
+14:12:26,892 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (NAME, DEPT_ID, CODE_NUMBER, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,892 DEBUG SQL:104 - 
+    insert 
+    into
+        "SECTION"
+        (COURSE_ID, SEMESTER, "YEAR", id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,892 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (NAME, id) 
+    values
+        (?, ?)
+14:12:26,893 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrollment
+        (SECTION_ID, STUDENT_ID, FINAL_GRADE, id) 
+    values
+        (?, ?, ?, ?)
+14:12:26,893 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=? 
+    where
+        id=?
+14:12:26,893 DEBUG SQL:104 - 
+    select
+        courseoffe0_.id as id4_0_,
+        courseoffe0_.COURSE_ID as COURSE2_4_0_,
+        courseoffe0_.SEMESTER as SEMESTER4_0_,
+        courseoffe0_."YEAR" as YEAR4_4_0_ 
+    from
+        "SECTION" courseoffe0_ 
+    where
+        courseoffe0_.id=?
+14:12:26,907 DEBUG SQL:104 - 
+    select
+        course0_.id as id0_0_,
+        course0_.NAME as NAME0_0_,
+        course0_.DEPT_ID as DEPT3_0_0_,
+        course0_.CODE_NUMBER as CODE4_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.id=?
+14:12:26,908 DEBUG SQL:104 - 
+    update
+        Enrollment 
+    set
+        SECTION_ID=null 
+    where
+        SECTION_ID=?
+14:12:26,909 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrollment 
+    where
+        id=?
+14:12:26,909 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        id=?
+14:12:26,930 DEBUG SQL:104 - 
+    delete 
+    from
+        "SECTION" 
+    where
+        id=?
+14:12:26,930 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        id=?
+14:12:26,930 DEBUG SQL:104 - 
+    delete 
+    from
+        Department 
+    where
+        id=?
+14:12:26,932  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:26,933 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:26,933 DEBUG SQL:104 - 
+    alter table Course 
+        drop constraint FK78A7CC3B5BAE444B
+14:12:26,933 DEBUG SQL:104 - 
+    alter table Enrollment 
+        drop constraint FK7DBD3F2493F5D39A
+14:12:26,934 DEBUG SQL:104 - 
+    alter table Enrollment 
+        drop constraint FK7DBD3F2472F8D6B6
+14:12:26,935 DEBUG SQL:104 - 
+    alter table "SECTION" 
+        drop constraint FKA03B0AC5F72A197E
+14:12:26,935 DEBUG SQL:104 - 
+    drop table Course if exists
+14:12:26,935 DEBUG SQL:104 - 
+    drop table Department if exists
+14:12:26,935 DEBUG SQL:104 - 
+    drop table Enrollment if exists
+14:12:26,935 DEBUG SQL:104 - 
+    drop table Student if exists
+14:12:26,936 DEBUG SQL:104 - 
+    drop table "SECTION" if exists
+14:12:26,936  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:26,936  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

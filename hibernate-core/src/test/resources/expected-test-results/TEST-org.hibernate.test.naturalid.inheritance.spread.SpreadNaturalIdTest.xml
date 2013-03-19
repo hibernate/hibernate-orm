@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.naturalid.inheritance.spread.SpreadNaturalIdTest" tests="1" time="0.006" timestamp="2013-02-28T20:17:31">
+  <properties />
+  <testcase classname="org.hibernate.test.naturalid.inheritance.spread.SpreadNaturalIdTest" name="testSpreadNaturalIdDeclarationGivesMappingException" time="0.004" />
+  <system-out><![CDATA[14:17:31,557  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.naturalid.inheritance.spread.SpreadNaturalIdTest
+14:17:31,557  INFO CustomRunner:139 - Test: testSpreadNaturalIdDeclarationGivesMappingException
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

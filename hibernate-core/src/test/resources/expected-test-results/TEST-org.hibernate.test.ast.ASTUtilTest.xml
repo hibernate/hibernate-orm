@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.ast.ASTUtilTest" tests="3" time="0.019" timestamp="2013-02-28T20:10:50">
+  <properties />
+  <testcase classname="org.hibernate.test.ast.ASTUtilTest" name="testCreate" time="0.002" />
+  <testcase classname="org.hibernate.test.ast.ASTUtilTest" name="testCreateTree" time="0.002" />
+  <testcase classname="org.hibernate.test.ast.ASTUtilTest" name="testFindPreviousSibling" time="0.002" />
+  <system-out><![CDATA[14:10:50,877  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.ast.ASTUtilTest
+14:10:50,877  INFO CustomRunner:139 - Test: testCreate
+14:10:50,880  INFO CustomRunner:139 - Test: testCreateTree
+14:10:50,884  INFO CustomRunner:139 - Test: testFindPreviousSibling
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

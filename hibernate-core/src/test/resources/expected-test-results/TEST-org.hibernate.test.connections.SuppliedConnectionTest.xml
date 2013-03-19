@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.connections.SuppliedConnectionTest" tests="7" time="0.146" timestamp="2013-02-28T20:12:02">
+  <properties />
+  <testcase classname="org.hibernate.test.connections.SuppliedConnectionTest" name="testBasicSessionUsage" time="0.022" />
+  <testcase classname="org.hibernate.test.connections.SuppliedConnectionTest" name="testConnectedSerialization" time="0.005" />
+  <testcase classname="org.hibernate.test.connections.SuppliedConnectionTest" name="testEnabledFilterSerialization" time="0.006" />
+  <testcase classname="org.hibernate.test.connections.SuppliedConnectionTest" name="testManualDisconnectChain" time="0.007" />
+  <testcase classname="org.hibernate.test.connections.SuppliedConnectionTest" name="testManualDisconnectWithOpenResources" time="0.034" />
+  <testcase classname="org.hibernate.test.connections.SuppliedConnectionTest" name="testManualDisconnectedSerialization" time="0.023" />
+  <testcase classname="org.hibernate.test.connections.SuppliedConnectionTest" name="testSessionClosedProtections" time="0.013" />
+  <system-out><![CDATA[14:12:02,227  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.connections.SuppliedConnectionTest
+14:12:02,228  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:02,228  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 20
+14:12:02,228  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:02,228  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:02,229  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa, password=****}
+14:12:02,229  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:02,229  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 20
+14:12:02,229  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:02,229  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:02,229  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa, password=****}
+14:12:02,231  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/connections/Silly.hbm.xml
+14:12:02,237  INFO ConnectionProviderInitiator:188 - HHH000130: Instantiating explicit connection provider: org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
+14:12:02,238  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,239  INFO LobCreatorBuilder:85 - HHH000422: Disabling contextual LOB creation as connection was null
+14:12:02,239  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:02,239  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:02,244  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:02,245  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:02,245  INFO CustomRunner:139 - Test: testBasicSessionUsage
+14:12:02,247  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,248  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,248 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,248 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,249 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Silly drop constraint FK4C2FCC34CE24B1
+14:12:02,249 ERROR SchemaExport:426 - Table "SILLY" not found; SQL statement:
+
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1 [42102-145]
+14:12:02,249 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,249 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,249 DEBUG SQL:104 - 
+    create table Other (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:02,249 DEBUG SQL:104 - 
+    create table Silly (
+        id bigint not null,
+        name varchar(255),
+        other bigint,
+        primary key (id)
+    )
+14:12:02,249 DEBUG SQL:104 - 
+    alter table Silly 
+        add constraint FK4C2FCC34CE24B1 
+        foreign key (other) 
+        references Other
+14:12:02,250  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,250 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.connections.Silly
+14:12:02,251 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'connections'
+                \-[IDENT] Node: 'Silly'
+
+14:12:02,251 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:02,252 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.connections.Silly (<no alias>) -> silly0_
+14:12:02,252 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Silly silly0_ ) )
+14:12:02,252 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:02,252 DEBUG JoinProcessor:175 - Using FROM fragment [Silly silly0_]
+14:12:02,253 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Silly)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'silly0_.id as id1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Silly,tableAlias=silly0_,origin=null,columns={,className=org.hibernate.test.connections.Silly}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'silly0_.name as name1_, silly0_.other as other1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[silly0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Silly silly0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Silly,tableAlias=silly0_,origin=null,columns={,className=org.hibernate.test.connections.Silly}}
+
+14:12:02,253 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:02,253 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.connections.Silly
+14:12:02,253 DEBUG QueryTranslatorImpl:236 - SQL: select silly0_.id as id1_, silly0_.name as name1_, silly0_.other as other1_ from Silly silly0_
+14:12:02,254 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:02,254 DEBUG SQL:104 - 
+    select
+        silly0_.id as id1_,
+        silly0_.name as name1_,
+        silly0_.other as other1_ 
+    from
+        Silly silly0_
+14:12:02,254  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,255  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,255 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,255 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,256 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,256 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,257  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,267  INFO CustomRunner:139 - Test: testConnectedSerialization
+14:12:02,268  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,269  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,269 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,269 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,269 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Silly drop constraint FK4C2FCC34CE24B1
+14:12:02,269 ERROR SchemaExport:426 - Table "SILLY" not found; SQL statement:
+
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1 [42102-145]
+14:12:02,270 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,270 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,270 DEBUG SQL:104 - 
+    create table Other (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:02,270 DEBUG SQL:104 - 
+    create table Silly (
+        id bigint not null,
+        name varchar(255),
+        other bigint,
+        primary key (id)
+    )
+14:12:02,270 DEBUG SQL:104 - 
+    alter table Silly 
+        add constraint FK4C2FCC34CE24B1 
+        foreign key (other) 
+        references Other
+14:12:02,271  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,271 DEBUG SQL:104 - 
+    select
+        silly0_.id as id1_,
+        silly0_.name as name1_,
+        silly0_.other as other1_ 
+    from
+        Silly silly0_
+14:12:02,272  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,272  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,273 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,273 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,273 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,273 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,273  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,274  INFO CustomRunner:139 - Test: testEnabledFilterSerialization
+14:12:02,274  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,275  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,276 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,276 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,276 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Silly drop constraint FK4C2FCC34CE24B1
+14:12:02,276 ERROR SchemaExport:426 - Table "SILLY" not found; SQL statement:
+
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1 [42102-145]
+14:12:02,276 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,276 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,276 DEBUG SQL:104 - 
+    create table Other (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:02,276 DEBUG SQL:104 - 
+    create table Silly (
+        id bigint not null,
+        name varchar(255),
+        other bigint,
+        primary key (id)
+    )
+14:12:02,277 DEBUG SQL:104 - 
+    alter table Silly 
+        add constraint FK4C2FCC34CE24B1 
+        foreign key (other) 
+        references Other
+14:12:02,277  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,278  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,278  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,279 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,279 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,279 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,279 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,279  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,280  INFO CustomRunner:139 - Test: testManualDisconnectChain
+14:12:02,281  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,282  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,283 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,283 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,283 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Silly drop constraint FK4C2FCC34CE24B1
+14:12:02,283 ERROR SchemaExport:426 - Table "SILLY" not found; SQL statement:
+
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1 [42102-145]
+14:12:02,283 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,283 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,283 DEBUG SQL:104 - 
+    create table Other (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:02,283 DEBUG SQL:104 - 
+    create table Silly (
+        id bigint not null,
+        name varchar(255),
+        other bigint,
+        primary key (id)
+    )
+14:12:02,284 DEBUG SQL:104 - 
+    alter table Silly 
+        add constraint FK4C2FCC34CE24B1 
+        foreign key (other) 
+        references Other
+14:12:02,284  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,285  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,286  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,286 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,286 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,286 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,287 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,287  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,289  INFO CustomRunner:139 - Test: testManualDisconnectWithOpenResources
+14:12:02,290  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,290  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,291 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,291 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,291 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Silly drop constraint FK4C2FCC34CE24B1
+14:12:02,291 ERROR SchemaExport:426 - Table "SILLY" not found; SQL statement:
+
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1 [42102-145]
+14:12:02,295 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,295 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,295 DEBUG SQL:104 - 
+    create table Other (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:02,296 DEBUG SQL:104 - 
+    create table Silly (
+        id bigint not null,
+        name varchar(255),
+        other bigint,
+        primary key (id)
+    )
+14:12:02,296 DEBUG SQL:104 - 
+    alter table Silly 
+        add constraint FK4C2FCC34CE24B1 
+        foreign key (other) 
+        references Other
+14:12:02,297  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,297 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Silly
+14:12:02,298 DEBUG SQL:104 - 
+    insert 
+    into
+        Silly
+        (name, other, id) 
+    values
+        (?, ?, ?)
+14:12:02,298 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.connections.Silly
+14:12:02,299 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'connections'
+                \-[IDENT] Node: 'Silly'
+
+14:12:02,300 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:02,300 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.connections.Silly (<no alias>) -> silly0_
+14:12:02,300 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Silly silly0_ ) )
+14:12:02,300 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:02,300 DEBUG JoinProcessor:175 - Using FROM fragment [Silly silly0_]
+14:12:02,301 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Silly)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'silly0_.id as col_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Silly,tableAlias=silly0_,origin=null,columns={,className=org.hibernate.test.connections.Silly}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[silly0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Silly silly0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Silly,tableAlias=silly0_,origin=null,columns={,className=org.hibernate.test.connections.Silly}}
+
+14:12:02,311 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:02,312 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.connections.Silly
+14:12:02,312 DEBUG QueryTranslatorImpl:236 - SQL: select silly0_.id as col_0_0_ from Silly silly0_
+14:12:02,312 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:02,312 DEBUG SQL:104 - 
+    select
+        silly0_.id as col_0_0_ 
+    from
+        Silly silly0_
+14:12:02,313 DEBUG SQL:104 - 
+    select
+        silly0_.id as id1_,
+        silly0_.name as name1_,
+        silly0_.other as other1_ 
+    from
+        Silly silly0_
+14:12:02,314 DEBUG SQL:104 - 
+    delete 
+    from
+        Silly 
+    where
+        id=?
+14:12:02,315  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,315  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,316 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,316 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,323 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,323 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,323  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,324  INFO CustomRunner:139 - Test: testManualDisconnectedSerialization
+14:12:02,324  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,325  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,325 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,325 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,326 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Silly drop constraint FK4C2FCC34CE24B1
+14:12:02,326 ERROR SchemaExport:426 - Table "SILLY" not found; SQL statement:
+
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1 [42102-145]
+14:12:02,326 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,326 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,326 DEBUG SQL:104 - 
+    create table Other (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:02,327 DEBUG SQL:104 - 
+    create table Silly (
+        id bigint not null,
+        name varchar(255),
+        other bigint,
+        primary key (id)
+    )
+14:12:02,327 DEBUG SQL:104 - 
+    alter table Silly 
+        add constraint FK4C2FCC34CE24B1 
+        foreign key (other) 
+        references Other
+14:12:02,327  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,328  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,328  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,346 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,346 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,347 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,347 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,347  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,348  INFO CustomRunner:139 - Test: testSessionClosedProtections
+14:12:02,348  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,349  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,349 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,349 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,350 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Silly drop constraint FK4C2FCC34CE24B1
+14:12:02,350 ERROR SchemaExport:426 - Table "SILLY" not found; SQL statement:
+
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1 [42102-145]
+14:12:02,350 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,350 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,350 DEBUG SQL:104 - 
+    create table Other (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:02,358 DEBUG SQL:104 - 
+    create table Silly (
+        id bigint not null,
+        name varchar(255),
+        other bigint,
+        primary key (id)
+    )
+14:12:02,358 DEBUG SQL:104 - 
+    alter table Silly 
+        add constraint FK4C2FCC34CE24B1 
+        foreign key (other) 
+        references Other
+14:12:02,359  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,359  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,360  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,360 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,360 DEBUG SQL:104 - 
+    alter table Silly 
+        drop constraint FK4C2FCC34CE24B1
+14:12:02,360 DEBUG SQL:104 - 
+    drop table Other if exists
+14:12:02,360 DEBUG SQL:104 - 
+    drop table Silly if exists
+14:12:02,361  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,361  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

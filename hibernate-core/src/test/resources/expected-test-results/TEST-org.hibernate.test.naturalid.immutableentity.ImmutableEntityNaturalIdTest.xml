@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.naturalid.immutableentity.ImmutableEntityNaturalIdTest" tests="3" time="0.054" timestamp="2013-02-28T20:17:31">
+  <properties />
+  <testcase classname="org.hibernate.test.naturalid.immutableentity.ImmutableEntityNaturalIdTest" name="testImmutableNaturalIdLifecycle" time="0.014" />
+  <testcase classname="org.hibernate.test.naturalid.immutableentity.ImmutableEntityNaturalIdTest" name="testImmutableNaturalIdLifecycle2" time="0.005" />
+  <testcase classname="org.hibernate.test.naturalid.immutableentity.ImmutableEntityNaturalIdTest" name="testMappingProperties" time="0.0" />
+  <system-out><![CDATA[14:17:31,461  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.naturalid.immutableentity.ImmutableEntityNaturalIdTest
+14:17:31,466  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:31,466  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:31,467  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:31,467  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:31,467  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:31,468  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:31,468  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:31,469  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:31,469  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:31,469  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:31,470  INFO UpdateTimestampsCache:61 - HHH000250: Starting update timestamps cache at region: hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache
+14:17:31,470  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: hibernate.test.org.hibernate.cache.internal.StandardQueryCache
+14:17:31,476  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,477 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,477 DEBUG SQL:104 - 
+    drop table Building if exists
+14:17:31,477 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:17:31,477 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:17:31,477 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:17:31,478 DEBUG SQL:104 - 
+    create table Building (
+        id integer not null,
+        address varchar(255),
+        city varchar(255),
+        name varchar(255),
+        state varchar(255),
+        primary key (id)
+    )
+14:17:31,478 DEBUG SQL:104 - 
+    alter table Building 
+        add constraint _UniqueKey unique (address, city, state)
+14:17:31,478 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:17:31,478  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,480  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:31,480  INFO CustomRunner:139 - Test: testImmutableNaturalIdLifecycle
+14:17:31,481 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:17:31,483 DEBUG SQL:104 - 
+    insert 
+    into
+        Building
+        (address, city, name, state, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:31,487 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Building] -> [5579090786250752]
+14:17:31,488 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,488 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] : [org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@2c6c618c]
+14:17:31,488 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Building] -> [5579090540494849]
+14:17:31,488 DEBUG BaseGeneralDataRegion:79 - evict cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,488 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] from region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,488 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,488 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] in region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,489 DEBUG SQL:104 - 
+    select
+        building_.id as id0_ 
+    from
+        Building building_ 
+    where
+        building_.address=? 
+        and building_.city=? 
+        and building_.state=?
+14:17:31,489 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] from region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,489 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,489 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] in region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,489 DEBUG AbstractReadWriteAccessStrategy:68 - putting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] -> value[1] into region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,489 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,489 DEBUG AbstractReadWriteAccessStrategy:73 - putting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] -> value[1] into region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] success
+14:17:31,489 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] : [org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@560dc7c5]
+14:17:31,490 DEBUG SQL:104 - 
+    select
+        building0_.id as id0_0_,
+        building0_.address as address0_0_,
+        building0_.city as city0_0_,
+        building0_.name as name0_0_,
+        building0_.state as state0_0_ 
+    from
+        Building building0_ 
+    where
+        building0_.id=?
+14:17:31,490 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] from region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,490 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,490 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] hit: org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]
+14:17:31,490 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] in region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,491 DEBUG SQL:104 - 
+    select
+        building0_.id as id0_0_,
+        building0_.address as address0_0_,
+        building0_.city as city0_0_,
+        building0_.name as name0_0_,
+        building0_.state as state0_0_ 
+    from
+        Building building0_ 
+    where
+        building0_.id=?
+14:17:31,491 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]: org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]
+14:17:31,491 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] from region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,491 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,491 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] in region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,491 DEBUG SQL:104 - 
+    select
+        building_.id as id0_ 
+    from
+        Building building_ 
+    where
+        building_.address=? 
+        and building_.city=? 
+        and building_.state=?
+14:17:31,492 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] from region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,492 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,492 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] in region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,492 DEBUG AbstractReadWriteAccessStrategy:68 - putting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] -> value[1] into region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,492 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,492 DEBUG AbstractReadWriteAccessStrategy:73 - putting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] -> value[1] into region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] success
+14:17:31,492 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] : [org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@15bc33b7]
+14:17:31,492 DEBUG SQL:104 - 
+    delete 
+    from
+        Building 
+    where
+        id=?
+14:17:31,493 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]: org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]
+14:17:31,493 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Building] -> [5579090786275328]
+14:17:31,493 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Building] -> [5579090540515329]
+14:17:31,493 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] from region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,493 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,493 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] in region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,493 DEBUG SQL:104 - 
+    select
+        building_.id as id0_ 
+    from
+        Building building_ 
+    where
+        building_.address=? 
+        and building_.city=? 
+        and building_.state=?
+14:17:31,494  INFO CustomRunner:139 - Test: testImmutableNaturalIdLifecycle2
+14:17:31,495 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:17:31,496 DEBUG SQL:104 - 
+    insert 
+    into
+        Building
+        (address, city, name, state, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:31,496 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Building] -> [5579090786287616]
+14:17:31,496 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,496 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] : [org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@30cf4d5d]
+14:17:31,497 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Building] -> [5579090540527618]
+14:17:31,497 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] from region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,497 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,497 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] hit: org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]
+14:17:31,497 DEBUG AbstractReadWriteAccessStrategy:41 - hit key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] in region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,497 DEBUG SQL:104 - 
+    select
+        building0_.id as id0_0_,
+        building0_.address as address0_0_,
+        building0_.city as city0_0_,
+        building0_.name as name0_0_,
+        building0_.state as state0_0_ 
+    from
+        Building building0_ 
+    where
+        building0_.id=?
+14:17:31,498 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]: org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]
+14:17:31,498 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] from region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,498 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,498 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] in region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,498 DEBUG SQL:104 - 
+    select
+        building_.id as id0_ 
+    from
+        Building building_ 
+    where
+        building_.address=? 
+        and building_.city=? 
+        and building_.state=?
+14:17:31,499 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] from region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,499 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,499 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] in region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,499 DEBUG AbstractReadWriteAccessStrategy:68 - putting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] -> value[2] into region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]
+14:17:31,499 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] lookup : key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]]
+14:17:31,499 DEBUG AbstractReadWriteAccessStrategy:73 - putting key[org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] -> value[2] into region[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] success
+14:17:31,499 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId] : [org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@5eefb2a9]
+14:17:31,499  INFO DefaultLoadEventListener:158 - HHH000327: Error performing load command : org.hibernate.ObjectNotFoundException: No row with the given identifier exists: [org.hibernate.test.naturalid.immutableentity.Building#2]
+14:17:31,500 DEBUG SQL:104 - 
+    delete 
+    from
+        Building 
+    where
+        id=?
+14:17:31,500 DEBUG BaseGeneralDataRegion:69 - Evicting[hibernate.test.org.hibernate.test.naturalid.immutableentity.Building##NaturalId]: org.hibernate.test.naturalid.immutableentity.Building##NaturalId[1210 W. Dayton St., Madison, WI]
+14:17:31,500 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Building] -> [5579090786304000]
+14:17:31,500 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache] : [Building] -> [5579090540544001]
+14:17:31,500  INFO CustomRunner:139 - Test: testMappingProperties
+14:17:31,501  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,502 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,502 DEBUG SQL:104 - 
+    drop table Building if exists
+14:17:31,502 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:17:31,503  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,503  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,1235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.manytoone.ManyToOneTest" tests="11" time="0.592" timestamp="2013-02-28T20:10:36">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneTest" name="testCascade" time="0.031" />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneTest" name="testCompositeFK" time="0.084" />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneTest" name="testCreate" time="0.006" />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneTest" name="testDefaultMetadata" time="0.01" />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneTest" name="testEager" time="0.004" />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneTest" name="testFetch" time="0.037" />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneTest" name="testFormulaOnOtherSide" time="0.025" />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneTest" name="testImplicitCompositeFk" time="0.011" />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneTest" name="testManyToOneNonPk" time="0.013" />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneTest" name="testManyToOneNonPkSecondaryTable" time="0.035" />
+  <testcase classname="org.hibernate.test.annotations.manytoone.ManyToOneTest" name="testTwoManyToOneNonPk" time="0.014" />
+  <system-out><![CDATA[14:10:36,699  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.manytoone.ManyToOneTest
+14:10:36,729  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:36,729  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:36,730  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:36,730  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:36,730  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:36,731  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:36,731  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:36,732  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:36,732  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:36,732  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:36,806  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:36,806 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:36,807 DEBUG SQL:104 - 
+    alter table CLRUS2DI 
+        drop constraint FK750A057017B4863A
+14:10:36,807 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CLRUS2DI drop constraint FK750A057017B4863A
+14:10:36,807 ERROR SchemaExport:426 - Table "CLRUS2DI" not found; SQL statement:
+
+    alter table CLRUS2DI 
+        drop constraint FK750A057017B4863A [42102-145]
+14:10:36,807 DEBUG SQL:104 - 
+    alter table Car 
+        drop constraint BODY_COLOR_FK
+14:10:36,807 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Car drop constraint BODY_COLOR_FK
+14:10:36,807 ERROR SchemaExport:426 - Table "CAR" not found; SQL statement:
+
+    alter table Car 
+        drop constraint BODY_COLOR_FK [42102-145]
+14:10:36,807 DEBUG SQL:104 - 
+    alter table Car 
+        drop constraint FK107B4AFFAACB
+14:10:36,807 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Car drop constraint FK107B4AFFAACB
+14:10:36,808 ERROR SchemaExport:426 - Table "CAR" not found; SQL statement:
+
+    alter table Car 
+        drop constraint FK107B4AFFAACB [42102-145]
+14:10:36,808 DEBUG SQL:104 - 
+    alter table Customer 
+        drop constraint FK27FBE3FE1E3E1F5A
+14:10:36,808 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Customer drop constraint FK27FBE3FE1E3E1F5A
+14:10:36,808 ERROR SchemaExport:426 - Table "CUSTOMER" not found; SQL statement:
+
+    alter table Customer 
+        drop constraint FK27FBE3FE1E3E1F5A [42102-145]
+14:10:36,808 DEBUG SQL:104 - 
+    alter table Deal 
+        drop constraint FK20708CD9F74BBB
+14:10:36,808 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Deal drop constraint FK20708CD9F74BBB
+14:10:36,808 ERROR SchemaExport:426 - Table "DEAL" not found; SQL statement:
+
+    alter table Deal 
+        drop constraint FK20708CD9F74BBB [42102-145]
+14:10:36,808 DEBUG SQL:104 - 
+    alter table Deal 
+        drop constraint FK20708C733C37CA
+14:10:36,809 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Deal drop constraint FK20708C733C37CA
+14:10:36,809 ERROR SchemaExport:426 - Table "DEAL" not found; SQL statement:
+
+    alter table Deal 
+        drop constraint FK20708C733C37CA [42102-145]
+14:10:36,809 DEBUG SQL:104 - 
+    alter table Discount 
+        drop constraint FK1422D961AED1FBDA
+14:10:36,809 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Discount drop constraint FK1422D961AED1FBDA
+14:10:36,809 ERROR SchemaExport:426 - Table "DISCOUNT" not found; SQL statement:
+
+    alter table Discount 
+        drop constraint FK1422D961AED1FBDA [42102-145]
+14:10:36,809 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:36,809 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Flight drop constraint FK7D96709059315E8
+14:10:36,809 ERROR SchemaExport:426 - Table "FLIGHT" not found; SQL statement:
+
+    alter table Flight 
+        drop constraint FK7D96709059315E8 [42102-145]
+14:10:36,813 DEBUG SQL:104 - 
+    alter table Lens 
+        drop constraint FK24151E5C29602
+14:10:36,814 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Lens drop constraint FK24151E5C29602
+14:10:36,814 ERROR SchemaExport:426 - Table "LENS" not found; SQL statement:
+
+    alter table Lens 
+        drop constraint FK24151E5C29602 [42102-145]
+14:10:36,814 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK2522228BC11D3
+14:10:36,814 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Node drop constraint FK2522228BC11D3
+14:10:36,814 ERROR SchemaExport:426 - Table "NODE" not found; SQL statement:
+
+    alter table Node 
+        drop constraint FK2522228BC11D3 [42102-145]
+14:10:36,814 DEBUG SQL:104 - 
+    alter table OrderLine 
+        drop constraint FK6017744250FBC7D9
+14:10:36,814 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OrderLine drop constraint FK6017744250FBC7D9
+14:10:36,814 ERROR SchemaExport:426 - Table "ORDERLINE" not found; SQL statement:
+
+    alter table OrderLine 
+        drop constraint FK6017744250FBC7D9 [42102-145]
+14:10:36,814 DEBUG SQL:104 - 
+    alter table OrderLine_Extension 
+        drop constraint FK6D7CC06229B721EC
+14:10:36,815 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OrderLine_Extension drop constraint FK6D7CC06229B721EC
+14:10:36,815 ERROR SchemaExport:426 - Table "ORDERLINE_EXTENSION" not found; SQL statement:
+
+    alter table OrderLine_Extension 
+        drop constraint FK6D7CC06229B721EC [42102-145]
+14:10:36,815 DEBUG SQL:104 - 
+    alter table OrderLine_Extension 
+        drop constraint FK6D7CC062FE238A3B
+14:10:36,815 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OrderLine_Extension drop constraint FK6D7CC062FE238A3B
+14:10:36,815 ERROR SchemaExport:426 - Table "ORDERLINE_EXTENSION" not found; SQL statement:
+
+    alter table OrderLine_Extension 
+        drop constraint FK6D7CC062FE238A3B [42102-145]
+14:10:36,815 DEBUG SQL:104 - 
+    alter table Ticket 
+        drop constraint FK954D572C5BAC2545
+14:10:36,815 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Ticket drop constraint FK954D572C5BAC2545
+14:10:36,816 ERROR SchemaExport:426 - Table "TICKET" not found; SQL statement:
+
+    alter table Ticket 
+        drop constraint FK954D572C5BAC2545 [42102-145]
+14:10:36,816 DEBUG SQL:104 - 
+    alter table tbl_child 
+        drop constraint FKEC16D15BD64379CD
+14:10:36,816 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table tbl_child drop constraint FKEC16D15BD64379CD
+14:10:36,816 ERROR SchemaExport:426 - Table "TBL_CHILD" not found; SQL statement:
+
+    alter table tbl_child 
+        drop constraint FKEC16D15BD64379CD [42102-145]
+14:10:36,816 DEBUG SQL:104 - 
+    drop table CLRUS2DI if exists
+14:10:36,816 DEBUG SQL:104 - 
+    drop table CTVUSERS if exists
+14:10:36,816 DEBUG SQL:104 - 
+    drop table Car if exists
+14:10:36,816 DEBUG SQL:104 - 
+    drop table Color if exists
+14:10:36,817 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:36,817 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:10:36,817 DEBUG SQL:104 - 
+    drop table Deal if exists
+14:10:36,817 DEBUG SQL:104 - 
+    drop table DealedCustomer if exists
+14:10:36,817 DEBUG SQL:104 - 
+    drop table Discount if exists
+14:10:36,817 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:36,817 DEBUG SQL:104 - 
+    drop table Frame if exists
+14:10:36,818 DEBUG SQL:104 - 
+    drop table Lens if exists
+14:10:36,818 DEBUG SQL:104 - 
+    drop table Node if exists
+14:10:36,818 DEBUG SQL:104 - 
+    drop table ORDERS if exists
+14:10:36,818 DEBUG SQL:104 - 
+    drop table OrderLine if exists
+14:10:36,818 DEBUG SQL:104 - 
+    drop table OrderLine_Extension if exists
+14:10:36,818 DEBUG SQL:104 - 
+    drop table Passport if exists
+14:10:36,818 DEBUG SQL:104 - 
+    drop table Ticket if exists
+14:10:36,819 DEBUG SQL:104 - 
+    drop table tbl_child if exists
+14:10:36,819 DEBUG SQL:104 - 
+    drop table tbl_parent if exists
+14:10:36,819 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:36,819 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:36,819 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:36,819 DEBUG SQL:104 - 
+    create table CLRUS2DI (
+        CLRUS2DI_KEY bigint not null,
+        CLRUS2DI_CREATE_USERS_KEY bigint,
+        CLRUS2DI_CREATE_DATE timestamp,
+        CLRUS2DI_LDTMD_KEY bigint,
+        CLRUS2DI_PMTMP_KEY bigint,
+        CLRUS2DI_END_DATE timestamp,
+        CLRUS2DI_BEGIN_DATE timestamp,
+        CLRUS2DI_USERS_KEY bigint,
+        primary key (CLRUS2DI_KEY)
+    )
+14:10:36,820 DEBUG SQL:104 - 
+    create table CTVUSERS (
+        CTVUSERS_END_DATE timestamp not null,
+        CTVUSERS_START_DATE timestamp not null,
+        CTVUSERS_KEY bigint not null,
+        CTVUSERS_BIRTH_CNTRY_KEY integer,
+        CTVUSERS_BIRTH_DATE timestamp,
+        CTVUSERS_BIRTH_PLACE varchar(255),
+        CTVUSERS_BIRTH_STATE_KEY integer,
+        CTVUSERS_CLSTR_KEY bigint,
+        CTVUSERS_CNTRY_KEY integer,
+        CTVUSERS_CREATE_USERS_KEY bigint,
+        CTVUSERS_CREATE_DATE timestamp,
+        CTVUSERS_FIRST_NAME varchar(255),
+        CTVUSERS_LAST_NAME1 varchar(255),
+        CTVUSERS_LAST_NAME2 varchar(255),
+        CTVUSERS_LDTMD_KEY bigint,
+        CTVUSERS_LDTMM_KEY bigint,
+        CTVUSERS_MIDDLE_NAME1 varchar(255),
+        CTVUSERS_MIDDLE_NAME2 varchar(255),
+        CTVUSERS_PASSWORD varchar(255),
+        CTVUSERS_PMTMP_KEY bigint,
+        CTVUSERS_PREFERRED_NAME varchar(255),
+        CTVUSERS_PREFX_KEY integer,
+        CTVUSERS_PRIVL_KEY integer,
+        CTVUSERS_SCHOL_KEY bigint,
+        CTVUSERS_STATE_KEY integer,
+        CTVUSERS_SUFFX_KEY integer,
+        CTVUSERS_ID varchar(255),
+        CTVUSERS_LOTYP_KEY integer,
+        CTVUSERS_USERNAME varchar(255),
+        primary key (CTVUSERS_END_DATE, CTVUSERS_START_DATE, CTVUSERS_KEY)
+    )
+14:10:36,820 DEBUG SQL:104 - 
+    create table Car (
+        id integer not null,
+        bodyColor_id integer,
+        owner_firstName varchar(50),
+        owner_isMale boolean,
+        owner_lastName varchar(255),
+        primary key (id)
+    )
+14:10:36,821 DEBUG SQL:104 - 
+    create table Color (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:36,832 DEBUG SQL:104 - 
+    create table Corporation (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:36,832 DEBUG SQL:104 - 
+    create table Customer (
+        id bigint not null,
+        name varchar(255),
+        passport_id bigint,
+        primary key (id)
+    )
+14:10:36,832 DEBUG SQL:104 - 
+    create table Deal (
+        id integer not null,
+        from_userId varchar(255),
+        to_userId varchar(255),
+        primary key (id)
+    )
+14:10:36,833 DEBUG SQL:104 - 
+    create table DealedCustomer (
+        id integer not null,
+        userId varchar(255),
+        primary key (id)
+    )
+14:10:36,841 DEBUG SQL:104 - 
+    create table Discount (
+        id bigint not null,
+        discount double,
+        CUSTOMER_ID bigint,
+        primary key (id)
+    )
+14:10:36,841 DEBUG SQL:104 - 
+    create table Flight (
+        id bigint not null,
+        alternativeDepartureDate timestamp,
+        buyDate timestamp,
+        departureDate date,
+        duration bigint not null,
+        flight_name varchar(50) not null,
+        triggeredData varchar(255),
+        OPTLOCK integer,
+        COMP_ID integer,
+        primary key (id)
+    )
+14:10:36,842 DEBUG SQL:104 - 
+    create table Frame (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:36,842 DEBUG SQL:104 - 
+    create table Lens (
+        id bigint not null,
+        focal float not null,
+        "frame_fk" varchar(255),
+        primary key (id)
+    )
+14:10:36,843 DEBUG SQL:104 - 
+    create table Node (
+        fld_lvl integer not null,
+        name varchar(255) not null,
+        description varchar(255),
+        parentName integer,
+        parentLevel varchar(255),
+        primary key (fld_lvl, name)
+    )
+14:10:36,843 DEBUG SQL:104 - 
+    create table ORDERS (
+        id integer not null,
+        order_nbr varchar(255),
+        primary key (id)
+    )
+14:10:36,864 DEBUG SQL:104 - 
+    create table OrderLine (
+        id integer not null,
+        item varchar(255),
+        order_nbr varchar(255),
+        primary key (id)
+    )
+14:10:36,864 DEBUG SQL:104 - 
+    create table OrderLine_Extension (
+        replacement_order_nbr varchar(255),
+        id integer not null,
+        primary key (id)
+    )
+14:10:36,865 DEBUG SQL:104 - 
+    create table Passport (
+        id bigint not null,
+        passport_number varchar(255),
+        primary key (id)
+    )
+14:10:36,865 DEBUG SQL:104 - 
+    create table Ticket (
+        id bigint not null,
+        ticket_number varchar(255),
+        CUST_ID bigint,
+        primary key (id)
+    )
+14:10:36,865 DEBUG SQL:104 - 
+    create table tbl_child (
+        id integer not null,
+        parentFirstName varchar(50),
+        parentCivility boolean,
+        parentLastName varchar(255),
+        primary key (id)
+    )
+14:10:36,866 DEBUG SQL:104 - 
+    create table tbl_parent (
+        firstName varchar(50) not null,
+        isMale boolean not null,
+        lastName varchar(255) not null,
+        age integer not null,
+        primary key (firstName, isMale, lastName)
+    )
+14:10:36,866 DEBUG SQL:104 - 
+    alter table CLRUS2DI 
+        add constraint FK750A057017B4863A 
+        foreign key (CLRUS2DI_END_DATE, CLRUS2DI_BEGIN_DATE, CLRUS2DI_USERS_KEY) 
+        references CTVUSERS
+14:10:36,867 DEBUG SQL:104 - 
+    alter table Car 
+        add constraint BODY_COLOR_FK 
+        foreign key (bodyColor_id) 
+        references Color
+14:10:36,868 DEBUG SQL:104 - 
+    alter table Car 
+        add constraint FK107B4AFFAACB 
+        foreign key (owner_firstName, owner_isMale, owner_lastName) 
+        references tbl_parent
+14:10:36,869 DEBUG SQL:104 - 
+    alter table Color 
+        add constraint uc_Color_1 unique (name)
+14:10:36,869 DEBUG SQL:104 - 
+    alter table Customer 
+        add constraint FK27FBE3FE1E3E1F5A 
+        foreign key (passport_id) 
+        references Passport
+14:10:36,870 DEBUG SQL:104 - 
+    alter table Deal 
+        add constraint FK20708CD9F74BBB 
+        foreign key (from_userId) 
+        references DealedCustomer (userId)
+14:10:36,870 DEBUG SQL:104 - 
+    alter table Deal 
+        add constraint FK20708C733C37CA 
+        foreign key (to_userId) 
+        references DealedCustomer (userId)
+14:10:36,884 DEBUG SQL:104 - 
+    alter table DealedCustomer 
+        add constraint UK_47171329CE2B3226 unique (userId)
+14:10:36,884 DEBUG SQL:104 - 
+    alter table Discount 
+        add constraint FK1422D961AED1FBDA 
+        foreign key (CUSTOMER_ID) 
+        references Customer
+14:10:36,885 DEBUG SQL:104 - 
+    alter table Flight 
+        add constraint FK7D96709059315E8 
+        foreign key (COMP_ID) 
+        references Corporation
+14:10:36,886 DEBUG SQL:104 - 
+    alter table Frame 
+        add constraint UK_40FB94D337A8B unique (name)
+14:10:36,887 DEBUG SQL:104 - 
+    alter table Lens 
+        add constraint FK24151E5C29602 
+        foreign key ("frame_fk") 
+        references Frame (name)
+14:10:36,887 DEBUG SQL:104 - 
+    alter table Node 
+        add constraint FK2522228BC11D3 
+        foreign key (parentName, parentLevel) 
+        references Node
+14:10:36,894 DEBUG SQL:104 - 
+    alter table ORDERS 
+        add constraint UK_8B7256E5E8AE08CD unique (order_nbr)
+14:10:36,894 DEBUG SQL:104 - 
+    alter table OrderLine 
+        add constraint uc_OrderLine_1 unique (order_nbr)
+14:10:36,895 DEBUG SQL:104 - 
+    alter table OrderLine 
+        add constraint FK6017744250FBC7D9 
+        foreign key (order_nbr) 
+        references ORDERS (order_nbr)
+14:10:36,895 DEBUG SQL:104 - 
+    alter table OrderLine_Extension 
+        add constraint FK6D7CC06229B721EC 
+        foreign key (replacement_order_nbr) 
+        references ORDERS (order_nbr)
+14:10:36,896 DEBUG SQL:104 - 
+    alter table OrderLine_Extension 
+        add constraint FK6D7CC062FE238A3B 
+        foreign key (id) 
+        references OrderLine
+14:10:36,896 DEBUG SQL:104 - 
+    alter table Ticket 
+        add constraint FK954D572C5BAC2545 
+        foreign key (CUST_ID) 
+        references Customer
+14:10:36,897 DEBUG SQL:104 - 
+    alter table tbl_child 
+        add constraint FKEC16D15BD64379CD 
+        foreign key (parentFirstName, parentCivility, parentLastName) 
+        references tbl_parent
+14:10:36,951 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:36,951  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:36,954  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:36,954  INFO CustomRunner:139 - Test: testCascade
+14:10:36,957 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:36,958 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:36,959 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (name, passport_id, id) 
+    values
+        (?, ?, ?)
+14:10:36,960 DEBUG SQL:104 - 
+    insert 
+    into
+        Discount
+        (discount, CUSTOMER_ID, id) 
+    values
+        (?, ?, ?)
+14:10:36,960 DEBUG SQL:104 - 
+    select
+        discount0_.id as id8_0_,
+        discount0_.discount as discount8_0_,
+        discount0_.CUSTOMER_ID as CUSTOMER3_8_0_ 
+    from
+        Discount discount0_ 
+    where
+        discount0_.id=?
+14:10:36,961 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:36,961 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (name, passport_id, id) 
+    values
+        (?, ?, ?)
+14:10:36,962 DEBUG SQL:104 - 
+    update
+        Discount 
+    set
+        discount=?,
+        CUSTOMER_ID=? 
+    where
+        id=?
+14:10:36,962 DEBUG SQL:104 - 
+    select
+        discount0_.id as id8_0_,
+        discount0_.discount as discount8_0_,
+        discount0_.CUSTOMER_ID as CUSTOMER3_8_0_ 
+    from
+        Discount discount0_ 
+    where
+        discount0_.id=?
+14:10:36,968 DEBUG SQL:104 - 
+    select
+        customer0_.id as id5_2_,
+        customer0_.name as name5_2_,
+        customer0_.passport_id as passport3_5_2_,
+        passport1_.id as id16_0_,
+        passport1_.passport_number as passport2_16_0_,
+        tickets2_.CUST_ID as CUST3_5_4_,
+        tickets2_.id as id17_4_,
+        tickets2_.id as id17_1_,
+        tickets2_.ticket_number as ticket2_17_1_ 
+    from
+        Customer customer0_ 
+    left outer join
+        Passport passport1_ 
+            on customer0_.passport_id=passport1_.id 
+    left outer join
+        Ticket tickets2_ 
+            on customer0_.id=tickets2_.CUST_ID 
+    where
+        customer0_.id=?
+14:10:36,969 DEBUG SQL:104 - 
+    select
+        customer0_.id as id5_2_,
+        customer0_.name as name5_2_,
+        customer0_.passport_id as passport3_5_2_,
+        passport1_.id as id16_0_,
+        passport1_.passport_number as passport2_16_0_,
+        tickets2_.CUST_ID as CUST3_5_4_,
+        tickets2_.id as id17_4_,
+        tickets2_.id as id17_1_,
+        tickets2_.ticket_number as ticket2_17_1_ 
+    from
+        Customer customer0_ 
+    left outer join
+        Passport passport1_ 
+            on customer0_.passport_id=passport1_.id 
+    left outer join
+        Ticket tickets2_ 
+            on customer0_.id=tickets2_.CUST_ID 
+    where
+        customer0_.id=?
+14:10:36,982 DEBUG SQL:104 - 
+    select
+        discountti0_.CUSTOMER_ID as CUSTOMER3_5_1_,
+        discountti0_.id as id8_1_,
+        discountti0_.id as id8_0_,
+        discountti0_.discount as discount8_0_,
+        discountti0_.CUSTOMER_ID as CUSTOMER3_8_0_ 
+    from
+        Discount discountti0_ 
+    where
+        discountti0_.CUSTOMER_ID=?
+14:10:36,983 DEBUG SQL:104 - 
+    delete 
+    from
+        Discount 
+    where
+        id=?
+14:10:36,984 DEBUG SQL:104 - 
+    delete 
+    from
+        Customer 
+    where
+        id=?
+14:10:36,986  INFO CustomRunner:139 - Test: testCompositeFK
+14:10:36,987 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:36,987 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_parent
+        (age, firstName, isMale, lastName) 
+    values
+        (?, ?, ?, ?)
+14:10:37,049 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_child
+        (parentFirstName, parentCivility, parentLastName, id) 
+    values
+        (?, ?, ?, ?)
+14:10:37,050 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.manytoone.Child
+14:10:37,051 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'annotations'
+                |  \-[IDENT] Node: 'manytoone'
+                \-[IDENT] Node: 'Child'
+
+14:10:37,051 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:37,051 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.manytoone.Child (<no alias>) -> child0_
+14:10:37,052 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} tbl_child child0_ ) )
+14:10:37,056 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:37,056 DEBUG JoinProcessor:175 - Using FROM fragment [tbl_child child0_]
+14:10:37,056 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (tbl_child)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'child0_.id as id18_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=tbl_child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.annotations.manytoone.Child}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'child0_.parentFirstName as parentFi2_18_, child0_.parentCivility as parentCi3_18_, child0_.parentLastName as parentLa4_18_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[child0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'tbl_child child0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=tbl_child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.annotations.manytoone.Child}}
+
+14:10:37,056 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:37,056 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.manytoone.Child
+14:10:37,056 DEBUG QueryTranslatorImpl:236 - SQL: select child0_.id as id18_, child0_.parentFirstName as parentFi2_18_, child0_.parentCivility as parentCi3_18_, child0_.parentLastName as parentLa4_18_ from tbl_child child0_
+14:10:37,056 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:37,057 DEBUG SQL:104 - 
+    select
+        child0_.id as id18_,
+        child0_.parentFirstName as parentFi2_18_,
+        child0_.parentCivility as parentCi3_18_,
+        child0_.parentLastName as parentLa4_18_ 
+    from
+        tbl_child child0_
+14:10:37,057 DEBUG SQL:104 - 
+    select
+        parent0_.firstName as firstName19_0_,
+        parent0_.isMale as isMale19_0_,
+        parent0_.lastName as lastName19_0_,
+        parent0_.age as age19_0_ 
+    from
+        tbl_parent parent0_ 
+    where
+        parent0_.firstName=? 
+        and parent0_.isMale=? 
+        and parent0_.lastName=?
+14:10:37,070  INFO CustomRunner:139 - Test: testCreate
+14:10:37,071 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,073 DEBUG SQL:104 - 
+    insert 
+    into
+        Corporation
+        (name, id) 
+    values
+        (?, ?)
+14:10:37,074 DEBUG SQL:104 - 
+    insert 
+    into
+        Flight
+        (alternativeDepartureDate, buyDate, COMP_ID, departureDate, duration, flight_name, OPTLOCK, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:10:37,074 DEBUG SQL:104 - 
+    select
+        flight0_.id as id9_1_,
+        flight0_.alternativeDepartureDate as alternat2_9_1_,
+        flight0_.buyDate as buyDate9_1_,
+        flight0_.COMP_ID as COMP9_9_1_,
+        flight0_.departureDate as departur4_9_1_,
+        flight0_.duration as duration9_1_,
+        flight0_.flight_name as flight6_9_1_,
+        flight0_.triggeredData as triggere7_9_1_,
+        flight0_.OPTLOCK as OPTLOCK9_1_,
+        company1_.id as id4_0_,
+        company1_.name as name4_0_ 
+    from
+        Flight flight0_ 
+    left outer join
+        Corporation company1_ 
+            on flight0_.COMP_ID=company1_.id 
+    where
+        flight0_.id=?
+14:10:37,077  INFO CustomRunner:139 - Test: testDefaultMetadata
+14:10:37,078 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,078 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,079 DEBUG SQL:104 - 
+    insert 
+    into
+        Color
+        (name, id) 
+    values
+        (?, ?)
+14:10:37,079 DEBUG SQL:104 - 
+    insert 
+    into
+        Car
+        (bodyColor_id, owner_firstName, owner_isMale, owner_lastName, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:37,086 DEBUG SQL:104 - 
+    select
+        car0_.id as id2_2_,
+        car0_.bodyColor_id as bodyColor2_2_2_,
+        car0_.owner_firstName as owner3_2_2_,
+        car0_.owner_isMale as owner4_2_2_,
+        car0_.owner_lastName as owner5_2_2_,
+        color1_.id as id3_0_,
+        color1_.name as name3_0_,
+        parent2_.firstName as firstName19_1_,
+        parent2_.isMale as isMale19_1_,
+        parent2_.lastName as lastName19_1_,
+        parent2_.age as age19_1_ 
+    from
+        Car car0_ 
+    left outer join
+        Color color1_ 
+            on car0_.bodyColor_id=color1_.id 
+    left outer join
+        tbl_parent parent2_ 
+            on car0_.owner_firstName=parent2_.firstName 
+            and car0_.owner_isMale=parent2_.isMale 
+            and car0_.owner_lastName=parent2_.lastName 
+    where
+        car0_.id=?
+14:10:37,087  INFO CustomRunner:139 - Test: testEager
+14:10:37,099 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,100 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,100 DEBUG SQL:104 - 
+    insert 
+    into
+        Color
+        (name, id) 
+    values
+        (?, ?)
+14:10:37,100 DEBUG SQL:104 - 
+    insert 
+    into
+        Car
+        (bodyColor_id, owner_firstName, owner_isMale, owner_lastName, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:37,101 DEBUG SQL:104 - 
+    select
+        car0_.id as id2_2_,
+        car0_.bodyColor_id as bodyColor2_2_2_,
+        car0_.owner_firstName as owner3_2_2_,
+        car0_.owner_isMale as owner4_2_2_,
+        car0_.owner_lastName as owner5_2_2_,
+        color1_.id as id3_0_,
+        color1_.name as name3_0_,
+        parent2_.firstName as firstName19_1_,
+        parent2_.isMale as isMale19_1_,
+        parent2_.lastName as lastName19_1_,
+        parent2_.age as age19_1_ 
+    from
+        Car car0_ 
+    left outer join
+        Color color1_ 
+            on car0_.bodyColor_id=color1_.id 
+    left outer join
+        tbl_parent parent2_ 
+            on car0_.owner_firstName=parent2_.firstName 
+            and car0_.owner_isMale=parent2_.isMale 
+            and car0_.owner_lastName=parent2_.lastName 
+    where
+        car0_.id=?
+14:10:37,122  INFO CustomRunner:139 - Test: testFetch
+14:10:37,124 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,124 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,126 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (name, passport_id, id) 
+    values
+        (?, ?, ?)
+14:10:37,126 DEBUG SQL:104 - 
+    insert 
+    into
+        Discount
+        (discount, CUSTOMER_ID, id) 
+    values
+        (?, ?, ?)
+14:10:37,127 DEBUG SQL:104 - 
+    select
+        discount0_.id as id8_0_,
+        discount0_.discount as discount8_0_,
+        discount0_.CUSTOMER_ID as CUSTOMER3_8_0_ 
+    from
+        Discount discount0_ 
+    where
+        discount0_.id=?
+14:10:37,129 DEBUG SQL:104 - 
+    select
+        discount0_.id as id8_0_,
+        discount0_.discount as discount8_0_,
+        discount0_.CUSTOMER_ID as CUSTOMER3_8_0_ 
+    from
+        Discount discount0_ 
+    where
+        discount0_.id=?
+14:10:37,137 DEBUG SQL:104 - 
+    select
+        discount0_.id as id8_0_,
+        discount0_.discount as discount8_0_,
+        discount0_.CUSTOMER_ID as CUSTOMER3_8_0_ 
+    from
+        Discount discount0_ 
+    where
+        discount0_.id=?
+14:10:37,138 DEBUG SQL:104 - 
+    select
+        customer0_.id as id5_2_,
+        customer0_.name as name5_2_,
+        customer0_.passport_id as passport3_5_2_,
+        passport1_.id as id16_0_,
+        passport1_.passport_number as passport2_16_0_,
+        tickets2_.CUST_ID as CUST3_5_4_,
+        tickets2_.id as id17_4_,
+        tickets2_.id as id17_1_,
+        tickets2_.ticket_number as ticket2_17_1_ 
+    from
+        Customer customer0_ 
+    left outer join
+        Passport passport1_ 
+            on customer0_.passport_id=passport1_.id 
+    left outer join
+        Ticket tickets2_ 
+            on customer0_.id=tickets2_.CUST_ID 
+    where
+        customer0_.id=?
+14:10:37,149 DEBUG SQL:104 - 
+    select
+        discountti0_.CUSTOMER_ID as CUSTOMER3_5_1_,
+        discountti0_.id as id8_1_,
+        discountti0_.id as id8_0_,
+        discountti0_.discount as discount8_0_,
+        discountti0_.CUSTOMER_ID as CUSTOMER3_8_0_ 
+    from
+        Discount discountti0_ 
+    where
+        discountti0_.CUSTOMER_ID=?
+14:10:37,150 DEBUG SQL:104 - 
+    delete 
+    from
+        Discount 
+    where
+        id=?
+14:10:37,151 DEBUG SQL:104 - 
+    delete 
+    from
+        Customer 
+    where
+        id=?
+14:10:37,160  INFO CustomRunner:139 - Test: testFormulaOnOtherSide
+14:10:37,161 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,162 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,162 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,163 DEBUG SQL:104 - 
+    insert 
+    into
+        Frame
+        (name, id) 
+    values
+        (?, ?)
+14:10:37,163 DEBUG SQL:104 - 
+    insert 
+    into
+        Lens
+        (focal, "frame_fk", id) 
+    values
+        (?, ?, ?)
+14:10:37,164 DEBUG SQL:104 - 
+    insert 
+    into
+        Lens
+        (focal, "frame_fk", id) 
+    values
+        (?, ?, ?)
+14:10:37,174 DEBUG SQL:104 - 
+    select
+        frame0_.id as id10_0_,
+        frame0_.name as name10_0_,
+        lower(frame0_.name) as formula15_0_ 
+    from
+        Frame frame0_ 
+    where
+        frame0_.id=?
+14:10:37,175 DEBUG SQL:104 - 
+    select
+        lenses0_."frame_fk" as frame3_10_1_,
+        lenses0_.id as id11_1_,
+        lenses0_.id as id11_0_,
+        lenses0_.focal as focal11_0_,
+        lenses0_."frame_fk" as frame3_11_0_,
+        (1/lenses0_.focal) as formula16_0_ 
+    from
+        Lens lenses0_ 
+    where
+        lenses0_."frame_fk"=?
+14:10:37,176 DEBUG SQL:104 - 
+    select
+        frame0_.id as id10_0_,
+        frame0_.name as name10_0_,
+        lower(frame0_.name) as formula15_0_ 
+    from
+        Frame frame0_ 
+    where
+        frame0_.name=?
+14:10:37,185 DEBUG SQL:104 - 
+    select
+        frame0_.id as id10_0_,
+        frame0_.name as name10_0_,
+        lower(frame0_.name) as formula15_0_ 
+    from
+        Frame frame0_ 
+    where
+        frame0_.name=?
+14:10:37,186  INFO CustomRunner:139 - Test: testImplicitCompositeFk
+14:10:37,188 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parentName, parentLevel, fld_lvl, name) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:37,189 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parentName, parentLevel, fld_lvl, name) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:37,189 DEBUG SQL:104 - 
+    select
+        node0_.fld_lvl as fld1_12_0_,
+        node0_.name as name12_0_,
+        node0_.description as descript3_12_0_,
+        node0_.parentName as parentName12_0_,
+        node0_.parentLevel as parentLe5_12_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.fld_lvl=? 
+        and node0_.name=?
+14:10:37,198  INFO CustomRunner:139 - Test: testManyToOneNonPk
+14:10:37,199 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,200 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,200 DEBUG SQL:104 - 
+    insert 
+    into
+        ORDERS
+        (order_nbr, id) 
+    values
+        (?, ?)
+14:10:37,201 DEBUG SQL:104 - 
+    insert 
+    into
+        OrderLine
+        (item, order_nbr, id) 
+    values
+        (?, ?, ?)
+14:10:37,201 DEBUG SQL:104 - 
+    select
+        orderline0_.id as id14_2_,
+        orderline0_.item as item14_2_,
+        orderline0_.order_nbr as order3_14_2_,
+        orderline0_1_.replacement_order_nbr as replacem1_15_2_,
+        order1_.id as id13_0_,
+        order1_.order_nbr as order2_13_0_,
+        order2_.id as id13_1_,
+        order2_.order_nbr as order2_13_1_ 
+    from
+        OrderLine orderline0_ 
+    left outer join
+        OrderLine_Extension orderline0_1_ 
+            on orderline0_.id=orderline0_1_.id 
+    left outer join
+        ORDERS order1_ 
+            on orderline0_.order_nbr=order1_.order_nbr 
+    left outer join
+        ORDERS order2_ 
+            on orderline0_1_.replacement_order_nbr=order2_.order_nbr 
+    where
+        orderline0_.id=?
+14:10:37,203 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_nbr as order3_13_2_,
+        orderlines0_.id as id14_2_,
+        orderlines0_.id as id14_1_,
+        orderlines0_.item as item14_1_,
+        orderlines0_.order_nbr as order3_14_1_,
+        orderlines0_1_.replacement_order_nbr as replacem1_15_1_,
+        order1_.id as id13_0_,
+        order1_.order_nbr as order2_13_0_ 
+    from
+        OrderLine orderlines0_ 
+    left outer join
+        OrderLine_Extension orderlines0_1_ 
+            on orderlines0_.id=orderlines0_1_.id 
+    left outer join
+        ORDERS order1_ 
+            on orderlines0_1_.replacement_order_nbr=order1_.order_nbr 
+    where
+        orderlines0_.order_nbr=?
+14:10:37,212  INFO CustomRunner:139 - Test: testManyToOneNonPkSecondaryTable
+14:10:37,213 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,213 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,214 DEBUG SQL:104 - 
+    insert 
+    into
+        ORDERS
+        (order_nbr, id) 
+    values
+        (?, ?)
+14:10:37,214 DEBUG SQL:104 - 
+    insert 
+    into
+        OrderLine
+        (item, order_nbr, id) 
+    values
+        (?, ?, ?)
+14:10:37,222 DEBUG SQL:104 - 
+    insert 
+    into
+        OrderLine_Extension
+        (replacement_order_nbr, id) 
+    values
+        (?, ?)
+14:10:37,222 DEBUG SQL:104 - 
+    select
+        orderline0_.id as id14_2_,
+        orderline0_.item as item14_2_,
+        orderline0_.order_nbr as order3_14_2_,
+        orderline0_1_.replacement_order_nbr as replacem1_15_2_,
+        order1_.id as id13_0_,
+        order1_.order_nbr as order2_13_0_,
+        order2_.id as id13_1_,
+        order2_.order_nbr as order2_13_1_ 
+    from
+        OrderLine orderline0_ 
+    left outer join
+        OrderLine_Extension orderline0_1_ 
+            on orderline0_.id=orderline0_1_.id 
+    left outer join
+        ORDERS order1_ 
+            on orderline0_.order_nbr=order1_.order_nbr 
+    left outer join
+        ORDERS order2_ 
+            on orderline0_1_.replacement_order_nbr=order2_.order_nbr 
+    where
+        orderline0_.id=?
+14:10:37,224 DEBUG SQL:104 - 
+    select
+        orderlines0_.order_nbr as order3_13_2_,
+        orderlines0_.id as id14_2_,
+        orderlines0_.id as id14_1_,
+        orderlines0_.item as item14_1_,
+        orderlines0_.order_nbr as order3_14_1_,
+        orderlines0_1_.replacement_order_nbr as replacem1_15_1_,
+        order1_.id as id13_0_,
+        order1_.order_nbr as order2_13_0_ 
+    from
+        OrderLine orderlines0_ 
+    left outer join
+        OrderLine_Extension orderlines0_1_ 
+            on orderlines0_.id=orderlines0_1_.id 
+    left outer join
+        ORDERS order1_ 
+            on orderlines0_1_.replacement_order_nbr=order1_.order_nbr 
+    where
+        orderlines0_.order_nbr=?
+14:10:37,247  INFO CustomRunner:139 - Test: testTwoManyToOneNonPk
+14:10:37,248 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,248 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,248 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:37,249 DEBUG SQL:104 - 
+    insert 
+    into
+        DealedCustomer
+        (userId, id) 
+    values
+        (?, ?)
+14:10:37,250 DEBUG SQL:104 - 
+    insert 
+    into
+        DealedCustomer
+        (userId, id) 
+    values
+        (?, ?)
+14:10:37,257 DEBUG SQL:104 - 
+    insert 
+    into
+        Deal
+        (from_userId, to_userId, id) 
+    values
+        (?, ?, ?)
+14:10:37,258 DEBUG SQL:104 - 
+    select
+        deal0_.id as id6_2_,
+        deal0_.from_userId as from2_6_2_,
+        deal0_.to_userId as to3_6_2_,
+        customer1_.id as id7_0_,
+        customer1_.userId as userId7_0_,
+        customer2_.id as id7_1_,
+        customer2_.userId as userId7_1_ 
+    from
+        Deal deal0_ 
+    left outer join
+        DealedCustomer customer1_ 
+            on deal0_.from_userId=customer1_.userId 
+    left outer join
+        DealedCustomer customer2_ 
+            on deal0_.to_userId=customer2_.userId 
+    where
+        deal0_.id=?
+14:10:37,261  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:37,267 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:37,268 DEBUG SQL:104 - 
+    alter table CLRUS2DI 
+        drop constraint FK750A057017B4863A
+14:10:37,268 DEBUG SQL:104 - 
+    alter table Car 
+        drop constraint BODY_COLOR_FK
+14:10:37,268 DEBUG SQL:104 - 
+    alter table Car 
+        drop constraint FK107B4AFFAACB
+14:10:37,268 DEBUG SQL:104 - 
+    alter table Customer 
+        drop constraint FK27FBE3FE1E3E1F5A
+14:10:37,269 DEBUG SQL:104 - 
+    alter table Deal 
+        drop constraint FK20708CD9F74BBB
+14:10:37,269 DEBUG SQL:104 - 
+    alter table Deal 
+        drop constraint FK20708C733C37CA
+14:10:37,269 DEBUG SQL:104 - 
+    alter table Discount 
+        drop constraint FK1422D961AED1FBDA
+14:10:37,269 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:37,270 DEBUG SQL:104 - 
+    alter table Lens 
+        drop constraint FK24151E5C29602
+14:10:37,270 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK2522228BC11D3
+14:10:37,277 DEBUG SQL:104 - 
+    alter table OrderLine 
+        drop constraint FK6017744250FBC7D9
+14:10:37,277 DEBUG SQL:104 - 
+    alter table OrderLine_Extension 
+        drop constraint FK6D7CC06229B721EC
+14:10:37,277 DEBUG SQL:104 - 
+    alter table OrderLine_Extension 
+        drop constraint FK6D7CC062FE238A3B
+14:10:37,277 DEBUG SQL:104 - 
+    alter table Ticket 
+        drop constraint FK954D572C5BAC2545
+14:10:37,277 DEBUG SQL:104 - 
+    alter table tbl_child 
+        drop constraint FKEC16D15BD64379CD
+14:10:37,278 DEBUG SQL:104 - 
+    drop table CLRUS2DI if exists
+14:10:37,278 DEBUG SQL:104 - 
+    drop table CTVUSERS if exists
+14:10:37,278 DEBUG SQL:104 - 
+    drop table Car if exists
+14:10:37,278 DEBUG SQL:104 - 
+    drop table Color if exists
+14:10:37,279 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:37,279 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:10:37,279 DEBUG SQL:104 - 
+    drop table Deal if exists
+14:10:37,286 DEBUG SQL:104 - 
+    drop table DealedCustomer if exists
+14:10:37,286 DEBUG SQL:104 - 
+    drop table Discount if exists
+14:10:37,286 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:37,286 DEBUG SQL:104 - 
+    drop table Frame if exists
+14:10:37,287 DEBUG SQL:104 - 
+    drop table Lens if exists
+14:10:37,287 DEBUG SQL:104 - 
+    drop table Node if exists
+14:10:37,287 DEBUG SQL:104 - 
+    drop table ORDERS if exists
+14:10:37,287 DEBUG SQL:104 - 
+    drop table OrderLine if exists
+14:10:37,288 DEBUG SQL:104 - 
+    drop table OrderLine_Extension if exists
+14:10:37,288 DEBUG SQL:104 - 
+    drop table Passport if exists
+14:10:37,288 DEBUG SQL:104 - 
+    drop table Ticket if exists
+14:10:37,288 DEBUG SQL:104 - 
+    drop table tbl_child if exists
+14:10:37,288 DEBUG SQL:104 - 
+    drop table tbl_parent if exists
+14:10:37,289 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:37,289  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:37,289  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

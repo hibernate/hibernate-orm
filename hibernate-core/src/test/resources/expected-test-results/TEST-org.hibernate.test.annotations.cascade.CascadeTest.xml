@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.cascade.CascadeTest" tests="4" time="0.178" timestamp="2013-02-28T20:10:10">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.cascade.CascadeTest" name="testDetach" time="0.022" />
+  <testcase classname="org.hibernate.test.annotations.cascade.CascadeTest" name="testMerge" time="0.014" />
+  <testcase classname="org.hibernate.test.annotations.cascade.CascadeTest" name="testPersist" time="0.007" />
+  <testcase classname="org.hibernate.test.annotations.cascade.CascadeTest" name="testRemove" time="0.018" />
+  <system-out><![CDATA[14:10:10,669  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.cascade.CascadeTest
+14:10:10,676  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:10,677  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:10,677  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:10,677  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:10,677  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:10,679  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:10,679  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:10,680  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:10,680  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:10,680  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:10,738  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:10,738 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:10,743 DEBUG SQL:104 - 
+    alter table Tooth 
+        drop constraint FK4D3DAA865835E32
+14:10:10,743 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Tooth drop constraint FK4D3DAA865835E32
+14:10:10,743 ERROR SchemaExport:426 - Table "TOOTH" not found; SQL statement:
+
+    alter table Tooth 
+        drop constraint FK4D3DAA865835E32 [42102-145]
+14:10:10,743 DEBUG SQL:104 - 
+    alter table Tooth 
+        drop constraint FK4D3DAA89152B1C0
+14:10:10,743 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Tooth drop constraint FK4D3DAA89152B1C0
+14:10:10,744 ERROR SchemaExport:426 - Table "TOOTH" not found; SQL statement:
+
+    alter table Tooth 
+        drop constraint FK4D3DAA89152B1C0 [42102-145]
+14:10:10,747 DEBUG SQL:104 - 
+    alter table Tooth 
+        drop constraint FK4D3DAA823E508C7
+14:10:10,747 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Tooth drop constraint FK4D3DAA823E508C7
+14:10:10,748 ERROR SchemaExport:426 - Table "TOOTH" not found; SQL statement:
+
+    alter table Tooth 
+        drop constraint FK4D3DAA823E508C7 [42102-145]
+14:10:10,759 DEBUG SQL:104 - 
+    drop table Mouth if exists
+14:10:10,759 DEBUG SQL:104 - 
+    drop table Tooth if exists
+14:10:10,759 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:10,760 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:10,760 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:10,760 DEBUG SQL:104 - 
+    create table Mouth (
+        id integer not null,
+        mouth_size integer,
+        primary key (id)
+    )
+14:10:10,763 DEBUG SQL:104 - 
+    create table Tooth (
+        id integer not null,
+        "type" varchar(255),
+        leftNeighbour_id integer,
+        mouth_id integer,
+        rightNeighbour_id integer,
+        primary key (id)
+    )
+14:10:10,765 DEBUG SQL:104 - 
+    alter table Tooth 
+        add constraint FK4D3DAA865835E32 
+        foreign key (leftNeighbour_id) 
+        references Tooth
+14:10:10,766 DEBUG SQL:104 - 
+    alter table Tooth 
+        add constraint FK4D3DAA89152B1C0 
+        foreign key (mouth_id) 
+        references Mouth
+14:10:10,768 DEBUG SQL:104 - 
+    alter table Tooth 
+        add constraint FK4D3DAA823E508C7 
+        foreign key (rightNeighbour_id) 
+        references Tooth
+14:10:10,770 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:10,770  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:10,771  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:10,771  INFO CustomRunner:139 - Test: testDetach
+14:10:10,778 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,779 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,781 DEBUG SQL:104 - 
+    insert 
+    into
+        Mouth
+        (mouth_size, id) 
+    values
+        (?, ?)
+14:10:10,782 DEBUG SQL:104 - 
+    insert 
+    into
+        Tooth
+        (leftNeighbour_id, mouth_id, rightNeighbour_id, "type", id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:10,782 DEBUG SQL:104 - 
+    update
+        Tooth 
+    set
+        leftNeighbour_id=?,
+        mouth_id=?,
+        rightNeighbour_id=?,
+        "type"=? 
+    where
+        id=?
+14:10:10,783 DEBUG SQL:104 - 
+    select
+        mouth0_.id as id0_0_,
+        mouth0_.mouth_size as mouth2_0_0_ 
+    from
+        Mouth mouth0_ 
+    where
+        mouth0_.id=?
+14:10:10,784 DEBUG SQL:104 - 
+    select
+        teeth0_.mouth_id as mouth4_0_3_,
+        teeth0_.id as id1_3_,
+        teeth0_.id as id1_2_,
+        teeth0_.leftNeighbour_id as leftNeig3_1_2_,
+        teeth0_.mouth_id as mouth4_1_2_,
+        teeth0_.rightNeighbour_id as rightNei5_1_2_,
+        teeth0_."type" as type2_1_2_,
+        tooth1_.id as id1_0_,
+        tooth1_.leftNeighbour_id as leftNeig3_1_0_,
+        tooth1_.mouth_id as mouth4_1_0_,
+        tooth1_.rightNeighbour_id as rightNei5_1_0_,
+        tooth1_."type" as type2_1_0_,
+        tooth2_.id as id1_1_,
+        tooth2_.leftNeighbour_id as leftNeig3_1_1_,
+        tooth2_.mouth_id as mouth4_1_1_,
+        tooth2_.rightNeighbour_id as rightNei5_1_1_,
+        tooth2_."type" as type2_1_1_ 
+    from
+        Tooth teeth0_ 
+    left outer join
+        Tooth tooth1_ 
+            on teeth0_.leftNeighbour_id=tooth1_.id 
+    left outer join
+        Tooth tooth2_ 
+            on tooth1_.rightNeighbour_id=tooth2_.id 
+    where
+        teeth0_.mouth_id=?
+14:10:10,788 DEBUG SQL:104 - 
+    select
+        mouth0_.id as id0_0_,
+        mouth0_.mouth_size as mouth2_0_0_ 
+    from
+        Mouth mouth0_ 
+    where
+        mouth0_.id=?
+14:10:10,789 DEBUG SQL:104 - 
+    select
+        teeth0_.mouth_id as mouth4_0_3_,
+        teeth0_.id as id1_3_,
+        teeth0_.id as id1_2_,
+        teeth0_.leftNeighbour_id as leftNeig3_1_2_,
+        teeth0_.mouth_id as mouth4_1_2_,
+        teeth0_.rightNeighbour_id as rightNei5_1_2_,
+        teeth0_."type" as type2_1_2_,
+        tooth1_.id as id1_0_,
+        tooth1_.leftNeighbour_id as leftNeig3_1_0_,
+        tooth1_.mouth_id as mouth4_1_0_,
+        tooth1_.rightNeighbour_id as rightNei5_1_0_,
+        tooth1_."type" as type2_1_0_,
+        tooth2_.id as id1_1_,
+        tooth2_.leftNeighbour_id as leftNeig3_1_1_,
+        tooth2_.mouth_id as mouth4_1_1_,
+        tooth2_.rightNeighbour_id as rightNei5_1_1_,
+        tooth2_."type" as type2_1_1_ 
+    from
+        Tooth teeth0_ 
+    left outer join
+        Tooth tooth1_ 
+            on teeth0_.leftNeighbour_id=tooth1_.id 
+    left outer join
+        Tooth tooth2_ 
+            on tooth1_.rightNeighbour_id=tooth2_.id 
+    where
+        teeth0_.mouth_id=?
+14:10:10,791 DEBUG SQL:104 - 
+    delete 
+    from
+        Tooth 
+    where
+        id=?
+14:10:10,793 DEBUG SQL:104 - 
+    delete 
+    from
+        Mouth 
+    where
+        id=?
+14:10:10,795  INFO CustomRunner:139 - Test: testMerge
+14:10:10,796 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,796 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,797 DEBUG SQL:104 - 
+    insert 
+    into
+        Tooth
+        (leftNeighbour_id, mouth_id, rightNeighbour_id, "type", id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:10,798 DEBUG SQL:104 - 
+    insert 
+    into
+        Tooth
+        (leftNeighbour_id, mouth_id, rightNeighbour_id, "type", id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:10,799 DEBUG SQL:104 - 
+    select
+        tooth0_.id as id1_3_,
+        tooth0_.leftNeighbour_id as leftNeig3_1_3_,
+        tooth0_.mouth_id as mouth4_1_3_,
+        tooth0_.rightNeighbour_id as rightNei5_1_3_,
+        tooth0_."type" as type2_1_3_,
+        tooth1_.id as id1_0_,
+        tooth1_.leftNeighbour_id as leftNeig3_1_0_,
+        tooth1_.mouth_id as mouth4_1_0_,
+        tooth1_.rightNeighbour_id as rightNei5_1_0_,
+        tooth1_."type" as type2_1_0_,
+        mouth2_.id as id0_1_,
+        mouth2_.mouth_size as mouth2_0_1_,
+        tooth3_.id as id1_2_,
+        tooth3_.leftNeighbour_id as leftNeig3_1_2_,
+        tooth3_.mouth_id as mouth4_1_2_,
+        tooth3_.rightNeighbour_id as rightNei5_1_2_,
+        tooth3_."type" as type2_1_2_ 
+    from
+        Tooth tooth0_ 
+    left outer join
+        Tooth tooth1_ 
+            on tooth0_.leftNeighbour_id=tooth1_.id 
+    left outer join
+        Mouth mouth2_ 
+            on tooth1_.mouth_id=mouth2_.id 
+    left outer join
+        Tooth tooth3_ 
+            on tooth1_.rightNeighbour_id=tooth3_.id 
+    where
+        tooth0_.id=?
+14:10:10,800 DEBUG SQL:104 - 
+    select
+        tooth0_.id as id1_3_,
+        tooth0_.leftNeighbour_id as leftNeig3_1_3_,
+        tooth0_.mouth_id as mouth4_1_3_,
+        tooth0_.rightNeighbour_id as rightNei5_1_3_,
+        tooth0_."type" as type2_1_3_,
+        tooth1_.id as id1_0_,
+        tooth1_.leftNeighbour_id as leftNeig3_1_0_,
+        tooth1_.mouth_id as mouth4_1_0_,
+        tooth1_.rightNeighbour_id as rightNei5_1_0_,
+        tooth1_."type" as type2_1_0_,
+        mouth2_.id as id0_1_,
+        mouth2_.mouth_size as mouth2_0_1_,
+        tooth3_.id as id1_2_,
+        tooth3_.leftNeighbour_id as leftNeig3_1_2_,
+        tooth3_.mouth_id as mouth4_1_2_,
+        tooth3_.rightNeighbour_id as rightNei5_1_2_,
+        tooth3_."type" as type2_1_2_ 
+    from
+        Tooth tooth0_ 
+    left outer join
+        Tooth tooth1_ 
+            on tooth0_.leftNeighbour_id=tooth1_.id 
+    left outer join
+        Mouth mouth2_ 
+            on tooth1_.mouth_id=mouth2_.id 
+    left outer join
+        Tooth tooth3_ 
+            on tooth1_.rightNeighbour_id=tooth3_.id 
+    where
+        tooth0_.id=?
+14:10:10,804 DEBUG SQL:104 - 
+    select
+        tooth0_.id as id1_1_,
+        tooth0_.leftNeighbour_id as leftNeig3_1_1_,
+        tooth0_.mouth_id as mouth4_1_1_,
+        tooth0_.rightNeighbour_id as rightNei5_1_1_,
+        tooth0_."type" as type2_1_1_,
+        tooth1_.id as id1_0_,
+        tooth1_.leftNeighbour_id as leftNeig3_1_0_,
+        tooth1_.mouth_id as mouth4_1_0_,
+        tooth1_.rightNeighbour_id as rightNei5_1_0_,
+        tooth1_."type" as type2_1_0_ 
+    from
+        Tooth tooth0_ 
+    left outer join
+        Tooth tooth1_ 
+            on tooth0_.rightNeighbour_id=tooth1_.id 
+    where
+        tooth0_.id=?
+14:10:10,806 DEBUG SQL:104 - 
+    update
+        Tooth 
+    set
+        leftNeighbour_id=?,
+        mouth_id=?,
+        rightNeighbour_id=?,
+        "type"=? 
+    where
+        id=?
+14:10:10,807 DEBUG SQL:104 - 
+    select
+        tooth0_.id as id1_3_,
+        tooth0_.leftNeighbour_id as leftNeig3_1_3_,
+        tooth0_.mouth_id as mouth4_1_3_,
+        tooth0_.rightNeighbour_id as rightNei5_1_3_,
+        tooth0_."type" as type2_1_3_,
+        tooth1_.id as id1_0_,
+        tooth1_.leftNeighbour_id as leftNeig3_1_0_,
+        tooth1_.mouth_id as mouth4_1_0_,
+        tooth1_.rightNeighbour_id as rightNei5_1_0_,
+        tooth1_."type" as type2_1_0_,
+        mouth2_.id as id0_1_,
+        mouth2_.mouth_size as mouth2_0_1_,
+        tooth3_.id as id1_2_,
+        tooth3_.leftNeighbour_id as leftNeig3_1_2_,
+        tooth3_.mouth_id as mouth4_1_2_,
+        tooth3_.rightNeighbour_id as rightNei5_1_2_,
+        tooth3_."type" as type2_1_2_ 
+    from
+        Tooth tooth0_ 
+    left outer join
+        Tooth tooth1_ 
+            on tooth0_.leftNeighbour_id=tooth1_.id 
+    left outer join
+        Mouth mouth2_ 
+            on tooth1_.mouth_id=mouth2_.id 
+    left outer join
+        Tooth tooth3_ 
+            on tooth1_.rightNeighbour_id=tooth3_.id 
+    where
+        tooth0_.id=?
+14:10:10,810  INFO CustomRunner:139 - Test: testPersist
+14:10:10,815 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,816 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,816 DEBUG SQL:104 - 
+    insert 
+    into
+        Tooth
+        (leftNeighbour_id, mouth_id, rightNeighbour_id, "type", id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:10,817 DEBUG SQL:104 - 
+    insert 
+    into
+        Tooth
+        (leftNeighbour_id, mouth_id, rightNeighbour_id, "type", id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:10,818 DEBUG SQL:104 - 
+    select
+        tooth0_.id as id1_3_,
+        tooth0_.leftNeighbour_id as leftNeig3_1_3_,
+        tooth0_.mouth_id as mouth4_1_3_,
+        tooth0_.rightNeighbour_id as rightNei5_1_3_,
+        tooth0_."type" as type2_1_3_,
+        tooth1_.id as id1_0_,
+        tooth1_.leftNeighbour_id as leftNeig3_1_0_,
+        tooth1_.mouth_id as mouth4_1_0_,
+        tooth1_.rightNeighbour_id as rightNei5_1_0_,
+        tooth1_."type" as type2_1_0_,
+        mouth2_.id as id0_1_,
+        mouth2_.mouth_size as mouth2_0_1_,
+        tooth3_.id as id1_2_,
+        tooth3_.leftNeighbour_id as leftNeig3_1_2_,
+        tooth3_.mouth_id as mouth4_1_2_,
+        tooth3_.rightNeighbour_id as rightNei5_1_2_,
+        tooth3_."type" as type2_1_2_ 
+    from
+        Tooth tooth0_ 
+    left outer join
+        Tooth tooth1_ 
+            on tooth0_.leftNeighbour_id=tooth1_.id 
+    left outer join
+        Mouth mouth2_ 
+            on tooth1_.mouth_id=mouth2_.id 
+    left outer join
+        Tooth tooth3_ 
+            on tooth1_.rightNeighbour_id=tooth3_.id 
+    where
+        tooth0_.id=?
+14:10:10,822  INFO CustomRunner:139 - Test: testRemove
+14:10:10,823 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,824 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,824 DEBUG SQL:104 - 
+    insert 
+    into
+        Mouth
+        (mouth_size, id) 
+    values
+        (?, ?)
+14:10:10,825 DEBUG SQL:104 - 
+    insert 
+    into
+        Tooth
+        (leftNeighbour_id, mouth_id, rightNeighbour_id, "type", id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:10,826 DEBUG SQL:104 - 
+    update
+        Tooth 
+    set
+        leftNeighbour_id=?,
+        mouth_id=?,
+        rightNeighbour_id=?,
+        "type"=? 
+    where
+        id=?
+14:10:10,827 DEBUG SQL:104 - 
+    select
+        tooth0_.id as id1_3_,
+        tooth0_.leftNeighbour_id as leftNeig3_1_3_,
+        tooth0_.mouth_id as mouth4_1_3_,
+        tooth0_.rightNeighbour_id as rightNei5_1_3_,
+        tooth0_."type" as type2_1_3_,
+        tooth1_.id as id1_0_,
+        tooth1_.leftNeighbour_id as leftNeig3_1_0_,
+        tooth1_.mouth_id as mouth4_1_0_,
+        tooth1_.rightNeighbour_id as rightNei5_1_0_,
+        tooth1_."type" as type2_1_0_,
+        mouth2_.id as id0_1_,
+        mouth2_.mouth_size as mouth2_0_1_,
+        tooth3_.id as id1_2_,
+        tooth3_.leftNeighbour_id as leftNeig3_1_2_,
+        tooth3_.mouth_id as mouth4_1_2_,
+        tooth3_.rightNeighbour_id as rightNei5_1_2_,
+        tooth3_."type" as type2_1_2_ 
+    from
+        Tooth tooth0_ 
+    left outer join
+        Tooth tooth1_ 
+            on tooth0_.leftNeighbour_id=tooth1_.id 
+    left outer join
+        Mouth mouth2_ 
+            on tooth1_.mouth_id=mouth2_.id 
+    left outer join
+        Tooth tooth3_ 
+            on tooth1_.rightNeighbour_id=tooth3_.id 
+    where
+        tooth0_.id=?
+14:10:10,828 DEBUG SQL:104 - 
+    select
+        mouth0_.id as id0_0_,
+        mouth0_.mouth_size as mouth2_0_0_ 
+    from
+        Mouth mouth0_ 
+    where
+        mouth0_.id=?
+14:10:10,830 DEBUG SQL:104 - 
+    select
+        teeth0_.mouth_id as mouth4_0_3_,
+        teeth0_.id as id1_3_,
+        teeth0_.id as id1_2_,
+        teeth0_.leftNeighbour_id as leftNeig3_1_2_,
+        teeth0_.mouth_id as mouth4_1_2_,
+        teeth0_.rightNeighbour_id as rightNei5_1_2_,
+        teeth0_."type" as type2_1_2_,
+        tooth1_.id as id1_0_,
+        tooth1_.leftNeighbour_id as leftNeig3_1_0_,
+        tooth1_.mouth_id as mouth4_1_0_,
+        tooth1_.rightNeighbour_id as rightNei5_1_0_,
+        tooth1_."type" as type2_1_0_,
+        tooth2_.id as id1_1_,
+        tooth2_.leftNeighbour_id as leftNeig3_1_1_,
+        tooth2_.mouth_id as mouth4_1_1_,
+        tooth2_.rightNeighbour_id as rightNei5_1_1_,
+        tooth2_."type" as type2_1_1_ 
+    from
+        Tooth teeth0_ 
+    left outer join
+        Tooth tooth1_ 
+            on teeth0_.leftNeighbour_id=tooth1_.id 
+    left outer join
+        Tooth tooth2_ 
+            on tooth1_.rightNeighbour_id=tooth2_.id 
+    where
+        teeth0_.mouth_id=?
+14:10:10,836 DEBUG SQL:104 - 
+    delete 
+    from
+        Tooth 
+    where
+        id=?
+14:10:10,837 DEBUG SQL:104 - 
+    delete 
+    from
+        Mouth 
+    where
+        id=?
+14:10:10,838 DEBUG SQL:104 - 
+    select
+        tooth0_.id as id1_3_,
+        tooth0_.leftNeighbour_id as leftNeig3_1_3_,
+        tooth0_.mouth_id as mouth4_1_3_,
+        tooth0_.rightNeighbour_id as rightNei5_1_3_,
+        tooth0_."type" as type2_1_3_,
+        tooth1_.id as id1_0_,
+        tooth1_.leftNeighbour_id as leftNeig3_1_0_,
+        tooth1_.mouth_id as mouth4_1_0_,
+        tooth1_.rightNeighbour_id as rightNei5_1_0_,
+        tooth1_."type" as type2_1_0_,
+        mouth2_.id as id0_1_,
+        mouth2_.mouth_size as mouth2_0_1_,
+        tooth3_.id as id1_2_,
+        tooth3_.leftNeighbour_id as leftNeig3_1_2_,
+        tooth3_.mouth_id as mouth4_1_2_,
+        tooth3_.rightNeighbour_id as rightNei5_1_2_,
+        tooth3_."type" as type2_1_2_ 
+    from
+        Tooth tooth0_ 
+    left outer join
+        Tooth tooth1_ 
+            on tooth0_.leftNeighbour_id=tooth1_.id 
+    left outer join
+        Mouth mouth2_ 
+            on tooth1_.mouth_id=mouth2_.id 
+    left outer join
+        Tooth tooth3_ 
+            on tooth1_.rightNeighbour_id=tooth3_.id 
+    where
+        tooth0_.id=?
+14:10:10,840  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:10,842 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:10,842 DEBUG SQL:104 - 
+    alter table Tooth 
+        drop constraint FK4D3DAA865835E32
+14:10:10,842 DEBUG SQL:104 - 
+    alter table Tooth 
+        drop constraint FK4D3DAA89152B1C0
+14:10:10,843 DEBUG SQL:104 - 
+    alter table Tooth 
+        drop constraint FK4D3DAA823E508C7
+14:10:10,843 DEBUG SQL:104 - 
+    drop table Mouth if exists
+14:10:10,844 DEBUG SQL:104 - 
+    drop table Tooth if exists
+14:10:10,844 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:10,845  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:10,845  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

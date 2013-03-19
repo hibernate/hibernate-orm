@@ -118,7 +118,6 @@ public class IJ2Test extends LegacyTestCase {
 		j = (J) s.get(J.class, jid);
 		i = (I) s.get(I.class, iid);
 		k = (K) s.get(K.class, kid);
-		System.out.println(k + "=" + i.getParent());
 		assertTrue( i.getParent()==k );
 		assertTrue( j.getParent()==k );
 		assertTrue( k.getIs().size()==2 );

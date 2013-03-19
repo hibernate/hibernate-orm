@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.metamodel.source.annotations.xml.mocker.DefaultConfigurationHelperTest" tests="4" time="0.008" timestamp="2013-02-28T20:10:01">
+  <properties />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.DefaultConfigurationHelperTest" name="applyDefaultToEntity" time="0.0" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.DefaultConfigurationHelperTest" name="applyNullDefaultToEntity" time="0.0" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.DefaultConfigurationHelperTest" name="testDefaultCascadePersist" time="0.003" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.xml.mocker.DefaultConfigurationHelperTest" name="testDefaultSchemaToAnnotationInstance" time="0.003" />
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

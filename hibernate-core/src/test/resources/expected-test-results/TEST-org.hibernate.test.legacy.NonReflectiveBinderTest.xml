@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.NonReflectiveBinderTest" tests="3" time="0.032" timestamp="2013-02-28T20:16:36">
+  <properties />
+  <testcase classname="org.hibernate.test.legacy.NonReflectiveBinderTest" name="testComparator" time="0.007" />
+  <testcase classname="org.hibernate.test.legacy.NonReflectiveBinderTest" name="testMetaInheritance" time="0.007" />
+  <testcase classname="org.hibernate.test.legacy.NonReflectiveBinderTest" name="testNonMutatedInheritance" time="0.007" />
+  <system-out><![CDATA[14:16:36,204  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.NonReflectiveBinderTest
+14:16:36,205  INFO CustomRunner:139 - Test: testComparator
+14:16:36,205  INFO Configuration:725 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Wicked.hbm.xml
+14:16:36,213  INFO CustomRunner:139 - Test: testMetaInheritance
+14:16:36,214  INFO Configuration:725 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Wicked.hbm.xml
+org.hibernate.mapping.Property(versionProp)
+org.hibernate.mapping.Property(stringProp)
+org.hibernate.mapping.Property(doubleProp)
+org.hibernate.mapping.Property(objectDoubleProp)
+org.hibernate.mapping.Property(booleanProp)
+org.hibernate.mapping.Property(objectBooleanProp)
+org.hibernate.mapping.Property(binaryProp)
+org.hibernate.mapping.Property(objectManyToOne)
+org.hibernate.mapping.Property(component)
+org.hibernate.mapping.Property(sortedEmployee)
+org.hibernate.mapping.Property(anotherSet)
+14:16:36,222  INFO CustomRunner:139 - Test: testNonMutatedInheritance
+14:16:36,223  INFO Configuration:725 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Wicked.hbm.xml
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

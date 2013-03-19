@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.metamodel.binding.BasicHbmBindingTests" tests="4" time="1.605" timestamp="2013-02-28T20:09:56">
+  <properties />
+  <testcase classname="org.hibernate.metamodel.binding.BasicHbmBindingTests" name="testEntityWithManyToOneMapping" time="0.773" />
+  <testcase classname="org.hibernate.metamodel.binding.BasicHbmBindingTests" name="testSimpleEntityMapping" time="0.33" />
+  <testcase classname="org.hibernate.metamodel.binding.BasicHbmBindingTests" name="testSimpleEntityWithSimpleComponentMapping" time="0.213" />
+  <testcase classname="org.hibernate.metamodel.binding.BasicHbmBindingTests" name="testSimpleVersionedEntityMapping" time="0.284" />
+  <system-out><![CDATA[14:09:56,533  INFO CustomRunner:132 - BeforeClass: org.hibernate.metamodel.binding.BasicHbmBindingTests
+14:09:56,534  INFO CustomRunner:139 - Test: testEntityWithManyToOneMapping
+14:09:57,285  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:57,287  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:57,287  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:57,289  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:57,290  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:57,296  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:57,297  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:57,306  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:57,307  INFO CustomRunner:139 - Test: testSimpleEntityMapping
+14:09:57,621  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:57,623  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:57,624  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:57,625  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:57,626  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:57,631  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:57,632  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:57,636  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:57,638  INFO CustomRunner:139 - Test: testSimpleEntityWithSimpleComponentMapping
+14:09:57,839  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:57,840  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:57,840  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:57,840  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:57,840  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:57,844  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:57,845  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:57,851  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:57,852  INFO CustomRunner:139 - Test: testSimpleVersionedEntityMapping
+14:09:58,099  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,099  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,099  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,120  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,120  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,125  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,125  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,135  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

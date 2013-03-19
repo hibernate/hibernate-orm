@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.jpa.lock.RepeatableReadTest" tests="4" time="0.004" timestamp="2013-02-28T20:14:51">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.jpa.lock.RepeatableReadTest" name="testStaleNonVersionedInstanceFoundInQueryResult" time="0.001" />
+  <ignored-testcase classname="org.hibernate.test.jpa.lock.RepeatableReadTest" name="testStaleNonVersionedInstanceFoundOnLock" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.jpa.lock.RepeatableReadTest" name="testStaleVersionedInstanceFoundInQueryResult" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.jpa.lock.RepeatableReadTest" name="testStaleVersionedInstanceFoundOnLock" time="0.0" />
+  <system-out><![CDATA[14:14:51,202  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.jpa.lock.RepeatableReadTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.util.PropertiesHelperTest" tests="2" time="0.003" timestamp="2013-02-28T20:19:29">
+  <properties />
+  <testcase classname="org.hibernate.test.util.PropertiesHelperTest" name="testParseExceptions" time="0.0" />
+  <testcase classname="org.hibernate.test.util.PropertiesHelperTest" name="testPlaceholderReplacement" time="0.0" />
+  <system-out><![CDATA[14:19:29,891  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.util.PropertiesHelperTest
+14:19:29,892  INFO CustomRunner:139 - Test: testParseExceptions
+14:19:29,892  INFO CustomRunner:139 - Test: testPlaceholderReplacement
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

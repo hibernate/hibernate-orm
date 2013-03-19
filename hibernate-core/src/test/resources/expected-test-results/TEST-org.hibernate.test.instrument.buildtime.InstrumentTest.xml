@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.instrument.buildtime.InstrumentTest" tests="10" time="0.006" timestamp="2013-02-28T20:14:29">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.instrument.buildtime.InstrumentTest" name="testCustomColumnReadAndWrite" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.instrument.buildtime.InstrumentTest" name="testDirtyCheck" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.instrument.buildtime.InstrumentTest" name="testFetchAll" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.instrument.buildtime.InstrumentTest" name="testLazy" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.instrument.buildtime.InstrumentTest" name="testLazyManyToOne" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.instrument.buildtime.InstrumentTest" name="testLazyPropertyCustomTypeExecutable" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.instrument.buildtime.InstrumentTest" name="testManyToOneProxy" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.instrument.buildtime.InstrumentTest" name="testPropertyInitialized" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.instrument.buildtime.InstrumentTest" name="testSetFieldInterceptor" time="0.001" />
+  <ignored-testcase classname="org.hibernate.test.instrument.buildtime.InstrumentTest" name="testSharedPKOneToOne" time="0.0" />
+  <system-out><![CDATA[14:14:29,532  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.instrument.buildtime.InstrumentTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

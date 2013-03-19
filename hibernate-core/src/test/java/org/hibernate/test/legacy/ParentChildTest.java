@@ -824,10 +824,6 @@ public class ParentChildTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		c = (Container) s.load( Container.class, new Long( c.getId() ) );
-		System.out.println( c.getOneToMany() );
-		System.out.println( c.getManyToMany() );
-		System.out.println( c.getComponents() );
-		System.out.println( c.getComposites() );
 		ccic = (Container.ContainerInnerClass) c.getComponents().get(2);
 		assertTrue( ccic.getMany().getOne()==ccic.getOne() );
 		assertTrue( c.getComponents().size()==3 );
@@ -858,10 +854,6 @@ public class ParentChildTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		c = (Container) s.load( Container.class, new Long( c.getId() ) );
-		System.out.println( c.getOneToMany() );
-		System.out.println( c.getManyToMany() );
-		System.out.println( c.getComponents() );
-		System.out.println( c.getComposites() );
 		assertTrue( c.getComponents().size()==1 ); //WAS: 2
 		assertTrue( c.getComposites().size()==2 );
 		assertTrue( c.getOneToMany().size()==2 );

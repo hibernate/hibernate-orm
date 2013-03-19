@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.formulajoin.FormulaJoinTest" tests="1" time="0.3" timestamp="2013-02-28T20:12:33">
+  <properties />
+  <testcase classname="org.hibernate.test.formulajoin.FormulaJoinTest" name="testFormulaJoin" time="0.23" />
+  <system-out><![CDATA[14:12:33,067  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.formulajoin.FormulaJoinTest
+14:12:33,068  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/formulajoin/Master.hbm.xml
+14:12:33,076  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:33,077  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:33,077  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:33,077  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:33,077  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:33,078  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:33,079  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:33,080  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:33,080  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:33,080  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:33,092  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:33,093 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:33,093 DEBUG SQL:104 - 
+    alter table t_details 
+        drop constraint FK186AE577BC0C5C97
+14:12:33,094 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table t_details drop constraint FK186AE577BC0C5C97
+14:12:33,094 ERROR SchemaExport:426 - Table "T_DETAILS" not found; SQL statement:
+
+    alter table t_details 
+        drop constraint FK186AE577BC0C5C97 [42102-145]
+14:12:33,094 DEBUG SQL:104 - 
+    drop table t_details if exists
+14:12:33,094 DEBUG SQL:104 - 
+    drop table t_masters if exists
+14:12:33,094 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:12:33,094 DEBUG SQL:104 - 
+    create table t_details (
+        id bigint not null,
+        details varchar(300) not null,
+        version integer not null,
+        cur_master bigint not null,
+        currentVersion boolean not null,
+        primary key (id)
+    )
+14:12:33,095 DEBUG SQL:104 - 
+    create table t_masters (
+        id bigint not null,
+        name varchar(100) not null,
+        primary key (id)
+    )
+14:12:33,095 DEBUG SQL:104 - 
+    alter table t_details 
+        add constraint masterVersion unique (version, cur_master)
+14:12:33,095 DEBUG SQL:104 - 
+    alter table t_details 
+        add constraint FK186AE577BC0C5C97 
+        foreign key (cur_master) 
+        references t_masters
+14:12:33,096 DEBUG SQL:104 - 
+    create table hibernate_unique_key (
+         next_hi integer 
+    )
+14:12:33,096 DEBUG SQL:104 - 
+    insert into hibernate_unique_key values ( 0 )
+14:12:33,096  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:33,097  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:33,108  INFO CustomRunner:139 - Test: testFormulaJoin
+14:12:33,109 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        t_masters
+14:12:33,110 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:12:33,110 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:12:33,111 DEBUG SQL:104 - 
+    insert 
+    into
+        t_masters
+        (name, id) 
+    values
+        (?, ?)
+14:12:33,111 DEBUG SQL:104 - 
+    insert 
+    into
+        t_details
+        (details, version, cur_master, currentVersion, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:33,132 DEBUG SQL:104 - 
+    insert 
+    into
+        t_details
+        (details, version, cur_master, currentVersion, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:33,132 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.formulajoin.Master m left join m.detail d
+14:12:33,134 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'formulajoin'
+          |  |  \-[IDENT] Node: 'Master'
+          |  \-[ALIAS] Node: 'm'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'm'
+             |  \-[IDENT] Node: 'detail'
+             \-[ALIAS] Node: 'd'
+
+14:12:33,134 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,134 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Master (m) -> master0_
+14:12:33,134 DEBUG FromReferenceNode:74 - Resolved : m -> master0_.id
+14:12:33,134 DEBUG DotNode:599 - getDataType() : detail -> org.hibernate.type.ManyToOneType(org.hibernate.test.formulajoin.Detail)
+14:12:33,134 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for detail in org.hibernate.test.formulajoin.Master (d) parent = [ {null} ]
+14:12:33,134 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Detail (d) -> detail1_
+14:12:33,135 DEBUG FromClause:282 - addJoinByPathMap() : m.detail -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+14:12:33,135 DEBUG FromReferenceNode:74 - Resolved : m.detail -> master0_.id, 1
+14:12:33,135 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 't_details detail1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+
+14:12:33,135 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( t_masters master0_ t_details detail1_ ) ) )
+14:12:33,135 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:33,135 DEBUG JoinProcessor:175 - Using FROM fragment [t_masters master0_]
+14:12:33,135 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join t_details detail1_ on master0_.id=detail1_.cur_master and 1=detail1_.currentVersion]
+14:12:33,136 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (t_masters,t_details)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'master0_.id as id1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=t_masters,tableAlias=master0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Master}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'detail1_.id as id0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'master0_.name as name1_0_, 1 as formula49_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'detail1_.details as details0_1_, detail1_.version as version0_1_, detail1_.cur_master as cur4_0_1_, detail1_.currentVersion as currentV5_0_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[d, m], fromElementByTableAlias=[detail1_, master0_], fromElementsByPath=[m.detail], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 't_masters master0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=t_masters,tableAlias=master0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Master}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join t_details detail1_ on master0_.id=detail1_.cur_master and 1=detail1_.currentVersion' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+
+14:12:33,152 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,152 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.formulajoin.Master m left join m.detail d
+14:12:33,152 DEBUG QueryTranslatorImpl:236 - SQL: select master0_.id as id1_0_, detail1_.id as id0_1_, master0_.name as name1_0_, 1 as formula49_0_, detail1_.details as details0_1_, detail1_.version as version0_1_, detail1_.cur_master as cur4_0_1_, detail1_.currentVersion as currentV5_0_1_ from t_masters master0_ left outer join t_details detail1_ on master0_.id=detail1_.cur_master and 1=detail1_.currentVersion
+14:12:33,152 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,153 DEBUG SQL:104 - 
+    select
+        master0_.id as id1_0_,
+        detail1_.id as id0_1_,
+        master0_.name as name1_0_,
+        1 as formula49_0_,
+        detail1_.details as details0_1_,
+        detail1_.version as version0_1_,
+        detail1_.cur_master as cur4_0_1_,
+        detail1_.currentVersion as currentV5_0_1_ 
+    from
+        t_masters master0_ 
+    left outer join
+        t_details detail1_ 
+            on master0_.id=detail1_.cur_master 
+            and 1=detail1_.currentVersion
+14:12:33,154 DEBUG SQL:104 - 
+    select
+        detail0_.id as id0_0_,
+        detail0_.details as details0_0_,
+        detail0_.version as version0_0_,
+        detail0_.cur_master as cur4_0_0_,
+        detail0_.currentVersion as currentV5_0_0_ 
+    from
+        t_details detail0_ 
+    where
+        detail0_.cur_master=? 
+        and detail0_.currentVersion=?
+14:12:33,170 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.formulajoin.Master m left join fetch m.detail
+14:12:33,172 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'formulajoin'
+          |  |  \-[IDENT] Node: 'Master'
+          |  \-[ALIAS] Node: 'm'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'm'
+                \-[IDENT] Node: 'detail'
+
+14:12:33,173 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,173 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Master (m) -> master0_
+14:12:33,173 DEBUG FromReferenceNode:74 - Resolved : m -> master0_.id
+14:12:33,174 DEBUG DotNode:599 - getDataType() : detail -> org.hibernate.type.ManyToOneType(org.hibernate.test.formulajoin.Detail)
+14:12:33,174 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for detail in org.hibernate.test.formulajoin.Master (<no alias>) parent = [ {null} ]
+14:12:33,174 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Detail (<no alias>) -> detail1_
+14:12:33,180 DEBUG FromClause:282 - addJoinByPathMap() : m.detail -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+14:12:33,180 DEBUG FromReferenceNode:74 - Resolved : m.detail -> master0_.id, 1
+14:12:33,180 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 't_details detail1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+
+14:12:33,181 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( t_masters master0_ t_details detail1_ ) ) )
+14:12:33,181 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:33,181 DEBUG JoinProcessor:175 - Using FROM fragment [t_masters master0_]
+14:12:33,181 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join t_details detail1_ on master0_.id=detail1_.cur_master and 1=detail1_.currentVersion]
+14:12:33,182 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (t_masters,t_details)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'master0_.id as id1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=t_masters,tableAlias=master0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Master}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'detail1_.id as id0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'master0_.name as name1_0_, 1 as formula49_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'detail1_.details as details0_1_, detail1_.version as version0_1_, detail1_.cur_master as cur4_0_1_, detail1_.currentVersion as currentV5_0_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[m], fromElementByTableAlias=[detail1_, master0_], fromElementsByPath=[m.detail], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 't_masters master0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=t_masters,tableAlias=master0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Master}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join t_details detail1_ on master0_.id=detail1_.cur_master and 1=detail1_.currentVersion' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+
+14:12:33,193 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,193 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.formulajoin.Master m left join fetch m.detail
+14:12:33,193 DEBUG QueryTranslatorImpl:236 - SQL: select master0_.id as id1_0_, detail1_.id as id0_1_, master0_.name as name1_0_, 1 as formula49_0_, detail1_.details as details0_1_, detail1_.version as version0_1_, detail1_.cur_master as cur4_0_1_, detail1_.currentVersion as currentV5_0_1_ from t_masters master0_ left outer join t_details detail1_ on master0_.id=detail1_.cur_master and 1=detail1_.currentVersion
+14:12:33,193 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,193 DEBUG SQL:104 - 
+    select
+        master0_.id as id1_0_,
+        detail1_.id as id0_1_,
+        master0_.name as name1_0_,
+        1 as formula49_0_,
+        detail1_.details as details0_1_,
+        detail1_.version as version0_1_,
+        detail1_.cur_master as cur4_0_1_,
+        detail1_.currentVersion as currentV5_0_1_ 
+    from
+        t_masters master0_ 
+    left outer join
+        t_details detail1_ 
+            on master0_.id=detail1_.cur_master 
+            and 1=detail1_.currentVersion
+14:12:33,195 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.formulajoin.Master m join fetch m.detail
+14:12:33,196 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'formulajoin'
+          |  |  \-[IDENT] Node: 'Master'
+          |  \-[ALIAS] Node: 'm'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'm'
+                \-[IDENT] Node: 'detail'
+
+14:12:33,208 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,209 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Master (m) -> master0_
+14:12:33,209 DEBUG FromReferenceNode:74 - Resolved : m -> master0_.id
+14:12:33,209 DEBUG DotNode:599 - getDataType() : detail -> org.hibernate.type.ManyToOneType(org.hibernate.test.formulajoin.Detail)
+14:12:33,209 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for detail in org.hibernate.test.formulajoin.Master (<no alias>) parent = [ {null} ]
+14:12:33,210 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Detail (<no alias>) -> detail1_
+14:12:33,210 DEBUG FromClause:282 - addJoinByPathMap() : m.detail -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+14:12:33,210 DEBUG FromReferenceNode:74 - Resolved : m.detail -> master0_.id, 1
+14:12:33,210 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 't_details detail1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+
+14:12:33,222 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( t_masters master0_ t_details detail1_ ) ) )
+14:12:33,222 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:33,223 DEBUG JoinProcessor:175 - Using FROM fragment [t_masters master0_]
+14:12:33,223 DEBUG JoinProcessor:175 - Using FROM fragment [inner join t_details detail1_ on master0_.id=detail1_.cur_master and 1=detail1_.currentVersion]
+14:12:33,223 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (t_masters,t_details)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'master0_.id as id1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=t_masters,tableAlias=master0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Master}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'detail1_.id as id0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'master0_.name as name1_0_, 1 as formula49_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'detail1_.details as details0_1_, detail1_.version as version0_1_, detail1_.cur_master as cur4_0_1_, detail1_.currentVersion as currentV5_0_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[m], fromElementByTableAlias=[detail1_, master0_], fromElementsByPath=[m.detail], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 't_masters master0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=t_masters,tableAlias=master0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Master}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join t_details detail1_ on master0_.id=detail1_.cur_master and 1=detail1_.currentVersion' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail1_,origin=t_masters master0_,columns={master0_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+
+14:12:33,224 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,224 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.formulajoin.Master m join fetch m.detail
+14:12:33,224 DEBUG QueryTranslatorImpl:236 - SQL: select master0_.id as id1_0_, detail1_.id as id0_1_, master0_.name as name1_0_, 1 as formula49_0_, detail1_.details as details0_1_, detail1_.version as version0_1_, detail1_.cur_master as cur4_0_1_, detail1_.currentVersion as currentV5_0_1_ from t_masters master0_ inner join t_details detail1_ on master0_.id=detail1_.cur_master and 1=detail1_.currentVersion
+14:12:33,224 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,225 DEBUG SQL:104 - 
+    select
+        master0_.id as id1_0_,
+        detail1_.id as id0_1_,
+        master0_.name as name1_0_,
+        1 as formula49_0_,
+        detail1_.details as details0_1_,
+        detail1_.version as version0_1_,
+        detail1_.cur_master as cur4_0_1_,
+        detail1_.currentVersion as currentV5_0_1_ 
+    from
+        t_masters master0_ 
+    inner join
+        t_details detail1_ 
+            on master0_.id=detail1_.cur_master 
+            and 1=detail1_.currentVersion
+14:12:33,234 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.formulajoin.Detail d join fetch d.currentMaster.master
+14:12:33,236 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'formulajoin'
+          |  |  \-[IDENT] Node: 'Detail'
+          |  \-[ALIAS] Node: 'd'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[IDENT] Node: 'd'
+                |  \-[IDENT] Node: 'currentMaster'
+                \-[IDENT] Node: 'master'
+
+14:12:33,237 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,245 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Detail (d) -> detail0_
+14:12:33,245 DEBUG FromReferenceNode:74 - Resolved : d -> detail0_.id
+14:12:33,245 DEBUG DotNode:599 - getDataType() : currentMaster -> org.hibernate.type.EmbeddedComponentType@548f2aa2
+14:12:33,245 DEBUG DotNode:585 - Unresolved property path is now 'currentMaster.master'
+14:12:33,246 DEBUG FromReferenceNode:74 - Resolved : d.currentMaster -> detail0_.cur_master
+14:12:33,246 DEBUG DotNode:599 - getDataType() : currentMaster.master -> org.hibernate.type.ManyToOneType(org.hibernate.test.formulajoin.Master)
+14:12:33,247 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for master in org.hibernate.test.formulajoin.Detail (<no alias>) parent = [ {null} ]
+14:12:33,247 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Master (<no alias>) -> master1_
+14:12:33,247 DEBUG FromClause:282 - addJoinByPathMap() : d.currentMaster.master -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_masters,tableAlias=master1_,origin=t_details detail0_,columns={detail0_.cur_master ,className=org.hibernate.test.formulajoin.Master}}
+14:12:33,247 DEBUG FromReferenceNode:74 - Resolved : d.currentMaster.master -> detail0_.cur_master
+14:12:33,247 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 't_masters master1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_masters,tableAlias=master1_,origin=t_details detail0_,columns={detail0_.cur_master ,className=org.hibernate.test.formulajoin.Master}}
+
+14:12:33,247 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( t_details detail0_ t_masters master1_ ) ) )
+14:12:33,248 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:33,253 DEBUG JoinProcessor:175 - Using FROM fragment [t_details detail0_]
+14:12:33,253 DEBUG JoinProcessor:175 - Using FROM fragment [inner join t_masters master1_ on detail0_.cur_master=master1_.id]
+14:12:33,253 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (t_masters,t_details)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'detail0_.id as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=t_details,tableAlias=detail0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Detail}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'master1_.id as id1_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_masters,tableAlias=master1_,origin=t_details detail0_,columns={detail0_.cur_master ,className=org.hibernate.test.formulajoin.Master}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'detail0_.details as details0_0_, detail0_.version as version0_0_, detail0_.cur_master as cur4_0_0_, detail0_.currentVersion as currentV5_0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'master1_.name as name1_1_, 1 as formula49_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[d], fromElementByTableAlias=[master1_, detail0_], fromElementsByPath=[d.currentMaster.master], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 't_details detail0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=t_details,tableAlias=detail0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Detail}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join t_masters master1_ on detail0_.cur_master=master1_.id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_masters,tableAlias=master1_,origin=t_details detail0_,columns={detail0_.cur_master ,className=org.hibernate.test.formulajoin.Master}}
+
+14:12:33,253 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,253 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.formulajoin.Detail d join fetch d.currentMaster.master
+14:12:33,258 DEBUG QueryTranslatorImpl:236 - SQL: select detail0_.id as id0_0_, master1_.id as id1_1_, detail0_.details as details0_0_, detail0_.version as version0_0_, detail0_.cur_master as cur4_0_0_, detail0_.currentVersion as currentV5_0_0_, master1_.name as name1_1_, 1 as formula49_1_ from t_details detail0_ inner join t_masters master1_ on detail0_.cur_master=master1_.id
+14:12:33,259 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,259 DEBUG SQL:104 - 
+    select
+        detail0_.id as id0_0_,
+        master1_.id as id1_1_,
+        detail0_.details as details0_0_,
+        detail0_.version as version0_0_,
+        detail0_.cur_master as cur4_0_0_,
+        detail0_.currentVersion as currentV5_0_0_,
+        master1_.name as name1_1_,
+        1 as formula49_1_ 
+    from
+        t_details detail0_ 
+    inner join
+        t_masters master1_ 
+            on detail0_.cur_master=master1_.id
+14:12:33,261 DEBUG SQL:104 - 
+    select
+        detail0_.id as id0_0_,
+        detail0_.details as details0_0_,
+        detail0_.version as version0_0_,
+        detail0_.cur_master as cur4_0_0_,
+        detail0_.currentVersion as currentV5_0_0_ 
+    from
+        t_details detail0_ 
+    where
+        detail0_.cur_master=? 
+        and detail0_.currentVersion=?
+14:12:33,261 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.formulajoin.Detail d join fetch d.currentMaster.master m join fetch m.detail
+14:12:33,263 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'formulajoin'
+          |  |  \-[IDENT] Node: 'Detail'
+          |  \-[ALIAS] Node: 'd'
+          +-[JOIN] Node: 'join'
+          |  +-[FETCH] Node: 'fetch'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[IDENT] Node: 'd'
+          |  |  |  \-[IDENT] Node: 'currentMaster'
+          |  |  \-[IDENT] Node: 'master'
+          |  \-[ALIAS] Node: 'm'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'm'
+                \-[IDENT] Node: 'detail'
+
+14:12:33,263 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,282 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Detail (d) -> detail0_
+14:12:33,282 DEBUG FromReferenceNode:74 - Resolved : d -> detail0_.id
+14:12:33,282 DEBUG DotNode:599 - getDataType() : currentMaster -> org.hibernate.type.EmbeddedComponentType@548f2aa2
+14:12:33,282 DEBUG DotNode:585 - Unresolved property path is now 'currentMaster.master'
+14:12:33,282 DEBUG FromReferenceNode:74 - Resolved : d.currentMaster -> detail0_.cur_master
+14:12:33,282 DEBUG DotNode:599 - getDataType() : currentMaster.master -> org.hibernate.type.ManyToOneType(org.hibernate.test.formulajoin.Master)
+14:12:33,282 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for master in org.hibernate.test.formulajoin.Detail (m) parent = [ {null} ]
+14:12:33,283 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Master (m) -> master1_
+14:12:33,283 DEBUG FromClause:282 - addJoinByPathMap() : d.currentMaster.master -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=t_masters,tableAlias=master1_,origin=t_details detail0_,columns={detail0_.cur_master ,className=org.hibernate.test.formulajoin.Master}}
+14:12:33,283 DEBUG FromReferenceNode:74 - Resolved : d.currentMaster.master -> detail0_.cur_master
+14:12:33,283 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 't_masters master1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=t_masters,tableAlias=master1_,origin=t_details detail0_,columns={detail0_.cur_master ,className=org.hibernate.test.formulajoin.Master}}
+
+14:12:33,283 DEBUG FromReferenceNode:74 - Resolved : m -> master1_.id
+14:12:33,283 DEBUG DotNode:599 - getDataType() : detail -> org.hibernate.type.ManyToOneType(org.hibernate.test.formulajoin.Detail)
+14:12:33,283 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for detail in org.hibernate.test.formulajoin.Master (<no alias>) parent = [ {null} ]
+14:12:33,284 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Detail (<no alias>) -> detail2_
+14:12:33,284 DEBUG FromClause:282 - addJoinByPathMap() : m.detail -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail2_,origin=t_masters master1_,columns={master1_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+14:12:33,284 DEBUG FromReferenceNode:74 - Resolved : m.detail -> master1_.id, 1
+14:12:33,284 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 't_details detail2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail2_,origin=t_masters master1_,columns={master1_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+
+14:12:33,284 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( t_details detail0_ ( t_masters master1_ t_details detail2_ ) ) ) )
+14:12:33,284 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:33,284 DEBUG JoinProcessor:175 - Using FROM fragment [t_details detail0_]
+14:12:33,284 DEBUG JoinProcessor:175 - Using FROM fragment [inner join t_masters master1_ on detail0_.cur_master=master1_.id]
+14:12:33,285 DEBUG JoinProcessor:175 - Using FROM fragment [inner join t_details detail2_ on master1_.id=detail2_.cur_master and 1=detail2_.currentVersion]
+14:12:33,285 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (t_masters,t_details)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'detail0_.id as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=t_details,tableAlias=detail0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Detail}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'master1_.id as id1_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=t_masters,tableAlias=master1_,origin=t_details detail0_,columns={detail0_.cur_master ,className=org.hibernate.test.formulajoin.Master}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'detail2_.id as id0_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail2_,origin=inner join t_masters master1_ on detail0_.cur_master=master1_.id,columns={master1_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'detail0_.details as details0_0_, detail0_.version as version0_0_, detail0_.cur_master as cur4_0_0_, detail0_.currentVersion as currentV5_0_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'master1_.name as name1_1_, 1 as formula49_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'detail2_.details as details0_2_, detail2_.version as version0_2_, detail2_.cur_master as cur4_0_2_, detail2_.currentVersion as currentV5_0_2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[d, m], fromElementByTableAlias=[detail2_, master1_, detail0_], fromElementsByPath=[m.detail, d.currentMaster.master], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 't_details detail0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=t_details,tableAlias=detail0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Detail}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join t_masters master1_ on detail0_.cur_master=master1_.id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=t_masters,tableAlias=master1_,origin=t_details detail0_,columns={detail0_.cur_master ,className=org.hibernate.test.formulajoin.Master}}
+             \-[JOIN_FRAGMENT] FromElement: 'inner join t_details detail2_ on master1_.id=detail2_.cur_master and 1=detail2_.currentVersion' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail2_,origin=inner join t_masters master1_ on detail0_.cur_master=master1_.id,columns={master1_.id 1 ,className=org.hibernate.test.formulajoin.Detail}}
+
+14:12:33,294 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,294 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.formulajoin.Detail d join fetch d.currentMaster.master m join fetch m.detail
+14:12:33,294 DEBUG QueryTranslatorImpl:236 - SQL: select detail0_.id as id0_0_, master1_.id as id1_1_, detail2_.id as id0_2_, detail0_.details as details0_0_, detail0_.version as version0_0_, detail0_.cur_master as cur4_0_0_, detail0_.currentVersion as currentV5_0_0_, master1_.name as name1_1_, 1 as formula49_1_, detail2_.details as details0_2_, detail2_.version as version0_2_, detail2_.cur_master as cur4_0_2_, detail2_.currentVersion as currentV5_0_2_ from t_details detail0_ inner join t_masters master1_ on detail0_.cur_master=master1_.id inner join t_details detail2_ on master1_.id=detail2_.cur_master and 1=detail2_.currentVersion
+14:12:33,294 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,295 DEBUG SQL:104 - 
+    select
+        detail0_.id as id0_0_,
+        master1_.id as id1_1_,
+        detail2_.id as id0_2_,
+        detail0_.details as details0_0_,
+        detail0_.version as version0_0_,
+        detail0_.cur_master as cur4_0_0_,
+        detail0_.currentVersion as currentV5_0_0_,
+        master1_.name as name1_1_,
+        1 as formula49_1_,
+        detail2_.details as details0_2_,
+        detail2_.version as version0_2_,
+        detail2_.cur_master as cur4_0_2_,
+        detail2_.currentVersion as currentV5_0_2_ 
+    from
+        t_details detail0_ 
+    inner join
+        t_masters master1_ 
+            on detail0_.cur_master=master1_.id 
+    inner join
+        t_details detail2_ 
+            on master1_.id=detail2_.cur_master 
+            and 1=detail2_.currentVersion
+14:12:33,296 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.formulajoin.Detail
+14:12:33,297 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'formulajoin'
+             \-[IDENT] Node: 'Detail'
+
+14:12:33,321 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,321 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Detail (<no alias>) -> detail0_
+14:12:33,321 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (t_details)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[detail0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 't_details' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_details,tableAlias=detail0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Detail}}
+
+14:12:33,322 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,322 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,322 DEBUG SQL:104 - 
+    delete 
+    from
+        t_details
+14:12:33,323 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.formulajoin.Master
+14:12:33,324 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'formulajoin'
+             \-[IDENT] Node: 'Master'
+
+14:12:33,336 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,336 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.formulajoin.Master (<no alias>) -> master0_
+14:12:33,337 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (t_masters)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[master0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 't_masters' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=t_masters,tableAlias=master0_,origin=null,columns={,className=org.hibernate.test.formulajoin.Master}}
+
+14:12:33,337 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,337 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:33,337 DEBUG SQL:104 - 
+    delete 
+    from
+        t_masters
+14:12:33,338  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:33,339 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:33,339 DEBUG SQL:104 - 
+    alter table t_details 
+        drop constraint FK186AE577BC0C5C97
+14:12:33,339 DEBUG SQL:104 - 
+    drop table t_details if exists
+14:12:33,339 DEBUG SQL:104 - 
+    drop table t_masters if exists
+14:12:33,340 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:12:33,350  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:33,351  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,1564 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.cid.CompositeIdTest" tests="6" time="0.438" timestamp="2013-02-28T20:11:54">
+  <properties />
+  <testcase classname="org.hibernate.test.cid.CompositeIdTest" name="testCompositeIds" time="0.111" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdTest" name="testDistinctCountOfEntityWithCompositeId" time="0.004" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdTest" name="testMultipleCollectionFetch" time="0.036" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdTest" name="testNonDistinctCountOfEntityWithCompositeId" time="0.03" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdTest" name="testNonLazyFetch" time="0.12" />
+  <testcase classname="org.hibernate.test.cid.CompositeIdTest" name="testQuery" time="0.039" />
+  <system-out><![CDATA[14:11:54,150  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.cid.CompositeIdTest
+14:11:54,153  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Customer.hbm.xml
+14:11:54,160  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Order.hbm.xml
+14:11:54,168  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/LineItem.hbm.xml
+14:11:54,175  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cid/Product.hbm.xml
+14:11:54,188  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:54,189  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:54,189  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:54,189  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:54,189  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:54,191  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:54,191  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:54,192  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:54,192  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:54,192  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:54,217  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:54,218 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:54,218 DEBUG SQL:104 - 
+    alter table CustomerOrder 
+        drop constraint FKAEF781F06153C9DD
+14:11:54,218 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CustomerOrder drop constraint FKAEF781F06153C9DD
+14:11:54,218 ERROR SchemaExport:426 - Table "CUSTOMERORDER" not found; SQL statement:
+
+    alter table CustomerOrder 
+        drop constraint FKAEF781F06153C9DD [42102-145]
+14:11:54,219 DEBUG SQL:104 - 
+    alter table LineItem 
+        drop constraint FK4AAEE947CB8F4618
+14:11:54,219 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table LineItem drop constraint FK4AAEE947CB8F4618
+14:11:54,219 ERROR SchemaExport:426 - Table "LINEITEM" not found; SQL statement:
+
+    alter table LineItem 
+        drop constraint FK4AAEE947CB8F4618 [42102-145]
+14:11:54,219 DEBUG SQL:104 - 
+    alter table LineItem 
+        drop constraint FK4AAEE947EDAE41F3
+14:11:54,219 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table LineItem drop constraint FK4AAEE947EDAE41F3
+14:11:54,219 ERROR SchemaExport:426 - Table "LINEITEM" not found; SQL statement:
+
+    alter table LineItem 
+        drop constraint FK4AAEE947EDAE41F3 [42102-145]
+14:11:54,219 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:11:54,220 DEBUG SQL:104 - 
+    drop table CustomerOrder if exists
+14:11:54,220 DEBUG SQL:104 - 
+    drop table LineItem if exists
+14:11:54,220 DEBUG SQL:104 - 
+    drop table Product if exists
+14:11:54,220 DEBUG SQL:104 - 
+    create table Customer (
+        customerId varchar(10) not null,
+        name varchar(100) not null,
+        address varchar(200) not null,
+        primary key (customerId)
+    )
+14:11:54,220 DEBUG SQL:104 - 
+    create table CustomerOrder (
+        customerId varchar(10) not null,
+        orderNumber integer not null,
+        orderDate date not null,
+        primary key (customerId, orderNumber)
+    )
+14:11:54,221 DEBUG SQL:104 - 
+    create table LineItem (
+        customerId varchar(10) not null,
+        orderNumber integer not null,
+        productId varchar(10) not null,
+        quantity integer,
+        primary key (customerId, orderNumber, productId)
+    )
+14:11:54,222 DEBUG SQL:104 - 
+    create table Product (
+        productId varchar(10) not null,
+        description varchar(200) not null,
+        cost decimal(19,2),
+        numberAvailable integer,
+        primary key (productId)
+    )
+14:11:54,222 DEBUG SQL:104 - 
+    alter table CustomerOrder 
+        add constraint FKAEF781F06153C9DD 
+        foreign key (customerId) 
+        references Customer
+14:11:54,224 DEBUG SQL:104 - 
+    alter table LineItem 
+        add constraint FK4AAEE947CB8F4618 
+        foreign key (customerId, orderNumber) 
+        references CustomerOrder
+14:11:54,225 DEBUG SQL:104 - 
+    alter table LineItem 
+        add constraint FK4AAEE947EDAE41F3 
+        foreign key (productId) 
+        references Product
+14:11:54,226  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:54,226  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:54,227  INFO CustomRunner:139 - Test: testCompositeIds
+14:11:54,228 DEBUG SQL:104 - 
+    select
+        order_.customerId,
+        order_.orderNumber,
+        order_.orderDate as orderDate1_ 
+    from
+        CustomerOrder order_ 
+    where
+        order_.customerId=? 
+        and order_.orderNumber=?
+14:11:54,229 DEBUG SQL:104 - 
+    select
+        lineitem_.customerId,
+        lineitem_.orderNumber,
+        lineitem_.productId,
+        lineitem_.quantity as quantity2_ 
+    from
+        LineItem lineitem_ 
+    where
+        lineitem_.customerId=? 
+        and lineitem_.orderNumber=? 
+        and lineitem_.productId=?
+14:11:54,230 DEBUG SQL:104 - 
+    insert 
+    into
+        Product
+        (description, cost, numberAvailable, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,230 DEBUG SQL:104 - 
+    insert 
+    into
+        Product
+        (description, cost, numberAvailable, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,231 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (name, address, customerId) 
+    values
+        (?, ?, ?)
+14:11:54,231 DEBUG SQL:104 - 
+    insert 
+    into
+        CustomerOrder
+        (orderDate, customerId, orderNumber) 
+    values
+        (?, ?, ?)
+14:11:54,232 DEBUG SQL:104 - 
+    insert 
+    into
+        LineItem
+        (quantity, customerId, orderNumber, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,233 DEBUG SQL:104 - 
+    select
+        order0_.customerId as customerId1_1_,
+        order0_.orderNumber as orderNum2_1_1_,
+        order0_.orderDate as orderDate1_1_,
+        ( select
+            sum(li.quantity*p.cost) 
+        from
+            LineItem li,
+            Product p 
+        where
+            li.productId = p.productId 
+            and li.customerId = order0_.customerId 
+            and li.orderNumber = order0_.orderNumber ) as formula42_1_,
+        lineitems1_.customerId as customerId1_3_,
+        lineitems1_.orderNumber as orderNum2_1_3_,
+        lineitems1_.customerId as customerId2_3_,
+        lineitems1_.orderNumber as orderNum2_2_3_,
+        lineitems1_.productId as productId2_3_,
+        lineitems1_.customerId as customerId2_0_,
+        lineitems1_.orderNumber as orderNum2_2_0_,
+        lineitems1_.productId as productId2_0_,
+        lineitems1_.quantity as quantity2_0_ 
+    from
+        CustomerOrder order0_ 
+    left outer join
+        LineItem lineitems1_ 
+            on order0_.customerId=lineitems1_.customerId 
+            and order0_.orderNumber=lineitems1_.orderNumber 
+    where
+        order0_.customerId=? 
+        and order0_.orderNumber=?
+14:11:54,235 DEBUG SQL:104 - 
+    select
+        customer0_.customerId as customerId0_0_,
+        customer0_.name as name0_0_,
+        customer0_.address as address0_0_ 
+    from
+        Customer customer0_ 
+    where
+        customer0_.customerId=?
+14:11:54,236 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cid.Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p
+14:11:54,240 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'cid'
+          |  |  \-[IDENT] Node: 'Customer'
+          |  \-[ALIAS] Node: 'c'
+          +-[JOIN] Node: 'join'
+          |  +-[LEFT] Node: 'left'
+          |  +-[FETCH] Node: 'fetch'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'c'
+          |  |  \-[IDENT] Node: 'orders'
+          |  \-[ALIAS] Node: 'o'
+          +-[JOIN] Node: 'join'
+          |  +-[LEFT] Node: 'left'
+          |  +-[FETCH] Node: 'fetch'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'o'
+          |  |  \-[IDENT] Node: 'lineItems'
+          |  \-[ALIAS] Node: 'li'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'li'
+             |  \-[IDENT] Node: 'product'
+             \-[ALIAS] Node: 'p'
+
+14:11:54,241 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,241 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Customer (c) -> customer0_
+14:11:54,242 DEBUG FromReferenceNode:74 - Resolved : c -> customer0_.customerId
+14:11:54,242 DEBUG DotNode:599 - getDataType() : orders -> org.hibernate.type.ListType(org.hibernate.test.cid.Customer.orders)
+14:11:54,242 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = c.orders role = org.hibernate.test.cid.Customer.orders associatedEntityName = org.hibernate.test.cid.Order
+14:11:54,242 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Order (o) -> orders1_
+14:11:54,243 DEBUG FromClause:282 - addJoinByPathMap() : c.orders -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=orders1_,origin=Customer customer0_,columns={customer0_.customerId ,className=org.hibernate.test.cid.Order}}
+14:11:54,243 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for c.orders : CustomerOrder orders1_
+14:11:54,243 DEBUG FromReferenceNode:74 - Resolved : c.orders -> .
+14:11:54,243 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'CustomerOrder orders1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.cid.Customer.orders,tableName=CustomerOrder,tableAlias=orders1_,origin=Customer customer0_,columns={customer0_.customerId ,className=org.hibernate.test.cid.Order}}
+
+14:11:54,243 DEBUG FromReferenceNode:74 - Resolved : o -> (orders1_.customerId, orders1_.orderNumber)
+14:11:54,244 DEBUG DotNode:599 - getDataType() : lineItems -> org.hibernate.type.BagType(org.hibernate.test.cid.Order.lineItems)
+14:11:54,244 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = o.lineItems role = org.hibernate.test.cid.Order.lineItems associatedEntityName = org.hibernate.test.cid.LineItem
+14:11:54,244 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.LineItem (li) -> lineitems2_
+14:11:54,244 DEBUG FromClause:282 - addJoinByPathMap() : o.lineItems -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=null,tableName=LineItem,tableAlias=lineitems2_,origin=CustomerOrder orders1_,columns={orders1_.customerId orders1_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+14:11:54,244 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for o.lineItems : LineItem lineitems2_
+14:11:54,244 DEBUG FromReferenceNode:74 - Resolved : o.lineItems -> .
+14:11:54,244 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'LineItem lineitems2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems2_,origin=CustomerOrder orders1_,columns={orders1_.customerId orders1_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+
+14:11:54,244 DEBUG FromReferenceNode:74 - Resolved : li -> (lineitems2_.customerId, lineitems2_.orderNumber, lineitems2_.productId)
+14:11:54,245 DEBUG DotNode:599 - getDataType() : product -> org.hibernate.type.ManyToOneType(org.hibernate.test.cid.Product)
+14:11:54,245 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for product in org.hibernate.test.cid.LineItem (p) parent = [ {null} ]
+14:11:54,245 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Product (p) -> product3_
+14:11:54,245 DEBUG FromClause:282 - addJoinByPathMap() : li.product -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Product,tableAlias=product3_,origin=LineItem lineitems2_,columns={lineitems2_.productId ,className=org.hibernate.test.cid.Product}}
+14:11:54,245 DEBUG FromReferenceNode:74 - Resolved : li.product -> lineitems2_.productId
+14:11:54,245 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Product product3_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Product,tableAlias=product3_,origin=LineItem lineitems2_,columns={lineitems2_.productId ,className=org.hibernate.test.cid.Product}}
+
+14:11:54,245 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Customer customer0_ ( CustomerOrder orders1_ ( LineItem lineitems2_ Product product3_ ) ) ) ) )
+14:11:54,246 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:54,246 DEBUG JoinProcessor:175 - Using FROM fragment [Customer customer0_]
+14:11:54,246 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join CustomerOrder orders1_ on customer0_.customerId=orders1_.customerId]
+14:11:54,246 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join LineItem lineitems2_ on orders1_.customerId=lineitems2_.customerId and orders1_.orderNumber=lineitems2_.orderNumber]
+14:11:54,246 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Product product3_ on lineitems2_.productId=product3_.productId]
+14:11:54,247 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Customer,Product,CustomerOrder,LineItem)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'customer0_.customerId as customerId0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=Customer,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.cid.Customer}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'orders1_.customerId as customerId1_1_, orders1_.orderNumber as orderNum2_1_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.cid.Customer.orders,tableName=CustomerOrder,tableAlias=orders1_,origin=Customer customer0_,columns={customer0_.customerId ,className=org.hibernate.test.cid.Order}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'lineitems2_.customerId as customerId2_2_, lineitems2_.orderNumber as orderNum2_2_2_, lineitems2_.productId as productId2_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems2_,origin=left outer join CustomerOrder orders1_ on customer0_.customerId=orders1_.customerId,columns={orders1_.customerId orders1_.orderNumber ,className=org.hibernate.test.cid.LineItem}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'product3_.productId as productId3_3_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Product,tableAlias=product3_,origin=left outer join LineItem lineitems2_ on orders1_.customerId=lineitems2_.customerId and orders1_.orderNumber=lineitems2_.orderNumber,columns={lineitems2_.productId ,className=org.hibernate.test.cid.Product}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'customer0_.name as name0_0_, customer0_.address as address0_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'orders1_.orderDate as orderDate1_1_, ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = orders1_.customerId and li.orderNumber = orders1_.orderNumber ) as formula42_1_'
+    |  +-[SQL_TOKEN] SqlFragment: 'orders1_.customerId as customerId0_0__, orders1_.customerId as customerId1_0__, orders1_.orderNumber as orderNum2_1_0__, orders1_.orderNumber as orderNum2_0__'
+    |  +-[SQL_TOKEN] SqlFragment: 'lineitems2_.quantity as quantity2_2_'
+    |  +-[SQL_TOKEN] SqlFragment: 'lineitems2_.customerId as customerId1_1__, lineitems2_.orderNumber as orderNum2_1_1__, lineitems2_.customerId as customerId2_1__, lineitems2_.orderNumber as orderNum2_2_1__, lineitems2_.productId as productId2_1__'
+    |  \-[SQL_TOKEN] SqlFragment: 'product3_.description as descript2_3_3_, product3_.cost as cost3_3_, product3_.numberAvailable as numberAv4_3_3_, ( select sum(li.quantity) from LineItem li where li.productId = product3_.productId ) as formula43_3_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=4, fromElements=4, fromElementByClassAlias=[li, c, p, o], fromElementByTableAlias=[orders1_, product3_, customer0_, lineitems2_], fromElementsByPath=[o.lineItems, li.product, c.orders], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Customer customer0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=Customer,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.cid.Customer}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join CustomerOrder orders1_ on customer0_.customerId=orders1_.customerId' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.cid.Customer.orders,tableName=CustomerOrder,tableAlias=orders1_,origin=Customer customer0_,columns={customer0_.customerId ,className=org.hibernate.test.cid.Order}}
+             \-[JOIN_FRAGMENT] FromElement: 'left outer join LineItem lineitems2_ on orders1_.customerId=lineitems2_.customerId and orders1_.orderNumber=lineitems2_.orderNumber' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems2_,origin=left outer join CustomerOrder orders1_ on customer0_.customerId=orders1_.customerId,columns={orders1_.customerId orders1_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+                \-[JOIN_FRAGMENT] FromElement: 'left outer join Product product3_ on lineitems2_.productId=product3_.productId' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Product,tableAlias=product3_,origin=left outer join LineItem lineitems2_ on orders1_.customerId=lineitems2_.customerId and orders1_.orderNumber=lineitems2_.orderNumber,columns={lineitems2_.productId ,className=org.hibernate.test.cid.Product}}
+
+14:11:54,247 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,247 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cid.Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p
+14:11:54,247 DEBUG QueryTranslatorImpl:236 - SQL: select customer0_.customerId as customerId0_0_, orders1_.customerId as customerId1_1_, orders1_.orderNumber as orderNum2_1_1_, lineitems2_.customerId as customerId2_2_, lineitems2_.orderNumber as orderNum2_2_2_, lineitems2_.productId as productId2_2_, product3_.productId as productId3_3_, customer0_.name as name0_0_, customer0_.address as address0_0_, orders1_.orderDate as orderDate1_1_, ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = orders1_.customerId and li.orderNumber = orders1_.orderNumber ) as formula42_1_, orders1_.customerId as customerId0_0__, orders1_.customerId as customerId1_0__, orders1_.orderNumber as orderNum2_1_0__, orders1_.orderNumber as orderNum2_0__, lineitems2_.quantity as quantity2_2_, lineitems2_.customerId as customerId1_1__, lineitems2_.orderNumber as orderNum2_1_1__, lineitems2_.customerId as customerId2_1__, lineitems2_.orderNumber as orderNum2_2_1__, lineitems2_.productId as productId2_1__, product3_.description as descript2_3_3_, product3_.cost as cost3_3_, product3_.numberAvailable as numberAv4_3_3_, ( select sum(li.quantity) from LineItem li where li.productId = product3_.productId ) as formula43_3_ from Customer customer0_ left outer join CustomerOrder orders1_ on customer0_.customerId=orders1_.customerId left outer join LineItem lineitems2_ on orders1_.customerId=lineitems2_.customerId and orders1_.orderNumber=lineitems2_.orderNumber left outer join Product product3_ on lineitems2_.productId=product3_.productId
+14:11:54,247 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,248 DEBUG SQL:104 - 
+    select
+        customer0_.customerId as customerId0_0_,
+        orders1_.customerId as customerId1_1_,
+        orders1_.orderNumber as orderNum2_1_1_,
+        lineitems2_.customerId as customerId2_2_,
+        lineitems2_.orderNumber as orderNum2_2_2_,
+        lineitems2_.productId as productId2_2_,
+        product3_.productId as productId3_3_,
+        customer0_.name as name0_0_,
+        customer0_.address as address0_0_,
+        orders1_.orderDate as orderDate1_1_,
+        ( select
+            sum(li.quantity*p.cost) 
+        from
+            LineItem li,
+            Product p 
+        where
+            li.productId = p.productId 
+            and li.customerId = orders1_.customerId 
+            and li.orderNumber = orders1_.orderNumber ) as formula42_1_,
+        orders1_.customerId as customerId0_0__,
+        orders1_.customerId as customerId1_0__,
+        orders1_.orderNumber as orderNum2_1_0__,
+        orders1_.orderNumber as orderNum2_0__,
+        lineitems2_.quantity as quantity2_2_,
+        lineitems2_.customerId as customerId1_1__,
+        lineitems2_.orderNumber as orderNum2_1_1__,
+        lineitems2_.customerId as customerId2_1__,
+        lineitems2_.orderNumber as orderNum2_2_1__,
+        lineitems2_.productId as productId2_1__,
+        product3_.description as descript2_3_3_,
+        product3_.cost as cost3_3_,
+        product3_.numberAvailable as numberAv4_3_3_,
+        ( select
+            sum(li.quantity) 
+        from
+            LineItem li 
+        where
+            li.productId = product3_.productId ) as formula43_3_ 
+    from
+        Customer customer0_ 
+    left outer join
+        CustomerOrder orders1_ 
+            on customer0_.customerId=orders1_.customerId 
+    left outer join
+        LineItem lineitems2_ 
+            on orders1_.customerId=lineitems2_.customerId 
+            and orders1_.orderNumber=lineitems2_.orderNumber 
+    left outer join
+        Product product3_ 
+            on lineitems2_.productId=product3_.productId
+14:11:54,252 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cid.Order o left join fetch o.lineItems li left join fetch li.product p
+14:11:54,252 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=29,possibleID=true]
+14:11:54,255 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'cid'
+          |  |  \-[IDENT] Node: 'Order'
+          |  \-[ALIAS] Node: 'o'
+          +-[JOIN] Node: 'join'
+          |  +-[LEFT] Node: 'left'
+          |  +-[FETCH] Node: 'fetch'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'o'
+          |  |  \-[IDENT] Node: 'lineItems'
+          |  \-[ALIAS] Node: 'li'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'li'
+             |  \-[IDENT] Node: 'product'
+             \-[ALIAS] Node: 'p'
+
+14:11:54,255 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,255 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Order (o) -> order0_
+14:11:54,255 DEBUG FromReferenceNode:74 - Resolved : o -> (order0_.customerId, order0_.orderNumber)
+14:11:54,255 DEBUG DotNode:599 - getDataType() : lineItems -> org.hibernate.type.BagType(org.hibernate.test.cid.Order.lineItems)
+14:11:54,256 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = o.lineItems role = org.hibernate.test.cid.Order.lineItems associatedEntityName = org.hibernate.test.cid.LineItem
+14:11:54,256 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.LineItem (li) -> lineitems1_
+14:11:54,256 DEBUG FromClause:282 - addJoinByPathMap() : o.lineItems -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=null,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+14:11:54,256 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for o.lineItems : LineItem lineitems1_
+14:11:54,256 DEBUG FromReferenceNode:74 - Resolved : o.lineItems -> .
+14:11:54,256 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'LineItem lineitems1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+
+14:11:54,257 DEBUG FromReferenceNode:74 - Resolved : li -> (lineitems1_.customerId, lineitems1_.orderNumber, lineitems1_.productId)
+14:11:54,257 DEBUG DotNode:599 - getDataType() : product -> org.hibernate.type.ManyToOneType(org.hibernate.test.cid.Product)
+14:11:54,257 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for product in org.hibernate.test.cid.LineItem (p) parent = [ {null} ]
+14:11:54,257 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Product (p) -> product2_
+14:11:54,257 DEBUG FromClause:282 - addJoinByPathMap() : li.product -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Product,tableAlias=product2_,origin=LineItem lineitems1_,columns={lineitems1_.productId ,className=org.hibernate.test.cid.Product}}
+14:11:54,257 DEBUG FromReferenceNode:74 - Resolved : li.product -> lineitems1_.productId
+14:11:54,258 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Product product2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Product,tableAlias=product2_,origin=LineItem lineitems1_,columns={lineitems1_.productId ,className=org.hibernate.test.cid.Product}}
+
+14:11:54,258 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( CustomerOrder order0_ ( LineItem lineitems1_ Product product2_ ) ) ) )
+14:11:54,258 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:54,258 DEBUG JoinProcessor:175 - Using FROM fragment [CustomerOrder order0_]
+14:11:54,258 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber]
+14:11:54,259 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Product product2_ on lineitems1_.productId=product2_.productId]
+14:11:54,259 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Product,CustomerOrder,LineItem)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'order0_.customerId as customerId1_0_, order0_.orderNumber as orderNum2_1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'lineitems1_.customerId as customerId2_1_, lineitems1_.orderNumber as orderNum2_2_1_, lineitems1_.productId as productId2_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'product2_.productId as productId3_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Product,tableAlias=product2_,origin=left outer join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber,columns={lineitems1_.productId ,className=org.hibernate.test.cid.Product}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'order0_.orderDate as orderDate1_0_, ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber ) as formula42_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'lineitems1_.quantity as quantity2_1_'
+    |  +-[SQL_TOKEN] SqlFragment: 'lineitems1_.customerId as customerId1_0__, lineitems1_.orderNumber as orderNum2_1_0__, lineitems1_.customerId as customerId2_0__, lineitems1_.orderNumber as orderNum2_2_0__, lineitems1_.productId as productId2_0__'
+    |  \-[SQL_TOKEN] SqlFragment: 'product2_.description as descript2_3_2_, product2_.cost as cost3_2_, product2_.numberAvailable as numberAv4_3_2_, ( select sum(li.quantity) from LineItem li where li.productId = product2_.productId ) as formula43_2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[li, p, o], fromElementByTableAlias=[lineitems1_, order0_, product2_], fromElementsByPath=[o.lineItems, li.product], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CustomerOrder order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+             \-[JOIN_FRAGMENT] FromElement: 'left outer join Product product2_ on lineitems1_.productId=product2_.productId' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Product,tableAlias=product2_,origin=left outer join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber,columns={lineitems1_.productId ,className=org.hibernate.test.cid.Product}}
+
+14:11:54,259 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,259 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cid.Order o left join fetch o.lineItems li left join fetch li.product p
+14:11:54,259 DEBUG QueryTranslatorImpl:236 - SQL: select order0_.customerId as customerId1_0_, order0_.orderNumber as orderNum2_1_0_, lineitems1_.customerId as customerId2_1_, lineitems1_.orderNumber as orderNum2_2_1_, lineitems1_.productId as productId2_1_, product2_.productId as productId3_2_, order0_.orderDate as orderDate1_0_, ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber ) as formula42_0_, lineitems1_.quantity as quantity2_1_, lineitems1_.customerId as customerId1_0__, lineitems1_.orderNumber as orderNum2_1_0__, lineitems1_.customerId as customerId2_0__, lineitems1_.orderNumber as orderNum2_2_0__, lineitems1_.productId as productId2_0__, product2_.description as descript2_3_2_, product2_.cost as cost3_2_, product2_.numberAvailable as numberAv4_3_2_, ( select sum(li.quantity) from LineItem li where li.productId = product2_.productId ) as formula43_2_ from CustomerOrder order0_ left outer join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber left outer join Product product2_ on lineitems1_.productId=product2_.productId
+14:11:54,260 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,260 DEBUG SQL:104 - 
+    select
+        order0_.customerId as customerId1_0_,
+        order0_.orderNumber as orderNum2_1_0_,
+        lineitems1_.customerId as customerId2_1_,
+        lineitems1_.orderNumber as orderNum2_2_1_,
+        lineitems1_.productId as productId2_1_,
+        product2_.productId as productId3_2_,
+        order0_.orderDate as orderDate1_0_,
+        ( select
+            sum(li.quantity*p.cost) 
+        from
+            LineItem li,
+            Product p 
+        where
+            li.productId = p.productId 
+            and li.customerId = order0_.customerId 
+            and li.orderNumber = order0_.orderNumber ) as formula42_0_,
+        lineitems1_.quantity as quantity2_1_,
+        lineitems1_.customerId as customerId1_0__,
+        lineitems1_.orderNumber as orderNum2_1_0__,
+        lineitems1_.customerId as customerId2_0__,
+        lineitems1_.orderNumber as orderNum2_2_0__,
+        lineitems1_.productId as productId2_0__,
+        product2_.description as descript2_3_2_,
+        product2_.cost as cost3_2_,
+        product2_.numberAvailable as numberAv4_3_2_,
+        ( select
+            sum(li.quantity) 
+        from
+            LineItem li 
+        where
+            li.productId = product2_.productId ) as formula43_2_ 
+    from
+        CustomerOrder order0_ 
+    left outer join
+        LineItem lineitems1_ 
+            on order0_.customerId=lineitems1_.customerId 
+            and order0_.orderNumber=lineitems1_.orderNumber 
+    left outer join
+        Product product2_ 
+            on lineitems1_.productId=product2_.productId
+14:11:54,263 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select o.id, li.id from org.hibernate.test.cid.Order o join o.lineItems li
+14:11:54,264 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=48,possibleID=true]
+14:11:54,266 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  +-[RANGE] Node: 'RANGE'
+       |  |  +-[DOT] Node: '.'
+       |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |  |  |  |  |  \-[IDENT] Node: 'test'
+       |  |  |  |  \-[IDENT] Node: 'cid'
+       |  |  |  \-[IDENT] Node: 'Order'
+       |  |  \-[ALIAS] Node: 'o'
+       |  \-[JOIN] Node: 'join'
+       |     +-[DOT] Node: '.'
+       |     |  +-[IDENT] Node: 'o'
+       |     |  \-[IDENT] Node: 'lineItems'
+       |     \-[ALIAS] Node: 'li'
+       \-[SELECT] Node: 'select'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'o'
+          |  \-[IDENT] Node: 'id'
+          \-[DOT] Node: '.'
+             +-[IDENT] Node: 'li'
+             \-[IDENT] Node: 'id'
+
+14:11:54,266 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,267 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Order (o) -> order0_
+14:11:54,267 DEBUG FromReferenceNode:74 - Resolved : o -> (order0_.customerId, order0_.orderNumber)
+14:11:54,267 DEBUG DotNode:599 - getDataType() : lineItems -> org.hibernate.type.BagType(org.hibernate.test.cid.Order.lineItems)
+14:11:54,267 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = o.lineItems role = org.hibernate.test.cid.Order.lineItems associatedEntityName = org.hibernate.test.cid.LineItem
+14:11:54,267 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.LineItem (li) -> lineitems1_
+14:11:54,267 DEBUG FromClause:282 - addJoinByPathMap() : o.lineItems -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=null,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+14:11:54,268 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for o.lineItems : LineItem lineitems1_
+14:11:54,268 DEBUG FromReferenceNode:74 - Resolved : o.lineItems -> .
+14:11:54,268 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'LineItem lineitems1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+
+14:11:54,268 DEBUG FromReferenceNode:74 - Resolved : o -> (order0_.customerId, order0_.orderNumber)
+14:11:54,268 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.ComponentType@3389dc2f
+14:11:54,268 DEBUG DotNode:588 - Terminal propertyPath = [id]
+14:11:54,269 DEBUG FromReferenceNode:74 - Resolved : o.id -> order0_.customerId, order0_.orderNumber
+14:11:54,269 DEBUG FromReferenceNode:74 - Resolved : li -> (lineitems1_.customerId, lineitems1_.orderNumber, lineitems1_.productId)
+14:11:54,269 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.ComponentType@1fd6ac18
+14:11:54,269 DEBUG DotNode:588 - Terminal propertyPath = [id]
+14:11:54,269 DEBUG FromReferenceNode:74 - Resolved : li.id -> lineitems1_.customerId, lineitems1_.orderNumber, lineitems1_.productId
+14:11:54,269 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( order0_.customerId, order0_.orderNumber (order0_.customerId, order0_.orderNumber) id ) ( lineitems1_.customerId, lineitems1_.orderNumber, lineitems1_.productId (lineitems1_.customerId, lineitems1_.orderNumber, lineitems1_.productId) id ) ) ( FromClause{level=1} ( CustomerOrder order0_ LineItem lineitems1_ ) ) )
+14:11:54,270 DEBUG JoinProcessor:175 - Using FROM fragment [CustomerOrder order0_]
+14:11:54,270 DEBUG JoinProcessor:175 - Using FROM fragment [inner join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber]
+14:11:54,270 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Product,CustomerOrder,LineItem)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'order0_.customerId' {propertyName=id,dereferenceType=2,propertyPath=id,path=o.id,tableAlias=order0_,className=org.hibernate.test.cid.Order,classAlias=o}
+    |  |  +-[ALIAS_REF] IdentNode: '(order0_.customerId, order0_.orderNumber)' {alias=o, className=org.hibernate.test.cid.Order, tableAlias=order0_}
+    |  |  \-[IDENT] IdentNode: 'id' {originalText=id}
+    |  +-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'order0_.orderNumber'
+    |  +-[SELECT_COLUMNS] SqlNode: ' as col_0_1_'
+    |  +-[DOT] DotNode: 'lineitems1_.customerId' {propertyName=id,dereferenceType=2,propertyPath=id,path=li.id,tableAlias=lineitems1_,className=org.hibernate.test.cid.LineItem,classAlias=li}
+    |  |  +-[ALIAS_REF] IdentNode: '(lineitems1_.customerId, lineitems1_.orderNumber, lineitems1_.productId)' {alias=li, className=org.hibernate.test.cid.LineItem, tableAlias=lineitems1_}
+    |  |  \-[IDENT] IdentNode: 'id' {originalText=id}
+    |  +-[SELECT_COLUMNS] SqlNode: ' as col_1_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'lineitems1_.orderNumber'
+    |  +-[SELECT_COLUMNS] SqlNode: ' as col_1_1_'
+    |  +-[SQL_TOKEN] SqlFragment: 'lineitems1_.productId'
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_1_2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[li, o], fromElementByTableAlias=[lineitems1_, order0_], fromElementsByPath=[o.lineItems], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CustomerOrder order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+
+14:11:54,271 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,271 DEBUG QueryTranslatorImpl:235 - HQL: select o.id, li.id from org.hibernate.test.cid.Order o join o.lineItems li
+14:11:54,271 DEBUG QueryTranslatorImpl:236 - SQL: select order0_.customerId as col_0_0_, order0_.orderNumber as col_0_1_, lineitems1_.customerId as col_1_0_, lineitems1_.orderNumber as col_1_1_, lineitems1_.productId as col_1_2_ from CustomerOrder order0_ inner join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber
+14:11:54,271 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,271 DEBUG SQL:104 - 
+    select
+        order0_.customerId as col_0_0_,
+        order0_.orderNumber as col_0_1_,
+        lineitems1_.customerId as col_1_0_,
+        lineitems1_.orderNumber as col_1_1_,
+        lineitems1_.productId as col_1_2_ 
+    from
+        CustomerOrder order0_ 
+    inner join
+        LineItem lineitems1_ 
+            on order0_.customerId=lineitems1_.customerId 
+            and order0_.orderNumber=lineitems1_.orderNumber
+14:11:54,276 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cid.Order o join o.lineItems li
+14:11:54,277 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=29,possibleID=true]
+14:11:54,279 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'cid'
+          |  |  \-[IDENT] Node: 'Order'
+          |  \-[ALIAS] Node: 'o'
+          \-[JOIN] Node: 'join'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'o'
+             |  \-[IDENT] Node: 'lineItems'
+             \-[ALIAS] Node: 'li'
+
+14:11:54,281 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,282 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Order (o) -> order0_
+14:11:54,282 DEBUG FromReferenceNode:74 - Resolved : o -> (order0_.customerId, order0_.orderNumber)
+14:11:54,282 DEBUG DotNode:599 - getDataType() : lineItems -> org.hibernate.type.BagType(org.hibernate.test.cid.Order.lineItems)
+14:11:54,282 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = o.lineItems role = org.hibernate.test.cid.Order.lineItems associatedEntityName = org.hibernate.test.cid.LineItem
+14:11:54,282 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.LineItem (li) -> lineitems1_
+14:11:54,282 DEBUG FromClause:282 - addJoinByPathMap() : o.lineItems -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=null,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+14:11:54,283 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for o.lineItems : LineItem lineitems1_
+14:11:54,283 DEBUG FromReferenceNode:74 - Resolved : o.lineItems -> .
+14:11:54,283 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'LineItem lineitems1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+
+14:11:54,283 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( CustomerOrder order0_ LineItem lineitems1_ ) ) )
+14:11:54,284 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:54,284 DEBUG JoinProcessor:175 - Using FROM fragment [CustomerOrder order0_]
+14:11:54,284 DEBUG JoinProcessor:175 - Using FROM fragment [inner join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber]
+14:11:54,284 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Product,CustomerOrder,LineItem)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'order0_.customerId as customerId1_0_, order0_.orderNumber as orderNum2_1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'lineitems1_.customerId as customerId2_1_, lineitems1_.orderNumber as orderNum2_2_1_, lineitems1_.productId as productId2_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'order0_.orderDate as orderDate1_0_, ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber ) as formula42_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'lineitems1_.quantity as quantity2_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[li, o], fromElementByTableAlias=[lineitems1_, order0_], fromElementsByPath=[o.lineItems], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CustomerOrder order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+
+14:11:54,285 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,285 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cid.Order o join o.lineItems li
+14:11:54,285 DEBUG QueryTranslatorImpl:236 - SQL: select order0_.customerId as customerId1_0_, order0_.orderNumber as orderNum2_1_0_, lineitems1_.customerId as customerId2_1_, lineitems1_.orderNumber as orderNum2_2_1_, lineitems1_.productId as productId2_1_, order0_.orderDate as orderDate1_0_, ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber ) as formula42_0_, lineitems1_.quantity as quantity2_1_ from CustomerOrder order0_ inner join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber
+14:11:54,285 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,285 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cid.Order o join o.lineItems li
+14:11:54,286 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=29,possibleID=true]
+14:11:54,287 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'cid'
+          |  |  \-[IDENT] Node: 'Order'
+          |  \-[ALIAS] Node: 'o'
+          \-[JOIN] Node: 'join'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'o'
+             |  \-[IDENT] Node: 'lineItems'
+             \-[ALIAS] Node: 'li'
+
+14:11:54,288 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,288 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Order (o) -> order0_
+14:11:54,288 DEBUG FromReferenceNode:74 - Resolved : o -> (order0_.customerId, order0_.orderNumber)
+14:11:54,289 DEBUG DotNode:599 - getDataType() : lineItems -> org.hibernate.type.BagType(org.hibernate.test.cid.Order.lineItems)
+14:11:54,289 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = o.lineItems role = org.hibernate.test.cid.Order.lineItems associatedEntityName = org.hibernate.test.cid.LineItem
+14:11:54,289 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.LineItem (li) -> lineitems1_
+14:11:54,289 DEBUG FromClause:282 - addJoinByPathMap() : o.lineItems -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=null,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+14:11:54,289 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for o.lineItems : LineItem lineitems1_
+14:11:54,289 DEBUG FromReferenceNode:74 - Resolved : o.lineItems -> .
+14:11:54,290 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'LineItem lineitems1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+
+14:11:54,290 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( CustomerOrder order0_ LineItem lineitems1_ ) ) )
+14:11:54,290 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:54,290 DEBUG JoinProcessor:175 - Using FROM fragment [CustomerOrder order0_]
+14:11:54,290 DEBUG JoinProcessor:175 - Using FROM fragment [inner join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber]
+14:11:54,291 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Product,CustomerOrder,LineItem)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'order0_.customerId as col_0_0_, order0_.orderNumber as col_0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}}
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'lineitems1_.customerId as col_1_0_, lineitems1_.orderNumber as col_1_1_, lineitems1_.productId as col_1_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[li, o], fromElementByTableAlias=[lineitems1_, order0_], fromElementsByPath=[o.lineItems], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CustomerOrder order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=li,role=org.hibernate.test.cid.Order.lineItems,tableName=LineItem,tableAlias=lineitems1_,origin=CustomerOrder order0_,columns={order0_.customerId order0_.orderNumber ,className=org.hibernate.test.cid.LineItem}}
+
+14:11:54,291 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,291 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cid.Order o join o.lineItems li
+14:11:54,291 DEBUG QueryTranslatorImpl:236 - SQL: select order0_.customerId as col_0_0_, order0_.orderNumber as col_0_1_, lineitems1_.customerId as col_1_0_, lineitems1_.orderNumber as col_1_1_, lineitems1_.productId as col_1_2_ from CustomerOrder order0_ inner join LineItem lineitems1_ on order0_.customerId=lineitems1_.customerId and order0_.orderNumber=lineitems1_.orderNumber
+14:11:54,292 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,292 DEBUG SQL:104 - 
+    select
+        order0_.customerId as col_0_0_,
+        order0_.orderNumber as col_0_1_,
+        lineitems1_.customerId as col_1_0_,
+        lineitems1_.orderNumber as col_1_1_,
+        lineitems1_.productId as col_1_2_ 
+    from
+        CustomerOrder order0_ 
+    inner join
+        LineItem lineitems1_ 
+            on order0_.customerId=lineitems1_.customerId 
+            and order0_.orderNumber=lineitems1_.orderNumber
+14:11:54,293 DEBUG SQL:104 - 
+    select
+        customer0_.customerId as customerId0_0_,
+        customer0_.name as name0_0_,
+        customer0_.address as address0_0_ 
+    from
+        Customer customer0_ 
+    where
+        customer0_.customerId=?
+14:11:54,294 DEBUG SQL:104 - 
+    select
+        orders0_.customerId as customerId0_1_,
+        orders0_.customerId as customerId1_1_,
+        orders0_.orderNumber as orderNum2_1_1_,
+        orders0_.orderNumber as orderNum2_1_,
+        orders0_.customerId as customerId1_0_,
+        orders0_.orderNumber as orderNum2_1_0_,
+        orders0_.orderDate as orderDate1_0_,
+        ( select
+            sum(li.quantity*p.cost) 
+        from
+            LineItem li,
+            Product p 
+        where
+            li.productId = p.productId 
+            and li.customerId = orders0_.customerId 
+            and li.orderNumber = orders0_.orderNumber ) as formula42_0_ 
+    from
+        CustomerOrder orders0_ 
+    where
+        orders0_.customerId=?
+14:11:54,295 DEBUG SQL:104 - 
+    select
+        lineitems0_.customerId as customerId1_1_,
+        lineitems0_.orderNumber as orderNum2_1_1_,
+        lineitems0_.customerId as customerId2_1_,
+        lineitems0_.orderNumber as orderNum2_2_1_,
+        lineitems0_.productId as productId2_1_,
+        lineitems0_.customerId as customerId2_0_,
+        lineitems0_.orderNumber as orderNum2_2_0_,
+        lineitems0_.productId as productId2_0_,
+        lineitems0_.quantity as quantity2_0_ 
+    from
+        LineItem lineitems0_ 
+    where
+        lineitems0_.customerId=? 
+        and lineitems0_.orderNumber=?
+14:11:54,296 DEBUG SQL:104 - 
+    select
+        order_.customerId,
+        order_.orderNumber,
+        order_.orderDate as orderDate1_ 
+    from
+        CustomerOrder order_ 
+    where
+        order_.customerId=? 
+        and order_.orderNumber=?
+14:11:54,297 DEBUG SQL:104 - 
+    insert 
+    into
+        CustomerOrder
+        (orderDate, customerId, orderNumber) 
+    values
+        (?, ?, ?)
+14:11:54,297 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cid.Order o where o.total>10.0
+14:11:54,298 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=29,possibleID=true]
+14:11:54,299 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'cid'
+    |        |  \-[IDENT] Node: 'Order'
+    |        \-[ALIAS] Node: 'o'
+    \-[WHERE] Node: 'where'
+       \-[GT] Node: '>'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'o'
+          |  \-[IDENT] Node: 'total'
+          \-[NUM_DOUBLE] Node: '10.0'
+
+14:11:54,299 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,300 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Order (o) -> order0_
+14:11:54,300 DEBUG FromReferenceNode:74 - Resolved : o -> (order0_.customerId, order0_.orderNumber)
+14:11:54,300 DEBUG DotNode:599 - getDataType() : total -> org.hibernate.type.BigDecimalType@3bb4a749
+14:11:54,300 DEBUG FromReferenceNode:74 - Resolved : o.total -> ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber )
+14:11:54,318 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} CustomerOrder order0_ ) ( where ( > ( ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber ) (order0_.customerId, order0_.orderNumber) total ) 10.0 ) ) )
+14:11:54,318 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:54,318 DEBUG JoinProcessor:175 - Using FROM fragment [CustomerOrder order0_]
+14:11:54,319 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Product,CustomerOrder,LineItem)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'order0_.customerId as customerId1_, order0_.orderNumber as orderNum2_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'order0_.orderDate as orderDate1_, ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber ) as formula42_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[o], fromElementByTableAlias=[order0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'CustomerOrder order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}
+    \-[WHERE] SqlNode: 'where'
+       \-[GT] BinaryLogicOperatorNode: '>'
+          +-[DOT] DotNode: '( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber )' {propertyName=total,dereferenceType=ALL,propertyPath=total,path=o.total,tableAlias=order0_,className=org.hibernate.test.cid.Order,classAlias=o}
+          |  +-[ALIAS_REF] IdentNode: '(order0_.customerId, order0_.orderNumber)' {alias=o, className=org.hibernate.test.cid.Order, tableAlias=order0_}
+          |  \-[IDENT] IdentNode: 'total' {originalText=total}
+          \-[NUM_DOUBLE] LiteralNode: '10.0'
+
+14:11:54,319 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,319 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cid.Order o where o.total>10.0
+14:11:54,319 DEBUG QueryTranslatorImpl:236 - SQL: select order0_.customerId as customerId1_, order0_.orderNumber as orderNum2_1_, order0_.orderDate as orderDate1_, ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber ) as formula42_ from CustomerOrder order0_ where ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber )>10.0
+14:11:54,319 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,320 DEBUG SQL:104 - 
+    select
+        lineitem_.customerId,
+        lineitem_.orderNumber,
+        lineitem_.productId,
+        lineitem_.quantity as quantity2_ 
+    from
+        LineItem lineitem_ 
+    where
+        lineitem_.customerId=? 
+        and lineitem_.orderNumber=? 
+        and lineitem_.productId=?
+14:11:54,321 DEBUG SQL:104 - 
+    insert 
+    into
+        LineItem
+        (quantity, customerId, orderNumber, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,322 DEBUG SQL:104 - 
+    select
+        order0_.customerId as customerId1_,
+        order0_.orderNumber as orderNum2_1_,
+        order0_.orderDate as orderDate1_,
+        ( select
+            sum(li.quantity*p.cost) 
+        from
+            LineItem li,
+            Product p 
+        where
+            li.productId = p.productId 
+            and li.customerId = order0_.customerId 
+            and li.orderNumber = order0_.orderNumber ) as formula42_ 
+    from
+        CustomerOrder order0_ 
+    where
+        (
+            select
+                sum(li.quantity*p.cost) 
+            from
+                LineItem li,
+                Product p 
+            where
+                li.productId = p.productId 
+                and li.customerId = order0_.customerId 
+                and li.orderNumber = order0_.orderNumber 
+        )>10.0
+14:11:54,325 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.cid.LineItem
+14:11:54,326 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'cid'
+             \-[IDENT] Node: 'LineItem'
+
+14:11:54,327 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,327 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.LineItem (<no alias>) -> lineitem0_
+14:11:54,327 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (LineItem)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[lineitem0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'LineItem' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=LineItem,tableAlias=lineitem0_,origin=null,columns={,className=org.hibernate.test.cid.LineItem}}
+
+14:11:54,327 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,327 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,328 DEBUG SQL:104 - 
+    delete 
+    from
+        LineItem
+14:11:54,329 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.cid.Order
+14:11:54,329 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=36,possibleID=true]
+14:11:54,330 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'cid'
+             \-[IDENT] Node: 'Order'
+
+14:11:54,330 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,330 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Order (<no alias>) -> order0_
+14:11:54,330 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Product,CustomerOrder,LineItem)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[order0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CustomerOrder' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}
+
+14:11:54,331 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,331 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,331 DEBUG SQL:104 - 
+    delete 
+    from
+        CustomerOrder
+14:11:54,332 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.cid.Customer
+14:11:54,333 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'cid'
+             \-[IDENT] Node: 'Customer'
+
+14:11:54,333 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,334 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Customer (<no alias>) -> customer0_
+14:11:54,334 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Customer)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[customer0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Customer' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Customer,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.cid.Customer}}
+
+14:11:54,334 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,334 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,334 DEBUG SQL:104 - 
+    delete 
+    from
+        Customer
+14:11:54,335 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.cid.Product
+14:11:54,336 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'cid'
+             \-[IDENT] Node: 'Product'
+
+14:11:54,336 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,337 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Product (<no alias>) -> product0_
+14:11:54,337 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Product,LineItem)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[product0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Product' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Product,tableAlias=product0_,origin=null,columns={,className=org.hibernate.test.cid.Product}}
+
+14:11:54,337 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,337 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,338 DEBUG SQL:104 - 
+    delete 
+    from
+        Product
+14:11:54,338  INFO CustomRunner:139 - Test: testDistinctCountOfEntityWithCompositeId
+14:11:54,339 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(distinct o) from org.hibernate.test.cid.Order o
+14:11:54,340 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=54,possibleID=true]
+14:11:54,341 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  \-[IDENT] Node: 'cid'
+       |     |  \-[IDENT] Node: 'Order'
+       |     \-[ALIAS] Node: 'o'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             +-[DISTINCT] Node: 'distinct'
+             \-[IDENT] Node: 'o'
+
+14:11:54,341 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,341 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Order (o) -> order0_
+14:11:54,342 DEBUG FromReferenceNode:74 - Resolved : o -> order0_.customerId, order0_.orderNumber
+14:11:54,342 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count distinct order0_.customerId, order0_.orderNumber ) ) ( FromClause{level=1} CustomerOrder order0_ ) )
+14:11:54,342 DEBUG JoinProcessor:175 - Using FROM fragment [CustomerOrder order0_]
+14:11:54,342 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Product,CustomerOrder,LineItem)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  +-[DISTINCT] SqlNode: 'distinct'
+    |  |  \-[ALIAS_REF] IdentNode: 'order0_.customerId, order0_.orderNumber' {alias=o, className=org.hibernate.test.cid.Order, tableAlias=order0_}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[o], fromElementByTableAlias=[order0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CustomerOrder order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}
+
+14:11:54,342 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,342 DEBUG QueryTranslatorImpl:235 - HQL: select count(distinct o) from org.hibernate.test.cid.Order o
+14:11:54,343 DEBUG QueryTranslatorImpl:236 - SQL: select count(distinct order0_.customerId, order0_.orderNumber) as col_0_0_ from CustomerOrder order0_
+14:11:54,343 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+Generated SQL : select count(distinct order0_.customerId, order0_.orderNumber) as col_0_0_ from CustomerOrder order0_
+14:11:54,343  INFO CustomRunner:139 - Test: testMultipleCollectionFetch
+14:11:54,345 DEBUG SQL:104 - 
+    select
+        order_.customerId,
+        order_.orderNumber,
+        order_.orderDate as orderDate1_ 
+    from
+        CustomerOrder order_ 
+    where
+        order_.customerId=? 
+        and order_.orderNumber=?
+14:11:54,346 DEBUG SQL:104 - 
+    select
+        lineitem_.customerId,
+        lineitem_.orderNumber,
+        lineitem_.productId,
+        lineitem_.quantity as quantity2_ 
+    from
+        LineItem lineitem_ 
+    where
+        lineitem_.customerId=? 
+        and lineitem_.orderNumber=? 
+        and lineitem_.productId=?
+14:11:54,346 DEBUG SQL:104 - 
+    select
+        lineitem_.customerId,
+        lineitem_.orderNumber,
+        lineitem_.productId,
+        lineitem_.quantity as quantity2_ 
+    from
+        LineItem lineitem_ 
+    where
+        lineitem_.customerId=? 
+        and lineitem_.orderNumber=? 
+        and lineitem_.productId=?
+14:11:54,347 DEBUG SQL:104 - 
+    select
+        order_.customerId,
+        order_.orderNumber,
+        order_.orderDate as orderDate1_ 
+    from
+        CustomerOrder order_ 
+    where
+        order_.customerId=? 
+        and order_.orderNumber=?
+14:11:54,347 DEBUG SQL:104 - 
+    select
+        lineitem_.customerId,
+        lineitem_.orderNumber,
+        lineitem_.productId,
+        lineitem_.quantity as quantity2_ 
+    from
+        LineItem lineitem_ 
+    where
+        lineitem_.customerId=? 
+        and lineitem_.orderNumber=? 
+        and lineitem_.productId=?
+14:11:54,348 DEBUG SQL:104 - 
+    select
+        lineitem_.customerId,
+        lineitem_.orderNumber,
+        lineitem_.productId,
+        lineitem_.quantity as quantity2_ 
+    from
+        LineItem lineitem_ 
+    where
+        lineitem_.customerId=? 
+        and lineitem_.orderNumber=? 
+        and lineitem_.productId=?
+14:11:54,350 DEBUG SQL:104 - 
+    insert 
+    into
+        Product
+        (description, cost, numberAvailable, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,351 DEBUG SQL:104 - 
+    insert 
+    into
+        Product
+        (description, cost, numberAvailable, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,351 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (name, address, customerId) 
+    values
+        (?, ?, ?)
+14:11:54,351 DEBUG SQL:104 - 
+    insert 
+    into
+        CustomerOrder
+        (orderDate, customerId, orderNumber) 
+    values
+        (?, ?, ?)
+14:11:54,351 DEBUG SQL:104 - 
+    insert 
+    into
+        LineItem
+        (quantity, customerId, orderNumber, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,352 DEBUG SQL:104 - 
+    insert 
+    into
+        LineItem
+        (quantity, customerId, orderNumber, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,352 DEBUG SQL:104 - 
+    insert 
+    into
+        CustomerOrder
+        (orderDate, customerId, orderNumber) 
+    values
+        (?, ?, ?)
+14:11:54,352 DEBUG SQL:104 - 
+    insert 
+    into
+        LineItem
+        (quantity, customerId, orderNumber, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,352 DEBUG SQL:104 - 
+    insert 
+    into
+        LineItem
+        (quantity, customerId, orderNumber, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,353 DEBUG SQL:104 - 
+    select
+        customer0_.customerId as customerId0_0_,
+        orders1_.customerId as customerId1_1_,
+        orders1_.orderNumber as orderNum2_1_1_,
+        lineitems2_.customerId as customerId2_2_,
+        lineitems2_.orderNumber as orderNum2_2_2_,
+        lineitems2_.productId as productId2_2_,
+        product3_.productId as productId3_3_,
+        customer0_.name as name0_0_,
+        customer0_.address as address0_0_,
+        orders1_.orderDate as orderDate1_1_,
+        ( select
+            sum(li.quantity*p.cost) 
+        from
+            LineItem li,
+            Product p 
+        where
+            li.productId = p.productId 
+            and li.customerId = orders1_.customerId 
+            and li.orderNumber = orders1_.orderNumber ) as formula42_1_,
+        orders1_.customerId as customerId0_0__,
+        orders1_.customerId as customerId1_0__,
+        orders1_.orderNumber as orderNum2_1_0__,
+        orders1_.orderNumber as orderNum2_0__,
+        lineitems2_.quantity as quantity2_2_,
+        lineitems2_.customerId as customerId1_1__,
+        lineitems2_.orderNumber as orderNum2_1_1__,
+        lineitems2_.customerId as customerId2_1__,
+        lineitems2_.orderNumber as orderNum2_2_1__,
+        lineitems2_.productId as productId2_1__,
+        product3_.description as descript2_3_3_,
+        product3_.cost as cost3_3_,
+        product3_.numberAvailable as numberAv4_3_3_,
+        ( select
+            sum(li.quantity) 
+        from
+            LineItem li 
+        where
+            li.productId = product3_.productId ) as formula43_3_ 
+    from
+        Customer customer0_ 
+    left outer join
+        CustomerOrder orders1_ 
+            on customer0_.customerId=orders1_.customerId 
+    left outer join
+        LineItem lineitems2_ 
+            on orders1_.customerId=lineitems2_.customerId 
+            and orders1_.orderNumber=lineitems2_.orderNumber 
+    left outer join
+        Product product3_ 
+            on lineitems2_.productId=product3_.productId
+14:11:54,378 DEBUG SQL:104 - 
+    delete 
+    from
+        LineItem
+14:11:54,378 DEBUG SQL:104 - 
+    delete 
+    from
+        CustomerOrder
+14:11:54,379 DEBUG SQL:104 - 
+    delete 
+    from
+        Customer
+14:11:54,379 DEBUG SQL:104 - 
+    delete 
+    from
+        Product
+14:11:54,380  INFO CustomRunner:139 - Test: testNonDistinctCountOfEntityWithCompositeId
+14:11:54,381 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(o) from org.hibernate.test.cid.Order o
+14:11:54,382 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=45,possibleID=true]
+14:11:54,382 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  \-[IDENT] Node: 'cid'
+       |     |  \-[IDENT] Node: 'Order'
+       |     \-[ALIAS] Node: 'o'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[IDENT] Node: 'o'
+
+14:11:54,383 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,383 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Order (o) -> order0_
+14:11:54,383 DEBUG FromReferenceNode:74 - Resolved : o -> order0_.customerId
+14:11:54,383 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count order0_.customerId ) ) ( FromClause{level=1} CustomerOrder order0_ ) )
+14:11:54,383 DEBUG JoinProcessor:175 - Using FROM fragment [CustomerOrder order0_]
+14:11:54,384 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Product,CustomerOrder,LineItem)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ALIAS_REF] IdentNode: 'order0_.customerId' {alias=o, className=org.hibernate.test.cid.Order, tableAlias=order0_}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[o], fromElementByTableAlias=[order0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CustomerOrder order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}
+
+14:11:54,409 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,410 DEBUG QueryTranslatorImpl:235 - HQL: select count(o) from org.hibernate.test.cid.Order o
+14:11:54,410 DEBUG QueryTranslatorImpl:236 - SQL: select count(order0_.customerId) as col_0_0_ from CustomerOrder order0_
+14:11:54,410 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,411  INFO CustomRunner:139 - Test: testNonLazyFetch
+14:11:54,412 DEBUG SQL:104 - 
+    select
+        order_.customerId,
+        order_.orderNumber,
+        order_.orderDate as orderDate1_ 
+    from
+        CustomerOrder order_ 
+    where
+        order_.customerId=? 
+        and order_.orderNumber=?
+14:11:54,413 DEBUG SQL:104 - 
+    select
+        lineitem_.customerId,
+        lineitem_.orderNumber,
+        lineitem_.productId,
+        lineitem_.quantity as quantity2_ 
+    from
+        LineItem lineitem_ 
+    where
+        lineitem_.customerId=? 
+        and lineitem_.orderNumber=? 
+        and lineitem_.productId=?
+14:11:54,424 DEBUG SQL:104 - 
+    insert 
+    into
+        Product
+        (description, cost, numberAvailable, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,424 DEBUG SQL:104 - 
+    insert 
+    into
+        Product
+        (description, cost, numberAvailable, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,424 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (name, address, customerId) 
+    values
+        (?, ?, ?)
+14:11:54,425 DEBUG SQL:104 - 
+    insert 
+    into
+        CustomerOrder
+        (orderDate, customerId, orderNumber) 
+    values
+        (?, ?, ?)
+14:11:54,435 DEBUG SQL:104 - 
+    insert 
+    into
+        LineItem
+        (quantity, customerId, orderNumber, productId) 
+    values
+        (?, ?, ?, ?)
+14:11:54,436 DEBUG SQL:104 - 
+    select
+        order0_.customerId as customerId1_1_,
+        order0_.orderNumber as orderNum2_1_1_,
+        order0_.orderDate as orderDate1_1_,
+        ( select
+            sum(li.quantity*p.cost) 
+        from
+            LineItem li,
+            Product p 
+        where
+            li.productId = p.productId 
+            and li.customerId = order0_.customerId 
+            and li.orderNumber = order0_.orderNumber ) as formula42_1_,
+        lineitems1_.customerId as customerId1_3_,
+        lineitems1_.orderNumber as orderNum2_1_3_,
+        lineitems1_.customerId as customerId2_3_,
+        lineitems1_.orderNumber as orderNum2_2_3_,
+        lineitems1_.productId as productId2_3_,
+        lineitems1_.customerId as customerId2_0_,
+        lineitems1_.orderNumber as orderNum2_2_0_,
+        lineitems1_.productId as productId2_0_,
+        lineitems1_.quantity as quantity2_0_ 
+    from
+        CustomerOrder order0_ 
+    left outer join
+        LineItem lineitems1_ 
+            on order0_.customerId=lineitems1_.customerId 
+            and order0_.orderNumber=lineitems1_.orderNumber 
+    where
+        order0_.customerId=? 
+        and order0_.orderNumber=?
+14:11:54,472 DEBUG SQL:104 - 
+    select
+        customer0_.customerId as customerId0_0_,
+        customer0_.name as name0_0_,
+        customer0_.address as address0_0_ 
+    from
+        Customer customer0_ 
+    where
+        customer0_.customerId=?
+14:11:54,474 DEBUG SQL:104 - 
+    select
+        order0_.customerId as customerId1_0_,
+        order0_.orderNumber as orderNum2_1_0_,
+        lineitems1_.customerId as customerId2_1_,
+        lineitems1_.orderNumber as orderNum2_2_1_,
+        lineitems1_.productId as productId2_1_,
+        product2_.productId as productId3_2_,
+        order0_.orderDate as orderDate1_0_,
+        ( select
+            sum(li.quantity*p.cost) 
+        from
+            LineItem li,
+            Product p 
+        where
+            li.productId = p.productId 
+            and li.customerId = order0_.customerId 
+            and li.orderNumber = order0_.orderNumber ) as formula42_0_,
+        lineitems1_.quantity as quantity2_1_,
+        lineitems1_.customerId as customerId1_0__,
+        lineitems1_.orderNumber as orderNum2_1_0__,
+        lineitems1_.customerId as customerId2_0__,
+        lineitems1_.orderNumber as orderNum2_2_0__,
+        lineitems1_.productId as productId2_0__,
+        product2_.description as descript2_3_2_,
+        product2_.cost as cost3_2_,
+        product2_.numberAvailable as numberAv4_3_2_,
+        ( select
+            sum(li.quantity) 
+        from
+            LineItem li 
+        where
+            li.productId = product2_.productId ) as formula43_2_ 
+    from
+        CustomerOrder order0_ 
+    left outer join
+        LineItem lineitems1_ 
+            on order0_.customerId=lineitems1_.customerId 
+            and order0_.orderNumber=lineitems1_.orderNumber 
+    left outer join
+        Product product2_ 
+            on lineitems1_.productId=product2_.productId
+14:11:54,495 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cid.Order o
+14:11:54,496 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Order",<108> previously: <41>,line=1,col=29,possibleID=true]
+14:11:54,497 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'cid'
+             |  \-[IDENT] Node: 'Order'
+             \-[ALIAS] Node: 'o'
+
+14:11:54,498 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,498 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.Order (o) -> order0_
+14:11:54,498 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} CustomerOrder order0_ ) )
+14:11:54,498 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:54,499 DEBUG JoinProcessor:175 - Using FROM fragment [CustomerOrder order0_]
+14:11:54,499 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Product,CustomerOrder,LineItem)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'order0_.customerId as customerId1_, order0_.orderNumber as orderNum2_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'order0_.orderDate as orderDate1_, ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber ) as formula42_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[o], fromElementByTableAlias=[order0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'CustomerOrder order0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=CustomerOrder,tableAlias=order0_,origin=null,columns={,className=org.hibernate.test.cid.Order}}
+
+14:11:54,500 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,502 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cid.Order o
+14:11:54,502 DEBUG QueryTranslatorImpl:236 - SQL: select order0_.customerId as customerId1_, order0_.orderNumber as orderNum2_1_, order0_.orderDate as orderDate1_, ( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = order0_.customerId and li.orderNumber = order0_.orderNumber ) as formula42_ from CustomerOrder order0_
+14:11:54,502 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,503 DEBUG SQL:104 - 
+    select
+        order0_.customerId as customerId1_,
+        order0_.orderNumber as orderNum2_1_,
+        order0_.orderDate as orderDate1_,
+        ( select
+            sum(li.quantity*p.cost) 
+        from
+            LineItem li,
+            Product p 
+        where
+            li.productId = p.productId 
+            and li.customerId = order0_.customerId 
+            and li.orderNumber = order0_.orderNumber ) as formula42_ 
+    from
+        CustomerOrder order0_
+14:11:54,505 DEBUG SQL:104 - 
+    select
+        lineitems0_.customerId as customerId1_1_,
+        lineitems0_.orderNumber as orderNum2_1_1_,
+        lineitems0_.customerId as customerId2_1_,
+        lineitems0_.orderNumber as orderNum2_2_1_,
+        lineitems0_.productId as productId2_1_,
+        lineitems0_.customerId as customerId2_0_,
+        lineitems0_.orderNumber as orderNum2_2_0_,
+        lineitems0_.productId as productId2_0_,
+        lineitems0_.quantity as quantity2_0_ 
+    from
+        LineItem lineitems0_ 
+    where
+        lineitems0_.customerId=? 
+        and lineitems0_.orderNumber=?
+14:11:54,529 DEBUG SQL:104 - 
+    delete 
+    from
+        LineItem
+14:11:54,530 DEBUG SQL:104 - 
+    delete 
+    from
+        CustomerOrder
+14:11:54,530 DEBUG SQL:104 - 
+    delete 
+    from
+        Customer
+14:11:54,530 DEBUG SQL:104 - 
+    delete 
+    from
+        Product
+14:11:54,531  INFO CustomRunner:139 - Test: testQuery
+14:11:54,532 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.cid.LineItem ol where ol.order.id.customerId = 'C111'
+14:11:54,547 DEBUG HqlParser:378 - handleDotIdent() : new LT(2) token - [".",<15> previously: <15>,line=1,col=49,possibleID=false]
+14:11:54,549 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'cid'
+    |        |  \-[IDENT] Node: 'LineItem'
+    |        \-[ALIAS] Node: 'ol'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[IDENT] Node: 'ol'
+          |  |  |  \-[IDENT] Node: 'order'
+          |  |  \-[IDENT] Node: 'id'
+          |  \-[IDENT] Node: 'customerId'
+          \-[QUOTED_STRING] Node: ''C111''
+
+14:11:54,557 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,558 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cid.LineItem (ol) -> lineitem0_
+14:11:54,558 DEBUG FromReferenceNode:74 - Resolved : ol -> (lineitem0_.customerId, lineitem0_.orderNumber, lineitem0_.productId)
+14:11:54,558 DEBUG DotNode:599 - getDataType() : order -> org.hibernate.type.ManyToOneType(org.hibernate.test.cid.Order)
+14:11:54,558 DEBUG DotNode:562 - dereferenceShortcut() : property id in org.hibernate.test.cid.LineItem does not require a join.
+14:11:54,559 DEBUG DotNode:585 - Unresolved property path is now 'order.id'
+14:11:54,559 DEBUG FromReferenceNode:74 - Resolved : ol.order -> (lineitem0_.customerId, lineitem0_.orderNumber)
+14:11:54,559 DEBUG DotNode:599 - getDataType() : order.id -> org.hibernate.type.ComponentType@15161f6e
+14:11:54,559 DEBUG DotNode:585 - Unresolved property path is now 'order.id.customerId'
+14:11:54,559 DEBUG FromReferenceNode:74 - Resolved : ol.order.id -> (lineitem0_.customerId, lineitem0_.orderNumber)
+14:11:54,559 DEBUG DotNode:599 - getDataType() : order.id.customerId -> org.hibernate.type.StringType@2dc8de40
+14:11:54,559 DEBUG FromReferenceNode:74 - Resolved : ol.order.id.customerId -> lineitem0_.customerId
+14:11:54,560 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} LineItem lineitem0_ ) ( where ( = ( lineitem0_.customerId ( (lineitem0_.customerId, lineitem0_.orderNumber) ( (lineitem0_.customerId, lineitem0_.orderNumber) (lineitem0_.customerId, lineitem0_.orderNumber, lineitem0_.productId) order ) id ) customerId ) 'C111' ) ) )
+14:11:54,560 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:54,560 DEBUG JoinProcessor:175 - Using FROM fragment [LineItem lineitem0_]
+14:11:54,560 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (LineItem)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'lineitem0_.customerId as customerId2_, lineitem0_.orderNumber as orderNum2_2_, lineitem0_.productId as productId2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=ol,role=null,tableName=LineItem,tableAlias=lineitem0_,origin=null,columns={,className=org.hibernate.test.cid.LineItem}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'lineitem0_.quantity as quantity2_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[ol], fromElementByTableAlias=[lineitem0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'LineItem lineitem0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=ol,role=null,tableName=LineItem,tableAlias=lineitem0_,origin=null,columns={,className=org.hibernate.test.cid.LineItem}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'lineitem0_.customerId' {propertyName=customerId,dereferenceType=ALL,propertyPath=order.id.customerId,path=ol.order.id.customerId,tableAlias=lineitem0_,className=org.hibernate.test.cid.LineItem,classAlias=ol}
+          |  +-[DOT] DotNode: '(lineitem0_.customerId, lineitem0_.orderNumber)' {propertyName=customerId,dereferenceType=2,propertyPath=order.id.customerId,path=ol.order.id,tableAlias=lineitem0_,className=org.hibernate.test.cid.LineItem,classAlias=ol}
+          |  |  +-[DOT] DotNode: '(lineitem0_.customerId, lineitem0_.orderNumber)' {propertyName=id,dereferenceType=0,propertyPath=order.id,path=ol.order,tableAlias=lineitem0_,className=org.hibernate.test.cid.LineItem,classAlias=ol}
+          |  |  |  +-[ALIAS_REF] IdentNode: '(lineitem0_.customerId, lineitem0_.orderNumber, lineitem0_.productId)' {alias=ol, className=org.hibernate.test.cid.LineItem, tableAlias=lineitem0_}
+          |  |  |  \-[IDENT] IdentNode: 'order' {originalText=order}
+          |  |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          |  \-[IDENT] IdentNode: 'customerId' {originalText=customerId}
+          \-[QUOTED_STRING] LiteralNode: ''C111''
+
+14:11:54,568 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,568 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.cid.LineItem ol where ol.order.id.customerId = 'C111'
+14:11:54,569 DEBUG QueryTranslatorImpl:236 - SQL: select lineitem0_.customerId as customerId2_, lineitem0_.orderNumber as orderNum2_2_, lineitem0_.productId as productId2_, lineitem0_.quantity as quantity2_ from LineItem lineitem0_ where lineitem0_.customerId='C111'
+14:11:54,569 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:54,569 DEBUG SQL:104 - 
+    select
+        lineitem0_.customerId as customerId2_,
+        lineitem0_.orderNumber as orderNum2_2_,
+        lineitem0_.productId as productId2_,
+        lineitem0_.quantity as quantity2_ 
+    from
+        LineItem lineitem0_ 
+    where
+        lineitem0_.customerId='C111'
+14:11:54,570  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:54,581 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:54,582 DEBUG SQL:104 - 
+    alter table CustomerOrder 
+        drop constraint FKAEF781F06153C9DD
+14:11:54,582 DEBUG SQL:104 - 
+    alter table LineItem 
+        drop constraint FK4AAEE947CB8F4618
+14:11:54,582 DEBUG SQL:104 - 
+    alter table LineItem 
+        drop constraint FK4AAEE947EDAE41F3
+14:11:54,582 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:11:54,583 DEBUG SQL:104 - 
+    drop table CustomerOrder if exists
+14:11:54,583 DEBUG SQL:104 - 
+    drop table LineItem if exists
+14:11:54,583 DEBUG SQL:104 - 
+    drop table Product if exists
+14:11:54,583  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:54,583  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

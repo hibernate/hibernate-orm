@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.collection.map.hhh7557.EntityMapTest" tests="1" time="0.341" timestamp="2013-02-28T20:11:56">
+  <properties />
+  <testcase classname="org.hibernate.test.collection.map.hhh7557.EntityMapTest" name="testInsertIntoMap" time="0.215" />
+  <system-out><![CDATA[14:11:56,524  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.collection.map.hhh7557.EntityMapTest
+14:11:56,537  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:56,538  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:56,538  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:56,538  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:56,538  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:56,539  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:56,540  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:56,540  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:56,541  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:56,541  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:56,559  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:56,560 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:56,560 DEBUG SQL:104 - 
+    alter table map_key 
+        drop constraint FK31E464FC59E61171
+14:11:56,570 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table map_key drop constraint FK31E464FC59E61171
+14:11:56,570 ERROR SchemaExport:426 - Table "MAP_KEY" not found; SQL statement:
+
+    alter table map_key 
+        drop constraint FK31E464FC59E61171 [42102-145]
+14:11:56,570 DEBUG SQL:104 - 
+    alter table map_key_map_value 
+        drop constraint FKFE10794BFC9E8C33
+14:11:56,571 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table map_key_map_value drop constraint FKFE10794BFC9E8C33
+14:11:56,571 ERROR SchemaExport:426 - Table "MAP_KEY_MAP_VALUE" not found; SQL statement:
+
+    alter table map_key_map_value 
+        drop constraint FKFE10794BFC9E8C33 [42102-145]
+14:11:56,571 DEBUG SQL:104 - 
+    alter table map_key_map_value 
+        drop constraint FKFE10794BEA896FB3
+14:11:56,571 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table map_key_map_value drop constraint FKFE10794BEA896FB3
+14:11:56,571 ERROR SchemaExport:426 - Table "MAP_KEY_MAP_VALUE" not found; SQL statement:
+
+    alter table map_key_map_value 
+        drop constraint FKFE10794BEA896FB3 [42102-145]
+14:11:56,571 DEBUG SQL:104 - 
+    alter table map_key_map_value 
+        drop constraint FKFE10794BF5ACA941
+14:11:56,572 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table map_key_map_value drop constraint FKFE10794BF5ACA941
+14:11:56,572 ERROR SchemaExport:426 - Table "MAP_KEY_MAP_VALUE" not found; SQL statement:
+
+    alter table map_key_map_value 
+        drop constraint FKFE10794BF5ACA941 [42102-145]
+14:11:56,599 DEBUG SQL:104 - 
+    drop table map_holder if exists
+14:11:56,600 DEBUG SQL:104 - 
+    drop table map_key if exists
+14:11:56,600 DEBUG SQL:104 - 
+    drop table map_key_map_value if exists
+14:11:56,600 DEBUG SQL:104 - 
+    drop table map_value if exists
+14:11:56,600 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:11:56,601 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:11:56,601 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:11:56,601 DEBUG SQL:104 - 
+    create table map_holder (
+        id bigint not null,
+        primary key (id)
+    )
+14:11:56,601 DEBUG SQL:104 - 
+    create table map_key (
+        id bigint not null,
+        name varchar(255) not null,
+        default_map_value_id bigint not null,
+        primary key (id)
+    )
+14:11:56,602 DEBUG SQL:104 - 
+    create table map_key_map_value (
+        map_holder_id bigint not null,
+        map_value_id bigint not null,
+        map_key_id bigint not null,
+        primary key (map_holder_id, map_key_id)
+    )
+14:11:56,613 DEBUG SQL:104 - 
+    create table map_value (
+        id bigint not null,
+        name varchar(255) not null,
+        primary key (id)
+    )
+14:11:56,614 DEBUG SQL:104 - 
+    alter table map_key 
+        add constraint UK_map_key_1 unique (name, default_map_value_id)
+14:11:56,614 DEBUG SQL:104 - 
+    alter table map_key 
+        add constraint FK31E464FC59E61171 
+        foreign key (default_map_value_id) 
+        references map_value
+14:11:56,615 DEBUG SQL:104 - 
+    alter table map_key_map_value 
+        add constraint FKFE10794BFC9E8C33 
+        foreign key (map_value_id) 
+        references map_value
+14:11:56,616 DEBUG SQL:104 - 
+    alter table map_key_map_value 
+        add constraint FKFE10794BEA896FB3 
+        foreign key (map_key_id) 
+        references map_key
+14:11:56,616 DEBUG SQL:104 - 
+    alter table map_key_map_value 
+        add constraint FKFE10794BF5ACA941 
+        foreign key (map_holder_id) 
+        references map_holder
+14:11:56,617 DEBUG SQL:104 - 
+    alter table map_value 
+        add constraint uc_map_value_2 unique (name)
+14:11:56,617 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:11:56,617  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:56,619  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:56,619  INFO CustomRunner:139 - Test: testInsertIntoMap
+Inserting (A,1) into map
+14:11:56,620 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:11:56,621 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+Inserting (B,2) into map
+14:11:56,638 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:11:56,639 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+Inserting (C,3) into map
+14:11:56,639 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:11:56,639 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:11:56,640 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:11:56,651 DEBUG SQL:104 - 
+    insert 
+    into
+        map_value
+        (name, id) 
+    values
+        (?, ?)
+14:11:56,653 DEBUG SQL:104 - 
+    insert 
+    into
+        map_key
+        (default_map_value_id, name, id) 
+    values
+        (?, ?, ?)
+14:11:56,653 DEBUG SQL:104 - 
+    insert 
+    into
+        map_value
+        (name, id) 
+    values
+        (?, ?)
+14:11:56,663 DEBUG SQL:104 - 
+    insert 
+    into
+        map_key
+        (default_map_value_id, name, id) 
+    values
+        (?, ?, ?)
+14:11:56,664 DEBUG SQL:104 - 
+    insert 
+    into
+        map_value
+        (name, id) 
+    values
+        (?, ?)
+14:11:56,664 DEBUG SQL:104 - 
+    insert 
+    into
+        map_key
+        (default_map_value_id, name, id) 
+    values
+        (?, ?, ?)
+14:11:56,665 DEBUG SQL:104 - 
+    insert 
+    into
+        map_holder
+        (id) 
+    values
+        (?)
+14:11:56,683 DEBUG SQL:104 - 
+    insert 
+    into
+        map_key_map_value
+        (map_holder_id, map_key_id, map_value_id) 
+    values
+        (?, ?, ?)
+14:11:56,684 DEBUG SQL:104 - 
+    insert 
+    into
+        map_key_map_value
+        (map_holder_id, map_key_id, map_value_id) 
+    values
+        (?, ?, ?)
+14:11:56,701 DEBUG SQL:104 - 
+    insert 
+    into
+        map_key_map_value
+        (map_holder_id, map_key_id, map_value_id) 
+    values
+        (?, ?, ?)
+14:11:56,702 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select distinct mh from org.hibernate.test.collection.map.hhh7557.MapHolder mh
+14:11:56,726 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  \-[IDENT] Node: 'collection'
+       |     |  |  |  \-[IDENT] Node: 'map'
+       |     |  |  \-[IDENT] Node: 'hhh7557'
+       |     |  \-[IDENT] Node: 'MapHolder'
+       |     \-[ALIAS] Node: 'mh'
+       \-[SELECT] Node: 'select'
+          +-[DISTINCT] Node: 'distinct'
+          \-[IDENT] Node: 'mh'
+
+14:11:56,727 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:56,727 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.collection.map.hhh7557.MapHolder (mh) -> mapholder0_
+14:11:56,727 DEBUG FromReferenceNode:74 - Resolved : mh -> mapholder0_.id
+14:11:56,727 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} distinct mapholder0_.id ) ( FromClause{level=1} map_holder mapholder0_ ) )
+14:11:56,728 DEBUG JoinProcessor:175 - Using FROM fragment [map_holder mapholder0_]
+14:11:56,728 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (map_holder)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DISTINCT] SqlNode: 'distinct'
+    |  \-[ALIAS_REF] IdentNode: 'mapholder0_.id as id0_' {alias=mh, className=org.hibernate.test.collection.map.hhh7557.MapHolder, tableAlias=mapholder0_}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[mh], fromElementByTableAlias=[mapholder0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'map_holder mapholder0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=mh,role=null,tableName=map_holder,tableAlias=mapholder0_,origin=null,columns={,className=org.hibernate.test.collection.map.hhh7557.MapHolder}}
+
+14:11:56,728 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:56,728 DEBUG QueryTranslatorImpl:235 - HQL: select distinct mh from org.hibernate.test.collection.map.hhh7557.MapHolder mh
+14:11:56,728 DEBUG QueryTranslatorImpl:236 - SQL: select distinct mapholder0_.id as id0_ from map_holder mapholder0_
+14:11:56,728 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:56,729 DEBUG SQL:104 - 
+    select
+        distinct mapholder0_.id as id0_ 
+    from
+        map_holder mapholder0_
+14:11:56,729 DEBUG SQL:104 - 
+    select
+        map0_.map_holder_id as map1_0_1_,
+        map0_.map_value_id as map2_2_1_,
+        map0_.map_key_id as map3_1_,
+        mapvalue1_.id as id3_0_,
+        mapvalue1_.name as name3_0_ 
+    from
+        map_key_map_value map0_ 
+    inner join
+        map_value mapvalue1_ 
+            on map0_.map_value_id=mapvalue1_.id 
+    where
+        map0_.map_holder_id=?
+14:11:56,736 DEBUG SQL:104 - 
+    select
+        mapkey0_.id as id1_1_,
+        mapkey0_.default_map_value_id as default3_1_1_,
+        mapkey0_.name as name1_1_,
+        mapvalue1_.id as id3_0_,
+        mapvalue1_.name as name3_0_ 
+    from
+        map_key mapkey0_ 
+    inner join
+        map_value mapvalue1_ 
+            on mapkey0_.default_map_value_id=mapvalue1_.id 
+    where
+        mapkey0_.id=?
+14:11:56,739 DEBUG SQL:104 - 
+    select
+        mapkey0_.id as id1_1_,
+        mapkey0_.default_map_value_id as default3_1_1_,
+        mapkey0_.name as name1_1_,
+        mapvalue1_.id as id3_0_,
+        mapvalue1_.name as name3_0_ 
+    from
+        map_key mapkey0_ 
+    inner join
+        map_value mapvalue1_ 
+            on mapkey0_.default_map_value_id=mapvalue1_.id 
+    where
+        mapkey0_.id=?
+14:11:56,740 DEBUG SQL:104 - 
+    select
+        mapkey0_.id as id1_1_,
+        mapkey0_.default_map_value_id as default3_1_1_,
+        mapkey0_.name as name1_1_,
+        mapvalue1_.id as id3_0_,
+        mapvalue1_.name as name3_0_ 
+    from
+        map_key mapkey0_ 
+    inner join
+        map_value mapvalue1_ 
+            on mapkey0_.default_map_value_id=mapvalue1_.id 
+    where
+        mapkey0_.id=?
+14:11:56,740 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:11:56,741 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:11:56,741 DEBUG SQL:104 - 
+    insert 
+    into
+        map_value
+        (name, id) 
+    values
+        (?, ?)
+14:11:56,760 DEBUG SQL:104 - 
+    insert 
+    into
+        map_key
+        (default_map_value_id, name, id) 
+    values
+        (?, ?, ?)
+14:11:56,761 DEBUG SQL:104 - 
+    insert 
+    into
+        map_key_map_value
+        (map_holder_id, map_key_id, map_value_id) 
+    values
+        (?, ?, ?)
+14:11:56,762 DEBUG SQL:104 - 
+    select
+        distinct mapholder0_.id as id0_ 
+    from
+        map_holder mapholder0_
+14:11:56,762 DEBUG SQL:104 - 
+    select
+        map0_.map_holder_id as map1_0_1_,
+        map0_.map_value_id as map2_2_1_,
+        map0_.map_key_id as map3_1_,
+        mapvalue1_.id as id3_0_,
+        mapvalue1_.name as name3_0_ 
+    from
+        map_key_map_value map0_ 
+    inner join
+        map_value mapvalue1_ 
+            on map0_.map_value_id=mapvalue1_.id 
+    where
+        map0_.map_holder_id=?
+14:11:56,797 DEBUG SQL:104 - 
+    select
+        mapkey0_.id as id1_1_,
+        mapkey0_.default_map_value_id as default3_1_1_,
+        mapkey0_.name as name1_1_,
+        mapvalue1_.id as id3_0_,
+        mapvalue1_.name as name3_0_ 
+    from
+        map_key mapkey0_ 
+    inner join
+        map_value mapvalue1_ 
+            on mapkey0_.default_map_value_id=mapvalue1_.id 
+    where
+        mapkey0_.id=?
+14:11:56,798 DEBUG SQL:104 - 
+    select
+        mapkey0_.id as id1_1_,
+        mapkey0_.default_map_value_id as default3_1_1_,
+        mapkey0_.name as name1_1_,
+        mapvalue1_.id as id3_0_,
+        mapvalue1_.name as name3_0_ 
+    from
+        map_key mapkey0_ 
+    inner join
+        map_value mapvalue1_ 
+            on mapkey0_.default_map_value_id=mapvalue1_.id 
+    where
+        mapkey0_.id=?
+14:11:56,819 DEBUG SQL:104 - 
+    select
+        mapkey0_.id as id1_1_,
+        mapkey0_.default_map_value_id as default3_1_1_,
+        mapkey0_.name as name1_1_,
+        mapvalue1_.id as id3_0_,
+        mapvalue1_.name as name3_0_ 
+    from
+        map_key mapkey0_ 
+    inner join
+        map_value mapvalue1_ 
+            on mapkey0_.default_map_value_id=mapvalue1_.id 
+    where
+        mapkey0_.id=?
+14:11:56,833 DEBUG SQL:104 - 
+    select
+        mapkey0_.id as id1_1_,
+        mapkey0_.default_map_value_id as default3_1_1_,
+        mapkey0_.name as name1_1_,
+        mapvalue1_.id as id3_0_,
+        mapvalue1_.name as name3_0_ 
+    from
+        map_key mapkey0_ 
+    inner join
+        map_value mapvalue1_ 
+            on mapkey0_.default_map_value_id=mapvalue1_.id 
+    where
+        mapkey0_.id=?
+14:11:56,835  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:56,836 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:56,836 DEBUG SQL:104 - 
+    alter table map_key 
+        drop constraint FK31E464FC59E61171
+14:11:56,836 DEBUG SQL:104 - 
+    alter table map_key_map_value 
+        drop constraint FKFE10794BFC9E8C33
+14:11:56,837 DEBUG SQL:104 - 
+    alter table map_key_map_value 
+        drop constraint FKFE10794BEA896FB3
+14:11:56,852 DEBUG SQL:104 - 
+    alter table map_key_map_value 
+        drop constraint FKFE10794BF5ACA941
+14:11:56,853 DEBUG SQL:104 - 
+    drop table map_holder if exists
+14:11:56,853 DEBUG SQL:104 - 
+    drop table map_key if exists
+14:11:56,853 DEBUG SQL:104 - 
+    drop table map_key_map_value if exists
+14:11:56,853 DEBUG SQL:104 - 
+    drop table map_value if exists
+14:11:56,854 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:11:56,854  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:56,854  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

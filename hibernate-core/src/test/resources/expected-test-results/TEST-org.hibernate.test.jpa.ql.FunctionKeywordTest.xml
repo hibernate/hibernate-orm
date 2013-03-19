@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.jpa.ql.FunctionKeywordTest" tests="2" time="0.09" timestamp="2013-02-28T20:14:51">
+  <properties />
+  <testcase classname="org.hibernate.test.jpa.ql.FunctionKeywordTest" name="basicFixture" time="0.016" />
+  <testcase classname="org.hibernate.test.jpa.ql.FunctionKeywordTest" name="basicTest" time="0.013" />
+  <system-out><![CDATA[14:14:51,496  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.jpa.ql.FunctionKeywordTest
+14:14:51,498  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/jpa/Part.hbm.xml
+14:14:51,502  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/jpa/Item.hbm.xml
+14:14:51,519  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/jpa/MyEntity.hbm.xml
+14:14:51,527  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:51,528  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:51,528  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:51,528  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:51,528  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:51,529  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:51,530  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:51,530  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:51,530  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:51,538  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:51,539 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:51,539 DEBUG SQL:104 - 
+    alter table EJB3_PART 
+        drop constraint FKFD4B66FC2A89F363
+14:14:51,539 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EJB3_PART drop constraint FKFD4B66FC2A89F363
+14:14:51,539 ERROR SchemaExport:426 - Table "EJB3_PART" not found; SQL statement:
+
+    alter table EJB3_PART 
+        drop constraint FKFD4B66FC2A89F363 [42102-145]
+14:14:51,539 DEBUG SQL:104 - 
+    alter table JPA_MYENTITY 
+        drop constraint FKE9D28493C4B8BDC8
+14:14:51,540 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table JPA_MYENTITY drop constraint FKE9D28493C4B8BDC8
+14:14:51,540 ERROR SchemaExport:426 - Table "JPA_MYENTITY" not found; SQL statement:
+
+    alter table JPA_MYENTITY 
+        drop constraint FKE9D28493C4B8BDC8 [42102-145]
+14:14:51,540 DEBUG SQL:104 - 
+    drop table EJB3_ITEM if exists
+14:14:51,540 DEBUG SQL:104 - 
+    drop table EJB3_PART if exists
+14:14:51,540 DEBUG SQL:104 - 
+    drop table JPA_MYENTITY if exists
+14:14:51,540 DEBUG SQL:104 - 
+    create table EJB3_ITEM (
+        ITEM_ID bigint not null,
+        VERS bigint not null,
+        NAME varchar(255) not null,
+        primary key (ITEM_ID)
+    )
+14:14:51,541 DEBUG SQL:104 - 
+    create table EJB3_PART (
+        PART_ID bigint not null,
+        ITEM_ID bigint not null,
+        NAME varchar(255) not null,
+        STOCK_NUM varchar(255) not null,
+        UNIT_PRICE decimal(19,2) not null,
+        primary key (PART_ID)
+    )
+14:14:51,541 DEBUG SQL:104 - 
+    create table JPA_MYENTITY (
+        ID bigint not null,
+        "TYPE" varchar(255) not null,
+        name varchar(255),
+        other bigint,
+        someSubProperty varchar(255),
+        primary key (ID)
+    )
+14:14:51,541 DEBUG SQL:104 - 
+    alter table EJB3_PART 
+        add constraint FKFD4B66FC2A89F363 
+        foreign key (ITEM_ID) 
+        references EJB3_ITEM
+14:14:51,542 DEBUG SQL:104 - 
+    alter table JPA_MYENTITY 
+        add constraint FKE9D28493C4B8BDC8 
+        foreign key (other) 
+        references JPA_MYENTITY
+14:14:51,542  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:51,543  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:51,543  INFO CustomRunner:139 - Test: basicFixture
+14:14:51,544 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select i from org.hibernate.test.jpa.Item i where substring( i.name, 1, 3 ) = 'abc'
+14:14:51,545 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'jpa'
+    |  |     |  \-[IDENT] Node: 'Item'
+    |  |     \-[ALIAS] Node: 'i'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'i'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'substring'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     +-[DOT] Node: '.'
+          |     |  +-[IDENT] Node: 'i'
+          |     |  \-[IDENT] Node: 'name'
+          |     +-[NUM_INT] Node: '1'
+          |     \-[NUM_INT] Node: '3'
+          \-[QUOTED_STRING] Node: ''abc''
+
+14:14:51,545 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:51,545 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.jpa.Item (i) -> item0_
+14:14:51,546 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.ITEM_ID
+14:14:51,546 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.ITEM_ID
+14:14:51,547 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:14:51,547 DEBUG FromReferenceNode:74 - Resolved : i.name -> item0_.NAME
+14:14:51,547 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} item0_.ITEM_ID ) ( FromClause{level=1} EJB3_ITEM item0_ ) ( where ( = ( ( substring ( exprList ( item0_.NAME item0_.ITEM_ID name ) 1 3 ) ) 'abc' ) ) )
+14:14:51,547 DEBUG JoinProcessor:175 - Using FROM fragment [EJB3_ITEM item0_]
+14:14:51,548 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (EJB3_ITEM)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'item0_.ITEM_ID as ITEM1_0_' {alias=i, className=org.hibernate.test.jpa.Item, tableAlias=item0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'item0_.VERS as VERS0_, item0_.NAME as NAME0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[i], fromElementByTableAlias=[item0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'EJB3_ITEM item0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=EJB3_ITEM,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.jpa.Item}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: '('
+          |  +-[METHOD_NAME] IdentNode: 'substring' {originalText=substring}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     +-[DOT] DotNode: 'item0_.NAME' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=i.name,tableAlias=item0_,className=org.hibernate.test.jpa.Item,classAlias=i}
+          |     |  +-[ALIAS_REF] IdentNode: 'item0_.ITEM_ID' {alias=i, className=org.hibernate.test.jpa.Item, tableAlias=item0_}
+          |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          |     +-[NUM_INT] LiteralNode: '1'
+          |     \-[NUM_INT] LiteralNode: '3'
+          \-[QUOTED_STRING] LiteralNode: ''abc''
+
+14:14:51,548 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:51,548 DEBUG QueryTranslatorImpl:235 - HQL: select i from org.hibernate.test.jpa.Item i where substring( i.name, 1, 3 ) = 'abc'
+14:14:51,548 DEBUG QueryTranslatorImpl:236 - SQL: select item0_.ITEM_ID as ITEM1_0_, item0_.VERS as VERS0_, item0_.NAME as NAME0_ from EJB3_ITEM item0_ where substring(item0_.NAME, 1, 3)='abc'
+14:14:51,548 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:51,548 DEBUG SQL:104 - 
+    select
+        item0_.ITEM_ID as ITEM1_0_,
+        item0_.VERS as VERS0_,
+        item0_.NAME as NAME0_ 
+    from
+        EJB3_ITEM item0_ 
+    where
+        substring(item0_.NAME, 1, 3)='abc'
+14:14:51,559  INFO CustomRunner:139 - Test: basicTest
+14:14:51,560 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select i from org.hibernate.test.jpa.Item i where function( 'substring', i.name, 1, 3 ) = 'abc'
+14:14:51,561 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  \-[IDENT] Node: 'jpa'
+    |  |     |  \-[IDENT] Node: 'Item'
+    |  |     \-[ALIAS] Node: 'i'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'i'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: 'function ('substring')'
+          |  +-[IDENT] Node: 'substring'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     +-[DOT] Node: '.'
+          |     |  +-[IDENT] Node: 'i'
+          |     |  \-[IDENT] Node: 'name'
+          |     +-[NUM_INT] Node: '1'
+          |     \-[NUM_INT] Node: '3'
+          \-[QUOTED_STRING] Node: ''abc''
+
+14:14:51,569 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:51,569 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.jpa.Item (i) -> item0_
+14:14:51,569 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.ITEM_ID
+14:14:51,569 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.ITEM_ID
+14:14:51,570 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:14:51,570 DEBUG FromReferenceNode:74 - Resolved : i.name -> item0_.NAME
+14:14:51,570 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} item0_.ITEM_ID ) ( FromClause{level=1} EJB3_ITEM item0_ ) ( where ( = ( function ('substring') substring ( exprList ( item0_.NAME item0_.ITEM_ID name ) 1 3 ) ) 'abc' ) ) )
+14:14:51,570 DEBUG JoinProcessor:175 - Using FROM fragment [EJB3_ITEM item0_]
+14:14:51,570 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (EJB3_ITEM)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'item0_.ITEM_ID as ITEM1_0_' {alias=i, className=org.hibernate.test.jpa.Item, tableAlias=item0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'item0_.VERS as VERS0_, item0_.NAME as NAME0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[i], fromElementByTableAlias=[item0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'EJB3_ITEM item0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=EJB3_ITEM,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.jpa.Item}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[METHOD_CALL] MethodNode: 'function ('substring')'
+          |  +-[METHOD_NAME] IdentNode: 'substring' {originalText=substring}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     +-[DOT] DotNode: 'item0_.NAME' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=i.name,tableAlias=item0_,className=org.hibernate.test.jpa.Item,classAlias=i}
+          |     |  +-[ALIAS_REF] IdentNode: 'item0_.ITEM_ID' {alias=i, className=org.hibernate.test.jpa.Item, tableAlias=item0_}
+          |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          |     +-[NUM_INT] LiteralNode: '1'
+          |     \-[NUM_INT] LiteralNode: '3'
+          \-[QUOTED_STRING] LiteralNode: ''abc''
+
+14:14:51,570 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:51,571 DEBUG QueryTranslatorImpl:235 - HQL: select i from org.hibernate.test.jpa.Item i where function( 'substring', i.name, 1, 3 ) = 'abc'
+14:14:51,571 DEBUG QueryTranslatorImpl:236 - SQL: select item0_.ITEM_ID as ITEM1_0_, item0_.VERS as VERS0_, item0_.NAME as NAME0_ from EJB3_ITEM item0_ where substring(item0_.NAME, 1, 3)='abc'
+14:14:51,571 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:51,571 DEBUG SQL:104 - 
+    select
+        item0_.ITEM_ID as ITEM1_0_,
+        item0_.VERS as VERS0_,
+        item0_.NAME as NAME0_ 
+    from
+        EJB3_ITEM item0_ 
+    where
+        substring(item0_.NAME, 1, 3)='abc'
+14:14:51,572  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:51,572 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:51,573 DEBUG SQL:104 - 
+    alter table EJB3_PART 
+        drop constraint FKFD4B66FC2A89F363
+14:14:51,573 DEBUG SQL:104 - 
+    alter table JPA_MYENTITY 
+        drop constraint FKE9D28493C4B8BDC8
+14:14:51,573 DEBUG SQL:104 - 
+    drop table EJB3_ITEM if exists
+14:14:51,584 DEBUG SQL:104 - 
+    drop table EJB3_PART if exists
+14:14:51,585 DEBUG SQL:104 - 
+    drop table JPA_MYENTITY if exists
+14:14:51,585  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:51,585  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

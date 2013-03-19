@@ -1,0 +1,1337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.cid.CompositeIdTest" tests="9" time="0.572" timestamp="2013-02-28T20:10:15">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.cid.CompositeIdTest" name="testManyToOneInCompositeId" time="0.042" />
+  <testcase classname="org.hibernate.test.annotations.cid.CompositeIdTest" name="testManyToOneInCompositeIdClass" time="0.022" />
+  <testcase classname="org.hibernate.test.annotations.cid.CompositeIdTest" name="testManyToOneInCompositePk" time="0.048" />
+  <testcase classname="org.hibernate.test.annotations.cid.CompositeIdTest" name="testManyToOneInCompositePkAndSubclass" time="0.034" />
+  <testcase classname="org.hibernate.test.annotations.cid.CompositeIdTest" name="testOneToOneInCompositePk" time="0.012" />
+  <testcase classname="org.hibernate.test.annotations.cid.CompositeIdTest" name="testQueryInAndComposite" time="0.023" />
+  <testcase classname="org.hibernate.test.annotations.cid.CompositeIdTest" name="testQueryInAndCompositeWithHQL" time="0.072" />
+  <testcase classname="org.hibernate.test.annotations.cid.CompositeIdTest" name="testSecondaryTableWithCompositeId" time="0.042" />
+  <testcase classname="org.hibernate.test.annotations.cid.CompositeIdTest" name="testSecondaryTableWithIdClass" time="0.088" />
+  <system-out><![CDATA[14:10:15,640  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.cid.CompositeIdTest
+14:10:15,684  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.cid.AId
+14:10:15,685  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.cid.AId
+14:10:15,685  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.cid.OrderLinePk
+14:10:15,685  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.cid.OrderLinePk
+14:10:15,686  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.cid.TvMagazinPk
+14:10:15,686  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.cid.TvMagazinPk
+14:10:15,686  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.cid.TvMagazinPk
+14:10:15,686  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.cid.TvMagazinPk
+14:10:15,687  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.cid.SomeEntityId
+14:10:15,687  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.cid.SomeEntityId
+14:10:15,687  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.cid.TvMagazinPk
+14:10:15,687  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.cid.TvMagazinPk
+14:10:15,687  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:15,688  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:15,688  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:15,688  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:15,688  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:15,689  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:15,690  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:15,690  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:15,691  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:15,691  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:15,749  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:15,750 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:15,750 DEBUG SQL:104 - 
+    alter table A 
+        drop constraint FK4148D42D11
+14:10:15,751 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table A drop constraint FK4148D42D11
+14:10:15,751 ERROR SchemaExport:426 - Table "A" not found; SQL statement:
+
+    alter table A 
+        drop constraint FK4148D42D11 [42102-145]
+14:10:15,751 DEBUG SQL:104 - 
+    alter table A 
+        drop constraint FK4148D4294F
+14:10:15,751 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table A drop constraint FK4148D4294F
+14:10:15,751 ERROR SchemaExport:426 - Table "A" not found; SQL statement:
+
+    alter table A 
+        drop constraint FK4148D4294F [42102-145]
+14:10:15,751 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC98F66F56
+14:10:15,752 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Child drop constraint FK3E104FC98F66F56
+14:10:15,752 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table Child 
+        drop constraint FK3E104FC98F66F56 [42102-145]
+14:10:15,752 DEBUG SQL:104 - 
+    alter table LittleGenius 
+        drop constraint FK6B933A2D622F5CA2
+14:10:15,752 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table LittleGenius drop constraint FK6B933A2D622F5CA2
+14:10:15,752 ERROR SchemaExport:426 - Table "LITTLEGENIUS" not found; SQL statement:
+
+    alter table LittleGenius 
+        drop constraint FK6B933A2D622F5CA2 [42102-145]
+14:10:15,752 DEBUG SQL:104 - 
+    alter table OrderLine 
+        drop constraint FK60177442D0E4804
+14:10:15,753 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OrderLine drop constraint FK60177442D0E4804
+14:10:15,753 ERROR SchemaExport:426 - Table "ORDERLINE" not found; SQL statement:
+
+    alter table OrderLine 
+        drop constraint FK60177442D0E4804 [42102-145]
+14:10:15,753 DEBUG SQL:104 - 
+    alter table OrderLine 
+        drop constraint FK60177442324D40F2
+14:10:15,753 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OrderLine drop constraint FK60177442324D40F2
+14:10:15,753 ERROR SchemaExport:426 - Table "ORDERLINE" not found; SQL statement:
+
+    alter table OrderLine 
+        drop constraint FK60177442324D40F2 [42102-145]
+14:10:15,753 DEBUG SQL:104 - 
+    alter table TV_PROGRAM_EXT 
+        drop constraint FKD459CB69BE07F92B
+14:10:15,753 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TV_PROGRAM_EXT drop constraint FKD459CB69BE07F92B
+14:10:15,754 ERROR SchemaExport:426 - Table "TV_PROGRAM_EXT" not found; SQL statement:
+
+    alter table TV_PROGRAM_EXT 
+        drop constraint FKD459CB69BE07F92B [42102-145]
+14:10:15,754 DEBUG SQL:104 - 
+    alter table TV_PROGRAM_IDCLASS 
+        drop constraint FKE2EFEA8590D452C4
+14:10:15,754 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TV_PROGRAM_IDCLASS drop constraint FKE2EFEA8590D452C4
+14:10:15,754 ERROR SchemaExport:426 - Table "TV_PROGRAM_IDCLASS" not found; SQL statement:
+
+    alter table TV_PROGRAM_IDCLASS 
+        drop constraint FKE2EFEA8590D452C4 [42102-145]
+14:10:15,754 DEBUG SQL:104 - 
+    alter table TvMagazin 
+        drop constraint FK1CDE65EF9895585A
+14:10:15,754 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TvMagazin drop constraint FK1CDE65EF9895585A
+14:10:15,754 ERROR SchemaExport:426 - Table "TVMAGAZIN" not found; SQL statement:
+
+    alter table TvMagazin 
+        drop constraint FK1CDE65EF9895585A [42102-145]
+14:10:15,755 DEBUG SQL:104 - 
+    alter table TvMagazin 
+        drop constraint FK1CDE65EF9CD4BA1B
+14:10:15,755 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TvMagazin drop constraint FK1CDE65EF9CD4BA1B
+14:10:15,755 ERROR SchemaExport:426 - Table "TVMAGAZIN" not found; SQL statement:
+
+    alter table TvMagazin 
+        drop constraint FK1CDE65EF9CD4BA1B [42102-145]
+14:10:15,755 DEBUG SQL:104 - 
+    alter table TvProgram 
+        drop constraint FKD906D1829895585A
+14:10:15,755 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TvProgram drop constraint FKD906D1829895585A
+14:10:15,756 ERROR SchemaExport:426 - Table "TVPROGRAM" not found; SQL statement:
+
+    alter table TvProgram 
+        drop constraint FKD906D1829895585A [42102-145]
+14:10:15,756 DEBUG SQL:104 - 
+    alter table TvProgram 
+        drop constraint FKD906D1829CD4BA1B
+14:10:15,756 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TvProgram drop constraint FKD906D1829CD4BA1B
+14:10:15,756 ERROR SchemaExport:426 - Table "TVPROGRAM" not found; SQL statement:
+
+    alter table TvProgram 
+        drop constraint FKD906D1829CD4BA1B [42102-145]
+14:10:15,756 DEBUG SQL:104 - 
+    alter table TvProgramIdClass 
+        drop constraint FK6E63153B9895585A
+14:10:15,756 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TvProgramIdClass drop constraint FK6E63153B9895585A
+14:10:15,757 ERROR SchemaExport:426 - Table "TVPROGRAMIDCLASS" not found; SQL statement:
+
+    alter table TvProgramIdClass 
+        drop constraint FK6E63153B9895585A [42102-145]
+14:10:15,757 DEBUG SQL:104 - 
+    alter table TvProgramIdClass 
+        drop constraint FK6E63153BFDB3A6CA
+14:10:15,757 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TvProgramIdClass drop constraint FK6E63153BFDB3A6CA
+14:10:15,757 ERROR SchemaExport:426 - Table "TVPROGRAMIDCLASS" not found; SQL statement:
+
+    alter table TvProgramIdClass 
+        drop constraint FK6E63153BFDB3A6CA [42102-145]
+14:10:15,758 DEBUG SQL:104 - 
+    drop table A if exists
+14:10:15,758 DEBUG SQL:104 - 
+    drop table B if exists
+14:10:15,758 DEBUG SQL:104 - 
+    drop table C if exists
+14:10:15,758 DEBUG SQL:104 - 
+    drop table Channel if exists
+14:10:15,759 DEBUG SQL:104 - 
+    drop table Child if exists
+14:10:15,759 DEBUG SQL:104 - 
+    drop table LittleGenius if exists
+14:10:15,759 DEBUG SQL:104 - 
+    drop table OrderLine if exists
+14:10:15,759 DEBUG SQL:104 - 
+    drop table OrderTableFoobar if exists
+14:10:15,759 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:10:15,759 DEBUG SQL:104 - 
+    drop table Presenter if exists
+14:10:15,759 DEBUG SQL:104 - 
+    drop table Product if exists
+14:10:15,760 DEBUG SQL:104 - 
+    drop table SomeEntity if exists
+14:10:15,760 DEBUG SQL:104 - 
+    drop table TV_PROGRAM_EXT if exists
+14:10:15,760 DEBUG SQL:104 - 
+    drop table TV_PROGRAM_IDCLASS if exists
+14:10:15,760 DEBUG SQL:104 - 
+    drop table TvMagazin if exists
+14:10:15,760 DEBUG SQL:104 - 
+    drop table TvProgram if exists
+14:10:15,761 DEBUG SQL:104 - 
+    drop table TvProgramIdClass if exists
+14:10:15,761 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:15,761 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:15,761 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:15,761 DEBUG SQL:104 - 
+    create table A (
+        cid bigint not null,
+        bid bigint not null,
+        primary key (bid, cid)
+    )
+14:10:15,763 DEBUG SQL:104 - 
+    create table B (
+        id bigint not null,
+        primary key (id)
+    )
+14:10:15,764 DEBUG SQL:104 - 
+    create table C (
+        id bigint not null,
+        primary key (id)
+    )
+14:10:15,764 DEBUG SQL:104 - 
+    create table Channel (
+        id integer not null,
+        primary key (id)
+    )
+14:10:15,764 DEBUG SQL:104 - 
+    create table Child (
+        nth integer not null,
+        parentFirstName varchar(255) not null,
+        parentLastName varchar(255) not null,
+        primary key (nth, parentFirstName, parentLastName)
+    )
+14:10:15,765 DEBUG SQL:104 - 
+    create table LittleGenius (
+        particularSkill varchar(255),
+        nthChild integer not null,
+        parentLastName varchar(255) not null,
+        parentFirstName varchar(255) not null,
+        primary key (nthChild, parentLastName, parentFirstName)
+    )
+14:10:15,765 DEBUG SQL:104 - 
+    create table OrderLine (
+        foo integer not null,
+        bar varchar(255) not null,
+        primary key (foo, bar)
+    )
+14:10:15,766 DEBUG SQL:104 - 
+    create table OrderTableFoobar (
+        id integer not null,
+        primary key (id)
+    )
+14:10:15,766 DEBUG SQL:104 - 
+    create table Parent (
+        firstName varchar(255) not null,
+        p_lname varchar(255) not null,
+        primary key (firstName, p_lname)
+    )
+14:10:15,766 DEBUG SQL:104 - 
+    create table Presenter (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:10:15,767 DEBUG SQL:104 - 
+    create table Product (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:10:15,767 DEBUG SQL:104 - 
+    create table SomeEntity (
+        id integer not null,
+        version integer not null,
+        prop varchar(255),
+        primary key (id, version)
+    )
+14:10:15,768 DEBUG SQL:104 - 
+    create table TV_PROGRAM_EXT (
+        TXT varchar(255),
+        CHANNEL_ID integer not null,
+        PRESENTER_NAME varchar(255) not null,
+        primary key (CHANNEL_ID, PRESENTER_NAME)
+    )
+14:10:15,768 DEBUG SQL:104 - 
+    create table TV_PROGRAM_IDCLASS (
+        TXT varchar(255),
+        CHANNEL_ID integer not null,
+        PRESENTER_NAME varchar(255) not null,
+        primary key (CHANNEL_ID, PRESENTER_NAME)
+    )
+14:10:15,769 DEBUG SQL:104 - 
+    create table TvMagazin (
+        "time" time,
+        presenter_name varchar(255) not null,
+        chan_id integer not null,
+        primary key (chan_id, presenter_name)
+    )
+14:10:15,769 DEBUG SQL:104 - 
+    create table TvProgram (
+        "time" time,
+        presenter_name varchar(255) not null,
+        chan_id integer not null,
+        primary key (chan_id, presenter_name)
+    )
+14:10:15,769 DEBUG SQL:104 - 
+    create table TvProgramIdClass (
+        "time" time,
+        presenter_name varchar(255) not null,
+        channel_id integer not null,
+        primary key (channel_id, presenter_name)
+    )
+14:10:15,770 DEBUG SQL:104 - 
+    alter table A 
+        add constraint FK4148D42D11 
+        foreign key (cid) 
+        references C
+14:10:15,772 DEBUG SQL:104 - 
+    alter table A 
+        add constraint FK4148D4294F 
+        foreign key (bid) 
+        references B
+14:10:15,772 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FC98F66F56 
+        foreign key (parentFirstName, parentLastName) 
+        references Parent
+14:10:15,773 DEBUG SQL:104 - 
+    alter table LittleGenius 
+        add constraint FK6B933A2D622F5CA2 
+        foreign key (nthChild, parentLastName, parentFirstName) 
+        references Child
+14:10:15,774 DEBUG SQL:104 - 
+    alter table OrderLine 
+        add constraint FK60177442D0E4804 
+        foreign key (foo) 
+        references OrderTableFoobar
+14:10:15,775 DEBUG SQL:104 - 
+    alter table OrderLine 
+        add constraint FK60177442324D40F2 
+        foreign key (bar) 
+        references Product
+14:10:15,776 DEBUG SQL:104 - 
+    alter table TV_PROGRAM_EXT 
+        add constraint FKD459CB69BE07F92B 
+        foreign key (CHANNEL_ID, PRESENTER_NAME) 
+        references TvProgram
+14:10:15,777 DEBUG SQL:104 - 
+    alter table TV_PROGRAM_IDCLASS 
+        add constraint FKE2EFEA8590D452C4 
+        foreign key (CHANNEL_ID, PRESENTER_NAME) 
+        references TvProgramIdClass
+14:10:15,777 DEBUG SQL:104 - 
+    alter table TvMagazin 
+        add constraint FK1CDE65EF9895585A 
+        foreign key (presenter_name) 
+        references Presenter
+14:10:15,778 DEBUG SQL:104 - 
+    alter table TvMagazin 
+        add constraint FK1CDE65EF9CD4BA1B 
+        foreign key (chan_id) 
+        references Channel
+14:10:15,779 DEBUG SQL:104 - 
+    alter table TvProgram 
+        add constraint FKD906D1829895585A 
+        foreign key (presenter_name) 
+        references Presenter
+14:10:15,780 DEBUG SQL:104 - 
+    alter table TvProgram 
+        add constraint FKD906D1829CD4BA1B 
+        foreign key (chan_id) 
+        references Channel
+14:10:15,781 DEBUG SQL:104 - 
+    alter table TvProgramIdClass 
+        add constraint FK6E63153B9895585A 
+        foreign key (presenter_name) 
+        references Presenter
+14:10:15,784 DEBUG SQL:104 - 
+    alter table TvProgramIdClass 
+        add constraint FK6E63153BFDB3A6CA 
+        foreign key (channel_id) 
+        references Channel
+14:10:15,785 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:15,785  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:15,787  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:15,787  INFO CustomRunner:139 - Test: testManyToOneInCompositeId
+14:10:15,788 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:15,790 DEBUG SQL:104 - 
+    insert 
+    into
+        Channel
+        (id) 
+    values
+        (?)
+14:10:15,790 DEBUG SQL:104 - 
+    insert 
+    into
+        Presenter
+        (name) 
+    values
+        (?)
+14:10:15,791 DEBUG SQL:104 - 
+    insert 
+    into
+        TvMagazin
+        ("time", chan_id, presenter_name) 
+    values
+        (?, ?, ?)
+14:10:15,804 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.cid.TvMagazin mag
+14:10:15,805 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  |  \-[IDENT] Node: 'test'
+             |  |  |  \-[IDENT] Node: 'annotations'
+             |  |  \-[IDENT] Node: 'cid'
+             |  \-[IDENT] Node: 'TvMagazin'
+             \-[ALIAS] Node: 'mag'
+
+14:10:15,805 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,806 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.cid.TvMagazin (mag) -> tvmagazin0_
+14:10:15,806 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} TvMagazin tvmagazin0_ ) )
+14:10:15,806 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:15,806 DEBUG JoinProcessor:175 - Using FROM fragment [TvMagazin tvmagazin0_]
+14:10:15,806 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (TvMagazin)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'tvmagazin0_.chan_id as chan3_14_, tvmagazin0_.presenter_name as presenter2_14_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=mag,role=null,tableName=TvMagazin,tableAlias=tvmagazin0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.TvMagazin}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'tvmagazin0_."time" as time1_14_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[mag], fromElementByTableAlias=[tvmagazin0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'TvMagazin tvmagazin0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=mag,role=null,tableName=TvMagazin,tableAlias=tvmagazin0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.TvMagazin}}
+
+14:10:15,814 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,814 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.cid.TvMagazin mag
+14:10:15,814 DEBUG QueryTranslatorImpl:236 - SQL: select tvmagazin0_.chan_id as chan3_14_, tvmagazin0_.presenter_name as presenter2_14_, tvmagazin0_."time" as time1_14_ from TvMagazin tvmagazin0_
+14:10:15,814 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,815 DEBUG SQL:104 - 
+    select
+        tvmagazin0_.chan_id as chan3_14_,
+        tvmagazin0_.presenter_name as presenter2_14_,
+        tvmagazin0_."time" as time1_14_ 
+    from
+        TvMagazin tvmagazin0_
+14:10:15,815 DEBUG SQL:104 - 
+    select
+        channel0_.id as id3_0_ 
+    from
+        Channel channel0_ 
+    where
+        channel0_.id=?
+14:10:15,816 DEBUG SQL:104 - 
+    select
+        presenter0_.name as name9_0_ 
+    from
+        Presenter presenter0_ 
+    where
+        presenter0_.name=?
+14:10:15,827 DEBUG SQL:104 - 
+    delete 
+    from
+        TvMagazin 
+    where
+        chan_id=? 
+        and presenter_name=?
+14:10:15,828 DEBUG SQL:104 - 
+    delete 
+    from
+        Channel 
+    where
+        id=?
+14:10:15,828 DEBUG SQL:104 - 
+    delete 
+    from
+        Presenter 
+    where
+        name=?
+14:10:15,829  INFO CustomRunner:139 - Test: testManyToOneInCompositeIdClass
+14:10:15,830 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:15,831 DEBUG SQL:104 - 
+    insert 
+    into
+        OrderTableFoobar
+        (id) 
+    values
+        (?)
+14:10:15,837 DEBUG SQL:104 - 
+    insert 
+    into
+        Product
+        (name) 
+    values
+        (?)
+14:10:15,838 DEBUG SQL:104 - 
+    insert 
+    into
+        OrderLine
+        (foo, bar) 
+    values
+        (?, ?)
+14:10:15,839 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select ol from org.hibernate.test.annotations.cid.OrderLine ol
+14:10:15,840 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  \-[IDENT] Node: 'cid'
+       |     |  \-[IDENT] Node: 'OrderLine'
+       |     \-[ALIAS] Node: 'ol'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'ol'
+
+14:10:15,840 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,840 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.cid.OrderLine (ol) -> orderline0_
+14:10:15,841 DEBUG FromReferenceNode:74 - Resolved : ol -> (orderline0_.foo, orderline0_.bar)
+14:10:15,841 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} (orderline0_.foo, orderline0_.bar) ) ( FromClause{level=1} OrderLine orderline0_ ) )
+14:10:15,841 DEBUG JoinProcessor:175 - Using FROM fragment [OrderLine orderline0_]
+14:10:15,841 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (OrderLine)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  \-[ALIAS_REF] IdentNode: 'orderline0_.foo as foo6_, orderline0_.bar as bar6_' {alias=ol, className=org.hibernate.test.annotations.cid.OrderLine, tableAlias=orderline0_}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[ol], fromElementByTableAlias=[orderline0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'OrderLine orderline0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=ol,role=null,tableName=OrderLine,tableAlias=orderline0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.OrderLine}}
+
+14:10:15,841 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,841 DEBUG QueryTranslatorImpl:235 - HQL: select ol from org.hibernate.test.annotations.cid.OrderLine ol
+14:10:15,842 DEBUG QueryTranslatorImpl:236 - SQL: select orderline0_.foo as foo6_, orderline0_.bar as bar6_ from OrderLine orderline0_
+14:10:15,842 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,842 DEBUG SQL:104 - 
+    select
+        orderline0_.foo as foo6_,
+        orderline0_.bar as bar6_ 
+    from
+        OrderLine orderline0_
+14:10:15,842 DEBUG SQL:104 - 
+    select
+        order0_.id as id7_0_ 
+    from
+        OrderTableFoobar order0_ 
+    where
+        order0_.id=?
+14:10:15,849 DEBUG SQL:104 - 
+    select
+        product0_.name as name10_0_ 
+    from
+        Product product0_ 
+    where
+        product0_.name=?
+14:10:15,851  INFO CustomRunner:139 - Test: testManyToOneInCompositePk
+14:10:15,853 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (firstName, p_lname) 
+    values
+        (?, ?)
+14:10:15,853 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (nth, parentFirstName, parentLastName) 
+    values
+        (?, ?, ?)
+14:10:15,854 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select c from org.hibernate.test.annotations.cid.Child c where c.id.nthChild = :nth
+14:10:15,863 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[IDENT] Node: 'cid'
+    |  |     |  \-[IDENT] Node: 'Child'
+    |  |     \-[ALIAS] Node: 'c'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'c'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'c'
+          |  |  \-[IDENT] Node: 'id'
+          |  \-[IDENT] Node: 'nthChild'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'nth'
+
+14:10:15,863 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,863 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.cid.Child (c) -> child0_
+14:10:15,864 DEBUG FromReferenceNode:74 - Resolved : c -> (child0_.nth, child0_.parentFirstName, child0_.parentLastName)
+14:10:15,864 DEBUG FromReferenceNode:74 - Resolved : c -> (child0_.nth, child0_.parentFirstName, child0_.parentLastName)
+14:10:15,864 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.ComponentType@3eeb2e2f
+14:10:15,864 DEBUG DotNode:585 - Unresolved property path is now 'id.nthChild'
+14:10:15,864 DEBUG FromReferenceNode:74 - Resolved : c.id -> child0_.nth
+14:10:15,864 DEBUG DotNode:599 - getDataType() : id.nthChild -> org.hibernate.type.IntegerType@42252fee
+14:10:15,864 DEBUG FromReferenceNode:74 - Resolved : c.id.nthChild -> child0_.nth
+14:10:15,865 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} (child0_.nth, child0_.parentFirstName, child0_.parentLastName) ) ( FromClause{level=1} Child child0_ ) ( where ( = ( child0_.nth ( child0_.nth (child0_.nth, child0_.parentFirstName, child0_.parentLastName) id ) nthChild ) ? ) ) )
+14:10:15,865 DEBUG JoinProcessor:175 - Using FROM fragment [Child child0_ left outer join LittleGenius child0_1_ on child0_.nth=child0_1_.nthChild and child0_.parentFirstName=child0_1_.parentLastName and child0_.parentLastName=child0_1_.parentFirstName]
+14:10:15,865 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Child)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'child0_.nth as nth4_, child0_.parentFirstName as parentFi2_4_, child0_.parentLastName as parentLa3_4_' {alias=c, className=org.hibernate.test.annotations.cid.Child, tableAlias=child0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'child0_1_.particularSkill as particul1_5_, case when child0_1_.nthChild is not null then 1 when child0_.nth is not null then 0 end as clazz_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[c], fromElementByTableAlias=[child0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Child child0_ left outer join LittleGenius child0_1_ on child0_.nth=child0_1_.nthChild and child0_.parentFirstName=child0_1_.parentLastName and child0_.parentLastName=child0_1_.parentFirstName' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.Child}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'child0_.nth' {propertyName=nthChild,dereferenceType=ALL,propertyPath=id.nthChild,path=c.id.nthChild,tableAlias=child0_,className=org.hibernate.test.annotations.cid.Child,classAlias=c}
+          |  +-[DOT] DotNode: 'child0_.nth' {propertyName=nthChild,dereferenceType=2,propertyPath=id.nthChild,path=c.id,tableAlias=child0_,className=org.hibernate.test.annotations.cid.Child,classAlias=c}
+          |  |  +-[ALIAS_REF] IdentNode: '(child0_.nth, child0_.parentFirstName, child0_.parentLastName)' {alias=c, className=org.hibernate.test.annotations.cid.Child, tableAlias=child0_}
+          |  |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          |  \-[IDENT] IdentNode: 'nthChild' {originalText=nthChild}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=nth, expectedType=org.hibernate.type.IntegerType@42252fee}
+
+14:10:15,885 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,885 DEBUG QueryTranslatorImpl:235 - HQL: select c from org.hibernate.test.annotations.cid.Child c where c.id.nthChild = :nth
+14:10:15,885 DEBUG QueryTranslatorImpl:236 - SQL: select child0_.nth as nth4_, child0_.parentFirstName as parentFi2_4_, child0_.parentLastName as parentLa3_4_, child0_1_.particularSkill as particul1_5_, case when child0_1_.nthChild is not null then 1 when child0_.nth is not null then 0 end as clazz_ from Child child0_ left outer join LittleGenius child0_1_ on child0_.nth=child0_1_.nthChild and child0_.parentFirstName=child0_1_.parentLastName and child0_.parentLastName=child0_1_.parentFirstName where child0_.nth=?
+14:10:15,885 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,886 DEBUG SQL:104 - 
+    select
+        child0_.nth as nth4_,
+        child0_.parentFirstName as parentFi2_4_,
+        child0_.parentLastName as parentLa3_4_,
+        child0_1_.particularSkill as particul1_5_,
+        case 
+            when child0_1_.nthChild is not null then 1 
+            when child0_.nth is not null then 0 
+        end as clazz_ 
+    from
+        Child child0_ 
+    left outer join
+        LittleGenius child0_1_ 
+            on child0_.nth=child0_1_.nthChild 
+            and child0_.parentFirstName=child0_1_.parentLastName 
+            and child0_.parentLastName=child0_1_.parentFirstName 
+    where
+        child0_.nth=?
+14:10:15,896 DEBUG SQL:104 - 
+    select
+        parent0_.firstName as firstName8_0_,
+        parent0_.p_lname as p2_8_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.firstName=? 
+        and parent0_.p_lname=?
+14:10:15,897 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        nth=? 
+        and parentFirstName=? 
+        and parentLastName=?
+14:10:15,897 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        firstName=? 
+        and p_lname=?
+14:10:15,899  INFO CustomRunner:139 - Test: testManyToOneInCompositePkAndSubclass
+14:10:15,910 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (firstName, p_lname) 
+    values
+        (?, ?)
+14:10:15,912 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (nth, parentFirstName, parentLastName) 
+    values
+        (?, ?, ?)
+14:10:15,912 DEBUG SQL:104 - 
+    insert 
+    into
+        LittleGenius
+        (particularSkill, nthChild, parentLastName, parentFirstName) 
+    values
+        (?, ?, ?, ?)
+14:10:15,913 DEBUG SQL:104 - 
+    select
+        child0_.nth as nth4_,
+        child0_.parentFirstName as parentFi2_4_,
+        child0_.parentLastName as parentLa3_4_,
+        child0_1_.particularSkill as particul1_5_,
+        case 
+            when child0_1_.nthChild is not null then 1 
+            when child0_.nth is not null then 0 
+        end as clazz_ 
+    from
+        Child child0_ 
+    left outer join
+        LittleGenius child0_1_ 
+            on child0_.nth=child0_1_.nthChild 
+            and child0_.parentFirstName=child0_1_.parentLastName 
+            and child0_.parentLastName=child0_1_.parentFirstName 
+    where
+        child0_.nth=?
+14:10:15,921 DEBUG SQL:104 - 
+    select
+        parent0_.firstName as firstName8_0_,
+        parent0_.p_lname as p2_8_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.firstName=? 
+        and parent0_.p_lname=?
+14:10:15,922 DEBUG SQL:104 - 
+    delete 
+    from
+        LittleGenius 
+    where
+        nthChild=? 
+        and parentLastName=? 
+        and parentFirstName=?
+14:10:15,922 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        nth=? 
+        and parentFirstName=? 
+        and parentLastName=?
+14:10:15,932 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        firstName=? 
+        and p_lname=?
+14:10:15,933  INFO CustomRunner:139 - Test: testOneToOneInCompositePk
+14:10:15,934 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:15,934 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:15,935 DEBUG SQL:104 - 
+    insert 
+    into
+        B
+        (id) 
+    values
+        (?)
+14:10:15,936 DEBUG SQL:104 - 
+    insert 
+    into
+        C
+        (id) 
+    values
+        (?)
+14:10:15,943 DEBUG SQL:104 - 
+    insert 
+    into
+        A
+        (bid, cid) 
+    values
+        (?, ?)
+14:10:15,943 DEBUG SQL:104 - 
+    select
+        a0_.bid as bid0_0_,
+        a0_.cid as cid0_0_ 
+    from
+        A a0_ 
+    where
+        a0_.bid=? 
+        and a0_.cid=?
+14:10:15,945  INFO CustomRunner:139 - Test: testQueryInAndComposite
+14:10:15,947 DEBUG SQL:104 - 
+    insert 
+    into
+        SomeEntity
+        (prop, id, version) 
+    values
+        (?, ?, ?)
+14:10:15,948 DEBUG SQL:104 - 
+    insert 
+    into
+        SomeEntity
+        (prop, id, version) 
+    values
+        (?, ?, ?)
+14:10:15,957 DEBUG SQL:104 - 
+    insert 
+    into
+        SomeEntity
+        (prop, id, version) 
+    values
+        (?, ?, ?)
+14:10:15,957 DEBUG SQL:104 - 
+    insert 
+    into
+        SomeEntity
+        (prop, id, version) 
+    values
+        (?, ?, ?)
+14:10:15,957 DEBUG SQL:104 - 
+    insert 
+    into
+        SomeEntity
+        (prop, id, version) 
+    values
+        (?, ?, ?)
+14:10:15,961 DEBUG SQL:104 - 
+    select
+        this_.id as id11_0_,
+        this_.version as version11_0_,
+        this_.prop as prop11_0_ 
+    from
+        SomeEntity this_ 
+    where
+        (
+            (
+                (
+                    this_.id = ? 
+                    and this_.version= ? 
+                ) 
+                or  (
+                    this_.id = ? 
+                    and this_.version= ? 
+                )  
+            ) 
+        )
+14:10:15,970  INFO CustomRunner:139 - Test: testQueryInAndCompositeWithHQL
+14:10:15,971 DEBUG SQL:104 - 
+    insert 
+    into
+        SomeEntity
+        (prop, id, version) 
+    values
+        (?, ?, ?)
+14:10:15,972 DEBUG SQL:104 - 
+    insert 
+    into
+        SomeEntity
+        (prop, id, version) 
+    values
+        (?, ?, ?)
+14:10:15,972 DEBUG SQL:104 - 
+    insert 
+    into
+        SomeEntity
+        (prop, id, version) 
+    values
+        (?, ?, ?)
+14:10:15,972 DEBUG SQL:104 - 
+    insert 
+    into
+        SomeEntity
+        (prop, id, version) 
+    values
+        (?, ?, ?)
+14:10:15,973 DEBUG SQL:104 - 
+    insert 
+    into
+        SomeEntity
+        (prop, id, version) 
+    values
+        (?, ?, ?)
+14:10:15,973 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.cid.SomeEntity e where e.id in :idList
+14:10:15,975 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  \-[IDENT] Node: 'cid'
+    |        |  \-[IDENT] Node: 'SomeEntity'
+    |        \-[ALIAS] Node: 'e'
+    \-[WHERE] Node: 'where'
+       \-[IN] Node: 'in'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'e'
+          |  \-[IDENT] Node: 'id'
+          \-[IN_LIST] Node: 'inList'
+             \-[COLON] Node: ':'
+                \-[IDENT] Node: 'idList'
+
+14:10:15,986 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,986 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.cid.SomeEntity (e) -> someentity0_
+14:10:15,987 DEBUG FromReferenceNode:74 - Resolved : e -> (someentity0_.id, someentity0_.version)
+14:10:15,987 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.ComponentType@1df60e59
+14:10:15,987 DEBUG DotNode:588 - Terminal propertyPath = [id]
+14:10:15,987 DEBUG FromReferenceNode:74 - Resolved : e.id -> (someentity0_.id, someentity0_.version)
+14:10:15,988 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} SomeEntity someentity0_ ) ( where ( and ( = someentity0_.id ? ) ( = someentity0_.version ? ) ) ) )
+14:10:15,996 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:15,997 DEBUG JoinProcessor:175 - Using FROM fragment [SomeEntity someentity0_]
+14:10:15,997 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (SomeEntity)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'someentity0_.id as id11_, someentity0_.version as version11_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=SomeEntity,tableAlias=someentity0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.SomeEntity}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'someentity0_.prop as prop11_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[someentity0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'SomeEntity someentity0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=SomeEntity,tableAlias=someentity0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.SomeEntity}}
+    \-[WHERE] SqlNode: 'where'
+       \-[AND] InLogicOperatorNode: 'and'
+          +-[EQ] BinaryLogicOperatorNode: '='
+          |  +-[SQL_TOKEN] SqlFragment: 'someentity0_.id'
+          |  \-[SQL_TOKEN] SqlFragment: '?'
+          \-[EQ] BinaryLogicOperatorNode: '='
+             +-[SQL_TOKEN] SqlFragment: 'someentity0_.version'
+             \-[SQL_TOKEN] SqlFragment: '?'
+
+14:10:15,997 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,997 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.cid.SomeEntity e where e.id in :idList
+14:10:15,998 DEBUG QueryTranslatorImpl:236 - SQL: select someentity0_.id as id11_, someentity0_.version as version11_, someentity0_.prop as prop11_ from SomeEntity someentity0_ where someentity0_.id=? and someentity0_.version=?
+14:10:15,998 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:15,998 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.cid.SomeEntity e where e.id in (:idList0_, :idList1_, :idList2_)
+14:10:16,000 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  \-[IDENT] Node: 'cid'
+    |        |  \-[IDENT] Node: 'SomeEntity'
+    |        \-[ALIAS] Node: 'e'
+    \-[WHERE] Node: 'where'
+       \-[IN] Node: 'in'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'e'
+          |  \-[IDENT] Node: 'id'
+          \-[IN_LIST] Node: 'inList'
+             +-[COLON] Node: ':'
+             |  \-[IDENT] Node: 'idList0_'
+             +-[COLON] Node: ':'
+             |  \-[IDENT] Node: 'idList1_'
+             \-[COLON] Node: ':'
+                \-[IDENT] Node: 'idList2_'
+
+14:10:16,021 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,022 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.cid.SomeEntity (e) -> someentity0_
+14:10:16,022 DEBUG FromReferenceNode:74 - Resolved : e -> (someentity0_.id, someentity0_.version)
+14:10:16,022 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.ComponentType@1df60e59
+14:10:16,022 DEBUG DotNode:588 - Terminal propertyPath = [id]
+14:10:16,022 DEBUG FromReferenceNode:74 - Resolved : e.id -> (someentity0_.id, someentity0_.version)
+14:10:16,023 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} SomeEntity someentity0_ ) ( where ( or ( or ( and ( = someentity0_.id ? ) ( = someentity0_.version ? ) ) ( and ( = someentity0_.id ? ) ( = someentity0_.version ? ) ) ) ( and ( = someentity0_.id ? ) ( = someentity0_.version ? ) ) ) ) )
+14:10:16,023 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:16,023 DEBUG JoinProcessor:175 - Using FROM fragment [SomeEntity someentity0_]
+14:10:16,024 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (SomeEntity)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'someentity0_.id as id11_, someentity0_.version as version11_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=SomeEntity,tableAlias=someentity0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.SomeEntity}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'someentity0_.prop as prop11_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[someentity0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'SomeEntity someentity0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=SomeEntity,tableAlias=someentity0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.SomeEntity}}
+    \-[WHERE] SqlNode: 'where'
+       \-[OR] InLogicOperatorNode: 'or'
+          +-[OR] SqlNode: 'or'
+          |  +-[AND] SqlNode: 'and'
+          |  |  +-[EQ] BinaryLogicOperatorNode: '='
+          |  |  |  +-[SQL_TOKEN] SqlFragment: 'someentity0_.id'
+          |  |  |  \-[SQL_TOKEN] SqlFragment: '?'
+          |  |  \-[EQ] BinaryLogicOperatorNode: '='
+          |  |     +-[SQL_TOKEN] SqlFragment: 'someentity0_.version'
+          |  |     \-[SQL_TOKEN] SqlFragment: '?'
+          |  \-[AND] SqlNode: 'and'
+          |     +-[EQ] BinaryLogicOperatorNode: '='
+          |     |  +-[SQL_TOKEN] SqlFragment: 'someentity0_.id'
+          |     |  \-[SQL_TOKEN] SqlFragment: '?'
+          |     \-[EQ] BinaryLogicOperatorNode: '='
+          |        +-[SQL_TOKEN] SqlFragment: 'someentity0_.version'
+          |        \-[SQL_TOKEN] SqlFragment: '?'
+          \-[AND] SqlNode: 'and'
+             +-[EQ] BinaryLogicOperatorNode: '='
+             |  +-[SQL_TOKEN] SqlFragment: 'someentity0_.id'
+             |  \-[SQL_TOKEN] SqlFragment: '?'
+             \-[EQ] BinaryLogicOperatorNode: '='
+                +-[SQL_TOKEN] SqlFragment: 'someentity0_.version'
+                \-[SQL_TOKEN] SqlFragment: '?'
+
+14:10:16,031 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,031 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.cid.SomeEntity e where e.id in (:idList0_, :idList1_, :idList2_)
+14:10:16,031 DEBUG QueryTranslatorImpl:236 - SQL: select someentity0_.id as id11_, someentity0_.version as version11_, someentity0_.prop as prop11_ from SomeEntity someentity0_ where someentity0_.id=? and someentity0_.version=? or someentity0_.id=? and someentity0_.version=? or someentity0_.id=? and someentity0_.version=?
+14:10:16,031 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,032 DEBUG SQL:104 - 
+    select
+        someentity0_.id as id11_,
+        someentity0_.version as version11_,
+        someentity0_.prop as prop11_ 
+    from
+        SomeEntity someentity0_ 
+    where
+        someentity0_.id=? 
+        and someentity0_.version=? 
+        or someentity0_.id=? 
+        and someentity0_.version=? 
+        or someentity0_.id=? 
+        and someentity0_.version=?
+14:10:16,042  INFO CustomRunner:139 - Test: testSecondaryTableWithCompositeId
+14:10:16,044 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:16,045 DEBUG SQL:104 - 
+    insert 
+    into
+        Channel
+        (id) 
+    values
+        (?)
+14:10:16,045 DEBUG SQL:104 - 
+    insert 
+    into
+        Presenter
+        (name) 
+    values
+        (?)
+14:10:16,046 DEBUG SQL:104 - 
+    insert 
+    into
+        TvProgram
+        ("time", chan_id, presenter_name) 
+    values
+        (?, ?, ?)
+14:10:16,052 DEBUG SQL:104 - 
+    insert 
+    into
+        TV_PROGRAM_EXT
+        (TXT, CHANNEL_ID, PRESENTER_NAME) 
+    values
+        (?, ?, ?)
+14:10:16,053 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.cid.TvProgram pr
+14:10:16,054 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  |  \-[IDENT] Node: 'test'
+             |  |  |  \-[IDENT] Node: 'annotations'
+             |  |  \-[IDENT] Node: 'cid'
+             |  \-[IDENT] Node: 'TvProgram'
+             \-[ALIAS] Node: 'pr'
+
+14:10:16,054 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,055 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.cid.TvProgram (pr) -> tvprogram0_
+14:10:16,062 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} TvProgram tvprogram0_ ) )
+14:10:16,062 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:16,063 DEBUG JoinProcessor:175 - Using FROM fragment [TvProgram tvprogram0_ left outer join TV_PROGRAM_EXT tvprogram0_1_ on tvprogram0_.chan_id=tvprogram0_1_.CHANNEL_ID and tvprogram0_.presenter_name=tvprogram0_1_.PRESENTER_NAME]
+14:10:16,063 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (TvProgram,TV_PROGRAM_EXT)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'tvprogram0_.chan_id as chan3_15_, tvprogram0_.presenter_name as presenter2_15_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=pr,role=null,tableName=TvProgram,tableAlias=tvprogram0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.TvProgram}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'tvprogram0_."time" as time1_15_, tvprogram0_1_.TXT as TXT12_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[pr], fromElementByTableAlias=[tvprogram0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'TvProgram tvprogram0_ left outer join TV_PROGRAM_EXT tvprogram0_1_ on tvprogram0_.chan_id=tvprogram0_1_.CHANNEL_ID and tvprogram0_.presenter_name=tvprogram0_1_.PRESENTER_NAME' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=pr,role=null,tableName=TvProgram,tableAlias=tvprogram0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.TvProgram}}
+
+14:10:16,064 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,064 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.cid.TvProgram pr
+14:10:16,064 DEBUG QueryTranslatorImpl:236 - SQL: select tvprogram0_.chan_id as chan3_15_, tvprogram0_.presenter_name as presenter2_15_, tvprogram0_."time" as time1_15_, tvprogram0_1_.TXT as TXT12_ from TvProgram tvprogram0_ left outer join TV_PROGRAM_EXT tvprogram0_1_ on tvprogram0_.chan_id=tvprogram0_1_.CHANNEL_ID and tvprogram0_.presenter_name=tvprogram0_1_.PRESENTER_NAME
+14:10:16,064 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,064 DEBUG SQL:104 - 
+    select
+        tvprogram0_.chan_id as chan3_15_,
+        tvprogram0_.presenter_name as presenter2_15_,
+        tvprogram0_."time" as time1_15_,
+        tvprogram0_1_.TXT as TXT12_ 
+    from
+        TvProgram tvprogram0_ 
+    left outer join
+        TV_PROGRAM_EXT tvprogram0_1_ 
+            on tvprogram0_.chan_id=tvprogram0_1_.CHANNEL_ID 
+            and tvprogram0_.presenter_name=tvprogram0_1_.PRESENTER_NAME
+14:10:16,066 DEBUG SQL:104 - 
+    select
+        channel0_.id as id3_0_ 
+    from
+        Channel channel0_ 
+    where
+        channel0_.id=?
+14:10:16,074 DEBUG SQL:104 - 
+    select
+        presenter0_.name as name9_0_ 
+    from
+        Presenter presenter0_ 
+    where
+        presenter0_.name=?
+14:10:16,076 DEBUG SQL:104 - 
+    delete 
+    from
+        TV_PROGRAM_EXT 
+    where
+        CHANNEL_ID=? 
+        and PRESENTER_NAME=?
+14:10:16,076 DEBUG SQL:104 - 
+    delete 
+    from
+        TvProgram 
+    where
+        chan_id=? 
+        and presenter_name=?
+14:10:16,077 DEBUG SQL:104 - 
+    delete 
+    from
+        Channel 
+    where
+        id=?
+14:10:16,085 DEBUG SQL:104 - 
+    delete 
+    from
+        Presenter 
+    where
+        name=?
+14:10:16,086  INFO CustomRunner:139 - Test: testSecondaryTableWithIdClass
+14:10:16,086 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:16,087 DEBUG SQL:104 - 
+    insert 
+    into
+        Channel
+        (id) 
+    values
+        (?)
+14:10:16,088 DEBUG SQL:104 - 
+    insert 
+    into
+        Presenter
+        (name) 
+    values
+        (?)
+14:10:16,089 DEBUG SQL:104 - 
+    insert 
+    into
+        TvProgramIdClass
+        ("time", channel_id, presenter_name) 
+    values
+        (?, ?, ?)
+14:10:16,098 DEBUG SQL:104 - 
+    insert 
+    into
+        TV_PROGRAM_IDCLASS
+        (TXT, CHANNEL_ID, PRESENTER_NAME) 
+    values
+        (?, ?, ?)
+14:10:16,099 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.cid.TvProgramIdClass pr
+14:10:16,100 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  |  \-[IDENT] Node: 'test'
+             |  |  |  \-[IDENT] Node: 'annotations'
+             |  |  \-[IDENT] Node: 'cid'
+             |  \-[IDENT] Node: 'TvProgramIdClass'
+             \-[ALIAS] Node: 'pr'
+
+14:10:16,100 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,101 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.cid.TvProgramIdClass (pr) -> tvprogrami0_
+14:10:16,101 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} TvProgramIdClass tvprogrami0_ ) )
+14:10:16,101 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:16,101 DEBUG JoinProcessor:175 - Using FROM fragment [TvProgramIdClass tvprogrami0_ left outer join TV_PROGRAM_IDCLASS tvprogrami0_1_ on tvprogrami0_.channel_id=tvprogrami0_1_.CHANNEL_ID and tvprogrami0_.presenter_name=tvprogrami0_1_.PRESENTER_NAME]
+14:10:16,102 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (TV_PROGRAM_IDCLASS,TvProgramIdClass)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'tvprogrami0_.channel_id as channel3_16_, tvprogrami0_.presenter_name as presenter2_16_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=pr,role=null,tableName=TvProgramIdClass,tableAlias=tvprogrami0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.TvProgramIdClass}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'tvprogrami0_."time" as time1_16_, tvprogrami0_1_.TXT as TXT13_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[pr], fromElementByTableAlias=[tvprogrami0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'TvProgramIdClass tvprogrami0_ left outer join TV_PROGRAM_IDCLASS tvprogrami0_1_ on tvprogrami0_.channel_id=tvprogrami0_1_.CHANNEL_ID and tvprogrami0_.presenter_name=tvprogrami0_1_.PRESENTER_NAME' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=pr,role=null,tableName=TvProgramIdClass,tableAlias=tvprogrami0_,origin=null,columns={,className=org.hibernate.test.annotations.cid.TvProgramIdClass}}
+
+14:10:16,102 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,102 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.cid.TvProgramIdClass pr
+14:10:16,102 DEBUG QueryTranslatorImpl:236 - SQL: select tvprogrami0_.channel_id as channel3_16_, tvprogrami0_.presenter_name as presenter2_16_, tvprogrami0_."time" as time1_16_, tvprogrami0_1_.TXT as TXT13_ from TvProgramIdClass tvprogrami0_ left outer join TV_PROGRAM_IDCLASS tvprogrami0_1_ on tvprogrami0_.channel_id=tvprogrami0_1_.CHANNEL_ID and tvprogrami0_.presenter_name=tvprogrami0_1_.PRESENTER_NAME
+14:10:16,102 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:16,102 DEBUG SQL:104 - 
+    select
+        tvprogrami0_.channel_id as channel3_16_,
+        tvprogrami0_.presenter_name as presenter2_16_,
+        tvprogrami0_."time" as time1_16_,
+        tvprogrami0_1_.TXT as TXT13_ 
+    from
+        TvProgramIdClass tvprogrami0_ 
+    left outer join
+        TV_PROGRAM_IDCLASS tvprogrami0_1_ 
+            on tvprogrami0_.channel_id=tvprogrami0_1_.CHANNEL_ID 
+            and tvprogrami0_.presenter_name=tvprogrami0_1_.PRESENTER_NAME
+14:10:16,103 DEBUG SQL:104 - 
+    select
+        channel0_.id as id3_0_ 
+    from
+        Channel channel0_ 
+    where
+        channel0_.id=?
+14:10:16,114 DEBUG SQL:104 - 
+    select
+        presenter0_.name as name9_0_ 
+    from
+        Presenter presenter0_ 
+    where
+        presenter0_.name=?
+14:10:16,115 DEBUG SQL:104 - 
+    delete 
+    from
+        TV_PROGRAM_IDCLASS 
+    where
+        CHANNEL_ID=? 
+        and PRESENTER_NAME=?
+14:10:16,116 DEBUG SQL:104 - 
+    delete 
+    from
+        TvProgramIdClass 
+    where
+        channel_id=? 
+        and presenter_name=?
+14:10:16,116 DEBUG SQL:104 - 
+    delete 
+    from
+        Channel 
+    where
+        id=?
+14:10:16,173 DEBUG SQL:104 - 
+    delete 
+    from
+        Presenter 
+    where
+        name=?
+14:10:16,174  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:16,175 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:16,175 DEBUG SQL:104 - 
+    alter table A 
+        drop constraint FK4148D42D11
+14:10:16,176 DEBUG SQL:104 - 
+    alter table A 
+        drop constraint FK4148D4294F
+14:10:16,176 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC98F66F56
+14:10:16,177 DEBUG SQL:104 - 
+    alter table LittleGenius 
+        drop constraint FK6B933A2D622F5CA2
+14:10:16,177 DEBUG SQL:104 - 
+    alter table OrderLine 
+        drop constraint FK60177442D0E4804
+14:10:16,177 DEBUG SQL:104 - 
+    alter table OrderLine 
+        drop constraint FK60177442324D40F2
+14:10:16,177 DEBUG SQL:104 - 
+    alter table TV_PROGRAM_EXT 
+        drop constraint FKD459CB69BE07F92B
+14:10:16,177 DEBUG SQL:104 - 
+    alter table TV_PROGRAM_IDCLASS 
+        drop constraint FKE2EFEA8590D452C4
+14:10:16,178 DEBUG SQL:104 - 
+    alter table TvMagazin 
+        drop constraint FK1CDE65EF9895585A
+14:10:16,178 DEBUG SQL:104 - 
+    alter table TvMagazin 
+        drop constraint FK1CDE65EF9CD4BA1B
+14:10:16,178 DEBUG SQL:104 - 
+    alter table TvProgram 
+        drop constraint FKD906D1829895585A
+14:10:16,178 DEBUG SQL:104 - 
+    alter table TvProgram 
+        drop constraint FKD906D1829CD4BA1B
+14:10:16,204 DEBUG SQL:104 - 
+    alter table TvProgramIdClass 
+        drop constraint FK6E63153B9895585A
+14:10:16,205 DEBUG SQL:104 - 
+    alter table TvProgramIdClass 
+        drop constraint FK6E63153BFDB3A6CA
+14:10:16,205 DEBUG SQL:104 - 
+    drop table A if exists
+14:10:16,205 DEBUG SQL:104 - 
+    drop table B if exists
+14:10:16,206 DEBUG SQL:104 - 
+    drop table C if exists
+14:10:16,206 DEBUG SQL:104 - 
+    drop table Channel if exists
+14:10:16,206 DEBUG SQL:104 - 
+    drop table Child if exists
+14:10:16,206 DEBUG SQL:104 - 
+    drop table LittleGenius if exists
+14:10:16,207 DEBUG SQL:104 - 
+    drop table OrderLine if exists
+14:10:16,207 DEBUG SQL:104 - 
+    drop table OrderTableFoobar if exists
+14:10:16,207 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:10:16,208 DEBUG SQL:104 - 
+    drop table Presenter if exists
+14:10:16,208 DEBUG SQL:104 - 
+    drop table Product if exists
+14:10:16,208 DEBUG SQL:104 - 
+    drop table SomeEntity if exists
+14:10:16,209 DEBUG SQL:104 - 
+    drop table TV_PROGRAM_EXT if exists
+14:10:16,209 DEBUG SQL:104 - 
+    drop table TV_PROGRAM_IDCLASS if exists
+14:10:16,209 DEBUG SQL:104 - 
+    drop table TvMagazin if exists
+14:10:16,209 DEBUG SQL:104 - 
+    drop table TvProgram if exists
+14:10:16,210 DEBUG SQL:104 - 
+    drop table TvProgramIdClass if exists
+14:10:16,210 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:16,210  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:16,210  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

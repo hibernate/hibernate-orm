@@ -1,0 +1,1942 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.SQLLoaderTest" tests="18" time="0.799" timestamp="2013-02-28T20:16:47">
+  <properties />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testComponentNoStar" time="0.012" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testComponentStar" time="0.006" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testCompositeIdId" time="0.023" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testDoubleAliasing" time="0.021" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testEmbeddedCompositeProperties" time="0.031" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testEscapedJDBC" time="0.022" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testFindBySQLAssociatedObjects" time="0.005" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testFindBySQLDiscriminatedDiffSession" time="0.019" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testFindBySQLDiscriminatedSameSession" time="0.057" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testFindBySQLMultipleObject" time="0.022" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testFindBySQLParameters" time="0.068" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testFindBySQLProperties" time="0.06" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testFindBySQLSimpleByDiffSessions" time="0.006" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testFindBySQLStar" time="0.086" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testFindSimpleBySQL" time="0.002" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testPropertyResultSQL" time="0.032" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testReturnPropertyComponentRename" time="0.11" />
+  <testcase classname="org.hibernate.test.legacy.SQLLoaderTest" name="testTS" time="0.015" />
+  <system-out><![CDATA[14:16:47,606  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.SQLLoaderTest
+14:16:47,607  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:47,608  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/ABC.hbm.xml
+14:16:47,615  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Category.hbm.xml
+14:16:47,619  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Simple.hbm.xml
+14:16:47,623  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Fo.hbm.xml
+14:16:47,627  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/SingleSeveral.hbm.xml
+14:16:47,631  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Componentizable.hbm.xml
+14:16:47,635  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/CompositeIdId.hbm.xml
+14:16:47,643  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.legacy.Single
+14:16:47,644  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.Single
+14:16:47,644  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.legacy.Several
+14:16:47,644  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.Several
+14:16:47,644  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.CompositeIdId
+14:16:47,645  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:16:47,645  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:16:47,645  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:16:47,645  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:16:47,645  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:16:47,646  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:47,646  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:16:47,647  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:16:47,647  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:16:47,662  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:47,663 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:47,663 DEBUG SQL:104 - 
+    alter table B2 
+        drop constraint FK830435E2490
+14:16:47,663 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table B2 drop constraint FK830435E2490
+14:16:47,663 ERROR SchemaExport:426 - Table "B2" not found; SQL statement:
+
+    alter table B2 
+        drop constraint FK830435E2490 [42102-145]
+14:16:47,664 DEBUG SQL:104 - 
+    alter table Several 
+        drop constraint FKD9AD23DCB9B9D411
+14:16:47,664 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Several drop constraint FKD9AD23DCB9B9D411
+14:16:47,664 ERROR SchemaExport:426 - Table "SEVERAL" not found; SQL statement:
+
+    alter table Several 
+        drop constraint FKD9AD23DCB9B9D411 [42102-145]
+14:16:47,664 DEBUG SQL:104 - 
+    alter table Simple 
+        drop constraint FK939D1DD2939BE031
+14:16:47,664 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Simple drop constraint FK939D1DD2939BE031
+14:16:47,664 ERROR SchemaExport:426 - Table "SIMPLE" not found; SQL statement:
+
+    alter table Simple 
+        drop constraint FK939D1DD2939BE031 [42102-145]
+14:16:47,664 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA70333C1F67
+14:16:47,665 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TD drop constraint FKA70333C1F67
+14:16:47,665 ERROR SchemaExport:426 - Table "TD" not found; SQL statement:
+
+    alter table TD 
+        drop constraint FKA70333C1F67 [42102-145]
+14:16:47,665 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA706869A0D9
+14:16:47,665 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TD drop constraint FKA706869A0D9
+14:16:47,665 ERROR SchemaExport:426 - Table "TD" not found; SQL statement:
+
+    alter table TD 
+        drop constraint FKA706869A0D9 [42102-145]
+14:16:47,665 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEE6C4D648
+14:16:47,665 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table category drop constraint FK302BCFEE6C4D648
+14:16:47,666 ERROR SchemaExport:426 - Table "CATEGORY" not found; SQL statement:
+
+    alter table category 
+        drop constraint FK302BCFEE6C4D648 [42102-145]
+14:16:47,666 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEB30D557
+14:16:47,666 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table category drop constraint FK302BCFEB30D557
+14:16:47,666 ERROR SchemaExport:426 - Table "CATEGORY" not found; SQL statement:
+
+    alter table category 
+        drop constraint FK302BCFEB30D557 [42102-145]
+14:16:47,666 DEBUG SQL:104 - 
+    alter table cmore 
+        drop constraint FK5A652382838574B
+14:16:47,666 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table cmore drop constraint FK5A652382838574B
+14:16:47,666 ERROR SchemaExport:426 - Table "CMORE" not found; SQL statement:
+
+    alter table cmore 
+        drop constraint FK5A652382838574B [42102-145]
+14:16:47,666 DEBUG SQL:104 - 
+    drop table B2 if exists
+14:16:47,667 DEBUG SQL:104 - 
+    drop table Componentizable if exists
+14:16:47,667 DEBUG SQL:104 - 
+    drop table CompositeIdId if exists
+14:16:47,667 DEBUG SQL:104 - 
+    drop table Several if exists
+14:16:47,667 DEBUG SQL:104 - 
+    drop table Simple if exists
+14:16:47,667 DEBUG SQL:104 - 
+    drop table Single if exists
+14:16:47,667 DEBUG SQL:104 - 
+    drop table TA if exists
+14:16:47,667 DEBUG SQL:104 - 
+    drop table TD if exists
+14:16:47,668 DEBUG SQL:104 - 
+    drop table "assign-able" if exists
+14:16:47,668 DEBUG SQL:104 - 
+    drop table category if exists
+14:16:47,668 DEBUG SQL:104 - 
+    drop table cmore if exists
+14:16:47,668 DEBUG SQL:104 - 
+    drop table foes if exists
+14:16:47,668 DEBUG SQL:104 - 
+    create table B2 (
+        bid bigint not null,
+        BName varchar(255) not null,
+        primary key (bid)
+    )
+14:16:47,668 DEBUG SQL:104 - 
+    create table Componentizable (
+        id integer generated by default as identity,
+        nickName varchar(255),
+        name varchar(255),
+        subName varchar(255),
+        subName1 varchar(255),
+        primary key (id)
+    )
+14:16:47,683 DEBUG SQL:104 - 
+    create table CompositeIdId (
+        system varchar(255) not null,
+        id varchar(255) not null,
+        name varchar(255),
+        foo varchar(255),
+        bar varchar(255),
+        primary key (system, id)
+    )
+14:16:47,683 DEBUG SQL:104 - 
+    create table Several (
+        id varchar(32) not null,
+        string_ varchar(32) not null,
+        single_id varchar(32),
+        single_string varchar(32),
+        primary key (id, string_)
+    )
+14:16:47,684 DEBUG SQL:104 - 
+    create table Simple (
+        id_ bigint not null,
+        name varchar(255),
+        address varchar(255),
+        count_ integer not null,
+        date_ timestamp,
+        pay float,
+        other bigint,
+        primary key (id_)
+    )
+14:16:47,697 DEBUG SQL:104 - 
+    create table Single (
+        id varchar(32) not null,
+        string_ varchar(32) not null,
+        prop varchar(255),
+        primary key (id, string_)
+    )
+14:16:47,698 DEBUG SQL:104 - 
+    create table TA (
+        identifier_column bigint not null,
+        clazz_discriminata integer,
+        name varchar(255),
+        count_ integer,
+        c1 varchar(255),
+        primary key (identifier_column)
+    )
+14:16:47,698 DEBUG SQL:104 - 
+    create table TD (
+        id bigint not null,
+        amount float,
+        rev_a_id bigint,
+        inv_a_id bigint,
+        primary key (id)
+    )
+14:16:47,698 DEBUG SQL:104 - 
+    create table "assign-able" (
+        id varchar(255) not null,
+        primary key (id)
+    )
+14:16:47,698 DEBUG SQL:104 - 
+    create table category (
+        category_key_col bigint generated by default as identity,
+        name varchar(255),
+        "assign-able-id" varchar(255),
+        parent bigint,
+        ord integer,
+        primary key (category_key_col)
+    )
+14:16:47,699 DEBUG SQL:104 - 
+    create table cmore (
+        c1 bigint not null,
+        C1Name varchar(255),
+        primary key (c1)
+    )
+14:16:47,699 DEBUG SQL:104 - 
+    create table foes (
+        string_ varchar(20) not null,
+        short_ smallint not null,
+        date_ date not null,
+        version bigint not null,
+        serial_ binary(255),
+        buf binary(255),
+        x integer,
+        primary key (string_, short_, date_)
+    )
+14:16:47,725 DEBUG SQL:104 - 
+    alter table B2 
+        add constraint FK830435E2490 
+        foreign key (bid) 
+        references TA
+14:16:47,726 DEBUG SQL:104 - 
+    alter table Several 
+        add constraint FKD9AD23DCB9B9D411 
+        foreign key (single_id, single_string) 
+        references Single
+14:16:47,726 DEBUG SQL:104 - 
+    alter table Simple 
+        add constraint uc_Simple_1 unique (count_)
+14:16:47,726 DEBUG SQL:104 - 
+    alter table Simple 
+        add constraint FK939D1DD2939BE031 
+        foreign key (other) 
+        references Simple
+14:16:47,727 DEBUG SQL:104 - 
+    create index indx_a_name2 on TA (name)
+14:16:47,727 DEBUG SQL:104 - 
+    create index indx_a_name on TA (name)
+14:16:47,727 DEBUG SQL:104 - 
+    alter table TD 
+        add constraint FKA70333C1F67 
+        foreign key (rev_a_id) 
+        references TA
+14:16:47,728 DEBUG SQL:104 - 
+    alter table TD 
+        add constraint FKA706869A0D9 
+        foreign key (inv_a_id) 
+        references TA
+14:16:47,728 DEBUG SQL:104 - 
+    alter table category 
+        add constraint FK302BCFEE6C4D648 
+        foreign key ("assign-able-id") 
+        references "assign-able"
+14:16:47,728 DEBUG SQL:104 - 
+    alter table category 
+        add constraint FK302BCFEB30D557 
+        foreign key (parent) 
+        references category
+14:16:47,729 DEBUG SQL:104 - 
+    alter table cmore 
+        add constraint FK5A652382838574B 
+        foreign key (c1) 
+        references TA 
+        on delete cascade
+14:16:47,729  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:47,730  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:16:47,731  INFO CustomRunner:139 - Test: testComponentNoStar
+14:16:47,740 DEBUG SQL:104 - 
+    insert 
+    into
+        Componentizable
+        (id, nickName, name, subName, subName1) 
+    values
+        (null, ?, ?, ?, ?)
+14:16:47,742 DEBUG SQL:104 - 
+    select
+        comp.id as id1_0_,
+        comp.nickName as nickName1_0_,
+        comp.name as name1_0_,
+        comp.subName as subName1_0_,
+        comp.subName1 as subName5_1_0_ 
+    from
+        Componentizable comp
+14:16:47,743 DEBUG SQL:104 - 
+    delete 
+    from
+        Componentizable 
+    where
+        id=?
+14:16:47,744  INFO CustomRunner:139 - Test: testComponentStar
+14:16:47,745 DEBUG SQL:104 - 
+    insert 
+    into
+        Componentizable
+        (id, nickName, name, subName, subName1) 
+    values
+        (null, ?, ?, ?, ?)
+14:16:47,749 DEBUG SQL:104 - 
+    select
+        comp.id as id1_0_,
+        comp.nickName as nickName1_0_,
+        comp.name as name1_0_,
+        comp.subName as subName1_0_,
+        comp.subName1 as subName5_1_0_ 
+    from
+        Componentizable comp
+14:16:47,750 DEBUG SQL:104 - 
+    delete 
+    from
+        Componentizable 
+    where
+        id=?
+14:16:47,751  INFO CustomRunner:139 - Test: testCompositeIdId
+14:16:47,752 DEBUG SQL:104 - 
+    insert 
+    into
+        CompositeIdId
+        (name, foo, bar, system, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:16:47,753 DEBUG SQL:104 - 
+    select
+        system as system2_0_,
+        id as id2_0_,
+        name as name2_0_,
+        foo as foo2_0_,
+        bar as bar2_0_ 
+    from
+        CompositeIdId 
+    where
+        system=? 
+        and id=?
+14:16:47,753 DEBUG SQL:104 - 
+    select
+        system as system2_0_,
+        id as id2_0_,
+        name as name2_0_,
+        foo as foo2_0_,
+        bar as bar2_0_ 
+    from
+        CompositeIdId 
+    where
+        system=? 
+        and id=?
+14:16:47,774  INFO CustomRunner:139 - Test: testDoubleAliasing
+14:16:47,775 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_6_,
+        a0_.name as name6_,
+        a0_.count_ as count4_6_,
+        a0_.c1 as c5_6_,
+        a0_.clazz_discriminata as clazz2_6_ 
+    from
+        TA a0_
+14:16:47,776 DEBUG SQL:104 - 
+    select
+        max(identifier_column) 
+    from
+        TA
+14:16:47,776 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, clazz_discriminata, identifier_column) 
+    values
+        (?, 0, ?)
+14:16:47,777 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, count_, clazz_discriminata, identifier_column) 
+    values
+        (?, ?, -1, ?)
+14:16:47,783 DEBUG SQL:104 - 
+    insert 
+    into
+        B2
+        (BName, bid) 
+    values
+        (?, ?)
+14:16:47,784 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_6_,
+        a0_.name as name6_,
+        a0_.count_ as count4_6_,
+        a0_.c1 as c5_6_,
+        a0_.clazz_discriminata as clazz2_6_ 
+    from
+        TA a0_
+14:16:47,785 DEBUG SQL:104 - 
+    select
+        a.identifier_column as identifier1_6_0_,
+        a.clazz_discriminata as clazz2_6_0_,
+        a.count_ as count4_6_0_,
+        a.name as name6_0_,
+        b.identifier_column as identifier1_6_1_,
+        b.clazz_discriminata as clazz2_6_1_,
+        b.count_ as count4_6_1_,
+        b.name as name6_1_ 
+    from
+        TA a,
+        TA b 
+    where
+        a.identifier_column = b.identifier_column
+14:16:47,796 DEBUG SQL:104 - 
+    select
+        a_1_.BName as BName0_ 
+    from
+        B2 a_1_ 
+    where
+        a_1_.bid=?
+14:16:47,797  INFO CustomRunner:139 - Test: testEmbeddedCompositeProperties
+14:16:47,798 DEBUG SQL:104 - 
+    insert 
+    into
+        Single
+        (prop, id, string_) 
+    values
+        (?, ?, ?)
+14:16:47,799 DEBUG SQL:104 - 
+    select
+        sing.id as id5_0_,
+        sing.string_ as string2_5_0_,
+        sing.prop as prop5_0_ 
+    from
+        Single sing
+14:16:47,799 DEBUG SQL:104 - 
+    select
+        several0_.single_id as single3_5_1_,
+        several0_.single_string as single4_5_1_,
+        several0_.id as id3_1_,
+        several0_.string_ as string2_3_1_,
+        several0_.id as id3_0_,
+        several0_.string_ as string2_3_0_,
+        several0_.single_id as single3_3_0_,
+        several0_.single_string as single4_3_0_ 
+    from
+        Several several0_ 
+    where
+        several0_.single_id=? 
+        and several0_.single_string=?
+14:16:47,800 DEBUG SQL:104 - 
+    select
+        sing.id as id5_0_,
+        sing.string_ as string2_5_0_,
+        sing.prop as prop5_0_ 
+    from
+        Single sing 
+    where
+        sing.id = ?
+14:16:47,800 DEBUG SQL:104 - 
+    select
+        several0_.single_id as single3_5_1_,
+        several0_.single_string as single4_5_1_,
+        several0_.id as id3_1_,
+        several0_.string_ as string2_3_1_,
+        several0_.id as id3_0_,
+        several0_.string_ as string2_3_0_,
+        several0_.single_id as single3_3_0_,
+        several0_.single_string as single4_3_0_ 
+    from
+        Several several0_ 
+    where
+        several0_.single_id=? 
+        and several0_.single_string=?
+14:16:47,801 DEBUG SQL:104 - 
+    select
+        s.id as id5_0_,
+        s.string_ as string2_5_0_,
+        s.prop as prop5_0_ 
+    from
+        Single s 
+    where
+        s.id = ?
+14:16:47,818 DEBUG SQL:104 - 
+    select
+        several0_.single_id as single3_5_1_,
+        several0_.single_string as single4_5_1_,
+        several0_.id as id3_1_,
+        several0_.string_ as string2_3_1_,
+        several0_.id as id3_0_,
+        several0_.string_ as string2_3_0_,
+        several0_.single_id as single3_3_0_,
+        several0_.single_string as single4_3_0_ 
+    from
+        Several several0_ 
+    where
+        several0_.single_id=? 
+        and several0_.single_string=?
+14:16:47,818 DEBUG SQL:104 - 
+    select
+        s.id as id5_0_,
+        s.string_ as string2_5_0_,
+        s.prop as prop5_0_ 
+    from
+        Single s 
+    where
+        s.id = ?
+14:16:47,819 DEBUG SQL:104 - 
+    select
+        several0_.single_id as single3_5_1_,
+        several0_.single_string as single4_5_1_,
+        several0_.id as id3_1_,
+        several0_.string_ as string2_3_1_,
+        several0_.id as id3_0_,
+        several0_.string_ as string2_3_0_,
+        several0_.single_id as single3_3_0_,
+        several0_.single_string as single4_3_0_ 
+    from
+        Several several0_ 
+    where
+        several0_.single_id=? 
+        and several0_.single_string=?
+14:16:47,828  INFO CustomRunner:139 - Test: testEscapedJDBC
+14:16:47,829 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_6_,
+        a0_.name as name6_,
+        a0_.count_ as count4_6_,
+        a0_.c1 as c5_6_,
+        a0_.clazz_discriminata as clazz2_6_ 
+    from
+        TA a0_
+14:16:47,830 DEBUG SQL:104 - 
+    select
+        a_1_.BName as BName0_ 
+    from
+        B2 a_1_ 
+    where
+        a_1_.bid=?
+14:16:47,840 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, clazz_discriminata, identifier_column) 
+    values
+        (?, 0, ?)
+14:16:47,840 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, count_, clazz_discriminata, identifier_column) 
+    values
+        (?, ?, -1, ?)
+14:16:47,840 DEBUG SQL:104 - 
+    insert 
+    into
+        B2
+        (BName, bid) 
+    values
+        (?, ?)
+14:16:47,840 DEBUG SQL:104 - 
+    delete 
+    from
+        TA 
+    where
+        identifier_column=?
+14:16:47,840 DEBUG SQL:104 - 
+    delete 
+    from
+        B2 
+    where
+        bid=?
+14:16:47,849 DEBUG SQL:104 - 
+    delete 
+    from
+        TA 
+    where
+        identifier_column=?
+14:16:47,849 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_6_,
+        a0_.name as name6_,
+        a0_.count_ as count4_6_,
+        a0_.c1 as c5_6_,
+        a0_.clazz_discriminata as clazz2_6_ 
+    from
+        TA a0_
+14:16:47,850 DEBUG SQL:104 - 
+    select
+        identifier_column as identifier1_6_0_,
+        clazz_discriminata as clazz2_6_0_,
+        count_ as count4_6_0_,
+        name as name6_0_ 
+    from
+        TA 
+    where
+        {fn ucase(name)} like {fn ucase('max')}
+14:16:47,861  INFO CustomRunner:139 - Test: testFindBySQLAssociatedObjects
+14:16:47,862 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_ 
+    from
+        "assign-able" assignable0_
+14:16:47,863 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_9_,
+        category0_.name as name9_,
+        category0_."assign-able-id" as assign3_9_ 
+    from
+        category category0_
+14:16:47,864 DEBUG SQL:104 - 
+    insert 
+    into
+        "assign-able"
+        (id) 
+    values
+        (?)
+14:16:47,864 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, "assign-able-id", category_key_col) 
+    values
+        (?, ?, null)
+14:16:47,865 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_ 
+    from
+        category category
+14:16:47,865 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_0_ 
+    from
+        "assign-able" assignable0_ 
+    where
+        assignable0_.id=?
+14:16:47,866 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_,
+        assignable.id as id8_1_ 
+    from
+        category category,
+        "assign-able" assignable
+14:16:47,867  INFO CustomRunner:139 - Test: testFindBySQLDiscriminatedDiffSession
+14:16:47,868 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_6_,
+        a0_.name as name6_,
+        a0_.count_ as count4_6_,
+        a0_.c1 as c5_6_,
+        a0_.clazz_discriminata as clazz2_6_ 
+    from
+        TA a0_
+14:16:47,874 DEBUG SQL:104 - 
+    select
+        a_1_.BName as BName0_ 
+    from
+        B2 a_1_ 
+    where
+        a_1_.bid=?
+14:16:47,875 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, clazz_discriminata, identifier_column) 
+    values
+        (?, 0, ?)
+14:16:47,875 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, count_, clazz_discriminata, identifier_column) 
+    values
+        (?, ?, -1, ?)
+14:16:47,875 DEBUG SQL:104 - 
+    insert 
+    into
+        B2
+        (BName, bid) 
+    values
+        (?, ?)
+14:16:47,875 DEBUG SQL:104 - 
+    delete 
+    from
+        TA 
+    where
+        identifier_column=?
+14:16:47,884 DEBUG SQL:104 - 
+    delete 
+    from
+        B2 
+    where
+        bid=?
+14:16:47,885 DEBUG SQL:104 - 
+    delete 
+    from
+        TA 
+    where
+        identifier_column=?
+14:16:47,885 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_6_,
+        a0_.name as name6_,
+        a0_.count_ as count4_6_,
+        a0_.c1 as c5_6_,
+        a0_.clazz_discriminata as clazz2_6_ 
+    from
+        TA a0_
+14:16:47,885 DEBUG SQL:104 - 
+    select
+        identifier_column as identifier1_6_0_,
+        clazz_discriminata as clazz2_6_0_,
+        count_ as count4_6_0_,
+        name as name6_0_ 
+    from
+        TA
+14:16:47,886 DEBUG SQL:104 - 
+    select
+        a_1_.BName as BName0_ 
+    from
+        B2 a_1_ 
+    where
+        a_1_.bid=?
+14:16:47,886  INFO CustomRunner:139 - Test: testFindBySQLDiscriminatedSameSession
+14:16:47,887 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_6_,
+        a0_.name as name6_,
+        a0_.count_ as count4_6_,
+        a0_.c1 as c5_6_,
+        a0_.clazz_discriminata as clazz2_6_ 
+    from
+        TA a0_
+14:16:47,941 DEBUG SQL:104 - 
+    select
+        a_1_.BName as BName0_ 
+    from
+        B2 a_1_ 
+    where
+        a_1_.bid=?
+14:16:47,942 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, clazz_discriminata, identifier_column) 
+    values
+        (?, 0, ?)
+14:16:47,942 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, count_, clazz_discriminata, identifier_column) 
+    values
+        (?, ?, -1, ?)
+14:16:47,942 DEBUG SQL:104 - 
+    insert 
+    into
+        B2
+        (BName, bid) 
+    values
+        (?, ?)
+14:16:47,942 DEBUG SQL:104 - 
+    delete 
+    from
+        B2 
+    where
+        bid=?
+14:16:47,942 DEBUG SQL:104 - 
+    delete 
+    from
+        TA 
+    where
+        identifier_column=?
+14:16:47,943 DEBUG SQL:104 - 
+    delete 
+    from
+        TA 
+    where
+        identifier_column=?
+14:16:47,943 DEBUG SQL:104 - 
+    select
+        identifier_column as identifier1_6_0_,
+        clazz_discriminata as clazz2_6_0_,
+        name as name6_0_,
+        count_ as count4_6_0_ 
+    from
+        TA a
+14:16:47,943 DEBUG SQL:104 - 
+    select
+        identifier_column,
+        clazz_discriminata as clazz,
+        name,
+        count_ 
+    from
+        TA s
+14:16:47,944 DEBUG SQL:104 - 
+    select
+        a_1_.BName as BName0_ 
+    from
+        B2 a_1_ 
+    where
+        a_1_.bid=?
+14:16:47,944  INFO CustomRunner:139 - Test: testFindBySQLMultipleObject
+14:16:47,946 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_ 
+    from
+        "assign-able" assignable0_
+14:16:47,947 DEBUG SQL:104 - 
+    select
+        categories0_."assign-able-id" as assign3_8_1_,
+        categories0_.category_key_col as category1_9_1_,
+        categories0_.category_key_col as category1_9_0_,
+        categories0_.name as name9_0_,
+        categories0_."assign-able-id" as assign3_9_0_ 
+    from
+        category categories0_ 
+    where
+        categories0_."assign-able-id"=?
+14:16:47,947 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent9_2_,
+        subcategor0_.category_key_col as category1_9_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_9_1_,
+        subcategor0_.name as name9_1_,
+        subcategor0_."assign-able-id" as assign3_9_1_,
+        assignable1_.id as id8_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:47,948 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:47,948 DEBUG SQL:104 - 
+    delete 
+    from
+        "assign-able" 
+    where
+        id=?
+14:16:47,948 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_9_,
+        category0_.name as name9_,
+        category0_."assign-able-id" as assign3_9_ 
+    from
+        category category0_
+14:16:47,949 DEBUG SQL:104 - 
+    insert 
+    into
+        "assign-able"
+        (id) 
+    values
+        (?)
+14:16:47,949 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, "assign-able-id", category_key_col) 
+    values
+        (?, ?, null)
+14:16:47,950 DEBUG SQL:104 - 
+    insert 
+    into
+        "assign-able"
+        (id) 
+    values
+        (?)
+14:16:47,965 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, "assign-able-id", category_key_col) 
+    values
+        (?, ?, null)
+14:16:47,966 DEBUG SQL:104 - 
+    insert 
+    into
+        "assign-able"
+        (id) 
+    values
+        (?)
+14:16:47,967 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_,
+        assignable.id as id8_1_ 
+    from
+        category category,
+        "assign-able" assignable
+14:16:47,968  INFO CustomRunner:139 - Test: testFindBySQLParameters
+14:16:47,977 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_ 
+    from
+        "assign-able" assignable0_
+14:16:47,978 DEBUG SQL:104 - 
+    select
+        categories0_."assign-able-id" as assign3_8_1_,
+        categories0_.category_key_col as category1_9_1_,
+        categories0_.category_key_col as category1_9_0_,
+        categories0_.name as name9_0_,
+        categories0_."assign-able-id" as assign3_9_0_ 
+    from
+        category categories0_ 
+    where
+        categories0_."assign-able-id"=?
+14:16:47,979 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent9_2_,
+        subcategor0_.category_key_col as category1_9_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_9_1_,
+        subcategor0_.name as name9_1_,
+        subcategor0_."assign-able-id" as assign3_9_1_,
+        assignable1_.id as id8_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:47,986 DEBUG SQL:104 - 
+    select
+        categories0_."assign-able-id" as assign3_8_1_,
+        categories0_.category_key_col as category1_9_1_,
+        categories0_.category_key_col as category1_9_0_,
+        categories0_.name as name9_0_,
+        categories0_."assign-able-id" as assign3_9_0_ 
+    from
+        category categories0_ 
+    where
+        categories0_."assign-able-id"=?
+14:16:47,987 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent9_2_,
+        subcategor0_.category_key_col as category1_9_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_9_1_,
+        subcategor0_.name as name9_1_,
+        subcategor0_."assign-able-id" as assign3_9_1_,
+        assignable1_.id as id8_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:47,988 DEBUG SQL:104 - 
+    select
+        categories0_."assign-able-id" as assign3_8_1_,
+        categories0_.category_key_col as category1_9_1_,
+        categories0_.category_key_col as category1_9_0_,
+        categories0_.name as name9_0_,
+        categories0_."assign-able-id" as assign3_9_0_ 
+    from
+        category categories0_ 
+    where
+        categories0_."assign-able-id"=?
+14:16:47,988 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:47,988 DEBUG SQL:104 - 
+    delete 
+    from
+        "assign-able" 
+    where
+        id=?
+14:16:47,988 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:47,989 DEBUG SQL:104 - 
+    delete 
+    from
+        "assign-able" 
+    where
+        id=?
+14:16:48,001 DEBUG SQL:104 - 
+    delete 
+    from
+        "assign-able" 
+    where
+        id=?
+14:16:48,001 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_9_,
+        category0_.name as name9_,
+        category0_."assign-able-id" as assign3_9_ 
+    from
+        category category0_
+14:16:48,002 DEBUG SQL:104 - 
+    insert 
+    into
+        "assign-able"
+        (id) 
+    values
+        (?)
+14:16:48,002 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, "assign-able-id", category_key_col) 
+    values
+        (?, ?, null)
+14:16:48,010 DEBUG SQL:104 - 
+    insert 
+    into
+        "assign-able"
+        (id) 
+    values
+        (?)
+14:16:48,011 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, "assign-able-id", category_key_col) 
+    values
+        (?, ?, null)
+14:16:48,011 DEBUG SQL:104 - 
+    insert 
+    into
+        "assign-able"
+        (id) 
+    values
+        (?)
+14:16:48,011 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, "assign-able-id", category_key_col) 
+    values
+        (?, ?, null)
+14:16:48,012 DEBUG SQL:104 - 
+    insert 
+    into
+        "assign-able"
+        (id) 
+    values
+        (?)
+14:16:48,013 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_ 
+    from
+        category category 
+    where
+        category.name = 'Best'
+14:16:48,033 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_0_ 
+    from
+        "assign-able" assignable0_ 
+    where
+        assignable0_.id=?
+14:16:48,034 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_ 
+    from
+        category category 
+    where
+        category.name = ? 
+        or category.name = ?
+14:16:48,034 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_0_ 
+    from
+        "assign-able" assignable0_ 
+    where
+        assignable0_.id=?
+14:16:48,034 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_ 
+    from
+        category category 
+    where
+        (
+            category.name=? 
+            or category.name=?
+        )
+14:16:48,043 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_0_ 
+    from
+        "assign-able" assignable0_ 
+    where
+        assignable0_.id=?
+14:16:48,044  INFO CustomRunner:139 - Test: testFindBySQLProperties
+14:16:48,045 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_9_,
+        category0_.name as name9_,
+        category0_."assign-able-id" as assign3_9_ 
+    from
+        category category0_
+14:16:48,046 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_0_ 
+    from
+        "assign-able" assignable0_ 
+    where
+        assignable0_.id=?
+14:16:48,047 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_0_ 
+    from
+        "assign-able" assignable0_ 
+    where
+        assignable0_.id=?
+14:16:48,054 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_0_ 
+    from
+        "assign-able" assignable0_ 
+    where
+        assignable0_.id=?
+14:16:48,054 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent9_2_,
+        subcategor0_.category_key_col as category1_9_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_9_1_,
+        subcategor0_.name as name9_1_,
+        subcategor0_."assign-able-id" as assign3_9_1_,
+        assignable1_.id as id8_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:48,055 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent9_2_,
+        subcategor0_.category_key_col as category1_9_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_9_1_,
+        subcategor0_.name as name9_1_,
+        subcategor0_."assign-able-id" as assign3_9_1_,
+        assignable1_.id as id8_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:48,065 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent9_2_,
+        subcategor0_.category_key_col as category1_9_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_9_1_,
+        subcategor0_.name as name9_1_,
+        subcategor0_."assign-able-id" as assign3_9_1_,
+        assignable1_.id as id8_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:48,075 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:48,076 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:48,076 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:48,076 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:48,077 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_ 
+    from
+        category category 
+    where
+        category.name = ?
+14:16:48,086 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_ 
+    from
+        category category 
+    where
+        category.name in (
+            ?, ?
+        )
+14:16:48,086 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_ 
+    from
+        category category 
+    where
+        category.name in (
+            ?, ?
+        )
+14:16:48,087 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_ 
+    from
+        category category 
+    where
+        category.name in (
+            ?
+        )
+14:16:48,104 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_ 
+    from
+        category category 
+    where
+        category.name in (
+            ?
+        )
+14:16:48,105  INFO CustomRunner:139 - Test: testFindBySQLSimpleByDiffSessions
+14:16:48,106 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:48,107 DEBUG SQL:104 - 
+    select
+        s.category_key_col as category1_9_0_,
+        s.name as name9_0_,
+        s."assign-able-id" as assign3_9_0_ 
+    from
+        category s
+14:16:48,112  INFO CustomRunner:139 - Test: testFindBySQLStar
+14:16:48,113 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_ 
+    from
+        "assign-able" assignable0_
+14:16:48,113 DEBUG SQL:104 - 
+    select
+        categories0_."assign-able-id" as assign3_8_1_,
+        categories0_.category_key_col as category1_9_1_,
+        categories0_.category_key_col as category1_9_0_,
+        categories0_.name as name9_0_,
+        categories0_."assign-able-id" as assign3_9_0_ 
+    from
+        category categories0_ 
+    where
+        categories0_."assign-able-id"=?
+14:16:48,114 DEBUG SQL:104 - 
+    select
+        categories0_."assign-able-id" as assign3_8_1_,
+        categories0_.category_key_col as category1_9_1_,
+        categories0_.category_key_col as category1_9_0_,
+        categories0_.name as name9_0_,
+        categories0_."assign-able-id" as assign3_9_0_ 
+    from
+        category categories0_ 
+    where
+        categories0_."assign-able-id"=?
+14:16:48,114 DEBUG SQL:104 - 
+    select
+        categories0_."assign-able-id" as assign3_8_1_,
+        categories0_.category_key_col as category1_9_1_,
+        categories0_.category_key_col as category1_9_0_,
+        categories0_.name as name9_0_,
+        categories0_."assign-able-id" as assign3_9_0_ 
+    from
+        category categories0_ 
+    where
+        categories0_."assign-able-id"=?
+14:16:48,114 DEBUG SQL:104 - 
+    select
+        categories0_."assign-able-id" as assign3_8_1_,
+        categories0_.category_key_col as category1_9_1_,
+        categories0_.category_key_col as category1_9_0_,
+        categories0_.name as name9_0_,
+        categories0_."assign-able-id" as assign3_9_0_ 
+    from
+        category categories0_ 
+    where
+        categories0_."assign-able-id"=?
+14:16:48,115 DEBUG SQL:104 - 
+    delete 
+    from
+        "assign-able" 
+    where
+        id=?
+14:16:48,127 DEBUG SQL:104 - 
+    delete 
+    from
+        "assign-able" 
+    where
+        id=?
+14:16:48,127 DEBUG SQL:104 - 
+    delete 
+    from
+        "assign-able" 
+    where
+        id=?
+14:16:48,127 DEBUG SQL:104 - 
+    delete 
+    from
+        "assign-able" 
+    where
+        id=?
+14:16:48,128 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_9_,
+        category0_.name as name9_,
+        category0_."assign-able-id" as assign3_9_ 
+    from
+        category category0_
+14:16:48,128 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent9_2_,
+        subcategor0_.category_key_col as category1_9_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_9_1_,
+        subcategor0_.name as name9_1_,
+        subcategor0_."assign-able-id" as assign3_9_1_,
+        assignable1_.id as id8_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:48,140 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent9_2_,
+        subcategor0_.category_key_col as category1_9_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_9_1_,
+        subcategor0_.name as name9_1_,
+        subcategor0_."assign-able-id" as assign3_9_1_,
+        assignable1_.id as id8_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:48,141 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_4_,
+        simple0_.name as name4_,
+        simple0_.address as address4_,
+        simple0_.count_ as count4_4_,
+        simple0_.date_ as date5_4_,
+        simple0_.pay as pay4_,
+        simple0_.other as other4_ 
+    from
+        Simple simple0_
+14:16:48,142 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_6_,
+        a0_.name as name6_,
+        a0_.count_ as count4_6_,
+        a0_.c1 as c5_6_,
+        a0_.clazz_discriminata as clazz2_6_ 
+    from
+        TA a0_
+14:16:48,162 DEBUG SQL:104 - 
+    select
+        a_1_.BName as BName0_ 
+    from
+        B2 a_1_ 
+    where
+        a_1_.bid=?
+14:16:48,163 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:48,164 DEBUG SQL:104 - 
+    insert 
+    into
+        Simple
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:48,164 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, clazz_discriminata, identifier_column) 
+    values
+        (?, 0, ?)
+14:16:48,172 DEBUG SQL:104 - 
+    insert 
+    into
+        TA
+        (name, count_, clazz_discriminata, identifier_column) 
+    values
+        (?, ?, -1, ?)
+14:16:48,172 DEBUG SQL:104 - 
+    insert 
+    into
+        B2
+        (BName, bid) 
+    values
+        (?, ?)
+14:16:48,172 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:48,172 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:48,173 DEBUG SQL:104 - 
+    delete 
+    from
+        B2 
+    where
+        bid=?
+14:16:48,183 DEBUG SQL:104 - 
+    delete 
+    from
+        TA 
+    where
+        identifier_column=?
+14:16:48,184 DEBUG SQL:104 - 
+    delete 
+    from
+        TA 
+    where
+        identifier_column=?
+14:16:48,184 DEBUG SQL:104 - 
+    select
+        category.category_key_col as category1_9_0_,
+        category.name as name9_0_,
+        category."assign-able-id" as assign3_9_0_ 
+    from
+        category category
+14:16:48,185 DEBUG SQL:104 - 
+    select
+        simple.id_ as id1_4_0_,
+        simple.name as name4_0_,
+        simple.address as address4_0_,
+        simple.count_ as count4_4_0_,
+        simple.date_ as date5_4_0_,
+        simple.pay as pay4_0_,
+        simple.other as other4_0_ 
+    from
+        Simple simple
+14:16:48,197 DEBUG SQL:104 - 
+    select
+        a.identifier_column as identifier1_6_0_,
+        a.name as name6_0_,
+        a.count_ as count4_6_0_,
+        a.c1 as c5_6_0_,
+        a.clazz_discriminata as clazz2_6_0_ 
+    from
+        TA a
+14:16:48,198  INFO CustomRunner:139 - Test: testFindSimpleBySQL
+14:16:48,200 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, category_key_col) 
+    values
+        (?, null)
+14:16:48,201 DEBUG SQL:104 - 
+    select
+        s.category_key_col as category1_9_0_,
+        s.name as name9_0_,
+        s."assign-able-id" as assign3_9_0_ 
+    from
+        category s
+14:16:48,201  INFO CustomRunner:139 - Test: testPropertyResultSQL
+14:16:48,210 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_ 
+    from
+        "assign-able" assignable0_
+14:16:48,211 DEBUG SQL:104 - 
+    select
+        category0_.category_key_col as category1_9_,
+        category0_.name as name9_,
+        category0_."assign-able-id" as assign3_9_ 
+    from
+        category category0_
+14:16:48,211 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent9_2_,
+        subcategor0_.category_key_col as category1_9_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_9_1_,
+        subcategor0_.name as name9_1_,
+        subcategor0_."assign-able-id" as assign3_9_1_,
+        assignable1_.id as id8_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:48,212 DEBUG SQL:104 - 
+    select
+        subcategor0_.parent as parent9_2_,
+        subcategor0_.category_key_col as category1_9_2_,
+        subcategor0_.ord as ord2_,
+        subcategor0_.category_key_col as category1_9_1_,
+        subcategor0_.name as name9_1_,
+        subcategor0_."assign-able-id" as assign3_9_1_,
+        assignable1_.id as id8_0_ 
+    from
+        category subcategor0_ 
+    left outer join
+        "assign-able" assignable1_ 
+            on subcategor0_."assign-able-id"=assignable1_.id 
+    where
+        subcategor0_.parent=?
+14:16:48,221 DEBUG SQL:104 - 
+    insert 
+    into
+        "assign-able"
+        (id) 
+    values
+        (?)
+14:16:48,222 DEBUG SQL:104 - 
+    insert 
+    into
+        category
+        (name, "assign-able-id", category_key_col) 
+    values
+        (?, ?, null)
+14:16:48,222 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:48,232 DEBUG SQL:104 - 
+    delete 
+    from
+        category 
+    where
+        category_key_col=?
+14:16:48,232 DEBUG SQL:104 - 
+    select
+        category_key_col,
+        name,
+        "assign-able-id" as assignid 
+    from
+        category
+14:16:48,233 DEBUG SQL:104 - 
+    select
+        assignable0_.id as id8_0_ 
+    from
+        "assign-able" assignable0_ 
+    where
+        assignable0_.id=?
+14:16:48,234  INFO CustomRunner:139 - Test: testReturnPropertyComponentRename
+14:16:48,235 DEBUG SQL:104 - 
+    insert 
+    into
+        Componentizable
+        (id, nickName, name, subName, subName1) 
+    values
+        (null, ?, ?, ?, ?)
+14:16:48,244 DEBUG SQL:104 - 
+    select
+        id,
+        nickName as n2,
+        name,
+        subName as otherSubName,
+        subName1 
+    from
+        Componentizable
+14:16:48,244  WARN SqlExceptionHelper:143 - SQL Error: 42122, SQLState: 42S22
+14:16:48,245 ERROR SqlExceptionHelper:144 - Column "id1_0_" not found [42122-145]
+14:16:48,245  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:16:48,246  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:48,247  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/ABC.hbm.xml
+14:16:48,253  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Category.hbm.xml
+14:16:48,259  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Simple.hbm.xml
+14:16:48,264  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Fo.hbm.xml
+14:16:48,280  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/SingleSeveral.hbm.xml
+14:16:48,285  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Componentizable.hbm.xml
+14:16:48,290  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/CompositeIdId.hbm.xml
+14:16:48,298  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.legacy.Single
+14:16:48,298  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.Single
+14:16:48,298  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.legacy.Several
+14:16:48,299  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.Several
+14:16:48,299  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.legacy.CompositeIdId
+14:16:48,299  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:16:48,300  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:16:48,300  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:16:48,301  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:16:48,301  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:16:48,305  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:48,306  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:16:48,307  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:16:48,307  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:16:48,324  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:48,324 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:48,325 DEBUG SQL:104 - 
+    alter table B2 
+        drop constraint FK830435E2490
+14:16:48,325 DEBUG SQL:104 - 
+    alter table Several 
+        drop constraint FKD9AD23DCB9B9D411
+14:16:48,325 DEBUG SQL:104 - 
+    alter table Simple 
+        drop constraint FK939D1DD2939BE031
+14:16:48,325 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA70333C1F67
+14:16:48,326 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA706869A0D9
+14:16:48,326 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEE6C4D648
+14:16:48,326 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEB30D557
+14:16:48,326 DEBUG SQL:104 - 
+    alter table cmore 
+        drop constraint FK5A652382838574B
+14:16:48,326 DEBUG SQL:104 - 
+    drop table B2 if exists
+14:16:48,327 DEBUG SQL:104 - 
+    drop table Componentizable if exists
+14:16:48,327 DEBUG SQL:104 - 
+    drop table CompositeIdId if exists
+14:16:48,327 DEBUG SQL:104 - 
+    drop table Several if exists
+14:16:48,327 DEBUG SQL:104 - 
+    drop table Simple if exists
+14:16:48,328 DEBUG SQL:104 - 
+    drop table Single if exists
+14:16:48,328 DEBUG SQL:104 - 
+    drop table TA if exists
+14:16:48,328 DEBUG SQL:104 - 
+    drop table TD if exists
+14:16:48,328 DEBUG SQL:104 - 
+    drop table "assign-able" if exists
+14:16:48,329 DEBUG SQL:104 - 
+    drop table category if exists
+14:16:48,329 DEBUG SQL:104 - 
+    drop table cmore if exists
+14:16:48,329 DEBUG SQL:104 - 
+    drop table foes if exists
+14:16:48,329 DEBUG SQL:104 - 
+    create table B2 (
+        bid bigint not null,
+        BName varchar(255) not null,
+        primary key (bid)
+    )
+14:16:48,330 DEBUG SQL:104 - 
+    create table Componentizable (
+        id integer generated by default as identity,
+        nickName varchar(255),
+        name varchar(255),
+        subName varchar(255),
+        subName1 varchar(255),
+        primary key (id)
+    )
+14:16:48,330 DEBUG SQL:104 - 
+    create table CompositeIdId (
+        system varchar(255) not null,
+        id varchar(255) not null,
+        name varchar(255),
+        foo varchar(255),
+        bar varchar(255),
+        primary key (system, id)
+    )
+14:16:48,332 DEBUG SQL:104 - 
+    create table Several (
+        id varchar(32) not null,
+        string_ varchar(32) not null,
+        single_id varchar(32),
+        single_string varchar(32),
+        primary key (id, string_)
+    )
+14:16:48,332 DEBUG SQL:104 - 
+    create table Simple (
+        id_ bigint not null,
+        name varchar(255),
+        address varchar(255),
+        count_ integer not null,
+        date_ timestamp,
+        pay float,
+        other bigint,
+        primary key (id_)
+    )
+14:16:48,332 DEBUG SQL:104 - 
+    create table Single (
+        id varchar(32) not null,
+        string_ varchar(32) not null,
+        prop varchar(255),
+        primary key (id, string_)
+    )
+14:16:48,332 DEBUG SQL:104 - 
+    create table TA (
+        identifier_column bigint not null,
+        clazz_discriminata integer,
+        name varchar(255),
+        count_ integer,
+        c1 varchar(255),
+        primary key (identifier_column)
+    )
+14:16:48,333 DEBUG SQL:104 - 
+    create table TD (
+        id bigint not null,
+        amount float,
+        rev_a_id bigint,
+        inv_a_id bigint,
+        primary key (id)
+    )
+14:16:48,333 DEBUG SQL:104 - 
+    create table "assign-able" (
+        id varchar(255) not null,
+        primary key (id)
+    )
+14:16:48,333 DEBUG SQL:104 - 
+    create table category (
+        category_key_col bigint generated by default as identity,
+        name varchar(255),
+        "assign-able-id" varchar(255),
+        parent bigint,
+        ord integer,
+        primary key (category_key_col)
+    )
+14:16:48,334 DEBUG SQL:104 - 
+    create table cmore (
+        c1 bigint not null,
+        C1Name varchar(255),
+        primary key (c1)
+    )
+14:16:48,334 DEBUG SQL:104 - 
+    create table foes (
+        string_ varchar(20) not null,
+        short_ smallint not null,
+        date_ date not null,
+        version bigint not null,
+        serial_ binary(255),
+        buf binary(255),
+        x integer,
+        primary key (string_, short_, date_)
+    )
+14:16:48,334 DEBUG SQL:104 - 
+    alter table B2 
+        add constraint FK830435E2490 
+        foreign key (bid) 
+        references TA
+14:16:48,335 DEBUG SQL:104 - 
+    alter table Several 
+        add constraint FKD9AD23DCB9B9D411 
+        foreign key (single_id, single_string) 
+        references Single
+14:16:48,335 DEBUG SQL:104 - 
+    alter table Simple 
+        add constraint uc_Simple_1 unique (count_)
+14:16:48,336 DEBUG SQL:104 - 
+    alter table Simple 
+        add constraint FK939D1DD2939BE031 
+        foreign key (other) 
+        references Simple
+14:16:48,336 DEBUG SQL:104 - 
+    create index indx_a_name2 on TA (name)
+14:16:48,336 DEBUG SQL:104 - 
+    create index indx_a_name on TA (name)
+14:16:48,336 DEBUG SQL:104 - 
+    alter table TD 
+        add constraint FKA70333C1F67 
+        foreign key (rev_a_id) 
+        references TA
+14:16:48,337 DEBUG SQL:104 - 
+    alter table TD 
+        add constraint FKA706869A0D9 
+        foreign key (inv_a_id) 
+        references TA
+14:16:48,337 DEBUG SQL:104 - 
+    alter table category 
+        add constraint FK302BCFEE6C4D648 
+        foreign key ("assign-able-id") 
+        references "assign-able"
+14:16:48,338 DEBUG SQL:104 - 
+    alter table category 
+        add constraint FK302BCFEB30D557 
+        foreign key (parent) 
+        references category
+14:16:48,338 DEBUG SQL:104 - 
+    alter table cmore 
+        add constraint FK5A652382838574B 
+        foreign key (c1) 
+        references TA 
+        on delete cascade
+14:16:48,343  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:48,343  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:16:48,344  INFO CustomRunner:139 - Test: testTS
+14:16:48,346 DEBUG SQL:104 - 
+    insert 
+    into
+        Simple
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:48,347 DEBUG SQL:104 - 
+    select
+        sim.id_ as id1_4_0_,
+        sim.name as name4_0_,
+        sim.address as address4_0_,
+        sim.count_ as count4_4_0_,
+        sim.date_ as date5_4_0_,
+        sim.pay as pay4_0_,
+        sim.other as other4_0_ 
+    from
+        Simple sim 
+    where
+        sim.date_ = ?
+14:16:48,347 DEBUG SQL:104 - 
+    delete 
+    from
+        Simple 
+    where
+        id_=?
+14:16:48,360  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:48,361 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:48,361 DEBUG SQL:104 - 
+    alter table B2 
+        drop constraint FK830435E2490
+14:16:48,361 DEBUG SQL:104 - 
+    alter table Several 
+        drop constraint FKD9AD23DCB9B9D411
+14:16:48,361 DEBUG SQL:104 - 
+    alter table Simple 
+        drop constraint FK939D1DD2939BE031
+14:16:48,362 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA70333C1F67
+14:16:48,362 DEBUG SQL:104 - 
+    alter table TD 
+        drop constraint FKA706869A0D9
+14:16:48,362 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEE6C4D648
+14:16:48,362 DEBUG SQL:104 - 
+    alter table category 
+        drop constraint FK302BCFEB30D557
+14:16:48,362 DEBUG SQL:104 - 
+    alter table cmore 
+        drop constraint FK5A652382838574B
+14:16:48,370 DEBUG SQL:104 - 
+    drop table B2 if exists
+14:16:48,371 DEBUG SQL:104 - 
+    drop table Componentizable if exists
+14:16:48,371 DEBUG SQL:104 - 
+    drop table CompositeIdId if exists
+14:16:48,371 DEBUG SQL:104 - 
+    drop table Several if exists
+14:16:48,371 DEBUG SQL:104 - 
+    drop table Simple if exists
+14:16:48,371 DEBUG SQL:104 - 
+    drop table Single if exists
+14:16:48,372 DEBUG SQL:104 - 
+    drop table TA if exists
+14:16:48,372 DEBUG SQL:104 - 
+    drop table TD if exists
+14:16:48,372 DEBUG SQL:104 - 
+    drop table "assign-able" if exists
+14:16:48,372 DEBUG SQL:104 - 
+    drop table category if exists
+14:16:48,372 DEBUG SQL:104 - 
+    drop table cmore if exists
+14:16:48,373 DEBUG SQL:104 - 
+    drop table foes if exists
+14:16:48,373  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:48,373  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

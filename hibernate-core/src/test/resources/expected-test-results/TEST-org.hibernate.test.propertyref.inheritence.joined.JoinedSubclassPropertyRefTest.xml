@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.propertyref.inheritence.joined.JoinedSubclassPropertyRefTest" tests="1" time="0.095" timestamp="2013-02-28T20:17:47">
+  <properties />
+  <testcase classname="org.hibernate.test.propertyref.inheritence.joined.JoinedSubclassPropertyRefTest" name="testPropertyRefToJoinedSubclass" time="0.01" />
+  <system-out><![CDATA[14:17:47,176  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.propertyref.inheritence.joined.JoinedSubclassPropertyRefTest
+14:17:47,177  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/propertyref/inheritence/joined/Person.hbm.xml
+14:17:47,208  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:47,209  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:47,209  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:47,209  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:47,209  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:47,210  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:47,210  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:47,211  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:47,211  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:47,211  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:47,240  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:47,241 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:47,241 DEBUG SQL:104 - 
+    alter table J_SBCLS_PROPREF_BACCT 
+        drop constraint FKE021202D8858B01E
+14:17:47,241 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table J_SBCLS_PROPREF_BACCT drop constraint FKE021202D8858B01E
+14:17:47,242 ERROR SchemaExport:426 - Table "J_SBCLS_PROPREF_BACCT" not found; SQL statement:
+
+    alter table J_SBCLS_PROPREF_BACCT 
+        drop constraint FKE021202D8858B01E [42102-145]
+14:17:47,242 DEBUG SQL:104 - 
+    alter table J_SBCLS_PROPREF_PERS 
+        drop constraint FK17C56F1EF14CF7A1
+14:17:47,242 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table J_SBCLS_PROPREF_PERS drop constraint FK17C56F1EF14CF7A1
+14:17:47,242 ERROR SchemaExport:426 - Table "J_SBCLS_PROPREF_PERS" not found; SQL statement:
+
+    alter table J_SBCLS_PROPREF_PERS 
+        drop constraint FK17C56F1EF14CF7A1 [42102-145]
+14:17:47,242 DEBUG SQL:104 - 
+    drop table J_SBCLS_PROPREF_ACCT if exists
+14:17:47,242 DEBUG SQL:104 - 
+    drop table J_SBCLS_PROPREF_BACCT if exists
+14:17:47,242 DEBUG SQL:104 - 
+    drop table J_SBCLS_PROPREF_PERS if exists
+14:17:47,243 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:17:47,243 DEBUG SQL:104 - 
+    create table J_SBCLS_PROPREF_ACCT (
+        accountId varchar(32) not null,
+        "type" char(255) not null,
+        primary key (accountId)
+    )
+14:17:47,244 DEBUG SQL:104 - 
+    create table J_SBCLS_PROPREF_BACCT (
+        accountId varchar(32) not null,
+        bsb varchar(4) not null,
+        accountNumber varchar(16) not null,
+        primary key (accountId)
+    )
+14:17:47,244 DEBUG SQL:104 - 
+    create table J_SBCLS_PROPREF_PERS (
+        id bigint not null,
+        name varchar(100),
+        bsb varchar(255),
+        accountNumber varchar(255),
+        primary key (id)
+    )
+14:17:47,245 DEBUG SQL:104 - 
+    alter table J_SBCLS_PROPREF_BACCT 
+        add constraint UK_E021202DFA56CDE7 unique (bsb, accountNumber)
+14:17:47,245 DEBUG SQL:104 - 
+    alter table J_SBCLS_PROPREF_BACCT 
+        add constraint FKE021202D8858B01E 
+        foreign key (accountId) 
+        references J_SBCLS_PROPREF_ACCT
+14:17:47,245 DEBUG SQL:104 - 
+    alter table J_SBCLS_PROPREF_PERS 
+        add constraint FK17C56F1EF14CF7A1 
+        foreign key (bsb, accountNumber) 
+        references J_SBCLS_PROPREF_BACCT (bsb, accountNumber)
+14:17:47,246 DEBUG SQL:104 - 
+    create table hibernate_unique_key (
+         next_hi integer 
+    )
+14:17:47,246 DEBUG SQL:104 - 
+    insert into hibernate_unique_key values ( 0 )
+14:17:47,246  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:47,247  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:47,247  INFO CustomRunner:139 - Test: testPropertyRefToJoinedSubclass
+14:17:47,248 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:17:47,248 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:17:47,249 DEBUG SQL:104 - 
+    insert 
+    into
+        J_SBCLS_PROPREF_ACCT
+        ("type", accountId) 
+    values
+        (?, ?)
+14:17:47,250 DEBUG SQL:104 - 
+    insert 
+    into
+        J_SBCLS_PROPREF_BACCT
+        (bsb, accountNumber, accountId) 
+    values
+        (?, ?, ?)
+14:17:47,250 DEBUG SQL:104 - 
+    insert 
+    into
+        J_SBCLS_PROPREF_PERS
+        (name, bsb, accountNumber, id) 
+    values
+        (?, ?, ?, ?)
+14:17:47,250 DEBUG SQL:104 - 
+    select
+        person0_.id as id2_0_,
+        person0_.name as name2_0_,
+        person0_.bsb as bsb2_0_,
+        person0_.accountNumber as accountN4_2_0_ 
+    from
+        J_SBCLS_PROPREF_PERS person0_ 
+    where
+        person0_.id=?
+14:17:47,251 DEBUG SQL:104 - 
+    select
+        bankaccoun0_.accountId as accountId0_0_,
+        bankaccoun0_1_."type" as type2_0_0_,
+        bankaccoun0_.bsb as bsb1_0_,
+        bankaccoun0_.accountNumber as accountN3_1_0_ 
+    from
+        J_SBCLS_PROPREF_BACCT bankaccoun0_ 
+    inner join
+        J_SBCLS_PROPREF_ACCT bankaccoun0_1_ 
+            on bankaccoun0_.accountId=bankaccoun0_1_.accountId 
+    where
+        bankaccoun0_.bsb=? 
+        and bankaccoun0_.accountNumber=?
+14:17:47,252 DEBUG SQL:104 - 
+    select
+        this_.id as id2_1_,
+        this_.name as name2_1_,
+        this_.bsb as bsb2_1_,
+        this_.accountNumber as accountN4_2_1_,
+        bankaccoun2_.accountId as accountId0_0_,
+        bankaccoun2_1_."type" as type2_0_0_,
+        bankaccoun2_.bsb as bsb1_0_,
+        bankaccoun2_.accountNumber as accountN3_1_0_ 
+    from
+        J_SBCLS_PROPREF_PERS this_ 
+    left outer join
+        J_SBCLS_PROPREF_BACCT bankaccoun2_ 
+            on this_.bsb=bankaccoun2_.bsb 
+            and this_.accountNumber=bankaccoun2_.accountNumber 
+    left outer join
+        J_SBCLS_PROPREF_ACCT bankaccoun2_1_ 
+            on bankaccoun2_.accountId=bankaccoun2_1_.accountId
+14:17:47,254 DEBUG SQL:104 - 
+    delete 
+    from
+        J_SBCLS_PROPREF_PERS 
+    where
+        id=?
+14:17:47,255 DEBUG SQL:104 - 
+    delete 
+    from
+        J_SBCLS_PROPREF_BACCT 
+    where
+        accountId=?
+14:17:47,256 DEBUG SQL:104 - 
+    delete 
+    from
+        J_SBCLS_PROPREF_ACCT 
+    where
+        accountId=?
+14:17:47,257  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:47,258 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:47,258 DEBUG SQL:104 - 
+    alter table J_SBCLS_PROPREF_BACCT 
+        drop constraint FKE021202D8858B01E
+14:17:47,258 DEBUG SQL:104 - 
+    alter table J_SBCLS_PROPREF_PERS 
+        drop constraint FK17C56F1EF14CF7A1
+14:17:47,258 DEBUG SQL:104 - 
+    drop table J_SBCLS_PROPREF_ACCT if exists
+14:17:47,259 DEBUG SQL:104 - 
+    drop table J_SBCLS_PROPREF_BACCT if exists
+14:17:47,259 DEBUG SQL:104 - 
+    drop table J_SBCLS_PROPREF_PERS if exists
+14:17:47,268 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:17:47,269  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:47,269  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.identifiercollection.IdentifierCollectionTest" tests="1" time="0.118" timestamp="2013-02-28T20:10:30">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.identifiercollection.IdentifierCollectionTest" name="testIdBag" time="0.057" />
+  <system-out><![CDATA[14:10:30,016  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.identifiercollection.IdentifierCollectionTest
+14:10:30,021  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:30,022  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:30,022  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:30,022  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:30,022  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:30,024  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:30,025  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:30,025  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:30,025  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:30,025  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:30,033  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [IDS.sequence_name] suggested; using default [PASSPORT_VISASTAMP]
+14:10:30,034  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [IDSTAMP.sequence_name] suggested; using default [PASSPORT_STAMP]
+14:10:30,037  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [IDS.sequence_name] suggested; using default [PASSPORT_VISASTAMP]
+14:10:30,038  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [IDSTAMP.sequence_name] suggested; using default [PASSPORT_STAMP]
+14:10:30,039  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [IDS.sequence_name] suggested; using default [PASSPORT_VISASTAMP]
+14:10:30,039  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [IDSTAMP.sequence_name] suggested; using default [PASSPORT_STAMP]
+14:10:30,039  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:30,040 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:30,040 DEBUG SQL:104 - 
+    alter table PASSPORT_STAMP 
+        drop constraint FK49E4D536171E0866
+14:10:30,040 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PASSPORT_STAMP drop constraint FK49E4D536171E0866
+14:10:30,040 ERROR SchemaExport:426 - Table "PASSPORT_STAMP" not found; SQL statement:
+
+    alter table PASSPORT_STAMP 
+        drop constraint FK49E4D536171E0866 [42102-145]
+14:10:30,040 DEBUG SQL:104 - 
+    alter table PASSPORT_STAMP 
+        drop constraint FK49E4D536877EAF34
+14:10:30,040 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PASSPORT_STAMP drop constraint FK49E4D536877EAF34
+14:10:30,040 ERROR SchemaExport:426 - Table "PASSPORT_STAMP" not found; SQL statement:
+
+    alter table PASSPORT_STAMP 
+        drop constraint FK49E4D536877EAF34 [42102-145]
+14:10:30,041 DEBUG SQL:104 - 
+    alter table PASSPORT_VISASTAMP 
+        drop constraint FK5E932015758B0414
+14:10:30,041 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PASSPORT_VISASTAMP drop constraint FK5E932015758B0414
+14:10:30,041 ERROR SchemaExport:426 - Table "PASSPORT_VISASTAMP" not found; SQL statement:
+
+    alter table PASSPORT_VISASTAMP 
+        drop constraint FK5E932015758B0414 [42102-145]
+14:10:30,041 DEBUG SQL:104 - 
+    alter table PASSPORT_VISASTAMP 
+        drop constraint FK5E932015877EAF34
+14:10:30,041 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PASSPORT_VISASTAMP drop constraint FK5E932015877EAF34
+14:10:30,041 ERROR SchemaExport:426 - Table "PASSPORT_VISASTAMP" not found; SQL statement:
+
+    alter table PASSPORT_VISASTAMP 
+        drop constraint FK5E932015877EAF34 [42102-145]
+14:10:30,041 DEBUG SQL:104 - 
+    drop table PASSPORT_STAMP if exists
+14:10:30,041 DEBUG SQL:104 - 
+    drop table PASSPORT_VISASTAMP if exists
+14:10:30,042 DEBUG SQL:104 - 
+    drop table Passport if exists
+14:10:30,042 DEBUG SQL:104 - 
+    drop table Stamp if exists
+14:10:30,042 DEBUG SQL:104 - 
+    drop table IDS if exists
+14:10:30,042 DEBUG SQL:104 - 
+    drop table IDSTAMP if exists
+14:10:30,042 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:30,042 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:30,042 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:30,043 DEBUG SQL:104 - 
+    create table PASSPORT_STAMP (
+        Passport_passport_id bigint not null,
+        stamps_id bigint not null,
+        COLLECTION_ID bigint not null,
+        primary key (COLLECTION_ID)
+    )
+14:10:30,043 DEBUG SQL:104 - 
+    create table PASSPORT_VISASTAMP (
+        Passport_passport_id bigint not null,
+        visaStamp_id bigint not null,
+        COLLECTION_ID bigint not null,
+        primary key (COLLECTION_ID)
+    )
+14:10:30,043 DEBUG SQL:104 - 
+    create table Passport (
+        passport_id bigint not null,
+        name varchar(255),
+        primary key (passport_id)
+    )
+14:10:30,057 DEBUG SQL:104 - 
+    create table Stamp (
+        id bigint not null,
+        country varchar(255),
+        primary key (id)
+    )
+14:10:30,058 DEBUG SQL:104 - 
+    alter table PASSPORT_STAMP 
+        add constraint FK49E4D536171E0866 
+        foreign key (stamps_id) 
+        references Stamp
+14:10:30,059 DEBUG SQL:104 - 
+    alter table PASSPORT_STAMP 
+        add constraint FK49E4D536877EAF34 
+        foreign key (Passport_passport_id) 
+        references Passport
+14:10:30,060 DEBUG SQL:104 - 
+    alter table PASSPORT_VISASTAMP 
+        add constraint FK5E932015758B0414 
+        foreign key (visaStamp_id) 
+        references Stamp
+14:10:30,061 DEBUG SQL:104 - 
+    alter table PASSPORT_VISASTAMP 
+        add constraint FK5E932015877EAF34 
+        foreign key (Passport_passport_id) 
+        references Passport
+14:10:30,061 DEBUG SQL:104 - 
+    create table IDS (
+         sequence_name varchar(255) not null ,
+         next_val bigint,
+        primary key ( sequence_name ) 
+    ) 
+14:10:30,062 DEBUG SQL:104 - 
+    create table IDSTAMP (
+         sequence_name varchar(255) not null ,
+         next_val bigint,
+        primary key ( sequence_name ) 
+    ) 
+14:10:30,062 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:30,062  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:30,063  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [IDS.sequence_name] suggested; using default [PASSPORT_VISASTAMP]
+14:10:30,063  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [IDSTAMP.sequence_name] suggested; using default [PASSPORT_STAMP]
+14:10:30,064  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [IDS.sequence_name] suggested; using default [PASSPORT_VISASTAMP]
+14:10:30,064  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [IDSTAMP.sequence_name] suggested; using default [PASSPORT_STAMP]
+14:10:30,064  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:30,065  INFO CustomRunner:139 - Test: testIdBag
+14:10:30,065 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:30,066 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:30,066 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:30,068 DEBUG SQL:104 - 
+    insert 
+    into
+        Passport
+        (name, passport_id) 
+    values
+        (?, ?)
+14:10:30,075 DEBUG SQL:104 - 
+    insert 
+    into
+        Stamp
+        (country, id) 
+    values
+        (?, ?)
+14:10:30,076 DEBUG SQL:104 - 
+    insert 
+    into
+        Stamp
+        (country, id) 
+    values
+        (?, ?)
+14:10:30,076 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        IDSTAMP tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:10:30,077 DEBUG SQL:104 - 
+    insert 
+    into
+        IDSTAMP
+        (sequence_name, next_val)  
+    values
+        (?,?)
+14:10:30,086 DEBUG SQL:104 - 
+    update
+        IDSTAMP 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:10:30,087 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        IDSTAMP tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:10:30,087 DEBUG SQL:104 - 
+    update
+        IDSTAMP 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:10:30,087 DEBUG SQL:104 - 
+    insert 
+    into
+        PASSPORT_STAMP
+        (Passport_passport_id, COLLECTION_ID, stamps_id) 
+    values
+        (?, ?, ?)
+14:10:30,088 DEBUG SQL:104 - 
+    insert 
+    into
+        PASSPORT_STAMP
+        (Passport_passport_id, COLLECTION_ID, stamps_id) 
+    values
+        (?, ?, ?)
+14:10:30,088 DEBUG SQL:104 - 
+    insert 
+    into
+        PASSPORT_STAMP
+        (Passport_passport_id, COLLECTION_ID, stamps_id) 
+    values
+        (?, ?, ?)
+14:10:30,110 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        IDS tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:10:30,111 DEBUG SQL:104 - 
+    insert 
+    into
+        IDS
+        (sequence_name, next_val)  
+    values
+        (?,?)
+14:10:30,111 DEBUG SQL:104 - 
+    update
+        IDS 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:10:30,111 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        IDS tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:10:30,121 DEBUG SQL:104 - 
+    update
+        IDS 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:10:30,121 DEBUG SQL:104 - 
+    insert 
+    into
+        PASSPORT_VISASTAMP
+        (Passport_passport_id, COLLECTION_ID, visaStamp_id) 
+    values
+        (?, ?, ?)
+14:10:30,122  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:30,123 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:30,123 DEBUG SQL:104 - 
+    alter table PASSPORT_STAMP 
+        drop constraint FK49E4D536171E0866
+14:10:30,123 DEBUG SQL:104 - 
+    alter table PASSPORT_STAMP 
+        drop constraint FK49E4D536877EAF34
+14:10:30,123 DEBUG SQL:104 - 
+    alter table PASSPORT_VISASTAMP 
+        drop constraint FK5E932015758B0414
+14:10:30,124 DEBUG SQL:104 - 
+    alter table PASSPORT_VISASTAMP 
+        drop constraint FK5E932015877EAF34
+14:10:30,131 DEBUG SQL:104 - 
+    drop table PASSPORT_STAMP if exists
+14:10:30,131 DEBUG SQL:104 - 
+    drop table PASSPORT_VISASTAMP if exists
+14:10:30,132 DEBUG SQL:104 - 
+    drop table Passport if exists
+14:10:30,132 DEBUG SQL:104 - 
+    drop table Stamp if exists
+14:10:30,132 DEBUG SQL:104 - 
+    drop table IDS if exists
+14:10:30,132 DEBUG SQL:104 - 
+    drop table IDSTAMP if exists
+14:10:30,133 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:30,133  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:30,133  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

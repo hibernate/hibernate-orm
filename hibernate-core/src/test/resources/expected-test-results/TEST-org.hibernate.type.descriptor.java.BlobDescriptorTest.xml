@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.type.descriptor.java.BlobDescriptorTest" tests="3" time="0.005" timestamp="2013-02-28T20:19:33">
+  <properties />
+  <testcase classname="org.hibernate.type.descriptor.java.BlobDescriptorTest" name="testEquality" time="0.001" />
+  <testcase classname="org.hibernate.type.descriptor.java.BlobDescriptorTest" name="testExternalization" time="0.0" />
+  <testcase classname="org.hibernate.type.descriptor.java.BlobDescriptorTest" name="testMutabilityPlan" time="0.0" />
+  <system-out><![CDATA[14:19:33,514  INFO CustomRunner:132 - BeforeClass: org.hibernate.type.descriptor.java.BlobDescriptorTest
+14:19:33,515  INFO CustomRunner:139 - Test: testEquality
+14:19:33,516  INFO CustomRunner:139 - Test: testExternalization
+14:19:33,517  INFO CustomRunner:139 - Test: testMutabilityPlan
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

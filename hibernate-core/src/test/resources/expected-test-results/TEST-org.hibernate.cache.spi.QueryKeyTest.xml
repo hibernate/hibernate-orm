@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.cache.spi.QueryKeyTest" tests="3" time="0.634" timestamp="2013-02-28T20:09:52">
+  <properties />
+  <testcase classname="org.hibernate.cache.spi.QueryKeyTest" name="testSerializedEquality" time="0.125" />
+  <testcase classname="org.hibernate.cache.spi.QueryKeyTest" name="testSerializedEqualityResultTransformer" time="0.016" />
+  <testcase classname="org.hibernate.cache.spi.QueryKeyTest" name="testSerializedEqualityWithTupleSubsetResultTransfprmer" time="0.032" />
+  <system-out><![CDATA[14:09:52,307  INFO Version:41 - HHH000412: Hibernate Core {4.3.0-SNAPSHOT}
+14:09:52,392  INFO Environment:224 - HHH000205: Loaded properties from resource hibernate.properties: {hibernate.connection.driver_class=org.h2.Driver, hibernate.max_fetch_depth=5, hibernate.dialect=org.hibernate.dialect.H2Dialect, hibernate.format_sql=true, hibernate.cache.region.factory_class=org.hibernate.testing.cache.CachingRegionFactory, hibernate.connection.username=sa, hibernate.cache.region_prefix=hibernate.test, hibernate.connection.url=jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE, hibernate.bytecode.use_reflection_optimizer=false, hibernate.show_sql=false, hibernate.jdbc.batch_versioned_data=true, hibernate.connection.pool_size=5}
+14:09:52,395  INFO Environment:342 - HHH000021: Bytecode provider name : javassist
+14:09:52,405  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:52,549  INFO CustomRunner:132 - BeforeClass: org.hibernate.cache.spi.QueryKeyTest
+14:09:52,551  INFO CustomRunner:139 - Test: testSerializedEquality
+14:09:52,679  INFO CustomRunner:139 - Test: testSerializedEqualityResultTransformer
+14:09:52,696  INFO CustomRunner:139 - Test: testSerializedEqualityWithTupleSubsetResultTransfprmer
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

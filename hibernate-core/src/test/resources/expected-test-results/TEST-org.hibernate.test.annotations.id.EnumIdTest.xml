@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.id.EnumIdTest" tests="1" time="0.03" timestamp="2013-02-28T20:10:28">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.id.EnumIdTest" name="testEnumAsId" time="0.011" />
+  <system-out><![CDATA[14:10:28,310  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.id.EnumIdTest
+14:10:28,314  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:28,315  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:28,315  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:28,315  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:28,315  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:28,316  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:28,316  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:28,317  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:28,317  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:28,317  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:28,323  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:28,324 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:28,324 DEBUG SQL:104 - 
+    drop table PlanetCheatSheet if exists
+14:10:28,324 DEBUG SQL:104 - 
+    create table PlanetCheatSheet (
+        planet varchar(255) not null,
+        mass double not null,
+        numberOfInhabitants bigint not null,
+        radius double not null,
+        primary key (planet)
+    )
+14:10:28,325  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:28,325  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:28,325  INFO CustomRunner:139 - Test: testEnumAsId
+14:10:28,327 DEBUG SQL:104 - 
+    insert 
+    into
+        PlanetCheatSheet
+        (mass, numberOfInhabitants, radius, planet) 
+    values
+        (?, ?, ?, ?)
+14:10:28,334 DEBUG SQL:104 - 
+    select
+        planetchea0_.planet as planet0_0_,
+        planetchea0_.mass as mass0_0_,
+        planetchea0_.numberOfInhabitants as numberOf3_0_0_,
+        planetchea0_.radius as radius0_0_ 
+    from
+        PlanetCheatSheet planetchea0_ 
+    where
+        planetchea0_.planet=?
+14:10:28,335 DEBUG SQL:104 - 
+    delete 
+    from
+        PlanetCheatSheet 
+    where
+        planet=?
+14:10:28,336 DEBUG SQL:104 - 
+    select
+        planetchea0_.planet as planet0_0_,
+        planetchea0_.mass as mass0_0_,
+        planetchea0_.numberOfInhabitants as numberOf3_0_0_,
+        planetchea0_.radius as radius0_0_ 
+    from
+        PlanetCheatSheet planetchea0_ 
+    where
+        planetchea0_.planet=?
+14:10:28,337  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:28,338 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:28,338 DEBUG SQL:104 - 
+    drop table PlanetCheatSheet if exists
+14:10:28,338  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:28,338  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

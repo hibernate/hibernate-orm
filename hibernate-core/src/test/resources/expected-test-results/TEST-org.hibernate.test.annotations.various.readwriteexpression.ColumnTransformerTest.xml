@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.various.readwriteexpression.ColumnTransformerTest" tests="1" time="0.069" timestamp="2013-02-28T20:10:45">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.various.readwriteexpression.ColumnTransformerTest" name="testCustomColumnReadAndWrite" time="0.05" />
+  <system-out><![CDATA[14:10:45,149  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.various.readwriteexpression.ColumnTransformerTest
+14:10:45,155  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:45,155  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:45,155  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:45,155  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:45,156  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:45,157  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:45,157  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:45,158  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:45,158  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:45,158  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:45,161  INFO PojoInstantiator:85 - HHH000182: No default (no-argument) constructor for class: org.hibernate.test.annotations.various.readwriteexpression.Staff (class must be instantiated by Interceptor)
+14:10:45,164  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:45,164 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:45,164 DEBUG SQL:104 - 
+    drop table t_staff if exists
+14:10:45,165 DEBUG SQL:104 - 
+    create table t_staff (
+        id integer not null,
+        diamet double,
+        radiusS double not null,
+        size_in_cm double,
+        primary key (id)
+    )
+14:10:45,165  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:45,165  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:45,165  INFO CustomRunner:139 - Test: testCustomColumnReadAndWrite
+14:10:45,168 DEBUG SQL:104 - 
+    insert 
+    into
+        t_staff
+        (diamet, radiusS, size_in_cm, id) 
+    values
+        (? * 2.54E0, ? * 2.54E0, ? * 2.54E0, ?)
+14:10:45,170 DEBUG SQL:104 - 
+    select
+        size_in_cm 
+    from
+        t_staff 
+    where
+        t_staff.id=1
+14:10:45,170 DEBUG SQL:104 - 
+    select
+        radiusS 
+    from
+        t_staff 
+    where
+        t_staff.id=1
+14:10:45,171 DEBUG SQL:104 - 
+    select
+        diamet 
+    from
+        t_staff 
+    where
+        t_staff.id=1
+14:10:45,171 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select s.sizeInInches from org.hibernate.test.annotations.various.readwriteexpression.Staff s where s.id = 1
+14:10:45,196 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  |  \-[IDENT] Node: 'various'
+    |  |     |  |  \-[IDENT] Node: 'readwriteexpression'
+    |  |     |  \-[IDENT] Node: 'Staff'
+    |  |     \-[ALIAS] Node: 's'
+    |  \-[SELECT] Node: 'select'
+    |     \-[DOT] Node: '.'
+    |        +-[IDENT] Node: 's'
+    |        \-[IDENT] Node: 'sizeInInches'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 's'
+          |  \-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '1'
+
+14:10:45,196 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,196 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.various.readwriteexpression.Staff (s) -> staff0_
+14:10:45,196 DEBUG FromReferenceNode:74 - Resolved : s -> staff0_.id
+14:10:45,196 DEBUG DotNode:599 - getDataType() : sizeInInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:10:45,196 DEBUG FromReferenceNode:74 - Resolved : s.sizeInInches -> staff0_.size_in_cm / 2.54E0
+14:10:45,197 DEBUG FromReferenceNode:74 - Resolved : s -> staff0_.id
+14:10:45,197 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:10:45,197 DEBUG FromReferenceNode:74 - Resolved : s.id -> staff0_.id
+14:10:45,197 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( staff0_.size_in_cm / 2.54E0 staff0_.id sizeInInches ) ) ( FromClause{level=1} t_staff staff0_ ) ( where ( = ( staff0_.id staff0_.id id ) 1 ) ) )
+14:10:45,197 DEBUG JoinProcessor:175 - Using FROM fragment [t_staff staff0_]
+14:10:45,197 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (t_staff)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'staff0_.size_in_cm / 2.54E0' {propertyName=sizeInInches,dereferenceType=ALL,propertyPath=sizeInInches,path=s.sizeInInches,tableAlias=staff0_,className=org.hibernate.test.annotations.various.readwriteexpression.Staff,classAlias=s}
+    |  |  +-[ALIAS_REF] IdentNode: 'staff0_.id' {alias=s, className=org.hibernate.test.annotations.various.readwriteexpression.Staff, tableAlias=staff0_}
+    |  |  \-[IDENT] IdentNode: 'sizeInInches' {originalText=sizeInInches}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[s], fromElementByTableAlias=[staff0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 't_staff staff0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=t_staff,tableAlias=staff0_,origin=null,columns={,className=org.hibernate.test.annotations.various.readwriteexpression.Staff}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'staff0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=s.id,tableAlias=staff0_,className=org.hibernate.test.annotations.various.readwriteexpression.Staff,classAlias=s}
+          |  +-[ALIAS_REF] IdentNode: 'staff0_.id' {alias=s, className=org.hibernate.test.annotations.various.readwriteexpression.Staff, tableAlias=staff0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '1'
+
+14:10:45,197 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,198 DEBUG QueryTranslatorImpl:235 - HQL: select s.sizeInInches from org.hibernate.test.annotations.various.readwriteexpression.Staff s where s.id = 1
+14:10:45,198 DEBUG QueryTranslatorImpl:236 - SQL: select staff0_.size_in_cm / 2.54E0 as col_0_0_ from t_staff staff0_ where staff0_.id=1
+14:10:45,198 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,198 DEBUG SQL:104 - 
+    select
+        staff0_.size_in_cm / 2.54E0 as col_0_0_ 
+    from
+        t_staff staff0_ 
+    where
+        staff0_.id=1
+14:10:45,200 DEBUG SQL:104 - 
+    select
+        this_.id as id0_0_,
+        this_.diamet / 2.54E0 as diamet0_0_,
+        this_.radiusS / 2.54E0 as radiusS0_0_,
+        this_.size_in_cm / 2.54E0 as size4_0_0_ 
+    from
+        t_staff this_ 
+    where
+        this_.size_in_cm / 2.54E0 between ? and ?
+14:10:45,200 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.various.readwriteexpression.Staff s where s.sizeInInches between ? and ?
+14:10:45,202 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  |  \-[IDENT] Node: 'various'
+    |        |  |  \-[IDENT] Node: 'readwriteexpression'
+    |        |  \-[IDENT] Node: 'Staff'
+    |        \-[ALIAS] Node: 's'
+    \-[WHERE] Node: 'where'
+       \-[BETWEEN] Node: 'between'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 's'
+          |  \-[IDENT] Node: 'sizeInInches'
+          +-[PARAM] Node: '?'
+          \-[PARAM] Node: '?'
+
+14:10:45,202 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,202 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.various.readwriteexpression.Staff (s) -> staff0_
+14:10:45,203 DEBUG FromReferenceNode:74 - Resolved : s -> staff0_.id
+14:10:45,203 DEBUG DotNode:599 - getDataType() : sizeInInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:10:45,203 DEBUG FromReferenceNode:74 - Resolved : s.sizeInInches -> staff0_.size_in_cm / 2.54E0
+14:10:45,203  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 102.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:10:45,203  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 108.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:10:45,203 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} t_staff staff0_ ) ( where ( between ( staff0_.size_in_cm / 2.54E0 staff0_.id sizeInInches ) ? ? ) ) )
+14:10:45,203 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:45,204 DEBUG JoinProcessor:175 - Using FROM fragment [t_staff staff0_]
+14:10:45,204 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (t_staff)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'staff0_.id as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=t_staff,tableAlias=staff0_,origin=null,columns={,className=org.hibernate.test.annotations.various.readwriteexpression.Staff}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'staff0_.diamet / 2.54E0 as diamet0_, staff0_.radiusS / 2.54E0 as radiusS0_, staff0_.size_in_cm / 2.54E0 as size4_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[s], fromElementByTableAlias=[staff0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 't_staff staff0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=t_staff,tableAlias=staff0_,origin=null,columns={,className=org.hibernate.test.annotations.various.readwriteexpression.Staff}}
+    \-[WHERE] SqlNode: 'where'
+       \-[BETWEEN] BetweenOperatorNode: 'between'
+          +-[DOT] DotNode: 'staff0_.size_in_cm / 2.54E0' {propertyName=sizeInInches,dereferenceType=ALL,propertyPath=sizeInInches,path=s.sizeInInches,tableAlias=staff0_,className=org.hibernate.test.annotations.various.readwriteexpression.Staff,classAlias=s}
+          |  +-[ALIAS_REF] IdentNode: 'staff0_.id' {alias=s, className=org.hibernate.test.annotations.various.readwriteexpression.Staff, tableAlias=staff0_}
+          |  \-[IDENT] IdentNode: 'sizeInInches' {originalText=sizeInInches}
+          +-[PARAM] ParameterNode: '?' {ordinal=0, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+          \-[PARAM] ParameterNode: '?' {ordinal=1, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+
+14:10:45,204 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,204 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.various.readwriteexpression.Staff s where s.sizeInInches between ? and ?
+14:10:45,204 DEBUG QueryTranslatorImpl:236 - SQL: select staff0_.id as id0_, staff0_.diamet / 2.54E0 as diamet0_, staff0_.radiusS / 2.54E0 as radiusS0_, staff0_.size_in_cm / 2.54E0 as size4_0_ from t_staff staff0_ where staff0_.size_in_cm / 2.54E0 between ? and ?
+14:10:45,204 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:45,205 DEBUG SQL:104 - 
+    select
+        staff0_.id as id0_,
+        staff0_.diamet / 2.54E0 as diamet0_,
+        staff0_.radiusS / 2.54E0 as radiusS0_,
+        staff0_.size_in_cm / 2.54E0 as size4_0_ 
+    from
+        t_staff staff0_ 
+    where
+        staff0_.size_in_cm / 2.54E0 between ? and ?
+14:10:45,207 DEBUG SQL:104 - 
+    update
+        t_staff 
+    set
+        diamet=? * 2.54E0,
+        radiusS=? * 2.54E0,
+        size_in_cm=? * 2.54E0 
+    where
+        id=?
+14:10:45,207 DEBUG SQL:104 - 
+    select
+        size_in_cm 
+    from
+        t_staff 
+    where
+        t_staff.id=1
+14:10:45,215 DEBUG SQL:104 - 
+    delete 
+    from
+        t_staff 
+    where
+        id=?
+14:10:45,216  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:45,217 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:45,217 DEBUG SQL:104 - 
+    drop table t_staff if exists
+14:10:45,217  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:45,217  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

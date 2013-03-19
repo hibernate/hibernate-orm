@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.util.JoinedIterableTest" tests="4" time="0.006" timestamp="2013-02-28T20:19:29">
+  <properties />
+  <testcase classname="org.hibernate.test.util.JoinedIterableTest" name="testJoinedIterables" time="0.001" />
+  <testcase classname="org.hibernate.test.util.JoinedIterableTest" name="testNullIterables" time="0.0" />
+  <testcase classname="org.hibernate.test.util.JoinedIterableTest" name="testSingleEmptyIterable" time="0.0" />
+  <testcase classname="org.hibernate.test.util.JoinedIterableTest" name="testSingleIterableOfSingletonCollection" time="0.0" />
+  <system-out><![CDATA[14:19:29,886  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.util.JoinedIterableTest
+14:19:29,886  INFO CustomRunner:139 - Test: testJoinedIterables
+14:19:29,887  INFO CustomRunner:139 - Test: testNullIterables
+14:19:29,888  INFO CustomRunner:139 - Test: testSingleEmptyIterable
+14:19:29,889  INFO CustomRunner:139 - Test: testSingleIterableOfSingletonCollection
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

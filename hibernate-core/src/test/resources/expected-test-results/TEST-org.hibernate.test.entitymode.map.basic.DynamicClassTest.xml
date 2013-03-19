@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.entitymode.map.basic.DynamicClassTest" tests="1" time="0.103" timestamp="2013-02-28T20:12:16">
+  <properties />
+  <testcase classname="org.hibernate.test.entitymode.map.basic.DynamicClassTest" name="testLazyDynamicClass" time="0.062" />
+  <system-out><![CDATA[14:12:16,510  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.entitymode.map.basic.DynamicClassTest
+14:12:16,517  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/entitymode/map/basic/ProductLine.hbm.xml
+14:12:16,524  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:16,525  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:16,525  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:16,525  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:16,525  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:16,526  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:16,527  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:16,527  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:16,527  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:16,527  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:16,534  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:16,535 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:16,535 DEBUG SQL:104 - 
+    alter table Model 
+        drop constraint FK4710B09CBCBE3AD
+14:12:16,536 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Model drop constraint FK4710B09CBCBE3AD
+14:12:16,536 ERROR SchemaExport:426 - Table "MODEL" not found; SQL statement:
+
+    alter table Model 
+        drop constraint FK4710B09CBCBE3AD [42102-145]
+14:12:16,536 DEBUG SQL:104 - 
+    drop table Model if exists
+14:12:16,536 DEBUG SQL:104 - 
+    drop table ProductLine if exists
+14:12:16,536 DEBUG SQL:104 - 
+    create table Model (
+        modelId varchar(32) not null,
+        name varchar(25) not null,
+        description varchar(200) not null,
+        productId varchar(32) not null,
+        primary key (modelId)
+    )
+14:12:16,537 DEBUG SQL:104 - 
+    create table ProductLine (
+        productId varchar(32) not null,
+        description varchar(200) not null,
+        primary key (productId)
+    )
+14:12:16,537 DEBUG SQL:104 - 
+    alter table Model 
+        add constraint FK4710B09CBCBE3AD 
+        foreign key (productId) 
+        references ProductLine
+14:12:16,537  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:16,538  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:16,538  INFO CustomRunner:139 - Test: testLazyDynamicClass
+14:12:16,539 DEBUG SQL:104 - 
+    insert 
+    into
+        ProductLine
+        (description, productId) 
+    values
+        (?, ?)
+14:12:16,540 DEBUG SQL:104 - 
+    insert 
+    into
+        Model
+        (name, description, productId, modelId) 
+    values
+        (?, ?, ?, ?)
+14:12:16,540 DEBUG SQL:104 - 
+    insert 
+    into
+        Model
+        (name, description, productId, modelId) 
+    values
+        (?, ?, ?, ?)
+14:12:16,541 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from ProductLine pl order by pl.description
+14:12:16,542 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[IDENT] Node: 'ProductLine'
+    |        \-[ALIAS] Node: 'pl'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'pl'
+          \-[IDENT] Node: 'description'
+
+14:12:16,542 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:16,542 DEBUG FromElement:157 - FromClause{level=1} : ProductLine (pl) -> productlin0_
+14:12:16,542 DEBUG FromReferenceNode:74 - Resolved : pl -> productlin0_.productId
+14:12:16,542 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:12:16,542 DEBUG FromReferenceNode:74 - Resolved : pl.description -> productlin0_.description
+14:12:16,542 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ProductLine productlin0_ ) ( order ( productlin0_.description productlin0_.productId description ) ) )
+14:12:16,543 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:16,543 DEBUG JoinProcessor:175 - Using FROM fragment [ProductLine productlin0_]
+14:12:16,543 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ProductLine)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'productlin0_.productId as productId1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=pl,role=null,tableName=ProductLine,tableAlias=productlin0_,origin=null,columns={,className=ProductLine}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'productlin0_.description as descript2_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[pl], fromElementByTableAlias=[productlin0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'ProductLine productlin0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=pl,role=null,tableName=ProductLine,tableAlias=productlin0_,origin=null,columns={,className=ProductLine}}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'productlin0_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path=pl.description,tableAlias=productlin0_,className=ProductLine,classAlias=pl}
+          +-[ALIAS_REF] IdentNode: 'productlin0_.productId' {alias=pl, className=ProductLine, tableAlias=productlin0_}
+          \-[IDENT] IdentNode: 'description' {originalText=description}
+
+14:12:16,553 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:16,553 DEBUG QueryTranslatorImpl:235 - HQL: from ProductLine pl order by pl.description
+14:12:16,553 DEBUG QueryTranslatorImpl:236 - SQL: select productlin0_.productId as productId1_, productlin0_.description as descript2_1_ from ProductLine productlin0_ order by productlin0_.description
+14:12:16,553 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:16,553 DEBUG SQL:104 - 
+    select
+        productlin0_.productId as productId1_,
+        productlin0_.description as descript2_1_ 
+    from
+        ProductLine productlin0_ 
+    order by
+        productlin0_.description
+14:12:16,554 DEBUG SQL:104 - 
+    select
+        models0_.productId as productId1_1_,
+        models0_.modelId as modelId0_1_,
+        models0_.modelId as modelId0_0_,
+        models0_.name as name0_0_,
+        models0_.description as descript3_0_0_,
+        models0_.productId as productId0_0_ 
+    from
+        Model models0_ 
+    where
+        models0_.productId=?
+14:12:16,555 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from Model m
+14:12:16,556 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[IDENT] Node: 'Model'
+             \-[ALIAS] Node: 'm'
+
+14:12:16,556 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:16,576 DEBUG FromElement:157 - FromClause{level=1} : Model (m) -> model0_
+14:12:16,576 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Model model0_ ) )
+14:12:16,576 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:16,577 DEBUG JoinProcessor:175 - Using FROM fragment [Model model0_]
+14:12:16,577 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Model)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'model0_.modelId as modelId0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Model,tableAlias=model0_,origin=null,columns={,className=Model}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'model0_.name as name0_, model0_.description as descript3_0_, model0_.productId as productId0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[m], fromElementByTableAlias=[model0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Model model0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Model,tableAlias=model0_,origin=null,columns={,className=Model}}
+
+14:12:16,577 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:16,578 DEBUG QueryTranslatorImpl:235 - HQL: from Model m
+14:12:16,578 DEBUG QueryTranslatorImpl:236 - SQL: select model0_.modelId as modelId0_, model0_.name as name0_, model0_.description as descript3_0_, model0_.productId as productId0_ from Model model0_
+14:12:16,578 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:16,578 DEBUG SQL:104 - 
+    select
+        model0_.modelId as modelId0_,
+        model0_.name as name0_,
+        model0_.description as descript3_0_,
+        model0_.productId as productId0_ 
+    from
+        Model model0_
+14:12:16,582 DEBUG SQL:104 - 
+    select
+        productlin0_.productId as productId1_0_,
+        productlin0_.description as descript2_1_0_ 
+    from
+        ProductLine productlin0_ 
+    where
+        productlin0_.productId=?
+14:12:16,587 DEBUG SQL:104 - 
+    select
+        models0_.productId as productId1_1_,
+        models0_.modelId as modelId0_1_,
+        models0_.modelId as modelId0_0_,
+        models0_.name as name0_0_,
+        models0_.description as descript3_0_0_,
+        models0_.productId as productId0_0_ 
+    from
+        Model models0_ 
+    where
+        models0_.productId=?
+14:12:16,588 DEBUG SQL:104 - 
+    select
+        productlin0_.productId as productId1_,
+        productlin0_.description as descript2_1_ 
+    from
+        ProductLine productlin0_ 
+    order by
+        productlin0_.description
+14:12:16,589 DEBUG SQL:104 - 
+    select
+        models0_.productId as productId1_1_,
+        models0_.modelId as modelId0_1_,
+        models0_.modelId as modelId0_0_,
+        models0_.name as name0_0_,
+        models0_.description as descript3_0_0_,
+        models0_.productId as productId0_0_ 
+    from
+        Model models0_ 
+    where
+        models0_.productId=?
+14:12:16,599 DEBUG SQL:104 - 
+    delete 
+    from
+        Model 
+    where
+        modelId=?
+14:12:16,599 DEBUG SQL:104 - 
+    delete 
+    from
+        Model 
+    where
+        modelId=?
+14:12:16,599 DEBUG SQL:104 - 
+    delete 
+    from
+        ProductLine 
+    where
+        productId=?
+14:12:16,600  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:16,600 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:16,601 DEBUG SQL:104 - 
+    alter table Model 
+        drop constraint FK4710B09CBCBE3AD
+14:12:16,601 DEBUG SQL:104 - 
+    drop table Model if exists
+14:12:16,601 DEBUG SQL:104 - 
+    drop table ProductLine if exists
+14:12:16,610  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:16,610  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

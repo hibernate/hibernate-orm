@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.id.BigDecimalHolderTest" tests="2" time="0.025" timestamp="2013-02-28T20:09:53">
+  <properties />
+  <testcase classname="org.hibernate.id.BigDecimalHolderTest" name="testBasicHiloAlgorithm" time="0.013" />
+  <testcase classname="org.hibernate.id.BigDecimalHolderTest" name="testInitializationChecking" time="0.002" />
+  <system-out><![CDATA[14:09:53,422  INFO CustomRunner:132 - BeforeClass: org.hibernate.id.BigDecimalHolderTest
+14:09:53,422  INFO CustomRunner:139 - Test: testBasicHiloAlgorithm
+14:09:53,437  INFO CustomRunner:139 - Test: testInitializationChecking
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

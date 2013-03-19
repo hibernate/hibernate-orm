@@ -1,0 +1,4144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" tests="19" time="1.523" timestamp="2013-02-28T20:14:16">
+  <properties />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testAddExistingManyToManyElementToPersistentEntity" time="0.092" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testAddNewManyToManyElementToPersistentEntity" time="0.059" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testCreateWithEmptyManyToManyCollectionMergeWithExistingElement" time="0.087" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testCreateWithEmptyManyToManyCollectionUpdateWithExistingElement" time="0.043" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testCreateWithNonEmptyManyToManyCollectionMergeWithNewElement" time="0.102" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testCreateWithNonEmptyManyToManyCollectionOfExisting" time="0.065" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testCreateWithNonEmptyManyToManyCollectionOfNew" time="0.053" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testCreateWithNonEmptyManyToManyCollectionUpdateWithNewElement" time="0.064" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testDeleteManyToManyElement" time="0.056" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testManyToManyCollectionOptimisticLockingWithMerge" time="0.081" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testManyToManyCollectionOptimisticLockingWithUpdate" time="0.065" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testMoveManyToManyElementToExistingEntityCollection" time="0.138" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testMoveManyToManyElementToNewEntityCollection" time="0.114" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testRemoveManyToManyElementByDelete" time="0.026" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testRemoveManyToManyElementUsingMerge" time="0.08" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testRemoveManyToManyElementUsingMergeBothSides" time="0.077" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testRemoveManyToManyElementUsingUpdate" time="0.077" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testRemoveManyToManyElementUsingUpdateBothSides" time="0.068" />
+  <testcase classname="org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest" name="testUpdateProperty" time="0.055" />
+  <system-out><![CDATA[14:14:16,920  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.immutable.entitywithmutablecollection.noninverse.EntityWithNonInverseManyToManyTest
+14:14:16,923  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/immutable/entitywithmutablecollection/noninverse/ContractVariation.hbm.xml
+14:14:16,930  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:16,931  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:16,931  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:16,931  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:16,931  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:16,932  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:16,932  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:16,933  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:16,933  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:16,933  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:16,942  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:16,943 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:16,943 DEBUG SQL:104 - 
+    alter table Contract 
+        drop constraint FKE20F7532190ADCD1
+14:14:16,943 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Contract drop constraint FKE20F7532190ADCD1
+14:14:16,943 ERROR SchemaExport:426 - Table "CONTRACT" not found; SQL statement:
+
+    alter table Contract 
+        drop constraint FKE20F7532190ADCD1 [42102-145]
+14:14:16,944 DEBUG SQL:104 - 
+    alter table ContractVariation 
+        drop constraint FKB86C05013294E539
+14:14:16,944 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ContractVariation drop constraint FKB86C05013294E539
+14:14:16,944 ERROR SchemaExport:426 - Table "CONTRACTVARIATION" not found; SQL statement:
+
+    alter table ContractVariation 
+        drop constraint FKB86C05013294E539 [42102-145]
+14:14:16,944 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CEA0A0D346
+14:14:16,944 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Info drop constraint FK22D8CEA0A0D346
+14:14:16,944 ERROR SchemaExport:426 - Table "INFO" not found; SQL statement:
+
+    alter table Info 
+        drop constraint FK22D8CEA0A0D346 [42102-145]
+14:14:16,944 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE1F1952D7
+14:14:16,945 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Info drop constraint FK22D8CE1F1952D7
+14:14:16,945 ERROR SchemaExport:426 - Table "INFO" not found; SQL statement:
+
+    alter table Info 
+        drop constraint FK22D8CE1F1952D7 [42102-145]
+14:14:16,947 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE3294E539
+14:14:16,948 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Info drop constraint FK22D8CE3294E539
+14:14:16,948 ERROR SchemaExport:426 - Table "INFO" not found; SQL statement:
+
+    alter table Info 
+        drop constraint FK22D8CE3294E539 [42102-145]
+14:14:16,948 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CEF8244EED
+14:14:16,948 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Info drop constraint FK22D8CEF8244EED
+14:14:16,948 ERROR SchemaExport:426 - Table "INFO" not found; SQL statement:
+
+    alter table Info 
+        drop constraint FK22D8CEF8244EED [42102-145]
+14:14:16,948 DEBUG SQL:104 - 
+    alter table Party 
+        drop constraint FK4952AC63294E539
+14:14:16,948 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Party drop constraint FK4952AC63294E539
+14:14:16,949 ERROR SchemaExport:426 - Table "PARTY" not found; SQL statement:
+
+    alter table Party 
+        drop constraint FK4952AC63294E539 [42102-145]
+14:14:16,949 DEBUG SQL:104 - 
+    alter table plan_contract 
+        drop constraint FKDE1535683294E539
+14:14:16,949 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table plan_contract drop constraint FKDE1535683294E539
+14:14:16,949 ERROR SchemaExport:426 - Table "PLAN_CONTRACT" not found; SQL statement:
+
+    alter table plan_contract 
+        drop constraint FKDE1535683294E539 [42102-145]
+14:14:16,958 DEBUG SQL:104 - 
+    alter table plan_contract 
+        drop constraint FKDE153568A0A0D346
+14:14:16,958 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table plan_contract drop constraint FKDE153568A0A0D346
+14:14:16,959 ERROR SchemaExport:426 - Table "PLAN_CONTRACT" not found; SQL statement:
+
+    alter table plan_contract 
+        drop constraint FKDE153568A0A0D346 [42102-145]
+14:14:16,959 DEBUG SQL:104 - 
+    drop table Contract if exists
+14:14:16,959 DEBUG SQL:104 - 
+    drop table ContractVariation if exists
+14:14:16,959 DEBUG SQL:104 - 
+    drop table Info if exists
+14:14:16,959 DEBUG SQL:104 - 
+    drop table Party if exists
+14:14:16,959 DEBUG SQL:104 - 
+    drop table plan_contract if exists
+14:14:16,959 DEBUG SQL:104 - 
+    drop table tbl_plan if exists
+14:14:16,960 DEBUG SQL:104 - 
+    create table Contract (
+        id bigint not null,
+        customerName varchar(255) not null,
+        "type" varchar(255) not null,
+        parent bigint,
+        primary key (id)
+    )
+14:14:16,969 DEBUG SQL:104 - 
+    create table ContractVariation (
+        id integer not null,
+        text longvarchar,
+        contract bigint,
+        primary key (id)
+    )
+14:14:16,970 DEBUG SQL:104 - 
+    create table Info (
+        id bigint not null,
+        text varchar(255),
+        col_plan bigint,
+        party bigint,
+        contract bigint,
+        contractvariation integer,
+        primary key (id)
+    )
+14:14:16,970 DEBUG SQL:104 - 
+    create table Party (
+        id bigint not null,
+        contract bigint,
+        name varchar(255) not null,
+        primary key (id)
+    )
+14:14:16,970 DEBUG SQL:104 - 
+    create table plan_contract (
+        col_plan bigint not null,
+        contract bigint not null,
+        primary key (col_plan, contract)
+    )
+14:14:16,980 DEBUG SQL:104 - 
+    create table tbl_plan (
+        id bigint not null,
+        description varchar(255) not null,
+        primary key (id)
+    )
+14:14:16,980 DEBUG SQL:104 - 
+    alter table Contract 
+        add constraint FKE20F7532190ADCD1 
+        foreign key (parent) 
+        references Contract
+14:14:16,981 DEBUG SQL:104 - 
+    alter table ContractVariation 
+        add constraint FKB86C05013294E539 
+        foreign key (contract) 
+        references Contract
+14:14:16,981 DEBUG SQL:104 - 
+    alter table Info 
+        add constraint FK22D8CEA0A0D346 
+        foreign key (col_plan) 
+        references tbl_plan
+14:14:16,982 DEBUG SQL:104 - 
+    alter table Info 
+        add constraint FK22D8CE1F1952D7 
+        foreign key (party) 
+        references Party
+14:14:16,982 DEBUG SQL:104 - 
+    alter table Info 
+        add constraint FK22D8CE3294E539 
+        foreign key (contract) 
+        references Contract
+14:14:16,992 DEBUG SQL:104 - 
+    alter table Info 
+        add constraint FK22D8CEF8244EED 
+        foreign key (contractvariation) 
+        references ContractVariation
+14:14:16,994 DEBUG SQL:104 - 
+    alter table Party 
+        add constraint FK4952AC63294E539 
+        foreign key (contract) 
+        references Contract
+14:14:16,996 DEBUG SQL:104 - 
+    alter table plan_contract 
+        add constraint FKDE1535683294E539 
+        foreign key (contract) 
+        references Contract
+14:14:16,997 DEBUG SQL:104 - 
+    alter table plan_contract 
+        add constraint FKDE153568A0A0D346 
+        foreign key (col_plan) 
+        references tbl_plan
+14:14:16,998  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:16,998  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:16,999  INFO CustomRunner:139 - Test: testAddExistingManyToManyElementToPersistentEntity
+14:14:17,000 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        tbl_plan
+14:14:17,006 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Contract
+14:14:17,007 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,008 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,009 DEBUG SQL:104 - 
+    select
+        plan0_.id as id5_4_,
+        plan0_.description as descript2_5_4_,
+        contracts1_.col_plan as col1_5_6_,
+        contract2_.id as contract4_6_,
+        contract2_.id as id0_0_,
+        contract2_.customerName as customer2_0_0_,
+        contract2_."type" as type3_0_0_,
+        contract2_.parent as parent0_0_,
+        variations3_.contract as contract0_7_,
+        variations3_.id as id1_7_,
+        variations3_.id as id1_1_,
+        variations3_.text as text1_1_,
+        variations3_.contract as contract1_1_,
+        subcontrac4_.parent as parent0_8_,
+        subcontrac4_.id as id0_8_,
+        subcontrac4_.id as id0_2_,
+        subcontrac4_.customerName as customer2_0_2_,
+        subcontrac4_."type" as type3_0_2_,
+        subcontrac4_.parent as parent0_2_,
+        parties5_.contract as contract0_9_,
+        parties5_.id as id3_9_,
+        parties5_.id as id3_3_,
+        parties5_.contract as contract3_3_,
+        parties5_.name as name3_3_ 
+    from
+        tbl_plan plan0_ 
+    left outer join
+        plan_contract contracts1_ 
+            on plan0_.id=contracts1_.col_plan 
+    left outer join
+        Contract contract2_ 
+            on contracts1_.contract=contract2_.id 
+    left outer join
+        ContractVariation variations3_ 
+            on contract2_.id=variations3_.contract 
+    left outer join
+        Contract subcontrac4_ 
+            on contract2_.id=subcontrac4_.parent 
+    left outer join
+        Party parties5_ 
+            on subcontrac4_.id=parties5_.contract 
+    where
+        plan0_.id=? 
+    order by
+        variations3_.id asc
+14:14:17,022 DEBUG SQL:104 - 
+    select
+        contract0_.id as id0_3_,
+        contract0_.customerName as customer2_0_3_,
+        contract0_."type" as type3_0_3_,
+        contract0_.parent as parent0_3_,
+        variations1_.contract as contract0_5_,
+        variations1_.id as id1_5_,
+        variations1_.id as id1_0_,
+        variations1_.text as text1_0_,
+        variations1_.contract as contract1_0_,
+        subcontrac2_.parent as parent0_6_,
+        subcontrac2_.id as id0_6_,
+        subcontrac2_.id as id0_1_,
+        subcontrac2_.customerName as customer2_0_1_,
+        subcontrac2_."type" as type3_0_1_,
+        subcontrac2_.parent as parent0_1_,
+        parties3_.contract as contract0_7_,
+        parties3_.id as id3_7_,
+        parties3_.id as id3_2_,
+        parties3_.contract as contract3_2_,
+        parties3_.name as name3_2_ 
+    from
+        Contract contract0_ 
+    left outer join
+        ContractVariation variations1_ 
+            on contract0_.id=variations1_.contract 
+    left outer join
+        Contract subcontrac2_ 
+            on contract0_.id=subcontrac2_.parent 
+    left outer join
+        Party parties3_ 
+            on subcontrac2_.id=parties3_.contract 
+    where
+        contract0_.id=? 
+    order by
+        variations1_.id asc
+14:14:17,034 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,034 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,035 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,069 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,069 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,070 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,079 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,081 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,081 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,081 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,090 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,091 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,092  INFO CustomRunner:139 - Test: testAddNewManyToManyElementToPersistentEntity
+14:14:17,093 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,094 DEBUG SQL:104 - 
+    select
+        plan0_.id as id5_4_,
+        plan0_.description as descript2_5_4_,
+        contracts1_.col_plan as col1_5_6_,
+        contract2_.id as contract4_6_,
+        contract2_.id as id0_0_,
+        contract2_.customerName as customer2_0_0_,
+        contract2_."type" as type3_0_0_,
+        contract2_.parent as parent0_0_,
+        variations3_.contract as contract0_7_,
+        variations3_.id as id1_7_,
+        variations3_.id as id1_1_,
+        variations3_.text as text1_1_,
+        variations3_.contract as contract1_1_,
+        subcontrac4_.parent as parent0_8_,
+        subcontrac4_.id as id0_8_,
+        subcontrac4_.id as id0_2_,
+        subcontrac4_.customerName as customer2_0_2_,
+        subcontrac4_."type" as type3_0_2_,
+        subcontrac4_.parent as parent0_2_,
+        parties5_.contract as contract0_9_,
+        parties5_.id as id3_9_,
+        parties5_.id as id3_3_,
+        parties5_.contract as contract3_3_,
+        parties5_.name as name3_3_ 
+    from
+        tbl_plan plan0_ 
+    left outer join
+        plan_contract contracts1_ 
+            on plan0_.id=contracts1_.col_plan 
+    left outer join
+        Contract contract2_ 
+            on contracts1_.contract=contract2_.id 
+    left outer join
+        ContractVariation variations3_ 
+            on contract2_.id=variations3_.contract 
+    left outer join
+        Contract subcontrac4_ 
+            on contract2_.id=subcontrac4_.parent 
+    left outer join
+        Party parties5_ 
+            on subcontrac4_.id=parties5_.contract 
+    where
+        plan0_.id=? 
+    order by
+        variations3_.id asc
+14:14:17,116 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,116 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,117 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,135 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,136 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,137 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,137 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,138 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,138 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,150 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,150 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,150 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,151  INFO CustomRunner:139 - Test: testCreateWithEmptyManyToManyCollectionMergeWithExistingElement
+14:14:17,152 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,153 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,160 DEBUG SQL:104 - 
+    select
+        plan0_.id as id5_1_,
+        plan0_.description as descript2_5_1_,
+        contracts1_.col_plan as col1_5_3_,
+        contract2_.id as contract4_3_,
+        contract2_.id as id0_0_,
+        contract2_.customerName as customer2_0_0_,
+        contract2_."type" as type3_0_0_,
+        contract2_.parent as parent0_0_ 
+    from
+        tbl_plan plan0_ 
+    left outer join
+        plan_contract contracts1_ 
+            on plan0_.id=contracts1_.col_plan 
+    left outer join
+        Contract contract2_ 
+            on contracts1_.contract=contract2_.id 
+    where
+        plan0_.id=?
+14:14:17,161 DEBUG SQL:104 - 
+    select
+        contract0_.id as id0_1_,
+        contract0_.customerName as customer2_0_1_,
+        contract0_."type" as type3_0_1_,
+        contract0_.parent as parent0_1_,
+        variations1_.contract as contract0_3_,
+        variations1_.id as id1_3_,
+        variations1_.id as id1_0_,
+        variations1_.text as text1_0_,
+        variations1_.contract as contract1_0_ 
+    from
+        Contract contract0_ 
+    left outer join
+        ContractVariation variations1_ 
+            on contract0_.id=variations1_.contract 
+    where
+        contract0_.id=? 
+    order by
+        variations1_.id asc
+14:14:17,185 DEBUG SQL:104 - 
+    select
+        subcontrac0_.parent as parent0_1_,
+        subcontrac0_.id as id0_1_,
+        subcontrac0_.id as id0_0_,
+        subcontrac0_.customerName as customer2_0_0_,
+        subcontrac0_."type" as type3_0_0_,
+        subcontrac0_.parent as parent0_0_ 
+    from
+        Contract subcontrac0_ 
+    where
+        subcontrac0_.parent=?
+14:14:17,186 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,187 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,187 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,187 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,188 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,189 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,217 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,218 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,218 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,228 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,228 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,229 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,238 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,238 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,239 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,239  INFO CustomRunner:139 - Test: testCreateWithEmptyManyToManyCollectionUpdateWithExistingElement
+14:14:17,241 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,241 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,248 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,249 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,259 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,259 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,260 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,260 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,272 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,273 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,273 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,273 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,282 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,283  INFO CustomRunner:139 - Test: testCreateWithNonEmptyManyToManyCollectionMergeWithNewElement
+14:14:17,284 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,285 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,285 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,286 DEBUG SQL:104 - 
+    select
+        plan0_.id as id5_1_,
+        plan0_.description as descript2_5_1_,
+        contracts1_.col_plan as col1_5_3_,
+        contract2_.id as contract4_3_,
+        contract2_.id as id0_0_,
+        contract2_.customerName as customer2_0_0_,
+        contract2_."type" as type3_0_0_,
+        contract2_.parent as parent0_0_ 
+    from
+        tbl_plan plan0_ 
+    left outer join
+        plan_contract contracts1_ 
+            on plan0_.id=contracts1_.col_plan 
+    left outer join
+        Contract contract2_ 
+            on contracts1_.contract=contract2_.id 
+    where
+        plan0_.id=?
+14:14:17,307 DEBUG SQL:104 - 
+    select
+        variations0_.contract as contract0_1_,
+        variations0_.id as id1_1_,
+        variations0_.id as id1_0_,
+        variations0_.text as text1_0_,
+        variations0_.contract as contract1_0_ 
+    from
+        ContractVariation variations0_ 
+    where
+        variations0_.contract=? 
+    order by
+        variations0_.id asc
+14:14:17,307 DEBUG SQL:104 - 
+    select
+        subcontrac0_.parent as parent0_1_,
+        subcontrac0_.id as id0_1_,
+        subcontrac0_.id as id0_0_,
+        subcontrac0_.customerName as customer2_0_0_,
+        subcontrac0_."type" as type3_0_0_,
+        subcontrac0_.parent as parent0_0_ 
+    from
+        Contract subcontrac0_ 
+    where
+        subcontrac0_.parent=?
+14:14:17,316 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,317 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,317 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,331 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,332 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,332 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,333 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,352 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,352 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,362 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,362 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,363 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,373 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,373 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,384 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,384 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,384 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,385 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,385 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,385 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,386  INFO CustomRunner:139 - Test: testCreateWithNonEmptyManyToManyCollectionOfExisting
+14:14:17,387 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,388 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,388 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,389 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,408 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,409 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,409 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,434 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,435 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,436 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,436 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,436 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,450 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,452  INFO CustomRunner:139 - Test: testCreateWithNonEmptyManyToManyCollectionOfNew
+14:14:17,453 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,453 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,454 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,461 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,475 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,489 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,489 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,489 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,503 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,503 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,504 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,504 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,504 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,505  INFO CustomRunner:139 - Test: testCreateWithNonEmptyManyToManyCollectionUpdateWithNewElement
+14:14:17,516 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,516 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,516 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,517 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,517 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,518 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,531 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,542 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,544 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,544 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,544 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,565 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,566 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,567 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,568 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,576 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,577 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,577 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,577 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,578  INFO CustomRunner:139 - Test: testDeleteManyToManyElement
+14:14:17,579 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,588 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,588 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,590 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,590 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,599 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,611 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.id as id1_5_,
+        variations2_.id as id1_0_,
+        variations2_.text as text1_0_,
+        variations2_.contract as contract1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.id asc
+14:14:17,622 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,633 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,633 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,634 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,634  INFO CustomRunner:139 - Test: testManyToManyCollectionOptimisticLockingWithMerge
+14:14:17,635 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,636 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,642 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,643 DEBUG SQL:104 - 
+    select
+        plan0_.id as id5_4_,
+        plan0_.description as descript2_5_4_,
+        contracts1_.col_plan as col1_5_6_,
+        contract2_.id as contract4_6_,
+        contract2_.id as id0_0_,
+        contract2_.customerName as customer2_0_0_,
+        contract2_."type" as type3_0_0_,
+        contract2_.parent as parent0_0_,
+        variations3_.contract as contract0_7_,
+        variations3_.id as id1_7_,
+        variations3_.id as id1_1_,
+        variations3_.text as text1_1_,
+        variations3_.contract as contract1_1_,
+        subcontrac4_.parent as parent0_8_,
+        subcontrac4_.id as id0_8_,
+        subcontrac4_.id as id0_2_,
+        subcontrac4_.customerName as customer2_0_2_,
+        subcontrac4_."type" as type3_0_2_,
+        subcontrac4_.parent as parent0_2_,
+        parties5_.contract as contract0_9_,
+        parties5_.id as id3_9_,
+        parties5_.id as id3_3_,
+        parties5_.contract as contract3_3_,
+        parties5_.name as name3_3_ 
+    from
+        tbl_plan plan0_ 
+    left outer join
+        plan_contract contracts1_ 
+            on plan0_.id=contracts1_.col_plan 
+    left outer join
+        Contract contract2_ 
+            on contracts1_.contract=contract2_.id 
+    left outer join
+        ContractVariation variations3_ 
+            on contract2_.id=variations3_.contract 
+    left outer join
+        Contract subcontrac4_ 
+            on contract2_.id=subcontrac4_.parent 
+    left outer join
+        Party parties5_ 
+            on subcontrac4_.id=parties5_.contract 
+    where
+        plan0_.id=? 
+    order by
+        variations3_.id asc
+14:14:17,644 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,657 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,658 DEBUG SQL:104 - 
+    select
+        plan0_.id as id5_1_,
+        plan0_.description as descript2_5_1_,
+        contracts1_.col_plan as col1_5_3_,
+        contract2_.id as contract4_3_,
+        contract2_.id as id0_0_,
+        contract2_.customerName as customer2_0_0_,
+        contract2_."type" as type3_0_0_,
+        contract2_.parent as parent0_0_ 
+    from
+        tbl_plan plan0_ 
+    left outer join
+        plan_contract contracts1_ 
+            on plan0_.id=contracts1_.col_plan 
+    left outer join
+        Contract contract2_ 
+            on contracts1_.contract=contract2_.id 
+    where
+        plan0_.id=?
+14:14:17,668 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,670 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,692 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,692 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,703 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,703 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,703 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,713 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,714 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,714 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,714 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,714 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,715 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,715  INFO CustomRunner:139 - Test: testManyToManyCollectionOptimisticLockingWithUpdate
+14:14:17,717 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,717 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,717 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,718 DEBUG SQL:104 - 
+    select
+        plan0_.id as id5_4_,
+        plan0_.description as descript2_5_4_,
+        contracts1_.col_plan as col1_5_6_,
+        contract2_.id as contract4_6_,
+        contract2_.id as id0_0_,
+        contract2_.customerName as customer2_0_0_,
+        contract2_."type" as type3_0_0_,
+        contract2_.parent as parent0_0_,
+        variations3_.contract as contract0_7_,
+        variations3_.id as id1_7_,
+        variations3_.id as id1_1_,
+        variations3_.text as text1_1_,
+        variations3_.contract as contract1_1_,
+        subcontrac4_.parent as parent0_8_,
+        subcontrac4_.id as id0_8_,
+        subcontrac4_.id as id0_2_,
+        subcontrac4_.customerName as customer2_0_2_,
+        subcontrac4_."type" as type3_0_2_,
+        subcontrac4_.parent as parent0_2_,
+        parties5_.contract as contract0_9_,
+        parties5_.id as id3_9_,
+        parties5_.id as id3_3_,
+        parties5_.contract as contract3_3_,
+        parties5_.name as name3_3_ 
+    from
+        tbl_plan plan0_ 
+    left outer join
+        plan_contract contracts1_ 
+            on plan0_.id=contracts1_.col_plan 
+    left outer join
+        Contract contract2_ 
+            on contracts1_.contract=contract2_.id 
+    left outer join
+        ContractVariation variations3_ 
+            on contract2_.id=variations3_.contract 
+    left outer join
+        Contract subcontrac4_ 
+            on contract2_.id=subcontrac4_.parent 
+    left outer join
+        Party parties5_ 
+            on subcontrac4_.id=parties5_.contract 
+    where
+        plan0_.id=? 
+    order by
+        variations3_.id asc
+14:14:17,746 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,747 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,747 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,748 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,767 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,768 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.immutable.entitywithmutablecollection.Contract
+14:14:17,768 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'immutable'
+             |  \-[IDENT] Node: 'entitywithmutablecollection'
+             \-[IDENT] Node: 'Contract'
+
+14:14:17,778 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:17,778 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.immutable.entitywithmutablecollection.Contract (<no alias>) -> contract0_
+14:14:17,778 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Contract)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[contract0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Contract' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Contract,tableAlias=contract0_,origin=null,columns={,className=org.hibernate.test.immutable.entitywithmutablecollection.Contract}}
+
+14:14:17,778 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:17,779 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:17,779 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract
+14:14:17,779 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,780 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,780 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,781  INFO CustomRunner:139 - Test: testMoveManyToManyElementToExistingEntityCollection
+14:14:17,783 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,783 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,783 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,784 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,791 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    where
+        this_.id = ? 
+    order by
+        variations4_.id asc
+14:14:17,803 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,804 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,805 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    where
+        this_.id = ? 
+    order by
+        variations4_.id asc
+14:14:17,838 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.id as id1_5_,
+        variations2_.id as id1_0_,
+        variations2_.text as text1_0_,
+        variations2_.contract as contract1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    where
+        this_.id = ? 
+    order by
+        variations2_.id asc
+14:14:17,849 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,849 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,859 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    where
+        this_.id = ? 
+    order by
+        variations4_.id asc
+14:14:17,870 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    where
+        this_.id = ? 
+    order by
+        variations4_.id asc
+14:14:17,894 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,895 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,905 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:17,906 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:17,906 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:17,907 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,907 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,908 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:17,908 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:17,908 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:17,920 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:17,921  INFO CustomRunner:139 - Test: testMoveManyToManyElementToNewEntityCollection
+14:14:17,922 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,922 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:17,923 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,923 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:17,933 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:17,958 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:17,959 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:17,959 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:17,971 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    where
+        this_.id = ? 
+    order by
+        variations4_.id asc
+14:14:17,982 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    where
+        this_.id = ? 
+    order by
+        variations4_.id asc
+14:14:18,003 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:18,004 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:18,004 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:18,013 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:18,014 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:18,015 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:18,024 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:18,024 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:18,024 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:18,025 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:18,025 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:18,035  INFO CustomRunner:139 - Test: testRemoveManyToManyElementByDelete
+14:14:18,037 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:18,037 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:18,037 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:18,038 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:18,038 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:18,039 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:18,051 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:18,061 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:18,061 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:18,061 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:18,062  INFO CustomRunner:139 - Test: testRemoveManyToManyElementUsingMerge
+14:14:18,063 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:18,064 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:18,064 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:18,064 DEBUG SQL:104 - 
+    select
+        plan0_.id as id5_1_,
+        plan0_.description as descript2_5_1_,
+        contracts1_.col_plan as col1_5_3_,
+        contract2_.id as contract4_3_,
+        contract2_.id as id0_0_,
+        contract2_.customerName as customer2_0_0_,
+        contract2_."type" as type3_0_0_,
+        contract2_.parent as parent0_0_ 
+    from
+        tbl_plan plan0_ 
+    left outer join
+        plan_contract contracts1_ 
+            on plan0_.id=contracts1_.col_plan 
+    left outer join
+        Contract contract2_ 
+            on contracts1_.contract=contract2_.id 
+    where
+        plan0_.id=?
+14:14:18,087 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:18,087 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:18,098 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:18,111 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.id as id1_5_,
+        variations2_.id as id1_0_,
+        variations2_.text as text1_0_,
+        variations2_.contract as contract1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.id asc
+14:14:18,121 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:18,131 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:18,131 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:18,132 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:18,141 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:18,141 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:18,142 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:18,142 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:18,143  INFO CustomRunner:139 - Test: testRemoveManyToManyElementUsingMergeBothSides
+14:14:18,151 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:18,152 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:18,152 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:18,153 DEBUG SQL:104 - 
+    select
+        plan0_.id as id5_1_,
+        plan0_.description as descript2_5_1_,
+        contracts1_.col_plan as col1_5_3_,
+        contract2_.id as contract4_3_,
+        contract2_.id as id0_0_,
+        contract2_.customerName as customer2_0_0_,
+        contract2_."type" as type3_0_0_,
+        contract2_.parent as parent0_0_ 
+    from
+        tbl_plan plan0_ 
+    left outer join
+        plan_contract contracts1_ 
+            on plan0_.id=contracts1_.col_plan 
+    left outer join
+        Contract contract2_ 
+            on contracts1_.contract=contract2_.id 
+    where
+        plan0_.id=?
+14:14:18,161 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:18,162 DEBUG SQL:104 - 
+    select
+        variations0_.contract as contract0_1_,
+        variations0_.id as id1_1_,
+        variations0_.id as id1_0_,
+        variations0_.text as text1_0_,
+        variations0_.contract as contract1_0_ 
+    from
+        ContractVariation variations0_ 
+    where
+        variations0_.contract=? 
+    order by
+        variations0_.id asc
+14:14:18,162 DEBUG SQL:104 - 
+    select
+        subcontrac0_.parent as parent0_1_,
+        subcontrac0_.id as id0_1_,
+        subcontrac0_.id as id0_0_,
+        subcontrac0_.customerName as customer2_0_0_,
+        subcontrac0_."type" as type3_0_0_,
+        subcontrac0_.parent as parent0_0_ 
+    from
+        Contract subcontrac0_ 
+    where
+        subcontrac0_.parent=?
+14:14:18,162 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:18,163 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:18,178 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:18,179 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:18,190 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.id as id1_5_,
+        variations2_.id as id1_0_,
+        variations2_.text as text1_0_,
+        variations2_.contract as contract1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.id asc
+14:14:18,213 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:18,224 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:18,225 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:18,225 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:18,226 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:18,226 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:18,226 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:18,227 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:18,227  INFO CustomRunner:139 - Test: testRemoveManyToManyElementUsingUpdate
+14:14:18,228 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:18,229 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:18,229 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:18,251 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:18,252 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:18,264 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.id as id1_5_,
+        variations2_.id as id1_0_,
+        variations2_.text as text1_0_,
+        variations2_.contract as contract1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.id asc
+14:14:18,278 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:18,290 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:18,291 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:18,292 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:18,293 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:18,293 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:18,294 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:18,294 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:18,304  INFO CustomRunner:139 - Test: testRemoveManyToManyElementUsingUpdateBothSides
+14:14:18,305 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:18,306 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:18,306 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:18,307 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:18,315 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:18,339 DEBUG SQL:104 - 
+    select
+        this_.id as id0_3_,
+        this_.customerName as customer2_0_3_,
+        this_."type" as type3_0_3_,
+        this_.parent as parent0_3_,
+        variations2_.contract as contract0_5_,
+        variations2_.id as id1_5_,
+        variations2_.id as id1_0_,
+        variations2_.text as text1_0_,
+        variations2_.contract as contract1_0_,
+        subcontrac3_.parent as parent0_6_,
+        subcontrac3_.id as id0_6_,
+        subcontrac3_.id as id0_1_,
+        subcontrac3_.customerName as customer2_0_1_,
+        subcontrac3_."type" as type3_0_1_,
+        subcontrac3_.parent as parent0_1_,
+        parties4_.contract as contract0_7_,
+        parties4_.id as id3_7_,
+        parties4_.id as id3_2_,
+        parties4_.contract as contract3_2_,
+        parties4_.name as name3_2_ 
+    from
+        Contract this_ 
+    left outer join
+        ContractVariation variations2_ 
+            on this_.id=variations2_.contract 
+    left outer join
+        Contract subcontrac3_ 
+            on this_.id=subcontrac3_.parent 
+    left outer join
+        Party parties4_ 
+            on subcontrac3_.id=parties4_.contract 
+    order by
+        variations2_.id asc
+14:14:18,349 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:18,350 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:18,360 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:18,360 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:18,361 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:18,361 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:18,371 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:18,372 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:18,372  INFO CustomRunner:139 - Test: testUpdateProperty
+14:14:18,373 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_plan
+        (description, id) 
+    values
+        (?, ?)
+14:14:18,374 DEBUG SQL:104 - 
+    insert 
+    into
+        Contract
+        (customerName, "type", id) 
+    values
+        (?, ?, ?)
+14:14:18,374 DEBUG SQL:104 - 
+    insert 
+    into
+        plan_contract
+        (col_plan, contract) 
+    values
+        (?, ?)
+14:14:18,384 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:18,394 DEBUG SQL:104 - 
+    select
+        this_.id as id5_4_,
+        this_.description as descript2_5_4_,
+        contracts2_.col_plan as col1_5_6_,
+        contract3_.id as contract4_6_,
+        contract3_.id as id0_0_,
+        contract3_.customerName as customer2_0_0_,
+        contract3_."type" as type3_0_0_,
+        contract3_.parent as parent0_0_,
+        variations4_.contract as contract0_7_,
+        variations4_.id as id1_7_,
+        variations4_.id as id1_1_,
+        variations4_.text as text1_1_,
+        variations4_.contract as contract1_1_,
+        subcontrac5_.parent as parent0_8_,
+        subcontrac5_.id as id0_8_,
+        subcontrac5_.id as id0_2_,
+        subcontrac5_.customerName as customer2_0_2_,
+        subcontrac5_."type" as type3_0_2_,
+        subcontrac5_.parent as parent0_2_,
+        parties6_.contract as contract0_9_,
+        parties6_.id as id3_9_,
+        parties6_.id as id3_3_,
+        parties6_.contract as contract3_3_,
+        parties6_.name as name3_3_ 
+    from
+        tbl_plan this_ 
+    left outer join
+        plan_contract contracts2_ 
+            on this_.id=contracts2_.col_plan 
+    left outer join
+        Contract contract3_ 
+            on contracts2_.contract=contract3_.id 
+    left outer join
+        ContractVariation variations4_ 
+            on contract3_.id=variations4_.contract 
+    left outer join
+        Contract subcontrac5_ 
+            on contract3_.id=subcontrac5_.parent 
+    left outer join
+        Party parties6_ 
+            on subcontrac5_.id=parties6_.contract 
+    order by
+        variations4_.id asc
+14:14:18,415 DEBUG SQL:104 - 
+    select
+        plans0_.contract as contract0_1_,
+        plans0_.col_plan as col1_4_1_,
+        plan1_.id as id5_0_,
+        plan1_.description as descript2_5_0_ 
+    from
+        plan_contract plans0_ 
+    inner join
+        tbl_plan plan1_ 
+            on plans0_.col_plan=plan1_.id 
+    where
+        plans0_.contract=?
+14:14:18,416 DEBUG SQL:104 - 
+    select
+        parties0_.contract as contract0_1_,
+        parties0_.id as id3_1_,
+        parties0_.id as id3_0_,
+        parties0_.contract as contract3_0_,
+        parties0_.name as name3_0_ 
+    from
+        Party parties0_ 
+    where
+        parties0_.contract=?
+14:14:18,416 DEBUG SQL:104 - 
+    select
+        infos0_.contract as contract0_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.contract=?
+14:14:18,416 DEBUG SQL:104 - 
+    select
+        infos0_.col_plan as col3_5_1_,
+        infos0_.id as id2_1_,
+        infos0_.id as id2_0_,
+        infos0_.text as text2_0_ 
+    from
+        Info infos0_ 
+    where
+        infos0_.col_plan=?
+14:14:18,417 DEBUG SQL:104 - 
+    delete 
+    from
+        plan_contract 
+    where
+        col_plan=?
+14:14:18,417 DEBUG SQL:104 - 
+    delete 
+    from
+        Contract 
+    where
+        id=?
+14:14:18,426 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_plan 
+    where
+        id=?
+14:14:18,426 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        Contract this_
+14:14:18,427 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        tbl_plan this_
+14:14:18,427  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:18,428 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:18,428 DEBUG SQL:104 - 
+    alter table Contract 
+        drop constraint FKE20F7532190ADCD1
+14:14:18,428 DEBUG SQL:104 - 
+    alter table ContractVariation 
+        drop constraint FKB86C05013294E539
+14:14:18,429 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CEA0A0D346
+14:14:18,429 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE1F1952D7
+14:14:18,437 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CE3294E539
+14:14:18,437 DEBUG SQL:104 - 
+    alter table Info 
+        drop constraint FK22D8CEF8244EED
+14:14:18,437 DEBUG SQL:104 - 
+    alter table Party 
+        drop constraint FK4952AC63294E539
+14:14:18,437 DEBUG SQL:104 - 
+    alter table plan_contract 
+        drop constraint FKDE1535683294E539
+14:14:18,438 DEBUG SQL:104 - 
+    alter table plan_contract 
+        drop constraint FKDE153568A0A0D346
+14:14:18,438 DEBUG SQL:104 - 
+    drop table Contract if exists
+14:14:18,438 DEBUG SQL:104 - 
+    drop table ContractVariation if exists
+14:14:18,438 DEBUG SQL:104 - 
+    drop table Info if exists
+14:14:18,438 DEBUG SQL:104 - 
+    drop table Party if exists
+14:14:18,439 DEBUG SQL:104 - 
+    drop table plan_contract if exists
+14:14:18,439 DEBUG SQL:104 - 
+    drop table tbl_plan if exists
+14:14:18,439  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:18,439  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

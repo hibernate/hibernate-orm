@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.JoinedSubclassTest" tests="3" time="0.361" timestamp="2013-02-28T20:10:06">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.JoinedSubclassTest" name="testCompositePk" time="0.045" />
+  <testcase classname="org.hibernate.test.annotations.JoinedSubclassTest" name="testDeclaredValues" time="0.076" />
+  <testcase classname="org.hibernate.test.annotations.JoinedSubclassTest" name="testDefaultValues" time="0.044" />
+  <system-out><![CDATA[14:10:06,587  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.JoinedSubclassTest
+14:10:06,614  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:06,615  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:06,615  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:06,615  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:06,615  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:06,618  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:06,619  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:06,620  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:06,620  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:06,620  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:06,678  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,679 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,679 DEBUG SQL:104 - 
+    alter table AmericaCupClass 
+        drop constraint FK5B3D79E890B6E71A
+14:10:06,685 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AmericaCupClass drop constraint FK5B3D79E890B6E71A
+14:10:06,685 ERROR SchemaExport:426 - Table "AMERICACUPCLASS" not found; SQL statement:
+
+    alter table AmericaCupClass 
+        drop constraint FK5B3D79E890B6E71A [42102-145]
+14:10:06,685 DEBUG SQL:104 - 
+    alter table AmericaCupClass 
+        drop constraint FK5B3D79E81E2A589A
+14:10:06,686 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AmericaCupClass drop constraint FK5B3D79E81E2A589A
+14:10:06,686 ERROR SchemaExport:426 - Table "AMERICACUPCLASS" not found; SQL statement:
+
+    alter table AmericaCupClass 
+        drop constraint FK5B3D79E81E2A589A [42102-145]
+14:10:06,686 DEBUG SQL:104 - 
+    alter table Carrot 
+        drop constraint FK77E125A388E53625
+14:10:06,687 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Carrot drop constraint FK77E125A388E53625
+14:10:06,687 ERROR SchemaExport:426 - Table "CARROT" not found; SQL statement:
+
+    alter table Carrot 
+        drop constraint FK77E125A388E53625 [42102-145]
+14:10:06,687 DEBUG SQL:104 - 
+    alter table Ferry 
+        drop constraint FK40A10FA1B10B53B
+14:10:06,687 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Ferry drop constraint FK40A10FA1B10B53B
+14:10:06,687 ERROR SchemaExport:426 - Table "FERRY" not found; SQL statement:
+
+    alter table Ferry 
+        drop constraint FK40A10FA1B10B53B [42102-145]
+14:10:06,688 DEBUG SQL:104 - 
+    alter table Tomato 
+        drop constraint FK95A64C2AC352AF17
+14:10:06,688 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Tomato drop constraint FK95A64C2AC352AF17
+14:10:06,688 ERROR SchemaExport:426 - Table "TOMATO" not found; SQL statement:
+
+    alter table Tomato 
+        drop constraint FK95A64C2AC352AF17 [42102-145]
+14:10:06,688 DEBUG SQL:104 - 
+    drop table AmericaCupClass if exists
+14:10:06,689 DEBUG SQL:104 - 
+    drop table Boat if exists
+14:10:06,689 DEBUG SQL:104 - 
+    drop table Carrot if exists
+14:10:06,690 DEBUG SQL:104 - 
+    drop table Country if exists
+14:10:06,691 DEBUG SQL:104 - 
+    drop table Ferry if exists
+14:10:06,691 DEBUG SQL:104 - 
+    drop table Tomato if exists
+14:10:06,693 DEBUG SQL:104 - 
+    drop table Vegetable if exists
+14:10:06,693 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,694 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:06,694 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:06,694 DEBUG SQL:104 - 
+    create table AmericaCupClass (
+        BOAT_ID integer not null,
+        COUNTRY_ID integer,
+        primary key (BOAT_ID)
+    )
+14:10:06,695 DEBUG SQL:104 - 
+    create table Boat (
+        id integer not null,
+        boat_size integer,
+        weight integer not null,
+        primary key (id)
+    )
+14:10:06,707 DEBUG SQL:104 - 
+    create table Carrot (
+        length integer not null,
+        carrot_farmer varchar(255) not null,
+        harvest varchar(255) not null,
+        primary key (carrot_farmer, harvest)
+    )
+14:10:06,710 DEBUG SQL:104 - 
+    create table Country (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:06,711 DEBUG SQL:104 - 
+    create table Ferry (
+        sea varchar(255),
+        id integer not null,
+        primary key (id)
+    )
+14:10:06,712 DEBUG SQL:104 - 
+    create table Tomato (
+        tom_size integer,
+        farmer varchar(255) not null,
+        harvestDate varchar(255) not null,
+        primary key (farmer, harvestDate)
+    )
+14:10:06,712 DEBUG SQL:104 - 
+    create table Vegetable (
+        farmer varchar(255) not null,
+        harvestDate varchar(255) not null,
+        priceInCent bigint not null,
+        primary key (farmer, harvestDate)
+    )
+14:10:06,713 DEBUG SQL:104 - 
+    alter table AmericaCupClass 
+        add constraint FK5B3D79E890B6E71A 
+        foreign key (COUNTRY_ID) 
+        references Country
+14:10:06,715 DEBUG SQL:104 - 
+    alter table AmericaCupClass 
+        add constraint FK5B3D79E81E2A589A 
+        foreign key (BOAT_ID) 
+        references Boat
+14:10:06,757 DEBUG SQL:104 - 
+    alter table Carrot 
+        add constraint FK77E125A388E53625 
+        foreign key (carrot_farmer, harvest) 
+        references Vegetable 
+        on delete cascade
+14:10:06,759 DEBUG SQL:104 - 
+    alter table Ferry 
+        add constraint FK40A10FA1B10B53B 
+        foreign key (id) 
+        references Boat
+14:10:06,760 DEBUG SQL:104 - 
+    alter table Tomato 
+        add constraint FK95A64C2AC352AF17 
+        foreign key (farmer, harvestDate) 
+        references Vegetable 
+        on delete cascade
+14:10:06,761 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:06,762  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,763  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:06,764  INFO CustomRunner:139 - Test: testCompositePk
+14:10:06,767 DEBUG SQL:104 - 
+    insert 
+    into
+        Vegetable
+        (priceInCent, farmer, harvestDate) 
+    values
+        (?, ?, ?)
+14:10:06,805 DEBUG SQL:104 - 
+    insert 
+    into
+        Carrot
+        (length, carrot_farmer, harvest) 
+    values
+        (?, ?, ?)
+14:10:06,807 DEBUG SQL:104 - 
+    select
+        this_.farmer as farmer6_0_,
+        this_.harvestDate as harvestD2_6_0_,
+        this_.priceInCent as priceInC3_6_0_,
+        this_1_.length as length2_0_,
+        this_2_.tom_size as tom1_5_0_,
+        case 
+            when this_1_.carrot_farmer is not null then 1 
+            when this_2_.farmer is not null then 2 
+            when this_.farmer is not null then 0 
+        end as clazz_0_ 
+    from
+        Vegetable this_ 
+    left outer join
+        Carrot this_1_ 
+            on this_.farmer=this_1_.carrot_farmer 
+            and this_.harvestDate=this_1_.harvest 
+    left outer join
+        Tomato this_2_ 
+            on this_.farmer=this_2_.farmer 
+            and this_.harvestDate=this_2_.harvestDate
+14:10:06,809  INFO CustomRunner:139 - Test: testDeclaredValues
+14:10:06,810 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:06,813 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:06,814 DEBUG SQL:104 - 
+    insert 
+    into
+        Country
+        (name, id) 
+    values
+        (?, ?)
+14:10:06,817 DEBUG SQL:104 - 
+    insert 
+    into
+        Boat
+        (boat_size, weight, id) 
+    values
+        (?, ?, ?)
+14:10:06,818 DEBUG SQL:104 - 
+    insert 
+    into
+        AmericaCupClass
+        (COUNTRY_ID, BOAT_ID) 
+    values
+        (?, ?)
+14:10:06,819 DEBUG SQL:104 - 
+    select
+        americacup0_.BOAT_ID as id1_1_,
+        americacup0_1_.boat_size as boat2_1_1_,
+        americacup0_1_.weight as weight1_1_,
+        americacup0_.COUNTRY_ID as COUNTRY2_0_1_,
+        country1_.id as id3_0_,
+        country1_.name as name3_0_ 
+    from
+        AmericaCupClass americacup0_ 
+    inner join
+        Boat americacup0_1_ 
+            on americacup0_.BOAT_ID=americacup0_1_.id 
+    left outer join
+        Country country1_ 
+            on americacup0_.COUNTRY_ID=country1_.id 
+    where
+        americacup0_.BOAT_ID=?
+14:10:06,866 DEBUG SQL:104 - 
+    delete 
+    from
+        AmericaCupClass 
+    where
+        BOAT_ID=?
+14:10:06,867 DEBUG SQL:104 - 
+    delete 
+    from
+        Boat 
+    where
+        id=?
+14:10:06,868 DEBUG SQL:104 - 
+    delete 
+    from
+        Country 
+    where
+        id=?
+14:10:06,886  INFO CustomRunner:139 - Test: testDefaultValues
+14:10:06,888 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:06,892 DEBUG SQL:104 - 
+    insert 
+    into
+        Boat
+        (boat_size, weight, id) 
+    values
+        (?, ?, ?)
+14:10:06,893 DEBUG SQL:104 - 
+    insert 
+    into
+        Ferry
+        (sea, id) 
+    values
+        (?, ?)
+14:10:06,895 DEBUG SQL:104 - 
+    select
+        ferry0_.id as id1_0_,
+        ferry0_1_.boat_size as boat2_1_0_,
+        ferry0_1_.weight as weight1_0_,
+        ferry0_.sea as sea4_0_ 
+    from
+        Ferry ferry0_ 
+    inner join
+        Boat ferry0_1_ 
+            on ferry0_.id=ferry0_1_.id 
+    where
+        ferry0_.id=?
+14:10:06,897 DEBUG SQL:104 - 
+    delete 
+    from
+        Ferry 
+    where
+        id=?
+14:10:06,898 DEBUG SQL:104 - 
+    delete 
+    from
+        Boat 
+    where
+        id=?
+14:10:06,931  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,932 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,932 DEBUG SQL:104 - 
+    alter table AmericaCupClass 
+        drop constraint FK5B3D79E890B6E71A
+14:10:06,932 DEBUG SQL:104 - 
+    alter table AmericaCupClass 
+        drop constraint FK5B3D79E81E2A589A
+14:10:06,933 DEBUG SQL:104 - 
+    alter table Carrot 
+        drop constraint FK77E125A388E53625
+14:10:06,933 DEBUG SQL:104 - 
+    alter table Ferry 
+        drop constraint FK40A10FA1B10B53B
+14:10:06,933 DEBUG SQL:104 - 
+    alter table Tomato 
+        drop constraint FK95A64C2AC352AF17
+14:10:06,933 DEBUG SQL:104 - 
+    drop table AmericaCupClass if exists
+14:10:06,934 DEBUG SQL:104 - 
+    drop table Boat if exists
+14:10:06,934 DEBUG SQL:104 - 
+    drop table Carrot if exists
+14:10:06,936 DEBUG SQL:104 - 
+    drop table Country if exists
+14:10:06,937 DEBUG SQL:104 - 
+    drop table Ferry if exists
+14:10:06,937 DEBUG SQL:104 - 
+    drop table Tomato if exists
+14:10:06,937 DEBUG SQL:104 - 
+    drop table Vegetable if exists
+14:10:06,938 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,938  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,946  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

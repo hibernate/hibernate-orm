@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.type.descriptor.java.BigIntegerDescriptorTest" tests="3" time="0.007" timestamp="2013-02-28T20:19:33">
+  <properties />
+  <testcase classname="org.hibernate.type.descriptor.java.BigIntegerDescriptorTest" name="testEquality" time="0.001" />
+  <testcase classname="org.hibernate.type.descriptor.java.BigIntegerDescriptorTest" name="testExternalization" time="0.0" />
+  <testcase classname="org.hibernate.type.descriptor.java.BigIntegerDescriptorTest" name="testMutabilityPlan" time="0.001" />
+  <system-out><![CDATA[14:19:33,507  INFO CustomRunner:132 - BeforeClass: org.hibernate.type.descriptor.java.BigIntegerDescriptorTest
+14:19:33,508  INFO CustomRunner:139 - Test: testEquality
+14:19:33,509  INFO CustomRunner:139 - Test: testExternalization
+14:19:33,510  INFO CustomRunner:139 - Test: testMutabilityPlan
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.sql.hand.custom.datadirect.oracle.DataDirectOracleCustomSQLTest" tests="6" time="0.141" timestamp="2013-02-28T20:19:16">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.sql.hand.custom.datadirect.oracle.DataDirectOracleCustomSQLTest" name="testEntityStoredProcedure" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.sql.hand.custom.datadirect.oracle.DataDirectOracleCustomSQLTest" name="testHandSQL" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.sql.hand.custom.datadirect.oracle.DataDirectOracleCustomSQLTest" name="testImageProperty" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.sql.hand.custom.datadirect.oracle.DataDirectOracleCustomSQLTest" name="testParameterHandling" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.sql.hand.custom.datadirect.oracle.DataDirectOracleCustomSQLTest" name="testScalarStoredProcedure" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.sql.hand.custom.datadirect.oracle.DataDirectOracleCustomSQLTest" name="testTextProperty" time="0.0" />
+  <system-out><![CDATA[14:19:16,974  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.sql.hand.custom.datadirect.oracle.DataDirectOracleCustomSQLTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

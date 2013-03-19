@@ -1,0 +1,3920 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" tests="15" time="1.627" timestamp="2013-02-28T20:19:03">
+  <properties />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testDefaultModifiableWithFilterCollectionEntities" time="0.179" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testDefaultModifiableWithQueryForEntity" time="0.1" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testDefaultModifiableWithReadOnlyFilterCollectionEntities" time="0.072" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testDefaultModifiableWithReadOnlyQueryForCollectionEntities" time="0.075" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testDefaultModifiableWithReadOnlyQueryForEntity" time="0.114" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testDefaultReadOnlyWithFilterCollectionEntities" time="0.081" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testDefaultReadOnlyWithModifiableFilterCollectionEntities" time="0.098" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testDefaultReadOnlyWithModifiableQueryForEntity" time="0.107" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testDefaultReadOnlyWithQueryForEntity" time="0.145" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testExistingModifiableAfterSetSessionReadOnly" time="0.143" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testExistingReadOnlyAfterSetSessionModifiable" time="0.075" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testExistingReadOnlyAfterSetSessionModifiableExisting" time="0.076" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testExistingReadOnlyAfterSetSessionModifiableExistingEntityReadOnly" time="0.137" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testExistingReadOnlyAfterSetSessionModifiableExistingProxyReadOnly" time="0.047" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest" name="testExistingReadOnlyAfterSetSessionModifiableProxyExisting" time="0.074" />
+  <system-out><![CDATA[14:19:03,920  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.readonly.ReadOnlySessionLazyNonLazyTest
+14:19:03,922  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/readonly/DataPoint.hbm.xml
+14:19:03,929  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:03,929  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:03,930  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:03,930  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:03,930  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:03,931  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:03,931  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:03,932  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:03,932  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:03,933  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:03,941  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:03,942 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:03,942 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61AEAEA601
+14:19:03,942 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container drop constraint FK5EF36C61AEAEA601
+14:19:03,942 ERROR SchemaExport:426 - Table "CONTAINER" not found; SQL statement:
+
+    alter table Container 
+        drop constraint FK5EF36C61AEAEA601 [42102-145]
+14:19:03,943 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61FA906BFF
+14:19:03,943 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container drop constraint FK5EF36C61FA906BFF
+14:19:03,943 ERROR SchemaExport:426 - Table "CONTAINER" not found; SQL statement:
+
+    alter table Container 
+        drop constraint FK5EF36C61FA906BFF [42102-145]
+14:19:03,943 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61A9E14337
+14:19:03,943 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container drop constraint FK5EF36C61A9E14337
+14:19:03,943 ERROR SchemaExport:426 - Table "CONTAINER" not found; SQL statement:
+
+    alter table Container 
+        drop constraint FK5EF36C61A9E14337 [42102-145]
+14:19:03,943 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61A7253163
+14:19:03,944 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container drop constraint FK5EF36C61A7253163
+14:19:03,944 ERROR SchemaExport:426 - Table "CONTAINER" not found; SQL statement:
+
+    alter table Container 
+        drop constraint FK5EF36C61A7253163 [42102-145]
+14:19:03,944 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C611DA4C2A5
+14:19:03,944 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container drop constraint FK5EF36C611DA4C2A5
+14:19:03,944 ERROR SchemaExport:426 - Table "CONTAINER" not found; SQL statement:
+
+    alter table Container 
+        drop constraint FK5EF36C611DA4C2A5 [42102-145]
+14:19:03,944 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61CE2A006D
+14:19:03,945 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Container drop constraint FK5EF36C61CE2A006D
+14:19:03,945 ERROR SchemaExport:426 - Table "CONTAINER" not found; SQL statement:
+
+    alter table Container 
+        drop constraint FK5EF36C61CE2A006D [42102-145]
+14:19:03,945 DEBUG SQL:104 - 
+    alter table DataPoint 
+        drop constraint FK60F3CFE6258C9255
+14:19:03,945 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DataPoint drop constraint FK60F3CFE6258C9255
+14:19:03,945 ERROR SchemaExport:426 - Table "DATAPOINT" not found; SQL statement:
+
+    alter table DataPoint 
+        drop constraint FK60F3CFE6258C9255 [42102-145]
+14:19:03,945 DEBUG SQL:104 - 
+    alter table DataPoint 
+        drop constraint FK60F3CFE6D520B9AC
+14:19:03,946 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DataPoint drop constraint FK60F3CFE6D520B9AC
+14:19:03,946 ERROR SchemaExport:426 - Table "DATAPOINT" not found; SQL statement:
+
+    alter table DataPoint 
+        drop constraint FK60F3CFE6D520B9AC [42102-145]
+14:19:03,946 DEBUG SQL:104 - 
+    alter table DataPoint 
+        drop constraint FK60F3CFE6B5A9F7E
+14:19:03,946 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DataPoint drop constraint FK60F3CFE6B5A9F7E
+14:19:03,946 ERROR SchemaExport:426 - Table "DATAPOINT" not found; SQL statement:
+
+    alter table DataPoint 
+        drop constraint FK60F3CFE6B5A9F7E [42102-145]
+14:19:03,946 DEBUG SQL:104 - 
+    drop table Container if exists
+14:19:03,946 DEBUG SQL:104 - 
+    drop table DataPoint if exists
+14:19:03,947 DEBUG SQL:104 - 
+    drop table Info if exists
+14:19:03,947 DEBUG SQL:104 - 
+    drop table Owner if exists
+14:19:03,947 DEBUG SQL:104 - 
+    create table Container (
+        id bigint not null,
+        name varchar(255),
+        no_proxy_owner_name varchar(255),
+        proxy_owner_name varchar(255),
+        non_lazy_owner_name varchar(255),
+        no_proxy_info_id bigint,
+        proxy_info_id bigint,
+        non_lazy_info_id bigint,
+        primary key (id)
+    )
+14:19:03,947 DEBUG SQL:104 - 
+    create table DataPoint (
+        id bigint not null,
+        xval decimal(25,19) not null,
+        yval decimal(25,19) not null,
+        description varchar(255),
+        c_lazy_id bigint,
+        c_non_lazy_select_id bigint,
+        c_non_lazy_join_id bigint,
+        primary key (id)
+    )
+14:19:03,948 DEBUG SQL:104 - 
+    create table Info (
+        id bigint not null,
+        details varchar(255),
+        primary key (id)
+    )
+14:19:03,948 DEBUG SQL:104 - 
+    create table Owner (
+        id bigint not null,
+        name varchar(255) not null,
+        primary key (id)
+    )
+14:19:03,948 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C61AEAEA601 
+        foreign key (no_proxy_info_id) 
+        references Info
+14:19:03,949 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C61FA906BFF 
+        foreign key (proxy_info_id) 
+        references Info
+14:19:03,957 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C61A9E14337 
+        foreign key (non_lazy_info_id) 
+        references Info
+14:19:03,957 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C61A7253163 
+        foreign key (no_proxy_owner_name) 
+        references Owner (name)
+14:19:03,958 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C611DA4C2A5 
+        foreign key (proxy_owner_name) 
+        references Owner (name)
+14:19:03,958 DEBUG SQL:104 - 
+    alter table Container 
+        add constraint FK5EF36C61CE2A006D 
+        foreign key (non_lazy_owner_name) 
+        references Owner (name)
+14:19:03,958 DEBUG SQL:104 - 
+    alter table DataPoint 
+        add constraint xy unique (xval, yval)
+14:19:03,959 DEBUG SQL:104 - 
+    alter table DataPoint 
+        add constraint FK60F3CFE6258C9255 
+        foreign key (c_lazy_id) 
+        references Container
+14:19:03,959 DEBUG SQL:104 - 
+    alter table DataPoint 
+        add constraint FK60F3CFE6D520B9AC 
+        foreign key (c_non_lazy_select_id) 
+        references Container
+14:19:03,966 DEBUG SQL:104 - 
+    alter table DataPoint 
+        add constraint FK60F3CFE6B5A9F7E 
+        foreign key (c_non_lazy_join_id) 
+        references Container
+14:19:03,967 DEBUG SQL:104 - 
+    alter table Owner 
+        add constraint uc_Owner_1 unique (name)
+14:19:03,967  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:03,968  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:03,968  INFO CustomRunner:139 - Test: testDefaultModifiableWithFilterCollectionEntities
+14:19:03,969 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Container
+14:19:03,970 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Owner
+14:19:03,970 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Info
+14:19:03,971 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        DataPoint
+14:19:03,971 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:03,972 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,003 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,004 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,004 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,005 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,015 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:04,016 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,016 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,016 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,017 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:04,026 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:04,026 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:04,028 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_1_,
+        container0_.name as name0_1_,
+        container0_.no_proxy_owner_name as no3_0_1_,
+        container0_.proxy_owner_name as proxy4_0_1_,
+        container0_.non_lazy_owner_name as non5_0_1_,
+        container0_.no_proxy_info_id as no6_0_1_,
+        container0_.proxy_info_id as proxy7_0_1_,
+        container0_.non_lazy_info_id as non8_0_1_,
+        nonlazyjoi1_.c_non_lazy_join_id as c7_0_3_,
+        nonlazyjoi1_.id as id1_3_,
+        nonlazyjoi1_.id as id1_0_,
+        nonlazyjoi1_.xval as xval1_0_,
+        nonlazyjoi1_.yval as yval1_0_,
+        nonlazyjoi1_.description as descript4_1_0_ 
+    from
+        Container container0_ 
+    left outer join
+        DataPoint nonlazyjoi1_ 
+            on container0_.id=nonlazyjoi1_.c_non_lazy_join_id 
+    where
+        container0_.id=?
+14:19:04,037 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,037 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,037 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,047 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,048 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:04,048 DEBUG QueryTranslatorImpl:265 - parse() - HQL: 
+14:19:04,049 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: '{filter-implied FROM}'
+
+14:19:04,057 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,057 DEBUG HqlSqlWalker:254 - prepareFromClauseInputTree() : Filter - Added 'this' as a from element...
+14:19:04,058 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: '{filter-implied FROM}'
+          +-[FILTER_ENTITY] Node: 'org.hibernate.test.readonly.DataPoint'
+          \-[ALIAS] Node: 'this'
+
+14:19:04,058 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.DataPoint (this) -> datapoint0_
+14:19:04,058 DEBUG HqlSqlWalker:351 - createFromFilterElement() : processed filter FROM element.
+14:19:04,058 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} DataPoint datapoint0_ ) )
+14:19:04,059 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:04,059 DEBUG JoinProcessor:175 - Using FROM fragment [DataPoint datapoint0_]
+14:19:04,059 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [datapoint0_.c_lazy_id = ?]
+14:19:04,059 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [datapoint0_.c_lazy_id = ?]
+14:19:04,059 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:19:04,059 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (DataPoint)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'datapoint0_.id as id1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=this,role=null,tableName=DataPoint,tableAlias=datapoint0_,origin=null,columns={,className=org.hibernate.test.readonly.DataPoint}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'datapoint0_.xval as xval1_, datapoint0_.yval as yval1_, datapoint0_.description as descript4_1_'
+    +-[FROM] FromClause: '{filter-implied FROM}' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[this], fromElementByTableAlias=[datapoint0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'DataPoint datapoint0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=this,role=null,tableName=DataPoint,tableAlias=datapoint0_,origin=null,columns={,className=org.hibernate.test.readonly.DataPoint}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'datapoint0_.c_lazy_id = ?'
+
+14:19:04,068 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,069 DEBUG QueryTranslatorImpl:235 - HQL: 
+14:19:04,069 DEBUG QueryTranslatorImpl:236 - SQL: select datapoint0_.id as id1_, datapoint0_.xval as xval1_, datapoint0_.yval as yval1_, datapoint0_.description as descript4_1_ from DataPoint datapoint0_ where datapoint0_.c_lazy_id = ?
+14:19:04,069 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,070 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_lazy_id = ? limit ?
+14:19:04,071 DEBUG QueryTranslatorImpl:265 - parse() - HQL: 
+14:19:04,071 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: '{filter-implied FROM}'
+
+14:19:04,071 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,071 DEBUG HqlSqlWalker:254 - prepareFromClauseInputTree() : Filter - Added 'this' as a from element...
+14:19:04,071 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: '{filter-implied FROM}'
+          +-[FILTER_ENTITY] Node: 'org.hibernate.test.readonly.DataPoint'
+          \-[ALIAS] Node: 'this'
+
+14:19:04,071 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.DataPoint (this) -> datapoint0_
+14:19:04,071 DEBUG HqlSqlWalker:351 - createFromFilterElement() : processed filter FROM element.
+14:19:04,072 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} DataPoint datapoint0_ ) )
+14:19:04,072 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:04,072 DEBUG JoinProcessor:175 - Using FROM fragment [DataPoint datapoint0_]
+14:19:04,072 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [datapoint0_.c_non_lazy_join_id = ?]
+14:19:04,072 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [datapoint0_.c_non_lazy_join_id = ?]
+14:19:04,072 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:19:04,072 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (DataPoint)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'datapoint0_.id as id1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=this,role=null,tableName=DataPoint,tableAlias=datapoint0_,origin=null,columns={,className=org.hibernate.test.readonly.DataPoint}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'datapoint0_.xval as xval1_, datapoint0_.yval as yval1_, datapoint0_.description as descript4_1_'
+    +-[FROM] FromClause: '{filter-implied FROM}' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[this], fromElementByTableAlias=[datapoint0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'DataPoint datapoint0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=this,role=null,tableName=DataPoint,tableAlias=datapoint0_,origin=null,columns={,className=org.hibernate.test.readonly.DataPoint}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'datapoint0_.c_non_lazy_join_id = ?'
+
+14:19:04,073 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,073 DEBUG QueryTranslatorImpl:235 - HQL: 
+14:19:04,073 DEBUG QueryTranslatorImpl:236 - SQL: select datapoint0_.id as id1_, datapoint0_.xval as xval1_, datapoint0_.yval as yval1_, datapoint0_.description as descript4_1_ from DataPoint datapoint0_ where datapoint0_.c_non_lazy_join_id = ?
+14:19:04,073 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,074 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_non_lazy_join_id = ? limit ?
+14:19:04,082 DEBUG QueryTranslatorImpl:265 - parse() - HQL: 
+14:19:04,082 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: '{filter-implied FROM}'
+
+14:19:04,082 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,082 DEBUG HqlSqlWalker:254 - prepareFromClauseInputTree() : Filter - Added 'this' as a from element...
+14:19:04,082 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: '{filter-implied FROM}'
+          +-[FILTER_ENTITY] Node: 'org.hibernate.test.readonly.DataPoint'
+          \-[ALIAS] Node: 'this'
+
+14:19:04,083 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.DataPoint (this) -> datapoint0_
+14:19:04,083 DEBUG HqlSqlWalker:351 - createFromFilterElement() : processed filter FROM element.
+14:19:04,083 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} DataPoint datapoint0_ ) )
+14:19:04,083 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:04,083 DEBUG JoinProcessor:175 - Using FROM fragment [DataPoint datapoint0_]
+14:19:04,083 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [datapoint0_.c_non_lazy_select_id = ?]
+14:19:04,083 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [datapoint0_.c_non_lazy_select_id = ?]
+14:19:04,083 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:19:04,084 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (DataPoint)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'datapoint0_.id as id1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=this,role=null,tableName=DataPoint,tableAlias=datapoint0_,origin=null,columns={,className=org.hibernate.test.readonly.DataPoint}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'datapoint0_.xval as xval1_, datapoint0_.yval as yval1_, datapoint0_.description as descript4_1_'
+    +-[FROM] FromClause: '{filter-implied FROM}' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[this], fromElementByTableAlias=[datapoint0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'DataPoint datapoint0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=this,role=null,tableName=DataPoint,tableAlias=datapoint0_,origin=null,columns={,className=org.hibernate.test.readonly.DataPoint}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'datapoint0_.c_non_lazy_select_id = ?'
+
+14:19:04,095 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,096 DEBUG QueryTranslatorImpl:235 - HQL: 
+14:19:04,096 DEBUG QueryTranslatorImpl:236 - SQL: select datapoint0_.id as id1_, datapoint0_.xval as xval1_, datapoint0_.yval as yval1_, datapoint0_.description as descript4_1_ from DataPoint datapoint0_ where datapoint0_.c_non_lazy_select_id = ?
+14:19:04,096 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,099 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_non_lazy_select_id = ? limit ?
+14:19:04,100 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.readonly.DataPoint
+14:19:04,101 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'readonly'
+             \-[IDENT] Node: 'DataPoint'
+
+14:19:04,101 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,101 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.DataPoint (<no alias>) -> datapoint0_
+14:19:04,101 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (DataPoint)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[datapoint0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'DataPoint' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=DataPoint,tableAlias=datapoint0_,origin=null,columns={,className=org.hibernate.test.readonly.DataPoint}}
+
+14:19:04,102 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,123 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,123 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:04,124 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.readonly.Container
+14:19:04,125 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'readonly'
+             \-[IDENT] Node: 'Container'
+
+14:19:04,125 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,125 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.Container (<no alias>) -> container0_
+14:19:04,125 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Container)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[container0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Container' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.readonly.Container}}
+
+14:19:04,125 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,125 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,126 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:04,140 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.readonly.Info
+14:19:04,143 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'readonly'
+             \-[IDENT] Node: 'Info'
+
+14:19:04,143 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,143 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.Info (<no alias>) -> info0_
+14:19:04,144 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Info)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[info0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Info' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Info,tableAlias=info0_,origin=null,columns={,className=org.hibernate.test.readonly.Info}}
+
+14:19:04,144 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,144 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,144 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:04,145 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.readonly.Owner
+14:19:04,146 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'readonly'
+             \-[IDENT] Node: 'Owner'
+
+14:19:04,146 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,146 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.Owner (<no alias>) -> owner0_
+14:19:04,146 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Owner)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[owner0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Owner' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Owner,tableAlias=owner0_,origin=null,columns={,className=org.hibernate.test.readonly.Owner}}
+
+14:19:04,147 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,147 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,147 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:04,147  INFO CustomRunner:139 - Test: testDefaultModifiableWithQueryForEntity
+14:19:04,149 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,150 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,166 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,167 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,167 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,167 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,167 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:04,177 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,178 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,178 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,178 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:04,188 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:04,189 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:04,189 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.readonly.Container where id=2
+14:19:04,190 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'readonly'
+    |           \-[IDENT] Node: 'Container'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '2'
+
+14:19:04,190 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,190 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.Container (<no alias>) -> container0_
+14:19:04,191 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:04,191 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:19:04,191 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.id -> container0_.id
+14:19:04,191 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Container container0_ ) ( where ( = ( container0_.id {synthetic-alias} id ) 2 ) ) )
+14:19:04,191 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:04,191 DEBUG JoinProcessor:175 - Using FROM fragment [Container container0_]
+14:19:04,192 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Container)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'container0_.id as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.readonly.Container}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'container0_.name as name0_, container0_.no_proxy_owner_name as no3_0_, container0_.proxy_owner_name as proxy4_0_, container0_.non_lazy_owner_name as non5_0_, container0_.no_proxy_info_id as no6_0_, container0_.proxy_info_id as proxy7_0_, container0_.non_lazy_info_id as non8_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[container0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Container container0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.readonly.Container}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'container0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path={synthetic-alias}.id,tableAlias=container0_,className=org.hibernate.test.readonly.Container,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '2'
+
+14:19:04,192 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,202 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.readonly.Container where id=2
+14:19:04,202 DEBUG QueryTranslatorImpl:236 - SQL: select container0_.id as id0_, container0_.name as name0_, container0_.no_proxy_owner_name as no3_0_, container0_.proxy_owner_name as proxy4_0_, container0_.non_lazy_owner_name as non5_0_, container0_.no_proxy_info_id as no6_0_, container0_.proxy_info_id as proxy7_0_, container0_.non_lazy_info_id as non8_0_ from Container container0_ where container0_.id=2
+14:19:04,202 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,203 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_,
+        container0_.name as name0_,
+        container0_.no_proxy_owner_name as no3_0_,
+        container0_.proxy_owner_name as proxy4_0_,
+        container0_.non_lazy_owner_name as non5_0_,
+        container0_.no_proxy_info_id as no6_0_,
+        container0_.proxy_info_id as proxy7_0_,
+        container0_.non_lazy_info_id as non8_0_ 
+    from
+        Container container0_ 
+    where
+        container0_.id=2
+14:19:04,203 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,203 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,213 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,214 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,214 DEBUG SQL:104 - 
+    select
+        nonlazyjoi0_.c_non_lazy_join_id as c7_0_1_,
+        nonlazyjoi0_.id as id1_1_,
+        nonlazyjoi0_.id as id1_0_,
+        nonlazyjoi0_.xval as xval1_0_,
+        nonlazyjoi0_.yval as yval1_0_,
+        nonlazyjoi0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazyjoi0_ 
+    where
+        nonlazyjoi0_.c_non_lazy_join_id=?
+14:19:04,215 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:04,215 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,237 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,238 DEBUG SQL:104 - 
+    select
+        lazydatapo0_.c_lazy_id as c5_0_1_,
+        lazydatapo0_.id as id1_1_,
+        lazydatapo0_.id as id1_0_,
+        lazydatapo0_.xval as xval1_0_,
+        lazydatapo0_.yval as yval1_0_,
+        lazydatapo0_.description as descript4_1_0_ 
+    from
+        DataPoint lazydatapo0_ 
+    where
+        lazydatapo0_.c_lazy_id=?
+14:19:04,240 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:04,247 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:04,247 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:04,247 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:04,248  INFO CustomRunner:139 - Test: testDefaultModifiableWithReadOnlyFilterCollectionEntities
+14:19:04,249 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,250 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,256 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,256 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,257 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,257 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,257 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:04,265 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,266 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,266 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,266 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:04,274 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:04,274 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:04,276 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_1_,
+        container0_.name as name0_1_,
+        container0_.no_proxy_owner_name as no3_0_1_,
+        container0_.proxy_owner_name as proxy4_0_1_,
+        container0_.non_lazy_owner_name as non5_0_1_,
+        container0_.no_proxy_info_id as no6_0_1_,
+        container0_.proxy_info_id as proxy7_0_1_,
+        container0_.non_lazy_info_id as non8_0_1_,
+        nonlazyjoi1_.c_non_lazy_join_id as c7_0_3_,
+        nonlazyjoi1_.id as id1_3_,
+        nonlazyjoi1_.id as id1_0_,
+        nonlazyjoi1_.xval as xval1_0_,
+        nonlazyjoi1_.yval as yval1_0_,
+        nonlazyjoi1_.description as descript4_1_0_ 
+    from
+        Container container0_ 
+    left outer join
+        DataPoint nonlazyjoi1_ 
+            on container0_.id=nonlazyjoi1_.c_non_lazy_join_id 
+    where
+        container0_.id=?
+14:19:04,284 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,285 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,286 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,294 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,296 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:04,297 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_lazy_id = ? limit ?
+14:19:04,306 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_non_lazy_join_id = ? limit ?
+14:19:04,307 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_non_lazy_select_id = ? limit ?
+14:19:04,308 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:04,308 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:04,319 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:04,319 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:04,320  INFO CustomRunner:139 - Test: testDefaultModifiableWithReadOnlyQueryForCollectionEntities
+14:19:04,322 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,322 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,322 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,323 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,323 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,323 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,323 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:04,323 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,334 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,334 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,334 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:04,335 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:04,344 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:04,345 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select c.lazyDataPoints from org.hibernate.test.readonly.Container c join c.lazyDataPoints where c.id=4
+14:19:04,346 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  +-[RANGE] Node: 'RANGE'
+    |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |  |  |  |  \-[IDENT] Node: 'readonly'
+    |  |  |  |  \-[IDENT] Node: 'Container'
+    |  |  |  \-[ALIAS] Node: 'c'
+    |  |  \-[JOIN] Node: 'join'
+    |  |     \-[DOT] Node: '.'
+    |  |        +-[IDENT] Node: 'c'
+    |  |        \-[IDENT] Node: 'lazyDataPoints'
+    |  \-[SELECT] Node: 'select'
+    |     \-[DOT] Node: '.'
+    |        +-[IDENT] Node: 'c'
+    |        \-[IDENT] Node: 'lazyDataPoints'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'c'
+          |  \-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '4'
+
+14:19:04,346 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,366 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.Container (c) -> container0_
+14:19:04,366 DEBUG FromReferenceNode:74 - Resolved : c -> container0_.id
+14:19:04,366 DEBUG DotNode:599 - getDataType() : lazyDataPoints -> org.hibernate.type.SetType(org.hibernate.test.readonly.Container.lazyDataPoints)
+14:19:04,366 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = c.lazyDataPoints role = org.hibernate.test.readonly.Container.lazyDataPoints associatedEntityName = org.hibernate.test.readonly.DataPoint
+14:19:04,367 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.DataPoint (<no alias>) -> lazydatapo1_
+14:19:04,367 DEBUG FromClause:282 - addJoinByPathMap() : c.lazyDataPoints -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=DataPoint,tableAlias=lazydatapo1_,origin=Container container0_,columns={container0_.id ,className=org.hibernate.test.readonly.DataPoint}}
+14:19:04,367 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for c.lazyDataPoints : DataPoint lazydatapo1_
+14:19:04,367 DEBUG FromReferenceNode:74 - Resolved : c.lazyDataPoints -> .
+14:19:04,367 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'DataPoint lazydatapo1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.readonly.Container.lazyDataPoints,tableName=DataPoint,tableAlias=lazydatapo1_,origin=Container container0_,columns={container0_.id ,className=org.hibernate.test.readonly.DataPoint}}
+
+14:19:04,367 DEBUG FromReferenceNode:74 - Resolved : c -> container0_.id
+14:19:04,367 DEBUG DotNode:599 - getDataType() : lazyDataPoints -> org.hibernate.type.SetType(org.hibernate.test.readonly.Container.lazyDataPoints)
+14:19:04,367 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = c.lazyDataPoints role = org.hibernate.test.readonly.Container.lazyDataPoints associatedEntityName = org.hibernate.test.readonly.DataPoint
+14:19:04,368 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.DataPoint (<no alias>) -> lazydatapo2_
+14:19:04,368 DEBUG FromClause:282 - addJoinByPathMap() : c.lazyDataPoints -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=DataPoint,tableAlias=lazydatapo2_,origin=Container container0_,columns={container0_.id ,className=org.hibernate.test.readonly.DataPoint}}
+14:19:04,368 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for c.lazyDataPoints : DataPoint lazydatapo2_
+14:19:04,368 DEBUG FromReferenceNode:74 - Resolved : c.lazyDataPoints -> .
+14:19:04,368 DEBUG FromReferenceNode:74 - Resolved : c -> container0_.id
+14:19:04,368 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:19:04,368 DEBUG FromReferenceNode:74 - Resolved : c.id -> container0_.id
+14:19:04,368 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( . container0_.id lazyDataPoints ) ) ( FromClause{level=1} ( Container container0_ DataPoint lazydatapo1_ DataPoint lazydatapo2_ ) ) ( where ( = ( container0_.id container0_.id id ) 4 ) ) )
+14:19:04,369 DEBUG JoinProcessor:175 - Using FROM fragment [Container container0_]
+14:19:04,369 DEBUG JoinProcessor:175 - Using FROM fragment [inner join DataPoint lazydatapo1_ on container0_.id=lazydatapo1_.c_lazy_id]
+14:19:04,369 DEBUG JoinProcessor:175 - Using FROM fragment [inner join DataPoint lazydatapo2_ on container0_.id=lazydatapo2_.c_lazy_id]
+14:19:04,369 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (DataPoint,Container)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'lazydatapo2_.id as id1_' {propertyName=lazyDataPoints,dereferenceType=NULL_TREE_LOOKAHEAD,propertyPath=lazyDataPoints,path=c.lazyDataPoints,tableAlias=lazydatapo2_,className=org.hibernate.test.readonly.DataPoint,classAlias=null}
+    |  |  +-[ALIAS_REF] IdentNode: 'container0_.id' {alias=c, className=org.hibernate.test.readonly.Container, tableAlias=container0_}
+    |  |  \-[IDENT] IdentNode: 'lazyDataPoints' {originalText=lazyDataPoints}
+    |  \-[SQL_TOKEN] SqlFragment: 'lazydatapo2_.xval as xval1_, lazydatapo2_.yval as yval1_, lazydatapo2_.description as descript4_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[c], fromElementByTableAlias=[lazydatapo2_, lazydatapo1_, container0_], fromElementsByPath=[c.lazyDataPoints], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Container container0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.readonly.Container}}
+    |     +-[JOIN_FRAGMENT] FromElement: 'inner join DataPoint lazydatapo1_ on container0_.id=lazydatapo1_.c_lazy_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.readonly.Container.lazyDataPoints,tableName=DataPoint,tableAlias=lazydatapo1_,origin=Container container0_,columns={container0_.id ,className=org.hibernate.test.readonly.DataPoint}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join DataPoint lazydatapo2_ on container0_.id=lazydatapo2_.c_lazy_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.readonly.Container.lazyDataPoints,tableName=DataPoint,tableAlias=lazydatapo2_,origin=Container container0_,columns={container0_.id ,className=org.hibernate.test.readonly.DataPoint}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'container0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=c.id,tableAlias=container0_,className=org.hibernate.test.readonly.Container,classAlias=c}
+          |  +-[ALIAS_REF] IdentNode: 'container0_.id' {alias=c, className=org.hibernate.test.readonly.Container, tableAlias=container0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '4'
+
+14:19:04,377 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,378 DEBUG QueryTranslatorImpl:235 - HQL: select c.lazyDataPoints from org.hibernate.test.readonly.Container c join c.lazyDataPoints where c.id=4
+14:19:04,378 DEBUG QueryTranslatorImpl:236 - SQL: select lazydatapo2_.id as id1_, lazydatapo2_.xval as xval1_, lazydatapo2_.yval as yval1_, lazydatapo2_.description as descript4_1_ from Container container0_ inner join DataPoint lazydatapo1_ on container0_.id=lazydatapo1_.c_lazy_id inner join DataPoint lazydatapo2_ on container0_.id=lazydatapo2_.c_lazy_id where container0_.id=4
+14:19:04,378 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,378 DEBUG SQL:104 - 
+    select
+        lazydatapo2_.id as id1_,
+        lazydatapo2_.xval as xval1_,
+        lazydatapo2_.yval as yval1_,
+        lazydatapo2_.description as descript4_1_ 
+    from
+        Container container0_ 
+    inner join
+        DataPoint lazydatapo1_ 
+            on container0_.id=lazydatapo1_.c_lazy_id 
+    inner join
+        DataPoint lazydatapo2_ 
+            on container0_.id=lazydatapo2_.c_lazy_id 
+    where
+        container0_.id=4
+14:19:04,394 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:04,395 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:04,395 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:04,395 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:04,396  INFO CustomRunner:139 - Test: testDefaultModifiableWithReadOnlyQueryForEntity
+14:19:04,397 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,407 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,407 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,408 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,408 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,420 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,421 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:04,421 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,421 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,421 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,432 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:04,433 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:04,433 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:04,433 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.readonly.Container where id=5
+14:19:04,434 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'readonly'
+    |           \-[IDENT] Node: 'Container'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '5'
+
+14:19:04,446 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,446 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.Container (<no alias>) -> container0_
+14:19:04,446 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:04,446 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:19:04,447 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.id -> container0_.id
+14:19:04,447 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Container container0_ ) ( where ( = ( container0_.id {synthetic-alias} id ) 5 ) ) )
+14:19:04,447 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:04,447 DEBUG JoinProcessor:175 - Using FROM fragment [Container container0_]
+14:19:04,447 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Container)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'container0_.id as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.readonly.Container}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'container0_.name as name0_, container0_.no_proxy_owner_name as no3_0_, container0_.proxy_owner_name as proxy4_0_, container0_.non_lazy_owner_name as non5_0_, container0_.no_proxy_info_id as no6_0_, container0_.proxy_info_id as proxy7_0_, container0_.non_lazy_info_id as non8_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[container0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Container container0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.readonly.Container}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'container0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path={synthetic-alias}.id,tableAlias=container0_,className=org.hibernate.test.readonly.Container,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '5'
+
+14:19:04,447 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,448 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.readonly.Container where id=5
+14:19:04,448 DEBUG QueryTranslatorImpl:236 - SQL: select container0_.id as id0_, container0_.name as name0_, container0_.no_proxy_owner_name as no3_0_, container0_.proxy_owner_name as proxy4_0_, container0_.non_lazy_owner_name as non5_0_, container0_.no_proxy_info_id as no6_0_, container0_.proxy_info_id as proxy7_0_, container0_.non_lazy_info_id as non8_0_ from Container container0_ where container0_.id=5
+14:19:04,448 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,448 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_,
+        container0_.name as name0_,
+        container0_.no_proxy_owner_name as no3_0_,
+        container0_.proxy_owner_name as proxy4_0_,
+        container0_.non_lazy_owner_name as non5_0_,
+        container0_.no_proxy_info_id as no6_0_,
+        container0_.proxy_info_id as proxy7_0_,
+        container0_.non_lazy_info_id as non8_0_ 
+    from
+        Container container0_ 
+    where
+        container0_.id=5
+14:19:04,448 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,471 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,472 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,474 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,475 DEBUG SQL:104 - 
+    select
+        nonlazyjoi0_.c_non_lazy_join_id as c7_0_1_,
+        nonlazyjoi0_.id as id1_1_,
+        nonlazyjoi0_.id as id1_0_,
+        nonlazyjoi0_.xval as xval1_0_,
+        nonlazyjoi0_.yval as yval1_0_,
+        nonlazyjoi0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazyjoi0_ 
+    where
+        nonlazyjoi0_.c_non_lazy_join_id=?
+14:19:04,481 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:04,482 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,482 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,482 DEBUG SQL:104 - 
+    select
+        lazydatapo0_.c_lazy_id as c5_0_1_,
+        lazydatapo0_.id as id1_1_,
+        lazydatapo0_.id as id1_0_,
+        lazydatapo0_.xval as xval1_0_,
+        lazydatapo0_.yval as yval1_0_,
+        lazydatapo0_.description as descript4_1_0_ 
+    from
+        DataPoint lazydatapo0_ 
+    where
+        lazydatapo0_.c_lazy_id=?
+14:19:04,509 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:04,509 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:04,510 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:04,510 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:04,510  INFO CustomRunner:139 - Test: testDefaultReadOnlyWithFilterCollectionEntities
+14:19:04,512 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,520 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,521 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,522 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,522 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,530 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,530 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:04,531 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,532 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,532 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,542 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:04,543 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:04,543 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:04,544 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_1_,
+        container0_.name as name0_1_,
+        container0_.no_proxy_owner_name as no3_0_1_,
+        container0_.proxy_owner_name as proxy4_0_1_,
+        container0_.non_lazy_owner_name as non5_0_1_,
+        container0_.no_proxy_info_id as no6_0_1_,
+        container0_.proxy_info_id as proxy7_0_1_,
+        container0_.non_lazy_info_id as non8_0_1_,
+        nonlazyjoi1_.c_non_lazy_join_id as c7_0_3_,
+        nonlazyjoi1_.id as id1_3_,
+        nonlazyjoi1_.id as id1_0_,
+        nonlazyjoi1_.xval as xval1_0_,
+        nonlazyjoi1_.yval as yval1_0_,
+        nonlazyjoi1_.description as descript4_1_0_ 
+    from
+        Container container0_ 
+    left outer join
+        DataPoint nonlazyjoi1_ 
+            on container0_.id=nonlazyjoi1_.c_non_lazy_join_id 
+    where
+        container0_.id=?
+14:19:04,555 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,556 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,565 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,566 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,566 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:04,578 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_lazy_id = ? limit ?
+14:19:04,579 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_non_lazy_join_id = ? limit ?
+14:19:04,589 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_non_lazy_select_id = ? limit ?
+14:19:04,590 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:04,591 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:04,591 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:04,591 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:04,592  INFO CustomRunner:139 - Test: testDefaultReadOnlyWithModifiableFilterCollectionEntities
+14:19:04,593 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,594 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,594 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,594 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,594 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,594 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,595 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:04,595 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,595 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,611 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,611 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:04,612 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:04,612 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:04,637 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_1_,
+        container0_.name as name0_1_,
+        container0_.no_proxy_owner_name as no3_0_1_,
+        container0_.proxy_owner_name as proxy4_0_1_,
+        container0_.non_lazy_owner_name as non5_0_1_,
+        container0_.no_proxy_info_id as no6_0_1_,
+        container0_.proxy_info_id as proxy7_0_1_,
+        container0_.non_lazy_info_id as non8_0_1_,
+        nonlazyjoi1_.c_non_lazy_join_id as c7_0_3_,
+        nonlazyjoi1_.id as id1_3_,
+        nonlazyjoi1_.id as id1_0_,
+        nonlazyjoi1_.xval as xval1_0_,
+        nonlazyjoi1_.yval as yval1_0_,
+        nonlazyjoi1_.description as descript4_1_0_ 
+    from
+        Container container0_ 
+    left outer join
+        DataPoint nonlazyjoi1_ 
+            on container0_.id=nonlazyjoi1_.c_non_lazy_join_id 
+    where
+        container0_.id=?
+14:19:04,637 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,638 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,638 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,639 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,640 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:04,641 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_lazy_id = ? limit ?
+14:19:04,683 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_non_lazy_join_id = ? limit ?
+14:19:04,684 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_,
+        datapoint0_.xval as xval1_,
+        datapoint0_.yval as yval1_,
+        datapoint0_.description as descript4_1_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.c_non_lazy_select_id = ? limit ?
+14:19:04,685 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:04,685 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:04,685 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:04,689 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:04,690  INFO CustomRunner:139 - Test: testDefaultReadOnlyWithModifiableQueryForEntity
+14:19:04,691 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,692 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,692 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,700 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,701 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,701 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,701 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:04,702 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,711 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,712 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,713 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:04,713 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:04,714 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:04,714 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.readonly.Container where id=8
+14:19:04,715 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'readonly'
+    |           \-[IDENT] Node: 'Container'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '8'
+
+14:19:04,725 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,726 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.Container (<no alias>) -> container0_
+14:19:04,726 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:04,726 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:19:04,726 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.id -> container0_.id
+14:19:04,726 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Container container0_ ) ( where ( = ( container0_.id {synthetic-alias} id ) 8 ) ) )
+14:19:04,726 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:04,726 DEBUG JoinProcessor:175 - Using FROM fragment [Container container0_]
+14:19:04,727 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Container)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'container0_.id as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.readonly.Container}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'container0_.name as name0_, container0_.no_proxy_owner_name as no3_0_, container0_.proxy_owner_name as proxy4_0_, container0_.non_lazy_owner_name as non5_0_, container0_.no_proxy_info_id as no6_0_, container0_.proxy_info_id as proxy7_0_, container0_.non_lazy_info_id as non8_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[container0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Container container0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.readonly.Container}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'container0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path={synthetic-alias}.id,tableAlias=container0_,className=org.hibernate.test.readonly.Container,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '8'
+
+14:19:04,727 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,727 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.readonly.Container where id=8
+14:19:04,727 DEBUG QueryTranslatorImpl:236 - SQL: select container0_.id as id0_, container0_.name as name0_, container0_.no_proxy_owner_name as no3_0_, container0_.proxy_owner_name as proxy4_0_, container0_.non_lazy_owner_name as non5_0_, container0_.no_proxy_info_id as no6_0_, container0_.proxy_info_id as proxy7_0_, container0_.non_lazy_info_id as non8_0_ from Container container0_ where container0_.id=8
+14:19:04,737 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,738 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_,
+        container0_.name as name0_,
+        container0_.no_proxy_owner_name as no3_0_,
+        container0_.proxy_owner_name as proxy4_0_,
+        container0_.non_lazy_owner_name as non5_0_,
+        container0_.no_proxy_info_id as no6_0_,
+        container0_.proxy_info_id as proxy7_0_,
+        container0_.non_lazy_info_id as non8_0_ 
+    from
+        Container container0_ 
+    where
+        container0_.id=8
+14:19:04,739 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,739 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,740 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,740 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,766 DEBUG SQL:104 - 
+    select
+        nonlazyjoi0_.c_non_lazy_join_id as c7_0_1_,
+        nonlazyjoi0_.id as id1_1_,
+        nonlazyjoi0_.id as id1_0_,
+        nonlazyjoi0_.xval as xval1_0_,
+        nonlazyjoi0_.yval as yval1_0_,
+        nonlazyjoi0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazyjoi0_ 
+    where
+        nonlazyjoi0_.c_non_lazy_join_id=?
+14:19:04,767 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:04,767 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,779 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,780 DEBUG SQL:104 - 
+    select
+        lazydatapo0_.c_lazy_id as c5_0_1_,
+        lazydatapo0_.id as id1_1_,
+        lazydatapo0_.id as id1_0_,
+        lazydatapo0_.xval as xval1_0_,
+        lazydatapo0_.yval as yval1_0_,
+        lazydatapo0_.description as descript4_1_0_ 
+    from
+        DataPoint lazydatapo0_ 
+    where
+        lazydatapo0_.c_lazy_id=?
+14:19:04,781 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:04,781 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:04,796 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:04,797 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:04,797  INFO CustomRunner:139 - Test: testDefaultReadOnlyWithQueryForEntity
+14:19:04,801 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,802 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,802 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,809 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,810 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,810 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,811 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:04,823 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,824 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,824 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,824 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:04,824 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:04,859 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:04,860 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.readonly.Container where id=9
+14:19:04,861 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'readonly'
+    |           \-[IDENT] Node: 'Container'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'id'
+          \-[NUM_INT] Node: '9'
+
+14:19:04,861 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,861 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.readonly.Container (<no alias>) -> container0_
+14:19:04,861 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:04,861 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.LongType@4bf3f9d
+14:19:04,861 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.id -> container0_.id
+14:19:04,862 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Container container0_ ) ( where ( = ( container0_.id {synthetic-alias} id ) 9 ) ) )
+14:19:04,862 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:04,862 DEBUG JoinProcessor:175 - Using FROM fragment [Container container0_]
+14:19:04,862 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Container)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'container0_.id as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.readonly.Container}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'container0_.name as name0_, container0_.no_proxy_owner_name as no3_0_, container0_.proxy_owner_name as proxy4_0_, container0_.non_lazy_owner_name as non5_0_, container0_.no_proxy_info_id as no6_0_, container0_.proxy_info_id as proxy7_0_, container0_.non_lazy_info_id as non8_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[container0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Container container0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Container,tableAlias=container0_,origin=null,columns={,className=org.hibernate.test.readonly.Container}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'container0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path={synthetic-alias}.id,tableAlias=container0_,className=org.hibernate.test.readonly.Container,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NUM_INT] LiteralNode: '9'
+
+14:19:04,862 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,862 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.readonly.Container where id=9
+14:19:04,862 DEBUG QueryTranslatorImpl:236 - SQL: select container0_.id as id0_, container0_.name as name0_, container0_.no_proxy_owner_name as no3_0_, container0_.proxy_owner_name as proxy4_0_, container0_.non_lazy_owner_name as non5_0_, container0_.no_proxy_info_id as no6_0_, container0_.proxy_info_id as proxy7_0_, container0_.non_lazy_info_id as non8_0_ from Container container0_ where container0_.id=9
+14:19:04,863 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:04,863 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_,
+        container0_.name as name0_,
+        container0_.no_proxy_owner_name as no3_0_,
+        container0_.proxy_owner_name as proxy4_0_,
+        container0_.non_lazy_owner_name as non5_0_,
+        container0_.no_proxy_info_id as no6_0_,
+        container0_.proxy_info_id as proxy7_0_,
+        container0_.non_lazy_info_id as non8_0_ 
+    from
+        Container container0_ 
+    where
+        container0_.id=9
+14:19:04,877 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,878 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,878 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:04,890 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,892 DEBUG SQL:104 - 
+    select
+        nonlazyjoi0_.c_non_lazy_join_id as c7_0_1_,
+        nonlazyjoi0_.id as id1_1_,
+        nonlazyjoi0_.id as id1_0_,
+        nonlazyjoi0_.xval as xval1_0_,
+        nonlazyjoi0_.yval as yval1_0_,
+        nonlazyjoi0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazyjoi0_ 
+    where
+        nonlazyjoi0_.c_non_lazy_join_id=?
+14:19:04,892 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:04,893 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,940 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,942 DEBUG SQL:104 - 
+    select
+        lazydatapo0_.c_lazy_id as c5_0_1_,
+        lazydatapo0_.id as id1_1_,
+        lazydatapo0_.id as id1_0_,
+        lazydatapo0_.xval as xval1_0_,
+        lazydatapo0_.yval as yval1_0_,
+        lazydatapo0_.description as descript4_1_0_ 
+    from
+        DataPoint lazydatapo0_ 
+    where
+        lazydatapo0_.c_lazy_id=?
+14:19:04,942 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:04,943 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:04,943 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:04,943 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:04,944  INFO CustomRunner:139 - Test: testExistingModifiableAfterSetSessionReadOnly
+14:19:04,945 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,946 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,946 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:04,946 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,946 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,946 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:04,947 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:04,947 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,953 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,953 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:04,954 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:04,954 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:04,972 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:04,973 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.id=?
+14:19:04,973 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.id=?
+14:19:04,973 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.id=?
+14:19:04,984 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,985 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,985 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:04,986 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:19:04,987 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:19:04,988 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:19:04,988 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_7_,
+        container0_.name as name0_7_,
+        container0_.no_proxy_owner_name as no3_0_7_,
+        container0_.proxy_owner_name as proxy4_0_7_,
+        container0_.non_lazy_owner_name as non5_0_7_,
+        container0_.no_proxy_info_id as no6_0_7_,
+        container0_.proxy_info_id as proxy7_0_7_,
+        container0_.non_lazy_info_id as non8_0_7_,
+        owner1_.id as id3_0_,
+        owner1_.name as name3_0_,
+        owner2_.id as id3_1_,
+        owner2_.name as name3_1_,
+        owner3_.id as id3_2_,
+        owner3_.name as name3_2_,
+        info4_.id as id2_3_,
+        info4_.details as details2_3_,
+        info5_.id as id2_4_,
+        info5_.details as details2_4_,
+        info6_.id as id2_5_,
+        info6_.details as details2_5_,
+        lazydatapo7_.c_lazy_id as c5_0_9_,
+        lazydatapo7_.id as id1_9_,
+        lazydatapo7_.id as id1_6_,
+        lazydatapo7_.xval as xval1_6_,
+        lazydatapo7_.yval as yval1_6_,
+        lazydatapo7_.description as descript4_1_6_ 
+    from
+        Container container0_ 
+    left outer join
+        Owner owner1_ 
+            on container0_.no_proxy_owner_name=owner1_.name 
+    left outer join
+        Owner owner2_ 
+            on container0_.proxy_owner_name=owner2_.name 
+    left outer join
+        Owner owner3_ 
+            on container0_.non_lazy_owner_name=owner3_.name 
+    left outer join
+        Info info4_ 
+            on container0_.no_proxy_info_id=info4_.id 
+    left outer join
+        Info info5_ 
+            on container0_.proxy_info_id=info5_.id 
+    left outer join
+        Info info6_ 
+            on container0_.non_lazy_info_id=info6_.id 
+    left outer join
+        DataPoint lazydatapo7_ 
+            on container0_.id=lazydatapo7_.c_lazy_id 
+    where
+        container0_.id=?
+14:19:05,017 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,018 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,018 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,018 DEBUG SQL:104 - 
+    select
+        nonlazyjoi0_.c_non_lazy_join_id as c7_0_1_,
+        nonlazyjoi0_.id as id1_1_,
+        nonlazyjoi0_.id as id1_0_,
+        nonlazyjoi0_.xval as xval1_0_,
+        nonlazyjoi0_.yval as yval1_0_,
+        nonlazyjoi0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazyjoi0_ 
+    where
+        nonlazyjoi0_.c_non_lazy_join_id=?
+14:19:05,037 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:05,038 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_1_,
+        container0_.name as name0_1_,
+        container0_.no_proxy_owner_name as no3_0_1_,
+        container0_.proxy_owner_name as proxy4_0_1_,
+        container0_.non_lazy_owner_name as non5_0_1_,
+        container0_.no_proxy_info_id as no6_0_1_,
+        container0_.proxy_info_id as proxy7_0_1_,
+        container0_.non_lazy_info_id as non8_0_1_,
+        nonlazyjoi1_.c_non_lazy_join_id as c7_0_3_,
+        nonlazyjoi1_.id as id1_3_,
+        nonlazyjoi1_.id as id1_0_,
+        nonlazyjoi1_.xval as xval1_0_,
+        nonlazyjoi1_.yval as yval1_0_,
+        nonlazyjoi1_.description as descript4_1_0_ 
+    from
+        Container container0_ 
+    left outer join
+        DataPoint nonlazyjoi1_ 
+            on container0_.id=nonlazyjoi1_.c_non_lazy_join_id 
+    where
+        container0_.id=?
+14:19:05,051 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,052 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,052 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,059 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,060 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:05,061 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,071 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,072 DEBUG SQL:104 - 
+    select
+        lazydatapo0_.c_lazy_id as c5_0_1_,
+        lazydatapo0_.id as id1_1_,
+        lazydatapo0_.id as id1_0_,
+        lazydatapo0_.xval as xval1_0_,
+        lazydatapo0_.yval as yval1_0_,
+        lazydatapo0_.description as descript4_1_0_ 
+    from
+        DataPoint lazydatapo0_ 
+    where
+        lazydatapo0_.c_lazy_id=?
+14:19:05,073 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:05,073 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:05,086 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:05,086 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:05,087  INFO CustomRunner:139 - Test: testExistingReadOnlyAfterSetSessionModifiable
+14:19:05,088 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,089 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,089 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,095 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,096 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,096 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,096 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:05,107 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,107 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,107 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,108 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:05,108 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:05,108 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:05,109 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_1_,
+        container0_.name as name0_1_,
+        container0_.no_proxy_owner_name as no3_0_1_,
+        container0_.proxy_owner_name as proxy4_0_1_,
+        container0_.non_lazy_owner_name as non5_0_1_,
+        container0_.no_proxy_info_id as no6_0_1_,
+        container0_.proxy_info_id as proxy7_0_1_,
+        container0_.non_lazy_info_id as non8_0_1_,
+        nonlazyjoi1_.c_non_lazy_join_id as c7_0_3_,
+        nonlazyjoi1_.id as id1_3_,
+        nonlazyjoi1_.id as id1_0_,
+        nonlazyjoi1_.xval as xval1_0_,
+        nonlazyjoi1_.yval as yval1_0_,
+        nonlazyjoi1_.description as descript4_1_0_ 
+    from
+        Container container0_ 
+    left outer join
+        DataPoint nonlazyjoi1_ 
+            on container0_.id=nonlazyjoi1_.c_non_lazy_join_id 
+    where
+        container0_.id=?
+14:19:05,124 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,124 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,125 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,136 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,137 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:05,137 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,138 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,138 DEBUG SQL:104 - 
+    select
+        lazydatapo0_.c_lazy_id as c5_0_1_,
+        lazydatapo0_.id as id1_1_,
+        lazydatapo0_.id as id1_0_,
+        lazydatapo0_.xval as xval1_0_,
+        lazydatapo0_.yval as yval1_0_,
+        lazydatapo0_.description as descript4_1_0_ 
+    from
+        DataPoint lazydatapo0_ 
+    where
+        lazydatapo0_.c_lazy_id=?
+14:19:05,161 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:05,161 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:05,161 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:05,162 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:05,162  INFO CustomRunner:139 - Test: testExistingReadOnlyAfterSetSessionModifiableExisting
+14:19:05,164 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,164 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,164 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,165 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,165 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,165 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,165 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:05,165 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,194 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,195 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,196 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:05,196 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:05,198 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:05,199 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_1_,
+        container0_.name as name0_1_,
+        container0_.no_proxy_owner_name as no3_0_1_,
+        container0_.proxy_owner_name as proxy4_0_1_,
+        container0_.non_lazy_owner_name as non5_0_1_,
+        container0_.no_proxy_info_id as no6_0_1_,
+        container0_.proxy_info_id as proxy7_0_1_,
+        container0_.non_lazy_info_id as non8_0_1_,
+        nonlazyjoi1_.c_non_lazy_join_id as c7_0_3_,
+        nonlazyjoi1_.id as id1_3_,
+        nonlazyjoi1_.id as id1_0_,
+        nonlazyjoi1_.xval as xval1_0_,
+        nonlazyjoi1_.yval as yval1_0_,
+        nonlazyjoi1_.description as descript4_1_0_ 
+    from
+        Container container0_ 
+    left outer join
+        DataPoint nonlazyjoi1_ 
+            on container0_.id=nonlazyjoi1_.c_non_lazy_join_id 
+    where
+        container0_.id=?
+14:19:05,211 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,213 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,213 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,214 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,234 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:05,234 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,235 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,236 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:19:05,236 DEBUG SQL:104 - 
+    select
+        lazydatapo0_.c_lazy_id as c5_0_1_,
+        lazydatapo0_.id as id1_1_,
+        lazydatapo0_.id as id1_0_,
+        lazydatapo0_.xval as xval1_0_,
+        lazydatapo0_.yval as yval1_0_,
+        lazydatapo0_.description as descript4_1_0_ 
+    from
+        DataPoint lazydatapo0_ 
+    where
+        lazydatapo0_.c_lazy_id=?
+14:19:05,237 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:05,237 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:05,238 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:05,238 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:05,238  INFO CustomRunner:139 - Test: testExistingReadOnlyAfterSetSessionModifiableExistingEntityReadOnly
+14:19:05,240 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,240 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,241 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,251 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,252 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,252 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,252 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:05,261 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,262 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,262 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,262 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:05,262 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:05,262 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:05,263 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_1_,
+        container0_.name as name0_1_,
+        container0_.no_proxy_owner_name as no3_0_1_,
+        container0_.proxy_owner_name as proxy4_0_1_,
+        container0_.non_lazy_owner_name as non5_0_1_,
+        container0_.no_proxy_info_id as no6_0_1_,
+        container0_.proxy_info_id as proxy7_0_1_,
+        container0_.non_lazy_info_id as non8_0_1_,
+        nonlazyjoi1_.c_non_lazy_join_id as c7_0_3_,
+        nonlazyjoi1_.id as id1_3_,
+        nonlazyjoi1_.id as id1_0_,
+        nonlazyjoi1_.xval as xval1_0_,
+        nonlazyjoi1_.yval as yval1_0_,
+        nonlazyjoi1_.description as descript4_1_0_ 
+    from
+        Container container0_ 
+    left outer join
+        DataPoint nonlazyjoi1_ 
+            on container0_.id=nonlazyjoi1_.c_non_lazy_join_id 
+    where
+        container0_.id=?
+14:19:05,284 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,285 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,294 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,295 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,295 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:05,372 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,373 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,373 DEBUG SQL:104 - 
+    select
+        datapoint0_.id as id1_0_,
+        datapoint0_.xval as xval1_0_,
+        datapoint0_.yval as yval1_0_,
+        datapoint0_.description as descript4_1_0_ 
+    from
+        DataPoint datapoint0_ 
+    where
+        datapoint0_.id=?
+14:19:05,373 DEBUG SQL:104 - 
+    select
+        lazydatapo0_.c_lazy_id as c5_0_1_,
+        lazydatapo0_.id as id1_1_,
+        lazydatapo0_.id as id1_0_,
+        lazydatapo0_.xval as xval1_0_,
+        lazydatapo0_.yval as yval1_0_,
+        lazydatapo0_.description as descript4_1_0_ 
+    from
+        DataPoint lazydatapo0_ 
+    where
+        lazydatapo0_.c_lazy_id=?
+14:19:05,374 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:05,375 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:05,375 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:05,375 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:05,376  INFO CustomRunner:139 - Test: testExistingReadOnlyAfterSetSessionModifiableExistingProxyReadOnly
+14:19:05,377 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,378 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,378 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,378 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,378 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,378 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,379 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:05,379 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,379 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,379 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,379 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:05,380 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:05,380 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:05,380 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_1_,
+        container0_.name as name0_1_,
+        container0_.no_proxy_owner_name as no3_0_1_,
+        container0_.proxy_owner_name as proxy4_0_1_,
+        container0_.non_lazy_owner_name as non5_0_1_,
+        container0_.no_proxy_info_id as no6_0_1_,
+        container0_.proxy_info_id as proxy7_0_1_,
+        container0_.non_lazy_info_id as non8_0_1_,
+        nonlazyjoi1_.c_non_lazy_join_id as c7_0_3_,
+        nonlazyjoi1_.id as id1_3_,
+        nonlazyjoi1_.id as id1_0_,
+        nonlazyjoi1_.xval as xval1_0_,
+        nonlazyjoi1_.yval as yval1_0_,
+        nonlazyjoi1_.description as descript4_1_0_ 
+    from
+        Container container0_ 
+    left outer join
+        DataPoint nonlazyjoi1_ 
+            on container0_.id=nonlazyjoi1_.c_non_lazy_join_id 
+    where
+        container0_.id=?
+14:19:05,381 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,388 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,389 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,390 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,391 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:05,400 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,401 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,402 DEBUG SQL:104 - 
+    select
+        lazydatapo0_.c_lazy_id as c5_0_1_,
+        lazydatapo0_.id as id1_1_,
+        lazydatapo0_.id as id1_0_,
+        lazydatapo0_.xval as xval1_0_,
+        lazydatapo0_.yval as yval1_0_,
+        lazydatapo0_.description as descript4_1_0_ 
+    from
+        DataPoint lazydatapo0_ 
+    where
+        lazydatapo0_.c_lazy_id=?
+14:19:05,403 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:05,403 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:05,404 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:05,423 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:05,423  INFO CustomRunner:139 - Test: testExistingReadOnlyAfterSetSessionModifiableProxyExisting
+14:19:05,425 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,425 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,425 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (name, id) 
+    values
+        (?, ?)
+14:19:05,433 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,433 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,434 DEBUG SQL:104 - 
+    insert 
+    into
+        Info
+        (details, id) 
+    values
+        (?, ?)
+14:19:05,434 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (name, no_proxy_owner_name, proxy_owner_name, non_lazy_owner_name, no_proxy_info_id, proxy_info_id, non_lazy_info_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:19:05,435 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,445 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,445 DEBUG SQL:104 - 
+    insert 
+    into
+        DataPoint
+        (xval, yval, description, id) 
+    values
+        (?, ?, ?, ?)
+14:19:05,446 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_lazy_id=? 
+    where
+        id=?
+14:19:05,446 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_select_id=? 
+    where
+        id=?
+14:19:05,456 DEBUG SQL:104 - 
+    update
+        DataPoint 
+    set
+        c_non_lazy_join_id=? 
+    where
+        id=?
+14:19:05,457 DEBUG SQL:104 - 
+    select
+        container0_.id as id0_1_,
+        container0_.name as name0_1_,
+        container0_.no_proxy_owner_name as no3_0_1_,
+        container0_.proxy_owner_name as proxy4_0_1_,
+        container0_.non_lazy_owner_name as non5_0_1_,
+        container0_.no_proxy_info_id as no6_0_1_,
+        container0_.proxy_info_id as proxy7_0_1_,
+        container0_.non_lazy_info_id as non8_0_1_,
+        nonlazyjoi1_.c_non_lazy_join_id as c7_0_3_,
+        nonlazyjoi1_.id as id1_3_,
+        nonlazyjoi1_.id as id1_0_,
+        nonlazyjoi1_.xval as xval1_0_,
+        nonlazyjoi1_.yval as yval1_0_,
+        nonlazyjoi1_.description as descript4_1_0_ 
+    from
+        Container container0_ 
+    left outer join
+        DataPoint nonlazyjoi1_ 
+            on container0_.id=nonlazyjoi1_.c_non_lazy_join_id 
+    where
+        container0_.id=?
+14:19:05,470 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,471 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,471 DEBUG SQL:104 - 
+    select
+        owner0_.id as id3_0_,
+        owner0_.name as name3_0_ 
+    from
+        Owner owner0_ 
+    where
+        owner0_.name=?
+14:19:05,472 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,483 DEBUG SQL:104 - 
+    select
+        nonlazysel0_.c_non_lazy_select_id as c6_0_1_,
+        nonlazysel0_.id as id1_1_,
+        nonlazysel0_.id as id1_0_,
+        nonlazysel0_.xval as xval1_0_,
+        nonlazysel0_.yval as yval1_0_,
+        nonlazysel0_.description as descript4_1_0_ 
+    from
+        DataPoint nonlazysel0_ 
+    where
+        nonlazysel0_.c_non_lazy_select_id=?
+14:19:05,484 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,484 DEBUG SQL:104 - 
+    select
+        info0_.id as id2_0_,
+        info0_.details as details2_0_ 
+    from
+        Info info0_ 
+    where
+        info0_.id=?
+14:19:05,495 DEBUG SQL:104 - 
+    select
+        lazydatapo0_.c_lazy_id as c5_0_1_,
+        lazydatapo0_.id as id1_1_,
+        lazydatapo0_.id as id1_0_,
+        lazydatapo0_.xval as xval1_0_,
+        lazydatapo0_.yval as yval1_0_,
+        lazydatapo0_.description as descript4_1_0_ 
+    from
+        DataPoint lazydatapo0_ 
+    where
+        lazydatapo0_.c_lazy_id=?
+14:19:05,497 DEBUG SQL:104 - 
+    delete 
+    from
+        DataPoint
+14:19:05,497 DEBUG SQL:104 - 
+    delete 
+    from
+        Container
+14:19:05,497 DEBUG SQL:104 - 
+    delete 
+    from
+        Info
+14:19:05,497 DEBUG SQL:104 - 
+    delete 
+    from
+        Owner
+14:19:05,498  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:05,498 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:05,499 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61AEAEA601
+14:19:05,499 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61FA906BFF
+14:19:05,499 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61A9E14337
+14:19:05,499 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61A7253163
+14:19:05,500 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C611DA4C2A5
+14:19:05,500 DEBUG SQL:104 - 
+    alter table Container 
+        drop constraint FK5EF36C61CE2A006D
+14:19:05,500 DEBUG SQL:104 - 
+    alter table DataPoint 
+        drop constraint FK60F3CFE6258C9255
+14:19:05,500 DEBUG SQL:104 - 
+    alter table DataPoint 
+        drop constraint FK60F3CFE6D520B9AC
+14:19:05,500 DEBUG SQL:104 - 
+    alter table DataPoint 
+        drop constraint FK60F3CFE6B5A9F7E
+14:19:05,500 DEBUG SQL:104 - 
+    drop table Container if exists
+14:19:05,508 DEBUG SQL:104 - 
+    drop table DataPoint if exists
+14:19:05,509 DEBUG SQL:104 - 
+    drop table Info if exists
+14:19:05,517 DEBUG SQL:104 - 
+    drop table Owner if exists
+14:19:05,518  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:05,518  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

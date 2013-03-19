@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.beanvalidation.HibernateTraversableResolverTest" tests="6" time="0.219" timestamp="2013-02-28T20:10:10">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.beanvalidation.HibernateTraversableResolverTest" name="testAssocInEmbeddedNotValidated" time="0.014" />
+  <testcase classname="org.hibernate.test.annotations.beanvalidation.HibernateTraversableResolverTest" name="testCollectionAssocNotValidated" time="0.008" />
+  <testcase classname="org.hibernate.test.annotations.beanvalidation.HibernateTraversableResolverTest" name="testEmbedded" time="0.019" />
+  <testcase classname="org.hibernate.test.annotations.beanvalidation.HibernateTraversableResolverTest" name="testEmbeddedCollection" time="0.038" />
+  <testcase classname="org.hibernate.test.annotations.beanvalidation.HibernateTraversableResolverTest" name="testNonLazyAssocFieldWithConstraintsFailureExpected" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.beanvalidation.HibernateTraversableResolverTest" name="testToOneAssocNotValidated" time="0.009" />
+  <system-out><![CDATA[14:10:10,385  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.beanvalidation.HibernateTraversableResolverTest
+14:10:10,402  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:10,402  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:10,403  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:10,403  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:10,403  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:10,404  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:10,405  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:10,405  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:10,405  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:10,406  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:10,472  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:10,473 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:10,473 DEBUG SQL:104 - 
+    alter table Screen 
+        drop constraint FK934AAC8C7B5215B5
+14:10:10,474 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Screen drop constraint FK934AAC8C7B5215B5
+14:10:10,474 ERROR SchemaExport:426 - Table "SCREEN" not found; SQL statement:
+
+    alter table Screen 
+        drop constraint FK934AAC8C7B5215B5 [42102-145]
+14:10:10,474 DEBUG SQL:104 - 
+    alter table Screen_Color 
+        drop constraint FKB782B5D017F8C3C6
+14:10:10,474 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Screen_Color drop constraint FKB782B5D017F8C3C6
+14:10:10,474 ERROR SchemaExport:426 - Table "SCREEN_COLOR" not found; SQL statement:
+
+    alter table Screen_Color 
+        drop constraint FKB782B5D017F8C3C6 [42102-145]
+14:10:10,474 DEBUG SQL:104 - 
+    alter table Screen_Color 
+        drop constraint FKB782B5D09BD5A8FF
+14:10:10,475 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Screen_Color drop constraint FKB782B5D09BD5A8FF
+14:10:10,475 ERROR SchemaExport:426 - Table "SCREEN_COLOR" not found; SQL statement:
+
+    alter table Screen_Color 
+        drop constraint FKB782B5D09BD5A8FF [42102-145]
+14:10:10,475 DEBUG SQL:104 - 
+    alter table Screen_connectors 
+        drop constraint FKFD5B2F59B20B5C55
+14:10:10,475 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Screen_connectors drop constraint FKFD5B2F59B20B5C55
+14:10:10,476 ERROR SchemaExport:426 - Table "SCREEN_CONNECTORS" not found; SQL statement:
+
+    alter table Screen_connectors 
+        drop constraint FKFD5B2F59B20B5C55 [42102-145]
+14:10:10,476 DEBUG SQL:104 - 
+    alter table Screen_connectors 
+        drop constraint FKFD5B2F599BD5A8FF
+14:10:10,476 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Screen_connectors drop constraint FKFD5B2F599BD5A8FF
+14:10:10,476 ERROR SchemaExport:426 - Table "SCREEN_CONNECTORS" not found; SQL statement:
+
+    alter table Screen_connectors 
+        drop constraint FKFD5B2F599BD5A8FF [42102-145]
+14:10:10,476 DEBUG SQL:104 - 
+    drop table Color if exists
+14:10:10,477 DEBUG SQL:104 - 
+    drop table Display if exists
+14:10:10,477 DEBUG SQL:104 - 
+    drop table PowerSupply if exists
+14:10:10,477 DEBUG SQL:104 - 
+    drop table Screen if exists
+14:10:10,477 DEBUG SQL:104 - 
+    drop table Screen_Color if exists
+14:10:10,477 DEBUG SQL:104 - 
+    drop table Screen_connectors if exists
+14:10:10,478 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:10,478 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:10,478 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:10,478 DEBUG SQL:104 - 
+    create table Color (
+        id integer not null,
+        name varchar(255) not null,
+        primary key (id)
+    )
+14:10:10,479 DEBUG SQL:104 - 
+    create table Display (
+        id integer not null,
+        brand varchar(255) not null,
+        primary key (id)
+    )
+14:10:10,479 DEBUG SQL:104 - 
+    create table PowerSupply (
+        id integer not null,
+        fld_pos varchar(255),
+        power decimal(19,2) check (power>=100 AND power<=250),
+        primary key (id)
+    )
+14:10:10,483 DEBUG SQL:104 - 
+    create table Screen (
+        id integer not null,
+        name varchar(255),
+        fld_size integer check (fld_size<=10),
+        powerSupply_id integer not null,
+        primary key (id)
+    )
+14:10:10,484 DEBUG SQL:104 - 
+    create table Screen_Color (
+        Screen_id integer not null,
+        displayColors_id integer not null,
+        primary key (Screen_id, displayColors_id)
+    )
+14:10:10,484 DEBUG SQL:104 - 
+    create table Screen_connectors (
+        Screen_id integer not null,
+        display_id integer,
+        number integer not null,
+        primary key (Screen_id, number)
+    )
+14:10:10,485 DEBUG SQL:104 - 
+    alter table Screen 
+        add constraint FK934AAC8C7B5215B5 
+        foreign key (powerSupply_id) 
+        references PowerSupply
+14:10:10,486 DEBUG SQL:104 - 
+    alter table Screen_Color 
+        add constraint FKB782B5D017F8C3C6 
+        foreign key (displayColors_id) 
+        references Color
+14:10:10,488 DEBUG SQL:104 - 
+    alter table Screen_Color 
+        add constraint FKB782B5D09BD5A8FF 
+        foreign key (Screen_id) 
+        references Screen
+14:10:10,489 DEBUG SQL:104 - 
+    alter table Screen_connectors 
+        add constraint FKFD5B2F59B20B5C55 
+        foreign key (display_id) 
+        references Display
+14:10:10,490 DEBUG SQL:104 - 
+    alter table Screen_connectors 
+        add constraint FKFD5B2F599BD5A8FF 
+        foreign key (Screen_id) 
+        references Screen
+14:10:10,491 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:10,491  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:10,492  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:10,492  INFO CustomRunner:139 - Test: testAssocInEmbeddedNotValidated
+14:10:10,494 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,497 DEBUG SQL:104 - 
+    insert 
+    into
+        Display
+        (brand, id) 
+    values
+        (?, ?)
+14:10:10,498 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,498 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,501 DEBUG SQL:104 - 
+    insert 
+    into
+        PowerSupply
+        (fld_pos, power, id) 
+    values
+        (?, ?, ?)
+14:10:10,505 DEBUG SQL:104 - 
+    insert 
+    into
+        Screen
+        (powerSupply_id, name, fld_size, id) 
+    values
+        (?, ?, ?, ?)
+14:10:10,507  INFO CustomRunner:139 - Test: testCollectionAssocNotValidated
+14:10:10,508 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,509 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,509 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,515  INFO CustomRunner:139 - Test: testEmbedded
+14:10:10,516 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,517 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,519 DEBUG SQL:104 - 
+    insert 
+    into
+        PowerSupply
+        (fld_pos, power, id) 
+    values
+        (?, ?, ?)
+14:10:10,535  INFO CustomRunner:139 - Test: testEmbeddedCollection
+14:10:10,568 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,569 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,571 DEBUG SQL:104 - 
+    insert 
+    into
+        PowerSupply
+        (fld_pos, power, id) 
+    values
+        (?, ?, ?)
+14:10:10,574  INFO CustomRunner:139 - Test: testNonLazyAssocFieldWithConstraintsFailureExpected
+14:10:10,575 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,576  INFO CustomRunner:139 - Test: testToOneAssocNotValidated
+14:10:10,581 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,582 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,585  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:10,590 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:10,590 DEBUG SQL:104 - 
+    alter table Screen 
+        drop constraint FK934AAC8C7B5215B5
+14:10:10,590 DEBUG SQL:104 - 
+    alter table Screen_Color 
+        drop constraint FKB782B5D017F8C3C6
+14:10:10,591 DEBUG SQL:104 - 
+    alter table Screen_Color 
+        drop constraint FKB782B5D09BD5A8FF
+14:10:10,591 DEBUG SQL:104 - 
+    alter table Screen_connectors 
+        drop constraint FKFD5B2F59B20B5C55
+14:10:10,592 DEBUG SQL:104 - 
+    alter table Screen_connectors 
+        drop constraint FKFD5B2F599BD5A8FF
+14:10:10,592 DEBUG SQL:104 - 
+    drop table Color if exists
+14:10:10,593 DEBUG SQL:104 - 
+    drop table Display if exists
+14:10:10,593 DEBUG SQL:104 - 
+    drop table PowerSupply if exists
+14:10:10,594 DEBUG SQL:104 - 
+    drop table Screen if exists
+14:10:10,594 DEBUG SQL:104 - 
+    drop table Screen_Color if exists
+14:10:10,594 DEBUG SQL:104 - 
+    drop table Screen_connectors if exists
+14:10:10,600 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:10,601  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:10,601  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

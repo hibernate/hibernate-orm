@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.constraint.ConstraintTest" tests="1" time="0.027" timestamp="2013-02-28T20:12:02">
+  <properties />
+  <testcase classname="org.hibernate.test.constraint.ConstraintTest" name="testConstraints" time="0.001" />
+  <system-out><![CDATA[14:12:02,448  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.constraint.ConstraintTest
+14:12:02,455  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:02,455  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:02,455  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:02,456  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:02,456  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:02,457  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,458  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:02,458  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:02,458  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:02,459  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:02,465  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,466 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,466 DEBUG SQL:104 - 
+    drop table Entity1 if exists
+14:12:02,466 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:12:02,467 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:12:02,467 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:12:02,467 DEBUG SQL:104 - 
+    create table Entity1 (
+        id bigint not null,
+        foo1 varchar(255) not null,
+        foo2 varchar(255),
+        primary key (id)
+    )
+14:12:02,467 DEBUG SQL:104 - 
+    alter table Entity1 
+        add constraint uc_Entity1_2 unique (foo1)
+14:12:02,468 DEBUG SQL:104 - 
+    alter table Entity1 
+        add constraint uc_Entity1_3 unique (foo2)
+14:12:02,468 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:12:02,468  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,469  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:02,469  INFO CustomRunner:139 - Test: testConstraints
+14:12:02,470  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:02,471 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:02,471 DEBUG SQL:104 - 
+    drop table Entity1 if exists
+14:12:02,472 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:12:02,472  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:02,472  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

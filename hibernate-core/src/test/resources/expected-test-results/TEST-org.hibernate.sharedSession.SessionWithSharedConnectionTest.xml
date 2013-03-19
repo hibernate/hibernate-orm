@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.sharedSession.SessionWithSharedConnectionTest" tests="7" time="0.081" timestamp="2013-02-28T20:10:03">
+  <properties />
+  <testcase classname="org.hibernate.sharedSession.SessionWithSharedConnectionTest" name="testChildSessionCallsAfterTransactionAction" time="0.01" />
+  <testcase classname="org.hibernate.sharedSession.SessionWithSharedConnectionTest" name="testChildSessionTwoTransactions" time="0.004" />
+  <testcase classname="org.hibernate.sharedSession.SessionWithSharedConnectionTest" name="testSessionRemovedFromObserversOnClose" time="0.002" />
+  <testcase classname="org.hibernate.sharedSession.SessionWithSharedConnectionTest" name="testSharedTransactionContextAutoClosing" time="0.001" />
+  <testcase classname="org.hibernate.sharedSession.SessionWithSharedConnectionTest" name="testSharedTransactionContextAutoJoining" time="0.0" />
+  <testcase classname="org.hibernate.sharedSession.SessionWithSharedConnectionTest" name="testSharedTransactionContextFlushBeforeCompletion" time="0.007" />
+  <testcase classname="org.hibernate.sharedSession.SessionWithSharedConnectionTest" name="testSharedTransactionContextSessionClosing" time="0.013" />
+  <system-out><![CDATA[14:10:03,718  INFO CustomRunner:132 - BeforeClass: org.hibernate.sharedSession.SessionWithSharedConnectionTest
+14:10:03,729  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:03,729  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:03,732  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:03,733  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:03,733  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:03,736  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:03,736  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:03,738  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:03,738  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:03,739  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:03,747  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:03,748 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:03,748 DEBUG SQL:104 - 
+    drop table IrrelevantEntity if exists
+14:10:03,748 DEBUG SQL:104 - 
+    create table IrrelevantEntity (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:03,749  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:03,750  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:03,751  INFO CustomRunner:139 - Test: testChildSessionCallsAfterTransactionAction
+14:10:03,753 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        IrrelevantEntity
+14:10:03,756 DEBUG SQL:104 - 
+    insert 
+    into
+        IrrelevantEntity
+        (name, id) 
+    values
+        (?, ?)
+14:10:03,758 DEBUG SQL:104 - 
+    insert 
+    into
+        IrrelevantEntity
+        (name, id) 
+    values
+        (?, ?)
+14:10:03,761  INFO CustomRunner:139 - Test: testChildSessionTwoTransactions
+14:10:03,766  INFO CustomRunner:139 - Test: testSessionRemovedFromObserversOnClose
+14:10:03,769  INFO CustomRunner:139 - Test: testSharedTransactionContextAutoClosing
+14:10:03,771  INFO CustomRunner:139 - Test: testSharedTransactionContextAutoJoining
+14:10:03,772  INFO CustomRunner:139 - Test: testSharedTransactionContextFlushBeforeCompletion
+14:10:03,773 DEBUG SQL:104 - 
+    insert 
+    into
+        IrrelevantEntity
+        (name, id) 
+    values
+        (?, ?)
+14:10:03,775 DEBUG SQL:104 - 
+    select
+        irrelevant0_.id as id0_0_,
+        irrelevant0_.name as name0_0_ 
+    from
+        IrrelevantEntity irrelevant0_ 
+    where
+        irrelevant0_.id=?
+14:10:03,777 DEBUG SQL:104 - 
+    delete 
+    from
+        IrrelevantEntity 
+    where
+        id=?
+14:10:03,780  INFO CustomRunner:139 - Test: testSharedTransactionContextSessionClosing
+14:10:03,791 DEBUG SQL:104 - 
+    select
+        this_.id as id0_0_,
+        this_.name as name0_0_ 
+    from
+        IrrelevantEntity this_
+14:10:03,794  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:03,795 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:03,795 DEBUG SQL:104 - 
+    drop table IrrelevantEntity if exists
+14:10:03,796  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:03,796  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

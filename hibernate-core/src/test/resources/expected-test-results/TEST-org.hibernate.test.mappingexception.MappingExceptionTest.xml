@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.mappingexception.MappingExceptionTest" tests="1" time="0.594" timestamp="2013-02-28T20:17:29">
+  <properties />
+  <testcase classname="org.hibernate.test.mappingexception.MappingExceptionTest" name="testNotFound" time="0.547" />
+  <system-out><![CDATA[14:17:29,740  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.mappingexception.MappingExceptionTest
+14:17:29,741  INFO CustomRunner:139 - Test: testNotFound
+14:17:29,768  WARN Configuration:539 - HHH000023: I/O reported cached file could not be found : /Users/jpav/hibernate/orm/hibernate-core/completelybogus.hbm.xml.bin : java.io.FileNotFoundException: Cached file could not be found or could not be used
+14:17:29,768  WARN Configuration:539 - HHH000023: I/O reported cached file could not be found : /Users/jpav/hibernate/orm/hibernate-core/completelybogus.hbm.xml.bin : java.io.FileNotFoundException: Cached file could not be found or could not be used
+14:17:29,769  INFO Configuration:753 - HHH000221: Reading mappings from resource: org/hibernate/Hibernate.hbm.xml
+14:17:29,769  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/Hibernate.hbm.xml
+14:17:29,840  INFO Configuration:467 - HHH000220: Reading mappings from file: completelybogus.hbm.xml
+14:17:29,840  INFO Configuration:467 - HHH000220: Reading mappings from file: completelybogus.hbm.xml
+14:17:29,891  INFO Configuration:725 - HHH000221: Reading mappings from resource: nothere
+14:17:29,891  INFO Configuration:706 - HHH000221: Reading mappings from resource: nothere
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

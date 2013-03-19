@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.derivedidentities.e4.a.DerivedIdentitySimpleParentSimpleDepTest" tests="3" time="0.061" timestamp="2013-02-28T20:10:21">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.derivedidentities.e4.a.DerivedIdentitySimpleParentSimpleDepTest" name="testManyToOneExplicitJoinColumn" time="0.006" />
+  <testcase classname="org.hibernate.test.annotations.derivedidentities.e4.a.DerivedIdentitySimpleParentSimpleDepTest" name="testOneToOneExplicitJoinColumn" time="0.006" />
+  <testcase classname="org.hibernate.test.annotations.derivedidentities.e4.a.DerivedIdentitySimpleParentSimpleDepTest" name="testSimplePkValueLoading" time="0.004" />
+  <system-out><![CDATA[14:10:21,061  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.derivedidentities.e4.a.DerivedIdentitySimpleParentSimpleDepTest
+14:10:21,067  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.derivedidentities.e4.a.MedicalHistory
+14:10:21,068  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.derivedidentities.e4.a.MedicalHistory
+14:10:21,068  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.derivedidentities.e4.a.FinancialHistory
+14:10:21,068  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.derivedidentities.e4.a.FinancialHistory
+14:10:21,068  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.derivedidentities.e4.a.Simple
+14:10:21,068  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.derivedidentities.e4.a.Simple
+14:10:21,069  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:21,069  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:21,069  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:21,069  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:21,069  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:21,071  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:21,071  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:21,072  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:21,072  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:21,072  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:21,094  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:21,095 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:21,095 DEBUG SQL:104 - 
+    alter table FinancialHistory 
+        drop constraint FKA61E67EBB8F854A0
+14:10:21,095 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FinancialHistory drop constraint FKA61E67EBB8F854A0
+14:10:21,095 ERROR SchemaExport:426 - Table "FINANCIALHISTORY" not found; SQL statement:
+
+    alter table FinancialHistory 
+        drop constraint FKA61E67EBB8F854A0 [42102-145]
+14:10:21,095 DEBUG SQL:104 - 
+    alter table MedicalHistory 
+        drop constraint FK306558E3999E9391
+14:10:21,096 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table MedicalHistory drop constraint FK306558E3999E9391
+14:10:21,096 ERROR SchemaExport:426 - Table "MEDICALHISTORY" not found; SQL statement:
+
+    alter table MedicalHistory 
+        drop constraint FK306558E3999E9391 [42102-145]
+14:10:21,096 DEBUG SQL:104 - 
+    drop table FinancialHistory if exists
+14:10:21,096 DEBUG SQL:104 - 
+    drop table MedicalHistory if exists
+14:10:21,096 DEBUG SQL:104 - 
+    drop table Person if exists
+14:10:21,096 DEBUG SQL:104 - 
+    drop table Simple if exists
+14:10:21,096 DEBUG SQL:104 - 
+    create table FinancialHistory (
+        lastUpdate date,
+        patient_ssn varchar(255) not null,
+        primary key (patient_ssn)
+    )
+14:10:21,097 DEBUG SQL:104 - 
+    create table MedicalHistory (
+        lastupdate date,
+        FK varchar(255) not null,
+        primary key (FK)
+    )
+14:10:21,097 DEBUG SQL:104 - 
+    create table Person (
+        ssn varchar(255) not null,
+        primary key (ssn)
+    )
+14:10:21,098 DEBUG SQL:104 - 
+    create table Simple (
+        ssn varchar(255) not null,
+        name varchar(255) not null,
+        primary key (ssn, name)
+    )
+14:10:21,098 DEBUG SQL:104 - 
+    alter table FinancialHistory 
+        add constraint FKA61E67EBB8F854A0 
+        foreign key (patient_ssn) 
+        references Person
+14:10:21,099 DEBUG SQL:104 - 
+    alter table MedicalHistory 
+        add constraint FK306558E3999E9391 
+        foreign key (FK) 
+        references Person
+14:10:21,100  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:21,100  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:21,100  INFO CustomRunner:139 - Test: testManyToOneExplicitJoinColumn
+14:10:21,102 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (ssn) 
+    values
+        (?)
+14:10:21,103 DEBUG SQL:104 - 
+    insert 
+    into
+        FinancialHistory
+        (lastUpdate, patient_ssn) 
+    values
+        (?, ?)
+14:10:21,104 DEBUG SQL:104 - 
+    select
+        person0_.ssn as ssn2_0_ 
+    from
+        Person person0_ 
+    where
+        person0_.ssn=?
+14:10:21,104 DEBUG SQL:104 - 
+    select
+        financialh0_.patient_ssn as patient2_0_0_,
+        financialh0_.lastUpdate as lastUpdate0_0_ 
+    from
+        FinancialHistory financialh0_ 
+    where
+        financialh0_.patient_ssn=?
+14:10:21,105 DEBUG SQL:104 - 
+    update
+        FinancialHistory 
+    set
+        lastUpdate=? 
+    where
+        patient_ssn=?
+14:10:21,105 DEBUG SQL:104 - 
+    select
+        person0_.ssn as ssn2_0_ 
+    from
+        Person person0_ 
+    where
+        person0_.ssn=?
+14:10:21,106 DEBUG SQL:104 - 
+    select
+        financialh0_.patient_ssn as patient2_0_0_,
+        financialh0_.lastUpdate as lastUpdate0_0_ 
+    from
+        FinancialHistory financialh0_ 
+    where
+        financialh0_.patient_ssn=?
+14:10:21,106 DEBUG SQL:104 - 
+    delete 
+    from
+        FinancialHistory 
+    where
+        patient_ssn=?
+14:10:21,107 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        ssn=?
+14:10:21,108  INFO CustomRunner:139 - Test: testOneToOneExplicitJoinColumn
+14:10:21,109 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (ssn) 
+    values
+        (?)
+14:10:21,110 DEBUG SQL:104 - 
+    insert 
+    into
+        MedicalHistory
+        (lastupdate, FK) 
+    values
+        (?, ?)
+14:10:21,110 DEBUG SQL:104 - 
+    select
+        person0_.ssn as ssn2_0_ 
+    from
+        Person person0_ 
+    where
+        person0_.ssn=?
+14:10:21,110 DEBUG SQL:104 - 
+    select
+        medicalhis0_.FK as FK1_0_,
+        medicalhis0_.lastupdate as lastupdate1_0_ 
+    from
+        MedicalHistory medicalhis0_ 
+    where
+        medicalhis0_.FK=?
+14:10:21,111 DEBUG SQL:104 - 
+    update
+        MedicalHistory 
+    set
+        lastupdate=? 
+    where
+        FK=?
+14:10:21,112 DEBUG SQL:104 - 
+    select
+        person0_.ssn as ssn2_0_ 
+    from
+        Person person0_ 
+    where
+        person0_.ssn=?
+14:10:21,112 DEBUG SQL:104 - 
+    select
+        medicalhis0_.FK as FK1_0_,
+        medicalhis0_.lastupdate as lastupdate1_0_ 
+    from
+        MedicalHistory medicalhis0_ 
+    where
+        medicalhis0_.FK=?
+14:10:21,113 DEBUG SQL:104 - 
+    delete 
+    from
+        MedicalHistory 
+    where
+        FK=?
+14:10:21,113 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        ssn=?
+14:10:21,114  INFO CustomRunner:139 - Test: testSimplePkValueLoading
+14:10:21,115 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (ssn) 
+    values
+        (?)
+14:10:21,115 DEBUG SQL:104 - 
+    insert 
+    into
+        FinancialHistory
+        (lastUpdate, patient_ssn) 
+    values
+        (?, ?)
+14:10:21,116 DEBUG SQL:104 - 
+    select
+        person0_.ssn as ssn2_0_ 
+    from
+        Person person0_ 
+    where
+        person0_.ssn=?
+14:10:21,116 DEBUG SQL:104 - 
+    select
+        financialh0_.patient_ssn as patient2_0_0_,
+        financialh0_.lastUpdate as lastUpdate0_0_ 
+    from
+        FinancialHistory financialh0_ 
+    where
+        financialh0_.patient_ssn=?
+14:10:21,117 DEBUG SQL:104 - 
+    delete 
+    from
+        FinancialHistory 
+    where
+        patient_ssn=?
+14:10:21,117 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        ssn=?
+14:10:21,118  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:21,119 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:21,119 DEBUG SQL:104 - 
+    alter table FinancialHistory 
+        drop constraint FKA61E67EBB8F854A0
+14:10:21,119 DEBUG SQL:104 - 
+    alter table MedicalHistory 
+        drop constraint FK306558E3999E9391
+14:10:21,119 DEBUG SQL:104 - 
+    drop table FinancialHistory if exists
+14:10:21,120 DEBUG SQL:104 - 
+    drop table MedicalHistory if exists
+14:10:21,120 DEBUG SQL:104 - 
+    drop table Person if exists
+14:10:21,120 DEBUG SQL:104 - 
+    drop table Simple if exists
+14:10:21,121  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:21,121  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

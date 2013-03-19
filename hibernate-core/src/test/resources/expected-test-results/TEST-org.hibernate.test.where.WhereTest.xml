@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.where.WhereTest" tests="1" time="0.036" timestamp="2013-02-28T20:19:33">
+  <properties />
+  <testcase classname="org.hibernate.test.where.WhereTest" name="testWhere" time="0.011" />
+  <system-out><![CDATA[14:19:33,245  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.where.WhereTest
+14:19:33,247  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/where/File.hbm.xml
+14:19:33,254  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:33,254  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:33,254  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:33,255  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:33,255  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:33,256  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:33,256  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:33,257  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:33,257  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:33,257  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:33,263  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:33,263 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:33,264 DEBUG SQL:104 - 
+    alter table T_FILE 
+        drop constraint FK94B2BA87924D2DA3
+14:19:33,264 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_FILE drop constraint FK94B2BA87924D2DA3
+14:19:33,264 ERROR SchemaExport:426 - Table "T_FILE" not found; SQL statement:
+
+    alter table T_FILE 
+        drop constraint FK94B2BA87924D2DA3 [42102-145]
+14:19:33,264 DEBUG SQL:104 - 
+    drop table T_FILE if exists
+14:19:33,264 DEBUG SQL:104 - 
+    create table T_FILE (
+        id bigint not null,
+        name varchar(255),
+        deleted integer,
+        parent bigint,
+        primary key (id)
+    )
+14:19:33,265 DEBUG SQL:104 - 
+    alter table T_FILE 
+        add constraint FK94B2BA87924D2DA3 
+        foreign key (parent) 
+        references T_FILE
+14:19:33,265  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:33,265  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:33,266  INFO CustomRunner:139 - Test: testWhere
+14:19:33,266 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        T_FILE
+14:19:33,268 DEBUG SQL:104 - 
+    insert 
+    into
+        T_FILE
+        (name, deleted, parent, id) 
+    values
+        (?, ?, ?, ?)
+14:19:33,268 DEBUG SQL:104 - 
+    insert 
+    into
+        T_FILE
+        (name, deleted, parent, id) 
+    values
+        (?, ?, ?, ?)
+14:19:33,269 DEBUG SQL:104 - 
+    insert 
+    into
+        T_FILE
+        (name, deleted, parent, id) 
+    values
+        (?, ?, ?, ?)
+14:19:33,269 DEBUG SQL:104 - 
+    insert 
+    into
+        T_FILE
+        (name, deleted, parent, id) 
+    values
+        (?, ?, ?, ?)
+14:19:33,270 DEBUG SQL:104 - 
+    select
+        this_.id as id0_1_,
+        this_.name as name0_1_,
+        this_.deleted as deleted0_1_,
+        this_.parent as parent0_1_,
+        children2_.parent as parent0_3_,
+        children2_.id as id0_3_,
+        children2_.id as id0_0_,
+        children2_.name as name0_0_,
+        children2_.deleted as deleted0_0_,
+        children2_.parent as parent0_0_ 
+    from
+        T_FILE this_ 
+    left outer join
+        T_FILE children2_ 
+            on this_.id=children2_.parent 
+            and (
+                children2_.deleted=0
+            )  
+    where
+        (
+            this_.deleted=0
+        ) 
+        and this_.parent is null
+14:19:33,271 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.where.File f left join fetch f.children where f.parent is null
+14:19:33,271 DEBUG ErrorCounter:63 - Keyword  'where' is being interpreted as an identifier due to: expecting IDENT, found 'where'
+14:19:33,272 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[WEIRD_IDENT] Node: 'where'
+    |     |  |  \-[IDENT] Node: 'File'
+    |     |  \-[ALIAS] Node: 'f'
+    |     \-[JOIN] Node: 'join'
+    |        +-[LEFT] Node: 'left'
+    |        +-[FETCH] Node: 'fetch'
+    |        \-[DOT] Node: '.'
+    |           +-[IDENT] Node: 'f'
+    |           \-[IDENT] Node: 'children'
+    \-[WHERE] Node: 'where'
+       \-[IS_NULL] Node: 'is null'
+          \-[DOT] Node: '.'
+             +-[IDENT] Node: 'f'
+             \-[IDENT] Node: 'parent'
+
+14:19:33,272 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:33,272 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.where.File (f) -> file0_
+14:19:33,272 DEBUG FromReferenceNode:74 - Resolved : f -> file0_.id
+14:19:33,273 DEBUG DotNode:599 - getDataType() : children -> org.hibernate.type.SetType(org.hibernate.test.where.File.children)
+14:19:33,273 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = f.children role = org.hibernate.test.where.File.children associatedEntityName = org.hibernate.test.where.File
+14:19:33,273 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.where.File (<no alias>) -> children1_
+14:19:33,273 DEBUG FromClause:282 - addJoinByPathMap() : f.children -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_FILE,tableAlias=children1_,origin=T_FILE file0_,columns={file0_.id ,className=org.hibernate.test.where.File}}
+14:19:33,273 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for f.children : T_FILE children1_
+14:19:33,273 DEBUG FromReferenceNode:74 - Resolved : f.children -> .
+14:19:33,273 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'T_FILE children1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.where.File.children,tableName=T_FILE,tableAlias=children1_,origin=T_FILE file0_,columns={file0_.id ,className=org.hibernate.test.where.File}}
+
+14:19:33,273 DEBUG FromReferenceNode:74 - Resolved : f -> file0_.id
+14:19:33,274 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.where.File)
+14:19:33,274 DEBUG DotNode:562 - dereferenceShortcut() : property parent in org.hibernate.test.where.File does not require a join.
+14:19:33,274 DEBUG DotNode:588 - Terminal propertyPath = [parent]
+14:19:33,274 DEBUG FromReferenceNode:74 - Resolved : f.parent -> file0_.parent
+14:19:33,274 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( T_FILE file0_ T_FILE children1_ ) ) ( where ( is null ( file0_.parent file0_.id parent ) ) ) )
+14:19:33,274 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:33,274 DEBUG JoinProcessor:175 - Using FROM fragment [T_FILE file0_]
+14:19:33,274 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [( file0_.deleted=0)]
+14:19:33,275 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [( file0_.deleted=0)]
+14:19:33,275 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join T_FILE children1_ on file0_.id=children1_.parent and ( children1_.deleted=0)]
+14:19:33,275 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_FILE)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'file0_.id as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=null,tableName=T_FILE,tableAlias=file0_,origin=null,columns={,className=org.hibernate.test.where.File}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'children1_.id as id0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.where.File.children,tableName=T_FILE,tableAlias=children1_,origin=T_FILE file0_,columns={file0_.id ,className=org.hibernate.test.where.File}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'file0_.name as name0_0_, file0_.deleted as deleted0_0_, file0_.parent as parent0_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'children1_.name as name0_1_, children1_.deleted as deleted0_1_, children1_.parent as parent0_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'children1_.parent as parent0_0__, children1_.id as id0_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[f], fromElementByTableAlias=[file0_, children1_], fromElementsByPath=[f.children], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_FILE file0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=null,tableName=T_FILE,tableAlias=file0_,origin=null,columns={,className=org.hibernate.test.where.File}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join T_FILE children1_ on file0_.id=children1_.parent and ( children1_.deleted=0)' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.where.File.children,tableName=T_FILE,tableAlias=children1_,origin=T_FILE file0_,columns={file0_.id ,className=org.hibernate.test.where.File}}
+    \-[WHERE] SqlNode: 'where'
+       +-[FILTERS] SqlNode: '{filter conditions}'
+       |  \-[SQL_TOKEN] SqlFragment: '( file0_.deleted=0)'
+       \-[IS_NULL] IsNullLogicOperatorNode: 'is null'
+          \-[DOT] DotNode: 'file0_.parent' {propertyName=parent,dereferenceType=0,propertyPath=parent,path=f.parent,tableAlias=file0_,className=org.hibernate.test.where.File,classAlias=f}
+             +-[ALIAS_REF] IdentNode: 'file0_.id' {alias=f, className=org.hibernate.test.where.File, tableAlias=file0_}
+             \-[IDENT] IdentNode: 'parent' {originalText=parent}
+
+14:19:33,275 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:33,275 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.where.File f left join fetch f.children where f.parent is null
+14:19:33,275 DEBUG QueryTranslatorImpl:236 - SQL: select file0_.id as id0_0_, children1_.id as id0_1_, file0_.name as name0_0_, file0_.deleted as deleted0_0_, file0_.parent as parent0_0_, children1_.name as name0_1_, children1_.deleted as deleted0_1_, children1_.parent as parent0_1_, children1_.parent as parent0_0__, children1_.id as id0_0__ from T_FILE file0_ left outer join T_FILE children1_ on file0_.id=children1_.parent and ( children1_.deleted=0) where ( file0_.deleted=0) and (file0_.parent is null)
+14:19:33,275 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:33,276 DEBUG SQL:104 - 
+    select
+        file0_.id as id0_0_,
+        children1_.id as id0_1_,
+        file0_.name as name0_0_,
+        file0_.deleted as deleted0_0_,
+        file0_.parent as parent0_0_,
+        children1_.name as name0_1_,
+        children1_.deleted as deleted0_1_,
+        children1_.parent as parent0_1_,
+        children1_.parent as parent0_0__,
+        children1_.id as id0_0__ 
+    from
+        T_FILE file0_ 
+    left outer join
+        T_FILE children1_ 
+            on file0_.id=children1_.parent 
+            and (
+                children1_.deleted=0
+            ) 
+    where
+        (
+            file0_.deleted=0
+        ) 
+        and (
+            file0_.parent is null
+        )
+14:19:33,277  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:33,278 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:33,278 DEBUG SQL:104 - 
+    alter table T_FILE 
+        drop constraint FK94B2BA87924D2DA3
+14:19:33,278 DEBUG SQL:104 - 
+    drop table T_FILE if exists
+14:19:33,278  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:33,278  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

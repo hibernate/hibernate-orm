@@ -1,0 +1,4196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.nonflushedchanges.MergeTest" tests="20" time="2.013" timestamp="2013-02-28T20:17:33">
+  <properties />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testDeleteAndMerge" time="0.203" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testMergeBidiForeignKeyOneToOne" time="0.06" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testMergeBidiPrimayKeyOneToOne" time="0.323" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testMergeDeepTree" time="0.253" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testMergeDeepTreeWithGeneratedId" time="0.312" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testMergeManaged" time="0.047" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testMergeManagedInitializedCollection" time="0.034" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testMergeManagedUninitializedCollection" time="0.018" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testMergeManyToManyWithCollectionDeference" time="0.072" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testMergeStaleVersionFails" time="0.033" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testMergeTree" time="0.058" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testMergeTreeWithGeneratedId" time="0.055" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testNoExtraUpdatesOnMerge" time="0.037" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testNoExtraUpdatesOnMergeVersioned" time="0.044" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testNoExtraUpdatesOnMergeVersionedWithCollection" time="0.054" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testNoExtraUpdatesOnMergeWithCollection" time="0.059" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testNoExtraUpdatesOnPersistentMergeVersionedWithCollection" time="0.053" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testPersistThenMergeInSameTxnWithTimestamp" time="0.014" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testPersistThenMergeInSameTxnWithVersion" time="0.043" />
+  <testcase classname="org.hibernate.test.nonflushedchanges.MergeTest" name="testRecursiveMergeTransient" time="0.066" />
+  <system-out><![CDATA[14:17:33,438  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.nonflushedchanges.MergeTest
+14:17:33,440  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/Node.hbm.xml
+14:17:33,446  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/Employer.hbm.xml
+14:17:33,452  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/OptLockEntity.hbm.xml
+14:17:33,457  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/OneToOne.hbm.xml
+14:17:33,462  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/Competition.hbm.xml
+14:17:33,470  INFO ConnectionProviderInitiator:188 - HHH000130: Instantiating explicit connection provider: org.hibernate.testing.jta.JtaAwareConnectionProviderImpl
+14:17:33,470  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:33,471  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 20
+14:17:33,471  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:33,471  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:33,471  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa, autocommit=false, release_mode=AFTER_STATEMENT}
+14:17:33,472  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:33,473  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:33,473  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:33,474  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:33,488  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:33,489 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:33,489 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB74F32D66
+14:17:33,489 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table COMPET_ION_OR drop constraint FK1AAE64FB74F32D66
+14:17:33,489 ERROR SchemaExport:426 - Table "COMPET_ION_OR" not found; SQL statement:
+
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB74F32D66 [42102-145]
+14:17:33,489 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB1F11BBAE
+14:17:33,490 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table COMPET_ION_OR drop constraint FK1AAE64FB1F11BBAE
+14:17:33,490 ERROR SchemaExport:426 - Table "COMPET_ION_OR" not found; SQL statement:
+
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB1F11BBAE [42102-145]
+14:17:33,490 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D4A24D7
+14:17:33,490 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMPLOYER_EMPLOYEE drop constraint FKDC9B93B28D4A24D7
+14:17:33,490 ERROR SchemaExport:426 - Table "EMPLOYER_EMPLOYEE" not found; SQL statement:
+
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D4A24D7 [42102-145]
+14:17:33,490 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D500DB7
+14:17:33,490 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table EMPLOYER_EMPLOYEE drop constraint FKDC9B93B28D500DB7
+14:17:33,491 ERROR SchemaExport:426 - Table "EMPLOYER_EMPLOYEE" not found; SQL statement:
+
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D500DB7 [42102-145]
+14:17:33,491 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK252222D556A303
+14:17:33,491 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Node drop constraint FK252222D556A303
+14:17:33,491 ERROR SchemaExport:426 - Table "NODE" not found; SQL statement:
+
+    alter table Node 
+        drop constraint FK252222D556A303 [42102-145]
+14:17:33,491 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK25222261DDD534
+14:17:33,491 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Node drop constraint FK25222261DDD534
+14:17:33,491 ERROR SchemaExport:426 - Table "NODE" not found; SQL statement:
+
+    alter table Node 
+        drop constraint FK25222261DDD534 [42102-145]
+14:17:33,492 DEBUG SQL:104 - 
+    alter table NumberedNode 
+        drop constraint FK667A9BEA4467F5CB
+14:17:33,492 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table NumberedNode drop constraint FK667A9BEA4467F5CB
+14:17:33,492 ERROR SchemaExport:426 - Table "NUMBEREDNODE" not found; SQL statement:
+
+    alter table NumberedNode 
+        drop constraint FK667A9BEA4467F5CB [42102-145]
+14:17:33,492 DEBUG SQL:104 - 
+    alter table OPS_ADDRESS 
+        drop constraint FKCEA94F2782611B3C
+14:17:33,492 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OPS_ADDRESS drop constraint FKCEA94F2782611B3C
+14:17:33,492 ERROR SchemaExport:426 - Table "OPS_ADDRESS" not found; SQL statement:
+
+    alter table OPS_ADDRESS 
+        drop constraint FKCEA94F2782611B3C [42102-145]
+14:17:33,492 DEBUG SQL:104 - 
+    alter table OPS_PERS_DETAIL 
+        drop constraint FK2409C38D9711DB07
+14:17:33,493 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table OPS_PERS_DETAIL drop constraint FK2409C38D9711DB07
+14:17:33,493 ERROR SchemaExport:426 - Table "OPS_PERS_DETAIL" not found; SQL statement:
+
+    alter table OPS_PERS_DETAIL 
+        drop constraint FK2409C38D9711DB07 [42102-145]
+14:17:33,493 DEBUG SQL:104 - 
+    alter table V_ENTITY 
+        drop constraint FK145E7ECFD463E2D
+14:17:33,493 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table V_ENTITY drop constraint FK145E7ECFD463E2D
+14:17:33,493 ERROR SchemaExport:426 - Table "V_ENTITY" not found; SQL statement:
+
+    alter table V_ENTITY 
+        drop constraint FK145E7ECFD463E2D [42102-145]
+14:17:33,493 DEBUG SQL:104 - 
+    drop table COMPET_ION_OR if exists
+14:17:33,494 DEBUG SQL:104 - 
+    drop table Competition if exists
+14:17:33,494 DEBUG SQL:104 - 
+    drop table Competitor if exists
+14:17:33,494 DEBUG SQL:104 - 
+    drop table EMPLOYER_EMPLOYEE if exists
+14:17:33,494 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:17:33,494 DEBUG SQL:104 - 
+    drop table Employer if exists
+14:17:33,494 DEBUG SQL:104 - 
+    drop table Node if exists
+14:17:33,494 DEBUG SQL:104 - 
+    drop table NumberedNode if exists
+14:17:33,495 DEBUG SQL:104 - 
+    drop table OPS_ADDRESS if exists
+14:17:33,495 DEBUG SQL:104 - 
+    drop table OPS_PERSON if exists
+14:17:33,495 DEBUG SQL:104 - 
+    drop table OPS_PERS_DETAIL if exists
+14:17:33,495 DEBUG SQL:104 - 
+    drop table T_ENTITY if exists
+14:17:33,495 DEBUG SQL:104 - 
+    drop table V_ENTITY if exists
+14:17:33,495 DEBUG SQL:104 - 
+    create table COMPET_ION_OR (
+        TION_ID integer not null,
+        TOR_ID integer not null,
+        INDEX_COL integer not null,
+        primary key (TION_ID, INDEX_COL)
+    )
+14:17:33,496 DEBUG SQL:104 - 
+    create table Competition (
+        id integer generated by default as identity,
+        primary key (id)
+    )
+14:17:33,496 DEBUG SQL:104 - 
+    create table Competitor (
+        id integer generated by default as identity,
+        name varchar(255),
+        primary key (id)
+    )
+14:17:33,497 DEBUG SQL:104 - 
+    create table EMPLOYER_EMPLOYEE (
+        EMPER_ID integer not null,
+        EMPEE_ID integer not null
+    )
+14:17:33,497 DEBUG SQL:104 - 
+    create table Employee (
+        id integer generated by default as identity,
+        primary key (id)
+    )
+14:17:33,497 DEBUG SQL:104 - 
+    create table Employer (
+        id integer generated by default as identity,
+        vers integer not null,
+        primary key (id)
+    )
+14:17:33,497 DEBUG SQL:104 - 
+    create table Node (
+        name varchar(255) not null,
+        description varchar(255),
+        parent varchar(255),
+        created date not null,
+        CASC_PARENT varchar(255),
+        primary key (name)
+    )
+14:17:33,498 DEBUG SQL:104 - 
+    create table NumberedNode (
+        id bigint generated by default as identity,
+        name varchar(255) not null,
+        description varchar(255),
+        created date not null,
+        parent bigint,
+        primary key (id)
+    )
+14:17:33,498 DEBUG SQL:104 - 
+    create table OPS_ADDRESS (
+        ID bigint not null,
+        STREET varchar(255),
+        CITY varchar(255),
+        CTRY varchar(255),
+        RESIDENT bigint,
+        primary key (ID)
+    )
+14:17:33,498 DEBUG SQL:104 - 
+    create table OPS_PERSON (
+        ID bigint not null,
+        NAME varchar(255),
+        primary key (ID)
+    )
+14:17:33,499 DEBUG SQL:104 - 
+    create table OPS_PERS_DETAIL (
+        ID bigint not null,
+        SOME_DETAIL varchar(255),
+        primary key (ID)
+    )
+14:17:33,499 DEBUG SQL:104 - 
+    create table T_ENTITY (
+        ID varchar(255) not null,
+        TS timestamp not null,
+        NAME varchar(255),
+        primary key (ID)
+    )
+14:17:33,499 DEBUG SQL:104 - 
+    create table V_ENTITY (
+        ID varchar(255) not null,
+        VERS bigint not null,
+        NAME varchar(255),
+        parent varchar(255),
+        primary key (ID)
+    )
+14:17:33,508 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        add constraint FK1AAE64FB74F32D66 
+        foreign key (TOR_ID) 
+        references Competitor
+14:17:33,509 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        add constraint FK1AAE64FB1F11BBAE 
+        foreign key (TION_ID) 
+        references Competition
+14:17:33,509 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        add constraint FKDC9B93B28D4A24D7 
+        foreign key (EMPEE_ID) 
+        references Employee
+14:17:33,510 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        add constraint FKDC9B93B28D500DB7 
+        foreign key (EMPER_ID) 
+        references Employer
+14:17:33,510 DEBUG SQL:104 - 
+    alter table Node 
+        add constraint FK252222D556A303 
+        foreign key (parent) 
+        references Node
+14:17:33,523 DEBUG SQL:104 - 
+    alter table Node 
+        add constraint FK25222261DDD534 
+        foreign key (CASC_PARENT) 
+        references Node
+14:17:33,524 DEBUG SQL:104 - 
+    create index iname on NumberedNode (name)
+14:17:33,524 DEBUG SQL:104 - 
+    alter table NumberedNode 
+        add constraint FK667A9BEA4467F5CB 
+        foreign key (parent) 
+        references NumberedNode
+14:17:33,524 DEBUG SQL:104 - 
+    alter table OPS_ADDRESS 
+        add constraint FKCEA94F2782611B3C 
+        foreign key (RESIDENT) 
+        references OPS_PERSON
+14:17:33,525 DEBUG SQL:104 - 
+    alter table OPS_PERS_DETAIL 
+        add constraint FK2409C38D9711DB07 
+        foreign key (ID) 
+        references OPS_PERSON
+14:17:33,525 DEBUG SQL:104 - 
+    alter table V_ENTITY 
+        add constraint FK145E7ECFD463E2D 
+        foreign key (parent) 
+        references V_ENTITY
+14:17:33,526  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:33,527  INFO CustomRunner:139 - Test: testDeleteAndMerge
+14:17:33,529 DEBUG SQL:104 - 
+    insert 
+    into
+        Employer
+        (id, vers) 
+    values
+        (null, ?)
+14:17:33,530 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_0_,
+        employer0_.vers as vers5_0_ 
+    from
+        Employer employer0_ 
+    where
+        employer0_.id=?
+14:17:33,532 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYER_EMPLOYEE 
+    where
+        EMPER_ID=?
+14:17:33,532 DEBUG SQL:104 - 
+    delete 
+    from
+        Employer 
+    where
+        id=? 
+        and vers=?
+14:17:33,533 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_1_,
+        employer0_.vers as vers5_1_,
+        employees1_.EMPER_ID as EMPER1_5_3_,
+        employee2_.id as EMPEE2_3_3_,
+        employee2_.id as id4_0_ 
+    from
+        Employer employer0_ 
+    left outer join
+        EMPLOYER_EMPLOYEE employees1_ 
+            on employer0_.id=employees1_.EMPER_ID 
+    left outer join
+        Employee employee2_ 
+            on employees1_.EMPEE_ID=employee2_.id 
+    where
+        employer0_.id=?
+14:17:33,543 DEBUG SQL:104 - 
+    insert 
+    into
+        Employer
+        (id, vers) 
+    values
+        (null, ?)
+14:17:33,546 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.NumberedNode where parent is not null
+14:17:33,547 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'nonflushedchanges'
+    |        \-[IDENT] Node: 'NumberedNode'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[IDENT] Node: 'parent'
+
+14:17:33,551 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,552 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.NumberedNode (<no alias>) -> numberedno0_
+14:17:33,552 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:17:33,552 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.nonflushedchanges.NumberedNode)
+14:17:33,552 DEBUG DotNode:562 - dereferenceShortcut() : property parent in org.hibernate.test.nonflushedchanges.NumberedNode does not require a join.
+14:17:33,552 DEBUG DotNode:588 - Terminal propertyPath = [parent]
+14:17:33,552 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.parent -> parent
+14:17:33,553 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (NumberedNode)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[numberedno0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'NumberedNode' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=NumberedNode,tableAlias=numberedno0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.NumberedNode}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[DOT] DotNode: 'parent' {propertyName=parent,dereferenceType=0,propertyPath=parent,path={synthetic-alias}.parent,tableAlias=numberedno0_,className=org.hibernate.test.nonflushedchanges.NumberedNode,classAlias=null}
+             +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             \-[IDENT] IdentNode: 'parent' {originalText=parent}
+
+14:17:33,553 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,553 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,553 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:33,554 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.NumberedNode
+14:17:33,555 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'NumberedNode'
+
+14:17:33,577 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,578 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.NumberedNode (<no alias>) -> numberedno0_
+14:17:33,578 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (NumberedNode)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[numberedno0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'NumberedNode' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=NumberedNode,tableAlias=numberedno0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.NumberedNode}}
+
+14:17:33,578 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,578 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,578 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:33,579 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.Node where parent is not null
+14:17:33,580 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'nonflushedchanges'
+    |        \-[IDENT] Node: 'Node'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[IDENT] Node: 'parent'
+
+14:17:33,591 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,592 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Node (<no alias>) -> node0_
+14:17:33,592 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:17:33,592 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.nonflushedchanges.Node)
+14:17:33,592 DEBUG DotNode:562 - dereferenceShortcut() : property parent in org.hibernate.test.nonflushedchanges.Node does not require a join.
+14:17:33,592 DEBUG DotNode:588 - Terminal propertyPath = [parent]
+14:17:33,592 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.parent -> parent
+14:17:33,593 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Node)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[node0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Node' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Node,tableAlias=node0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Node}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[DOT] DotNode: 'parent' {propertyName=parent,dereferenceType=0,propertyPath=parent,path={synthetic-alias}.parent,tableAlias=node0_,className=org.hibernate.test.nonflushedchanges.Node,classAlias=null}
+             +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             \-[IDENT] IdentNode: 'parent' {originalText=parent}
+
+14:17:33,593 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,593 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,593 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:33,594 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.Node
+14:17:33,604 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'Node'
+
+14:17:33,605 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,605 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Node (<no alias>) -> node0_
+14:17:33,605 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Node)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[node0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Node' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Node,tableAlias=node0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Node}}
+
+14:17:33,606 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,606 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,607 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:33,607 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.VersionedEntity where parent is not null
+14:17:33,608 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'nonflushedchanges'
+    |        \-[IDENT] Node: 'VersionedEntity'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[IDENT] Node: 'parent'
+
+14:17:33,623 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,624 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.VersionedEntity (<no alias>) -> versionede0_
+14:17:33,624 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:17:33,624 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.nonflushedchanges.VersionedEntity)
+14:17:33,625 DEBUG DotNode:562 - dereferenceShortcut() : property parent in org.hibernate.test.nonflushedchanges.VersionedEntity does not require a join.
+14:17:33,625 DEBUG DotNode:588 - Terminal propertyPath = [parent]
+14:17:33,625 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.parent -> parent
+14:17:33,625 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (V_ENTITY)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[versionede0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'V_ENTITY' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=V_ENTITY,tableAlias=versionede0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.VersionedEntity}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[DOT] DotNode: 'parent' {propertyName=parent,dereferenceType=0,propertyPath=parent,path={synthetic-alias}.parent,tableAlias=versionede0_,className=org.hibernate.test.nonflushedchanges.VersionedEntity,classAlias=null}
+             +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             \-[IDENT] IdentNode: 'parent' {originalText=parent}
+
+14:17:33,638 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,638 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,638 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:33,639 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.VersionedEntity
+14:17:33,640 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'VersionedEntity'
+
+14:17:33,640 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,640 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.VersionedEntity (<no alias>) -> versionede0_
+14:17:33,640 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (V_ENTITY)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[versionede0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'V_ENTITY' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=V_ENTITY,tableAlias=versionede0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.VersionedEntity}}
+
+14:17:33,653 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,654 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,654 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:33,655 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.TimestampedEntity
+14:17:33,655 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'TimestampedEntity'
+
+14:17:33,655 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,656 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.TimestampedEntity (<no alias>) -> timestampe0_
+14:17:33,656 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (T_ENTITY)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[timestampe0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'T_ENTITY' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_ENTITY,tableAlias=timestampe0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.TimestampedEntity}}
+
+14:17:33,656 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,656 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,656 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:33,657 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.Competitor
+14:17:33,657 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'Competitor'
+
+14:17:33,657 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,657 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Competitor (<no alias>) -> competitor0_
+14:17:33,657 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Competitor)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[competitor0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Competitor' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Competitor,tableAlias=competitor0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Competitor}}
+
+14:17:33,658 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,670 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,672 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:33,673 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.Competition
+14:17:33,674 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'Competition'
+
+14:17:33,674 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,674 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Competition (<no alias>) -> competitio0_
+14:17:33,674 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Competition)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[competitio0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Competition' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Competition,tableAlias=competitio0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Competition}}
+
+14:17:33,674 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,674 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,675 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:33,683 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.nonflushedchanges.Employer
+14:17:33,684 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'nonflushedchanges'
+                \-[IDENT] Node: 'Employer'
+
+14:17:33,684 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,685 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Employer (<no alias>) -> employer0_
+14:17:33,685 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Employer employer0_ ) )
+14:17:33,685 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:33,685 DEBUG JoinProcessor:175 - Using FROM fragment [Employer employer0_]
+14:17:33,685 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Employer)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employer0_.id as id5_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employer,tableAlias=employer0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Employer}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'employer0_.vers as vers5_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employer0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Employer employer0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employer,tableAlias=employer0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Employer}}
+
+14:17:33,685 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,686 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.nonflushedchanges.Employer
+14:17:33,686 DEBUG QueryTranslatorImpl:236 - SQL: select employer0_.id as id5_, employer0_.vers as vers5_ from Employer employer0_
+14:17:33,686 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,686 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:33,687 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYER_EMPLOYEE 
+    where
+        EMPER_ID=?
+14:17:33,729 DEBUG SQL:104 - 
+    delete 
+    from
+        Employer 
+    where
+        id=? 
+        and vers=?
+14:17:33,730  INFO CustomRunner:139 - Test: testMergeBidiForeignKeyOneToOne
+14:17:33,732 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        OPS_ADDRESS
+14:17:33,733 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        OPS_PERSON
+14:17:33,733 DEBUG SQL:104 - 
+    insert 
+    into
+        OPS_ADDRESS
+        (STREET, CITY, CTRY, RESIDENT, ID) 
+    values
+        (?, ?, ?, ?, ?)
+14:17:33,734 DEBUG SQL:104 - 
+    insert 
+    into
+        OPS_PERSON
+        (NAME, ID) 
+    values
+        (?, ?)
+14:17:33,746 DEBUG SQL:104 - 
+    update
+        OPS_ADDRESS 
+    set
+        STREET=?,
+        CITY=?,
+        CTRY=?,
+        RESIDENT=? 
+    where
+        ID=?
+14:17:33,756 DEBUG SQL:104 - 
+    select
+        person0_.ID as ID9_1_,
+        person0_.NAME as NAME9_1_,
+        personalde1_.ID as ID10_0_,
+        personalde1_.SOME_DETAIL as SOME2_10_0_ 
+    from
+        OPS_PERSON person0_ 
+    left outer join
+        OPS_PERS_DETAIL personalde1_ 
+            on person0_.ID=personalde1_.ID 
+    where
+        person0_.ID=?
+14:17:33,757 DEBUG SQL:104 - 
+    select
+        address0_.ID as ID8_0_,
+        address0_.STREET as STREET8_0_,
+        address0_.CITY as CITY8_0_,
+        address0_.CTRY as CTRY8_0_,
+        address0_.RESIDENT as RESIDENT8_0_ 
+    from
+        OPS_ADDRESS address0_ 
+    where
+        address0_.RESIDENT=?
+14:17:33,761 DEBUG SQL:104 - 
+    select
+        address0_.ID as ID8_0_,
+        address0_.STREET as STREET8_0_,
+        address0_.CITY as CITY8_0_,
+        address0_.CTRY as CTRY8_0_,
+        address0_.RESIDENT as RESIDENT8_0_ 
+    from
+        OPS_ADDRESS address0_ 
+    where
+        address0_.RESIDENT=?
+14:17:33,765 DEBUG SQL:104 - 
+    delete 
+    from
+        OPS_ADDRESS 
+    where
+        ID=?
+14:17:33,766 DEBUG SQL:104 - 
+    delete 
+    from
+        OPS_PERSON 
+    where
+        ID=?
+14:17:33,776 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:33,776 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:33,776 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:33,777 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:33,777 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:33,777 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:33,789 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:33,790 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:33,790 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:33,790 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:33,791  INFO CustomRunner:139 - Test: testMergeBidiPrimayKeyOneToOne
+14:17:33,796  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/Node.hbm.xml
+14:17:33,801  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/Employer.hbm.xml
+14:17:33,806  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/OptLockEntity.hbm.xml
+14:17:33,810  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/OneToOne.hbm.xml
+14:17:33,815  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/nonflushedchanges/Competition.hbm.xml
+14:17:33,822  INFO ConnectionProviderInitiator:188 - HHH000130: Instantiating explicit connection provider: org.hibernate.testing.jta.JtaAwareConnectionProviderImpl
+14:17:33,823  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:33,823  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 20
+14:17:33,823  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:33,823  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:33,823  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa, autocommit=false, release_mode=AFTER_STATEMENT}
+14:17:33,824  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:33,824  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:33,825  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:33,825  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:33,838  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:33,839 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:33,839 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB74F32D66
+14:17:33,839 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB1F11BBAE
+14:17:33,839 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D4A24D7
+14:17:33,839 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D500DB7
+14:17:33,839 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK252222D556A303
+14:17:33,839 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK25222261DDD534
+14:17:33,840 DEBUG SQL:104 - 
+    alter table NumberedNode 
+        drop constraint FK667A9BEA4467F5CB
+14:17:33,840 DEBUG SQL:104 - 
+    alter table OPS_ADDRESS 
+        drop constraint FKCEA94F2782611B3C
+14:17:33,840 DEBUG SQL:104 - 
+    alter table OPS_PERS_DETAIL 
+        drop constraint FK2409C38D9711DB07
+14:17:33,840 DEBUG SQL:104 - 
+    alter table V_ENTITY 
+        drop constraint FK145E7ECFD463E2D
+14:17:33,840 DEBUG SQL:104 - 
+    drop table COMPET_ION_OR if exists
+14:17:33,840 DEBUG SQL:104 - 
+    drop table Competition if exists
+14:17:33,840 DEBUG SQL:104 - 
+    drop table Competitor if exists
+14:17:33,841 DEBUG SQL:104 - 
+    drop table EMPLOYER_EMPLOYEE if exists
+14:17:33,841 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:17:33,841 DEBUG SQL:104 - 
+    drop table Employer if exists
+14:17:33,841 DEBUG SQL:104 - 
+    drop table Node if exists
+14:17:33,841 DEBUG SQL:104 - 
+    drop table NumberedNode if exists
+14:17:33,841 DEBUG SQL:104 - 
+    drop table OPS_ADDRESS if exists
+14:17:33,841 DEBUG SQL:104 - 
+    drop table OPS_PERSON if exists
+14:17:33,859 DEBUG SQL:104 - 
+    drop table OPS_PERS_DETAIL if exists
+14:17:33,859 DEBUG SQL:104 - 
+    drop table T_ENTITY if exists
+14:17:33,860 DEBUG SQL:104 - 
+    drop table V_ENTITY if exists
+14:17:33,860 DEBUG SQL:104 - 
+    create table COMPET_ION_OR (
+        TION_ID integer not null,
+        TOR_ID integer not null,
+        INDEX_COL integer not null,
+        primary key (TION_ID, INDEX_COL)
+    )
+14:17:33,860 DEBUG SQL:104 - 
+    create table Competition (
+        id integer generated by default as identity,
+        primary key (id)
+    )
+14:17:33,860 DEBUG SQL:104 - 
+    create table Competitor (
+        id integer generated by default as identity,
+        name varchar(255),
+        primary key (id)
+    )
+14:17:33,861 DEBUG SQL:104 - 
+    create table EMPLOYER_EMPLOYEE (
+        EMPER_ID integer not null,
+        EMPEE_ID integer not null
+    )
+14:17:33,861 DEBUG SQL:104 - 
+    create table Employee (
+        id integer generated by default as identity,
+        primary key (id)
+    )
+14:17:33,861 DEBUG SQL:104 - 
+    create table Employer (
+        id integer generated by default as identity,
+        vers integer not null,
+        primary key (id)
+    )
+14:17:33,862 DEBUG SQL:104 - 
+    create table Node (
+        name varchar(255) not null,
+        description varchar(255),
+        parent varchar(255),
+        created date not null,
+        CASC_PARENT varchar(255),
+        primary key (name)
+    )
+14:17:33,886 DEBUG SQL:104 - 
+    create table NumberedNode (
+        id bigint generated by default as identity,
+        name varchar(255) not null,
+        description varchar(255),
+        created date not null,
+        parent bigint,
+        primary key (id)
+    )
+14:17:33,886 DEBUG SQL:104 - 
+    create table OPS_ADDRESS (
+        ID bigint not null,
+        STREET varchar(255),
+        CITY varchar(255),
+        CTRY varchar(255),
+        RESIDENT bigint,
+        primary key (ID)
+    )
+14:17:33,887 DEBUG SQL:104 - 
+    create table OPS_PERSON (
+        ID bigint not null,
+        NAME varchar(255),
+        primary key (ID)
+    )
+14:17:33,887 DEBUG SQL:104 - 
+    create table OPS_PERS_DETAIL (
+        ID bigint not null,
+        SOME_DETAIL varchar(255),
+        primary key (ID)
+    )
+14:17:33,898 DEBUG SQL:104 - 
+    create table T_ENTITY (
+        ID varchar(255) not null,
+        TS timestamp not null,
+        NAME varchar(255),
+        primary key (ID)
+    )
+14:17:33,899 DEBUG SQL:104 - 
+    create table V_ENTITY (
+        ID varchar(255) not null,
+        VERS bigint not null,
+        NAME varchar(255),
+        parent varchar(255),
+        primary key (ID)
+    )
+14:17:33,899 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        add constraint FK1AAE64FB74F32D66 
+        foreign key (TOR_ID) 
+        references Competitor
+14:17:33,900 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        add constraint FK1AAE64FB1F11BBAE 
+        foreign key (TION_ID) 
+        references Competition
+14:17:33,910 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        add constraint FKDC9B93B28D4A24D7 
+        foreign key (EMPEE_ID) 
+        references Employee
+14:17:33,911 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        add constraint FKDC9B93B28D500DB7 
+        foreign key (EMPER_ID) 
+        references Employer
+14:17:33,911 DEBUG SQL:104 - 
+    alter table Node 
+        add constraint FK252222D556A303 
+        foreign key (parent) 
+        references Node
+14:17:33,912 DEBUG SQL:104 - 
+    alter table Node 
+        add constraint FK25222261DDD534 
+        foreign key (CASC_PARENT) 
+        references Node
+14:17:33,912 DEBUG SQL:104 - 
+    create index iname on NumberedNode (name)
+14:17:33,912 DEBUG SQL:104 - 
+    alter table NumberedNode 
+        add constraint FK667A9BEA4467F5CB 
+        foreign key (parent) 
+        references NumberedNode
+14:17:33,913 DEBUG SQL:104 - 
+    alter table OPS_ADDRESS 
+        add constraint FKCEA94F2782611B3C 
+        foreign key (RESIDENT) 
+        references OPS_PERSON
+14:17:33,924 DEBUG SQL:104 - 
+    alter table OPS_PERS_DETAIL 
+        add constraint FK2409C38D9711DB07 
+        foreign key (ID) 
+        references OPS_PERSON
+14:17:33,925 DEBUG SQL:104 - 
+    alter table V_ENTITY 
+        add constraint FK145E7ECFD463E2D 
+        foreign key (parent) 
+        references V_ENTITY
+14:17:33,925  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:33,927 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        OPS_PERSON
+14:17:33,928 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        OPS_PERS_DETAIL
+14:17:33,929 DEBUG SQL:104 - 
+    insert 
+    into
+        OPS_PERSON
+        (NAME, ID) 
+    values
+        (?, ?)
+14:17:33,929 DEBUG SQL:104 - 
+    insert 
+    into
+        OPS_PERS_DETAIL
+        (SOME_DETAIL, ID) 
+    values
+        (?, ?)
+14:17:33,930 DEBUG SQL:104 - 
+    select
+        person0_.ID as ID9_1_,
+        person0_.NAME as NAME9_1_,
+        personalde1_.ID as ID10_0_,
+        personalde1_.SOME_DETAIL as SOME2_10_0_ 
+    from
+        OPS_PERSON person0_ 
+    left outer join
+        OPS_PERS_DETAIL personalde1_ 
+            on person0_.ID=personalde1_.ID 
+    where
+        person0_.ID=?
+14:17:33,930 DEBUG SQL:104 - 
+    select
+        address0_.ID as ID8_0_,
+        address0_.STREET as STREET8_0_,
+        address0_.CITY as CITY8_0_,
+        address0_.CTRY as CTRY8_0_,
+        address0_.RESIDENT as RESIDENT8_0_ 
+    from
+        OPS_ADDRESS address0_ 
+    where
+        address0_.RESIDENT=?
+14:17:33,947 DEBUG SQL:104 - 
+    update
+        OPS_PERS_DETAIL 
+    set
+        SOME_DETAIL=? 
+    where
+        ID=?
+14:17:33,948 DEBUG SQL:104 - 
+    delete 
+    from
+        OPS_PERS_DETAIL 
+    where
+        ID=?
+14:17:33,948 DEBUG SQL:104 - 
+    delete 
+    from
+        OPS_PERSON 
+    where
+        ID=?
+14:17:33,949 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.NumberedNode where parent is not null
+14:17:33,950 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'nonflushedchanges'
+    |        \-[IDENT] Node: 'NumberedNode'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[IDENT] Node: 'parent'
+
+14:17:33,962 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,963 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.NumberedNode (<no alias>) -> numberedno0_
+14:17:33,963 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:17:33,963 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.nonflushedchanges.NumberedNode)
+14:17:33,963 DEBUG DotNode:562 - dereferenceShortcut() : property parent in org.hibernate.test.nonflushedchanges.NumberedNode does not require a join.
+14:17:33,963 DEBUG DotNode:588 - Terminal propertyPath = [parent]
+14:17:33,963 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.parent -> parent
+14:17:33,964 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (NumberedNode)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[numberedno0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'NumberedNode' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=NumberedNode,tableAlias=numberedno0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.NumberedNode}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[DOT] DotNode: 'parent' {propertyName=parent,dereferenceType=0,propertyPath=parent,path={synthetic-alias}.parent,tableAlias=numberedno0_,className=org.hibernate.test.nonflushedchanges.NumberedNode,classAlias=null}
+             +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             \-[IDENT] IdentNode: 'parent' {originalText=parent}
+
+14:17:33,964 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,964 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,964 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:33,965 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.NumberedNode
+14:17:33,966 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'NumberedNode'
+
+14:17:33,991 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,992 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.NumberedNode (<no alias>) -> numberedno0_
+14:17:33,992 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (NumberedNode)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[numberedno0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'NumberedNode' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=NumberedNode,tableAlias=numberedno0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.NumberedNode}}
+
+14:17:33,992 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,992 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:33,993 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:33,993 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.Node where parent is not null
+14:17:33,994 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'nonflushedchanges'
+    |        \-[IDENT] Node: 'Node'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[IDENT] Node: 'parent'
+
+14:17:34,012 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,013 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Node (<no alias>) -> node0_
+14:17:34,013 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:17:34,013 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.nonflushedchanges.Node)
+14:17:34,013 DEBUG DotNode:562 - dereferenceShortcut() : property parent in org.hibernate.test.nonflushedchanges.Node does not require a join.
+14:17:34,013 DEBUG DotNode:588 - Terminal propertyPath = [parent]
+14:17:34,013 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.parent -> parent
+14:17:34,013 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Node)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[node0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Node' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Node,tableAlias=node0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Node}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[DOT] DotNode: 'parent' {propertyName=parent,dereferenceType=0,propertyPath=parent,path={synthetic-alias}.parent,tableAlias=node0_,className=org.hibernate.test.nonflushedchanges.Node,classAlias=null}
+             +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             \-[IDENT] IdentNode: 'parent' {originalText=parent}
+
+14:17:34,014 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,014 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,014 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:34,026 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.Node
+14:17:34,027 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'Node'
+
+14:17:34,027 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,028 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Node (<no alias>) -> node0_
+14:17:34,028 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Node)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[node0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Node' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Node,tableAlias=node0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Node}}
+
+14:17:34,028 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,028 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,028 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:34,029 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.VersionedEntity where parent is not null
+14:17:34,030 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'nonflushedchanges'
+    |        \-[IDENT] Node: 'VersionedEntity'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[IDENT] Node: 'parent'
+
+14:17:34,030 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,030 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.VersionedEntity (<no alias>) -> versionede0_
+14:17:34,030 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:17:34,031 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.nonflushedchanges.VersionedEntity)
+14:17:34,031 DEBUG DotNode:562 - dereferenceShortcut() : property parent in org.hibernate.test.nonflushedchanges.VersionedEntity does not require a join.
+14:17:34,031 DEBUG DotNode:588 - Terminal propertyPath = [parent]
+14:17:34,031 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.parent -> parent
+14:17:34,031 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (V_ENTITY)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[versionede0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'V_ENTITY' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=V_ENTITY,tableAlias=versionede0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.VersionedEntity}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[DOT] DotNode: 'parent' {propertyName=parent,dereferenceType=0,propertyPath=parent,path={synthetic-alias}.parent,tableAlias=versionede0_,className=org.hibernate.test.nonflushedchanges.VersionedEntity,classAlias=null}
+             +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             \-[IDENT] IdentNode: 'parent' {originalText=parent}
+
+14:17:34,031 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,031 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,032 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:34,032 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.VersionedEntity
+14:17:34,050 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'VersionedEntity'
+
+14:17:34,050 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,050 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.VersionedEntity (<no alias>) -> versionede0_
+14:17:34,050 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (V_ENTITY)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[versionede0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'V_ENTITY' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=V_ENTITY,tableAlias=versionede0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.VersionedEntity}}
+
+14:17:34,051 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,051 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,051 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:34,052 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.TimestampedEntity
+14:17:34,052 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'TimestampedEntity'
+
+14:17:34,052 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,052 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.TimestampedEntity (<no alias>) -> timestampe0_
+14:17:34,053 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (T_ENTITY)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[timestampe0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'T_ENTITY' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_ENTITY,tableAlias=timestampe0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.TimestampedEntity}}
+
+14:17:34,053 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,053 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,053 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:34,053 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.Competitor
+14:17:34,054 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'Competitor'
+
+14:17:34,067 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,068 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Competitor (<no alias>) -> competitor0_
+14:17:34,068 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Competitor)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[competitor0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Competitor' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Competitor,tableAlias=competitor0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Competitor}}
+
+14:17:34,068 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,068 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,068 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:34,069 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.Competition
+14:17:34,070 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'nonflushedchanges'
+             \-[IDENT] Node: 'Competition'
+
+14:17:34,082 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,082 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Competition (<no alias>) -> competitio0_
+14:17:34,082 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Competition)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[competitio0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Competition' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Competition,tableAlias=competitio0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Competition}}
+
+14:17:34,082 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,082 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,083 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:34,083 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.nonflushedchanges.Employer
+14:17:34,084 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'nonflushedchanges'
+                \-[IDENT] Node: 'Employer'
+
+14:17:34,084 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,084 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Employer (<no alias>) -> employer0_
+14:17:34,084 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Employer employer0_ ) )
+14:17:34,084 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:34,084 DEBUG JoinProcessor:175 - Using FROM fragment [Employer employer0_]
+14:17:34,112 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Employer)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employer0_.id as id5_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employer,tableAlias=employer0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Employer}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'employer0_.vers as vers5_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[employer0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Employer employer0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employer,tableAlias=employer0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Employer}}
+
+14:17:34,113 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,113 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.nonflushedchanges.Employer
+14:17:34,113 DEBUG QueryTranslatorImpl:236 - SQL: select employer0_.id as id5_, employer0_.vers as vers5_ from Employer employer0_
+14:17:34,113 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,113 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:34,114  INFO CustomRunner:139 - Test: testMergeDeepTree
+14:17:34,116 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,145 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,147 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,155 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:34,155 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:34,156 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:34,163 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,164 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,166 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,178 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:34,179 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent6_1_,
+        children0_.name as name6_1_,
+        children0_.name as name6_0_,
+        children0_.description as descript2_6_0_,
+        children0_.parent as parent6_0_,
+        children0_.created as created6_0_ 
+    from
+        Node children0_ 
+    where
+        children0_.parent=?
+14:17:34,180 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:34,181 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:34,189 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:34,196 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        description=?,
+        parent=?,
+        created=? 
+    where
+        name=?
+14:17:34,197 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,198 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,211 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,212 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,242 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:34,243 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,255 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:34,256 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent6_1_,
+        children0_.name as name6_1_,
+        children0_.name as name6_0_,
+        children0_.description as descript2_6_0_,
+        children0_.parent as parent6_0_,
+        children0_.created as created6_0_ 
+    from
+        Node children0_ 
+    where
+        children0_.parent=?
+14:17:34,268 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:34,269 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:34,282 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:34,285 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:34,286 DEBUG SQL:104 - 
+    select
+        node_.name,
+        node_.description as descript2_6_,
+        node_.parent as parent6_,
+        node_.created as created6_ 
+    from
+        Node node_ 
+    where
+        node_.name=?
+14:17:34,286 DEBUG SQL:104 - 
+    select
+        node_.name,
+        node_.description as descript2_6_,
+        node_.parent as parent6_,
+        node_.created as created6_ 
+    from
+        Node node_ 
+    where
+        node_.name=?
+14:17:34,298 DEBUG SQL:104 - 
+    select
+        node_.name,
+        node_.description as descript2_6_,
+        node_.parent as parent6_,
+        node_.created as created6_ 
+    from
+        Node node_ 
+    where
+        node_.name=?
+14:17:34,299 DEBUG SQL:104 - 
+    select
+        node_.name,
+        node_.description as descript2_6_,
+        node_.parent as parent6_,
+        node_.created as created6_ 
+    from
+        Node node_ 
+    where
+        node_.name=?
+14:17:34,299 DEBUG SQL:104 - 
+    select
+        node_.name,
+        node_.description as descript2_6_,
+        node_.parent as parent6_,
+        node_.created as created6_ 
+    from
+        Node node_ 
+    where
+        node_.name=?
+14:17:34,310 DEBUG SQL:104 - 
+    select
+        node_.name,
+        node_.description as descript2_6_,
+        node_.parent as parent6_,
+        node_.created as created6_ 
+    from
+        Node node_ 
+    where
+        node_.name=?
+14:17:34,311 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        CASC_PARENT=null 
+    where
+        CASC_PARENT=?
+14:17:34,311 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        CASC_PARENT=null 
+    where
+        CASC_PARENT=?
+14:17:34,311 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        CASC_PARENT=null 
+    where
+        CASC_PARENT=?
+14:17:34,312 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        CASC_PARENT=null 
+    where
+        CASC_PARENT=?
+14:17:34,312 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        CASC_PARENT=null 
+    where
+        CASC_PARENT=?
+14:17:34,312 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        CASC_PARENT=null 
+    where
+        CASC_PARENT=?
+14:17:34,312 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        name=?
+14:17:34,325 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        name=?
+14:17:34,326 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        name=?
+14:17:34,326 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        name=?
+14:17:34,326 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        name=?
+14:17:34,326 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        name=?
+14:17:34,339 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:34,339 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:34,340 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:34,340 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:34,340 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:34,340 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:34,340 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:34,341 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:34,341 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:34,341 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:34,368  INFO CustomRunner:139 - Test: testMergeDeepTreeWithGeneratedId
+14:17:34,370 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,373 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,373 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,387 DEBUG SQL:104 - 
+    select
+        numberedno0_.id as id7_1_,
+        numberedno0_.name as name7_1_,
+        numberedno0_.description as descript3_7_1_,
+        numberedno0_.created as created7_1_,
+        numberedno0_.parent as parent7_1_,
+        children1_.parent as parent7_3_,
+        children1_.id as id7_3_,
+        children1_.id as id7_0_,
+        children1_.name as name7_0_,
+        children1_.description as descript3_7_0_,
+        children1_.created as created7_0_,
+        children1_.parent as parent7_0_ 
+    from
+        NumberedNode numberedno0_ 
+    left outer join
+        NumberedNode children1_ 
+            on numberedno0_.id=children1_.parent 
+    where
+        numberedno0_.id=?
+14:17:34,389 DEBUG SQL:104 - 
+    select
+        numberedno0_.id as id7_1_,
+        numberedno0_.name as name7_1_,
+        numberedno0_.description as descript3_7_1_,
+        numberedno0_.created as created7_1_,
+        numberedno0_.parent as parent7_1_,
+        children1_.parent as parent7_3_,
+        children1_.id as id7_3_,
+        children1_.id as id7_0_,
+        children1_.name as name7_0_,
+        children1_.description as descript3_7_0_,
+        children1_.created as created7_0_,
+        children1_.parent as parent7_0_ 
+    from
+        NumberedNode numberedno0_ 
+    left outer join
+        NumberedNode children1_ 
+            on numberedno0_.id=children1_.parent 
+    where
+        numberedno0_.id=?
+14:17:34,400 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,400 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent7_1_,
+        children0_.id as id7_1_,
+        children0_.id as id7_0_,
+        children0_.name as name7_0_,
+        children0_.description as descript3_7_0_,
+        children0_.created as created7_0_,
+        children0_.parent as parent7_0_ 
+    from
+        NumberedNode children0_ 
+    where
+        children0_.parent=?
+14:17:34,415 DEBUG SQL:104 - 
+    update
+        NumberedNode 
+    set
+        name=?,
+        description=?,
+        created=?,
+        parent=? 
+    where
+        id=?
+14:17:34,416 DEBUG SQL:104 - 
+    select
+        numberedno0_.id as id7_1_,
+        numberedno0_.name as name7_1_,
+        numberedno0_.description as descript3_7_1_,
+        numberedno0_.created as created7_1_,
+        numberedno0_.parent as parent7_1_,
+        children1_.parent as parent7_3_,
+        children1_.id as id7_3_,
+        children1_.id as id7_0_,
+        children1_.name as name7_0_,
+        children1_.description as descript3_7_0_,
+        children1_.created as created7_0_,
+        children1_.parent as parent7_0_ 
+    from
+        NumberedNode numberedno0_ 
+    left outer join
+        NumberedNode children1_ 
+            on numberedno0_.id=children1_.parent 
+    where
+        numberedno0_.id=?
+14:17:34,431 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,432 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,433 DEBUG SQL:104 - 
+    select
+        numberedno0_.id as id7_1_,
+        numberedno0_.name as name7_1_,
+        numberedno0_.description as descript3_7_1_,
+        numberedno0_.created as created7_1_,
+        numberedno0_.parent as parent7_1_,
+        children1_.parent as parent7_3_,
+        children1_.id as id7_3_,
+        children1_.id as id7_0_,
+        children1_.name as name7_0_,
+        children1_.description as descript3_7_0_,
+        children1_.created as created7_0_,
+        children1_.parent as parent7_0_ 
+    from
+        NumberedNode numberedno0_ 
+    left outer join
+        NumberedNode children1_ 
+            on numberedno0_.id=children1_.parent 
+    where
+        numberedno0_.id=?
+14:17:34,442 DEBUG SQL:104 - 
+    select
+        numberedno0_.id as id7_1_,
+        numberedno0_.name as name7_1_,
+        numberedno0_.description as descript3_7_1_,
+        numberedno0_.created as created7_1_,
+        numberedno0_.parent as parent7_1_,
+        children1_.parent as parent7_3_,
+        children1_.id as id7_3_,
+        children1_.id as id7_0_,
+        children1_.name as name7_0_,
+        children1_.description as descript3_7_0_,
+        children1_.created as created7_0_,
+        children1_.parent as parent7_0_ 
+    from
+        NumberedNode numberedno0_ 
+    left outer join
+        NumberedNode children1_ 
+            on numberedno0_.id=children1_.parent 
+    where
+        numberedno0_.id=?
+14:17:34,443 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent7_1_,
+        children0_.id as id7_1_,
+        children0_.id as id7_0_,
+        children0_.name as name7_0_,
+        children0_.description as descript3_7_0_,
+        children0_.created as created7_0_,
+        children0_.parent as parent7_0_ 
+    from
+        NumberedNode children0_ 
+    where
+        children0_.parent=?
+14:17:34,447 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.NumberedNode where name like 'grand%'
+14:17:34,448 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'nonflushedchanges'
+    |        \-[IDENT] Node: 'NumberedNode'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''grand%''
+
+14:17:34,462 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,462 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.NumberedNode (<no alias>) -> numberedno0_
+14:17:34,462 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:17:34,462 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:17:34,463 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> name
+14:17:34,463 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (NumberedNode)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[numberedno0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'NumberedNode' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=NumberedNode,tableAlias=numberedno0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.NumberedNode}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=numberedno0_,className=org.hibernate.test.nonflushedchanges.NumberedNode,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''grand%''
+
+14:17:34,464 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,464 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,464 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        name like 'grand%'
+14:17:34,466 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.nonflushedchanges.NumberedNode where name like 'child%'
+14:17:34,649 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    +-[FROM] Node: 'FROM'
+    |  \-[RANGE] Node: 'RANGE'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  \-[IDENT] Node: 'test'
+    |        |  \-[IDENT] Node: 'nonflushedchanges'
+    |        \-[IDENT] Node: 'NumberedNode'
+    \-[WHERE] Node: 'where'
+       \-[LIKE] Node: 'like'
+          +-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''child%''
+
+14:17:34,649 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,649 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.NumberedNode (<no alias>) -> numberedno0_
+14:17:34,649 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:17:34,650 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:17:34,650 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> name
+14:17:34,650 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (NumberedNode)
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[numberedno0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'NumberedNode' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=NumberedNode,tableAlias=numberedno0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.NumberedNode}}
+    \-[WHERE] SqlNode: 'where'
+       \-[LIKE] BinaryLogicOperatorNode: 'like'
+          +-[DOT] DotNode: 'name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=numberedno0_,className=org.hibernate.test.nonflushedchanges.NumberedNode,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''child%''
+
+14:17:34,650 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,650 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:34,654 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        name like 'child%'
+14:17:34,654 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:34,669 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:34,669 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:34,670 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:34,670 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:34,670 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:34,670 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:34,680 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:34,680 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:34,681 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:34,681 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:34,682  INFO CustomRunner:139 - Test: testMergeManaged
+14:17:34,683 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,685 DEBUG SQL:104 - 
+    select
+        numberedno0_.id as id7_1_,
+        numberedno0_.name as name7_1_,
+        numberedno0_.description as descript3_7_1_,
+        numberedno0_.created as created7_1_,
+        numberedno0_.parent as parent7_1_,
+        children1_.parent as parent7_3_,
+        children1_.id as id7_3_,
+        children1_.id as id7_0_,
+        children1_.name as name7_0_,
+        children1_.description as descript3_7_0_,
+        children1_.created as created7_0_,
+        children1_.parent as parent7_0_ 
+    from
+        NumberedNode numberedno0_ 
+    left outer join
+        NumberedNode children1_ 
+            on numberedno0_.id=children1_.parent 
+    where
+        numberedno0_.id=?
+14:17:34,709 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,712 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        NumberedNode this_
+14:17:34,712 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:34,713 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:34,713 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:34,718 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:34,718 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:34,718 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:34,718 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:34,719 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:34,719 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:34,719 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:34,729  INFO CustomRunner:139 - Test: testMergeManagedInitializedCollection
+14:17:34,731 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,732 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,733 DEBUG SQL:104 - 
+    select
+        numberedno0_.id as id7_0_,
+        numberedno0_.name as name7_0_,
+        numberedno0_.description as descript3_7_0_,
+        numberedno0_.created as created7_0_,
+        numberedno0_.parent as parent7_0_ 
+    from
+        NumberedNode numberedno0_ 
+    where
+        numberedno0_.id=?
+14:17:34,744 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent7_1_,
+        children0_.id as id7_1_,
+        children0_.id as id7_0_,
+        children0_.name as name7_0_,
+        children0_.description as descript3_7_0_,
+        children0_.created as created7_0_,
+        children0_.parent as parent7_0_ 
+    from
+        NumberedNode children0_ 
+    where
+        children0_.parent=?
+14:17:34,747 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        NumberedNode this_
+14:17:34,748 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:34,749 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:34,751 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:34,752 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:34,752 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:34,753 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:34,753 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:34,753 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:34,754 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:34,763 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:34,764  INFO CustomRunner:139 - Test: testMergeManagedUninitializedCollection
+14:17:34,765 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,766 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,766 DEBUG SQL:104 - 
+    select
+        numberedno0_.id as id7_0_,
+        numberedno0_.name as name7_0_,
+        numberedno0_.description as descript3_7_0_,
+        numberedno0_.created as created7_0_,
+        numberedno0_.parent as parent7_0_ 
+    from
+        NumberedNode numberedno0_ 
+    where
+        numberedno0_.id=?
+14:17:34,778 DEBUG SQL:104 - 
+    select
+        count(*) as y0_ 
+    from
+        NumberedNode this_
+14:17:34,779 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:34,780 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:34,780 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:34,780 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:34,781 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:34,781 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:34,781 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:34,781 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:34,781 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:34,782 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:34,782  INFO CustomRunner:139 - Test: testMergeManyToManyWithCollectionDeference
+14:17:34,792 DEBUG SQL:104 - 
+    insert 
+    into
+        Competition
+        (id) 
+    values
+        (null)
+14:17:34,794 DEBUG SQL:104 - 
+    insert 
+    into
+        Competitor
+        (id, name) 
+    values
+        (null, ?)
+14:17:34,794 DEBUG SQL:104 - 
+    insert 
+    into
+        Competitor
+        (id, name) 
+    values
+        (null, ?)
+14:17:34,794 DEBUG SQL:104 - 
+    insert 
+    into
+        Competitor
+        (id, name) 
+    values
+        (null, ?)
+14:17:34,795 DEBUG SQL:104 - 
+    insert 
+    into
+        COMPET_ION_OR
+        (TION_ID, INDEX_COL, TOR_ID) 
+    values
+        (?, ?, ?)
+14:17:34,806 DEBUG SQL:104 - 
+    insert 
+    into
+        COMPET_ION_OR
+        (TION_ID, INDEX_COL, TOR_ID) 
+    values
+        (?, ?, ?)
+14:17:34,806 DEBUG SQL:104 - 
+    insert 
+    into
+        COMPET_ION_OR
+        (TION_ID, INDEX_COL, TOR_ID) 
+    values
+        (?, ?, ?)
+14:17:34,807 DEBUG SQL:104 - 
+    select
+        competitio0_.id as id1_1_,
+        competitor1_.TION_ID as TION1_1_3_,
+        competitor2_.id as TOR2_0_3_,
+        competitor1_.INDEX_COL as INDEX3_3_,
+        competitor2_.id as id2_0_,
+        competitor2_.name as name2_0_ 
+    from
+        Competition competitio0_ 
+    left outer join
+        COMPET_ION_OR competitor1_ 
+            on competitio0_.id=competitor1_.TION_ID 
+    left outer join
+        Competitor competitor2_ 
+            on competitor1_.TOR_ID=competitor2_.id 
+    where
+        competitio0_.id=?
+14:17:34,818 DEBUG SQL:104 - 
+    insert 
+    into
+        Competitor
+        (id, name) 
+    values
+        (null, ?)
+14:17:34,822 DEBUG SQL:104 - 
+    update
+        Competitor 
+    set
+        name=? 
+    where
+        id=?
+14:17:34,827 DEBUG SQL:104 - 
+    delete 
+    from
+        COMPET_ION_OR 
+    where
+        TION_ID=? 
+        and INDEX_COL=?
+14:17:34,827 DEBUG SQL:104 - 
+    update
+        COMPET_ION_OR 
+    set
+        TOR_ID=? 
+    where
+        TION_ID=? 
+        and INDEX_COL=?
+14:17:34,828 DEBUG SQL:104 - 
+    select
+        competitio0_.id as id1_0_ 
+    from
+        Competition competitio0_ 
+    where
+        competitio0_.id=?
+14:17:34,829 DEBUG SQL:104 - 
+    select
+        competitor0_.TION_ID as TION1_1_1_,
+        competitor0_.TOR_ID as TOR2_0_1_,
+        competitor0_.INDEX_COL as INDEX3_1_,
+        competitor1_.id as id2_0_,
+        competitor1_.name as name2_0_ 
+    from
+        COMPET_ION_OR competitor0_ 
+    inner join
+        Competitor competitor1_ 
+            on competitor0_.TOR_ID=competitor1_.id 
+    where
+        competitor0_.TION_ID=?
+14:17:34,841 DEBUG SQL:104 - 
+    delete 
+    from
+        COMPET_ION_OR 
+    where
+        TION_ID=?
+14:17:34,842 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor 
+    where
+        id=?
+14:17:34,842 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor 
+    where
+        id=?
+14:17:34,842 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition 
+    where
+        id=?
+14:17:34,852 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:34,853 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:34,853 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:34,854 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:34,854 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:34,862 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:34,862 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:34,863 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:34,863 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:34,863 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:34,864  INFO CustomRunner:139 - Test: testMergeStaleVersionFails
+14:17:34,865 DEBUG SQL:104 - 
+    insert 
+    into
+        V_ENTITY
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:17:34,875 DEBUG SQL:104 - 
+    select
+        versionede0_.ID as ID12_0_,
+        versionede0_.VERS as VERS12_0_,
+        versionede0_.NAME as NAME12_0_,
+        versionede0_.parent as parent12_0_ 
+    from
+        V_ENTITY versionede0_ 
+    where
+        versionede0_.ID=?
+14:17:34,876 DEBUG SQL:104 - 
+    update
+        V_ENTITY 
+    set
+        VERS=?,
+        NAME=?,
+        parent=? 
+    where
+        ID=? 
+        and VERS=?
+14:17:34,876 DEBUG SQL:104 - 
+    select
+        versionede0_.ID as ID12_1_,
+        versionede0_.VERS as VERS12_1_,
+        versionede0_.NAME as NAME12_1_,
+        versionede0_.parent as parent12_1_,
+        children1_.parent as parent12_3_,
+        children1_.ID as ID12_3_,
+        children1_.ID as ID12_0_,
+        children1_.VERS as VERS12_0_,
+        children1_.NAME as NAME12_0_,
+        children1_.parent as parent12_0_ 
+    from
+        V_ENTITY versionede0_ 
+    left outer join
+        V_ENTITY children1_ 
+            on versionede0_.ID=children1_.parent 
+    where
+        versionede0_.ID=?
+14:17:34,886 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:34,887 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:34,887 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:34,887 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:34,895 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:34,895 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:34,895 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:34,896 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:34,896 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:34,896 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:34,897  INFO CustomRunner:139 - Test: testMergeTree
+14:17:34,910 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:34,923 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:34,924 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,925 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:34,926 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:34,928 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:34,928 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:34,929 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        description=?,
+        parent=?,
+        created=? 
+    where
+        name=?
+14:17:34,939 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        description=?,
+        parent=?,
+        created=? 
+    where
+        name=?
+14:17:34,940 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:34,941 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:34,941 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:34,941 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:34,941 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:34,941 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:34,942 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:34,964 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:34,964 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:34,964 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:34,965  INFO CustomRunner:139 - Test: testMergeTreeWithGeneratedId
+14:17:34,966 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,967 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,979 DEBUG SQL:104 - 
+    select
+        numberedno0_.id as id7_1_,
+        numberedno0_.name as name7_1_,
+        numberedno0_.description as descript3_7_1_,
+        numberedno0_.created as created7_1_,
+        numberedno0_.parent as parent7_1_,
+        children1_.parent as parent7_3_,
+        children1_.id as id7_3_,
+        children1_.id as id7_0_,
+        children1_.name as name7_0_,
+        children1_.description as descript3_7_0_,
+        children1_.created as created7_0_,
+        children1_.parent as parent7_0_ 
+    from
+        NumberedNode numberedno0_ 
+    left outer join
+        NumberedNode children1_ 
+            on numberedno0_.id=children1_.parent 
+    where
+        numberedno0_.id=?
+14:17:34,981 DEBUG SQL:104 - 
+    insert 
+    into
+        NumberedNode
+        (id, name, description, created, parent) 
+    values
+        (null, ?, ?, ?, ?)
+14:17:34,996 DEBUG SQL:104 - 
+    update
+        NumberedNode 
+    set
+        name=?,
+        description=?,
+        created=?,
+        parent=? 
+    where
+        id=?
+14:17:34,997 DEBUG SQL:104 - 
+    update
+        NumberedNode 
+    set
+        name=?,
+        description=?,
+        created=?,
+        parent=? 
+    where
+        id=?
+14:17:34,997 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:34,998 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:35,006 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:35,007 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:35,007 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:35,007 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:35,016 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:35,017 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:35,017 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:35,017 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:35,020  INFO CustomRunner:139 - Test: testNoExtraUpdatesOnMerge
+14:17:35,022 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:35,024 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:35,029 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:35,032 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:35,033 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:35,037 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        description=?,
+        parent=?,
+        created=? 
+    where
+        name=?
+14:17:35,045 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:35,046 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:35,046 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:35,047 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:35,056 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:35,056 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:35,056 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:35,057 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:35,057 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:35,057 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:35,058  INFO CustomRunner:139 - Test: testNoExtraUpdatesOnMergeVersioned
+14:17:35,063 DEBUG SQL:104 - 
+    insert 
+    into
+        V_ENTITY
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:17:35,065 DEBUG SQL:104 - 
+    select
+        versionede0_.ID as ID12_1_,
+        versionede0_.VERS as VERS12_1_,
+        versionede0_.NAME as NAME12_1_,
+        versionede0_.parent as parent12_1_,
+        children1_.parent as parent12_3_,
+        children1_.ID as ID12_3_,
+        children1_.ID as ID12_0_,
+        children1_.VERS as VERS12_0_,
+        children1_.NAME as NAME12_0_,
+        children1_.parent as parent12_0_ 
+    from
+        V_ENTITY versionede0_ 
+    left outer join
+        V_ENTITY children1_ 
+            on versionede0_.ID=children1_.parent 
+    where
+        versionede0_.ID=?
+14:17:35,077 DEBUG SQL:104 - 
+    select
+        versionede0_.ID as ID12_1_,
+        versionede0_.VERS as VERS12_1_,
+        versionede0_.NAME as NAME12_1_,
+        versionede0_.parent as parent12_1_,
+        children1_.parent as parent12_3_,
+        children1_.ID as ID12_3_,
+        children1_.ID as ID12_0_,
+        children1_.VERS as VERS12_0_,
+        children1_.NAME as NAME12_0_,
+        children1_.parent as parent12_0_ 
+    from
+        V_ENTITY versionede0_ 
+    left outer join
+        V_ENTITY children1_ 
+            on versionede0_.ID=children1_.parent 
+    where
+        versionede0_.ID=?
+14:17:35,082 DEBUG SQL:104 - 
+    update
+        V_ENTITY 
+    set
+        VERS=?,
+        NAME=?,
+        parent=? 
+    where
+        ID=? 
+        and VERS=?
+14:17:35,084 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:35,092 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:35,092 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:35,092 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:35,093 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:35,093 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:35,093 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:35,102 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:35,102 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:35,102 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:35,103  INFO CustomRunner:139 - Test: testNoExtraUpdatesOnMergeVersionedWithCollection
+14:17:35,112 DEBUG SQL:104 - 
+    insert 
+    into
+        V_ENTITY
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:17:35,113 DEBUG SQL:104 - 
+    insert 
+    into
+        V_ENTITY
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:17:35,113 DEBUG SQL:104 - 
+    select
+        versionede0_.ID as ID12_1_,
+        versionede0_.VERS as VERS12_1_,
+        versionede0_.NAME as NAME12_1_,
+        versionede0_.parent as parent12_1_,
+        children1_.parent as parent12_3_,
+        children1_.ID as ID12_3_,
+        children1_.ID as ID12_0_,
+        children1_.VERS as VERS12_0_,
+        children1_.NAME as NAME12_0_,
+        children1_.parent as parent12_0_ 
+    from
+        V_ENTITY versionede0_ 
+    left outer join
+        V_ENTITY children1_ 
+            on versionede0_.ID=children1_.parent 
+    where
+        versionede0_.ID=?
+14:17:35,117 DEBUG SQL:104 - 
+    select
+        versionede0_.ID as ID12_1_,
+        versionede0_.VERS as VERS12_1_,
+        versionede0_.NAME as NAME12_1_,
+        versionede0_.parent as parent12_1_,
+        children1_.parent as parent12_3_,
+        children1_.ID as ID12_3_,
+        children1_.ID as ID12_0_,
+        children1_.VERS as VERS12_0_,
+        children1_.NAME as NAME12_0_,
+        children1_.parent as parent12_0_ 
+    from
+        V_ENTITY versionede0_ 
+    left outer join
+        V_ENTITY children1_ 
+            on versionede0_.ID=children1_.parent 
+    where
+        versionede0_.ID=?
+14:17:35,125 DEBUG SQL:104 - 
+    select
+        versionede0_.ID as ID12_1_,
+        versionede0_.VERS as VERS12_1_,
+        versionede0_.NAME as NAME12_1_,
+        versionede0_.parent as parent12_1_,
+        children1_.parent as parent12_3_,
+        children1_.ID as ID12_3_,
+        children1_.ID as ID12_0_,
+        children1_.VERS as VERS12_0_,
+        children1_.NAME as NAME12_0_,
+        children1_.parent as parent12_0_ 
+    from
+        V_ENTITY versionede0_ 
+    left outer join
+        V_ENTITY children1_ 
+            on versionede0_.ID=children1_.parent 
+    where
+        versionede0_.ID=?
+14:17:35,128 DEBUG SQL:104 - 
+    insert 
+    into
+        V_ENTITY
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:17:35,135 DEBUG SQL:104 - 
+    update
+        V_ENTITY 
+    set
+        VERS=?,
+        NAME=?,
+        parent=? 
+    where
+        ID=? 
+        and VERS=?
+14:17:35,136 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:35,136 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:35,137 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:35,137 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:35,146 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:35,147 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:35,147 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:35,147 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:35,147 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:35,147 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:35,158  INFO CustomRunner:139 - Test: testNoExtraUpdatesOnMergeWithCollection
+14:17:35,159 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:35,160 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:35,161 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:35,162 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:35,162 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:35,174 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:35,175 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:35,182 DEBUG SQL:104 - 
+    select
+        node0_.name as name6_1_,
+        node0_.description as descript2_6_1_,
+        node0_.parent as parent6_1_,
+        node0_.created as created6_1_,
+        children1_.parent as parent6_3_,
+        children1_.name as name6_3_,
+        children1_.name as name6_0_,
+        children1_.description as descript2_6_0_,
+        children1_.parent as parent6_0_,
+        children1_.created as created6_0_ 
+    from
+        Node node0_ 
+    left outer join
+        Node children1_ 
+            on node0_.name=children1_.parent 
+    where
+        node0_.name=?
+14:17:35,182 DEBUG SQL:104 - 
+    select
+        cascadingc0_.CASC_PARENT as CASC5_6_1_,
+        cascadingc0_.name as name6_1_,
+        cascadingc0_.name as name6_0_,
+        cascadingc0_.description as descript2_6_0_,
+        cascadingc0_.parent as parent6_0_,
+        cascadingc0_.created as created6_0_ 
+    from
+        Node cascadingc0_ 
+    where
+        cascadingc0_.CASC_PARENT=?
+14:17:35,185 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (description, parent, created, name) 
+    values
+        (?, ?, ?, ?)
+14:17:35,185 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        description=?,
+        parent=?,
+        created=? 
+    where
+        name=?
+14:17:35,205 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:35,206 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:35,206 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:35,207 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:35,207 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:35,207 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:35,216 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:35,216 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:35,216 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:35,216 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:35,217  INFO CustomRunner:139 - Test: testNoExtraUpdatesOnPersistentMergeVersionedWithCollection
+14:17:35,218 DEBUG SQL:104 - 
+    insert 
+    into
+        V_ENTITY
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:17:35,219 DEBUG SQL:104 - 
+    insert 
+    into
+        V_ENTITY
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:17:35,226 DEBUG SQL:104 - 
+    select
+        versionede0_.ID as ID12_0_,
+        versionede0_.VERS as VERS12_0_,
+        versionede0_.NAME as NAME12_0_,
+        versionede0_.parent as parent12_0_ 
+    from
+        V_ENTITY versionede0_ 
+    where
+        versionede0_.ID=?
+14:17:35,228 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent12_1_,
+        children0_.ID as ID12_1_,
+        children0_.ID as ID12_0_,
+        children0_.VERS as VERS12_0_,
+        children0_.NAME as NAME12_0_,
+        children0_.parent as parent12_0_ 
+    from
+        V_ENTITY children0_ 
+    where
+        children0_.parent=?
+14:17:35,232 DEBUG SQL:104 - 
+    select
+        versionede0_.ID as ID12_0_,
+        versionede0_.VERS as VERS12_0_,
+        versionede0_.NAME as NAME12_0_,
+        versionede0_.parent as parent12_0_ 
+    from
+        V_ENTITY versionede0_ 
+    where
+        versionede0_.ID=?
+14:17:35,238 DEBUG SQL:104 - 
+    select
+        children0_.parent as parent12_1_,
+        children0_.ID as ID12_1_,
+        children0_.ID as ID12_0_,
+        children0_.VERS as VERS12_0_,
+        children0_.NAME as NAME12_0_,
+        children0_.parent as parent12_0_ 
+    from
+        V_ENTITY children0_ 
+    where
+        children0_.parent=?
+14:17:35,240 DEBUG SQL:104 - 
+    select
+        versionede0_.ID as ID12_1_,
+        versionede0_.VERS as VERS12_1_,
+        versionede0_.NAME as NAME12_1_,
+        versionede0_.parent as parent12_1_,
+        children1_.parent as parent12_3_,
+        children1_.ID as ID12_3_,
+        children1_.ID as ID12_0_,
+        children1_.VERS as VERS12_0_,
+        children1_.NAME as NAME12_0_,
+        children1_.parent as parent12_0_ 
+    from
+        V_ENTITY versionede0_ 
+    left outer join
+        V_ENTITY children1_ 
+            on versionede0_.ID=children1_.parent 
+    where
+        versionede0_.ID=?
+14:17:35,251 DEBUG SQL:104 - 
+    insert 
+    into
+        V_ENTITY
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:17:35,251 DEBUG SQL:104 - 
+    update
+        V_ENTITY 
+    set
+        VERS=?,
+        NAME=?,
+        parent=? 
+    where
+        ID=? 
+        and VERS=?
+14:17:35,252 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:35,259 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:35,260 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:35,260 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:35,260 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:35,260 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:35,261 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:35,261 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:35,270 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:35,270 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:35,271  INFO CustomRunner:139 - Test: testPersistThenMergeInSameTxnWithTimestamp
+14:17:35,276 DEBUG SQL:104 - 
+    insert 
+    into
+        T_ENTITY
+        (TS, NAME, ID) 
+    values
+        (?, ?, ?)
+14:17:35,277 DEBUG SQL:104 - 
+    update
+        T_ENTITY 
+    set
+        TS=?,
+        NAME=? 
+    where
+        ID=? 
+        and TS=?
+14:17:35,283 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:35,284 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:35,284 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:35,284 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:35,285 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:35,285 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:35,285 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:35,285 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:35,285 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:35,286 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:35,286  INFO CustomRunner:139 - Test: testPersistThenMergeInSameTxnWithVersion
+14:17:35,290 DEBUG SQL:104 - 
+    select
+        versionede_.ID,
+        versionede_.VERS as VERS12_,
+        versionede_.NAME as NAME12_,
+        versionede_.parent as parent12_ 
+    from
+        V_ENTITY versionede_ 
+    where
+        versionede_.ID=?
+14:17:35,299 DEBUG SQL:104 - 
+    insert 
+    into
+        V_ENTITY
+        (VERS, NAME, parent, ID) 
+    values
+        (?, ?, ?, ?)
+14:17:35,301 DEBUG SQL:104 - 
+    update
+        V_ENTITY 
+    set
+        VERS=?,
+        NAME=?,
+        parent=? 
+    where
+        ID=? 
+        and VERS=?
+14:17:35,302 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:35,303 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:35,303 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:35,328 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:35,328 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:35,328 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:35,329 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:35,329 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:35,329 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:35,329 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:35,330  INFO CustomRunner:139 - Test: testRecursiveMergeTransient
+14:17:35,331 DEBUG SQL:104 - 
+    insert 
+    into
+        Employer
+        (id, vers) 
+    values
+        (null, ?)
+14:17:35,333 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (id) 
+    values
+        (null)
+14:17:35,335 DEBUG SQL:104 - 
+    update
+        Employer 
+    set
+        vers=? 
+    where
+        id=? 
+        and vers=?
+14:17:35,335 DEBUG SQL:104 - 
+    insert 
+    into
+        EMPLOYER_EMPLOYEE
+        (EMPER_ID, EMPEE_ID) 
+    values
+        (?, ?)
+14:17:35,337 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.nonflushedchanges.Employer e join fetch e.employees
+14:17:35,338 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'nonflushedchanges'
+          |  |  \-[IDENT] Node: 'Employer'
+          |  \-[ALIAS] Node: 'e'
+          \-[JOIN] Node: 'join'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'e'
+                \-[IDENT] Node: 'employees'
+
+14:17:35,338 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:35,338 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Employer (e) -> employer0_
+14:17:35,353 DEBUG FromReferenceNode:74 - Resolved : e -> employer0_.id
+14:17:35,354 DEBUG DotNode:599 - getDataType() : employees -> org.hibernate.type.BagType(org.hibernate.test.nonflushedchanges.Employer.employees)
+14:17:35,354 DEBUG FromElementFactory:385 - createManyToMany() : path = e.employees role = org.hibernate.test.nonflushedchanges.Employer.employees associatedEntityName = org.hibernate.test.nonflushedchanges.Employee
+14:17:35,354 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.nonflushedchanges.Employee (<no alias>) -> employee2_
+14:17:35,354 DEBUG FromClause:282 - addJoinByPathMap() : e.employees -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employee,tableAlias=employee2_,origin=Employer employer0_,columns={employer0_.id ,className=org.hibernate.test.nonflushedchanges.Employee}}
+14:17:35,354 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for e.employees : EMPLOYER_EMPLOYEE employee2_
+14:17:35,354 DEBUG FromReferenceNode:74 - Resolved : e.employees -> .
+14:17:35,355 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'EMPLOYER_EMPLOYEE employee2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.nonflushedchanges.Employer.employees,tableName=Employee,tableAlias=employee2_,origin=Employer employer0_,columns={employer0_.id ,className=org.hibernate.test.nonflushedchanges.Employee}}
+
+14:17:35,355 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Employer employer0_ EMPLOYER_EMPLOYEE employee2_ ) ) )
+14:17:35,355 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:35,355 DEBUG JoinProcessor:175 - Using FROM fragment [Employer employer0_]
+14:17:35,355 DEBUG JoinProcessor:175 - Using FROM fragment [inner join EMPLOYER_EMPLOYEE employees1_ on employer0_.id=employees1_.EMPER_ID inner join Employee employee2_ on employees1_.EMPEE_ID=employee2_.id]
+14:17:35,356 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (EMPLOYER_EMPLOYEE,Employer,Employee)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employer0_.id as id5_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employer,tableAlias=employer0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Employer}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee2_.id as id4_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.nonflushedchanges.Employer.employees,tableName=Employee,tableAlias=employee2_,origin=Employer employer0_,columns={employer0_.id ,className=org.hibernate.test.nonflushedchanges.Employee}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'employer0_.vers as vers5_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'employees1_.EMPER_ID as EMPER1_5_0__, employees1_.EMPEE_ID as EMPEE2_3_0__'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[e], fromElementByTableAlias=[employer0_, employee2_], fromElementsByPath=[e.employees], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Employer employer0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employer,tableAlias=employer0_,origin=null,columns={,className=org.hibernate.test.nonflushedchanges.Employer}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join EMPLOYER_EMPLOYEE employees1_ on employer0_.id=employees1_.EMPER_ID inner join Employee employee2_ on employees1_.EMPEE_ID=employee2_.id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.nonflushedchanges.Employer.employees,tableName=Employee,tableAlias=employee2_,origin=Employer employer0_,columns={employer0_.id ,className=org.hibernate.test.nonflushedchanges.Employee}}
+
+14:17:35,356 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:35,356 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.nonflushedchanges.Employer e join fetch e.employees
+14:17:35,356 DEBUG QueryTranslatorImpl:236 - SQL: select employer0_.id as id5_0_, employee2_.id as id4_1_, employer0_.vers as vers5_0_, employees1_.EMPER_ID as EMPER1_5_0__, employees1_.EMPEE_ID as EMPEE2_3_0__ from Employer employer0_ inner join EMPLOYER_EMPLOYEE employees1_ on employer0_.id=employees1_.EMPER_ID inner join Employee employee2_ on employees1_.EMPEE_ID=employee2_.id
+14:17:35,356 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:35,356 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_0_,
+        employee2_.id as id4_1_,
+        employer0_.vers as vers5_0_,
+        employees1_.EMPER_ID as EMPER1_5_0__,
+        employees1_.EMPEE_ID as EMPEE2_3_0__ 
+    from
+        Employer employer0_ 
+    inner join
+        EMPLOYER_EMPLOYEE employees1_ 
+            on employer0_.id=employees1_.EMPER_ID 
+    inner join
+        Employee employee2_ 
+            on employees1_.EMPEE_ID=employee2_.id
+14:17:35,366 DEBUG SQL:104 - 
+    select
+        employee0_.id as id4_1_,
+        employers1_.EMPEE_ID as EMPEE2_4_3_,
+        employer2_.id as EMPER1_3_3_,
+        employer2_.id as id5_0_,
+        employer2_.vers as vers5_0_ 
+    from
+        Employee employee0_ 
+    left outer join
+        EMPLOYER_EMPLOYEE employers1_ 
+            on employee0_.id=employers1_.EMPEE_ID 
+    left outer join
+        Employer employer2_ 
+            on employers1_.EMPER_ID=employer2_.id 
+    where
+        employee0_.id=?
+14:17:35,377 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode 
+    where
+        parent is not null
+14:17:35,378 DEBUG SQL:104 - 
+    delete 
+    from
+        NumberedNode
+14:17:35,378 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        parent is not null
+14:17:35,378 DEBUG SQL:104 - 
+    delete 
+    from
+        Node
+14:17:35,378 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY 
+    where
+        parent is not null
+14:17:35,378 DEBUG SQL:104 - 
+    delete 
+    from
+        V_ENTITY
+14:17:35,379 DEBUG SQL:104 - 
+    delete 
+    from
+        T_ENTITY
+14:17:35,386 DEBUG SQL:104 - 
+    delete 
+    from
+        Competitor
+14:17:35,386 DEBUG SQL:104 - 
+    delete 
+    from
+        Competition
+14:17:35,386 DEBUG SQL:104 - 
+    select
+        employer0_.id as id5_,
+        employer0_.vers as vers5_ 
+    from
+        Employer employer0_
+14:17:35,387 DEBUG SQL:104 - 
+    delete 
+    from
+        EMPLOYER_EMPLOYEE 
+    where
+        EMPER_ID=?
+14:17:35,387 DEBUG SQL:104 - 
+    delete 
+    from
+        Employer 
+    where
+        id=? 
+        and vers=?
+14:17:35,398  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:35,398 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:35,399 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB74F32D66
+14:17:35,399 DEBUG SQL:104 - 
+    alter table COMPET_ION_OR 
+        drop constraint FK1AAE64FB1F11BBAE
+14:17:35,399 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D4A24D7
+14:17:35,400 DEBUG SQL:104 - 
+    alter table EMPLOYER_EMPLOYEE 
+        drop constraint FKDC9B93B28D500DB7
+14:17:35,400 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK252222D556A303
+14:17:35,400 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK25222261DDD534
+14:17:35,400 DEBUG SQL:104 - 
+    alter table NumberedNode 
+        drop constraint FK667A9BEA4467F5CB
+14:17:35,400 DEBUG SQL:104 - 
+    alter table OPS_ADDRESS 
+        drop constraint FKCEA94F2782611B3C
+14:17:35,401 DEBUG SQL:104 - 
+    alter table OPS_PERS_DETAIL 
+        drop constraint FK2409C38D9711DB07
+14:17:35,401 DEBUG SQL:104 - 
+    alter table V_ENTITY 
+        drop constraint FK145E7ECFD463E2D
+14:17:35,414 DEBUG SQL:104 - 
+    drop table COMPET_ION_OR if exists
+14:17:35,414 DEBUG SQL:104 - 
+    drop table Competition if exists
+14:17:35,414 DEBUG SQL:104 - 
+    drop table Competitor if exists
+14:17:35,415 DEBUG SQL:104 - 
+    drop table EMPLOYER_EMPLOYEE if exists
+14:17:35,415 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:17:35,415 DEBUG SQL:104 - 
+    drop table Employer if exists
+14:17:35,415 DEBUG SQL:104 - 
+    drop table Node if exists
+14:17:35,415 DEBUG SQL:104 - 
+    drop table NumberedNode if exists
+14:17:35,416 DEBUG SQL:104 - 
+    drop table OPS_ADDRESS if exists
+14:17:35,416 DEBUG SQL:104 - 
+    drop table OPS_PERSON if exists
+14:17:35,416 DEBUG SQL:104 - 
+    drop table OPS_PERS_DETAIL if exists
+14:17:35,416 DEBUG SQL:104 - 
+    drop table T_ENTITY if exists
+14:17:35,416 DEBUG SQL:104 - 
+    drop table V_ENTITY if exists
+14:17:35,417  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:35,417  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

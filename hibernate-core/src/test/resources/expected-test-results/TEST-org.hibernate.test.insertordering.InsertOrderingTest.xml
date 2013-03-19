@@ -1,0 +1,671 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.insertordering.InsertOrderingTest" tests="1" time="0.243" timestamp="2013-02-28T20:14:29">
+  <properties />
+  <testcase classname="org.hibernate.test.insertordering.InsertOrderingTest" name="testBatchOrdering" time="0.204" />
+  <system-out><![CDATA[14:14:29,286  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.insertordering.InsertOrderingTest
+14:14:29,289  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/insertordering/Mapping.hbm.xml
+14:14:29,296  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:29,297  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:29,297  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:29,297  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:29,297  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:29,298  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:29,298  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:29,299  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:29,299  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:29,299  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:29,308  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:29,308 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:29,308 DEBUG SQL:104 - 
+    alter table INS_ORD_MEM 
+        drop constraint FK653B57C6AA36E35C
+14:14:29,309 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table INS_ORD_MEM drop constraint FK653B57C6AA36E35C
+14:14:29,309 ERROR SchemaExport:426 - Table "INS_ORD_MEM" not found; SQL statement:
+
+    alter table INS_ORD_MEM 
+        drop constraint FK653B57C6AA36E35C [42102-145]
+14:14:29,309 DEBUG SQL:104 - 
+    alter table INS_ORD_MEM 
+        drop constraint FK653B57C65A344AA9
+14:14:29,309 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table INS_ORD_MEM drop constraint FK653B57C65A344AA9
+14:14:29,309 ERROR SchemaExport:426 - Table "INS_ORD_MEM" not found; SQL statement:
+
+    alter table INS_ORD_MEM 
+        drop constraint FK653B57C65A344AA9 [42102-145]
+14:14:29,309 DEBUG SQL:104 - 
+    drop table INS_ORD_GRP if exists
+14:14:29,310 DEBUG SQL:104 - 
+    drop table INS_ORD_MEM if exists
+14:14:29,310 DEBUG SQL:104 - 
+    drop table INS_ORD_USR if exists
+14:14:29,310 DEBUG SQL:104 - 
+    create table INS_ORD_GRP (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:14:29,310 DEBUG SQL:104 - 
+    create table INS_ORD_MEM (
+        id bigint not null,
+        USR_ID bigint,
+        GRP_ID bigint,
+        JN_DT timestamp,
+        primary key (id)
+    )
+14:14:29,310 DEBUG SQL:104 - 
+    create table INS_ORD_USR (
+        id bigint not null,
+        USR_NM varchar(255),
+        primary key (id)
+    )
+14:14:29,311 DEBUG SQL:104 - 
+    alter table INS_ORD_MEM 
+        add constraint FK653B57C6AA36E35C 
+        foreign key (USR_ID) 
+        references INS_ORD_USR
+14:14:29,311 DEBUG SQL:104 - 
+    alter table INS_ORD_MEM 
+        add constraint FK653B57C65A344AA9 
+        foreign key (GRP_ID) 
+        references INS_ORD_GRP
+14:14:29,311  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:29,312  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:29,312  INFO CustomRunner:139 - Test: testBatchOrdering
+14:14:29,313 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        INS_ORD_USR
+14:14:29,314 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        INS_ORD_GRP
+14:14:29,316 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        INS_ORD_MEM
+14:14:29,376 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,377 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,377 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,377 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,377 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,377 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,378 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,378 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,378 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,378 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,378 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,378 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_USR
+        (USR_NM, id) 
+    values
+        (?, ?)
+14:14:29,379 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,379 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,379 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,379 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,379 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,379 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,379 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,380 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,380 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,380 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,380 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,380 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_GRP
+        (name, id) 
+    values
+        (?, ?)
+14:14:29,380 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,381 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,381 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,389 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,389 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,389 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,389 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,399 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,399 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,399 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,399 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,400 DEBUG SQL:104 - 
+    insert 
+    into
+        INS_ORD_MEM
+        (USR_ID, GRP_ID, JN_DT, id) 
+    values
+        (?, ?, ?, ?)
+14:14:29,401 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.insertordering.User u left join fetch u.memberships m left join fetch m.group
+14:14:29,401 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["group",<108> previously: <24>,line=1,col=97,possibleID=true]
+14:14:29,402 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'insertordering'
+          |  |  \-[IDENT] Node: 'User'
+          |  \-[ALIAS] Node: 'u'
+          +-[JOIN] Node: 'join'
+          |  +-[LEFT] Node: 'left'
+          |  +-[FETCH] Node: 'fetch'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'u'
+          |  |  \-[IDENT] Node: 'memberships'
+          |  \-[ALIAS] Node: 'm'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'm'
+                \-[IDENT] Node: 'group'
+
+14:14:29,415 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:29,416 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.insertordering.User (u) -> user0_
+14:14:29,416 DEBUG FromReferenceNode:74 - Resolved : u -> user0_.id
+14:14:29,416 DEBUG DotNode:599 - getDataType() : memberships -> org.hibernate.type.SetType(org.hibernate.test.insertordering.User.memberships)
+14:14:29,416 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = u.memberships role = org.hibernate.test.insertordering.User.memberships associatedEntityName = org.hibernate.test.insertordering.Membership
+14:14:29,416 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.insertordering.Membership (m) -> membership1_
+14:14:29,416 DEBUG FromClause:282 - addJoinByPathMap() : u.memberships -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=INS_ORD_MEM,tableAlias=membership1_,origin=INS_ORD_USR user0_,columns={user0_.id ,className=org.hibernate.test.insertordering.Membership}}
+14:14:29,417 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for u.memberships : INS_ORD_MEM membership1_
+14:14:29,417 DEBUG FromReferenceNode:74 - Resolved : u.memberships -> .
+14:14:29,417 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'INS_ORD_MEM membership1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.insertordering.User.memberships,tableName=INS_ORD_MEM,tableAlias=membership1_,origin=INS_ORD_USR user0_,columns={user0_.id ,className=org.hibernate.test.insertordering.Membership}}
+
+14:14:29,417 DEBUG FromReferenceNode:74 - Resolved : m -> membership1_.id
+14:14:29,417 DEBUG DotNode:599 - getDataType() : group -> org.hibernate.type.ManyToOneType(org.hibernate.test.insertordering.Group)
+14:14:29,417 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for group in org.hibernate.test.insertordering.Membership (<no alias>) parent = [ {null} ]
+14:14:29,417 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.insertordering.Group (<no alias>) -> group2_
+14:14:29,417 DEBUG FromClause:282 - addJoinByPathMap() : m.group -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=INS_ORD_GRP,tableAlias=group2_,origin=INS_ORD_MEM membership1_,columns={membership1_.GRP_ID ,className=org.hibernate.test.insertordering.Group}}
+14:14:29,418 DEBUG FromReferenceNode:74 - Resolved : m.group -> membership1_.GRP_ID
+14:14:29,418 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'INS_ORD_GRP group2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=INS_ORD_GRP,tableAlias=group2_,origin=INS_ORD_MEM membership1_,columns={membership1_.GRP_ID ,className=org.hibernate.test.insertordering.Group}}
+
+14:14:29,418 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( INS_ORD_USR user0_ ( INS_ORD_MEM membership1_ INS_ORD_GRP group2_ ) ) ) )
+14:14:29,418 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:29,418 DEBUG JoinProcessor:175 - Using FROM fragment [INS_ORD_USR user0_]
+14:14:29,418 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join INS_ORD_MEM membership1_ on user0_.id=membership1_.USR_ID]
+14:14:29,428 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join INS_ORD_GRP group2_ on membership1_.GRP_ID=group2_.id]
+14:14:29,428 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (INS_ORD_USR,INS_ORD_MEM,INS_ORD_GRP)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user0_.id as id2_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=INS_ORD_USR,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.insertordering.User}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'membership1_.id as id1_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.insertordering.User.memberships,tableName=INS_ORD_MEM,tableAlias=membership1_,origin=INS_ORD_USR user0_,columns={user0_.id ,className=org.hibernate.test.insertordering.Membership}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'group2_.id as id0_2_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=INS_ORD_GRP,tableAlias=group2_,origin=left outer join INS_ORD_MEM membership1_ on user0_.id=membership1_.USR_ID,columns={membership1_.GRP_ID ,className=org.hibernate.test.insertordering.Group}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'user0_.USR_NM as USR2_2_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'membership1_.USR_ID as USR2_1_1_, membership1_.GRP_ID as GRP3_1_1_, membership1_.JN_DT as JN4_1_1_'
+    |  +-[SQL_TOKEN] SqlFragment: 'membership1_.USR_ID as USR2_2_0__, membership1_.id as id1_0__'
+    |  \-[SQL_TOKEN] SqlFragment: 'group2_.name as name0_2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[u, m], fromElementByTableAlias=[membership1_, user0_, group2_], fromElementsByPath=[m.group, u.memberships], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'INS_ORD_USR user0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=INS_ORD_USR,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.insertordering.User}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join INS_ORD_MEM membership1_ on user0_.id=membership1_.USR_ID' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.insertordering.User.memberships,tableName=INS_ORD_MEM,tableAlias=membership1_,origin=INS_ORD_USR user0_,columns={user0_.id ,className=org.hibernate.test.insertordering.Membership}}
+             \-[JOIN_FRAGMENT] FromElement: 'left outer join INS_ORD_GRP group2_ on membership1_.GRP_ID=group2_.id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=INS_ORD_GRP,tableAlias=group2_,origin=left outer join INS_ORD_MEM membership1_ on user0_.id=membership1_.USR_ID,columns={membership1_.GRP_ID ,className=org.hibernate.test.insertordering.Group}}
+
+14:14:29,428 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:29,428 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.insertordering.User u left join fetch u.memberships m left join fetch m.group
+14:14:29,428 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.id as id2_0_, membership1_.id as id1_1_, group2_.id as id0_2_, user0_.USR_NM as USR2_2_0_, membership1_.USR_ID as USR2_1_1_, membership1_.GRP_ID as GRP3_1_1_, membership1_.JN_DT as JN4_1_1_, membership1_.USR_ID as USR2_2_0__, membership1_.id as id1_0__, group2_.name as name0_2_ from INS_ORD_USR user0_ left outer join INS_ORD_MEM membership1_ on user0_.id=membership1_.USR_ID left outer join INS_ORD_GRP group2_ on membership1_.GRP_ID=group2_.id
+14:14:29,429 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:29,429 DEBUG SQL:104 - 
+    select
+        user0_.id as id2_0_,
+        membership1_.id as id1_1_,
+        group2_.id as id0_2_,
+        user0_.USR_NM as USR2_2_0_,
+        membership1_.USR_ID as USR2_1_1_,
+        membership1_.GRP_ID as GRP3_1_1_,
+        membership1_.JN_DT as JN4_1_1_,
+        membership1_.USR_ID as USR2_2_0__,
+        membership1_.id as id1_0__,
+        group2_.name as name0_2_ 
+    from
+        INS_ORD_USR user0_ 
+    left outer join
+        INS_ORD_MEM membership1_ 
+            on user0_.id=membership1_.USR_ID 
+    left outer join
+        INS_ORD_GRP group2_ 
+            on membership1_.GRP_ID=group2_.id
+14:14:29,432 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,453 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,453 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,453 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,453 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,454 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,463 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,464 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,464 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,464 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,464 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,475 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,475 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,475 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,475 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,476 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,484 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,484 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,485 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,485 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,485 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,485 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,495 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,495 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,495 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,496 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,496 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,505 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,505 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,505 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,505 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,506 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,515 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,515 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_MEM 
+    where
+        id=?
+14:14:29,515 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_GRP 
+    where
+        id=?
+14:14:29,516 DEBUG SQL:104 - 
+    delete 
+    from
+        INS_ORD_USR 
+    where
+        id=?
+14:14:29,516  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:29,525 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:29,525 DEBUG SQL:104 - 
+    alter table INS_ORD_MEM 
+        drop constraint FK653B57C6AA36E35C
+14:14:29,525 DEBUG SQL:104 - 
+    alter table INS_ORD_MEM 
+        drop constraint FK653B57C65A344AA9
+14:14:29,526 DEBUG SQL:104 - 
+    drop table INS_ORD_GRP if exists
+14:14:29,526 DEBUG SQL:104 - 
+    drop table INS_ORD_MEM if exists
+14:14:29,526 DEBUG SQL:104 - 
+    drop table INS_ORD_USR if exists
+14:14:29,526  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:29,526  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

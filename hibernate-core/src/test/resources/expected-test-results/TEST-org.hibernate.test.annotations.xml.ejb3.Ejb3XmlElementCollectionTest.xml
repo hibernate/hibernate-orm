@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" tests="28" time="0.093" timestamp="2013-02-28T20:10:45">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testAllAttributes" time="0.007" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testCollectionTableAllChildren" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testCollectionTableNoChildren" time="0.004" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testColumnAllAttributes" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testColumnNoAttributes" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testEnumerated" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testLob" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMapKeyAllAttributes" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMapKeyClass" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMapKeyColumnAllAttributes" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMapKeyColumnNoAttributes" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMapKeyEnumerated" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMapKeyNoAttributes" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMapKeyTemporal" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMixedAttributeOverrides" time="0.005" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMultipleAssociationOverridesJoinColumns" time="0.006" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMultipleAttributeOverrides" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMultipleMapKeyAttributeOverrides" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testMultipleMapKeyJoinColumns" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testNoChildren" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testOrderBy" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testOrderColumnAllAttributes" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testOrderColumnNoAttributes" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testSingleAssociationOverride" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testSingleAttributeOverride" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testSingleMapKeyAttributeOverride" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testSingleMapKeyJoinColumn" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest" name="testTemporal" time="0.002" />
+  <system-out><![CDATA[14:10:45,223  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.xml.ejb3.Ejb3XmlElementCollectionTest
+14:10:45,223  INFO CustomRunner:139 - Test: testAllAttributes
+14:10:45,230  INFO CustomRunner:139 - Test: testCollectionTableAllChildren
+14:10:45,234  INFO CustomRunner:139 - Test: testCollectionTableNoChildren
+14:10:45,238  INFO CustomRunner:139 - Test: testColumnAllAttributes
+14:10:45,241  INFO CustomRunner:139 - Test: testColumnNoAttributes
+14:10:45,243  INFO CustomRunner:139 - Test: testEnumerated
+14:10:45,246  INFO CustomRunner:139 - Test: testLob
+14:10:45,249  INFO CustomRunner:139 - Test: testMapKeyAllAttributes
+14:10:45,251  INFO CustomRunner:139 - Test: testMapKeyClass
+14:10:45,253  INFO CustomRunner:139 - Test: testMapKeyColumnAllAttributes
+14:10:45,256  INFO CustomRunner:139 - Test: testMapKeyColumnNoAttributes
+14:10:45,258  INFO CustomRunner:139 - Test: testMapKeyEnumerated
+14:10:45,260  INFO CustomRunner:139 - Test: testMapKeyNoAttributes
+14:10:45,265  INFO CustomRunner:139 - Test: testMapKeyTemporal
+14:10:45,267  INFO CustomRunner:139 - Test: testMixedAttributeOverrides
+14:10:45,274  INFO CustomRunner:139 - Test: testMultipleAssociationOverridesJoinColumns
+14:10:45,280  INFO CustomRunner:139 - Test: testMultipleAttributeOverrides
+14:10:45,283  INFO CustomRunner:139 - Test: testMultipleMapKeyAttributeOverrides
+14:10:45,286  INFO CustomRunner:139 - Test: testMultipleMapKeyJoinColumns
+14:10:45,290  INFO CustomRunner:139 - Test: testNoChildren
+14:10:45,293  INFO CustomRunner:139 - Test: testOrderBy
+14:10:45,295  INFO CustomRunner:139 - Test: testOrderColumnAllAttributes
+14:10:45,298  INFO CustomRunner:139 - Test: testOrderColumnNoAttributes
+14:10:45,300  INFO CustomRunner:139 - Test: testSingleAssociationOverride
+14:10:45,303  INFO CustomRunner:139 - Test: testSingleAttributeOverride
+14:10:45,305  INFO CustomRunner:139 - Test: testSingleMapKeyAttributeOverride
+14:10:45,308  INFO CustomRunner:139 - Test: testSingleMapKeyJoinColumn
+14:10:45,311  INFO CustomRunner:139 - Test: testTemporal
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.collection.ordered.joinedInheritence.OrderCollectionOfJoinedHierarchyTest" tests="1" time="0.106" timestamp="2013-02-28T20:11:56">
+  <properties />
+  <testcase classname="org.hibernate.test.collection.ordered.joinedInheritence.OrderCollectionOfJoinedHierarchyTest" name="testQuerySyntaxCheck" time="0.014" />
+  <system-out><![CDATA[14:11:56,859  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.collection.ordered.joinedInheritence.OrderCollectionOfJoinedHierarchyTest
+14:11:56,874  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:56,874  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:56,875  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:56,875  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:56,875  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:56,877  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:56,877  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:56,878  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:56,878  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:56,878  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:56,906  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:56,907 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:56,907 DEBUG SQL:104 - 
+    alter table Lion 
+        drop constraint FK24243C5D77B6C3
+14:11:56,907 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Lion drop constraint FK24243C5D77B6C3
+14:11:56,908 ERROR SchemaExport:426 - Table "LION" not found; SQL statement:
+
+    alter table Lion 
+        drop constraint FK24243C5D77B6C3 [42102-145]
+14:11:56,908 DEBUG SQL:104 - 
+    alter table Lion 
+        drop constraint FK24243C8E6C3631
+14:11:56,908 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Lion drop constraint FK24243C8E6C3631
+14:11:56,908 ERROR SchemaExport:426 - Table "LION" not found; SQL statement:
+
+    alter table Lion 
+        drop constraint FK24243C8E6C3631 [42102-145]
+14:11:56,908 DEBUG SQL:104 - 
+    alter table Tiger 
+        drop constraint FK4D1009F5D77B6C3
+14:11:56,908 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Tiger drop constraint FK4D1009F5D77B6C3
+14:11:56,908 ERROR SchemaExport:426 - Table "TIGER" not found; SQL statement:
+
+    alter table Tiger 
+        drop constraint FK4D1009F5D77B6C3 [42102-145]
+14:11:56,909 DEBUG SQL:104 - 
+    alter table Tiger 
+        drop constraint FK4D1009FB266D54
+14:11:56,909 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Tiger drop constraint FK4D1009FB266D54
+14:11:56,909 ERROR SchemaExport:426 - Table "TIGER" not found; SQL statement:
+
+    alter table Tiger 
+        drop constraint FK4D1009FB266D54 [42102-145]
+14:11:56,909 DEBUG SQL:104 - 
+    drop table Animal if exists
+14:11:56,909 DEBUG SQL:104 - 
+    drop table Lion if exists
+14:11:56,909 DEBUG SQL:104 - 
+    drop table Tiger if exists
+14:11:56,909 DEBUG SQL:104 - 
+    drop table Zoo if exists
+14:11:56,910 DEBUG SQL:104 - 
+    create table Animal (
+        id bigint not null,
+        weight bigint not null,
+        primary key (id)
+    )
+14:11:56,910 DEBUG SQL:104 - 
+    create table Lion (
+        id bigint not null,
+        lions_id bigint,
+        primary key (id)
+    )
+14:11:56,910 DEBUG SQL:104 - 
+    create table Tiger (
+        numberOfStripes integer not null,
+        id bigint not null,
+        tigers_id bigint,
+        primary key (id)
+    )
+14:11:56,910 DEBUG SQL:104 - 
+    create table Zoo (
+        id bigint not null,
+        city varchar(255),
+        name varchar(255),
+        primary key (id)
+    )
+14:11:56,911 DEBUG SQL:104 - 
+    alter table Lion 
+        add constraint FK24243C5D77B6C3 
+        foreign key (id) 
+        references Animal
+14:11:56,911 DEBUG SQL:104 - 
+    alter table Lion 
+        add constraint FK24243C8E6C3631 
+        foreign key (lions_id) 
+        references Zoo
+14:11:56,912 DEBUG SQL:104 - 
+    alter table Tiger 
+        add constraint FK4D1009F5D77B6C3 
+        foreign key (id) 
+        references Animal
+14:11:56,913 DEBUG SQL:104 - 
+    alter table Tiger 
+        add constraint FK4D1009FB266D54 
+        foreign key (tigers_id) 
+        references Zoo
+14:11:56,913  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:56,914  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:56,914  INFO CustomRunner:139 - Test: testQuerySyntaxCheck
+14:11:56,929 DEBUG SQL:104 - 
+    select
+        zoo0_.id as id3_2_,
+        zoo0_.city as city3_2_,
+        zoo0_.name as name3_2_,
+        lions1_.lions_id as lions2_3_4_,
+        lions1_.id as id1_4_,
+        lions1_.id as id0_0_,
+        lions1_1_.weight as weight0_0_,
+        tigers2_.tigers_id as tigers3_3_5_,
+        tigers2_.id as id2_5_,
+        tigers2_.id as id0_1_,
+        tigers2_1_.weight as weight0_1_,
+        tigers2_.numberOfStripes as numberOf1_2_1_ 
+    from
+        Zoo zoo0_ 
+    left outer join
+        Lion lions1_ 
+            on zoo0_.id=lions1_.lions_id 
+    left outer join
+        Animal lions1_1_ 
+            on lions1_.id=lions1_1_.id 
+    left outer join
+        Tiger tigers2_ 
+            on zoo0_.id=tigers2_.tigers_id 
+    left outer join
+        Animal tigers2_1_ 
+            on tigers2_.id=tigers2_1_.id 
+    where
+        zoo0_.id=? 
+    order by
+        lions1_1_.weight,
+        tigers2_1_.weight
+14:11:56,943  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:56,944 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:56,945 DEBUG SQL:104 - 
+    alter table Lion 
+        drop constraint FK24243C5D77B6C3
+14:11:56,945 DEBUG SQL:104 - 
+    alter table Lion 
+        drop constraint FK24243C8E6C3631
+14:11:56,945 DEBUG SQL:104 - 
+    alter table Tiger 
+        drop constraint FK4D1009F5D77B6C3
+14:11:56,960 DEBUG SQL:104 - 
+    alter table Tiger 
+        drop constraint FK4D1009FB266D54
+14:11:56,960 DEBUG SQL:104 - 
+    drop table Animal if exists
+14:11:56,960 DEBUG SQL:104 - 
+    drop table Lion if exists
+14:11:56,961 DEBUG SQL:104 - 
+    drop table Tiger if exists
+14:11:56,961 DEBUG SQL:104 - 
+    drop table Zoo if exists
+14:11:56,961  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:56,961  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

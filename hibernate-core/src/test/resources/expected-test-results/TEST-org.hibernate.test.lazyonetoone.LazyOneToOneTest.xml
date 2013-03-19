@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.lazyonetoone.LazyOneToOneTest" tests="1" time="0.122" timestamp="2013-02-28T20:14:52">
+  <properties />
+  <testcase classname="org.hibernate.test.lazyonetoone.LazyOneToOneTest" name="testLazy" time="0.079" />
+  <system-out><![CDATA[14:14:52,818  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.lazyonetoone.LazyOneToOneTest
+14:14:52,820  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/lazyonetoone/Person.hbm.xml
+14:14:52,828  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.lazyonetoone.Employment
+14:14:52,828  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.lazyonetoone.Employment
+14:14:52,829  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:52,829  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:52,829  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:52,829  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:52,829  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:52,830  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:52,831  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:52,831  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:52,832  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:14:52,842  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:52,843 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:52,843 DEBUG SQL:104 - 
+    alter table Employment 
+        drop constraint FK80D9800C3BD5452D
+14:14:52,843 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Employment drop constraint FK80D9800C3BD5452D
+14:14:52,843 ERROR SchemaExport:426 - Table "EMPLOYMENT" not found; SQL statement:
+
+    alter table Employment 
+        drop constraint FK80D9800C3BD5452D [42102-145]
+14:14:52,843 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:14:52,844 DEBUG SQL:104 - 
+    drop table Employment if exists
+14:14:52,844 DEBUG SQL:104 - 
+    drop table Person if exists
+14:14:52,844 DEBUG SQL:104 - 
+    create table Employee (
+        personName varchar(255) not null,
+        primary key (personName)
+    )
+14:14:52,844 DEBUG SQL:104 - 
+    create table Employment (
+        personName varchar(255) not null,
+        organizationName varchar(255) not null,
+        startDate timestamp,
+        endDate timestamp,
+        primary key (personName, organizationName)
+    )
+14:14:52,844 DEBUG SQL:104 - 
+    create table Person (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:14:52,845 DEBUG SQL:104 - 
+    alter table Employment 
+        add constraint FK80D9800C3BD5452D 
+        foreign key (personName) 
+        references Employee
+14:14:52,845  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:52,845  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:52,846  INFO CustomRunner:139 - Test: testLazy
+14:14:52,847 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (name) 
+    values
+        (?)
+14:14:52,848 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (personName) 
+    values
+        (?)
+14:14:52,848 DEBUG SQL:104 - 
+    insert 
+    into
+        Employment
+        (startDate, endDate, personName, organizationName) 
+    values
+        (?, ?, ?, ?)
+14:14:52,848 DEBUG SQL:104 - 
+    insert 
+    into
+        Employment
+        (startDate, endDate, personName, organizationName) 
+    values
+        (?, ?, ?, ?)
+14:14:52,848 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (name) 
+    values
+        (?)
+14:14:52,849 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.lazyonetoone.Person where name='Gavin'
+14:14:52,850 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'lazyonetoone'
+    |           \-[IDENT] Node: 'Person'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Gavin''
+
+14:14:52,850 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,850 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.lazyonetoone.Person (<no alias>) -> person0_
+14:14:52,850 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:14:52,850 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:14:52,851 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> person0_.name
+14:14:52,851 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Person person0_ ) ( where ( = ( person0_.name {synthetic-alias} name ) 'Gavin' ) ) )
+14:14:52,851 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:52,851 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:14:52,851 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'person0_.name as name2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.lazyonetoone.Person}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.lazyonetoone.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=person0_,className=org.hibernate.test.lazyonetoone.Person,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Gavin''
+
+14:14:52,851 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,851 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.lazyonetoone.Person where name='Gavin'
+14:14:52,852 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.name as name2_ from Person person0_ where person0_.name='Gavin'
+14:14:52,852 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,852 DEBUG SQL:104 - 
+    select
+        person0_.name as name2_ 
+    from
+        Person person0_ 
+    where
+        person0_.name='Gavin'
+14:14:52,852 DEBUG SQL:104 - 
+    select
+        employee0_.personName as personName0_2_,
+        person1_.name as name2_0_,
+        employment2_.personName as personName0_4_,
+        employment2_.personName as personName1_4_,
+        employment2_.organizationName as organiza2_1_4_,
+        employment2_.personName as personName1_1_,
+        employment2_.organizationName as organiza2_1_1_,
+        employment2_.startDate as startDate1_1_,
+        employment2_.endDate as endDate1_1_ 
+    from
+        Employee employee0_ 
+    left outer join
+        Person person1_ 
+            on employee0_.personName=person1_.name 
+    left outer join
+        Employment employment2_ 
+            on employee0_.personName=employment2_.personName 
+            and (
+                employment2_.endDate is null
+            )  
+    where
+        employee0_.personName=?
+14:14:52,862 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.lazyonetoone.Person where name='Emmanuel'
+14:14:52,863 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'lazyonetoone'
+    |           \-[IDENT] Node: 'Person'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Emmanuel''
+
+14:14:52,864 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,864 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.lazyonetoone.Person (<no alias>) -> person0_
+14:14:52,865 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:14:52,865 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:14:52,865 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> person0_.name
+14:14:52,865 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Person person0_ ) ( where ( = ( person0_.name {synthetic-alias} name ) 'Emmanuel' ) ) )
+14:14:52,865 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:14:52,866 DEBUG JoinProcessor:175 - Using FROM fragment [Person person0_]
+14:14:52,866 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Person)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'person0_.name as name2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.lazyonetoone.Person}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[person0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Person person0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Person,tableAlias=person0_,origin=null,columns={,className=org.hibernate.test.lazyonetoone.Person}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'person0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=person0_,className=org.hibernate.test.lazyonetoone.Person,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Emmanuel''
+
+14:14:52,884 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,884 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.lazyonetoone.Person where name='Emmanuel'
+14:14:52,884 DEBUG QueryTranslatorImpl:236 - SQL: select person0_.name as name2_ from Person person0_ where person0_.name='Emmanuel'
+14:14:52,884 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:14:52,885 DEBUG SQL:104 - 
+    select
+        person0_.name as name2_ 
+    from
+        Person person0_ 
+    where
+        person0_.name='Emmanuel'
+14:14:52,885 DEBUG SQL:104 - 
+    select
+        employee0_.personName as personName0_2_,
+        person1_.name as name2_0_,
+        employment2_.personName as personName0_4_,
+        employment2_.personName as personName1_4_,
+        employment2_.organizationName as organiza2_1_4_,
+        employment2_.personName as personName1_1_,
+        employment2_.organizationName as organiza2_1_1_,
+        employment2_.startDate as startDate1_1_,
+        employment2_.endDate as endDate1_1_ 
+    from
+        Employee employee0_ 
+    left outer join
+        Person person1_ 
+            on employee0_.personName=person1_.name 
+    left outer join
+        Employment employment2_ 
+            on employee0_.personName=employment2_.personName 
+            and (
+                employment2_.endDate is null
+            )  
+    where
+        employee0_.personName=?
+14:14:52,896 DEBUG SQL:104 - 
+    select
+        person0_.name as name2_2_,
+        employee1_.personName as personName0_0_,
+        employment2_.personName as personName0_4_,
+        employment2_.personName as personName1_4_,
+        employment2_.organizationName as organiza2_1_4_,
+        employment2_.personName as personName1_1_,
+        employment2_.organizationName as organiza2_1_1_,
+        employment2_.startDate as startDate1_1_,
+        employment2_.endDate as endDate1_1_ 
+    from
+        Person person0_ 
+    left outer join
+        Employee employee1_ 
+            on person0_.name=employee1_.personName 
+    left outer join
+        Employment employment2_ 
+            on employee1_.personName=employment2_.personName 
+            and (
+                employment2_.endDate is null
+            )  
+    where
+        person0_.name=?
+14:14:52,906 DEBUG SQL:104 - 
+    select
+        person0_.name as name2_2_,
+        employee1_.personName as personName0_0_,
+        employment2_.personName as personName0_4_,
+        employment2_.personName as personName1_4_,
+        employment2_.organizationName as organiza2_1_4_,
+        employment2_.personName as personName1_1_,
+        employment2_.organizationName as organiza2_1_1_,
+        employment2_.startDate as startDate1_1_,
+        employment2_.endDate as endDate1_1_ 
+    from
+        Person person0_ 
+    left outer join
+        Employee employee1_ 
+            on person0_.name=employee1_.personName 
+    left outer join
+        Employment employment2_ 
+            on employee1_.personName=employment2_.personName 
+            and (
+                employment2_.endDate is null
+            )  
+    where
+        person0_.name=?
+14:14:52,907 DEBUG SQL:104 - 
+    select
+        employment_.personName,
+        employment_.organizationName,
+        employment_.endDate as endDate1_ 
+    from
+        Employment employment_ 
+    where
+        employment_.personName=? 
+        and employment_.organizationName=?
+14:14:52,916 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        name=?
+14:14:52,916 DEBUG SQL:104 - 
+    delete 
+    from
+        Employment 
+    where
+        personName=? 
+        and organizationName=?
+14:14:52,916 DEBUG SQL:104 - 
+    delete 
+    from
+        Employment 
+    where
+        personName=? 
+        and organizationName=?
+14:14:52,916 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        personName=?
+14:14:52,924 DEBUG SQL:104 - 
+    delete 
+    from
+        Person 
+    where
+        name=?
+14:14:52,925  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:52,926 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:52,926 DEBUG SQL:104 - 
+    alter table Employment 
+        drop constraint FK80D9800C3BD5452D
+14:14:52,926 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:14:52,927 DEBUG SQL:104 - 
+    drop table Employment if exists
+14:14:52,927 DEBUG SQL:104 - 
+    drop table Person if exists
+14:14:52,927  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:52,927  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

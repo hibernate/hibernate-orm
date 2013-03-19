@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.typedmanytoone.TypedManyToOneTest" tests="2" time="0.097" timestamp="2013-02-28T20:19:26">
+  <properties />
+  <testcase classname="org.hibernate.test.typedmanytoone.TypedManyToOneTest" name="testCreateQuery" time="0.054" />
+  <testcase classname="org.hibernate.test.typedmanytoone.TypedManyToOneTest" name="testCreateQueryNull" time="0.007" />
+  <system-out><![CDATA[14:19:26,024  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.typedmanytoone.TypedManyToOneTest
+14:19:26,026  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/typedmanytoone/Customer.hbm.xml
+14:19:26,035  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:26,035  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:26,035  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:26,036  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:26,036  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:26,037  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:26,038  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:26,038  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:26,038  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:26,039  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:26,049  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:26,050 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:26,050 DEBUG SQL:104 - 
+    drop table Address if exists
+14:19:26,051 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:19:26,051 DEBUG SQL:104 - 
+    create table Address (
+        addressId varchar(255) not null,
+        add_type varchar(255) not null,
+        street varchar(255) not null,
+        city varchar(255) not null,
+        state varchar(255) not null,
+        zip varchar(255) not null,
+        primary key (addressId, add_type),
+        check (add_type in ('BILLING', 'SHIPPING'))
+    )
+14:19:26,052 DEBUG SQL:104 - 
+    create table Customer (
+        customerId varchar(255) not null,
+        name varchar(255) not null,
+        billingAddressId varchar(255),
+        shippingAddressId varchar(255),
+        primary key (customerId)
+    )
+14:19:26,052  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:26,053  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:26,053  INFO CustomRunner:139 - Test: testCreateQuery
+14:19:26,055 DEBUG SQL:104 - 
+    insert 
+    into
+        Address
+        (street, city, state, zip, addressId, add_type) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:19:26,055 DEBUG SQL:104 - 
+    insert 
+    into
+        Address
+        (street, city, state, zip, addressId, add_type) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:19:26,056 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (name, billingAddressId, shippingAddressId, customerId) 
+    values
+        (?, ?, ?, ?)
+14:19:26,056 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.typedmanytoone.Customer cust left join fetch cust.billingAddress where cust.customerId='abc123'
+14:19:26,092 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'typedmanytoone'
+    |     |  |  \-[IDENT] Node: 'Customer'
+    |     |  \-[ALIAS] Node: 'cust'
+    |     \-[JOIN] Node: 'join'
+    |        +-[LEFT] Node: 'left'
+    |        +-[FETCH] Node: 'fetch'
+    |        \-[DOT] Node: '.'
+    |           +-[IDENT] Node: 'cust'
+    |           \-[IDENT] Node: 'billingAddress'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'cust'
+          |  \-[IDENT] Node: 'customerId'
+          \-[QUOTED_STRING] Node: ''abc123''
+
+14:19:26,092 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,093 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.typedmanytoone.Customer (cust) -> customer0_
+14:19:26,093 DEBUG FromReferenceNode:74 - Resolved : cust -> customer0_.customerId
+14:19:26,093 DEBUG DotNode:599 - getDataType() : billingAddress -> org.hibernate.type.ManyToOneType(BillingAddress)
+14:19:26,093 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for billingAddress in org.hibernate.test.typedmanytoone.Customer (<no alias>) parent = [ {null} ]
+14:19:26,094 DEBUG FromElement:157 - FromClause{level=1} : BillingAddress (<no alias>) -> billingadd1_
+14:19:26,094 DEBUG FromClause:282 - addJoinByPathMap() : cust.billingAddress -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=billingadd1_,origin=Customer customer0_,columns={customer0_.billingAddressId 'BILLING' ,className=BillingAddress}}
+14:19:26,094 DEBUG FromReferenceNode:74 - Resolved : cust.billingAddress -> customer0_.billingAddressId, 'BILLING'
+14:19:26,094 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Address billingadd1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=billingadd1_,origin=Customer customer0_,columns={customer0_.billingAddressId 'BILLING' ,className=BillingAddress}}
+
+14:19:26,094 DEBUG FromReferenceNode:74 - Resolved : cust -> customer0_.customerId
+14:19:26,095 DEBUG DotNode:599 - getDataType() : customerId -> org.hibernate.type.StringType@2dc8de40
+14:19:26,095 DEBUG FromReferenceNode:74 - Resolved : cust.customerId -> customer0_.customerId
+14:19:26,095 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Customer customer0_ Address billingadd1_ ) ) ( where ( = ( customer0_.customerId customer0_.customerId customerId ) 'abc123' ) ) )
+14:19:26,095 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:26,095 DEBUG JoinProcessor:175 - Using FROM fragment [Customer customer0_]
+14:19:26,096 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Address billingadd1_ on customer0_.billingAddressId=billingadd1_.addressId and 'BILLING'=billingadd1_.add_type]
+14:19:26,096 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Customer,Address)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'customer0_.customerId as customerId1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=cust,role=null,tableName=Customer,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.typedmanytoone.Customer}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'billingadd1_.addressId as addressId0_1_, billingadd1_.add_type as add2_0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=billingadd1_,origin=Customer customer0_,columns={customer0_.billingAddressId 'BILLING' ,className=BillingAddress}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'customer0_.name as name1_0_, customer0_.billingAddressId as billingA3_1_0_, customer0_.shippingAddressId as shipping4_1_0_, 'BILLING' as formula106_0_, 'SHIPPING' as formula107_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'billingadd1_.street as street0_1_, billingadd1_.city as city0_1_, billingadd1_.state as state0_1_, billingadd1_.zip as zip0_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[cust], fromElementByTableAlias=[customer0_, billingadd1_], fromElementsByPath=[cust.billingAddress], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Customer customer0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=cust,role=null,tableName=Customer,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.typedmanytoone.Customer}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join Address billingadd1_ on customer0_.billingAddressId=billingadd1_.addressId and 'BILLING'=billingadd1_.add_type' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=billingadd1_,origin=Customer customer0_,columns={customer0_.billingAddressId 'BILLING' ,className=BillingAddress}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'customer0_.customerId' {propertyName=customerId,dereferenceType=ALL,propertyPath=customerId,path=cust.customerId,tableAlias=customer0_,className=org.hibernate.test.typedmanytoone.Customer,classAlias=cust}
+          |  +-[ALIAS_REF] IdentNode: 'customer0_.customerId' {alias=cust, className=org.hibernate.test.typedmanytoone.Customer, tableAlias=customer0_}
+          |  \-[IDENT] IdentNode: 'customerId' {originalText=customerId}
+          \-[QUOTED_STRING] LiteralNode: ''abc123''
+
+14:19:26,096 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,096 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.typedmanytoone.Customer cust left join fetch cust.billingAddress where cust.customerId='abc123'
+14:19:26,096 DEBUG QueryTranslatorImpl:236 - SQL: select customer0_.customerId as customerId1_0_, billingadd1_.addressId as addressId0_1_, billingadd1_.add_type as add2_0_1_, customer0_.name as name1_0_, customer0_.billingAddressId as billingA3_1_0_, customer0_.shippingAddressId as shipping4_1_0_, 'BILLING' as formula106_0_, 'SHIPPING' as formula107_0_, billingadd1_.street as street0_1_, billingadd1_.city as city0_1_, billingadd1_.state as state0_1_, billingadd1_.zip as zip0_1_ from Customer customer0_ left outer join Address billingadd1_ on customer0_.billingAddressId=billingadd1_.addressId and 'BILLING'=billingadd1_.add_type where customer0_.customerId='abc123'
+14:19:26,096 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,097 DEBUG SQL:104 - 
+    select
+        customer0_.customerId as customerId1_0_,
+        billingadd1_.addressId as addressId0_1_,
+        billingadd1_.add_type as add2_0_1_,
+        customer0_.name as name1_0_,
+        customer0_.billingAddressId as billingA3_1_0_,
+        customer0_.shippingAddressId as shipping4_1_0_,
+        'BILLING' as formula106_0_,
+        'SHIPPING' as formula107_0_,
+        billingadd1_.street as street0_1_,
+        billingadd1_.city as city0_1_,
+        billingadd1_.state as state0_1_,
+        billingadd1_.zip as zip0_1_ 
+    from
+        Customer customer0_ 
+    left outer join
+        Address billingadd1_ 
+            on customer0_.billingAddressId=billingadd1_.addressId 
+            and 'BILLING'=billingadd1_.add_type 
+    where
+        customer0_.customerId='abc123'
+14:19:26,099 DEBUG SQL:104 - 
+    select
+        shippingad0_.addressId as addressId0_0_,
+        shippingad0_.add_type as add2_0_0_,
+        shippingad0_.street as street0_0_,
+        shippingad0_.city as city0_0_,
+        shippingad0_.state as state0_0_,
+        shippingad0_.zip as zip0_0_ 
+    from
+        Address shippingad0_ 
+    where
+        shippingad0_.addressId=? 
+        and shippingad0_.add_type=? 
+        and (
+            shippingad0_.add_type='SHIPPING'
+        ) 
+14:19:26,100 DEBUG SQL:104 - 
+    select
+        customer_.customerId,
+        customer_.name as name1_,
+        customer_.billingAddressId as billingA3_1_,
+        'BILLING' as formula106_,
+        customer_.shippingAddressId as shipping4_1_,
+        'SHIPPING' as formula107_ 
+    from
+        Customer customer_ 
+    where
+        customer_.customerId=?
+14:19:26,101 DEBUG SQL:104 - 
+    select
+        billingadd_.addressId,
+        billingadd_.add_type,
+        billingadd_.street as street0_,
+        billingadd_.city as city0_,
+        billingadd_.state as state0_,
+        billingadd_.zip as zip0_ 
+    from
+        Address billingadd_ 
+    where
+        billingadd_.addressId=? 
+        and billingadd_.add_type=?
+14:19:26,104 DEBUG SQL:104 - 
+    select
+        shippingad_.addressId,
+        shippingad_.add_type,
+        shippingad_.street as street0_,
+        shippingad_.city as city0_,
+        shippingad_.state as state0_,
+        shippingad_.zip as zip0_ 
+    from
+        Address shippingad_ 
+    where
+        shippingad_.addressId=? 
+        and shippingad_.add_type=?
+14:19:26,105 DEBUG SQL:104 - 
+    update
+        Customer 
+    set
+        shippingAddressId=? 
+    where
+        customerId=?
+14:19:26,106 DEBUG SQL:104 - 
+    delete 
+    from
+        Address 
+    where
+        addressId=? 
+        and add_type=?
+14:19:26,106 DEBUG SQL:104 - 
+    select
+        shippingad0_.addressId as addressId0_0_,
+        shippingad0_.add_type as add2_0_0_,
+        shippingad0_.street as street0_0_,
+        shippingad0_.city as city0_0_,
+        shippingad0_.state as state0_0_,
+        shippingad0_.zip as zip0_0_ 
+    from
+        Address shippingad0_ 
+    where
+        shippingad0_.addressId=? 
+        and shippingad0_.add_type=? 
+        and (
+            shippingad0_.add_type='SHIPPING'
+        ) 
+14:19:26,107 DEBUG SQL:104 - 
+    delete 
+    from
+        Customer 
+    where
+        customerId=?
+14:19:26,107 DEBUG SQL:104 - 
+    delete 
+    from
+        Address 
+    where
+        addressId=? 
+        and add_type=?
+14:19:26,108  INFO CustomRunner:139 - Test: testCreateQueryNull
+14:19:26,110 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (name, billingAddressId, shippingAddressId, customerId) 
+    values
+        (?, ?, ?, ?)
+14:19:26,110 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.typedmanytoone.Customer cust left join fetch cust.billingAddress where cust.customerId='xyz123'
+14:19:26,112 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'typedmanytoone'
+    |     |  |  \-[IDENT] Node: 'Customer'
+    |     |  \-[ALIAS] Node: 'cust'
+    |     \-[JOIN] Node: 'join'
+    |        +-[LEFT] Node: 'left'
+    |        +-[FETCH] Node: 'fetch'
+    |        \-[DOT] Node: '.'
+    |           +-[IDENT] Node: 'cust'
+    |           \-[IDENT] Node: 'billingAddress'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'cust'
+          |  \-[IDENT] Node: 'customerId'
+          \-[QUOTED_STRING] Node: ''xyz123''
+
+14:19:26,112 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,112 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.typedmanytoone.Customer (cust) -> customer0_
+14:19:26,112 DEBUG FromReferenceNode:74 - Resolved : cust -> customer0_.customerId
+14:19:26,112 DEBUG DotNode:599 - getDataType() : billingAddress -> org.hibernate.type.ManyToOneType(BillingAddress)
+14:19:26,112 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for billingAddress in org.hibernate.test.typedmanytoone.Customer (<no alias>) parent = [ {null} ]
+14:19:26,112 DEBUG FromElement:157 - FromClause{level=1} : BillingAddress (<no alias>) -> billingadd1_
+14:19:26,113 DEBUG FromClause:282 - addJoinByPathMap() : cust.billingAddress -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=billingadd1_,origin=Customer customer0_,columns={customer0_.billingAddressId 'BILLING' ,className=BillingAddress}}
+14:19:26,113 DEBUG FromReferenceNode:74 - Resolved : cust.billingAddress -> customer0_.billingAddressId, 'BILLING'
+14:19:26,113 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Address billingadd1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=billingadd1_,origin=Customer customer0_,columns={customer0_.billingAddressId 'BILLING' ,className=BillingAddress}}
+
+14:19:26,113 DEBUG FromReferenceNode:74 - Resolved : cust -> customer0_.customerId
+14:19:26,113 DEBUG DotNode:599 - getDataType() : customerId -> org.hibernate.type.StringType@2dc8de40
+14:19:26,113 DEBUG FromReferenceNode:74 - Resolved : cust.customerId -> customer0_.customerId
+14:19:26,113 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Customer customer0_ Address billingadd1_ ) ) ( where ( = ( customer0_.customerId customer0_.customerId customerId ) 'xyz123' ) ) )
+14:19:26,113 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:26,114 DEBUG JoinProcessor:175 - Using FROM fragment [Customer customer0_]
+14:19:26,114 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Address billingadd1_ on customer0_.billingAddressId=billingadd1_.addressId and 'BILLING'=billingadd1_.add_type]
+14:19:26,114 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Customer,Address)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'customer0_.customerId as customerId1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=cust,role=null,tableName=Customer,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.typedmanytoone.Customer}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'billingadd1_.addressId as addressId0_1_, billingadd1_.add_type as add2_0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=billingadd1_,origin=Customer customer0_,columns={customer0_.billingAddressId 'BILLING' ,className=BillingAddress}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'customer0_.name as name1_0_, customer0_.billingAddressId as billingA3_1_0_, customer0_.shippingAddressId as shipping4_1_0_, 'BILLING' as formula106_0_, 'SHIPPING' as formula107_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'billingadd1_.street as street0_1_, billingadd1_.city as city0_1_, billingadd1_.state as state0_1_, billingadd1_.zip as zip0_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[cust], fromElementByTableAlias=[customer0_, billingadd1_], fromElementsByPath=[cust.billingAddress], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Customer customer0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=cust,role=null,tableName=Customer,tableAlias=customer0_,origin=null,columns={,className=org.hibernate.test.typedmanytoone.Customer}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join Address billingadd1_ on customer0_.billingAddressId=billingadd1_.addressId and 'BILLING'=billingadd1_.add_type' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Address,tableAlias=billingadd1_,origin=Customer customer0_,columns={customer0_.billingAddressId 'BILLING' ,className=BillingAddress}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'customer0_.customerId' {propertyName=customerId,dereferenceType=ALL,propertyPath=customerId,path=cust.customerId,tableAlias=customer0_,className=org.hibernate.test.typedmanytoone.Customer,classAlias=cust}
+          |  +-[ALIAS_REF] IdentNode: 'customer0_.customerId' {alias=cust, className=org.hibernate.test.typedmanytoone.Customer, tableAlias=customer0_}
+          |  \-[IDENT] IdentNode: 'customerId' {originalText=customerId}
+          \-[QUOTED_STRING] LiteralNode: ''xyz123''
+
+14:19:26,114 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,114 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.typedmanytoone.Customer cust left join fetch cust.billingAddress where cust.customerId='xyz123'
+14:19:26,114 DEBUG QueryTranslatorImpl:236 - SQL: select customer0_.customerId as customerId1_0_, billingadd1_.addressId as addressId0_1_, billingadd1_.add_type as add2_0_1_, customer0_.name as name1_0_, customer0_.billingAddressId as billingA3_1_0_, customer0_.shippingAddressId as shipping4_1_0_, 'BILLING' as formula106_0_, 'SHIPPING' as formula107_0_, billingadd1_.street as street0_1_, billingadd1_.city as city0_1_, billingadd1_.state as state0_1_, billingadd1_.zip as zip0_1_ from Customer customer0_ left outer join Address billingadd1_ on customer0_.billingAddressId=billingadd1_.addressId and 'BILLING'=billingadd1_.add_type where customer0_.customerId='xyz123'
+14:19:26,114 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:26,115 DEBUG SQL:104 - 
+    select
+        customer0_.customerId as customerId1_0_,
+        billingadd1_.addressId as addressId0_1_,
+        billingadd1_.add_type as add2_0_1_,
+        customer0_.name as name1_0_,
+        customer0_.billingAddressId as billingA3_1_0_,
+        customer0_.shippingAddressId as shipping4_1_0_,
+        'BILLING' as formula106_0_,
+        'SHIPPING' as formula107_0_,
+        billingadd1_.street as street0_1_,
+        billingadd1_.city as city0_1_,
+        billingadd1_.state as state0_1_,
+        billingadd1_.zip as zip0_1_ 
+    from
+        Customer customer0_ 
+    left outer join
+        Address billingadd1_ 
+            on customer0_.billingAddressId=billingadd1_.addressId 
+            and 'BILLING'=billingadd1_.add_type 
+    where
+        customer0_.customerId='xyz123'
+14:19:26,115 DEBUG SQL:104 - 
+    delete 
+    from
+        Customer 
+    where
+        customerId=?
+14:19:26,116  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:26,118 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:26,118 DEBUG SQL:104 - 
+    drop table Address if exists
+14:19:26,118 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:19:26,119  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:26,119  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

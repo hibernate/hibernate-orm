@@ -841,7 +841,6 @@ public class MasterDetailTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		c = (Category) s.load( Category.class, new Long( c.getId() ) );
-		System.out.println( c.getSubcategories() );
 		assertTrue( c.getSubcategories().get(0)!=null && c.getSubcategories().get(1)!=null );
 		List list = ( (Category) c.getSubcategories().get(1) ).getSubcategories();
 		assertTrue( list.get(1)!=null && list.get(0)==null );

@@ -1,0 +1,1549 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.SQLFunctionsTest" tests="11" time="0.51" timestamp="2013-02-28T20:16:47">
+  <properties />
+  <testcase classname="org.hibernate.test.legacy.SQLFunctionsTest" name="testBlobClob" time="0.015" />
+  <testcase classname="org.hibernate.test.legacy.SQLFunctionsTest" name="testBroken" time="0.008" />
+  <testcase classname="org.hibernate.test.legacy.SQLFunctionsTest" name="testCachedQuery" time="0.009" />
+  <testcase classname="org.hibernate.test.legacy.SQLFunctionsTest" name="testCachedQueryOnInsert" time="0.004" />
+  <testcase classname="org.hibernate.test.legacy.SQLFunctionsTest" name="testCachedQueryRegion" time="0.06" />
+  <testcase classname="org.hibernate.test.legacy.SQLFunctionsTest" name="testDialectSQLFunctions" time="0.012" />
+  <testcase classname="org.hibernate.test.legacy.SQLFunctionsTest" name="testNothinToUpdate" time="0.02" />
+  <testcase classname="org.hibernate.test.legacy.SQLFunctionsTest" name="testSQLFunctions" time="0.181" />
+  <testcase classname="org.hibernate.test.legacy.SQLFunctionsTest" name="testSetProperties" time="0.029" />
+  <testcase classname="org.hibernate.test.legacy.SQLFunctionsTest" name="testSetPropertiesMap" time="0.038" />
+  <testcase classname="org.hibernate.test.legacy.SQLFunctionsTest" name="testSqlFunctionAsAlias" time="0.013" />
+  <system-out><![CDATA[14:16:47,065  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.SQLFunctionsTest
+14:16:47,066  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:47,068  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/AltSimple.hbm.xml
+14:16:47,102  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Broken.hbm.xml
+14:16:47,149  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/Blobber.hbm.xml
+14:16:47,155  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:16:47,155  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:16:47,155  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:16:47,156  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:16:47,156  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:16:47,157  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:16:47,157  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:16:47,158  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:16:47,158  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:16:47,165  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:47,165 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:47,166 DEBUG SQL:104 - 
+    alter table BROKE 
+        drop constraint FK3C887994581DD3E
+14:16:47,166 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table BROKE drop constraint FK3C887994581DD3E
+14:16:47,166 ERROR SchemaExport:426 - Table "BROKE" not found; SQL statement:
+
+    alter table BROKE 
+        drop constraint FK3C887994581DD3E [42102-145]
+14:16:47,166 DEBUG SQL:104 - 
+    alter table FIX 
+        drop constraint FK10FF54C3CA255
+14:16:47,166 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table FIX drop constraint FK10FF54C3CA255
+14:16:47,166 ERROR SchemaExport:426 - Table "FIX" not found; SQL statement:
+
+    alter table FIX 
+        drop constraint FK10FF54C3CA255 [42102-145]
+14:16:47,166 DEBUG SQL:104 - 
+    alter table SIMP 
+        drop constraint FK26D679939BE031
+14:16:47,167 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table SIMP drop constraint FK26D679939BE031
+14:16:47,167 ERROR SchemaExport:426 - Table "SIMP" not found; SQL statement:
+
+    alter table SIMP 
+        drop constraint FK26D679939BE031 [42102-145]
+14:16:47,167 DEBUG SQL:104 - 
+    drop table BROKE if exists
+14:16:47,167 DEBUG SQL:104 - 
+    drop table Blobber if exists
+14:16:47,167 DEBUG SQL:104 - 
+    drop table FIX if exists
+14:16:47,167 DEBUG SQL:104 - 
+    drop table SIMP if exists
+14:16:47,167 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:16:47,168 DEBUG SQL:104 - 
+    create table BROKE (
+        id bigint not null,
+        otherId varchar(255) not null,
+        "timestamp" timestamp not null,
+        FIX_ID bigint,
+        OTHER_FIX_ID varchar(255),
+        primary key (id, otherId)
+    )
+14:16:47,168 DEBUG SQL:104 - 
+    create table Blobber (
+        id integer not null,
+        blob_ blob,
+        clob_ clob,
+        primary key (id)
+    )
+14:16:47,168 DEBUG SQL:104 - 
+    create table FIX (
+        BROKE_ID bigint not null,
+        OTHER_BROKE_ID varchar(255) not null,
+        list binary(255),
+        primary key (BROKE_ID, OTHER_BROKE_ID)
+    )
+14:16:47,168 DEBUG SQL:104 - 
+    create table SIMP (
+        id_ bigint not null,
+        name varchar(255),
+        address varchar(255),
+        count_ integer not null,
+        date_ timestamp,
+        pay float,
+        other bigint,
+        primary key (id_)
+    )
+14:16:47,169 DEBUG SQL:104 - 
+    alter table BROKE 
+        add constraint FK3C887994581DD3E 
+        foreign key (FIX_ID, OTHER_FIX_ID) 
+        references FIX
+14:16:47,169 DEBUG SQL:104 - 
+    alter table FIX 
+        add constraint FK10FF54C3CA255 
+        foreign key (BROKE_ID, OTHER_BROKE_ID) 
+        references BROKE
+14:16:47,170 DEBUG SQL:104 - 
+    alter table SIMP 
+        add constraint uc_SIMP_1 unique (count_)
+14:16:47,170 DEBUG SQL:104 - 
+    alter table SIMP 
+        add constraint FK26D679939BE031 
+        foreign key (other) 
+        references SIMP
+14:16:47,170 DEBUG SQL:104 - 
+    create table hibernate_unique_key (
+         next_hi integer 
+    )
+14:16:47,170 DEBUG SQL:104 - 
+    insert into hibernate_unique_key values ( 0 )
+14:16:47,171  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:47,171  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:16:47,171  INFO CustomRunner:139 - Test: testBlobClob
+14:16:47,181 DEBUG SQL:104 - 
+    select
+        next_hi 
+    from
+        hibernate_unique_key for update
+            
+14:16:47,182 DEBUG SQL:104 - 
+    update
+        hibernate_unique_key 
+    set
+        next_hi = ? 
+    where
+        next_hi = ?
+14:16:47,183 DEBUG SQL:104 - 
+    insert 
+    into
+        Blobber
+        (blob_, clob_, id) 
+    values
+        (?, ?, ?)
+14:16:47,183 DEBUG SQL:104 - 
+    select
+        blobber0_.id as id1_0_,
+        blobber0_.blob_ as blob2_1_0_,
+        blobber0_.clob_ as clob3_1_0_ 
+    from
+        Blobber blobber0_ 
+    where
+        blobber0_.id=?
+14:16:47,184 DEBUG SQL:104 - 
+    select
+        blobber0_.id as id1_0_,
+        blobber0_.blob_ as blob2_1_0_,
+        blobber0_.clob_ as clob3_1_0_ 
+    from
+        Blobber blobber0_ 
+    where
+        blobber0_.id=?
+14:16:47,185 DEBUG SQL:104 - 
+    insert 
+    into
+        Blobber
+        (blob_, clob_, id) 
+    values
+        (?, ?, ?)
+14:16:47,185 DEBUG SQL:104 - 
+    update
+        Blobber 
+    set
+        blob_=? 
+    where
+        id=?
+14:16:47,185 DEBUG SQL:104 - 
+    update
+        Blobber 
+    set
+        blob_=? 
+    where
+        id=?
+14:16:47,185 DEBUG SQL:104 - 
+    select
+        blobber0_.id as id1_0_,
+        blobber0_.blob_ as blob2_1_0_,
+        blobber0_.clob_ as clob3_1_0_ 
+    from
+        Blobber blobber0_ 
+    where
+        blobber0_.id=?
+14:16:47,186 DEBUG SQL:104 - 
+    update
+        Blobber 
+    set
+        clob_=? 
+    where
+        id=?
+14:16:47,186 DEBUG SQL:104 - 
+    select
+        blobber0_.id as id1_0_,
+        blobber0_.blob_ as blob2_1_0_,
+        blobber0_.clob_ as clob3_1_0_ 
+    from
+        Blobber blobber0_ 
+    where
+        blobber0_.id=?
+14:16:47,187  INFO CustomRunner:139 - Test: testBroken
+14:16:47,188 DEBUG SQL:104 - 
+    insert 
+    into
+        BROKE
+        ("timestamp", id, otherId) 
+    values
+        (?, ?, ?)
+14:16:47,189 DEBUG SQL:104 - 
+    insert 
+    into
+        FIX
+        (list, BROKE_ID, OTHER_BROKE_ID) 
+    values
+        (?, ?, ?)
+14:16:47,189 DEBUG SQL:104 - 
+    update
+        BROKE 
+    set
+        "timestamp"=? 
+    where
+        id=? 
+        and otherId=? 
+        and "timestamp"=?
+14:16:47,190 DEBUG SQL:104 - 
+    update
+        BROKE 
+    set
+        "timestamp"=? 
+    where
+        id=? 
+        and otherId=? 
+        and "timestamp"=?
+14:16:47,190 DEBUG SQL:104 - 
+    update
+        FIX 
+    set
+        list=? 
+    where
+        BROKE_ID=? 
+        and OTHER_BROKE_ID=?
+14:16:47,190 DEBUG SQL:104 - 
+    select
+        broken0_.id as id0_0_,
+        broken0_.otherId as otherId0_0_,
+        broken0_."timestamp" as timestamp3_0_0_,
+        broken0_1_.list as list2_0_,
+        case 
+            when broken0_1_.BROKE_ID is not null then 1 
+            when broken0_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        BROKE broken0_ 
+    left outer join
+        FIX broken0_1_ 
+            on broken0_.id=broken0_1_.BROKE_ID 
+            and broken0_.otherId=broken0_1_.OTHER_BROKE_ID 
+    where
+        broken0_.id=? 
+        and broken0_.otherId=?
+14:16:47,192 DEBUG SQL:104 - 
+    delete 
+    from
+        FIX 
+    where
+        BROKE_ID=? 
+        and OTHER_BROKE_ID=?
+14:16:47,192 DEBUG SQL:104 - 
+    delete 
+    from
+        BROKE 
+    where
+        id=? 
+        and otherId=? 
+        and "timestamp"=?
+14:16:47,195  INFO CustomRunner:139 - Test: testCachedQuery
+14:16:47,196 DEBUG SQL:104 - 
+    insert 
+    into
+        SIMP
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:47,198 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,199 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,199 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,200 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,200 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,201 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,201 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,201 DEBUG SQL:104 - 
+    update
+        SIMP 
+    set
+        name=?,
+        address=?,
+        count_=?,
+        date_=?,
+        pay=?,
+        other=? 
+    where
+        id_=?
+14:16:47,202 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,202 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,202 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,203 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,203 DEBUG SQL:104 - 
+    update
+        SIMP 
+    set
+        name=?,
+        address=?,
+        count_=?,
+        date_=?,
+        pay=?,
+        other=? 
+    where
+        id_=?
+14:16:47,203 DEBUG SQL:104 - 
+    delete 
+    from
+        SIMP 
+    where
+        id_=?
+14:16:47,204 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,204 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,204  INFO CustomRunner:139 - Test: testCachedQueryOnInsert
+14:16:47,205 DEBUG SQL:104 - 
+    insert 
+    into
+        SIMP
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:47,206 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_
+14:16:47,207 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_
+14:16:47,207 DEBUG SQL:104 - 
+    insert 
+    into
+        SIMP
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:47,207 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_
+14:16:47,208 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_
+14:16:47,208 DEBUG SQL:104 - 
+    delete 
+    from
+        SIMP 
+    where
+        id_=?
+14:16:47,208 DEBUG SQL:104 - 
+    delete 
+    from
+        SIMP 
+    where
+        id_=?
+14:16:47,209  INFO CustomRunner:139 - Test: testCachedQueryRegion
+14:16:47,210 DEBUG SQL:104 - 
+    insert 
+    into
+        SIMP
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:47,211 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,218 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,219 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,221 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,222 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,229 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,231 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,238 DEBUG SQL:104 - 
+    update
+        SIMP 
+    set
+        name=?,
+        address=?,
+        count_=?,
+        date_=?,
+        pay=?,
+        other=? 
+    where
+        id_=?
+14:16:47,239 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,241 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,242 DEBUG SQL:104 - 
+    update
+        SIMP 
+    set
+        name=?,
+        address=?,
+        count_=?,
+        date_=?,
+        pay=?,
+        other=? 
+    where
+        id_=?
+14:16:47,260 DEBUG SQL:104 - 
+    delete 
+    from
+        SIMP 
+    where
+        id_=?
+14:16:47,261 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,269 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,270  INFO CustomRunner:139 - Test: testDialectSQLFunctions
+14:16:47,272 DEBUG SQL:104 - 
+    select
+        max(simple0_.count_) as col_0_0_ 
+    from
+        SIMP simple0_
+14:16:47,273 DEBUG SQL:104 - 
+    insert 
+    into
+        SIMP
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:47,281 DEBUG SQL:104 - 
+    select
+        simple0_.count_ as col_0_0_,
+        simple0_.address as col_1_0_ 
+    from
+        SIMP simple0_
+14:16:47,282 DEBUG SQL:104 - 
+    select
+        max(simple0_.count_) as col_0_0_ 
+    from
+        SIMP simple0_
+14:16:47,282 DEBUG SQL:104 - 
+    select
+        count(*) as col_0_0_ 
+    from
+        SIMP simple0_
+14:16:47,282 DEBUG SQL:104 - 
+    delete 
+    from
+        SIMP 
+    where
+        id_=?
+14:16:47,283  INFO CustomRunner:139 - Test: testNothinToUpdate
+14:16:47,284 DEBUG SQL:104 - 
+    insert 
+    into
+        SIMP
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:47,292 DEBUG SQL:104 - 
+    update
+        SIMP 
+    set
+        name=?,
+        address=?,
+        count_=?,
+        date_=?,
+        pay=?,
+        other=? 
+    where
+        id_=?
+14:16:47,293 DEBUG SQL:104 - 
+    update
+        SIMP 
+    set
+        name=?,
+        address=?,
+        count_=?,
+        date_=?,
+        pay=?,
+        other=? 
+    where
+        id_=?
+14:16:47,294 DEBUG SQL:104 - 
+    delete 
+    from
+        SIMP 
+    where
+        id_=?
+14:16:47,304  INFO CustomRunner:139 - Test: testSQLFunctions
+14:16:47,307 DEBUG SQL:104 - 
+    insert 
+    into
+        SIMP
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:47,307 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            upper(simple0_.name)='SIMPLE 1' 
+        )
+14:16:47,312 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            (
+                upper(simple0_.name)<>'yada' 
+            )
+            and(
+                1<>2 
+            )
+            and(
+                'foo'<>'bar' 
+            )
+            and(
+                (
+                    'foo'='foo' 
+                )
+            )
+            and(
+                'foo' not like 'bar' 
+            )
+        )
+14:16:47,318 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            lower(simple0_.name||' foo')='simple 1 foo' 
+        )
+14:16:47,329 DEBUG SQL:104 - 
+    insert 
+    into
+        SIMP
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:47,329 DEBUG SQL:104 - 
+    update
+        SIMP 
+    set
+        name=?,
+        address=?,
+        count_=?,
+        date_=?,
+        pay=?,
+        other=? 
+    where
+        id_=?
+14:16:47,336 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_,
+        SIMP simple1_ 
+    where
+        (
+            upper(simple1_.name)='SIMPLE 2'  
+            and simple0_.other=simple1_.id_
+        )
+14:16:47,339 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_,
+        SIMP simple1_ 
+    where
+        (
+            (
+                upper(simple1_.name)<>'SIMPLE 2'  
+                and simple0_.other=simple1_.id_
+            )
+        )
+14:16:47,356 DEBUG SQL:104 - 
+    select
+        distinct simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_,
+        SIMP simple1_ 
+    where
+        (
+            (
+                (
+                    simple1_.count_+3
+                )=(
+                    15*2
+                )/2  
+                and simple0_.other=simple1_.id_
+            )
+            and(
+                simple0_.count_=69 
+            )
+        )
+        or(
+            (
+                (
+                    simple1_.count_+2
+                )/7
+            )=2  
+            and simple0_.other=simple1_.id_
+        )
+14:16:47,361 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_,
+        SIMP simple1_ 
+    where
+        (
+            (
+                (
+                    simple1_.count_+3
+                )=(
+                    15*2
+                )/2  
+                and simple0_.other=simple1_.id_
+            )
+            and(
+                simple0_.count_=69 
+            )
+        )
+        or(
+            (
+                (
+                    simple1_.count_+2
+                )/7
+            )=2  
+            and simple0_.other=simple1_.id_
+        ) 
+    order by
+        simple1_.count_
+14:16:47,367 DEBUG SQL:104 - 
+    insert 
+    into
+        SIMP
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:47,368 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.count_>(
+                select
+                    min(simple1_.count_) 
+                from
+                    SIMP simple1_
+            )
+        )
+14:16:47,380 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.id_=some(
+                select
+                    simple1_.id_ 
+                from
+                    SIMP simple1_ 
+                where
+                    (
+                        simple1_.count_>=0 
+                    )
+            )
+        )
+        and(
+            simple0_.count_>=0 
+        )
+14:16:47,383 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_,
+        SIMP simple4_ 
+    where
+        (
+            simple0_.id_=some(
+                select
+                    simple1_.id_ 
+                from
+                    SIMP simple1_,
+                    SIMP simple2_,
+                    SIMP simple3_ 
+                where
+                    (
+                        simple2_.count_=simple3_.count_  
+                        and simple1_.other=simple2_.id_ 
+                        and simple0_.other=simple3_.id_
+                    )
+            )
+        )
+        and(
+            simple4_.count_>0  
+            and simple0_.other=simple4_.id_
+        )
+14:16:47,404 DEBUG SQL:104 - 
+    select
+        sum(simple0_.count_) as col_0_0_ 
+    from
+        SIMP simple0_ 
+    group by
+        simple0_.count_ 
+    having
+        (
+            sum(simple0_.count_)>10 
+        )
+14:16:47,424 DEBUG SQL:104 - 
+    select
+        simple0_.count_ as col_0_0_ 
+    from
+        SIMP simple0_ 
+    group by
+        simple0_.count_ 
+    having
+        (
+            simple0_.count_=12 
+        )
+14:16:47,427 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as col_0_0_,
+        simple0_.count_ as col_1_0_,
+        count(simple1_.id_) as col_2_0_,
+        max(simple1_.date_) as col_3_0_ 
+    from
+        SIMP simple0_,
+        SIMP simple1_ 
+    where
+        (
+            simple0_.count_=simple1_.count_ 
+        ) 
+    group by
+        simple0_.id_ ,
+        simple0_.count_ 
+    order by
+        simple0_.count_
+14:16:47,430 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ limit ?
+14:16:47,430 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ limit ?
+14:16:47,430 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_
+14:16:47,442 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+14:16:47,446 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as col_0_0_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+        and(
+            upper(simple0_.name)=? 
+        )
+14:16:47,455 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as col_0_0_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+        and(
+            upper(simple0_.name)=? 
+        )
+        or(
+            simple0_.count_=? 
+        )
+        or(
+            simple0_.count_=?+1 
+        )
+14:16:47,457 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as col_0_0_ 
+    from
+        SIMP simple0_ limit ? offset ?
+14:16:47,460 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_0_,
+        simple1_.id_ as id1_3_1_,
+        simple0_.name as name3_0_,
+        simple0_.address as address3_0_,
+        simple0_.count_ as count4_3_0_,
+        simple0_.date_ as date5_3_0_,
+        simple0_.pay as pay3_0_,
+        simple0_.other as other3_0_,
+        simple1_.name as name3_1_,
+        simple1_.address as address3_1_,
+        simple1_.count_ as count4_3_1_,
+        simple1_.date_ as date5_3_1_,
+        simple1_.pay as pay3_1_,
+        simple1_.other as other3_1_ 
+    from
+        SIMP simple0_,
+        SIMP simple1_ 
+    where
+        simple0_.other=simple1_.id_ 
+        and (
+            (
+                simple0_.id_=? 
+            )
+        )
+14:16:47,464 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name in(
+                ? , ?
+            )
+        )
+        and(
+            simple0_.count_>? 
+        )
+14:16:47,473 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_
+14:16:47,474 DEBUG SQL:104 - 
+    update
+        SIMP 
+    set
+        name=?,
+        address=?,
+        count_=?,
+        date_=?,
+        pay=?,
+        other=? 
+    where
+        id_=?
+14:16:47,484 DEBUG SQL:104 - 
+    delete 
+    from
+        SIMP 
+    where
+        id_=?
+14:16:47,484 DEBUG SQL:104 - 
+    delete 
+    from
+        SIMP 
+    where
+        id_=?
+14:16:47,484 DEBUG SQL:104 - 
+    delete 
+    from
+        SIMP 
+    where
+        id_=?
+14:16:47,485  INFO CustomRunner:139 - Test: testSetProperties
+14:16:47,487 DEBUG SQL:104 - 
+    insert 
+    into
+        SIMP
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:47,488 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+        and(
+            simple0_.count_=? 
+        )
+14:16:47,491 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name in(
+                ? , ?
+            )
+        )
+14:16:47,498 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name in(
+                ? , ?
+            )
+        )
+14:16:47,503 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name in(
+                ? , ?
+            )
+        )
+14:16:47,513 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name in(
+                ? , ?
+            )
+        )
+14:16:47,513 DEBUG SQL:104 - 
+    delete 
+    from
+        SIMP 
+    where
+        id_=?
+14:16:47,514  INFO CustomRunner:139 - Test: testSetPropertiesMap
+14:16:47,516 DEBUG SQL:104 - 
+    insert 
+    into
+        SIMP
+        (name, address, count_, date_, pay, other, id_) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:16:47,537 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name=? 
+        )
+        and(
+            simple0_.count_=? 
+        )
+14:16:47,538 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name in(
+                ? , ?
+            )
+        )
+14:16:47,552 DEBUG SQL:104 - 
+    select
+        simple0_.id_ as id1_3_,
+        simple0_.name as name3_,
+        simple0_.address as address3_,
+        simple0_.count_ as count4_3_,
+        simple0_.date_ as date5_3_,
+        simple0_.pay as pay3_,
+        simple0_.other as other3_ 
+    from
+        SIMP simple0_ 
+    where
+        (
+            simple0_.name in(
+                ? , ?
+            )
+        )
+14:16:47,553 DEBUG SQL:104 - 
+    delete 
+    from
+        SIMP 
+    where
+        id_=?
+14:16:47,554  INFO CustomRunner:139 - Test: testSqlFunctionAsAlias
+14:16:47,566  INFO SQLFunctionsTest:611 - Dialect does not list any no-arg functions
+14:16:47,567  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:16:47,568 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:16:47,568 DEBUG SQL:104 - 
+    alter table BROKE 
+        drop constraint FK3C887994581DD3E
+14:16:47,568 DEBUG SQL:104 - 
+    alter table FIX 
+        drop constraint FK10FF54C3CA255
+14:16:47,568 DEBUG SQL:104 - 
+    alter table SIMP 
+        drop constraint FK26D679939BE031
+14:16:47,568 DEBUG SQL:104 - 
+    drop table BROKE if exists
+14:16:47,569 DEBUG SQL:104 - 
+    drop table Blobber if exists
+14:16:47,569 DEBUG SQL:104 - 
+    drop table FIX if exists
+14:16:47,569 DEBUG SQL:104 - 
+    drop table SIMP if exists
+14:16:47,569 DEBUG SQL:104 - 
+    drop table hibernate_unique_key if exists
+14:16:47,570  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:16:47,570  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

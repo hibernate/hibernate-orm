@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.queryplan.NativeSQLQueryPlanEqualsTest" tests="1" time="0.025" timestamp="2013-02-28T20:19:02">
+  <properties />
+  <testcase classname="org.hibernate.test.queryplan.NativeSQLQueryPlanEqualsTest" name="testNativeSQLQuerySpecEquals" time="0.002" />
+  <system-out><![CDATA[14:19:02,282  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.queryplan.NativeSQLQueryPlanEqualsTest
+14:19:02,283  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:02,284  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:02,284  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:02,284  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:02,284  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:02,285  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:02,286  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:02,286  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:02,287  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:02,287  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:02,290  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:02,290 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:02,291  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:02,291  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:02,291  INFO CustomRunner:139 - Test: testNativeSQLQuerySpecEquals
+14:19:02,293  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:02,293 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:02,293  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:02,294  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,944 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.collection.set.PersistentSetTest" tests="8" time="0.669" timestamp="2013-02-28T20:11:58">
+  <properties />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetTest" name="testCollectionMerging" time="0.029" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetTest" name="testCollectiondirtyChecking" time="0.058" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetTest" name="testCompositeElementCollectionDirtyChecking" time="0.106" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetTest" name="testCompositeElementMerging" time="0.068" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetTest" name="testCompositeElementWriteMethodDirtying" time="0.003" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetTest" name="testLoadChildCheckParentContainsChildCache" time="0.184" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetTest" name="testLoadChildCheckParentContainsChildNoCache" time="0.113" />
+  <testcase classname="org.hibernate.test.collection.set.PersistentSetTest" name="testWriteMethodDirtying" time="0.033" />
+  <system-out><![CDATA[14:11:58,397  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.collection.set.PersistentSetTest
+14:11:58,399  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/collection/set/Mappings.hbm.xml
+14:11:58,407  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:58,407  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:58,407  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:58,407  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:58,408  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:58,409  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:58,409  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:58,410  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:58,410  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:58,410  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:58,420  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:58,420 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:58,421 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        drop constraint FKCD54B1AF7EF8054
+14:11:58,421 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CONTENTS drop constraint FKCD54B1AF7EF8054
+14:11:58,421 ERROR SchemaExport:426 - Table "CONTENTS" not found; SQL statement:
+
+    alter table CONTENTS 
+        drop constraint FKCD54B1AF7EF8054 [42102-145]
+14:11:58,421 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC5A7FE15A
+14:11:58,421 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Child drop constraint FK3E104FC5A7FE15A
+14:11:58,436 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table Child 
+        drop constraint FK3E104FC5A7FE15A [42102-145]
+14:11:58,436 DEBUG SQL:104 - 
+    drop table CONTENTS if exists
+14:11:58,437 DEBUG SQL:104 - 
+    drop table Child if exists
+14:11:58,437 DEBUG SQL:104 - 
+    drop table Container if exists
+14:11:58,437 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:11:58,437 DEBUG SQL:104 - 
+    create table CONTENTS (
+        CONTAINER_ID bigint not null,
+        NAME varchar(255)
+    )
+14:11:58,437 DEBUG SQL:104 - 
+    create table Child (
+        NAME varchar(255) not null,
+        parent varchar(255),
+        description varchar(255),
+        primary key (NAME)
+    )
+14:11:58,438 DEBUG SQL:104 - 
+    create table Container (
+        id bigint not null,
+        NAME varchar(255),
+        primary key (id)
+    )
+14:11:58,438 DEBUG SQL:104 - 
+    create table Parent (
+        NAME varchar(255) not null,
+        primary key (NAME)
+    )
+14:11:58,439 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        add constraint FKCD54B1AF7EF8054 
+        foreign key (CONTAINER_ID) 
+        references Container
+14:11:58,440 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FC5A7FE15A 
+        foreign key (parent) 
+        references Parent
+14:11:58,440  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:58,441  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:58,441  INFO CustomRunner:139 - Test: testCollectionMerging
+14:11:58,443 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,444 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:11:58,455 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:58,456 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_1_,
+        children1_.PARENT as PARENT3_3_,
+        children1_.NAME as NAME1_3_,
+        children1_.NAME as NAME1_0_,
+        children1_.parent as parent1_0_,
+        children1_.description as descript3_1_0_ 
+    from
+        Parent parent0_ 
+    left outer join
+        Child children1_ 
+            on parent0_.NAME=children1_.PARENT 
+    where
+        parent0_.NAME=?
+14:11:58,458 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,468 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,469 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:58,469 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:11:58,481  INFO CustomRunner:139 - Test: testCollectiondirtyChecking
+14:11:58,483 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,484 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:11:58,501 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:58,503 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,504 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,505 DEBUG SQL:104 - 
+    select
+        parent_.NAME 
+    from
+        Parent parent_ 
+    where
+        parent_.NAME=?
+14:11:58,537 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,538 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:58,538 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:11:58,539  INFO CustomRunner:139 - Test: testCompositeElementCollectionDirtyChecking
+14:11:58,541 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Container
+14:11:58,542 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (NAME, id) 
+    values
+        (?, ?)
+14:11:58,542 DEBUG SQL:104 - 
+    insert 
+    into
+        CONTENTS
+        (CONTAINER_ID, NAME) 
+    values
+        (?, ?)
+14:11:58,543 DEBUG SQL:104 - 
+    select
+        container0_.id as id2_0_,
+        container0_.NAME as NAME2_0_ 
+    from
+        Container container0_ 
+    where
+        container0_.id=?
+14:11:58,544 DEBUG SQL:104 - 
+    select
+        contents0_.CONTAINER_ID as CONTAINER1_2_0_,
+        contents0_.NAME as NAME0_0_ 
+    from
+        CONTENTS contents0_ 
+    where
+        contents0_.CONTAINER_ID=?
+14:11:58,544 DEBUG SQL:104 - 
+    delete 
+    from
+        CONTENTS 
+    where
+        CONTAINER_ID=? 
+        and NAME=?
+14:11:58,545 DEBUG SQL:104 - 
+    insert 
+    into
+        CONTENTS
+        (CONTAINER_ID, NAME) 
+    values
+        (?, ?)
+14:11:58,545  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:11:58,547  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/collection/set/Mappings.hbm.xml
+14:11:58,556  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:58,556  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:58,557  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:58,557  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:58,557  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:58,566  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:58,567  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:58,568  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:58,568  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:58,568  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:58,578  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:58,578 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:58,579 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        drop constraint FKCD54B1AF7EF8054
+14:11:58,579 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC5A7FE15A
+14:11:58,579 DEBUG SQL:104 - 
+    drop table CONTENTS if exists
+14:11:58,579 DEBUG SQL:104 - 
+    drop table Child if exists
+14:11:58,580 DEBUG SQL:104 - 
+    drop table Container if exists
+14:11:58,580 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:11:58,580 DEBUG SQL:104 - 
+    create table CONTENTS (
+        CONTAINER_ID bigint not null,
+        NAME varchar(255)
+    )
+14:11:58,580 DEBUG SQL:104 - 
+    create table Child (
+        NAME varchar(255) not null,
+        parent varchar(255),
+        description varchar(255),
+        primary key (NAME)
+    )
+14:11:58,581 DEBUG SQL:104 - 
+    create table Container (
+        id bigint not null,
+        NAME varchar(255),
+        primary key (id)
+    )
+14:11:58,625 DEBUG SQL:104 - 
+    create table Parent (
+        NAME varchar(255) not null,
+        primary key (NAME)
+    )
+14:11:58,626 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        add constraint FKCD54B1AF7EF8054 
+        foreign key (CONTAINER_ID) 
+        references Container
+14:11:58,643 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FC5A7FE15A 
+        foreign key (parent) 
+        references Parent
+14:11:58,644  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:58,645  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:58,645  INFO CustomRunner:139 - Test: testCompositeElementMerging
+14:11:58,646 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Container
+14:11:58,648 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (NAME, id) 
+    values
+        (?, ?)
+14:11:58,648 DEBUG SQL:104 - 
+    insert 
+    into
+        CONTENTS
+        (CONTAINER_ID, NAME) 
+    values
+        (?, ?)
+14:11:58,649 DEBUG SQL:104 - 
+    select
+        container0_.id as id2_0_,
+        container0_.NAME as NAME2_0_ 
+    from
+        Container container0_ 
+    where
+        container0_.id=?
+14:11:58,649 DEBUG SQL:104 - 
+    select
+        contents0_.CONTAINER_ID as CONTAINER1_2_0_,
+        contents0_.NAME as NAME0_0_ 
+    from
+        CONTENTS contents0_ 
+    where
+        contents0_.CONTAINER_ID=?
+14:11:58,650 DEBUG SQL:104 - 
+    update
+        Container 
+    set
+        NAME=? 
+    where
+        id=?
+14:11:58,650 DEBUG SQL:104 - 
+    delete 
+    from
+        CONTENTS 
+    where
+        CONTAINER_ID=? 
+        and NAME=?
+14:11:58,651 DEBUG SQL:104 - 
+    insert 
+    into
+        CONTENTS
+        (CONTAINER_ID, NAME) 
+    values
+        (?, ?)
+14:11:58,671  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:11:58,673  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/collection/set/Mappings.hbm.xml
+14:11:58,683  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:58,683  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:58,683  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:58,683  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:58,684  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:58,685  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:58,685  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:58,686  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:58,686  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:58,686  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:58,695  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:58,695 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:58,696 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        drop constraint FKCD54B1AF7EF8054
+14:11:58,696 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC5A7FE15A
+14:11:58,696 DEBUG SQL:104 - 
+    drop table CONTENTS if exists
+14:11:58,696 DEBUG SQL:104 - 
+    drop table Child if exists
+14:11:58,697 DEBUG SQL:104 - 
+    drop table Container if exists
+14:11:58,697 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:11:58,697 DEBUG SQL:104 - 
+    create table CONTENTS (
+        CONTAINER_ID bigint not null,
+        NAME varchar(255)
+    )
+14:11:58,697 DEBUG SQL:104 - 
+    create table Child (
+        NAME varchar(255) not null,
+        parent varchar(255),
+        description varchar(255),
+        primary key (NAME)
+    )
+14:11:58,698 DEBUG SQL:104 - 
+    create table Container (
+        id bigint not null,
+        NAME varchar(255),
+        primary key (id)
+    )
+14:11:58,698 DEBUG SQL:104 - 
+    create table Parent (
+        NAME varchar(255) not null,
+        primary key (NAME)
+    )
+14:11:58,698 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        add constraint FKCD54B1AF7EF8054 
+        foreign key (CONTAINER_ID) 
+        references Container
+14:11:58,711 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FC5A7FE15A 
+        foreign key (parent) 
+        references Parent
+14:11:58,713  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:58,714  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:58,714  INFO CustomRunner:139 - Test: testCompositeElementWriteMethodDirtying
+14:11:58,715 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Container
+14:11:58,716 DEBUG SQL:104 - 
+    insert 
+    into
+        Container
+        (NAME, id) 
+    values
+        (?, ?)
+14:11:58,717 DEBUG SQL:104 - 
+    insert 
+    into
+        CONTENTS
+        (CONTAINER_ID, NAME) 
+    values
+        (?, ?)
+14:11:58,717 DEBUG SQL:104 - 
+    delete 
+    from
+        CONTENTS 
+    where
+        CONTAINER_ID=?
+14:11:58,717 DEBUG SQL:104 - 
+    delete 
+    from
+        Container 
+    where
+        id=?
+14:11:58,718  INFO CustomRunner:139 - Test: testLoadChildCheckParentContainsChildCache
+14:11:58,719 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,720 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,726 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:11:58,727 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:58,728 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:58,729 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,746 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,748 DEBUG SQL:104 - 
+    select
+        child0_.NAME as NAME1_0_,
+        child0_.parent as parent1_0_,
+        child0_.description as descript3_1_0_ 
+    from
+        Child child0_ 
+    where
+        child0_.NAME=?
+14:11:58,749 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,749 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,750 DEBUG SQL:104 - 
+    select
+        this_.NAME as NAME1_0_,
+        this_.parent as parent1_0_,
+        this_.description as descript3_1_0_ 
+    from
+        Child this_ 
+    where
+        this_.NAME = ?
+14:11:58,830 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,830 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,831 DEBUG SQL:104 - 
+    select
+        this_.NAME as NAME1_0_,
+        this_.parent as parent1_0_,
+        this_.description as descript3_1_0_ 
+    from
+        Child this_ 
+    where
+        this_.NAME = ?
+14:11:58,832 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,833 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,833 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.collection.set.Child where name = 'c1'
+14:11:58,834 DEBUG ErrorCounter:63 - Keyword  'set' is being interpreted as an identifier due to: expecting IDENT, found 'set'
+14:11:58,835 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[DOT] Node: '.'
+    |           |  |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  |  \-[IDENT] Node: 'test'
+    |           |  |  \-[IDENT] Node: 'collection'
+    |           |  \-[WEIRD_IDENT] Node: 'set'
+    |           \-[IDENT] Node: 'Child'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''c1''
+
+14:11:58,846 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:58,847 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.collection.set.Child (<no alias>) -> child0_
+14:11:58,847 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:11:58,847 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:11:58,847 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> child0_.NAME
+14:11:58,847 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Child child0_ ) ( where ( = ( child0_.NAME {synthetic-alias} name ) 'c1' ) ) )
+14:11:58,847 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:58,848 DEBUG JoinProcessor:175 - Using FROM fragment [Child child0_]
+14:11:58,848 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Child)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'child0_.NAME as NAME1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.collection.set.Child}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'child0_.parent as parent1_, child0_.description as descript3_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[child0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Child child0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.collection.set.Child}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'child0_.NAME' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=child0_,className=org.hibernate.test.collection.set.Child,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''c1''
+
+14:11:58,873 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:58,874 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.collection.set.Child where name = 'c1'
+14:11:58,874 DEBUG QueryTranslatorImpl:236 - SQL: select child0_.NAME as NAME1_, child0_.parent as parent1_, child0_.description as descript3_1_ from Child child0_ where child0_.NAME='c1'
+14:11:58,875 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:58,875 DEBUG SQL:104 - 
+    select
+        child0_.NAME as NAME1_,
+        child0_.parent as parent1_,
+        child0_.description as descript3_1_ 
+    from
+        Child child0_ 
+    where
+        child0_.NAME='c1'
+14:11:58,876 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,876 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,877 DEBUG SQL:104 - 
+    select
+        child0_.NAME as NAME1_,
+        child0_.parent as parent1_,
+        child0_.description as descript3_1_ 
+    from
+        Child child0_ 
+    where
+        child0_.NAME='c1'
+14:11:58,877 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:58,902 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:58,902 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:11:58,913  INFO CustomRunner:139 - Test: testLoadChildCheckParentContainsChildNoCache
+14:11:58,914 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,915 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:58,918 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:11:58,919 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:58,920 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:58,921 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,950 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,951 DEBUG SQL:104 - 
+    select
+        child0_.NAME as NAME1_0_,
+        child0_.parent as parent1_0_,
+        child0_.description as descript3_1_0_ 
+    from
+        Child child0_ 
+    where
+        child0_.NAME=?
+14:11:58,952 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,952 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,953 DEBUG SQL:104 - 
+    select
+        this_.NAME as NAME1_0_,
+        this_.parent as parent1_0_,
+        this_.description as descript3_1_0_ 
+    from
+        Child this_ 
+    where
+        this_.NAME = ?
+14:11:58,954 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,995 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:58,996 DEBUG SQL:104 - 
+    select
+        child0_.NAME as NAME1_,
+        child0_.parent as parent1_,
+        child0_.description as descript3_1_ 
+    from
+        Child child0_ 
+    where
+        child0_.NAME='c1'
+14:11:58,997 DEBUG SQL:104 - 
+    select
+        parent0_.NAME as NAME3_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.NAME=?
+14:11:58,997 DEBUG SQL:104 - 
+    select
+        children0_.PARENT as PARENT3_1_,
+        children0_.NAME as NAME1_1_,
+        children0_.NAME as NAME1_0_,
+        children0_.parent as parent1_0_,
+        children0_.description as descript3_1_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.PARENT=?
+14:11:59,025 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:59,025 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:59,026 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:11:59,026  INFO CustomRunner:139 - Test: testWriteMethodDirtying
+14:11:59,027 DEBUG SQL:104 - 
+    select
+        child_.NAME,
+        child_.parent as parent1_,
+        child_.description as descript3_1_ 
+    from
+        Child child_ 
+    where
+        child_.NAME=?
+14:11:59,028 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (NAME) 
+    values
+        (?)
+14:11:59,058 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parent, description, NAME) 
+    values
+        (?, ?, ?)
+14:11:59,059 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        NAME=?
+14:11:59,060 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        NAME=?
+14:11:59,060  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:59,061 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:59,061 DEBUG SQL:104 - 
+    alter table CONTENTS 
+        drop constraint FKCD54B1AF7EF8054
+14:11:59,062 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FC5A7FE15A
+14:11:59,062 DEBUG SQL:104 - 
+    drop table CONTENTS if exists
+14:11:59,062 DEBUG SQL:104 - 
+    drop table Child if exists
+14:11:59,062 DEBUG SQL:104 - 
+    drop table Container if exists
+14:11:59,062 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:11:59,063  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:59,063  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

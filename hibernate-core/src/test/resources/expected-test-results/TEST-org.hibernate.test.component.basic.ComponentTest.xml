@@ -1,0 +1,1292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.component.basic.ComponentTest" tests="9" time="0.861" timestamp="2013-02-28T20:11:59">
+  <properties />
+  <testcase classname="org.hibernate.test.component.basic.ComponentTest" name="testComponent" time="0.038" />
+  <testcase classname="org.hibernate.test.component.basic.ComponentTest" name="testComponentFormulaQuery" time="0.064" />
+  <testcase classname="org.hibernate.test.component.basic.ComponentTest" name="testComponentQueries" time="0.154" />
+  <ignored-testcase classname="org.hibernate.test.component.basic.ComponentTest" name="testComponentQueryMethodNoParensFailureExpected" time="0.0" />
+  <testcase classname="org.hibernate.test.component.basic.ComponentTest" name="testComponentStateChangeAndDirtiness" time="0.023" />
+  <testcase classname="org.hibernate.test.component.basic.ComponentTest" name="testCustomColumnReadAndWrite" time="0.124" />
+  <testcase classname="org.hibernate.test.component.basic.ComponentTest" name="testMergeComponent" time="0.238" />
+  <testcase classname="org.hibernate.test.component.basic.ComponentTest" name="testNamedQuery" time="0.061" />
+  <testcase classname="org.hibernate.test.component.basic.ComponentTest" name="testUpdateFalse" time="0.005" />
+  <system-out><![CDATA[14:11:59,333  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.component.basic.ComponentTest
+14:11:59,336  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/component/basic/User.hbm.xml
+14:11:59,362  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:59,363  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:59,363  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:59,363  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:59,363  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:59,364  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:59,365  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:59,365  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:59,365  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:59,366  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:59,381  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:59,381 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:59,382 DEBUG SQL:104 - 
+    alter table T_EMP 
+        drop constraint FK4CBF23DD444FEA5
+14:11:59,382 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table T_EMP drop constraint FK4CBF23DD444FEA5
+14:11:59,382 ERROR SchemaExport:426 - Table "T_EMP" not found; SQL statement:
+
+    alter table T_EMP 
+        drop constraint FK4CBF23DD444FEA5 [42102-145]
+14:11:59,382 DEBUG SQL:104 - 
+    drop table T_EMP if exists
+14:11:59,382 DEBUG SQL:104 - 
+    drop table T_USER if exists
+14:11:59,383 DEBUG SQL:104 - 
+    create table T_EMP (
+        ID bigint not null,
+        HIRE_DATE date,
+        name varchar(255) not null,
+        dob timestamp not null,
+        value1 varchar(255),
+        value2 varchar(255),
+        PARENT_ID bigint,
+        primary key (ID)
+    )
+14:11:59,383 DEBUG SQL:104 - 
+    create table T_USER (
+        userName varchar(255) not null,
+        lastModified timestamp not null,
+        "password" varchar(255) not null,
+        name varchar(255) not null,
+        dob timestamp not null,
+        address varchar(255),
+        previousAddress varchar(255),
+        height_centimeters double not null,
+        primary key (userName)
+    )
+14:11:59,383 DEBUG SQL:104 - 
+    alter table T_EMP 
+        add constraint FK4CBF23DD444FEA5 
+        foreign key (PARENT_ID) 
+        references T_EMP
+14:11:59,384  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:59,385  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:59,385 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.component.basic.User where person.name in (:nameList) or userName in (:nameList)
+14:11:59,408 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[DOT] Node: '.'
+    |           |  |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  |  \-[IDENT] Node: 'test'
+    |           |  |  \-[IDENT] Node: 'component'
+    |           |  \-[IDENT] Node: 'basic'
+    |           \-[IDENT] Node: 'User'
+    \-[WHERE] Node: 'where'
+       \-[OR] Node: 'or'
+          +-[IN] Node: 'in'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'person'
+          |  |  \-[IDENT] Node: 'name'
+          |  \-[IN_LIST] Node: 'inList'
+          |     \-[COLON] Node: ':'
+          |        \-[IDENT] Node: 'nameList'
+          \-[IN] Node: 'in'
+             +-[IDENT] Node: 'userName'
+             \-[IN_LIST] Node: 'inList'
+                \-[COLON] Node: ':'
+                   \-[IDENT] Node: 'nameList'
+
+14:11:59,409 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,409 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.component.basic.User (<no alias>) -> user0_
+14:11:59,409 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:11:59,409 DEBUG DotNode:599 - getDataType() : person -> org.hibernate.type.ComponentType@60909f11
+14:11:59,410 DEBUG DotNode:585 - Unresolved property path is now 'person.name'
+14:11:59,410 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.person -> user0_.name
+14:11:59,410 DEBUG DotNode:599 - getDataType() : person.name -> org.hibernate.type.StringType@2dc8de40
+14:11:59,410 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.person.name -> user0_.name
+14:11:59,411 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:11:59,411 DEBUG DotNode:599 - getDataType() : userName -> org.hibernate.type.StringType@2dc8de40
+14:11:59,411 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.userName -> user0_.userName
+14:11:59,411 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} T_USER user0_ ) ( where ( or ( in ( user0_.name ( user0_.name {synthetic-alias} person ) name ) ( inList ? ) ) ( in ( user0_.userName {synthetic-alias} userName ) ( inList ? ) ) ) ) )
+14:11:59,412 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:59,412 DEBUG JoinProcessor:175 - Using FROM fragment [T_USER user0_]
+14:11:59,412 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_USER)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user0_.userName as userName1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.component.basic.User}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'user0_.lastModified as lastModi2_1_, user0_."password" as password3_1_, user0_.name as name1_, user0_.dob as dob1_, user0_.address as address1_, user0_.previousAddress as previous7_1_, user0_.height_centimeters / 2.54E0 as height8_1_, extract(year from user0_.dob) as formula45_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_USER user0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.component.basic.User}}
+    \-[WHERE] SqlNode: 'where'
+       \-[OR] SqlNode: 'or'
+          +-[IN] InLogicOperatorNode: 'in'
+          |  +-[DOT] DotNode: 'user0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=person.name,path={synthetic-alias}.person.name,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=null}
+          |  |  +-[DOT] DotNode: 'user0_.name' {propertyName=name,dereferenceType=2,propertyPath=person.name,path={synthetic-alias}.person,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=null}
+          |  |  |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  |  |  \-[IDENT] IdentNode: 'person' {originalText=person}
+          |  |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          |  \-[IN_LIST] SqlNode: 'inList'
+          |     \-[NAMED_PARAM] ParameterNode: '?' {name=nameList, expectedType=org.hibernate.type.StringType@2dc8de40}
+          \-[IN] InLogicOperatorNode: 'in'
+             +-[DOT] DotNode: 'user0_.userName' {propertyName=userName,dereferenceType=ALL,propertyPath=userName,path={synthetic-alias}.userName,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=null}
+             |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             |  \-[IDENT] IdentNode: 'userName' {originalText=userName}
+             \-[IN_LIST] SqlNode: 'inList'
+                \-[NAMED_PARAM] ParameterNode: '?' {name=nameList, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:11:59,437 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,438 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.component.basic.User where person.name in (:nameList) or userName in (:nameList)
+14:11:59,438 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.userName as userName1_, user0_.lastModified as lastModi2_1_, user0_."password" as password3_1_, user0_.name as name1_, user0_.dob as dob1_, user0_.address as address1_, user0_.previousAddress as previous7_1_, user0_.height_centimeters / 2.54E0 as height8_1_, extract(year from user0_.dob) as formula45_ from T_USER user0_ where user0_.name in (?) or user0_.userName in (?)
+14:11:59,438 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,438  INFO CustomRunner:139 - Test: testComponent
+14:11:59,440 DEBUG SQL:104 - 
+    insert 
+    into
+        T_USER
+        (lastModified, "password", name, dob, address, height_centimeters, userName) 
+    values
+        (?, ?, ?, ?, ?, ? * 2.54E0, ?)
+14:11:59,441 DEBUG SQL:104 - 
+    update
+        T_USER 
+    set
+        lastModified=?,
+        "password"=?,
+        address=?,
+        previousAddress=?,
+        height_centimeters=? * 2.54E0 
+    where
+        userName=? 
+        and lastModified=?
+14:11:59,442 DEBUG SQL:104 - 
+    select
+        user0_.userName as userName1_0_,
+        user0_.lastModified as lastModi2_1_0_,
+        user0_."password" as password3_1_0_,
+        user0_.name as name1_0_,
+        user0_.dob as dob1_0_,
+        user0_.address as address1_0_,
+        user0_.previousAddress as previous7_1_0_,
+        user0_.height_centimeters / 2.54E0 as height8_1_0_,
+        extract(year 
+    from
+        user0_.dob) as formula45_0_ 
+    from
+        T_USER user0_ 
+    where
+        user0_.userName=?
+14:11:59,443 DEBUG SQL:104 - 
+    update
+        T_USER 
+    set
+        lastModified=?,
+        "password"=?,
+        address=?,
+        previousAddress=?,
+        height_centimeters=? * 2.54E0 
+    where
+        userName=? 
+        and lastModified=?
+14:11:59,443 DEBUG SQL:104 - 
+    select
+        user0_.userName as userName1_0_,
+        user0_.lastModified as lastModi2_1_0_,
+        user0_."password" as password3_1_0_,
+        user0_.name as name1_0_,
+        user0_.dob as dob1_0_,
+        user0_.address as address1_0_,
+        user0_.previousAddress as previous7_1_0_,
+        user0_.height_centimeters / 2.54E0 as height8_1_0_,
+        extract(year 
+    from
+        user0_.dob) as formula45_0_ 
+    from
+        T_USER user0_ 
+    where
+        user0_.userName=?
+14:11:59,476 DEBUG SQL:104 - 
+    delete 
+    from
+        T_USER 
+    where
+        userName=? 
+        and lastModified=?
+14:11:59,478  INFO CustomRunner:139 - Test: testComponentFormulaQuery
+14:11:59,478 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.component.basic.User u where u.person.yob = 1999
+14:11:59,480 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'component'
+    |        |  |  \-[IDENT] Node: 'basic'
+    |        |  \-[IDENT] Node: 'User'
+    |        \-[ALIAS] Node: 'u'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'u'
+          |  |  \-[IDENT] Node: 'person'
+          |  \-[IDENT] Node: 'yob'
+          \-[NUM_INT] Node: '1999'
+
+14:11:59,500 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,500 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.component.basic.User (u) -> user0_
+14:11:59,500 DEBUG FromReferenceNode:74 - Resolved : u -> user0_.userName
+14:11:59,501 DEBUG DotNode:599 - getDataType() : person -> org.hibernate.type.ComponentType@60909f11
+14:11:59,501 DEBUG DotNode:585 - Unresolved property path is now 'person.yob'
+14:11:59,501 DEBUG FromReferenceNode:74 - Resolved : u.person -> extract(year from user0_.dob)
+14:11:59,501 DEBUG DotNode:599 - getDataType() : person.yob -> org.hibernate.type.IntegerType@42252fee
+14:11:59,501 DEBUG FromReferenceNode:74 - Resolved : u.person.yob -> extract(year from user0_.dob)
+14:11:59,501 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} T_USER user0_ ) ( where ( = ( extract(year from user0_.dob) ( extract(year from user0_.dob) user0_.userName person ) yob ) 1999 ) ) )
+14:11:59,501 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:59,502 DEBUG JoinProcessor:175 - Using FROM fragment [T_USER user0_]
+14:11:59,502 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_USER)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user0_.userName as userName1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.component.basic.User}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'user0_.lastModified as lastModi2_1_, user0_."password" as password3_1_, user0_.name as name1_, user0_.dob as dob1_, user0_.address as address1_, user0_.previousAddress as previous7_1_, user0_.height_centimeters / 2.54E0 as height8_1_, extract(year from user0_.dob) as formula45_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[u], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_USER user0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.component.basic.User}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'extract(year from user0_.dob)' {propertyName=yob,dereferenceType=ALL,propertyPath=person.yob,path=u.person.yob,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=u}
+          |  +-[DOT] DotNode: 'extract(year from user0_.dob)' {propertyName=yob,dereferenceType=2,propertyPath=person.yob,path=u.person,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=u}
+          |  |  +-[ALIAS_REF] IdentNode: 'user0_.userName' {alias=u, className=org.hibernate.test.component.basic.User, tableAlias=user0_}
+          |  |  \-[IDENT] IdentNode: 'person' {originalText=person}
+          |  \-[IDENT] IdentNode: 'yob' {originalText=yob}
+          \-[NUM_INT] LiteralNode: '1999'
+
+14:11:59,526 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,526 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.component.basic.User u where u.person.yob = 1999
+14:11:59,526 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.userName as userName1_, user0_.lastModified as lastModi2_1_, user0_."password" as password3_1_, user0_.name as name1_, user0_.dob as dob1_, user0_.address as address1_, user0_.previousAddress as previous7_1_, user0_.height_centimeters / 2.54E0 as height8_1_, extract(year from user0_.dob) as formula45_ from T_USER user0_ where extract(year from user0_.dob)=1999
+14:11:59,526 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,527 DEBUG SQL:104 - 
+    select
+        user0_.userName as userName1_,
+        user0_.lastModified as lastModi2_1_,
+        user0_."password" as password3_1_,
+        user0_.name as name1_,
+        user0_.dob as dob1_,
+        user0_.address as address1_,
+        user0_.previousAddress as previous7_1_,
+        user0_.height_centimeters / 2.54E0 as height8_1_,
+        extract(year 
+    from
+        user0_.dob) as formula45_ 
+    from
+        T_USER user0_ 
+    where
+        extract(year 
+    from
+        user0_.dob)=1999
+14:11:59,541 DEBUG SQL:104 - 
+    select
+        this_.userName as userName1_0_,
+        this_.lastModified as lastModi2_1_0_,
+        this_."password" as password3_1_0_,
+        this_.name as name1_0_,
+        this_.dob as dob1_0_,
+        this_.address as address1_0_,
+        this_.previousAddress as previous7_1_0_,
+        this_.height_centimeters / 2.54E0 as height8_1_0_,
+        extract(year 
+    from
+        this_.dob) as formula45_0_ 
+    from
+        T_USER this_ 
+    where
+        extract(year 
+    from
+        this_.dob) between ? and ?
+14:11:59,543  INFO CustomRunner:139 - Test: testComponentQueries
+14:11:59,544 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        T_EMP
+14:11:59,545 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.component.basic.Employee e where e.person = :p and 1 = 1 and 2=2
+14:11:59,547 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'component'
+    |        |  |  \-[IDENT] Node: 'basic'
+    |        |  \-[IDENT] Node: 'Employee'
+    |        \-[ALIAS] Node: 'e'
+    \-[WHERE] Node: 'where'
+       \-[AND] Node: 'and'
+          +-[AND] Node: 'and'
+          |  +-[EQ] Node: '='
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[IDENT] Node: 'e'
+          |  |  |  \-[IDENT] Node: 'person'
+          |  |  \-[COLON] Node: ':'
+          |  |     \-[IDENT] Node: 'p'
+          |  \-[EQ] Node: '='
+          |     +-[NUM_INT] Node: '1'
+          |     \-[NUM_INT] Node: '1'
+          \-[EQ] Node: '='
+             +-[NUM_INT] Node: '2'
+             \-[NUM_INT] Node: '2'
+
+14:11:59,547 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,547 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.component.basic.Employee (e) -> employee0_
+14:11:59,548 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.ID
+14:11:59,548 DEBUG DotNode:599 - getDataType() : person -> org.hibernate.type.ComponentType@219f4219
+14:11:59,548 DEBUG DotNode:588 - Terminal propertyPath = [person]
+14:11:59,548 DEBUG FromReferenceNode:74 - Resolved : e.person -> (employee0_.name, employee0_.dob)
+14:11:59,548 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} T_EMP employee0_ ) ( where ( and ( and ( AND ( = employee0_.name ? ) ( = employee0_.dob ? ) ) ( = 1 1 ) ) ( = 2 2 ) ) ) )
+14:11:59,549 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:59,549 DEBUG JoinProcessor:175 - Using FROM fragment [T_EMP employee0_]
+14:11:59,549 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_EMP)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.ID as ID0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=T_EMP,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.component.basic.Employee}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'employee0_.HIRE_DATE as HIRE2_0_, employee0_.name as name0_, employee0_.dob as dob0_, employee0_.value1 as value5_0_, employee0_.value2 as value6_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_EMP employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=T_EMP,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.component.basic.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[AND] SqlNode: 'and'
+          +-[AND] SqlNode: 'and'
+          |  +-[AND] BinaryLogicOperatorNode: 'AND'
+          |  |  +-[EQ] BinaryLogicOperatorNode: '='
+          |  |  |  +-[SQL_TOKEN] SqlFragment: 'employee0_.name'
+          |  |  |  \-[SQL_TOKEN] SqlFragment: '?'
+          |  |  \-[EQ] BinaryLogicOperatorNode: '='
+          |  |     +-[SQL_TOKEN] SqlFragment: 'employee0_.dob'
+          |  |     \-[SQL_TOKEN] SqlFragment: '?'
+          |  \-[EQ] BinaryLogicOperatorNode: '='
+          |     +-[NUM_INT] LiteralNode: '1'
+          |     \-[NUM_INT] LiteralNode: '1'
+          \-[EQ] BinaryLogicOperatorNode: '='
+             +-[NUM_INT] LiteralNode: '2'
+             \-[NUM_INT] LiteralNode: '2'
+
+14:11:59,560 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,560 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.component.basic.Employee e where e.person = :p and 1 = 1 and 2=2
+14:11:59,560 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.ID as ID0_, employee0_.HIRE_DATE as HIRE2_0_, employee0_.name as name0_, employee0_.dob as dob0_, employee0_.value1 as value5_0_, employee0_.value2 as value6_0_ from T_EMP employee0_ where employee0_.name=? and employee0_.dob=? and 1=1 and 2=2
+14:11:59,560 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,561 DEBUG SQL:104 - 
+    insert 
+    into
+        T_EMP
+        (HIRE_DATE, name, dob, value1, value2, ID) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:11:59,562 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_,
+        employee0_.HIRE_DATE as HIRE2_0_,
+        employee0_.name as name0_,
+        employee0_.dob as dob0_,
+        employee0_.value1 as value5_0_,
+        employee0_.value2 as value6_0_ 
+    from
+        T_EMP employee0_ 
+    where
+        employee0_.name=? 
+        and employee0_.dob=? 
+        and 1=1 
+        and 2=2
+14:11:59,589 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.component.basic.Employee e where :p = e.person
+14:11:59,591 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'component'
+    |        |  |  \-[IDENT] Node: 'basic'
+    |        |  \-[IDENT] Node: 'Employee'
+    |        \-[ALIAS] Node: 'e'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[COLON] Node: ':'
+          |  \-[IDENT] Node: 'p'
+          \-[DOT] Node: '.'
+             +-[IDENT] Node: 'e'
+             \-[IDENT] Node: 'person'
+
+14:11:59,610 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,610 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.component.basic.Employee (e) -> employee0_
+14:11:59,610 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.ID
+14:11:59,611 DEBUG DotNode:599 - getDataType() : person -> org.hibernate.type.ComponentType@219f4219
+14:11:59,611 DEBUG DotNode:588 - Terminal propertyPath = [person]
+14:11:59,611 DEBUG FromReferenceNode:74 - Resolved : e.person -> (employee0_.name, employee0_.dob)
+14:11:59,611 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} T_EMP employee0_ ) ( where ( AND ( = ? employee0_.name ) ( = ? employee0_.dob ) ) ) )
+14:11:59,611 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:59,611 DEBUG JoinProcessor:175 - Using FROM fragment [T_EMP employee0_]
+14:11:59,612 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_EMP)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.ID as ID0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=T_EMP,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.component.basic.Employee}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'employee0_.HIRE_DATE as HIRE2_0_, employee0_.name as name0_, employee0_.dob as dob0_, employee0_.value1 as value5_0_, employee0_.value2 as value6_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_EMP employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=T_EMP,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.component.basic.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[AND] BinaryLogicOperatorNode: 'AND'
+          +-[EQ] BinaryLogicOperatorNode: '='
+          |  +-[SQL_TOKEN] SqlFragment: '?'
+          |  \-[SQL_TOKEN] SqlFragment: 'employee0_.name'
+          \-[EQ] BinaryLogicOperatorNode: '='
+             +-[SQL_TOKEN] SqlFragment: '?'
+             \-[SQL_TOKEN] SqlFragment: 'employee0_.dob'
+
+14:11:59,612 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,612 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.component.basic.Employee e where :p = e.person
+14:11:59,612 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.ID as ID0_, employee0_.HIRE_DATE as HIRE2_0_, employee0_.name as name0_, employee0_.dob as dob0_, employee0_.value1 as value5_0_, employee0_.value2 as value6_0_ from T_EMP employee0_ where ?=employee0_.name and ?=employee0_.dob
+14:11:59,612 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,613 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_,
+        employee0_.HIRE_DATE as HIRE2_0_,
+        employee0_.name as name0_,
+        employee0_.dob as dob0_,
+        employee0_.value1 as value5_0_,
+        employee0_.value2 as value6_0_ 
+    from
+        T_EMP employee0_ 
+    where
+        ?=employee0_.name 
+        and ?=employee0_.dob
+14:11:59,663 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.component.basic.Employee e where e.person = ('steve', current_timestamp)
+14:11:59,665 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'component'
+    |        |  |  \-[IDENT] Node: 'basic'
+    |        |  \-[IDENT] Node: 'Employee'
+    |        \-[ALIAS] Node: 'e'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'e'
+          |  \-[IDENT] Node: 'person'
+          \-[VECTOR_EXPR] Node: '{vector}'
+             +-[QUOTED_STRING] Node: ''steve''
+             \-[IDENT] Node: 'current_timestamp'
+
+14:11:59,680 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,681 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.component.basic.Employee (e) -> employee0_
+14:11:59,681 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.ID
+14:11:59,681 DEBUG DotNode:599 - getDataType() : person -> org.hibernate.type.ComponentType@219f4219
+14:11:59,681 DEBUG DotNode:588 - Terminal propertyPath = [person]
+14:11:59,681 DEBUG FromReferenceNode:74 - Resolved : e.person -> (employee0_.name, employee0_.dob)
+14:11:59,682 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} T_EMP employee0_ ) ( where ( AND ( = employee0_.name 'steve' ) ( = employee0_.dob current_timestamp ) ) ) )
+14:11:59,682 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:59,683 DEBUG JoinProcessor:175 - Using FROM fragment [T_EMP employee0_]
+14:11:59,683 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_EMP)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.ID as ID0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=T_EMP,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.component.basic.Employee}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'employee0_.HIRE_DATE as HIRE2_0_, employee0_.name as name0_, employee0_.dob as dob0_, employee0_.value1 as value5_0_, employee0_.value2 as value6_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[e], fromElementByTableAlias=[employee0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_EMP employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=T_EMP,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.component.basic.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[AND] BinaryLogicOperatorNode: 'AND'
+          +-[EQ] BinaryLogicOperatorNode: '='
+          |  +-[SQL_TOKEN] SqlFragment: 'employee0_.name'
+          |  \-[SQL_TOKEN] SqlFragment: ''steve''
+          \-[EQ] BinaryLogicOperatorNode: '='
+             +-[SQL_TOKEN] SqlFragment: 'employee0_.dob'
+             \-[SQL_TOKEN] SqlFragment: 'current_timestamp'
+
+14:11:59,683 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,683 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.component.basic.Employee e where e.person = ('steve', current_timestamp)
+14:11:59,683 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.ID as ID0_, employee0_.HIRE_DATE as HIRE2_0_, employee0_.name as name0_, employee0_.dob as dob0_, employee0_.value1 as value5_0_, employee0_.value2 as value6_0_ from T_EMP employee0_ where employee0_.name='steve' and employee0_.dob=current_timestamp
+14:11:59,694 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,695 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_,
+        employee0_.HIRE_DATE as HIRE2_0_,
+        employee0_.name as name0_,
+        employee0_.dob as dob0_,
+        employee0_.value1 as value5_0_,
+        employee0_.value2 as value6_0_ 
+    from
+        T_EMP employee0_ 
+    where
+        employee0_.name='steve' 
+        and employee0_.dob=current_timestamp
+14:11:59,696 DEBUG SQL:104 - 
+    delete 
+    from
+        T_EMP 
+    where
+        ID=?
+14:11:59,698  INFO CustomRunner:139 - Test: testComponentStateChangeAndDirtiness
+14:11:59,701 DEBUG SQL:104 - 
+    insert 
+    into
+        T_USER
+        (lastModified, "password", name, dob, address, height_centimeters, userName) 
+    values
+        (?, ?, ?, ?, ?, ? * 2.54E0, ?)
+14:11:59,710 DEBUG SQL:104 - 
+    update
+        T_USER 
+    set
+        lastModified=?,
+        "password"=?,
+        address=?,
+        previousAddress=?,
+        height_centimeters=? * 2.54E0 
+    where
+        userName=? 
+        and lastModified=?
+14:11:59,711 DEBUG SQL:104 - 
+    update
+        T_USER 
+    set
+        lastModified=?,
+        "password"=?,
+        address=?,
+        previousAddress=?,
+        height_centimeters=? * 2.54E0 
+    where
+        userName=? 
+        and lastModified=?
+14:11:59,711 DEBUG SQL:104 - 
+    delete 
+    from
+        T_USER 
+    where
+        userName=? 
+        and lastModified=?
+14:11:59,721  INFO CustomRunner:139 - Test: testCustomColumnReadAndWrite
+14:11:59,723 DEBUG SQL:104 - 
+    insert 
+    into
+        T_USER
+        (lastModified, "password", name, dob, address, height_centimeters, userName) 
+    values
+        (?, ?, ?, ?, ?, ? * 2.54E0, ?)
+14:11:59,724 DEBUG SQL:104 - 
+    select
+        height_centimeters 
+    from
+        T_USER 
+    where
+        T_USER.username='steve'
+14:11:59,724 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select u.person.heightInches from org.hibernate.test.component.basic.User u where u.id = 'steve'
+14:11:59,726 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'component'
+    |  |     |  |  \-[IDENT] Node: 'basic'
+    |  |     |  \-[IDENT] Node: 'User'
+    |  |     \-[ALIAS] Node: 'u'
+    |  \-[SELECT] Node: 'select'
+    |     \-[DOT] Node: '.'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'u'
+    |        |  \-[IDENT] Node: 'person'
+    |        \-[IDENT] Node: 'heightInches'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'u'
+          |  \-[IDENT] Node: 'id'
+          \-[QUOTED_STRING] Node: ''steve''
+
+14:11:59,733 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,733 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.component.basic.User (u) -> user0_
+14:11:59,733 DEBUG FromReferenceNode:74 - Resolved : u -> user0_.userName
+14:11:59,734 DEBUG DotNode:599 - getDataType() : person -> org.hibernate.type.ComponentType@60909f11
+14:11:59,734 DEBUG DotNode:585 - Unresolved property path is now 'person.heightInches'
+14:11:59,734 DEBUG FromReferenceNode:74 - Resolved : u.person -> user0_.height_centimeters / 2.54E0
+14:11:59,734 DEBUG DotNode:599 - getDataType() : person.heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:11:59,734 DEBUG FromReferenceNode:74 - Resolved : u.person.heightInches -> user0_.height_centimeters / 2.54E0
+14:11:59,734 DEBUG FromReferenceNode:74 - Resolved : u -> user0_.userName
+14:11:59,734 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.StringType@2dc8de40
+14:11:59,734 DEBUG FromReferenceNode:74 - Resolved : u.id -> user0_.userName
+14:11:59,735 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( user0_.height_centimeters / 2.54E0 ( user0_.height_centimeters / 2.54E0 user0_.userName person ) heightInches ) ) ( FromClause{level=1} T_USER user0_ ) ( where ( = ( user0_.userName user0_.userName id ) 'steve' ) ) )
+14:11:59,735 DEBUG JoinProcessor:175 - Using FROM fragment [T_USER user0_]
+14:11:59,735 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_USER)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'user0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=person.heightInches,path=u.person.heightInches,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=u}
+    |  |  +-[DOT] DotNode: 'user0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=2,propertyPath=person.heightInches,path=u.person,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=u}
+    |  |  |  +-[ALIAS_REF] IdentNode: 'user0_.userName' {alias=u, className=org.hibernate.test.component.basic.User, tableAlias=user0_}
+    |  |  |  \-[IDENT] IdentNode: 'person' {originalText=person}
+    |  |  \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[u], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_USER user0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.component.basic.User}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'user0_.userName' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=u.id,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=u}
+          |  +-[ALIAS_REF] IdentNode: 'user0_.userName' {alias=u, className=org.hibernate.test.component.basic.User, tableAlias=user0_}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[QUOTED_STRING] LiteralNode: ''steve''
+
+14:11:59,771 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,772 DEBUG QueryTranslatorImpl:235 - HQL: select u.person.heightInches from org.hibernate.test.component.basic.User u where u.id = 'steve'
+14:11:59,772 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.height_centimeters / 2.54E0 as col_0_0_ from T_USER user0_ where user0_.userName='steve'
+14:11:59,772 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,773 DEBUG SQL:104 - 
+    select
+        user0_.height_centimeters / 2.54E0 as col_0_0_ 
+    from
+        T_USER user0_ 
+    where
+        user0_.userName='steve'
+14:11:59,775 DEBUG SQL:104 - 
+    select
+        this_.userName as userName1_0_,
+        this_.lastModified as lastModi2_1_0_,
+        this_."password" as password3_1_0_,
+        this_.name as name1_0_,
+        this_.dob as dob1_0_,
+        this_.address as address1_0_,
+        this_.previousAddress as previous7_1_0_,
+        this_.height_centimeters / 2.54E0 as height8_1_0_,
+        extract(year 
+    from
+        this_.dob) as formula45_0_ 
+    from
+        T_USER this_ 
+    where
+        this_.height_centimeters / 2.54E0 between ? and ?
+14:11:59,797 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.component.basic.User u where u.person.heightInches between ? and ?
+14:11:59,799 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'component'
+    |        |  |  \-[IDENT] Node: 'basic'
+    |        |  \-[IDENT] Node: 'User'
+    |        \-[ALIAS] Node: 'u'
+    \-[WHERE] Node: 'where'
+       \-[BETWEEN] Node: 'between'
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'u'
+          |  |  \-[IDENT] Node: 'person'
+          |  \-[IDENT] Node: 'heightInches'
+          +-[PARAM] Node: '?'
+          \-[PARAM] Node: '?'
+
+14:11:59,807 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,807 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.component.basic.User (u) -> user0_
+14:11:59,808 DEBUG FromReferenceNode:74 - Resolved : u -> user0_.userName
+14:11:59,808 DEBUG DotNode:599 - getDataType() : person -> org.hibernate.type.ComponentType@60909f11
+14:11:59,808 DEBUG DotNode:585 - Unresolved property path is now 'person.heightInches'
+14:11:59,808 DEBUG FromReferenceNode:74 - Resolved : u.person -> user0_.height_centimeters / 2.54E0
+14:11:59,808 DEBUG DotNode:599 - getDataType() : person.heightInches -> org.hibernate.type.DoubleType@26e7f2ac
+14:11:59,808 DEBUG FromReferenceNode:74 - Resolved : u.person.heightInches -> user0_.height_centimeters / 2.54E0
+14:11:59,808  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 84.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:11:59,808  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 90.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:11:59,809 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} T_USER user0_ ) ( where ( between ( user0_.height_centimeters / 2.54E0 ( user0_.height_centimeters / 2.54E0 user0_.userName person ) heightInches ) ? ? ) ) )
+14:11:59,809 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:11:59,809 DEBUG JoinProcessor:175 - Using FROM fragment [T_USER user0_]
+14:11:59,809 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_USER)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user0_.userName as userName1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.component.basic.User}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'user0_.lastModified as lastModi2_1_, user0_."password" as password3_1_, user0_.name as name1_, user0_.dob as dob1_, user0_.address as address1_, user0_.previousAddress as previous7_1_, user0_.height_centimeters / 2.54E0 as height8_1_, extract(year from user0_.dob) as formula45_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[u], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_USER user0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.component.basic.User}}
+    \-[WHERE] SqlNode: 'where'
+       \-[BETWEEN] BetweenOperatorNode: 'between'
+          +-[DOT] DotNode: 'user0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=ALL,propertyPath=person.heightInches,path=u.person.heightInches,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=u}
+          |  +-[DOT] DotNode: 'user0_.height_centimeters / 2.54E0' {propertyName=heightInches,dereferenceType=2,propertyPath=person.heightInches,path=u.person,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=u}
+          |  |  +-[ALIAS_REF] IdentNode: 'user0_.userName' {alias=u, className=org.hibernate.test.component.basic.User, tableAlias=user0_}
+          |  |  \-[IDENT] IdentNode: 'person' {originalText=person}
+          |  \-[IDENT] IdentNode: 'heightInches' {originalText=heightInches}
+          +-[PARAM] ParameterNode: '?' {ordinal=0, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+          \-[PARAM] ParameterNode: '?' {ordinal=1, expectedType=org.hibernate.type.DoubleType@26e7f2ac}
+
+14:11:59,840 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,840 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.component.basic.User u where u.person.heightInches between ? and ?
+14:11:59,840 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.userName as userName1_, user0_.lastModified as lastModi2_1_, user0_."password" as password3_1_, user0_.name as name1_, user0_.dob as dob1_, user0_.address as address1_, user0_.previousAddress as previous7_1_, user0_.height_centimeters / 2.54E0 as height8_1_, extract(year from user0_.dob) as formula45_ from T_USER user0_ where user0_.height_centimeters / 2.54E0 between ? and ?
+14:11:59,840 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:59,841 DEBUG SQL:104 - 
+    select
+        user0_.userName as userName1_,
+        user0_.lastModified as lastModi2_1_,
+        user0_."password" as password3_1_,
+        user0_.name as name1_,
+        user0_.dob as dob1_,
+        user0_.address as address1_,
+        user0_.previousAddress as previous7_1_,
+        user0_.height_centimeters / 2.54E0 as height8_1_,
+        extract(year 
+    from
+        user0_.dob) as formula45_ 
+    from
+        T_USER user0_ 
+    where
+        user0_.height_centimeters / 2.54E0 between ? and ?
+14:11:59,842 DEBUG SQL:104 - 
+    update
+        T_USER 
+    set
+        lastModified=?,
+        "password"=?,
+        address=?,
+        previousAddress=?,
+        height_centimeters=? * 2.54E0 
+    where
+        userName=? 
+        and lastModified=?
+14:11:59,843 DEBUG SQL:104 - 
+    select
+        height_centimeters 
+    from
+        T_USER 
+    where
+        T_USER.username='steve'
+14:11:59,845 DEBUG SQL:104 - 
+    delete 
+    from
+        T_USER 
+    where
+        userName=? 
+        and lastModified=?
+14:11:59,846  INFO CustomRunner:139 - Test: testMergeComponent
+14:11:59,865 DEBUG SQL:104 - 
+    insert 
+    into
+        T_EMP
+        (HIRE_DATE, name, dob, value1, value2, ID) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:11:59,866 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_0_,
+        employee0_.HIRE_DATE as HIRE2_0_0_,
+        employee0_.name as name0_0_,
+        employee0_.dob as dob0_0_,
+        employee0_.value1 as value5_0_0_,
+        employee0_.value2 as value6_0_0_ 
+    from
+        T_EMP employee0_ 
+    where
+        employee0_.ID=?
+14:11:59,867 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_1_,
+        employee0_.HIRE_DATE as HIRE2_0_1_,
+        employee0_.name as name0_1_,
+        employee0_.dob as dob0_1_,
+        employee0_.value1 as value5_0_1_,
+        employee0_.value2 as value6_0_1_,
+        directrepo1_.PARENT_ID as PARENT7_0_3_,
+        directrepo1_.ID as ID0_3_,
+        directrepo1_.ID as ID0_0_,
+        directrepo1_.HIRE_DATE as HIRE2_0_0_,
+        directrepo1_.name as name0_0_,
+        directrepo1_.dob as dob0_0_,
+        directrepo1_.value1 as value5_0_0_,
+        directrepo1_.value2 as value6_0_0_ 
+    from
+        T_EMP employee0_ 
+    left outer join
+        T_EMP directrepo1_ 
+            on employee0_.ID=directrepo1_.PARENT_ID 
+    where
+        employee0_.ID=?
+14:11:59,886 DEBUG SQL:104 - 
+    update
+        T_EMP 
+    set
+        HIRE_DATE=?,
+        value1=?,
+        value2=? 
+    where
+        ID=?
+14:11:59,887 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_0_,
+        employee0_.HIRE_DATE as HIRE2_0_0_,
+        employee0_.name as name0_0_,
+        employee0_.dob as dob0_0_,
+        employee0_.value1 as value5_0_0_,
+        employee0_.value2 as value6_0_0_ 
+    from
+        T_EMP employee0_ 
+    where
+        employee0_.ID=?
+14:11:59,888 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_1_,
+        employee0_.HIRE_DATE as HIRE2_0_1_,
+        employee0_.name as name0_1_,
+        employee0_.dob as dob0_1_,
+        employee0_.value1 as value5_0_1_,
+        employee0_.value2 as value6_0_1_,
+        directrepo1_.PARENT_ID as PARENT7_0_3_,
+        directrepo1_.ID as ID0_3_,
+        directrepo1_.ID as ID0_0_,
+        directrepo1_.HIRE_DATE as HIRE2_0_0_,
+        directrepo1_.name as name0_0_,
+        directrepo1_.dob as dob0_0_,
+        directrepo1_.value1 as value5_0_0_,
+        directrepo1_.value2 as value6_0_0_ 
+    from
+        T_EMP employee0_ 
+    left outer join
+        T_EMP directrepo1_ 
+            on employee0_.ID=directrepo1_.PARENT_ID 
+    where
+        employee0_.ID=?
+14:11:59,910 DEBUG SQL:104 - 
+    update
+        T_EMP 
+    set
+        HIRE_DATE=?,
+        value1=?,
+        value2=? 
+    where
+        ID=?
+14:11:59,911 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_0_,
+        employee0_.HIRE_DATE as HIRE2_0_0_,
+        employee0_.name as name0_0_,
+        employee0_.dob as dob0_0_,
+        employee0_.value1 as value5_0_0_,
+        employee0_.value2 as value6_0_0_ 
+    from
+        T_EMP employee0_ 
+    where
+        employee0_.ID=?
+14:11:59,951 DEBUG SQL:104 - 
+    select
+        directrepo0_.PARENT_ID as PARENT7_0_1_,
+        directrepo0_.ID as ID0_1_,
+        directrepo0_.ID as ID0_0_,
+        directrepo0_.HIRE_DATE as HIRE2_0_0_,
+        directrepo0_.name as name0_0_,
+        directrepo0_.dob as dob0_0_,
+        directrepo0_.value1 as value5_0_0_,
+        directrepo0_.value2 as value6_0_0_ 
+    from
+        T_EMP directrepo0_ 
+    where
+        directrepo0_.PARENT_ID=?
+14:11:59,952 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_1_,
+        employee0_.HIRE_DATE as HIRE2_0_1_,
+        employee0_.name as name0_1_,
+        employee0_.dob as dob0_1_,
+        employee0_.value1 as value5_0_1_,
+        employee0_.value2 as value6_0_1_,
+        directrepo1_.PARENT_ID as PARENT7_0_3_,
+        directrepo1_.ID as ID0_3_,
+        directrepo1_.ID as ID0_0_,
+        directrepo1_.HIRE_DATE as HIRE2_0_0_,
+        directrepo1_.name as name0_0_,
+        directrepo1_.dob as dob0_0_,
+        directrepo1_.value1 as value5_0_0_,
+        directrepo1_.value2 as value6_0_0_ 
+    from
+        T_EMP employee0_ 
+    left outer join
+        T_EMP directrepo1_ 
+            on employee0_.ID=directrepo1_.PARENT_ID 
+    where
+        employee0_.ID=?
+14:11:59,979 DEBUG SQL:104 - 
+    insert 
+    into
+        T_EMP
+        (HIRE_DATE, name, dob, value1, value2, ID) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:11:59,980 DEBUG SQL:104 - 
+    update
+        T_EMP 
+    set
+        PARENT_ID=? 
+    where
+        ID=?
+14:11:59,980 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_0_,
+        employee0_.HIRE_DATE as HIRE2_0_0_,
+        employee0_.name as name0_0_,
+        employee0_.dob as dob0_0_,
+        employee0_.value1 as value5_0_0_,
+        employee0_.value2 as value6_0_0_ 
+    from
+        T_EMP employee0_ 
+    where
+        employee0_.ID=?
+14:11:59,981 DEBUG SQL:104 - 
+    select
+        directrepo0_.PARENT_ID as PARENT7_0_1_,
+        directrepo0_.ID as ID0_1_,
+        directrepo0_.ID as ID0_0_,
+        directrepo0_.HIRE_DATE as HIRE2_0_0_,
+        directrepo0_.name as name0_0_,
+        directrepo0_.dob as dob0_0_,
+        directrepo0_.value1 as value5_0_0_,
+        directrepo0_.value2 as value6_0_0_ 
+    from
+        T_EMP directrepo0_ 
+    where
+        directrepo0_.PARENT_ID=?
+14:11:59,983 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_1_,
+        employee0_.HIRE_DATE as HIRE2_0_1_,
+        employee0_.name as name0_1_,
+        employee0_.dob as dob0_1_,
+        employee0_.value1 as value5_0_1_,
+        employee0_.value2 as value6_0_1_,
+        directrepo1_.PARENT_ID as PARENT7_0_3_,
+        directrepo1_.ID as ID0_3_,
+        directrepo1_.ID as ID0_0_,
+        directrepo1_.HIRE_DATE as HIRE2_0_0_,
+        directrepo1_.name as name0_0_,
+        directrepo1_.dob as dob0_0_,
+        directrepo1_.value1 as value5_0_0_,
+        directrepo1_.value2 as value6_0_0_ 
+    from
+        T_EMP employee0_ 
+    left outer join
+        T_EMP directrepo1_ 
+            on employee0_.ID=directrepo1_.PARENT_ID 
+    where
+        employee0_.ID=?
+14:11:59,995 DEBUG SQL:104 - 
+    update
+        T_EMP 
+    set
+        HIRE_DATE=?,
+        value1=?,
+        value2=? 
+    where
+        ID=?
+14:11:59,996 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_0_,
+        employee0_.HIRE_DATE as HIRE2_0_0_,
+        employee0_.name as name0_0_,
+        employee0_.dob as dob0_0_,
+        employee0_.value1 as value5_0_0_,
+        employee0_.value2 as value6_0_0_ 
+    from
+        T_EMP employee0_ 
+    where
+        employee0_.ID=?
+14:12:00,015 DEBUG SQL:104 - 
+    select
+        directrepo0_.PARENT_ID as PARENT7_0_1_,
+        directrepo0_.ID as ID0_1_,
+        directrepo0_.ID as ID0_0_,
+        directrepo0_.HIRE_DATE as HIRE2_0_0_,
+        directrepo0_.name as name0_0_,
+        directrepo0_.dob as dob0_0_,
+        directrepo0_.value1 as value5_0_0_,
+        directrepo0_.value2 as value6_0_0_ 
+    from
+        T_EMP directrepo0_ 
+    where
+        directrepo0_.PARENT_ID=?
+14:12:00,016 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_1_,
+        employee0_.HIRE_DATE as HIRE2_0_1_,
+        employee0_.name as name0_1_,
+        employee0_.dob as dob0_1_,
+        employee0_.value1 as value5_0_1_,
+        employee0_.value2 as value6_0_1_,
+        directrepo1_.PARENT_ID as PARENT7_0_3_,
+        directrepo1_.ID as ID0_3_,
+        directrepo1_.ID as ID0_0_,
+        directrepo1_.HIRE_DATE as HIRE2_0_0_,
+        directrepo1_.name as name0_0_,
+        directrepo1_.dob as dob0_0_,
+        directrepo1_.value1 as value5_0_0_,
+        directrepo1_.value2 as value6_0_0_ 
+    from
+        T_EMP employee0_ 
+    left outer join
+        T_EMP directrepo1_ 
+            on employee0_.ID=directrepo1_.PARENT_ID 
+    where
+        employee0_.ID=?
+14:12:00,060 DEBUG SQL:104 - 
+    update
+        T_EMP 
+    set
+        HIRE_DATE=?,
+        value1=?,
+        value2=? 
+    where
+        ID=?
+14:12:00,061 DEBUG SQL:104 - 
+    select
+        employee0_.ID as ID0_0_,
+        employee0_.HIRE_DATE as HIRE2_0_0_,
+        employee0_.name as name0_0_,
+        employee0_.dob as dob0_0_,
+        employee0_.value1 as value5_0_0_,
+        employee0_.value2 as value6_0_0_ 
+    from
+        T_EMP employee0_ 
+    where
+        employee0_.ID=?
+14:12:00,062 DEBUG SQL:104 - 
+    select
+        directrepo0_.PARENT_ID as PARENT7_0_1_,
+        directrepo0_.ID as ID0_1_,
+        directrepo0_.ID as ID0_0_,
+        directrepo0_.HIRE_DATE as HIRE2_0_0_,
+        directrepo0_.name as name0_0_,
+        directrepo0_.dob as dob0_0_,
+        directrepo0_.value1 as value5_0_0_,
+        directrepo0_.value2 as value6_0_0_ 
+    from
+        T_EMP directrepo0_ 
+    where
+        directrepo0_.PARENT_ID=?
+14:12:00,071 DEBUG SQL:104 - 
+    select
+        directrepo0_.PARENT_ID as PARENT7_0_1_,
+        directrepo0_.ID as ID0_1_,
+        directrepo0_.ID as ID0_0_,
+        directrepo0_.HIRE_DATE as HIRE2_0_0_,
+        directrepo0_.name as name0_0_,
+        directrepo0_.dob as dob0_0_,
+        directrepo0_.value1 as value5_0_0_,
+        directrepo0_.value2 as value6_0_0_ 
+    from
+        T_EMP directrepo0_ 
+    where
+        directrepo0_.PARENT_ID=?
+14:12:00,072 DEBUG SQL:104 - 
+    update
+        T_EMP 
+    set
+        PARENT_ID=null 
+    where
+        PARENT_ID=?
+14:12:00,072 DEBUG SQL:104 - 
+    delete 
+    from
+        T_EMP 
+    where
+        ID=?
+14:12:00,084 DEBUG SQL:104 - 
+    delete 
+    from
+        T_EMP 
+    where
+        ID=?
+14:12:00,084  INFO CustomRunner:139 - Test: testNamedQuery
+14:12:00,090 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.component.basic.User where person.name in (:nameList0_, :nameList1_, :nameList2_) or userName in (:nameList0_, :nameList1_, :nameList2_)
+14:12:00,093 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[DOT] Node: '.'
+    |           |  |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  |  \-[IDENT] Node: 'test'
+    |           |  |  \-[IDENT] Node: 'component'
+    |           |  \-[IDENT] Node: 'basic'
+    |           \-[IDENT] Node: 'User'
+    \-[WHERE] Node: 'where'
+       \-[OR] Node: 'or'
+          +-[IN] Node: 'in'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'person'
+          |  |  \-[IDENT] Node: 'name'
+          |  \-[IN_LIST] Node: 'inList'
+          |     +-[COLON] Node: ':'
+          |     |  \-[IDENT] Node: 'nameList0_'
+          |     +-[COLON] Node: ':'
+          |     |  \-[IDENT] Node: 'nameList1_'
+          |     \-[COLON] Node: ':'
+          |        \-[IDENT] Node: 'nameList2_'
+          \-[IN] Node: 'in'
+             +-[IDENT] Node: 'userName'
+             \-[IN_LIST] Node: 'inList'
+                +-[COLON] Node: ':'
+                |  \-[IDENT] Node: 'nameList0_'
+                +-[COLON] Node: ':'
+                |  \-[IDENT] Node: 'nameList1_'
+                \-[COLON] Node: ':'
+                   \-[IDENT] Node: 'nameList2_'
+
+14:12:00,105 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:00,106 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.component.basic.User (<no alias>) -> user0_
+14:12:00,106 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:12:00,106 DEBUG DotNode:599 - getDataType() : person -> org.hibernate.type.ComponentType@60909f11
+14:12:00,106 DEBUG DotNode:585 - Unresolved property path is now 'person.name'
+14:12:00,106 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.person -> user0_.name
+14:12:00,106 DEBUG DotNode:599 - getDataType() : person.name -> org.hibernate.type.StringType@2dc8de40
+14:12:00,106 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.person.name -> user0_.name
+14:12:00,107 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:12:00,107 DEBUG DotNode:599 - getDataType() : userName -> org.hibernate.type.StringType@2dc8de40
+14:12:00,107 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.userName -> user0_.userName
+14:12:00,107 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} T_USER user0_ ) ( where ( or ( in ( user0_.name ( user0_.name {synthetic-alias} person ) name ) ( inList ? ? ? ) ) ( in ( user0_.userName {synthetic-alias} userName ) ( inList ? ? ? ) ) ) ) )
+14:12:00,107 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:00,107 DEBUG JoinProcessor:175 - Using FROM fragment [T_USER user0_]
+14:12:00,108 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_USER)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user0_.userName as userName1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.component.basic.User}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'user0_.lastModified as lastModi2_1_, user0_."password" as password3_1_, user0_.name as name1_, user0_.dob as dob1_, user0_.address as address1_, user0_.previousAddress as previous7_1_, user0_.height_centimeters / 2.54E0 as height8_1_, extract(year from user0_.dob) as formula45_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_USER user0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.component.basic.User}}
+    \-[WHERE] SqlNode: 'where'
+       \-[OR] SqlNode: 'or'
+          +-[IN] InLogicOperatorNode: 'in'
+          |  +-[DOT] DotNode: 'user0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=person.name,path={synthetic-alias}.person.name,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=null}
+          |  |  +-[DOT] DotNode: 'user0_.name' {propertyName=name,dereferenceType=2,propertyPath=person.name,path={synthetic-alias}.person,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=null}
+          |  |  |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  |  |  \-[IDENT] IdentNode: 'person' {originalText=person}
+          |  |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          |  \-[IN_LIST] SqlNode: 'inList'
+          |     +-[NAMED_PARAM] ParameterNode: '?' {name=nameList0_, expectedType=org.hibernate.type.StringType@2dc8de40}
+          |     +-[NAMED_PARAM] ParameterNode: '?' {name=nameList1_, expectedType=org.hibernate.type.StringType@2dc8de40}
+          |     \-[NAMED_PARAM] ParameterNode: '?' {name=nameList2_, expectedType=org.hibernate.type.StringType@2dc8de40}
+          \-[IN] InLogicOperatorNode: 'in'
+             +-[DOT] DotNode: 'user0_.userName' {propertyName=userName,dereferenceType=ALL,propertyPath=userName,path={synthetic-alias}.userName,tableAlias=user0_,className=org.hibernate.test.component.basic.User,classAlias=null}
+             |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+             |  \-[IDENT] IdentNode: 'userName' {originalText=userName}
+             \-[IN_LIST] SqlNode: 'inList'
+                +-[NAMED_PARAM] ParameterNode: '?' {name=nameList0_, expectedType=org.hibernate.type.StringType@2dc8de40}
+                +-[NAMED_PARAM] ParameterNode: '?' {name=nameList1_, expectedType=org.hibernate.type.StringType@2dc8de40}
+                \-[NAMED_PARAM] ParameterNode: '?' {name=nameList2_, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:12:00,117 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:00,117 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.component.basic.User where person.name in (:nameList0_, :nameList1_, :nameList2_) or userName in (:nameList0_, :nameList1_, :nameList2_)
+14:12:00,117 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.userName as userName1_, user0_.lastModified as lastModi2_1_, user0_."password" as password3_1_, user0_.name as name1_, user0_.dob as dob1_, user0_.address as address1_, user0_.previousAddress as previous7_1_, user0_.height_centimeters / 2.54E0 as height8_1_, extract(year from user0_.dob) as formula45_ from T_USER user0_ where user0_.name in (? , ? , ?) or user0_.userName in (? , ? , ?)
+14:12:00,117 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:00,118 DEBUG SQL:104 - 
+    select
+        user0_.userName as userName1_,
+        user0_.lastModified as lastModi2_1_,
+        user0_."password" as password3_1_,
+        user0_.name as name1_,
+        user0_.dob as dob1_,
+        user0_.address as address1_,
+        user0_.previousAddress as previous7_1_,
+        user0_.height_centimeters / 2.54E0 as height8_1_,
+        extract(year 
+    from
+        user0_.dob) as formula45_ 
+    from
+        T_USER user0_ 
+    where
+        user0_.name in (
+            ? , ? , ?
+        ) 
+        or user0_.userName in (
+            ? , ? , ?
+        )
+14:12:00,147  INFO CustomRunner:139 - Test: testUpdateFalse
+14:12:00,150 DEBUG SQL:104 - 
+    insert 
+    into
+        T_USER
+        (lastModified, "password", name, dob, address, height_centimeters, userName) 
+    values
+        (?, ?, ?, ?, ?, ? * 2.54E0, ?)
+14:12:00,151 DEBUG SQL:104 - 
+    select
+        user0_.userName as userName1_0_,
+        user0_.lastModified as lastModi2_1_0_,
+        user0_."password" as password3_1_0_,
+        user0_.name as name1_0_,
+        user0_.dob as dob1_0_,
+        user0_.address as address1_0_,
+        user0_.previousAddress as previous7_1_0_,
+        user0_.height_centimeters / 2.54E0 as height8_1_0_,
+        extract(year 
+    from
+        user0_.dob) as formula45_0_ 
+    from
+        T_USER user0_ 
+    where
+        user0_.userName=?
+14:12:00,152 DEBUG SQL:104 - 
+    delete 
+    from
+        T_USER 
+    where
+        userName=? 
+        and lastModified=?
+14:12:00,153  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:00,154 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:00,154 DEBUG SQL:104 - 
+    alter table T_EMP 
+        drop constraint FK4CBF23DD444FEA5
+14:12:00,154 DEBUG SQL:104 - 
+    drop table T_EMP if exists
+14:12:00,155 DEBUG SQL:104 - 
+    drop table T_USER if exists
+14:12:00,189  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:00,190  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

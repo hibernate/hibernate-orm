@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.entity.Java5FeaturesTest" tests="2" time="0.12" timestamp="2013-02-28T20:10:24">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.entity.Java5FeaturesTest" name="testEnums" time="0.077" />
+  <testcase classname="org.hibernate.test.annotations.entity.Java5FeaturesTest" name="testInterface" time="0.003" />
+  <system-out><![CDATA[14:10:24,366  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.entity.Java5FeaturesTest
+14:10:24,372  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:24,372  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:24,372  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:24,373  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:24,373  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:24,374  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:24,374  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:24,375  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:24,375  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:24,375  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:24,400  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:24,401 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:24,401 DEBUG SQL:104 - 
+    drop table Bid if exists
+14:10:24,401 DEBUG SQL:104 - 
+    drop table Race if exists
+14:10:24,402 DEBUG SQL:104 - 
+    create table Bid (
+        DTYPE varchar(31) not null,
+        id integer not null,
+        approved boolean,
+        description varchar(255),
+        editorsNote varchar(255),
+        note integer,
+        communityNote integer,
+        primary key (id)
+    )
+14:10:24,402 DEBUG SQL:104 - 
+    create table Race (
+        id integer not null,
+        length bigint,
+        primary key (id)
+    )
+14:10:24,403  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:24,403  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:24,403  INFO CustomRunner:139 - Test: testEnums
+14:10:24,405 DEBUG SQL:104 - 
+    insert 
+    into
+        Bid
+        (approved, description, editorsNote, note, DTYPE, id) 
+    values
+        (?, ?, ?, ?, 'Bid', ?)
+14:10:24,406 DEBUG SQL:104 - 
+    insert 
+    into
+        Bid
+        (approved, description, editorsNote, note, communityNote, DTYPE, id) 
+    values
+        (?, ?, ?, ?, ?, 'CommunityBid', ?)
+14:10:24,407 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select b from org.hibernate.test.annotations.entity.Bid b where b.note = org.hibernate.test.annotations.entity.Starred.OK and b.editorsNote = org.hibernate.test.annotations.entity.Starred.GOOD and b.id = :id
+14:10:24,410 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[IDENT] Node: 'entity'
+    |  |     |  \-[IDENT] Node: 'Bid'
+    |  |     \-[ALIAS] Node: 'b'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'b'
+    \-[WHERE] Node: 'where'
+       \-[AND] Node: 'and'
+          +-[AND] Node: 'and'
+          |  +-[EQ] Node: '='
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[IDENT] Node: 'b'
+          |  |  |  \-[IDENT] Node: 'note'
+          |  |  \-[JAVA_CONSTANT] Node: 'org.hibernate.test.annotations.entity.Starred.OK'
+          |  \-[EQ] Node: '='
+          |     +-[DOT] Node: '.'
+          |     |  +-[IDENT] Node: 'b'
+          |     |  \-[IDENT] Node: 'editorsNote'
+          |     \-[JAVA_CONSTANT] Node: 'org.hibernate.test.annotations.entity.Starred.GOOD'
+          \-[EQ] Node: '='
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'b'
+             |  \-[IDENT] Node: 'id'
+             \-[COLON] Node: ':'
+                \-[IDENT] Node: 'id'
+
+14:10:24,410 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:24,410 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Bid (b) -> bid0_
+14:10:24,410 DEBUG FromReferenceNode:74 - Resolved : b -> bid0_.id
+14:10:24,410 DEBUG FromReferenceNode:74 - Resolved : b -> bid0_.id
+14:10:24,411 DEBUG DotNode:599 - getDataType() : note -> org.hibernate.type.CustomType@6829a1f5
+14:10:24,411 DEBUG FromReferenceNode:74 - Resolved : b.note -> bid0_.note
+14:10:24,411 DEBUG FromReferenceNode:74 - Resolved : b -> bid0_.id
+14:10:24,412 DEBUG DotNode:599 - getDataType() : editorsNote -> org.hibernate.type.CustomType@1eb01989
+14:10:24,412 DEBUG FromReferenceNode:74 - Resolved : b.editorsNote -> bid0_.editorsNote
+14:10:24,412 DEBUG FromReferenceNode:74 - Resolved : b -> bid0_.id
+14:10:24,412 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:10:24,412 DEBUG FromReferenceNode:74 - Resolved : b.id -> bid0_.id
+14:10:24,412 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} bid0_.id ) ( FromClause{level=1} Bid bid0_ ) ( where ( and ( and ( = ( bid0_.note bid0_.id note ) org.hibernate.test.annotations.entity.Starred.OK ) ( = ( bid0_.editorsNote bid0_.id editorsNote ) org.hibernate.test.annotations.entity.Starred.GOOD ) ) ( = ( bid0_.id bid0_.id id ) ? ) ) ) )
+14:10:24,412 DEBUG JoinProcessor:175 - Using FROM fragment [Bid bid0_]
+14:10:24,413 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Bid)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'bid0_.id as id0_' {alias=b, className=org.hibernate.test.annotations.entity.Bid, tableAlias=bid0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'bid0_.approved as approved0_, bid0_.description as descript4_0_, bid0_.editorsNote as editorsN5_0_, bid0_.note as note0_, bid0_.communityNote as communit7_0_, bid0_.DTYPE as DTYPE0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[b], fromElementByTableAlias=[bid0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Bid bid0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=Bid,tableAlias=bid0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Bid}}
+    \-[WHERE] SqlNode: 'where'
+       \-[AND] SqlNode: 'and'
+          +-[AND] SqlNode: 'and'
+          |  +-[EQ] BinaryLogicOperatorNode: '='
+          |  |  +-[DOT] DotNode: 'bid0_.note' {propertyName=note,dereferenceType=ALL,propertyPath=note,path=b.note,tableAlias=bid0_,className=org.hibernate.test.annotations.entity.Bid,classAlias=b}
+          |  |  |  +-[ALIAS_REF] IdentNode: 'bid0_.id' {alias=b, className=org.hibernate.test.annotations.entity.Bid, tableAlias=bid0_}
+          |  |  |  \-[IDENT] IdentNode: 'note' {originalText=note}
+          |  |  \-[JAVA_CONSTANT] JavaConstantNode: 'org.hibernate.test.annotations.entity.Starred.OK'
+          |  \-[EQ] BinaryLogicOperatorNode: '='
+          |     +-[DOT] DotNode: 'bid0_.editorsNote' {propertyName=editorsNote,dereferenceType=ALL,propertyPath=editorsNote,path=b.editorsNote,tableAlias=bid0_,className=org.hibernate.test.annotations.entity.Bid,classAlias=b}
+          |     |  +-[ALIAS_REF] IdentNode: 'bid0_.id' {alias=b, className=org.hibernate.test.annotations.entity.Bid, tableAlias=bid0_}
+          |     |  \-[IDENT] IdentNode: 'editorsNote' {originalText=editorsNote}
+          |     \-[JAVA_CONSTANT] JavaConstantNode: 'org.hibernate.test.annotations.entity.Starred.GOOD'
+          \-[EQ] BinaryLogicOperatorNode: '='
+             +-[DOT] DotNode: 'bid0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=b.id,tableAlias=bid0_,className=org.hibernate.test.annotations.entity.Bid,classAlias=b}
+             |  +-[ALIAS_REF] IdentNode: 'bid0_.id' {alias=b, className=org.hibernate.test.annotations.entity.Bid, tableAlias=bid0_}
+             |  \-[IDENT] IdentNode: 'id' {originalText=id}
+             \-[NAMED_PARAM] ParameterNode: '?' {name=id, expectedType=org.hibernate.type.IntegerType@42252fee}
+
+14:10:24,413 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:24,413 DEBUG QueryTranslatorImpl:235 - HQL: select b from org.hibernate.test.annotations.entity.Bid b where b.note = org.hibernate.test.annotations.entity.Starred.OK and b.editorsNote = org.hibernate.test.annotations.entity.Starred.GOOD and b.id = :id
+14:10:24,413 DEBUG QueryTranslatorImpl:236 - SQL: select bid0_.id as id0_, bid0_.approved as approved0_, bid0_.description as descript4_0_, bid0_.editorsNote as editorsN5_0_, bid0_.note as note0_, bid0_.communityNote as communit7_0_, bid0_.DTYPE as DTYPE0_ from Bid bid0_ where bid0_.note=1 and bid0_.editorsNote='GOOD' and bid0_.id=?
+14:10:24,413 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:24,414 DEBUG SQL:104 - 
+    select
+        bid0_.id as id0_,
+        bid0_.approved as approved0_,
+        bid0_.description as descript4_0_,
+        bid0_.editorsNote as editorsN5_0_,
+        bid0_.note as note0_,
+        bid0_.communityNote as communit7_0_,
+        bid0_.DTYPE as DTYPE0_ 
+    from
+        Bid bid0_ 
+    where
+        bid0_.note=1 
+        and bid0_.editorsNote='GOOD' 
+        and bid0_.id=?
+14:10:24,415 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select b from org.hibernate.test.annotations.entity.Bid b where b.note = :note and b.editorsNote = :editorNote  and b.id = :id
+14:10:24,417 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[IDENT] Node: 'entity'
+    |  |     |  \-[IDENT] Node: 'Bid'
+    |  |     \-[ALIAS] Node: 'b'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'b'
+    \-[WHERE] Node: 'where'
+       \-[AND] Node: 'and'
+          +-[AND] Node: 'and'
+          |  +-[EQ] Node: '='
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[IDENT] Node: 'b'
+          |  |  |  \-[IDENT] Node: 'note'
+          |  |  \-[COLON] Node: ':'
+          |  |     \-[IDENT] Node: 'note'
+          |  \-[EQ] Node: '='
+          |     +-[DOT] Node: '.'
+          |     |  +-[IDENT] Node: 'b'
+          |     |  \-[IDENT] Node: 'editorsNote'
+          |     \-[COLON] Node: ':'
+          |        \-[IDENT] Node: 'editorNote'
+          \-[EQ] Node: '='
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'b'
+             |  \-[IDENT] Node: 'id'
+             \-[COLON] Node: ':'
+                \-[IDENT] Node: 'id'
+
+14:10:24,424 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:24,425 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.entity.Bid (b) -> bid0_
+14:10:24,425 DEBUG FromReferenceNode:74 - Resolved : b -> bid0_.id
+14:10:24,425 DEBUG FromReferenceNode:74 - Resolved : b -> bid0_.id
+14:10:24,426 DEBUG DotNode:599 - getDataType() : note -> org.hibernate.type.CustomType@6829a1f5
+14:10:24,426 DEBUG FromReferenceNode:74 - Resolved : b.note -> bid0_.note
+14:10:24,426 DEBUG FromReferenceNode:74 - Resolved : b -> bid0_.id
+14:10:24,426 DEBUG DotNode:599 - getDataType() : editorsNote -> org.hibernate.type.CustomType@1eb01989
+14:10:24,426 DEBUG FromReferenceNode:74 - Resolved : b.editorsNote -> bid0_.editorsNote
+14:10:24,426 DEBUG FromReferenceNode:74 - Resolved : b -> bid0_.id
+14:10:24,426 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:10:24,427 DEBUG FromReferenceNode:74 - Resolved : b.id -> bid0_.id
+14:10:24,427 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} bid0_.id ) ( FromClause{level=1} Bid bid0_ ) ( where ( and ( and ( = ( bid0_.note bid0_.id note ) ? ) ( = ( bid0_.editorsNote bid0_.id editorsNote ) ? ) ) ( = ( bid0_.id bid0_.id id ) ? ) ) ) )
+14:10:24,427 DEBUG JoinProcessor:175 - Using FROM fragment [Bid bid0_]
+14:10:24,427 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Bid)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'bid0_.id as id0_' {alias=b, className=org.hibernate.test.annotations.entity.Bid, tableAlias=bid0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'bid0_.approved as approved0_, bid0_.description as descript4_0_, bid0_.editorsNote as editorsN5_0_, bid0_.note as note0_, bid0_.communityNote as communit7_0_, bid0_.DTYPE as DTYPE0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[b], fromElementByTableAlias=[bid0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Bid bid0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=Bid,tableAlias=bid0_,origin=null,columns={,className=org.hibernate.test.annotations.entity.Bid}}
+    \-[WHERE] SqlNode: 'where'
+       \-[AND] SqlNode: 'and'
+          +-[AND] SqlNode: 'and'
+          |  +-[EQ] BinaryLogicOperatorNode: '='
+          |  |  +-[DOT] DotNode: 'bid0_.note' {propertyName=note,dereferenceType=ALL,propertyPath=note,path=b.note,tableAlias=bid0_,className=org.hibernate.test.annotations.entity.Bid,classAlias=b}
+          |  |  |  +-[ALIAS_REF] IdentNode: 'bid0_.id' {alias=b, className=org.hibernate.test.annotations.entity.Bid, tableAlias=bid0_}
+          |  |  |  \-[IDENT] IdentNode: 'note' {originalText=note}
+          |  |  \-[NAMED_PARAM] ParameterNode: '?' {name=note, expectedType=org.hibernate.type.CustomType@6829a1f5}
+          |  \-[EQ] BinaryLogicOperatorNode: '='
+          |     +-[DOT] DotNode: 'bid0_.editorsNote' {propertyName=editorsNote,dereferenceType=ALL,propertyPath=editorsNote,path=b.editorsNote,tableAlias=bid0_,className=org.hibernate.test.annotations.entity.Bid,classAlias=b}
+          |     |  +-[ALIAS_REF] IdentNode: 'bid0_.id' {alias=b, className=org.hibernate.test.annotations.entity.Bid, tableAlias=bid0_}
+          |     |  \-[IDENT] IdentNode: 'editorsNote' {originalText=editorsNote}
+          |     \-[NAMED_PARAM] ParameterNode: '?' {name=editorNote, expectedType=org.hibernate.type.CustomType@1eb01989}
+          \-[EQ] BinaryLogicOperatorNode: '='
+             +-[DOT] DotNode: 'bid0_.id' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=b.id,tableAlias=bid0_,className=org.hibernate.test.annotations.entity.Bid,classAlias=b}
+             |  +-[ALIAS_REF] IdentNode: 'bid0_.id' {alias=b, className=org.hibernate.test.annotations.entity.Bid, tableAlias=bid0_}
+             |  \-[IDENT] IdentNode: 'id' {originalText=id}
+             \-[NAMED_PARAM] ParameterNode: '?' {name=id, expectedType=org.hibernate.type.IntegerType@42252fee}
+
+14:10:24,439 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:24,439 DEBUG QueryTranslatorImpl:235 - HQL: select b from org.hibernate.test.annotations.entity.Bid b where b.note = :note and b.editorsNote = :editorNote  and b.id = :id
+14:10:24,439 DEBUG QueryTranslatorImpl:236 - SQL: select bid0_.id as id0_, bid0_.approved as approved0_, bid0_.description as descript4_0_, bid0_.editorsNote as editorsN5_0_, bid0_.note as note0_, bid0_.communityNote as communit7_0_, bid0_.DTYPE as DTYPE0_ from Bid bid0_ where bid0_.note=? and bid0_.editorsNote=? and bid0_.id=?
+14:10:24,440 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:24,440 DEBUG SQL:104 - 
+    select
+        bid0_.id as id0_,
+        bid0_.approved as approved0_,
+        bid0_.description as descript4_0_,
+        bid0_.editorsNote as editorsN5_0_,
+        bid0_.note as note0_,
+        bid0_.communityNote as communit7_0_,
+        bid0_.DTYPE as DTYPE0_ 
+    from
+        Bid bid0_ 
+    where
+        bid0_.note=? 
+        and bid0_.editorsNote=? 
+        and bid0_.id=?
+14:10:24,441 DEBUG SQL:104 - 
+    update
+        Bid 
+    set
+        approved=?,
+        description=?,
+        editorsNote=?,
+        note=? 
+    where
+        id=?
+14:10:24,452 DEBUG SQL:104 - 
+    select
+        bid0_.id as id0_0_,
+        bid0_.approved as approved0_0_,
+        bid0_.description as descript4_0_0_,
+        bid0_.editorsNote as editorsN5_0_0_,
+        bid0_.note as note0_0_,
+        bid0_.communityNote as communit7_0_0_,
+        bid0_.DTYPE as DTYPE0_0_ 
+    from
+        Bid bid0_ 
+    where
+        bid0_.id=?
+14:10:24,452 DEBUG SQL:104 - 
+    select
+        communityb0_.id as id0_0_,
+        communityb0_.approved as approved0_0_,
+        communityb0_.description as descript4_0_0_,
+        communityb0_.editorsNote as editorsN5_0_0_,
+        communityb0_.note as note0_0_,
+        communityb0_.communityNote as communit7_0_0_ 
+    from
+        Bid communityb0_ 
+    where
+        communityb0_.id=? 
+        and communityb0_.DTYPE='CommunityBid'
+14:10:24,467 DEBUG SQL:104 - 
+    select
+        b.id as id0_0_,
+        b.approved as approved0_0_,
+        b.description as descript4_0_0_,
+        b.editorsNote as editorsN5_0_0_,
+        b.note as note0_0_,
+        b.communityNote as communit7_0_0_ 
+    from
+        Bid b 
+    where
+        b.id = ?
+14:10:24,479 DEBUG SQL:104 - 
+    delete 
+    from
+        Bid 
+    where
+        id=?
+14:10:24,480  INFO CustomRunner:139 - Test: testInterface
+14:10:24,482 DEBUG SQL:104 - 
+    insert 
+    into
+        Race
+        (length, id) 
+    values
+        (?, ?)
+14:10:24,483 DEBUG SQL:104 - 
+    select
+        race0_.id as id1_0_,
+        race0_.length as length1_0_ 
+    from
+        Race race0_ 
+    where
+        race0_.id=?
+14:10:24,484  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:24,484 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:24,484 DEBUG SQL:104 - 
+    drop table Bid if exists
+14:10:24,485 DEBUG SQL:104 - 
+    drop table Race if exists
+14:10:24,485  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:24,485  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

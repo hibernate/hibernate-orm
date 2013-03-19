@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.nationalized.SimpleNationalizedTest" tests="1" time="0.046" timestamp="2013-02-28T20:17:31">
+  <properties />
+  <testcase classname="org.hibernate.test.nationalized.SimpleNationalizedTest" name="simpleNationalizedTest" time="0.044" />
+  <system-out><![CDATA[14:17:31,248  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.nationalized.SimpleNationalizedTest
+14:17:31,248  INFO CustomRunner:139 - Test: simpleNationalizedTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

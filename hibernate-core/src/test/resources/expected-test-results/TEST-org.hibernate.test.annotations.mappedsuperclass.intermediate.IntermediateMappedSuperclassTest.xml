@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.mappedsuperclass.intermediate.IntermediateMappedSuperclassTest" tests="1" time="0.09" timestamp="2013-02-28T20:10:37">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.mappedsuperclass.intermediate.IntermediateMappedSuperclassTest" name="testGetOnIntermediateMappedSuperclass" time="0.037" />
+  <system-out><![CDATA[14:10:37,607  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.mappedsuperclass.intermediate.IntermediateMappedSuperclassTest
+14:10:37,613  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:37,614  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:37,614  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:37,614  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:37,614  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:37,615  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:37,616  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:37,616  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:37,616  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:37,617  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:37,626  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:37,627 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:37,627 DEBUG SQL:104 - 
+    alter table SAVINGS_ACCOUNT 
+        drop constraint FK6E8B8C679FE8635
+14:10:37,627 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table SAVINGS_ACCOUNT drop constraint FK6E8B8C679FE8635
+14:10:37,628 ERROR SchemaExport:426 - Table "SAVINGS_ACCOUNT" not found; SQL statement:
+
+    alter table SAVINGS_ACCOUNT 
+        drop constraint FK6E8B8C679FE8635 [42102-145]
+14:10:37,642 DEBUG SQL:104 - 
+    drop table ACCOUNT if exists
+14:10:37,643 DEBUG SQL:104 - 
+    drop table SAVINGS_ACCOUNT if exists
+14:10:37,643 DEBUG SQL:104 - 
+    create table ACCOUNT (
+        ACC_ID bigint not null,
+        ACC_NO varchar(255),
+        primary key (ACC_ID)
+    )
+14:10:37,644 DEBUG SQL:104 - 
+    create table SAVINGS_ACCOUNT (
+        SAVACC_WITHDRAWALLIMIT decimal(19,2),
+        SAVACC_ACC_ID bigint not null,
+        primary key (SAVACC_ACC_ID)
+    )
+14:10:37,644 DEBUG SQL:104 - 
+    alter table SAVINGS_ACCOUNT 
+        add constraint FK6E8B8C679FE8635 
+        foreign key (SAVACC_ACC_ID) 
+        references ACCOUNT
+14:10:37,645  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:37,645  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:37,645  INFO CustomRunner:139 - Test: testGetOnIntermediateMappedSuperclass
+14:10:37,646 DEBUG SQL:104 - 
+    select
+        max(ACC_ID) 
+    from
+        ACCOUNT
+14:10:37,649 DEBUG SQL:104 - 
+    insert 
+    into
+        ACCOUNT
+        (ACC_NO, ACC_ID) 
+    values
+        (?, ?)
+14:10:37,649 DEBUG SQL:104 - 
+    insert 
+    into
+        SAVINGS_ACCOUNT
+        (SAVACC_WITHDRAWALLIMIT, SAVACC_ACC_ID) 
+    values
+        (?, ?)
+14:10:37,650 DEBUG SQL:104 - 
+    select
+        account0_.ACC_ID as ACC1_0_0_,
+        account0_.ACC_NO as ACC2_0_0_,
+        account0_1_.SAVACC_WITHDRAWALLIMIT as SAVACC1_1_0_,
+        case 
+            when account0_1_.SAVACC_ACC_ID is not null then 1 
+            when account0_.ACC_ID is not null then 0 
+        end as clazz_0_ 
+    from
+        ACCOUNT account0_ 
+    left outer join
+        SAVINGS_ACCOUNT account0_1_ 
+            on account0_.ACC_ID=account0_1_.SAVACC_ACC_ID 
+    where
+        account0_.ACC_ID=?
+14:10:37,682 DEBUG SQL:104 - 
+    delete 
+    from
+        SAVINGS_ACCOUNT 
+    where
+        SAVACC_ACC_ID=?
+14:10:37,682 DEBUG SQL:104 - 
+    delete 
+    from
+        ACCOUNT 
+    where
+        ACC_ID=?
+14:10:37,683  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:37,684 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:37,684 DEBUG SQL:104 - 
+    alter table SAVINGS_ACCOUNT 
+        drop constraint FK6E8B8C679FE8635
+14:10:37,695 DEBUG SQL:104 - 
+    drop table ACCOUNT if exists
+14:10:37,696 DEBUG SQL:104 - 
+    drop table SAVINGS_ACCOUNT if exists
+14:10:37,696  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:37,696  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

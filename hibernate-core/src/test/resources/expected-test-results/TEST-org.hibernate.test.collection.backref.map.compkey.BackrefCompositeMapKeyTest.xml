@@ -1,0 +1,810 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest" tests="8" time="0.569" timestamp="2013-02-28T20:11:54">
+  <properties />
+  <testcase classname="org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest" name="testOrphanDelete" time="0.055" />
+  <testcase classname="org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest" name="testOrphanDeleteAfterLock" time="0.121" />
+  <testcase classname="org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest" name="testOrphanDeleteAfterPersist" time="0.005" />
+  <testcase classname="org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest" name="testOrphanDeleteAfterPersistAndFlush" time="0.037" />
+  <testcase classname="org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest" name="testOrphanDeleteOnDelete" time="0.042" />
+  <testcase classname="org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest" name="testOrphanDeleteOnMerge" time="0.041" />
+  <testcase classname="org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest" name="testOrphanDeleteOnSaveOrUpdate" time="0.071" />
+  <testcase classname="org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest" name="testOrphanDeleteOnSaveOrUpdateAfterSerialization" time="0.099" />
+  <system-out><![CDATA[14:11:55,010  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest
+14:11:55,013  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/collection/backref/map/compkey/Mappings.hbm.xml
+14:11:55,023  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:55,024  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:55,024  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:55,024  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:55,026  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:55,028  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:55,028  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:55,029  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:55,029  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:55,029  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:55,045  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:55,046 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:55,046 DEBUG SQL:104 - 
+    alter table t_part 
+        drop constraint FKCB6144DEECB8C8FD
+14:11:55,047 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table t_part drop constraint FKCB6144DEECB8C8FD
+14:11:55,047 ERROR SchemaExport:426 - Table "T_PART" not found; SQL statement:
+
+    alter table t_part 
+        drop constraint FKCB6144DEECB8C8FD [42102-145]
+14:11:55,047 DEBUG SQL:104 - 
+    drop table t_part if exists
+14:11:55,047 DEBUG SQL:104 - 
+    drop table t_product if exists
+14:11:55,047 DEBUG SQL:104 - 
+    create table t_part (
+        name varchar(255) not null,
+        description varchar(255) not null,
+        productName varchar(255) not null,
+        role_ varchar(255),
+        primary key (name)
+    )
+14:11:55,048 DEBUG SQL:104 - 
+    create table t_product (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:11:55,048 DEBUG SQL:104 - 
+    alter table t_part 
+        add constraint FKCB6144DEECB8C8FD 
+        foreign key (productName) 
+        references t_product
+14:11:55,049  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:55,049  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:55,049  INFO CustomRunner:139 - Test: testOrphanDelete
+14:11:55,069 DEBUG SQL:104 - 
+    insert 
+    into
+        t_product
+        (name) 
+    values
+        (?)
+14:11:55,070 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,070 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,070 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,070 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,071 DEBUG SQL:104 - 
+    select
+        product0_.name as name1_1_,
+        parts1_.productName as productN3_1_3_,
+        parts1_.name as name0_3_,
+        parts1_.role_ as role4_3_,
+        parts1_.name as name0_0_,
+        parts1_.description as descript2_0_0_ 
+    from
+        t_product product0_ 
+    left outer join
+        t_part parts1_ 
+            on product0_.name=parts1_.productName 
+    where
+        product0_.name=?
+14:11:55,072 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,102 DEBUG SQL:104 - 
+    select
+        product0_.name as name1_1_,
+        parts1_.productName as productN3_1_3_,
+        parts1_.name as name0_3_,
+        parts1_.role_ as role4_3_,
+        parts1_.name as name0_0_,
+        parts1_.description as descript2_0_0_ 
+    from
+        t_product product0_ 
+    left outer join
+        t_part parts1_ 
+            on product0_.name=parts1_.productName 
+    where
+        product0_.name=?
+14:11:55,104 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,104 DEBUG SQL:104 - 
+    delete 
+    from
+        t_product 
+    where
+        name=?
+14:11:55,106  INFO CustomRunner:139 - Test: testOrphanDeleteAfterLock
+14:11:55,110 DEBUG SQL:104 - 
+    insert 
+    into
+        t_product
+        (name) 
+    values
+        (?)
+14:11:55,111 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,137 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,138 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,162 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,222 DEBUG SQL:104 - 
+    select
+        name 
+    from
+        t_product 
+    where
+        name =?
+14:11:55,223 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,223 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,224 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,224 DEBUG SQL:104 - 
+    select
+        product0_.name as name1_1_,
+        parts1_.productName as productN3_1_3_,
+        parts1_.name as name0_3_,
+        parts1_.role_ as role4_3_,
+        parts1_.name as name0_0_,
+        parts1_.description as descript2_0_0_ 
+    from
+        t_product product0_ 
+    left outer join
+        t_part parts1_ 
+            on product0_.name=parts1_.productName 
+    where
+        product0_.name=?
+14:11:55,225 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,225 DEBUG SQL:104 - 
+    delete 
+    from
+        t_product 
+    where
+        name=?
+14:11:55,227  INFO CustomRunner:139 - Test: testOrphanDeleteAfterPersist
+14:11:55,229 DEBUG SQL:104 - 
+    insert 
+    into
+        t_product
+        (name) 
+    values
+        (?)
+14:11:55,229 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,229 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,230 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,230 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,230 DEBUG SQL:104 - 
+    select
+        product0_.name as name1_1_,
+        parts1_.productName as productN3_1_3_,
+        parts1_.name as name0_3_,
+        parts1_.role_ as role4_3_,
+        parts1_.name as name0_0_,
+        parts1_.description as descript2_0_0_ 
+    from
+        t_product product0_ 
+    left outer join
+        t_part parts1_ 
+            on product0_.name=parts1_.productName 
+    where
+        product0_.name=?
+14:11:55,231 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,231 DEBUG SQL:104 - 
+    delete 
+    from
+        t_product 
+    where
+        name=?
+14:11:55,232  INFO CustomRunner:139 - Test: testOrphanDeleteAfterPersistAndFlush
+14:11:55,243 DEBUG SQL:104 - 
+    insert 
+    into
+        t_product
+        (name) 
+    values
+        (?)
+14:11:55,244 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,244 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,245 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,245 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,245 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,265 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,266 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,267 DEBUG SQL:104 - 
+    select
+        product0_.name as name1_1_,
+        parts1_.productName as productN3_1_3_,
+        parts1_.name as name0_3_,
+        parts1_.role_ as role4_3_,
+        parts1_.name as name0_0_,
+        parts1_.description as descript2_0_0_ 
+    from
+        t_product product0_ 
+    left outer join
+        t_part parts1_ 
+            on product0_.name=parts1_.productName 
+    where
+        product0_.name=?
+14:11:55,268 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,269 DEBUG SQL:104 - 
+    delete 
+    from
+        t_product 
+    where
+        name=?
+14:11:55,269  INFO CustomRunner:139 - Test: testOrphanDeleteOnDelete
+14:11:55,271 DEBUG SQL:104 - 
+    insert 
+    into
+        t_product
+        (name) 
+    values
+        (?)
+14:11:55,271 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,292 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,292 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,292 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,293 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,309 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,310 DEBUG SQL:104 - 
+    delete 
+    from
+        t_product 
+    where
+        name=?
+14:11:55,311 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,311 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,312 DEBUG SQL:104 - 
+    select
+        product0_.name as name1_1_,
+        parts1_.productName as productN3_1_3_,
+        parts1_.name as name0_3_,
+        parts1_.role_ as role4_3_,
+        parts1_.name as name0_0_,
+        parts1_.description as descript2_0_0_ 
+    from
+        t_product product0_ 
+    left outer join
+        t_part parts1_ 
+            on product0_.name=parts1_.productName 
+    where
+        product0_.name=?
+14:11:55,349  INFO CustomRunner:139 - Test: testOrphanDeleteOnMerge
+14:11:55,351 DEBUG SQL:104 - 
+    insert 
+    into
+        t_product
+        (name) 
+    values
+        (?)
+14:11:55,351 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,352 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,352 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,369 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,370 DEBUG SQL:104 - 
+    select
+        product0_.name as name1_1_,
+        parts1_.productName as productN3_1_3_,
+        parts1_.name as name0_3_,
+        parts1_.role_ as role4_3_,
+        parts1_.name as name0_0_,
+        parts1_.description as descript2_0_0_ 
+    from
+        t_product product0_ 
+    left outer join
+        t_part parts1_ 
+            on product0_.name=parts1_.productName 
+    where
+        product0_.name=?
+14:11:55,371 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,376 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,377 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,377 DEBUG SQL:104 - 
+    select
+        product0_.name as name1_1_,
+        parts1_.productName as productN3_1_3_,
+        parts1_.name as name0_3_,
+        parts1_.role_ as role4_3_,
+        parts1_.name as name0_0_,
+        parts1_.description as descript2_0_0_ 
+    from
+        t_product product0_ 
+    left outer join
+        t_part parts1_ 
+            on product0_.name=parts1_.productName 
+    where
+        product0_.name=?
+14:11:55,389 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,390 DEBUG SQL:104 - 
+    delete 
+    from
+        t_product 
+    where
+        name=?
+14:11:55,391  INFO CustomRunner:139 - Test: testOrphanDeleteOnSaveOrUpdate
+14:11:55,393 DEBUG SQL:104 - 
+    insert 
+    into
+        t_product
+        (name) 
+    values
+        (?)
+14:11:55,393 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,393 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,394 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,394 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,394 DEBUG SQL:104 - 
+    select
+        product_.name 
+    from
+        t_product product_ 
+    where
+        product_.name=?
+14:11:55,395 DEBUG SQL:104 - 
+    select
+        part_.name,
+        part_.description as descript2_0_ 
+    from
+        t_part part_ 
+    where
+        part_.name=?
+14:11:55,420 DEBUG SQL:104 - 
+    select
+        part_.name,
+        part_.description as descript2_0_ 
+    from
+        t_part part_ 
+    where
+        part_.name=?
+14:11:55,421 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,422 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,422 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,457 DEBUG SQL:104 - 
+    select
+        product0_.name as name1_1_,
+        parts1_.productName as productN3_1_3_,
+        parts1_.name as name0_3_,
+        parts1_.role_ as role4_3_,
+        parts1_.name as name0_0_,
+        parts1_.description as descript2_0_0_ 
+    from
+        t_product product0_ 
+    left outer join
+        t_part parts1_ 
+            on product0_.name=parts1_.productName 
+    where
+        product0_.name=?
+14:11:55,461 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,462 DEBUG SQL:104 - 
+    delete 
+    from
+        t_product 
+    where
+        name=?
+14:11:55,462  INFO CustomRunner:139 - Test: testOrphanDeleteOnSaveOrUpdateAfterSerialization
+14:11:55,466 DEBUG SQL:104 - 
+    insert 
+    into
+        t_product
+        (name) 
+    values
+        (?)
+14:11:55,466 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,496 DEBUG SQL:104 - 
+    insert 
+    into
+        t_part
+        (description, productName, role_, name) 
+    values
+        (?, ?, ?, ?)
+14:11:55,497 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,497 DEBUG SQL:104 - 
+    update
+        t_part 
+    set
+        productName=?,
+        role_=? 
+    where
+        name=?
+14:11:55,504 DEBUG SQL:104 - 
+    select
+        product_.name 
+    from
+        t_product product_ 
+    where
+        product_.name=?
+14:11:55,521 DEBUG SQL:104 - 
+    select
+        part_.name,
+        part_.description as descript2_0_ 
+    from
+        t_part part_ 
+    where
+        part_.name=?
+14:11:55,521 DEBUG SQL:104 - 
+    select
+        part_.name,
+        part_.description as descript2_0_ 
+    from
+        t_part part_ 
+    where
+        part_.name=?
+14:11:55,522 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,522 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,532 DEBUG SQL:104 - 
+    select
+        part0_.name as name0_0_,
+        part0_.description as descript2_0_0_ 
+    from
+        t_part part0_ 
+    where
+        part0_.name=?
+14:11:55,532 DEBUG SQL:104 - 
+    select
+        product0_.name as name1_1_,
+        parts1_.productName as productN3_1_3_,
+        parts1_.name as name0_3_,
+        parts1_.role_ as role4_3_,
+        parts1_.name as name0_0_,
+        parts1_.description as descript2_0_0_ 
+    from
+        t_product product0_ 
+    left outer join
+        t_part parts1_ 
+            on product0_.name=parts1_.productName 
+    where
+        product0_.name=?
+14:11:55,534 DEBUG SQL:104 - 
+    delete 
+    from
+        t_part 
+    where
+        name=?
+14:11:55,561 DEBUG SQL:104 - 
+    delete 
+    from
+        t_product 
+    where
+        name=?
+14:11:55,562  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:55,563 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:55,563 DEBUG SQL:104 - 
+    alter table t_part 
+        drop constraint FKCB6144DEECB8C8FD
+14:11:55,564 DEBUG SQL:104 - 
+    drop table t_part if exists
+14:11:55,565 DEBUG SQL:104 - 
+    drop table t_product if exists
+14:11:55,565  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:55,565  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

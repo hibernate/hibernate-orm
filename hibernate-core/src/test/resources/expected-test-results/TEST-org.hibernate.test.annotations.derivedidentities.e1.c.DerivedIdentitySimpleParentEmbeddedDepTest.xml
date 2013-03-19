@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.derivedidentities.e1.c.DerivedIdentitySimpleParentEmbeddedDepTest" tests="1" time="0.062" timestamp="2013-02-28T20:10:20">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.derivedidentities.e1.c.DerivedIdentitySimpleParentEmbeddedDepTest" name="testManyToOne" time="0.033" />
+  <system-out><![CDATA[14:10:20,731  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.derivedidentities.e1.c.DerivedIdentitySimpleParentEmbeddedDepTest
+14:10:20,735  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.derivedidentities.e1.c.Dependent
+14:10:20,736  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.derivedidentities.e1.c.Dependent
+14:10:20,736  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:20,736  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:20,736  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:20,737  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:20,737  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:20,738  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:20,739  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:20,739  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:20,739  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:20,740  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:20,750  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:20,750 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:20,751 DEBUG SQL:104 - 
+    alter table Dependent 
+        drop constraint FK3554AADF30C77C32
+14:10:20,751 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Dependent drop constraint FK3554AADF30C77C32
+14:10:20,751 ERROR SchemaExport:426 - Table "DEPENDENT" not found; SQL statement:
+
+    alter table Dependent 
+        drop constraint FK3554AADF30C77C32 [42102-145]
+14:10:20,751 DEBUG SQL:104 - 
+    drop table Dependent if exists
+14:10:20,751 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:10:20,751 DEBUG SQL:104 - 
+    create table Dependent (
+        name varchar(255) not null,
+        emp_empId bigint not null,
+        primary key (name, emp_empId)
+    )
+14:10:20,752 DEBUG SQL:104 - 
+    create table Employee (
+        empId bigint not null,
+        empName varchar(255),
+        primary key (empId)
+    )
+14:10:20,752 DEBUG SQL:104 - 
+    alter table Dependent 
+        add constraint FK3554AADF30C77C32 
+        foreign key (emp_empId) 
+        references Employee
+14:10:20,753  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:20,754  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:20,754  INFO CustomRunner:139 - Test: testManyToOne
+14:10:20,757 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (empName, empId) 
+    values
+        (?, ?)
+14:10:20,758 DEBUG SQL:104 - 
+    insert 
+    into
+        Dependent
+        (name, emp_empId) 
+    values
+        (?, ?)
+14:10:20,759 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.derivedidentities.e1.c.Dependent d where d.name = :name and d.emp.empId = :empId
+14:10:20,760 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  |  |  \-[IDENT] Node: 'derivedidentities'
+    |        |  |  |  \-[IDENT] Node: 'e1'
+    |        |  |  \-[IDENT] Node: 'c'
+    |        |  \-[IDENT] Node: 'Dependent'
+    |        \-[ALIAS] Node: 'd'
+    \-[WHERE] Node: 'where'
+       \-[AND] Node: 'and'
+          +-[EQ] Node: '='
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'd'
+          |  |  \-[IDENT] Node: 'name'
+          |  \-[COLON] Node: ':'
+          |     \-[IDENT] Node: 'name'
+          \-[EQ] Node: '='
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[IDENT] Node: 'd'
+             |  |  \-[IDENT] Node: 'emp'
+             |  \-[IDENT] Node: 'empId'
+             \-[COLON] Node: ':'
+                \-[IDENT] Node: 'empId'
+
+14:10:20,766 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,767 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.derivedidentities.e1.c.Dependent (d) -> dependent0_
+14:10:20,767 DEBUG FromReferenceNode:74 - Resolved : d -> (dependent0_.name, dependent0_.emp_empId)
+14:10:20,767 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:10:20,767 DEBUG FromReferenceNode:74 - Resolved : d.name -> dependent0_.name
+14:10:20,767 DEBUG FromReferenceNode:74 - Resolved : d -> (dependent0_.name, dependent0_.emp_empId)
+14:10:20,767 DEBUG DotNode:599 - getDataType() : emp -> org.hibernate.type.ManyToOneType(org.hibernate.test.annotations.derivedidentities.e1.c.Employee)
+14:10:20,767 DEBUG DotNode:562 - dereferenceShortcut() : property empId in org.hibernate.test.annotations.derivedidentities.e1.c.Dependent does not require a join.
+14:10:20,768 DEBUG DotNode:585 - Unresolved property path is now 'emp.empId'
+14:10:20,768 DEBUG FromReferenceNode:74 - Resolved : d.emp -> dependent0_.emp_empId
+14:10:20,768 DEBUG DotNode:599 - getDataType() : emp.empId -> org.hibernate.type.LongType@4bf3f9d
+14:10:20,768 DEBUG FromReferenceNode:74 - Resolved : d.emp.empId -> dependent0_.emp_empId
+14:10:20,768 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Dependent dependent0_ ) ( where ( and ( = ( dependent0_.name (dependent0_.name, dependent0_.emp_empId) name ) ? ) ( = ( dependent0_.emp_empId ( dependent0_.emp_empId (dependent0_.name, dependent0_.emp_empId) emp ) empId ) ? ) ) ) )
+14:10:20,768 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:20,768 DEBUG JoinProcessor:175 - Using FROM fragment [Dependent dependent0_]
+14:10:20,769 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Dependent)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'dependent0_.name as name0_, dependent0_.emp_empId as emp2_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=Dependent,tableAlias=dependent0_,origin=null,columns={,className=org.hibernate.test.annotations.derivedidentities.e1.c.Dependent}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[d], fromElementByTableAlias=[dependent0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Dependent dependent0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=d,role=null,tableName=Dependent,tableAlias=dependent0_,origin=null,columns={,className=org.hibernate.test.annotations.derivedidentities.e1.c.Dependent}}
+    \-[WHERE] SqlNode: 'where'
+       \-[AND] SqlNode: 'and'
+          +-[EQ] BinaryLogicOperatorNode: '='
+          |  +-[DOT] DotNode: 'dependent0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=d.name,tableAlias=dependent0_,className=org.hibernate.test.annotations.derivedidentities.e1.c.Dependent,classAlias=d}
+          |  |  +-[ALIAS_REF] IdentNode: '(dependent0_.name, dependent0_.emp_empId)' {alias=d, className=org.hibernate.test.annotations.derivedidentities.e1.c.Dependent, tableAlias=dependent0_}
+          |  |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          |  \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+          \-[EQ] BinaryLogicOperatorNode: '='
+             +-[DOT] DotNode: 'dependent0_.emp_empId' {propertyName=empId,dereferenceType=ALL,propertyPath=emp.empId,path=d.emp.empId,tableAlias=dependent0_,className=org.hibernate.test.annotations.derivedidentities.e1.c.Dependent,classAlias=d}
+             |  +-[DOT] DotNode: 'dependent0_.emp_empId' {propertyName=empId,dereferenceType=0,propertyPath=emp.empId,path=d.emp,tableAlias=dependent0_,className=org.hibernate.test.annotations.derivedidentities.e1.c.Dependent,classAlias=d}
+             |  |  +-[ALIAS_REF] IdentNode: '(dependent0_.name, dependent0_.emp_empId)' {alias=d, className=org.hibernate.test.annotations.derivedidentities.e1.c.Dependent, tableAlias=dependent0_}
+             |  |  \-[IDENT] IdentNode: 'emp' {originalText=emp}
+             |  \-[IDENT] IdentNode: 'empId' {originalText=empId}
+             \-[NAMED_PARAM] ParameterNode: '?' {name=empId, expectedType=org.hibernate.type.LongType@4bf3f9d}
+
+14:10:20,776 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,777 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.derivedidentities.e1.c.Dependent d where d.name = :name and d.emp.empId = :empId
+14:10:20,777 DEBUG QueryTranslatorImpl:236 - SQL: select dependent0_.name as name0_, dependent0_.emp_empId as emp2_0_ from Dependent dependent0_ where dependent0_.name=? and dependent0_.emp_empId=?
+14:10:20,777 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,777 DEBUG SQL:104 - 
+    select
+        dependent0_.name as name0_,
+        dependent0_.emp_empId as emp2_0_ 
+    from
+        Dependent dependent0_ 
+    where
+        dependent0_.name=? 
+        and dependent0_.emp_empId=?
+14:10:20,778 DEBUG SQL:104 - 
+    select
+        employee0_.empId as empId1_0_,
+        employee0_.empName as empName1_0_ 
+    from
+        Employee employee0_ 
+    where
+        employee0_.empId=?
+14:10:20,788  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:20,789 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:20,789 DEBUG SQL:104 - 
+    alter table Dependent 
+        drop constraint FK3554AADF30C77C32
+14:10:20,790 DEBUG SQL:104 - 
+    drop table Dependent if exists
+14:10:20,790 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:10:20,790  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:20,791  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

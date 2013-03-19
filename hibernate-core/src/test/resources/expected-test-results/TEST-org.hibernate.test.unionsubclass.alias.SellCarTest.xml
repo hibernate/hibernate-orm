@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.unionsubclass.alias.SellCarTest" tests="1" time="0.149" timestamp="2013-02-28T20:19:28">
+  <properties />
+  <testcase classname="org.hibernate.test.unionsubclass.alias.SellCarTest" name="testSellCar" time="0.018" />
+  <system-out><![CDATA[14:19:29,013  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.unionsubclass.alias.SellCarTest
+14:19:29,015  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/unionsubclass/alias/mapping.hbm.xml
+14:19:29,042  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:29,042  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:29,043  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:29,043  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:29,043  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:29,044  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:29,044  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:29,045  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:29,045  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:29,045  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:29,073  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:29,074 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:29,074 DEBUG SQL:104 - 
+    alter table CarBuyer 
+        drop constraint FK18CBA5FA54A6DB2
+14:19:29,074 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CarBuyer drop constraint FK18CBA5FA54A6DB2
+14:19:29,074 ERROR SchemaExport:426 - Table "CARBUYER" not found; SQL statement:
+
+    alter table CarBuyer 
+        drop constraint FK18CBA5FA54A6DB2 [42102-145]
+14:19:29,075 DEBUG SQL:104 - 
+    drop table CarBuyer if exists
+14:19:29,075 DEBUG SQL:104 - 
+    drop table Seller if exists
+14:19:29,075 DEBUG SQL:104 - 
+    create table CarBuyer (
+        NR_RZBK bigint not null,
+        TXT_OID varchar(255) not null,
+        PID varchar(255),
+        TXT_OID_TESTB varchar(255),
+        primary key (NR_RZBK, TXT_OID)
+    )
+14:19:29,075 DEBUG SQL:104 - 
+    create table Seller (
+        NR_RZBK bigint not null,
+        TXT_OID varchar(255) not null,
+        primary key (NR_RZBK, TXT_OID)
+    )
+14:19:29,076 DEBUG SQL:104 - 
+    alter table CarBuyer 
+        add constraint FK18CBA5FA54A6DB2 
+        foreign key (NR_RZBK, TXT_OID_TESTB) 
+        references Seller
+14:19:29,076  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:29,076  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:29,077  INFO CustomRunner:139 - Test: testSellCar
+14:19:29,078 DEBUG SQL:104 - 
+    select
+        carbuyer_.NR_RZBK,
+        carbuyer_.TXT_OID,
+        carbuyer_.TXT_OID_TESTB as TXT2_0_ 
+    from
+        CarBuyer carbuyer_ 
+    where
+        carbuyer_.NR_RZBK=? 
+        and carbuyer_.TXT_OID=?
+14:19:29,079 DEBUG SQL:104 - 
+    insert 
+    into
+        Seller
+        (NR_RZBK, TXT_OID) 
+    values
+        (?, ?)
+14:19:29,080 DEBUG SQL:104 - 
+    insert 
+    into
+        CarBuyer
+        (PID, TXT_OID_TESTB, NR_RZBK, TXT_OID) 
+    values
+        (?, ?, ?, ?)
+14:19:29,080 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.unionsubclass.alias.Seller
+14:19:29,091 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'unionsubclass'
+                |  \-[IDENT] Node: 'alias'
+                \-[IDENT] Node: 'Seller'
+
+14:19:29,092 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,092 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.unionsubclass.alias.Seller (<no alias>) -> seller0_
+14:19:29,092 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Seller seller0_ ) )
+14:19:29,092 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:29,092 DEBUG JoinProcessor:175 - Using FROM fragment [Seller seller0_]
+14:19:29,093 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Seller)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'seller0_.NR_RZBK as NR1_2_, seller0_.TXT_OID as TXT2_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Seller,tableAlias=seller0_,origin=null,columns={,className=org.hibernate.test.unionsubclass.alias.Seller}}}
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[seller0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Seller seller0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Seller,tableAlias=seller0_,origin=null,columns={,className=org.hibernate.test.unionsubclass.alias.Seller}}
+
+14:19:29,093 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,093 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.unionsubclass.alias.Seller
+14:19:29,093 DEBUG QueryTranslatorImpl:236 - SQL: select seller0_.NR_RZBK as NR1_2_, seller0_.TXT_OID as TXT2_2_ from Seller seller0_
+14:19:29,093 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:29,093 DEBUG SQL:104 - 
+    select
+        seller0_.NR_RZBK as NR1_2_,
+        seller0_.TXT_OID as TXT2_2_ 
+    from
+        Seller seller0_
+14:19:29,094 DEBUG SQL:104 - 
+    select
+        buyers0_.NR_RZBK as NR1_2_1_,
+        buyers0_.TXT_OID_TESTB as TXT2_2_1_,
+        buyers0_.NR_RZBK as NR1_0_1_,
+        buyers0_.TXT_OID as TXT2_0_1_,
+        buyers0_.NR_RZBK as NR1_1_0_,
+        buyers0_.TXT_OID as TXT2_1_0_,
+        buyers0_.PID as PID0_0_,
+        buyers0_.TXT_OID_TESTB as TXT2_0_0_,
+        buyers0_.NR_RZBK as NR1_0_0_ 
+    from
+        CarBuyer buyers0_ 
+    where
+        buyers0_.NR_RZBK=? 
+        and buyers0_.TXT_OID_TESTB=?
+14:19:29,096  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:29,096 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:29,097 DEBUG SQL:104 - 
+    alter table CarBuyer 
+        drop constraint FK18CBA5FA54A6DB2
+14:19:29,097 DEBUG SQL:104 - 
+    drop table CarBuyer if exists
+14:19:29,097 DEBUG SQL:104 - 
+    drop table Seller if exists
+14:19:29,097  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:29,097  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

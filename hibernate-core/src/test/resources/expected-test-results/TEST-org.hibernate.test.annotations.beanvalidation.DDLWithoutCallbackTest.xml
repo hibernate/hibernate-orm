@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.beanvalidation.DDLWithoutCallbackTest" tests="4" time="0.158" timestamp="2013-02-28T20:10:10">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.beanvalidation.DDLWithoutCallbackTest" name="testDDLEnabled" time="0.0" />
+  <testcase classname="org.hibernate.test.annotations.beanvalidation.DDLWithoutCallbackTest" name="testListeners" time="0.031" />
+  <testcase classname="org.hibernate.test.annotations.beanvalidation.DDLWithoutCallbackTest" name="testMinAndMaxChecksGetApplied" time="0.034" />
+  <testcase classname="org.hibernate.test.annotations.beanvalidation.DDLWithoutCallbackTest" name="testRangeChecksGetApplied" time="0.017" />
+  <system-out><![CDATA[14:10:10,227  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.beanvalidation.DDLWithoutCallbackTest
+14:10:10,245  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:10,246  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:10,246  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:10,246  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:10,246  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:10,248  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:10,250  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:10,251  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:10,251  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:10,252  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:10,278  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:10,279 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:10,279 DEBUG SQL:104 - 
+    drop table Address if exists
+14:10:10,279 DEBUG SQL:104 - 
+    drop table CupHolder if exists
+14:10:10,279 DEBUG SQL:104 - 
+    drop table MinMax if exists
+14:10:10,279 DEBUG SQL:104 - 
+    drop table Range if exists
+14:10:10,279 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:10,280 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:10,280 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:10,280 DEBUG SQL:104 - 
+    create table Address (
+        id bigint not null check (id>=1 AND id<=2000),
+        country varchar(20) not null,
+        line1 varchar(255) not null,
+        line2 varchar(255),
+        state varchar(3) not null,
+        zip varchar(5) not null,
+        primary key (id)
+    )
+14:10:10,281 DEBUG SQL:104 - 
+    create table CupHolder (
+        id integer not null,
+        radius decimal(19,2) check (radius<=10),
+        primary key (id)
+    )
+14:10:10,281 DEBUG SQL:104 - 
+    create table MinMax (
+        id bigint not null,
+        "value" integer check ("value"<=10 AND "value">=2),
+        primary key (id)
+    )
+14:10:10,282 DEBUG SQL:104 - 
+    create table Range (
+        id bigint not null,
+        "value" integer check ("value"<=10 AND "value">=2),
+        primary key (id)
+    )
+14:10:10,282 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:10,282  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:10,284  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:10,285  INFO CustomRunner:139 - Test: testDDLEnabled
+14:10:10,290  INFO CustomRunner:139 - Test: testListeners
+14:10:10,291 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,309 DEBUG SQL:104 - 
+    insert 
+    into
+        CupHolder
+        (radius, id) 
+    values
+        (?, ?)
+14:10:10,310  WARN SqlExceptionHelper:143 - SQL Error: 23000, SQLState: 23000
+14:10:10,310 ERROR SqlExceptionHelper:144 - Check constraint violation: "(RADIUS <= 10)"; SQL statement:
+insert into CupHolder (radius, id) values (?, ?) [23000-145]
+14:10:10,310  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:10,322  INFO CustomRunner:139 - Test: testMinAndMaxChecksGetApplied
+14:10:10,323 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,324 DEBUG SQL:104 - 
+    insert 
+    into
+        MinMax
+        ("value", id) 
+    values
+        (?, ?)
+14:10:10,324  WARN SqlExceptionHelper:143 - SQL Error: 23000, SQLState: 23000
+14:10:10,324 ERROR SqlExceptionHelper:144 - Check constraint violation: "((""value"" <= 10) AND (""value"" >= 2))"; SQL statement:
+insert into MinMax ("value", id) values (?, ?) [23000-145]
+14:10:10,324  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:10,325 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,325 DEBUG SQL:104 - 
+    insert 
+    into
+        MinMax
+        ("value", id) 
+    values
+        (?, ?)
+14:10:10,326  WARN SqlExceptionHelper:143 - SQL Error: 23000, SQLState: 23000
+14:10:10,326 ERROR SqlExceptionHelper:144 - Check constraint violation: "((""value"" <= 10) AND (""value"" >= 2))"; SQL statement:
+insert into MinMax ("value", id) values (?, ?) [23000-145]
+14:10:10,326  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:10,326 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,327 DEBUG SQL:104 - 
+    insert 
+    into
+        MinMax
+        ("value", id) 
+    values
+        (?, ?)
+14:10:10,356  INFO CustomRunner:139 - Test: testRangeChecksGetApplied
+14:10:10,369 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,370 DEBUG SQL:104 - 
+    insert 
+    into
+        Range
+        ("value", id) 
+    values
+        (?, ?)
+14:10:10,370  WARN SqlExceptionHelper:143 - SQL Error: 23000, SQLState: 23000
+14:10:10,370 ERROR SqlExceptionHelper:144 - Check constraint violation: "((""value"" <= 10) AND (""value"" >= 2))"; SQL statement:
+insert into Range ("value", id) values (?, ?) [23000-145]
+14:10:10,371  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:10,371 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,372 DEBUG SQL:104 - 
+    insert 
+    into
+        Range
+        ("value", id) 
+    values
+        (?, ?)
+14:10:10,372  WARN SqlExceptionHelper:143 - SQL Error: 23000, SQLState: 23000
+14:10:10,372 ERROR SqlExceptionHelper:144 - Check constraint violation: "((""value"" <= 10) AND (""value"" >= 2))"; SQL statement:
+insert into Range ("value", id) values (?, ?) [23000-145]
+14:10:10,372  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:10,372 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,373 DEBUG SQL:104 - 
+    insert 
+    into
+        Range
+        ("value", id) 
+    values
+        (?, ?)
+14:10:10,374  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:10,375 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:10,376 DEBUG SQL:104 - 
+    drop table Address if exists
+14:10:10,377 DEBUG SQL:104 - 
+    drop table CupHolder if exists
+14:10:10,380 DEBUG SQL:104 - 
+    drop table MinMax if exists
+14:10:10,381 DEBUG SQL:104 - 
+    drop table Range if exists
+14:10:10,381 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:10,382  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:10,382  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

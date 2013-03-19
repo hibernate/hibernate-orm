@@ -1,0 +1,3121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.hql.WithClauseTest" tests="3" time="1.669" timestamp="2013-02-28T20:13:57">
+  <properties />
+  <testcase classname="org.hibernate.test.hql.WithClauseTest" name="testInvalidWithSemantics" time="0.273" />
+  <testcase classname="org.hibernate.test.hql.WithClauseTest" name="testWithClause" time="0.755" />
+  <testcase classname="org.hibernate.test.hql.WithClauseTest" name="testWithClauseFailsWithFetch" time="0.19" />
+  <system-out><![CDATA[14:13:57,070  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.hql.WithClauseTest
+14:13:57,113  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/Animal.hbm.xml
+14:13:57,381  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:13:57,382  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:13:57,382  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:13:57,382  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:13:57,382  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:13:57,383  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:13:57,383  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:13:57,384  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:13:57,384  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:13:57,384  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:13:57,414  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:13:57,415 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:13:57,415 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4
+14:13:57,415 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C1F3964B4
+14:13:57,415 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4 [42102-145]
+14:13:57,415 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B
+14:13:57,416 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C6309E77B
+14:13:57,416 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B [42102-145]
+14:13:57,416 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79
+14:13:57,416 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C4B485C79
+14:13:57,416 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79 [42102-145]
+14:13:57,416 DEBUG SQL:104 - 
+    alter table Cat 
+        drop constraint FK107B66D384BBA
+14:13:57,416 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Cat drop constraint FK107B66D384BBA
+14:13:57,417 ERROR SchemaExport:426 - Table "CAT" not found; SQL statement:
+
+    alter table Cat 
+        drop constraint FK107B66D384BBA [42102-145]
+14:13:57,417 DEBUG SQL:104 - 
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA
+14:13:57,417 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Dog drop constraint FK10D1C6D384BBA
+14:13:57,417 ERROR SchemaExport:426 - Table "DOG" not found; SQL statement:
+
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA [42102-145]
+14:13:57,417 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F
+14:13:57,417 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DomesticAnimal drop constraint FKE02638DA1733655F
+14:13:57,417 ERROR SchemaExport:426 - Table "DOMESTICANIMAL" not found; SQL statement:
+
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F [42102-145]
+14:13:57,418 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F
+14:13:57,418 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DomesticAnimal drop constraint FKE02638DA6C03411F
+14:13:57,418 ERROR SchemaExport:426 - Table "DOMESTICANIMAL" not found; SQL statement:
+
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F [42102-145]
+14:13:57,418 DEBUG SQL:104 - 
+    alter table Human 
+        drop constraint FK42D710D1733655F
+14:13:57,418 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human drop constraint FK42D710D1733655F
+14:13:57,418 ERROR SchemaExport:426 - Table "HUMAN" not found; SQL statement:
+
+    alter table Human 
+        drop constraint FK42D710D1733655F [42102-145]
+14:13:57,418 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311
+14:13:57,419 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_family drop constraint FK5F790ED61DCB1311
+14:13:57,419 ERROR SchemaExport:426 - Table "HUMAN_FAMILY" not found; SQL statement:
+
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311 [42102-145]
+14:13:57,419 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310
+14:13:57,419 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_family drop constraint FK5F790ED61DCB1310
+14:13:57,419 ERROR SchemaExport:426 - Table "HUMAN_FAMILY" not found; SQL statement:
+
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310 [42102-145]
+14:13:57,419 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311
+14:13:57,419 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_friends drop constraint FKAC7104631DCB1311
+14:13:57,419 ERROR SchemaExport:426 - Table "HUMAN_FRIENDS" not found; SQL statement:
+
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311 [42102-145]
+14:13:57,420 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310
+14:13:57,420 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_friends drop constraint FKAC7104631DCB1310
+14:13:57,420 ERROR SchemaExport:426 - Table "HUMAN_FRIENDS" not found; SQL statement:
+
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310 [42102-145]
+14:13:57,420 DEBUG SQL:104 - 
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13
+14:13:57,420 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table JOINED drop constraint FK82C23B49534E0F13
+14:13:57,420 ERROR SchemaExport:426 - Table "JOINED" not found; SQL statement:
+
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13 [42102-145]
+14:13:57,420 DEBUG SQL:104 - 
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315
+14:13:57,421 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Lizard drop constraint FK87B0E2B6EE398315
+14:13:57,421 ERROR SchemaExport:426 - Table "LIZARD" not found; SQL statement:
+
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315 [42102-145]
+14:13:57,421 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699
+14:13:57,421 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Mammal drop constraint FK88EF417FEFA9D699
+14:13:57,421 ERROR SchemaExport:426 - Table "MAMMAL" not found; SQL statement:
+
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699 [42102-145]
+14:13:57,421 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98
+14:13:57,421 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Mammal drop constraint FK88EF417FCE6EEE98
+14:13:57,422 ERROR SchemaExport:426 - Table "MAMMAL" not found; SQL statement:
+
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98 [42102-145]
+14:13:57,422 DEBUG SQL:104 - 
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699
+14:13:57,422 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Reptile drop constraint FKA4790CABEFA9D699
+14:13:57,422 ERROR SchemaExport:426 - Table "REPTILE" not found; SQL statement:
+
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699 [42102-145]
+14:13:57,422 DEBUG SQL:104 - 
+    alter table Zoo 
+        drop constraint FK15FBA55106523
+14:13:57,422 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo drop constraint FK15FBA55106523
+14:13:57,422 ERROR SchemaExport:426 - Table "ZOO" not found; SQL statement:
+
+    alter table Zoo 
+        drop constraint FK15FBA55106523 [42102-145]
+14:13:57,422 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719
+14:13:57,423 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo_directors drop constraint FK2D21982265B0D719
+14:13:57,423 ERROR SchemaExport:426 - Table "ZOO_DIRECTORS" not found; SQL statement:
+
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719 [42102-145]
+14:13:57,423 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705
+14:13:57,423 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo_directors drop constraint FK2D219822C590D705
+14:13:57,423 ERROR SchemaExport:426 - Table "ZOO_DIRECTORS" not found; SQL statement:
+
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705 [42102-145]
+14:13:57,423 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2
+14:13:57,423 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "User_permissions" drop constraint FKB4582A30F2810CD2
+14:13:57,424 ERROR SchemaExport:426 - Table "User_permissions" not found; SQL statement:
+
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2 [42102-145]
+14:13:57,424 DEBUG SQL:104 - 
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87
+14:13:57,424 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "User" drop constraint FK285FEB65AF5B87
+14:13:57,424 ERROR SchemaExport:426 - Table "User" not found; SQL statement:
+
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87 [42102-145]
+14:13:57,424 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA255106523
+14:13:57,424 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table addresses drop constraint FK34207BA255106523
+14:13:57,424 ERROR SchemaExport:426 - Table "ADDRESSES" not found; SQL statement:
+
+    alter table addresses 
+        drop constraint FK34207BA255106523 [42102-145]
+14:13:57,425 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99
+14:13:57,425 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table addresses drop constraint FK34207BA26B9FAF99
+14:13:57,425 ERROR SchemaExport:426 - Table "ADDRESSES" not found; SQL statement:
+
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99 [42102-145]
+14:13:57,425 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99
+14:13:57,425 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table human_nick_names drop constraint FK8718E1BE6B9FAF99
+14:13:57,425 ERROR SchemaExport:426 - Table "HUMAN_NICK_NAMES" not found; SQL statement:
+
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99 [42102-145]
+14:13:57,425 DEBUG SQL:104 - 
+    drop table Animal if exists
+14:13:57,426 DEBUG SQL:104 - 
+    drop table Cat if exists
+14:13:57,426 DEBUG SQL:104 - 
+    drop table Dog if exists
+14:13:57,426 DEBUG SQL:104 - 
+    drop table DomesticAnimal if exists
+14:13:57,426 DEBUG SQL:104 - 
+    drop table Human if exists
+14:13:57,426 DEBUG SQL:104 - 
+    drop table Human_family if exists
+14:13:57,426 DEBUG SQL:104 - 
+    drop table Human_friends if exists
+14:13:57,426 DEBUG SQL:104 - 
+    drop table JOINED if exists
+14:13:57,426 DEBUG SQL:104 - 
+    drop table Joiner if exists
+14:13:57,427 DEBUG SQL:104 - 
+    drop table Lizard if exists
+14:13:57,427 DEBUG SQL:104 - 
+    drop table Mammal if exists
+14:13:57,427 DEBUG SQL:104 - 
+    drop table Reptile if exists
+14:13:57,427 DEBUG SQL:104 - 
+    drop table StateProvince if exists
+14:13:57,427 DEBUG SQL:104 - 
+    drop table Zoo if exists
+14:13:57,427 DEBUG SQL:104 - 
+    drop table Zoo_directors if exists
+14:13:57,427 DEBUG SQL:104 - 
+    drop table "User_permissions" if exists
+14:13:57,428 DEBUG SQL:104 - 
+    drop table "User" if exists
+14:13:57,428 DEBUG SQL:104 - 
+    drop table addresses if exists
+14:13:57,428 DEBUG SQL:104 - 
+    drop table human_nick_names if exists
+14:13:57,428 DEBUG SQL:104 - 
+    create table Animal (
+        id bigint generated by default as identity,
+        description varchar(255),
+        body_weight float,
+        mother_id bigint,
+        father_id bigint,
+        zoo_id bigint,
+        serialNumber varchar(255),
+        primary key (id)
+    )
+14:13:57,428 DEBUG SQL:104 - 
+    create table Cat (
+        mammal bigint not null,
+        primary key (mammal)
+    )
+14:13:57,429 DEBUG SQL:104 - 
+    create table Dog (
+        mammal bigint not null,
+        primary key (mammal)
+    )
+14:13:57,429 DEBUG SQL:104 - 
+    create table DomesticAnimal (
+        mammal bigint not null,
+        owner bigint,
+        primary key (mammal)
+    )
+14:13:57,429 DEBUG SQL:104 - 
+    create table Human (
+        mammal bigint not null,
+        name_first varchar(255),
+        name_initial char(255),
+        name_last varchar(255),
+        nickName varchar(255),
+        height_centimeters double not null,
+        intValue integer,
+        floatValue float,
+        bigDecimalValue decimal(19,2),
+        bigIntegerValue decimal(19,2),
+        primary key (mammal)
+    )
+14:13:57,430 DEBUG SQL:104 - 
+    create table Human_family (
+        human1 bigint not null,
+        human2 bigint not null,
+        relationship varchar(255) not null,
+        primary key (human1, relationship)
+    )
+14:13:57,430 DEBUG SQL:104 - 
+    create table Human_friends (
+        human1 bigint not null,
+        human2 bigint not null
+    )
+14:13:57,430 DEBUG SQL:104 - 
+    create table JOINED (
+        ID bigint not null,
+        joinedName varchar(255),
+        primary key (ID)
+    )
+14:13:57,430 DEBUG SQL:104 - 
+    create table Joiner (
+        id bigint generated by default as identity,
+        name varchar(255),
+        primary key (id)
+    )
+14:13:57,430 DEBUG SQL:104 - 
+    create table Lizard (
+        reptile bigint not null,
+        primary key (reptile)
+    )
+14:13:57,431 DEBUG SQL:104 - 
+    create table Mammal (
+        animal bigint not null,
+        pregnant boolean,
+        birthdate date,
+        mammalZoo_id bigint,
+        name varchar(255),
+        primary key (animal)
+    )
+14:13:57,431 DEBUG SQL:104 - 
+    create table Reptile (
+        animal bigint not null,
+        bodyTemperature float,
+        primary key (animal)
+    )
+14:13:57,431 DEBUG SQL:104 - 
+    create table StateProvince (
+        id bigint generated by default as identity,
+        name varchar(255),
+        isoCode varchar(255),
+        primary key (id)
+    )
+14:13:57,432 DEBUG SQL:104 - 
+    create table Zoo (
+        id bigint generated by default as identity,
+        zooType char(255) not null,
+        name varchar(255),
+        classification tinyint,
+        street varchar(255),
+        city varchar(255),
+        postalCode varchar(255),
+        country varchar(255),
+        state_prov_id bigint,
+        primary key (id)
+    )
+14:13:57,432 DEBUG SQL:104 - 
+    create table Zoo_directors (
+        directorZoo_id bigint not null,
+        elt bigint not null,
+        title varchar(255) not null,
+        primary key (directorZoo_id, title)
+    )
+14:13:57,432 DEBUG SQL:104 - 
+    create table "User_permissions" (
+        userId bigint not null,
+        permissionName varchar(255),
+        permissionId integer not null,
+        primary key (userId, permissionId)
+    )
+14:13:57,432 DEBUG SQL:104 - 
+    create table "User" (
+        id bigint not null,
+        userName varchar(255),
+        primary key (id)
+    )
+14:13:57,433 DEBUG SQL:104 - 
+    create table addresses (
+        human bigint not null,
+        street varchar(255),
+        city varchar(255),
+        postalCode varchar(255),
+        country varchar(255),
+        state_prov_id bigint,
+        "type" varchar(255) not null,
+        primary key (human, "type")
+    )
+14:13:57,433 DEBUG SQL:104 - 
+    create table human_nick_names (
+        human bigint not null,
+        nick_name varchar(255) not null,
+        primary key (human, nick_name)
+    )
+14:13:57,433 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C1F3964B4 
+        foreign key (mother_id) 
+        references Animal
+14:13:57,434 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C6309E77B 
+        foreign key (father_id) 
+        references Animal
+14:13:57,434 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C4B485C79 
+        foreign key (zoo_id) 
+        references Zoo
+14:13:57,435 DEBUG SQL:104 - 
+    alter table Cat 
+        add constraint FK107B66D384BBA 
+        foreign key (mammal) 
+        references DomesticAnimal
+14:13:57,435 DEBUG SQL:104 - 
+    alter table Dog 
+        add constraint FK10D1C6D384BBA 
+        foreign key (mammal) 
+        references DomesticAnimal
+14:13:57,435 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        add constraint FKE02638DA1733655F 
+        foreign key (mammal) 
+        references Mammal
+14:13:57,436 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        add constraint FKE02638DA6C03411F 
+        foreign key (owner) 
+        references Human
+14:13:57,436 DEBUG SQL:104 - 
+    alter table Human 
+        add constraint FK42D710D1733655F 
+        foreign key (mammal) 
+        references Mammal
+14:13:57,436 DEBUG SQL:104 - 
+    alter table Human_family 
+        add constraint FK5F790ED61DCB1311 
+        foreign key (human2) 
+        references Human
+14:13:57,437 DEBUG SQL:104 - 
+    alter table Human_family 
+        add constraint FK5F790ED61DCB1310 
+        foreign key (human1) 
+        references Human
+14:13:57,437 DEBUG SQL:104 - 
+    alter table Human_friends 
+        add constraint FKAC7104631DCB1311 
+        foreign key (human2) 
+        references Human
+14:13:57,437 DEBUG SQL:104 - 
+    alter table Human_friends 
+        add constraint FKAC7104631DCB1310 
+        foreign key (human1) 
+        references Human
+14:13:57,438 DEBUG SQL:104 - 
+    alter table JOINED 
+        add constraint FK82C23B49534E0F13 
+        foreign key (ID) 
+        references Joiner
+14:13:57,438 DEBUG SQL:104 - 
+    alter table Lizard 
+        add constraint FK87B0E2B6EE398315 
+        foreign key (reptile) 
+        references Reptile
+14:13:57,439 DEBUG SQL:104 - 
+    alter table Mammal 
+        add constraint FK88EF417FEFA9D699 
+        foreign key (animal) 
+        references Animal
+14:13:57,439 DEBUG SQL:104 - 
+    alter table Mammal 
+        add constraint FK88EF417FCE6EEE98 
+        foreign key (mammalZoo_id) 
+        references Zoo
+14:13:57,439 DEBUG SQL:104 - 
+    alter table Reptile 
+        add constraint FKA4790CABEFA9D699 
+        foreign key (animal) 
+        references Animal
+14:13:57,440 DEBUG SQL:104 - 
+    alter table Zoo 
+        add constraint FK15FBA55106523 
+        foreign key (state_prov_id) 
+        references StateProvince
+14:13:57,440 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        add constraint FK2D21982265B0D719 
+        foreign key (elt) 
+        references Human
+14:13:57,440 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        add constraint FK2D219822C590D705 
+        foreign key (directorZoo_id) 
+        references Zoo
+14:13:57,441 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        add constraint FKB4582A30F2810CD2 
+        foreign key (userId) 
+        references "User"
+14:13:57,441 DEBUG SQL:104 - 
+    alter table "User" 
+        add constraint FK285FEB65AF5B87 
+        foreign key (id) 
+        references Human
+14:13:57,442 DEBUG SQL:104 - 
+    alter table addresses 
+        add constraint FK34207BA255106523 
+        foreign key (state_prov_id) 
+        references StateProvince
+14:13:57,442 DEBUG SQL:104 - 
+    alter table addresses 
+        add constraint FK34207BA26B9FAF99 
+        foreign key (human) 
+        references Human
+14:13:57,442 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        add constraint FK8718E1BE6B9FAF99 
+        foreign key (human) 
+        references Human
+14:13:57,443  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:13:57,444  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:13:57,444  INFO CustomRunner:139 - Test: testInvalidWithSemantics
+14:13:57,445 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Human h inner join h.friends as f with f.bodyWeight < :someLimit
+14:13:57,448 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'hql'
+          |  |  \-[IDENT] Node: 'Human'
+          |  \-[ALIAS] Node: 'h'
+          \-[JOIN] Node: 'join'
+             +-[INNER] Node: 'inner'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'h'
+             |  \-[IDENT] Node: 'friends'
+             +-[ALIAS] Node: 'f'
+             \-[WITH] Node: 'with'
+                \-[LT] Node: '<'
+                   +-[DOT] Node: '.'
+                   |  +-[IDENT] Node: 'f'
+                   |  \-[IDENT] Node: 'bodyWeight'
+                   \-[COLON] Node: ':'
+                      \-[IDENT] Node: 'someLimit'
+
+14:13:57,448 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:57,449 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (h) -> human0_
+14:13:57,449 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:57,449 DEBUG DotNode:599 - getDataType() : friends -> org.hibernate.type.BagType(org.hibernate.test.hql.Human.friends)
+14:13:57,449 DEBUG FromElementFactory:385 - createManyToMany() : path = h.friends role = org.hibernate.test.hql.Human.friends associatedEntityName = org.hibernate.test.hql.Human
+14:13:57,449 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (f) -> human2_
+14:13:57,449 DEBUG FromClause:282 - addJoinByPathMap() : h.friends -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=null,tableName=Human,tableAlias=human2_,origin=Human human0_,columns={human0_.mammal ,className=org.hibernate.test.hql.Human}}
+14:13:57,450 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for h.friends : Human_friends human2_
+14:13:57,450 DEBUG FromReferenceNode:74 - Resolved : h.friends -> .
+14:13:57,450 DEBUG FromReferenceNode:74 - Resolved : f -> human2_.mammal
+14:13:57,450 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:57,450 DEBUG FromReferenceNode:74 - Resolved : f.bodyWeight -> human2_2_.body_weight
+14:13:57,452 DEBUG HqlSqlWalker:411 - handleWithFragment() : -- with clause --
+ \-[WITH] SqlNode: 'with'
+    \-[LT] BinaryLogicOperatorNode: '<'
+       +-[DOT] DotNode: 'human2_2_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=f.bodyWeight,tableAlias=human2_,className=org.hibernate.test.hql.Human,classAlias=f}
+       |  +-[ALIAS_REF] IdentNode: 'human2_.mammal' {alias=f, className=org.hibernate.test.hql.Human, tableAlias=human2_}
+       |  \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+       \-[NAMED_PARAM] ParameterNode: '?' {name=someLimit, expectedType=org.hibernate.type.FloatType@39fd378e}
+
+14:13:57,655 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Animal a inner join a.offspring o inner join o.mother as m inner join m.father as f with o.bodyWeight > 1
+14:13:57,658 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'hql'
+          |  |  \-[IDENT] Node: 'Animal'
+          |  \-[ALIAS] Node: 'a'
+          +-[JOIN] Node: 'join'
+          |  +-[INNER] Node: 'inner'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'a'
+          |  |  \-[IDENT] Node: 'offspring'
+          |  \-[ALIAS] Node: 'o'
+          +-[JOIN] Node: 'join'
+          |  +-[INNER] Node: 'inner'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'o'
+          |  |  \-[IDENT] Node: 'mother'
+          |  \-[ALIAS] Node: 'm'
+          \-[JOIN] Node: 'join'
+             +-[INNER] Node: 'inner'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'm'
+             |  \-[IDENT] Node: 'father'
+             +-[ALIAS] Node: 'f'
+             \-[WITH] Node: 'with'
+                \-[GT] Node: '>'
+                   +-[DOT] Node: '.'
+                   |  +-[IDENT] Node: 'o'
+                   |  \-[IDENT] Node: 'bodyWeight'
+                   \-[NUM_INT] Node: '1'
+
+14:13:57,658 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:57,658 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (a) -> animal0_
+14:13:57,659 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:57,659 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:57,659 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:57,659 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (o) -> offspring1_
+14:13:57,659 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:57,659 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:57,660 DEBUG FromReferenceNode:74 - Resolved : a.offspring -> .
+14:13:57,660 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Animal offspring1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+
+14:13:57,660 DEBUG FromReferenceNode:74 - Resolved : o -> offspring1_.id
+14:13:57,660 DEBUG DotNode:599 - getDataType() : mother -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:57,660 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for mother in org.hibernate.test.hql.Animal (m) parent = [ {null} ]
+14:13:57,660 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (m) -> animal2_
+14:13:57,661 DEBUG FromClause:282 - addJoinByPathMap() : o.mother -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Animal,tableAlias=animal2_,origin=Animal offspring1_,columns={offspring1_.mother_id ,className=org.hibernate.test.hql.Animal}}
+14:13:57,661 DEBUG FromReferenceNode:74 - Resolved : o.mother -> offspring1_.mother_id
+14:13:57,661 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Animal animal2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Animal,tableAlias=animal2_,origin=Animal offspring1_,columns={offspring1_.mother_id ,className=org.hibernate.test.hql.Animal}}
+
+14:13:57,661 DEBUG FromReferenceNode:74 - Resolved : m -> animal2_.id
+14:13:57,661 DEBUG DotNode:599 - getDataType() : father -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:57,661 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for father in org.hibernate.test.hql.Animal (f) parent = [ {null} ]
+14:13:57,662 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (f) -> animal3_
+14:13:57,662 DEBUG FromClause:282 - addJoinByPathMap() : m.father -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=null,tableName=Animal,tableAlias=animal3_,origin=Animal animal2_,columns={animal2_.father_id ,className=org.hibernate.test.hql.Animal}}
+14:13:57,662 DEBUG FromReferenceNode:74 - Resolved : m.father -> animal2_.father_id
+14:13:57,662 DEBUG FromReferenceNode:74 - Resolved : o -> offspring1_.id
+14:13:57,662 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:57,662 DEBUG FromReferenceNode:74 - Resolved : o.bodyWeight -> offspring1_.body_weight
+14:13:57,663 DEBUG HqlSqlWalker:411 - handleWithFragment() : -- with clause --
+ \-[WITH] SqlNode: 'with'
+    \-[GT] BinaryLogicOperatorNode: '>'
+       +-[DOT] DotNode: 'offspring1_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=o.bodyWeight,tableAlias=offspring1_,className=org.hibernate.test.hql.Animal,classAlias=o}
+       |  +-[ALIAS_REF] IdentNode: 'offspring1_.id' {alias=o, className=org.hibernate.test.hql.Animal, tableAlias=offspring1_}
+       |  \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+       \-[NUM_INT] LiteralNode: '1'
+
+14:13:57,663 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Human h inner join h.offspring o with o.mother.father = :cousin
+14:13:57,664 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'hql'
+          |  |  \-[IDENT] Node: 'Human'
+          |  \-[ALIAS] Node: 'h'
+          \-[JOIN] Node: 'join'
+             +-[INNER] Node: 'inner'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'h'
+             |  \-[IDENT] Node: 'offspring'
+             +-[ALIAS] Node: 'o'
+             \-[WITH] Node: 'with'
+                \-[EQ] Node: '='
+                   +-[DOT] Node: '.'
+                   |  +-[DOT] Node: '.'
+                   |  |  +-[IDENT] Node: 'o'
+                   |  |  \-[IDENT] Node: 'mother'
+                   |  \-[IDENT] Node: 'father'
+                   \-[COLON] Node: ':'
+                      \-[IDENT] Node: 'cousin'
+
+14:13:57,665 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:57,665 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (h) -> human0_
+14:13:57,665 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:57,665 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:57,665 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = h.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:57,665 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (o) -> offspring1_
+14:13:57,665 DEBUG FromClause:282 - addJoinByPathMap() : h.offspring -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=Animal,tableAlias=offspring1_,origin=Human human0_,columns={human0_.mammal ,className=org.hibernate.test.hql.Animal}}
+14:13:57,666 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for h.offspring : Animal offspring1_
+14:13:57,666 DEBUG FromReferenceNode:74 - Resolved : h.offspring -> .
+14:13:57,666 DEBUG FromReferenceNode:74 - Resolved : o -> offspring1_.id
+14:13:57,666 DEBUG DotNode:599 - getDataType() : mother -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:57,666 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for mother in org.hibernate.test.hql.Animal (<no alias>) parent = [  ( . ( . offspring1_.id mother ) father ) ]
+14:13:57,666 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> animal2_
+14:13:57,666 DEBUG FromClause:282 - addJoinByPathMap() : o.mother -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal2_,origin=Animal offspring1_,columns={offspring1_.mother_id ,className=org.hibernate.test.hql.Animal}}
+14:13:57,667 DEBUG FromReferenceNode:74 - Resolved : o.mother -> offspring1_.mother_id
+14:13:57,667 DEBUG DotNode:599 - getDataType() : father -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:57,667 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for father in org.hibernate.test.hql.Animal (<no alias>) parent = [ {null} ]
+14:13:57,667 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> animal3_
+14:13:57,667 DEBUG FromClause:282 - addJoinByPathMap() : o.mother.father -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal3_,origin=Animal animal2_,columns={animal2_.father_id ,className=org.hibernate.test.hql.Animal}}
+14:13:57,667 DEBUG FromReferenceNode:74 - Resolved : o.mother.father -> animal2_.father_id
+14:13:57,668 DEBUG HqlSqlWalker:411 - handleWithFragment() : -- with clause --
+ \-[WITH] SqlNode: 'with'
+    \-[EQ] BinaryLogicOperatorNode: '='
+       +-[DOT] DotNode: 'animal2_.father_id' {propertyName=father,dereferenceType=EOF,propertyPath=father,path=o.mother.father,tableAlias=animal3_,className=org.hibernate.test.hql.Animal,classAlias=null}
+       |  +-[DOT] DotNode: 'offspring1_.mother_id' {propertyName=mother,dereferenceType=EOF,propertyPath=mother,path=o.mother,tableAlias=animal2_,className=org.hibernate.test.hql.Animal,classAlias=null}
+       |  |  +-[ALIAS_REF] IdentNode: 'offspring1_.id' {alias=o, className=org.hibernate.test.hql.Animal, tableAlias=offspring1_}
+       |  |  \-[IDENT] IdentNode: 'mother' {originalText=mother}
+       |  \-[IDENT] IdentNode: 'father' {originalText=father}
+       \-[NAMED_PARAM] ParameterNode: '?' {name=cousin, expectedType=org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)}
+
+14:13:57,719  INFO CustomRunner:139 - Test: testWithClause
+14:13:57,833 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:57,835 DEBUG SQL:104 - 
+    insert 
+    into
+        Mammal
+        (pregnant, birthdate, animal) 
+    values
+        (?, ?, ?)
+14:13:57,835 DEBUG SQL:104 - 
+    insert 
+    into
+        Human
+        (name_first, name_initial, name_last, nickName, height_centimeters, intValue, floatValue, bigDecimalValue, bigIntegerValue, mammal) 
+    values
+        (?, ?, ?, ?, ? * 2.54E0, ?, ?, ?, ?, ?)
+14:13:57,836 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:57,836 DEBUG SQL:104 - 
+    insert 
+    into
+        Mammal
+        (pregnant, birthdate, animal) 
+    values
+        (?, ?, ?)
+14:13:57,836 DEBUG SQL:104 - 
+    insert 
+    into
+        Human
+        (name_first, name_initial, name_last, nickName, height_centimeters, intValue, floatValue, bigDecimalValue, bigIntegerValue, mammal) 
+    values
+        (?, ?, ?, ?, ? * 2.54E0, ?, ?, ?, ?, ?)
+14:13:57,836 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:57,850 DEBUG SQL:104 - 
+    insert 
+    into
+        Mammal
+        (pregnant, birthdate, animal) 
+    values
+        (?, ?, ?)
+14:13:57,851 DEBUG SQL:104 - 
+    insert 
+    into
+        Human
+        (name_first, name_initial, name_last, nickName, height_centimeters, intValue, floatValue, bigDecimalValue, bigIntegerValue, mammal) 
+    values
+        (?, ?, ?, ?, ? * 2.54E0, ?, ?, ?, ?, ?)
+14:13:57,851 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:57,852 DEBUG SQL:104 - 
+    insert 
+    into
+        Mammal
+        (pregnant, birthdate, animal) 
+    values
+        (?, ?, ?)
+14:13:57,852 DEBUG SQL:104 - 
+    insert 
+    into
+        Human
+        (name_first, name_initial, name_last, nickName, height_centimeters, intValue, floatValue, bigDecimalValue, bigIntegerValue, mammal) 
+    values
+        (?, ?, ?, ?, ? * 2.54E0, ?, ?, ?, ?, ?)
+14:13:57,852 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:57,852 DEBUG SQL:104 - 
+    insert 
+    into
+        Mammal
+        (pregnant, birthdate, animal) 
+    values
+        (?, ?, ?)
+14:13:57,852 DEBUG SQL:104 - 
+    insert 
+    into
+        Human
+        (name_first, name_initial, name_last, nickName, height_centimeters, intValue, floatValue, bigDecimalValue, bigIntegerValue, mammal) 
+    values
+        (?, ?, ?, ?, ? * 2.54E0, ?, ?, ?, ?, ?)
+14:13:57,853 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:57,853 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:57,854 DEBUG SQL:104 - 
+    insert 
+    into
+        Human_friends
+        (human1, human2) 
+    values
+        (?, ?)
+14:13:57,854 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Human h inner join h.offspring as o with o.bodyWeight < :someLimit
+14:13:57,890 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'hql'
+          |  |  \-[IDENT] Node: 'Human'
+          |  \-[ALIAS] Node: 'h'
+          \-[JOIN] Node: 'join'
+             +-[INNER] Node: 'inner'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'h'
+             |  \-[IDENT] Node: 'offspring'
+             +-[ALIAS] Node: 'o'
+             \-[WITH] Node: 'with'
+                \-[LT] Node: '<'
+                   +-[DOT] Node: '.'
+                   |  +-[IDENT] Node: 'o'
+                   |  \-[IDENT] Node: 'bodyWeight'
+                   \-[COLON] Node: ':'
+                      \-[IDENT] Node: 'someLimit'
+
+14:13:57,892 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:57,892 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (h) -> human0_
+14:13:57,893 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:57,893 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:57,893 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = h.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:57,893 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (o) -> offspring1_
+14:13:57,893 DEBUG FromClause:282 - addJoinByPathMap() : h.offspring -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=Animal,tableAlias=offspring1_,origin=Human human0_,columns={human0_.mammal ,className=org.hibernate.test.hql.Animal}}
+14:13:57,894 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for h.offspring : Animal offspring1_
+14:13:57,894 DEBUG FromReferenceNode:74 - Resolved : h.offspring -> .
+14:13:57,894 DEBUG FromReferenceNode:74 - Resolved : o -> offspring1_.id
+14:13:57,895 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:57,895 DEBUG FromReferenceNode:74 - Resolved : o.bodyWeight -> offspring1_.body_weight
+14:13:57,895 DEBUG HqlSqlWalker:411 - handleWithFragment() : -- with clause --
+ \-[WITH] SqlNode: 'with'
+    \-[LT] BinaryLogicOperatorNode: '<'
+       +-[DOT] DotNode: 'offspring1_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=o.bodyWeight,tableAlias=offspring1_,className=org.hibernate.test.hql.Animal,classAlias=o}
+       |  +-[ALIAS_REF] IdentNode: 'offspring1_.id' {alias=o, className=org.hibernate.test.hql.Animal, tableAlias=offspring1_}
+       |  \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+       \-[NAMED_PARAM] ParameterNode: '?' {name=someLimit, expectedType=org.hibernate.type.FloatType@39fd378e}
+
+14:13:57,896 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Animal offspring1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Human human0_,columns={human0_.mammal ,className=org.hibernate.test.hql.Animal}}
+
+14:13:57,896 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Human human0_ Animal offspring1_ ) ) )
+14:13:57,896 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:57,896 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:57,905 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Animal offspring1_ on human0_.mammal=offspring1_.mother_id and (offspring1_.body_weight<?) left outer join Reptile offspring1_1_ on offspring1_.id=offspring1_1_.animal left outer join Lizard offspring1_2_ on offspring1_.id=offspring1_2_.reptile left outer join Mammal offspring1_3_ on offspring1_.id=offspring1_3_.animal left outer join DomesticAnimal offspring1_4_ on offspring1_.id=offspring1_4_.mammal left outer join Cat offspring1_5_ on offspring1_.id=offspring1_5_.mammal left outer join Dog offspring1_6_ on offspring1_.id=offspring1_6_.mammal left outer join Human offspring1_7_ on offspring1_.id=offspring1_7_.mammal]
+14:13:57,906 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'offspring1_.id as id0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id,columns={human0_.mammal ,className=org.hibernate.test.hql.Animal}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'human0_2_.description as descript2_0_0_, human0_2_.body_weight as body3_0_0_, human0_2_.mother_id as mother4_0_0_, human0_2_.father_id as father5_0_0_, human0_2_.zoo_id as zoo6_0_0_, human0_2_.serialNumber as serialNu7_0_0_, human0_1_.pregnant as pregnant10_0_, human0_1_.birthdate as birthdate10_0_, human0_.name_first as name2_4_0_, human0_.name_initial as name3_4_0_, human0_.name_last as name4_4_0_, human0_.nickName as nickName4_0_, human0_.height_centimeters / 2.54E0 as height6_4_0_, human0_.intValue as intValue4_0_, human0_.floatValue as floatValue4_0_, human0_.bigDecimalValue as bigDecim9_4_0_, human0_.bigIntegerValue as bigInte10_4_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'offspring1_.description as descript2_0_1_, offspring1_.body_weight as body3_0_1_, offspring1_.mother_id as mother4_0_1_, offspring1_.father_id as father5_0_1_, offspring1_.zoo_id as zoo6_0_1_, offspring1_.serialNumber as serialNu7_0_1_, offspring1_1_.bodyTemperature as bodyTemp2_11_1_, offspring1_3_.pregnant as pregnant10_1_, offspring1_3_.birthdate as birthdate10_1_, offspring1_4_.owner as owner3_1_, offspring1_7_.name_first as name2_4_1_, offspring1_7_.name_initial as name3_4_1_, offspring1_7_.name_last as name4_4_1_, offspring1_7_.nickName as nickName4_1_, offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_, offspring1_7_.intValue as intValue4_1_, offspring1_7_.floatValue as floatValue4_1_, offspring1_7_.bigDecimalValue as bigDecim9_4_1_, offspring1_7_.bigIntegerValue as bigInte10_4_1_, case when offspring1_2_.reptile is not null then 2 when offspring1_5_.mammal is not null then 5 when offspring1_6_.mammal is not null then 6 when offspring1_4_.mammal is not null then 4 when offspring1_7_.mammal is not null then 7 when offspring1_1_.animal is not null then 1 when offspring1_3_.animal is not null then 3 when offspring1_.id is not null then 0 end as clazz_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[o, h], fromElementByTableAlias=[human0_, offspring1_], fromElementsByPath=[h.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join Animal offspring1_ on human0_.mammal=offspring1_.mother_id and (offspring1_.body_weight<?) left outer join Reptile offspring1_1_ on offspring1_.id=offspring1_1_.animal left outer join Lizard offspring1_2_ on offspring1_.id=offspring1_2_.reptile left outer join Mammal offspring1_3_ on offspring1_.id=offspring1_3_.animal left outer join DomesticAnimal offspring1_4_ on offspring1_.id=offspring1_4_.mammal left outer join Cat offspring1_5_ on offspring1_.id=offspring1_5_.mammal left outer join Dog offspring1_6_ on offspring1_.id=offspring1_6_.mammal left outer join Human offspring1_7_ on offspring1_.id=offspring1_7_.mammal' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id,columns={human0_.mammal ,className=org.hibernate.test.hql.Animal}}
+
+14:13:57,906 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:57,906 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.Human h inner join h.offspring as o with o.bodyWeight < :someLimit
+14:13:57,906 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as id0_0_, offspring1_.id as id0_1_, human0_2_.description as descript2_0_0_, human0_2_.body_weight as body3_0_0_, human0_2_.mother_id as mother4_0_0_, human0_2_.father_id as father5_0_0_, human0_2_.zoo_id as zoo6_0_0_, human0_2_.serialNumber as serialNu7_0_0_, human0_1_.pregnant as pregnant10_0_, human0_1_.birthdate as birthdate10_0_, human0_.name_first as name2_4_0_, human0_.name_initial as name3_4_0_, human0_.name_last as name4_4_0_, human0_.nickName as nickName4_0_, human0_.height_centimeters / 2.54E0 as height6_4_0_, human0_.intValue as intValue4_0_, human0_.floatValue as floatValue4_0_, human0_.bigDecimalValue as bigDecim9_4_0_, human0_.bigIntegerValue as bigInte10_4_0_, offspring1_.description as descript2_0_1_, offspring1_.body_weight as body3_0_1_, offspring1_.mother_id as mother4_0_1_, offspring1_.father_id as father5_0_1_, offspring1_.zoo_id as zoo6_0_1_, offspring1_.serialNumber as serialNu7_0_1_, offspring1_1_.bodyTemperature as bodyTemp2_11_1_, offspring1_3_.pregnant as pregnant10_1_, offspring1_3_.birthdate as birthdate10_1_, offspring1_4_.owner as owner3_1_, offspring1_7_.name_first as name2_4_1_, offspring1_7_.name_initial as name3_4_1_, offspring1_7_.name_last as name4_4_1_, offspring1_7_.nickName as nickName4_1_, offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_, offspring1_7_.intValue as intValue4_1_, offspring1_7_.floatValue as floatValue4_1_, offspring1_7_.bigDecimalValue as bigDecim9_4_1_, offspring1_7_.bigIntegerValue as bigInte10_4_1_, case when offspring1_2_.reptile is not null then 2 when offspring1_5_.mammal is not null then 5 when offspring1_6_.mammal is not null then 6 when offspring1_4_.mammal is not null then 4 when offspring1_7_.mammal is not null then 7 when offspring1_1_.animal is not null then 1 when offspring1_3_.animal is not null then 3 when offspring1_.id is not null then 0 end as clazz_1_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id inner join Animal offspring1_ on human0_.mammal=offspring1_.mother_id and (offspring1_.body_weight<?) left outer join Reptile offspring1_1_ on offspring1_.id=offspring1_1_.animal left outer join Lizard offspring1_2_ on offspring1_.id=offspring1_2_.reptile left outer join Mammal offspring1_3_ on offspring1_.id=offspring1_3_.animal left outer join DomesticAnimal offspring1_4_ on offspring1_.id=offspring1_4_.mammal left outer join Cat offspring1_5_ on offspring1_.id=offspring1_5_.mammal left outer join Dog offspring1_6_ on offspring1_.id=offspring1_6_.mammal left outer join Human offspring1_7_ on offspring1_.id=offspring1_7_.mammal
+14:13:57,906 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:57,907 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_0_,
+        offspring1_.id as id0_1_,
+        human0_2_.description as descript2_0_0_,
+        human0_2_.body_weight as body3_0_0_,
+        human0_2_.mother_id as mother4_0_0_,
+        human0_2_.father_id as father5_0_0_,
+        human0_2_.zoo_id as zoo6_0_0_,
+        human0_2_.serialNumber as serialNu7_0_0_,
+        human0_1_.pregnant as pregnant10_0_,
+        human0_1_.birthdate as birthdate10_0_,
+        human0_.name_first as name2_4_0_,
+        human0_.name_initial as name3_4_0_,
+        human0_.name_last as name4_4_0_,
+        human0_.nickName as nickName4_0_,
+        human0_.height_centimeters / 2.54E0 as height6_4_0_,
+        human0_.intValue as intValue4_0_,
+        human0_.floatValue as floatValue4_0_,
+        human0_.bigDecimalValue as bigDecim9_4_0_,
+        human0_.bigIntegerValue as bigInte10_4_0_,
+        offspring1_.description as descript2_0_1_,
+        offspring1_.body_weight as body3_0_1_,
+        offspring1_.mother_id as mother4_0_1_,
+        offspring1_.father_id as father5_0_1_,
+        offspring1_.zoo_id as zoo6_0_1_,
+        offspring1_.serialNumber as serialNu7_0_1_,
+        offspring1_1_.bodyTemperature as bodyTemp2_11_1_,
+        offspring1_3_.pregnant as pregnant10_1_,
+        offspring1_3_.birthdate as birthdate10_1_,
+        offspring1_4_.owner as owner3_1_,
+        offspring1_7_.name_first as name2_4_1_,
+        offspring1_7_.name_initial as name3_4_1_,
+        offspring1_7_.name_last as name4_4_1_,
+        offspring1_7_.nickName as nickName4_1_,
+        offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_,
+        offspring1_7_.intValue as intValue4_1_,
+        offspring1_7_.floatValue as floatValue4_1_,
+        offspring1_7_.bigDecimalValue as bigDecim9_4_1_,
+        offspring1_7_.bigIntegerValue as bigInte10_4_1_,
+        case 
+            when offspring1_2_.reptile is not null then 2 
+            when offspring1_5_.mammal is not null then 5 
+            when offspring1_6_.mammal is not null then 6 
+            when offspring1_4_.mammal is not null then 4 
+            when offspring1_7_.mammal is not null then 7 
+            when offspring1_1_.animal is not null then 1 
+            when offspring1_3_.animal is not null then 3 
+            when offspring1_.id is not null then 0 
+        end as clazz_1_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    inner join
+        Animal offspring1_ 
+            on human0_.mammal=offspring1_.mother_id 
+            and (
+                offspring1_.body_weight<?
+            ) 
+    left outer join
+        Reptile offspring1_1_ 
+            on offspring1_.id=offspring1_1_.animal 
+    left outer join
+        Lizard offspring1_2_ 
+            on offspring1_.id=offspring1_2_.reptile 
+    left outer join
+        Mammal offspring1_3_ 
+            on offspring1_.id=offspring1_3_.animal 
+    left outer join
+        DomesticAnimal offspring1_4_ 
+            on offspring1_.id=offspring1_4_.mammal 
+    left outer join
+        Cat offspring1_5_ 
+            on offspring1_.id=offspring1_5_.mammal 
+    left outer join
+        Dog offspring1_6_ 
+            on offspring1_.id=offspring1_6_.mammal 
+    left outer join
+        Human offspring1_7_ 
+            on offspring1_.id=offspring1_7_.mammal
+14:13:58,092 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Animal a inner join a.mother as m with m.bodyWeight < :someLimit
+14:13:58,094 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'hql'
+          |  |  \-[IDENT] Node: 'Animal'
+          |  \-[ALIAS] Node: 'a'
+          \-[JOIN] Node: 'join'
+             +-[INNER] Node: 'inner'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'a'
+             |  \-[IDENT] Node: 'mother'
+             +-[ALIAS] Node: 'm'
+             \-[WITH] Node: 'with'
+                \-[LT] Node: '<'
+                   +-[DOT] Node: '.'
+                   |  +-[IDENT] Node: 'm'
+                   |  \-[IDENT] Node: 'bodyWeight'
+                   \-[COLON] Node: ':'
+                      \-[IDENT] Node: 'someLimit'
+
+14:13:58,095 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,095 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (a) -> animal0_
+14:13:58,095 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:58,095 DEBUG DotNode:599 - getDataType() : mother -> org.hibernate.type.ManyToOneType(org.hibernate.test.hql.Animal)
+14:13:58,095 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for mother in org.hibernate.test.hql.Animal (m) parent = [ {null} ]
+14:13:58,095 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (m) -> animal1_
+14:13:58,096 DEBUG FromClause:282 - addJoinByPathMap() : a.mother -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Animal,tableAlias=animal1_,origin=Animal animal0_,columns={animal0_.mother_id ,className=org.hibernate.test.hql.Animal}}
+14:13:58,096 DEBUG FromReferenceNode:74 - Resolved : a.mother -> animal0_.mother_id
+14:13:58,096 DEBUG FromReferenceNode:74 - Resolved : m -> animal1_.id
+14:13:58,096 DEBUG DotNode:599 - getDataType() : bodyWeight -> org.hibernate.type.FloatType@39fd378e
+14:13:58,096 DEBUG FromReferenceNode:74 - Resolved : m.bodyWeight -> animal1_.body_weight
+14:13:58,096 DEBUG HqlSqlWalker:411 - handleWithFragment() : -- with clause --
+ \-[WITH] SqlNode: 'with'
+    \-[LT] BinaryLogicOperatorNode: '<'
+       +-[DOT] DotNode: 'animal1_.body_weight' {propertyName=bodyWeight,dereferenceType=ALL,propertyPath=bodyWeight,path=m.bodyWeight,tableAlias=animal1_,className=org.hibernate.test.hql.Animal,classAlias=m}
+       |  +-[ALIAS_REF] IdentNode: 'animal1_.id' {alias=m, className=org.hibernate.test.hql.Animal, tableAlias=animal1_}
+       |  \-[IDENT] IdentNode: 'bodyWeight' {originalText=bodyWeight}
+       \-[NAMED_PARAM] ParameterNode: '?' {name=someLimit, expectedType=org.hibernate.type.FloatType@39fd378e}
+
+14:13:58,097 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Animal animal1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Animal,tableAlias=animal1_,origin=Animal animal0_,columns={animal0_.mother_id ,className=org.hibernate.test.hql.Animal}}
+
+14:13:58,097 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Animal animal0_ Animal animal1_ ) ) )
+14:13:58,097 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:58,097 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal]
+14:13:58,097 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Animal animal1_ on animal0_.mother_id=animal1_.id and (animal1_.body_weight<?) left outer join Reptile animal1_1_ on animal1_.id=animal1_1_.animal left outer join Lizard animal1_2_ on animal1_.id=animal1_2_.reptile left outer join Mammal animal1_3_ on animal1_.id=animal1_3_.animal left outer join DomesticAnimal animal1_4_ on animal1_.id=animal1_4_.mammal left outer join Cat animal1_5_ on animal1_.id=animal1_5_.mammal left outer join Dog animal1_6_ on animal1_.id=animal1_6_.mammal left outer join Human animal1_7_ on animal1_.id=animal1_7_.mammal]
+14:13:58,098 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=org.hibernate.test.hql.Animal}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'animal1_.id as id0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Animal,tableAlias=animal1_,origin=Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal,columns={animal0_.mother_id ,className=org.hibernate.test.hql.Animal}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'animal0_.description as descript2_0_0_, animal0_.body_weight as body3_0_0_, animal0_.mother_id as mother4_0_0_, animal0_.father_id as father5_0_0_, animal0_.zoo_id as zoo6_0_0_, animal0_.serialNumber as serialNu7_0_0_, animal0_1_.bodyTemperature as bodyTemp2_11_0_, animal0_3_.pregnant as pregnant10_0_, animal0_3_.birthdate as birthdate10_0_, animal0_4_.owner as owner3_0_, animal0_7_.name_first as name2_4_0_, animal0_7_.name_initial as name3_4_0_, animal0_7_.name_last as name4_4_0_, animal0_7_.nickName as nickName4_0_, animal0_7_.height_centimeters / 2.54E0 as height6_4_0_, animal0_7_.intValue as intValue4_0_, animal0_7_.floatValue as floatValue4_0_, animal0_7_.bigDecimalValue as bigDecim9_4_0_, animal0_7_.bigIntegerValue as bigInte10_4_0_, case when animal0_2_.reptile is not null then 2 when animal0_5_.mammal is not null then 5 when animal0_6_.mammal is not null then 6 when animal0_4_.mammal is not null then 4 when animal0_7_.mammal is not null then 7 when animal0_1_.animal is not null then 1 when animal0_3_.animal is not null then 3 when animal0_.id is not null then 0 end as clazz_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'animal1_.description as descript2_0_1_, animal1_.body_weight as body3_0_1_, animal1_.mother_id as mother4_0_1_, animal1_.father_id as father5_0_1_, animal1_.zoo_id as zoo6_0_1_, animal1_.serialNumber as serialNu7_0_1_, animal1_1_.bodyTemperature as bodyTemp2_11_1_, animal1_3_.pregnant as pregnant10_1_, animal1_3_.birthdate as birthdate10_1_, animal1_4_.owner as owner3_1_, animal1_7_.name_first as name2_4_1_, animal1_7_.name_initial as name3_4_1_, animal1_7_.name_last as name4_4_1_, animal1_7_.nickName as nickName4_1_, animal1_7_.height_centimeters / 2.54E0 as height6_4_1_, animal1_7_.intValue as intValue4_1_, animal1_7_.floatValue as floatValue4_1_, animal1_7_.bigDecimalValue as bigDecim9_4_1_, animal1_7_.bigIntegerValue as bigInte10_4_1_, case when animal1_2_.reptile is not null then 2 when animal1_5_.mammal is not null then 5 when animal1_6_.mammal is not null then 6 when animal1_4_.mammal is not null then 4 when animal1_7_.mammal is not null then 7 when animal1_1_.animal is not null then 1 when animal1_3_.animal is not null then 3 when animal1_.id is not null then 0 end as clazz_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a, m], fromElementByTableAlias=[animal0_, animal1_], fromElementsByPath=[a.mother], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=org.hibernate.test.hql.Animal}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join Animal animal1_ on animal0_.mother_id=animal1_.id and (animal1_.body_weight<?) left outer join Reptile animal1_1_ on animal1_.id=animal1_1_.animal left outer join Lizard animal1_2_ on animal1_.id=animal1_2_.reptile left outer join Mammal animal1_3_ on animal1_.id=animal1_3_.animal left outer join DomesticAnimal animal1_4_ on animal1_.id=animal1_4_.mammal left outer join Cat animal1_5_ on animal1_.id=animal1_5_.mammal left outer join Dog animal1_6_ on animal1_.id=animal1_6_.mammal left outer join Human animal1_7_ on animal1_.id=animal1_7_.mammal' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Animal,tableAlias=animal1_,origin=Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal,columns={animal0_.mother_id ,className=org.hibernate.test.hql.Animal}}
+
+14:13:58,098 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,098 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.Animal a inner join a.mother as m with m.bodyWeight < :someLimit
+14:13:58,098 DEBUG QueryTranslatorImpl:236 - SQL: select animal0_.id as id0_0_, animal1_.id as id0_1_, animal0_.description as descript2_0_0_, animal0_.body_weight as body3_0_0_, animal0_.mother_id as mother4_0_0_, animal0_.father_id as father5_0_0_, animal0_.zoo_id as zoo6_0_0_, animal0_.serialNumber as serialNu7_0_0_, animal0_1_.bodyTemperature as bodyTemp2_11_0_, animal0_3_.pregnant as pregnant10_0_, animal0_3_.birthdate as birthdate10_0_, animal0_4_.owner as owner3_0_, animal0_7_.name_first as name2_4_0_, animal0_7_.name_initial as name3_4_0_, animal0_7_.name_last as name4_4_0_, animal0_7_.nickName as nickName4_0_, animal0_7_.height_centimeters / 2.54E0 as height6_4_0_, animal0_7_.intValue as intValue4_0_, animal0_7_.floatValue as floatValue4_0_, animal0_7_.bigDecimalValue as bigDecim9_4_0_, animal0_7_.bigIntegerValue as bigInte10_4_0_, case when animal0_2_.reptile is not null then 2 when animal0_5_.mammal is not null then 5 when animal0_6_.mammal is not null then 6 when animal0_4_.mammal is not null then 4 when animal0_7_.mammal is not null then 7 when animal0_1_.animal is not null then 1 when animal0_3_.animal is not null then 3 when animal0_.id is not null then 0 end as clazz_0_, animal1_.description as descript2_0_1_, animal1_.body_weight as body3_0_1_, animal1_.mother_id as mother4_0_1_, animal1_.father_id as father5_0_1_, animal1_.zoo_id as zoo6_0_1_, animal1_.serialNumber as serialNu7_0_1_, animal1_1_.bodyTemperature as bodyTemp2_11_1_, animal1_3_.pregnant as pregnant10_1_, animal1_3_.birthdate as birthdate10_1_, animal1_4_.owner as owner3_1_, animal1_7_.name_first as name2_4_1_, animal1_7_.name_initial as name3_4_1_, animal1_7_.name_last as name4_4_1_, animal1_7_.nickName as nickName4_1_, animal1_7_.height_centimeters / 2.54E0 as height6_4_1_, animal1_7_.intValue as intValue4_1_, animal1_7_.floatValue as floatValue4_1_, animal1_7_.bigDecimalValue as bigDecim9_4_1_, animal1_7_.bigIntegerValue as bigInte10_4_1_, case when animal1_2_.reptile is not null then 2 when animal1_5_.mammal is not null then 5 when animal1_6_.mammal is not null then 6 when animal1_4_.mammal is not null then 4 when animal1_7_.mammal is not null then 7 when animal1_1_.animal is not null then 1 when animal1_3_.animal is not null then 3 when animal1_.id is not null then 0 end as clazz_1_ from Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal inner join Animal animal1_ on animal0_.mother_id=animal1_.id and (animal1_.body_weight<?) left outer join Reptile animal1_1_ on animal1_.id=animal1_1_.animal left outer join Lizard animal1_2_ on animal1_.id=animal1_2_.reptile left outer join Mammal animal1_3_ on animal1_.id=animal1_3_.animal left outer join DomesticAnimal animal1_4_ on animal1_.id=animal1_4_.mammal left outer join Cat animal1_5_ on animal1_.id=animal1_5_.mammal left outer join Dog animal1_6_ on animal1_.id=animal1_6_.mammal left outer join Human animal1_7_ on animal1_.id=animal1_7_.mammal
+14:13:58,098 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,099 DEBUG SQL:104 - 
+    select
+        animal0_.id as id0_0_,
+        animal1_.id as id0_1_,
+        animal0_.description as descript2_0_0_,
+        animal0_.body_weight as body3_0_0_,
+        animal0_.mother_id as mother4_0_0_,
+        animal0_.father_id as father5_0_0_,
+        animal0_.zoo_id as zoo6_0_0_,
+        animal0_.serialNumber as serialNu7_0_0_,
+        animal0_1_.bodyTemperature as bodyTemp2_11_0_,
+        animal0_3_.pregnant as pregnant10_0_,
+        animal0_3_.birthdate as birthdate10_0_,
+        animal0_4_.owner as owner3_0_,
+        animal0_7_.name_first as name2_4_0_,
+        animal0_7_.name_initial as name3_4_0_,
+        animal0_7_.name_last as name4_4_0_,
+        animal0_7_.nickName as nickName4_0_,
+        animal0_7_.height_centimeters / 2.54E0 as height6_4_0_,
+        animal0_7_.intValue as intValue4_0_,
+        animal0_7_.floatValue as floatValue4_0_,
+        animal0_7_.bigDecimalValue as bigDecim9_4_0_,
+        animal0_7_.bigIntegerValue as bigInte10_4_0_,
+        case 
+            when animal0_2_.reptile is not null then 2 
+            when animal0_5_.mammal is not null then 5 
+            when animal0_6_.mammal is not null then 6 
+            when animal0_4_.mammal is not null then 4 
+            when animal0_7_.mammal is not null then 7 
+            when animal0_1_.animal is not null then 1 
+            when animal0_3_.animal is not null then 3 
+            when animal0_.id is not null then 0 
+        end as clazz_0_,
+        animal1_.description as descript2_0_1_,
+        animal1_.body_weight as body3_0_1_,
+        animal1_.mother_id as mother4_0_1_,
+        animal1_.father_id as father5_0_1_,
+        animal1_.zoo_id as zoo6_0_1_,
+        animal1_.serialNumber as serialNu7_0_1_,
+        animal1_1_.bodyTemperature as bodyTemp2_11_1_,
+        animal1_3_.pregnant as pregnant10_1_,
+        animal1_3_.birthdate as birthdate10_1_,
+        animal1_4_.owner as owner3_1_,
+        animal1_7_.name_first as name2_4_1_,
+        animal1_7_.name_initial as name3_4_1_,
+        animal1_7_.name_last as name4_4_1_,
+        animal1_7_.nickName as nickName4_1_,
+        animal1_7_.height_centimeters / 2.54E0 as height6_4_1_,
+        animal1_7_.intValue as intValue4_1_,
+        animal1_7_.floatValue as floatValue4_1_,
+        animal1_7_.bigDecimalValue as bigDecim9_4_1_,
+        animal1_7_.bigIntegerValue as bigInte10_4_1_,
+        case 
+            when animal1_2_.reptile is not null then 2 
+            when animal1_5_.mammal is not null then 5 
+            when animal1_6_.mammal is not null then 6 
+            when animal1_4_.mammal is not null then 4 
+            when animal1_7_.mammal is not null then 7 
+            when animal1_1_.animal is not null then 1 
+            when animal1_3_.animal is not null then 3 
+            when animal1_.id is not null then 0 
+        end as clazz_1_ 
+    from
+        Animal animal0_ 
+    left outer join
+        Reptile animal0_1_ 
+            on animal0_.id=animal0_1_.animal 
+    left outer join
+        Lizard animal0_2_ 
+            on animal0_.id=animal0_2_.reptile 
+    left outer join
+        Mammal animal0_3_ 
+            on animal0_.id=animal0_3_.animal 
+    left outer join
+        DomesticAnimal animal0_4_ 
+            on animal0_.id=animal0_4_.mammal 
+    left outer join
+        Cat animal0_5_ 
+            on animal0_.id=animal0_5_.mammal 
+    left outer join
+        Dog animal0_6_ 
+            on animal0_.id=animal0_6_.mammal 
+    left outer join
+        Human animal0_7_ 
+            on animal0_.id=animal0_7_.mammal 
+    inner join
+        Animal animal1_ 
+            on animal0_.mother_id=animal1_.id 
+            and (
+                animal1_.body_weight<?
+            ) 
+    left outer join
+        Reptile animal1_1_ 
+            on animal1_.id=animal1_1_.animal 
+    left outer join
+        Lizard animal1_2_ 
+            on animal1_.id=animal1_2_.reptile 
+    left outer join
+        Mammal animal1_3_ 
+            on animal1_.id=animal1_3_.animal 
+    left outer join
+        DomesticAnimal animal1_4_ 
+            on animal1_.id=animal1_4_.mammal 
+    left outer join
+        Cat animal1_5_ 
+            on animal1_.id=animal1_5_.mammal 
+    left outer join
+        Dog animal1_6_ 
+            on animal1_.id=animal1_6_.mammal 
+    left outer join
+        Human animal1_7_ 
+            on animal1_.id=animal1_7_.mammal
+14:13:58,100 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Human h inner join h.friends as f with f.nickName like 'bubba'
+14:13:58,102 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'hql'
+          |  |  \-[IDENT] Node: 'Human'
+          |  \-[ALIAS] Node: 'h'
+          \-[JOIN] Node: 'join'
+             +-[INNER] Node: 'inner'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'h'
+             |  \-[IDENT] Node: 'friends'
+             +-[ALIAS] Node: 'f'
+             \-[WITH] Node: 'with'
+                \-[LIKE] Node: 'like'
+                   +-[DOT] Node: '.'
+                   |  +-[IDENT] Node: 'f'
+                   |  \-[IDENT] Node: 'nickName'
+                   \-[QUOTED_STRING] Node: ''bubba''
+
+14:13:58,102 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,102 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (h) -> human0_
+14:13:58,102 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:58,103 DEBUG DotNode:599 - getDataType() : friends -> org.hibernate.type.BagType(org.hibernate.test.hql.Human.friends)
+14:13:58,103 DEBUG FromElementFactory:385 - createManyToMany() : path = h.friends role = org.hibernate.test.hql.Human.friends associatedEntityName = org.hibernate.test.hql.Human
+14:13:58,103 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (f) -> human2_
+14:13:58,103 DEBUG FromClause:282 - addJoinByPathMap() : h.friends -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=null,tableName=Human,tableAlias=human2_,origin=Human human0_,columns={human0_.mammal ,className=org.hibernate.test.hql.Human}}
+14:13:58,103 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for h.friends : Human_friends human2_
+14:13:58,103 DEBUG FromReferenceNode:74 - Resolved : h.friends -> .
+14:13:58,103 DEBUG FromReferenceNode:74 - Resolved : f -> human2_.mammal
+14:13:58,103 DEBUG DotNode:599 - getDataType() : nickName -> org.hibernate.type.StringType@2dc8de40
+14:13:58,103 DEBUG FromReferenceNode:74 - Resolved : f.nickName -> human2_.nickName
+14:13:58,104 DEBUG HqlSqlWalker:411 - handleWithFragment() : -- with clause --
+ \-[WITH] SqlNode: 'with'
+    \-[LIKE] BinaryLogicOperatorNode: 'like'
+       +-[DOT] DotNode: 'human2_.nickName' {propertyName=nickName,dereferenceType=ALL,propertyPath=nickName,path=f.nickName,tableAlias=human2_,className=org.hibernate.test.hql.Human,classAlias=f}
+       |  +-[ALIAS_REF] IdentNode: 'human2_.mammal' {alias=f, className=org.hibernate.test.hql.Human, tableAlias=human2_}
+       |  \-[IDENT] IdentNode: 'nickName' {originalText=nickName}
+       \-[QUOTED_STRING] LiteralNode: ''bubba''
+
+14:13:58,104 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Human_friends human2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=org.hibernate.test.hql.Human.friends,tableName=Human,tableAlias=human2_,origin=Human human0_,columns={human0_.mammal ,className=org.hibernate.test.hql.Human}}
+
+14:13:58,104 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Human human0_ Human_friends human2_ ) ) )
+14:13:58,104 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:58,104 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:58,104 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Human_friends friends1_ on human0_.mammal=friends1_.human1 inner join Human human2_ on friends1_.human2=human2_.mammal and (human2_.nickName like 'bubba') inner join Mammal human2_1_ on human2_.mammal=human2_1_.animal inner join Animal human2_2_ on human2_.mammal=human2_2_.id]
+14:13:58,105 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal,Human_friends)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'human2_.mammal as id0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=org.hibernate.test.hql.Human.friends,tableName=Human,tableAlias=human2_,origin=Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id,columns={human0_.mammal ,className=org.hibernate.test.hql.Human}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'human0_2_.description as descript2_0_0_, human0_2_.body_weight as body3_0_0_, human0_2_.mother_id as mother4_0_0_, human0_2_.father_id as father5_0_0_, human0_2_.zoo_id as zoo6_0_0_, human0_2_.serialNumber as serialNu7_0_0_, human0_1_.pregnant as pregnant10_0_, human0_1_.birthdate as birthdate10_0_, human0_.name_first as name2_4_0_, human0_.name_initial as name3_4_0_, human0_.name_last as name4_4_0_, human0_.nickName as nickName4_0_, human0_.height_centimeters / 2.54E0 as height6_4_0_, human0_.intValue as intValue4_0_, human0_.floatValue as floatValue4_0_, human0_.bigDecimalValue as bigDecim9_4_0_, human0_.bigIntegerValue as bigInte10_4_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'human2_2_.description as descript2_0_1_, human2_2_.body_weight as body3_0_1_, human2_2_.mother_id as mother4_0_1_, human2_2_.father_id as father5_0_1_, human2_2_.zoo_id as zoo6_0_1_, human2_2_.serialNumber as serialNu7_0_1_, human2_1_.pregnant as pregnant10_1_, human2_1_.birthdate as birthdate10_1_, human2_.name_first as name2_4_1_, human2_.name_initial as name3_4_1_, human2_.name_last as name4_4_1_, human2_.nickName as nickName4_1_, human2_.height_centimeters / 2.54E0 as height6_4_1_, human2_.intValue as intValue4_1_, human2_.floatValue as floatValue4_1_, human2_.bigDecimalValue as bigDecim9_4_1_, human2_.bigIntegerValue as bigInte10_4_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[f, h], fromElementByTableAlias=[human0_, human2_], fromElementsByPath=[h.friends], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join Human_friends friends1_ on human0_.mammal=friends1_.human1 inner join Human human2_ on friends1_.human2=human2_.mammal and (human2_.nickName like 'bubba') inner join Mammal human2_1_ on human2_.mammal=human2_1_.animal inner join Animal human2_2_ on human2_.mammal=human2_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=org.hibernate.test.hql.Human.friends,tableName=Human,tableAlias=human2_,origin=Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id,columns={human0_.mammal ,className=org.hibernate.test.hql.Human}}
+
+14:13:58,105 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,105 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.Human h inner join h.friends as f with f.nickName like 'bubba'
+14:13:58,105 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as id0_0_, human2_.mammal as id0_1_, human0_2_.description as descript2_0_0_, human0_2_.body_weight as body3_0_0_, human0_2_.mother_id as mother4_0_0_, human0_2_.father_id as father5_0_0_, human0_2_.zoo_id as zoo6_0_0_, human0_2_.serialNumber as serialNu7_0_0_, human0_1_.pregnant as pregnant10_0_, human0_1_.birthdate as birthdate10_0_, human0_.name_first as name2_4_0_, human0_.name_initial as name3_4_0_, human0_.name_last as name4_4_0_, human0_.nickName as nickName4_0_, human0_.height_centimeters / 2.54E0 as height6_4_0_, human0_.intValue as intValue4_0_, human0_.floatValue as floatValue4_0_, human0_.bigDecimalValue as bigDecim9_4_0_, human0_.bigIntegerValue as bigInte10_4_0_, human2_2_.description as descript2_0_1_, human2_2_.body_weight as body3_0_1_, human2_2_.mother_id as mother4_0_1_, human2_2_.father_id as father5_0_1_, human2_2_.zoo_id as zoo6_0_1_, human2_2_.serialNumber as serialNu7_0_1_, human2_1_.pregnant as pregnant10_1_, human2_1_.birthdate as birthdate10_1_, human2_.name_first as name2_4_1_, human2_.name_initial as name3_4_1_, human2_.name_last as name4_4_1_, human2_.nickName as nickName4_1_, human2_.height_centimeters / 2.54E0 as height6_4_1_, human2_.intValue as intValue4_1_, human2_.floatValue as floatValue4_1_, human2_.bigDecimalValue as bigDecim9_4_1_, human2_.bigIntegerValue as bigInte10_4_1_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id inner join Human_friends friends1_ on human0_.mammal=friends1_.human1 inner join Human human2_ on friends1_.human2=human2_.mammal and (human2_.nickName like 'bubba') inner join Mammal human2_1_ on human2_.mammal=human2_1_.animal inner join Animal human2_2_ on human2_.mammal=human2_2_.id
+14:13:58,105 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,106 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_0_,
+        human2_.mammal as id0_1_,
+        human0_2_.description as descript2_0_0_,
+        human0_2_.body_weight as body3_0_0_,
+        human0_2_.mother_id as mother4_0_0_,
+        human0_2_.father_id as father5_0_0_,
+        human0_2_.zoo_id as zoo6_0_0_,
+        human0_2_.serialNumber as serialNu7_0_0_,
+        human0_1_.pregnant as pregnant10_0_,
+        human0_1_.birthdate as birthdate10_0_,
+        human0_.name_first as name2_4_0_,
+        human0_.name_initial as name3_4_0_,
+        human0_.name_last as name4_4_0_,
+        human0_.nickName as nickName4_0_,
+        human0_.height_centimeters / 2.54E0 as height6_4_0_,
+        human0_.intValue as intValue4_0_,
+        human0_.floatValue as floatValue4_0_,
+        human0_.bigDecimalValue as bigDecim9_4_0_,
+        human0_.bigIntegerValue as bigInte10_4_0_,
+        human2_2_.description as descript2_0_1_,
+        human2_2_.body_weight as body3_0_1_,
+        human2_2_.mother_id as mother4_0_1_,
+        human2_2_.father_id as father5_0_1_,
+        human2_2_.zoo_id as zoo6_0_1_,
+        human2_2_.serialNumber as serialNu7_0_1_,
+        human2_1_.pregnant as pregnant10_1_,
+        human2_1_.birthdate as birthdate10_1_,
+        human2_.name_first as name2_4_1_,
+        human2_.name_initial as name3_4_1_,
+        human2_.name_last as name4_4_1_,
+        human2_.nickName as nickName4_1_,
+        human2_.height_centimeters / 2.54E0 as height6_4_1_,
+        human2_.intValue as intValue4_1_,
+        human2_.floatValue as floatValue4_1_,
+        human2_.bigDecimalValue as bigDecim9_4_1_,
+        human2_.bigIntegerValue as bigInte10_4_1_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    inner join
+        Human_friends friends1_ 
+            on human0_.mammal=friends1_.human1 
+    inner join
+        Human human2_ 
+            on friends1_.human2=human2_.mammal 
+            and (
+                human2_.nickName like 'bubba'
+            ) 
+    inner join
+        Mammal human2_1_ 
+            on human2_.mammal=human2_1_.animal 
+    inner join
+        Animal human2_2_ 
+            on human2_.mammal=human2_2_.id
+14:13:58,378 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Human h inner join h.nickNames as nicknames with nicknames = 'abc'
+14:13:58,379 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'hql'
+          |  |  \-[IDENT] Node: 'Human'
+          |  \-[ALIAS] Node: 'h'
+          \-[JOIN] Node: 'join'
+             +-[INNER] Node: 'inner'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'h'
+             |  \-[IDENT] Node: 'nickNames'
+             +-[ALIAS] Node: 'nicknames'
+             \-[WITH] Node: 'with'
+                \-[EQ] Node: '='
+                   +-[IDENT] Node: 'nicknames'
+                   \-[QUOTED_STRING] Node: ''abc''
+
+14:13:58,379 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,380 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (h) -> human0_
+14:13:58,380 DEBUG FromReferenceNode:74 - Resolved : h -> human0_.mammal
+14:13:58,380 DEBUG DotNode:599 - getDataType() : nickNames -> org.hibernate.type.SortedSetType(org.hibernate.test.hql.Human.nickNames)
+14:13:58,380 DEBUG FromElement:157 - FromClause{level=1} : null (nicknames) -> nicknames1_
+14:13:58,381 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : h.nickNames -> human_nick_names
+14:13:58,381 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for h.nickNames : human_nick_names nicknames1_
+14:13:58,381 DEBUG FromReferenceNode:74 - Resolved : h.nickNames -> .
+14:13:58,381 DEBUG FromReferenceNode:74 - Resolved : nicknames -> nicknames1_.nick_name
+14:13:58,381 DEBUG HqlSqlWalker:411 - handleWithFragment() : -- with clause --
+ \-[WITH] SqlNode: 'with'
+    \-[EQ] BinaryLogicOperatorNode: '='
+       +-[ALIAS_REF] IdentNode: 'nicknames1_.nick_name' {alias=nicknames, className=null, tableAlias=nicknames1_}
+       \-[QUOTED_STRING] LiteralNode: ''abc''
+
+14:13:58,381 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'human_nick_names nicknames1_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=nicknames,role=org.hibernate.test.hql.Human.nickNames,tableName={none},tableAlias=nicknames1_,origin=null,columns={,className=null}}
+
+14:13:58,381 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} (  human_nick_names nicknames1_ ) ) )
+14:13:58,382 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:58,382 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:58,382 DEBUG JoinProcessor:175 - Using FROM fragment [inner join human_nick_names nicknames1_ on human0_.mammal=nicknames1_.human and (nicknames1_.nick_name='abc')]
+14:13:58,382 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (human_nick_names,Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as id0_' {FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[nicknames, h], fromElementByTableAlias=[human0_, nicknames1_], fromElementsByPath=[], collectionJoinFromElementsByPath=[h.nickNames], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=h,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join human_nick_names nicknames1_ on human0_.mammal=nicknames1_.human and (nicknames1_.nick_name='abc')' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=nicknames,role=org.hibernate.test.hql.Human.nickNames,tableName={none},tableAlias=nicknames1_,origin=Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id,columns={,className=null}}
+
+14:13:58,382 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,382 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.Human h inner join h.nickNames as nicknames with nicknames = 'abc'
+14:13:58,382 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as id0_, human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id inner join human_nick_names nicknames1_ on human0_.mammal=nicknames1_.human and (nicknames1_.nick_name='abc')
+14:13:58,382 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,383 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_,
+        human0_2_.description as descript2_0_,
+        human0_2_.body_weight as body3_0_,
+        human0_2_.mother_id as mother4_0_,
+        human0_2_.father_id as father5_0_,
+        human0_2_.zoo_id as zoo6_0_,
+        human0_2_.serialNumber as serialNu7_0_,
+        human0_1_.pregnant as pregnant10_,
+        human0_1_.birthdate as birthdate10_,
+        human0_.name_first as name2_4_,
+        human0_.name_initial as name3_4_,
+        human0_.name_last as name4_4_,
+        human0_.nickName as nickName4_,
+        human0_.height_centimeters / 2.54E0 as height6_4_,
+        human0_.intValue as intValue4_,
+        human0_.floatValue as floatValue4_,
+        human0_.bigDecimalValue as bigDecim9_4_,
+        human0_.bigIntegerValue as bigInte10_4_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    inner join
+        human_nick_names nicknames1_ 
+            on human0_.mammal=nicknames1_.human 
+            and (
+                nicknames1_.nick_name='abc'
+            )
+14:13:58,384 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Human where description = 'father'
+14:13:58,384 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'hql'
+    |           \-[IDENT] Node: 'Human'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'description'
+          \-[QUOTED_STRING] Node: ''father''
+
+14:13:58,385 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,385 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (<no alias>) -> human0_
+14:13:58,385 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:58,385 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:58,386 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.description -> human0_2_.description
+14:13:58,386 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Human human0_ ) ( where ( = ( human0_2_.description {synthetic-alias} description ) 'father' ) ) )
+14:13:58,386 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:58,395 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:58,398 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'human0_2_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path={synthetic-alias}.description,tableAlias=human0_,className=org.hibernate.test.hql.Human,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[QUOTED_STRING] LiteralNode: ''father''
+
+14:13:58,399 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,400 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.Human where description = 'father'
+14:13:58,400 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as id0_, human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id where human0_2_.description='father'
+14:13:58,400 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,401 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_,
+        human0_2_.description as descript2_0_,
+        human0_2_.body_weight as body3_0_,
+        human0_2_.mother_id as mother4_0_,
+        human0_2_.father_id as father5_0_,
+        human0_2_.zoo_id as zoo6_0_,
+        human0_2_.serialNumber as serialNu7_0_,
+        human0_1_.pregnant as pregnant10_,
+        human0_1_.birthdate as birthdate10_,
+        human0_.name_first as name2_4_,
+        human0_.name_initial as name3_4_,
+        human0_.name_last as name4_4_,
+        human0_.nickName as nickName4_,
+        human0_.height_centimeters / 2.54E0 as height6_4_,
+        human0_.intValue as intValue4_,
+        human0_.floatValue as floatValue4_,
+        human0_.bigDecimalValue as bigDecim9_4_,
+        human0_.bigIntegerValue as bigInte10_4_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    where
+        human0_2_.description='father'
+14:13:58,402 DEBUG SQL:104 - 
+    select
+        nicknames0_.human as human0_0_,
+        nicknames0_.nick_name as nick2_18_0_ 
+    from
+        human_nick_names nicknames0_ 
+    where
+        nicknames0_.human=?
+14:13:58,403 DEBUG SQL:104 - 
+    select
+        friends0_.human1 as human1_0_1_,
+        friends0_.human2 as human2_6_1_,
+        human1_.mammal as id0_0_,
+        human1_2_.description as descript2_0_0_,
+        human1_2_.body_weight as body3_0_0_,
+        human1_2_.mother_id as mother4_0_0_,
+        human1_2_.father_id as father5_0_0_,
+        human1_2_.zoo_id as zoo6_0_0_,
+        human1_2_.serialNumber as serialNu7_0_0_,
+        human1_1_.pregnant as pregnant10_0_,
+        human1_1_.birthdate as birthdate10_0_,
+        human1_.name_first as name2_4_0_,
+        human1_.name_initial as name3_4_0_,
+        human1_.name_last as name4_4_0_,
+        human1_.nickName as nickName4_0_,
+        human1_.height_centimeters / 2.54E0 as height6_4_0_,
+        human1_.intValue as intValue4_0_,
+        human1_.floatValue as floatValue4_0_,
+        human1_.bigDecimalValue as bigDecim9_4_0_,
+        human1_.bigIntegerValue as bigInte10_4_0_ 
+    from
+        Human_friends friends0_ 
+    inner join
+        Human human1_ 
+            on friends0_.human2=human1_.mammal 
+    left outer join
+        Mammal human1_1_ 
+            on human1_.mammal=human1_1_.animal 
+    left outer join
+        Animal human1_2_ 
+            on human1_.mammal=human1_2_.id 
+    where
+        friends0_.human1=?
+14:13:58,407 DEBUG SQL:104 - 
+    select
+        nicknames0_.human as human0_0_,
+        nicknames0_.nick_name as nick2_18_0_ 
+    from
+        human_nick_names nicknames0_ 
+    where
+        nicknames0_.human=?
+14:13:58,407 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_friends 
+    where
+        human1=?
+14:13:58,408 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Human where description = 'friend'
+14:13:58,410 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'hql'
+    |           \-[IDENT] Node: 'Human'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'description'
+          \-[QUOTED_STRING] Node: ''friend''
+
+14:13:58,410 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,410 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (<no alias>) -> human0_
+14:13:58,410 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:58,411 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:58,411 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.description -> human0_2_.description
+14:13:58,411 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Human human0_ ) ( where ( = ( human0_2_.description {synthetic-alias} description ) 'friend' ) ) )
+14:13:58,411 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:58,411 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:58,411 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'human0_2_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path={synthetic-alias}.description,tableAlias=human0_,className=org.hibernate.test.hql.Human,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[QUOTED_STRING] LiteralNode: ''friend''
+
+14:13:58,411 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,412 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.Human where description = 'friend'
+14:13:58,412 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as id0_, human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id where human0_2_.description='friend'
+14:13:58,412 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,412 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_,
+        human0_2_.description as descript2_0_,
+        human0_2_.body_weight as body3_0_,
+        human0_2_.mother_id as mother4_0_,
+        human0_2_.father_id as father5_0_,
+        human0_2_.zoo_id as zoo6_0_,
+        human0_2_.serialNumber as serialNu7_0_,
+        human0_1_.pregnant as pregnant10_,
+        human0_1_.birthdate as birthdate10_,
+        human0_.name_first as name2_4_,
+        human0_.name_initial as name3_4_,
+        human0_.name_last as name4_4_,
+        human0_.nickName as nickName4_,
+        human0_.height_centimeters / 2.54E0 as height6_4_,
+        human0_.intValue as intValue4_,
+        human0_.floatValue as floatValue4_,
+        human0_.bigDecimalValue as bigDecim9_4_,
+        human0_.bigIntegerValue as bigInte10_4_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    where
+        human0_2_.description='friend'
+14:13:58,413 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Human where description = 'child1'
+14:13:58,414 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'hql'
+    |           \-[IDENT] Node: 'Human'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'description'
+          \-[QUOTED_STRING] Node: ''child1''
+
+14:13:58,416 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,417 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (<no alias>) -> human0_
+14:13:58,417 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:58,417 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:58,417 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.description -> human0_2_.description
+14:13:58,418 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Human human0_ ) ( where ( = ( human0_2_.description {synthetic-alias} description ) 'child1' ) ) )
+14:13:58,418 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:58,418 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:58,419 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'human0_2_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path={synthetic-alias}.description,tableAlias=human0_,className=org.hibernate.test.hql.Human,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[QUOTED_STRING] LiteralNode: ''child1''
+
+14:13:58,420 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,420 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.Human where description = 'child1'
+14:13:58,420 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as id0_, human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id where human0_2_.description='child1'
+14:13:58,420 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,433 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=null 
+    where
+        mother_id=?
+14:13:58,434 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_friends 
+    where
+        human1=?
+14:13:58,434 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_family 
+    where
+        human1=?
+14:13:58,435 DEBUG SQL:104 - 
+    delete 
+    from
+        addresses 
+    where
+        human=?
+14:13:58,435 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        mammal=?
+14:13:58,436 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        animal=?
+14:13:58,436 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        id=?
+14:13:58,436 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_,
+        human0_2_.description as descript2_0_,
+        human0_2_.body_weight as body3_0_,
+        human0_2_.mother_id as mother4_0_,
+        human0_2_.father_id as father5_0_,
+        human0_2_.zoo_id as zoo6_0_,
+        human0_2_.serialNumber as serialNu7_0_,
+        human0_1_.pregnant as pregnant10_,
+        human0_1_.birthdate as birthdate10_,
+        human0_.name_first as name2_4_,
+        human0_.name_initial as name3_4_,
+        human0_.name_last as name4_4_,
+        human0_.nickName as nickName4_,
+        human0_.height_centimeters / 2.54E0 as height6_4_,
+        human0_.intValue as intValue4_,
+        human0_.floatValue as floatValue4_,
+        human0_.bigDecimalValue as bigDecim9_4_,
+        human0_.bigIntegerValue as bigInte10_4_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    where
+        human0_2_.description='child1'
+14:13:58,437 DEBUG SQL:104 - 
+    select
+        nicknames0_.human as human0_0_,
+        nicknames0_.nick_name as nick2_18_0_ 
+    from
+        human_nick_names nicknames0_ 
+    where
+        nicknames0_.human=?
+14:13:58,437 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Human where description = 'child2'
+14:13:58,438 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'hql'
+    |           \-[IDENT] Node: 'Human'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'description'
+          \-[QUOTED_STRING] Node: ''child2''
+
+14:13:58,438 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,438 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (<no alias>) -> human0_
+14:13:58,439 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:58,439 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:58,439 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.description -> human0_2_.description
+14:13:58,439 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Human human0_ ) ( where ( = ( human0_2_.description {synthetic-alias} description ) 'child2' ) ) )
+14:13:58,439 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:58,439 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:58,439 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'human0_2_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path={synthetic-alias}.description,tableAlias=human0_,className=org.hibernate.test.hql.Human,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[QUOTED_STRING] LiteralNode: ''child2''
+
+14:13:58,440 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,440 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.Human where description = 'child2'
+14:13:58,440 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as id0_, human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id where human0_2_.description='child2'
+14:13:58,440 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,440 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=null 
+    where
+        mother_id=?
+14:13:58,441 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_friends 
+    where
+        human1=?
+14:13:58,441 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_family 
+    where
+        human1=?
+14:13:58,441 DEBUG SQL:104 - 
+    delete 
+    from
+        addresses 
+    where
+        human=?
+14:13:58,441 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        mammal=?
+14:13:58,442 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        animal=?
+14:13:58,442 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        id=?
+14:13:58,447 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_,
+        human0_2_.description as descript2_0_,
+        human0_2_.body_weight as body3_0_,
+        human0_2_.mother_id as mother4_0_,
+        human0_2_.father_id as father5_0_,
+        human0_2_.zoo_id as zoo6_0_,
+        human0_2_.serialNumber as serialNu7_0_,
+        human0_1_.pregnant as pregnant10_,
+        human0_1_.birthdate as birthdate10_,
+        human0_.name_first as name2_4_,
+        human0_.name_initial as name3_4_,
+        human0_.name_last as name4_4_,
+        human0_.nickName as nickName4_,
+        human0_.height_centimeters / 2.54E0 as height6_4_,
+        human0_.intValue as intValue4_,
+        human0_.floatValue as floatValue4_,
+        human0_.bigDecimalValue as bigDecim9_4_,
+        human0_.bigIntegerValue as bigInte10_4_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    where
+        human0_2_.description='child2'
+14:13:58,448 DEBUG SQL:104 - 
+    select
+        nicknames0_.human as human0_0_,
+        nicknames0_.nick_name as nick2_18_0_ 
+    from
+        human_nick_names nicknames0_ 
+    where
+        nicknames0_.human=?
+14:13:58,449 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Human where description = 'mother'
+14:13:58,449 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'hql'
+    |           \-[IDENT] Node: 'Human'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'description'
+          \-[QUOTED_STRING] Node: ''mother''
+
+14:13:58,450 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,450 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Human (<no alias>) -> human0_
+14:13:58,450 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:13:58,450 DEBUG DotNode:599 - getDataType() : description -> org.hibernate.type.StringType@2dc8de40
+14:13:58,450 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.description -> human0_2_.description
+14:13:58,450 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Human human0_ ) ( where ( = ( human0_2_.description {synthetic-alias} description ) 'mother' ) ) )
+14:13:58,450 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:58,451 DEBUG JoinProcessor:175 - Using FROM fragment [Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id]
+14:13:58,451 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Human,Animal,Mammal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'human0_.mammal as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[human0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Human,tableAlias=human0_,origin=null,columns={,className=org.hibernate.test.hql.Human}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'human0_2_.description' {propertyName=description,dereferenceType=ALL,propertyPath=description,path={synthetic-alias}.description,tableAlias=human0_,className=org.hibernate.test.hql.Human,classAlias=null}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'description' {originalText=description}
+          \-[QUOTED_STRING] LiteralNode: ''mother''
+
+14:13:58,451 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,451 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.hql.Human where description = 'mother'
+14:13:58,451 DEBUG QueryTranslatorImpl:236 - SQL: select human0_.mammal as id0_, human0_2_.description as descript2_0_, human0_2_.body_weight as body3_0_, human0_2_.mother_id as mother4_0_, human0_2_.father_id as father5_0_, human0_2_.zoo_id as zoo6_0_, human0_2_.serialNumber as serialNu7_0_, human0_1_.pregnant as pregnant10_, human0_1_.birthdate as birthdate10_, human0_.name_first as name2_4_, human0_.name_initial as name3_4_, human0_.name_last as name4_4_, human0_.nickName as nickName4_, human0_.height_centimeters / 2.54E0 as height6_4_, human0_.intValue as intValue4_, human0_.floatValue as floatValue4_, human0_.bigDecimalValue as bigDecim9_4_, human0_.bigIntegerValue as bigInte10_4_ from Human human0_ inner join Mammal human0_1_ on human0_.mammal=human0_1_.animal inner join Animal human0_2_ on human0_.mammal=human0_2_.id where human0_2_.description='mother'
+14:13:58,451 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,452 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=null 
+    where
+        mother_id=?
+14:13:58,452 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_friends 
+    where
+        human1=?
+14:13:58,452 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_family 
+    where
+        human1=?
+14:13:58,452 DEBUG SQL:104 - 
+    delete 
+    from
+        addresses 
+    where
+        human=?
+14:13:58,453 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        mammal=?
+14:13:58,453 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        animal=?
+14:13:58,453 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        id=?
+14:13:58,453 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_,
+        human0_2_.description as descript2_0_,
+        human0_2_.body_weight as body3_0_,
+        human0_2_.mother_id as mother4_0_,
+        human0_2_.father_id as father5_0_,
+        human0_2_.zoo_id as zoo6_0_,
+        human0_2_.serialNumber as serialNu7_0_,
+        human0_1_.pregnant as pregnant10_,
+        human0_1_.birthdate as birthdate10_,
+        human0_.name_first as name2_4_,
+        human0_.name_initial as name3_4_,
+        human0_.name_last as name4_4_,
+        human0_.nickName as nickName4_,
+        human0_.height_centimeters / 2.54E0 as height6_4_,
+        human0_.intValue as intValue4_,
+        human0_.floatValue as floatValue4_,
+        human0_.bigDecimalValue as bigDecim9_4_,
+        human0_.bigIntegerValue as bigInte10_4_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    where
+        human0_2_.description='mother'
+14:13:58,454  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.hql.Human - this operation breaks ==
+14:13:58,454 DEBUG SQL:104 - 
+    select
+        nicknames0_.human as human0_0_,
+        nicknames0_.nick_name as nick2_18_0_ 
+    from
+        human_nick_names nicknames0_ 
+    where
+        nicknames0_.human=?
+14:13:58,455 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.hql.Animal
+14:13:58,461 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'hql'
+             \-[IDENT] Node: 'Animal'
+
+14:13:58,462 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,462 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (<no alias>) -> animal0_
+14:13:58,463 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Animal)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[animal0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Animal' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=org.hibernate.test.hql.Animal}}
+
+14:13:58,463 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,463 DEBUG DeleteStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:13:58,464 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=null 
+    where
+        mother_id=?
+14:13:58,465 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_family 
+    where
+        human1=?
+14:13:58,465 DEBUG SQL:104 - 
+    delete 
+    from
+        addresses 
+    where
+        human=?
+14:13:58,465 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=null 
+    where
+        mother_id=?
+14:13:58,466 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_friends 
+    where
+        human1=?
+14:13:58,466 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_family 
+    where
+        human1=?
+14:13:58,466 DEBUG SQL:104 - 
+    delete 
+    from
+        addresses 
+    where
+        human=?
+14:13:58,467 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        mammal=?
+14:13:58,467 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        animal=?
+14:13:58,467 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        id=?
+14:13:58,468 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        mammal=?
+14:13:58,468 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        animal=?
+14:13:58,469 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        id=?
+14:13:58,469 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_
+14:13:58,469 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,470 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,470 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,471 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,473 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,473 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,473 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,473 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,473 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:58,474  INFO CustomRunner:139 - Test: testWithClauseFailsWithFetch
+14:13:58,475 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:58,476 DEBUG SQL:104 - 
+    insert 
+    into
+        Mammal
+        (pregnant, birthdate, animal) 
+    values
+        (?, ?, ?)
+14:13:58,476 DEBUG SQL:104 - 
+    insert 
+    into
+        Human
+        (name_first, name_initial, name_last, nickName, height_centimeters, intValue, floatValue, bigDecimalValue, bigIntegerValue, mammal) 
+    values
+        (?, ?, ?, ?, ? * 2.54E0, ?, ?, ?, ?, ?)
+14:13:58,476 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:58,476 DEBUG SQL:104 - 
+    insert 
+    into
+        Mammal
+        (pregnant, birthdate, animal) 
+    values
+        (?, ?, ?)
+14:13:58,477 DEBUG SQL:104 - 
+    insert 
+    into
+        Human
+        (name_first, name_initial, name_last, nickName, height_centimeters, intValue, floatValue, bigDecimalValue, bigIntegerValue, mammal) 
+    values
+        (?, ?, ?, ?, ? * 2.54E0, ?, ?, ?, ?, ?)
+14:13:58,477 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:58,477 DEBUG SQL:104 - 
+    insert 
+    into
+        Mammal
+        (pregnant, birthdate, animal) 
+    values
+        (?, ?, ?)
+14:13:58,477 DEBUG SQL:104 - 
+    insert 
+    into
+        Human
+        (name_first, name_initial, name_last, nickName, height_centimeters, intValue, floatValue, bigDecimalValue, bigIntegerValue, mammal) 
+    values
+        (?, ?, ?, ?, ? * 2.54E0, ?, ?, ?, ?, ?)
+14:13:58,478 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:58,478 DEBUG SQL:104 - 
+    insert 
+    into
+        Mammal
+        (pregnant, birthdate, animal) 
+    values
+        (?, ?, ?)
+14:13:58,478 DEBUG SQL:104 - 
+    insert 
+    into
+        Human
+        (name_first, name_initial, name_last, nickName, height_centimeters, intValue, floatValue, bigDecimalValue, bigIntegerValue, mammal) 
+    values
+        (?, ?, ?, ?, ? * 2.54E0, ?, ?, ?, ?, ?)
+14:13:58,478 DEBUG SQL:104 - 
+    insert 
+    into
+        Animal
+        (id, description, body_weight, mother_id, father_id, zoo_id, serialNumber) 
+    values
+        (null, ?, ?, ?, ?, ?, ?)
+14:13:58,478 DEBUG SQL:104 - 
+    insert 
+    into
+        Mammal
+        (pregnant, birthdate, animal) 
+    values
+        (?, ?, ?)
+14:13:58,479 DEBUG SQL:104 - 
+    insert 
+    into
+        Human
+        (name_first, name_initial, name_last, nickName, height_centimeters, intValue, floatValue, bigDecimalValue, bigIntegerValue, mammal) 
+    values
+        (?, ?, ?, ?, ? * 2.54E0, ?, ?, ?, ?, ?)
+14:13:58,479 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:58,479 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=? 
+    where
+        id=?
+14:13:58,480 DEBUG SQL:104 - 
+    insert 
+    into
+        Human_friends
+        (human1, human2) 
+    values
+        (?, ?)
+14:13:58,480 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.hql.Animal a inner join fetch a.offspring as o with o.bodyWeight = :someLimit
+14:13:58,481 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'hql'
+          |  |  \-[IDENT] Node: 'Animal'
+          |  \-[ALIAS] Node: 'a'
+          \-[JOIN] Node: 'join'
+             +-[INNER] Node: 'inner'
+             +-[FETCH] Node: 'fetch'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'a'
+             |  \-[IDENT] Node: 'offspring'
+             +-[ALIAS] Node: 'o'
+             \-[WITH] Node: 'with'
+                \-[EQ] Node: '='
+                   +-[DOT] Node: '.'
+                   |  +-[IDENT] Node: 'o'
+                   |  \-[IDENT] Node: 'bodyWeight'
+                   \-[COLON] Node: ':'
+                      \-[IDENT] Node: 'someLimit'
+
+14:13:58,481 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:13:58,482 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (a) -> animal0_
+14:13:58,482 DEBUG FromReferenceNode:74 - Resolved : a -> animal0_.id
+14:13:58,482 DEBUG DotNode:599 - getDataType() : offspring -> org.hibernate.type.OrderedSetType(org.hibernate.test.hql.Animal.offspring)
+14:13:58,482 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = a.offspring role = org.hibernate.test.hql.Animal.offspring associatedEntityName = org.hibernate.test.hql.Animal
+14:13:58,482 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.hql.Animal (o) -> offspring1_
+14:13:58,482 DEBUG FromClause:282 - addJoinByPathMap() : a.offspring -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=o,role=null,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+14:13:58,482 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for a.offspring : Animal offspring1_
+14:13:58,482 DEBUG FromReferenceNode:74 - Resolved : a.offspring -> .
+14:13:58,483 ERROR ErrorCounter:54 -  with-clause not allowed on fetched associations; use filters
+14:13:58,483 ERROR ErrorCounter:50 -  with-clause not allowed on fetched associations; use filters
+ with-clause not allowed on fetched associations; use filters
+	at org.hibernate.hql.internal.ast.HqlSqlWalker.createFromJoinElement(HqlSqlWalker.java:397)
+	at org.hibernate.hql.internal.antlr.HqlSqlBaseWalker.joinElement(HqlSqlBaseWalker.java:3645)
+	at org.hibernate.hql.internal.antlr.HqlSqlBaseWalker.fromElement(HqlSqlBaseWalker.java:3431)
+	at org.hibernate.hql.internal.antlr.HqlSqlBaseWalker.fromElementList(HqlSqlBaseWalker.java:3309)
+	at org.hibernate.hql.internal.antlr.HqlSqlBaseWalker.fromClause(HqlSqlBaseWalker.java:706)
+	at org.hibernate.hql.internal.antlr.HqlSqlBaseWalker.query(HqlSqlBaseWalker.java:562)
+	at org.hibernate.hql.internal.antlr.HqlSqlBaseWalker.selectStatement(HqlSqlBaseWalker.java:299)
+	at org.hibernate.hql.internal.antlr.HqlSqlBaseWalker.statement(HqlSqlBaseWalker.java:247)
+	at org.hibernate.hql.internal.ast.QueryTranslatorImpl.analyze(QueryTranslatorImpl.java:248)
+	at org.hibernate.hql.internal.ast.QueryTranslatorImpl.doCompile(QueryTranslatorImpl.java:183)
+	at org.hibernate.hql.internal.ast.QueryTranslatorImpl.compile(QueryTranslatorImpl.java:136)
+	at org.hibernate.engine.query.spi.HQLQueryPlan.<init>(HQLQueryPlan.java:105)
+	at org.hibernate.engine.query.spi.HQLQueryPlan.<init>(HQLQueryPlan.java:80)
+	at org.hibernate.engine.query.spi.QueryPlanCache.getHQLQueryPlan(QueryPlanCache.java:168)
+	at org.hibernate.internal.AbstractSessionImpl.getHQLQueryPlan(AbstractSessionImpl.java:270)
+	at org.hibernate.internal.AbstractSessionImpl.createQuery(AbstractSessionImpl.java:221)
+	at org.hibernate.internal.SessionImpl.createQuery(SessionImpl.java:1741)
+	at org.hibernate.test.hql.WithClauseTest.testWithClauseFailsWithFetch(WithClauseTest.java:58)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:45)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:42)
+	at org.hibernate.testing.junit4.ExtendedFrameworkMethod.invokeExplosively(ExtendedFrameworkMethod.java:63)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:20)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:28)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:30)
+	at org.junit.internal.runners.statements.FailOnTimeout$StatementThread.run(FailOnTimeout.java:62)
+14:13:58,483 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Animal animal0_ Animal offspring1_ ) ) )
+14:13:58,483 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:13:58,484 DEBUG JoinProcessor:175 - Using FROM fragment [Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal]
+14:13:58,484 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Animal offspring1_ on animal0_.id=offspring1_.mother_id left outer join Reptile offspring1_1_ on offspring1_.id=offspring1_1_.animal left outer join Lizard offspring1_2_ on offspring1_.id=offspring1_2_.reptile left outer join Mammal offspring1_3_ on offspring1_.id=offspring1_3_.animal left outer join DomesticAnimal offspring1_4_ on offspring1_.id=offspring1_4_.mammal left outer join Cat offspring1_5_ on offspring1_.id=offspring1_5_.mammal left outer join Dog offspring1_6_ on offspring1_.id=offspring1_6_.mammal left outer join Human offspring1_7_ on offspring1_.id=offspring1_7_.mammal]
+14:13:58,484 DEBUG QueryNode:101 - getOrderByClause() : Creating a new ORDER BY clause
+14:13:58,485 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Animal)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'animal0_.id as id0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=org.hibernate.test.hql.Animal}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'offspring1_.id as id0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'animal0_.description as descript2_0_0_, animal0_.body_weight as body3_0_0_, animal0_.mother_id as mother4_0_0_, animal0_.father_id as father5_0_0_, animal0_.zoo_id as zoo6_0_0_, animal0_.serialNumber as serialNu7_0_0_, animal0_1_.bodyTemperature as bodyTemp2_11_0_, animal0_3_.pregnant as pregnant10_0_, animal0_3_.birthdate as birthdate10_0_, animal0_4_.owner as owner3_0_, animal0_7_.name_first as name2_4_0_, animal0_7_.name_initial as name3_4_0_, animal0_7_.name_last as name4_4_0_, animal0_7_.nickName as nickName4_0_, animal0_7_.height_centimeters / 2.54E0 as height6_4_0_, animal0_7_.intValue as intValue4_0_, animal0_7_.floatValue as floatValue4_0_, animal0_7_.bigDecimalValue as bigDecim9_4_0_, animal0_7_.bigIntegerValue as bigInte10_4_0_, case when animal0_2_.reptile is not null then 2 when animal0_5_.mammal is not null then 5 when animal0_6_.mammal is not null then 6 when animal0_4_.mammal is not null then 4 when animal0_7_.mammal is not null then 7 when animal0_1_.animal is not null then 1 when animal0_3_.animal is not null then 3 when animal0_.id is not null then 0 end as clazz_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'offspring1_.description as descript2_0_1_, offspring1_.body_weight as body3_0_1_, offspring1_.mother_id as mother4_0_1_, offspring1_.father_id as father5_0_1_, offspring1_.zoo_id as zoo6_0_1_, offspring1_.serialNumber as serialNu7_0_1_, offspring1_1_.bodyTemperature as bodyTemp2_11_1_, offspring1_3_.pregnant as pregnant10_1_, offspring1_3_.birthdate as birthdate10_1_, offspring1_4_.owner as owner3_1_, offspring1_7_.name_first as name2_4_1_, offspring1_7_.name_initial as name3_4_1_, offspring1_7_.name_last as name4_4_1_, offspring1_7_.nickName as nickName4_1_, offspring1_7_.height_centimeters / 2.54E0 as height6_4_1_, offspring1_7_.intValue as intValue4_1_, offspring1_7_.floatValue as floatValue4_1_, offspring1_7_.bigDecimalValue as bigDecim9_4_1_, offspring1_7_.bigIntegerValue as bigInte10_4_1_, case when offspring1_2_.reptile is not null then 2 when offspring1_5_.mammal is not null then 5 when offspring1_6_.mammal is not null then 6 when offspring1_4_.mammal is not null then 4 when offspring1_7_.mammal is not null then 7 when offspring1_1_.animal is not null then 1 when offspring1_3_.animal is not null then 3 when offspring1_.id is not null then 0 end as clazz_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'offspring1_.mother_id as mother4_0_0__, offspring1_.id as id0_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a, o], fromElementByTableAlias=[animal0_, offspring1_], fromElementsByPath=[a.offspring], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Animal,tableAlias=animal0_,origin=null,columns={,className=org.hibernate.test.hql.Animal}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join Animal offspring1_ on animal0_.id=offspring1_.mother_id left outer join Reptile offspring1_1_ on offspring1_.id=offspring1_1_.animal left outer join Lizard offspring1_2_ on offspring1_.id=offspring1_2_.reptile left outer join Mammal offspring1_3_ on offspring1_.id=offspring1_3_.animal left outer join DomesticAnimal offspring1_4_ on offspring1_.id=offspring1_4_.mammal left outer join Cat offspring1_5_ on offspring1_.id=offspring1_5_.mammal left outer join Dog offspring1_6_ on offspring1_.id=offspring1_6_.mammal left outer join Human offspring1_7_ on offspring1_.id=offspring1_7_.mammal' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=o,role=org.hibernate.test.hql.Animal.offspring,tableName=Animal,tableAlias=offspring1_,origin=Animal animal0_ left outer join Reptile animal0_1_ on animal0_.id=animal0_1_.animal left outer join Lizard animal0_2_ on animal0_.id=animal0_2_.reptile left outer join Mammal animal0_3_ on animal0_.id=animal0_3_.animal left outer join DomesticAnimal animal0_4_ on animal0_.id=animal0_4_.mammal left outer join Cat animal0_5_ on animal0_.id=animal0_5_.mammal left outer join Dog animal0_6_ on animal0_.id=animal0_6_.mammal left outer join Human animal0_7_ on animal0_.id=animal0_7_.mammal,columns={animal0_.id ,className=org.hibernate.test.hql.Animal}}
+    \-[ORDER] OrderByClause: 'ORDER'
+       \-[SQL_TOKEN] SqlFragment: 'offspring1_.father_id'
+
+14:13:58,485 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_,
+        human0_2_.description as descript2_0_,
+        human0_2_.body_weight as body3_0_,
+        human0_2_.mother_id as mother4_0_,
+        human0_2_.father_id as father5_0_,
+        human0_2_.zoo_id as zoo6_0_,
+        human0_2_.serialNumber as serialNu7_0_,
+        human0_1_.pregnant as pregnant10_,
+        human0_1_.birthdate as birthdate10_,
+        human0_.name_first as name2_4_,
+        human0_.name_initial as name3_4_,
+        human0_.name_last as name4_4_,
+        human0_.nickName as nickName4_,
+        human0_.height_centimeters / 2.54E0 as height6_4_,
+        human0_.intValue as intValue4_,
+        human0_.floatValue as floatValue4_,
+        human0_.bigDecimalValue as bigDecim9_4_,
+        human0_.bigIntegerValue as bigInte10_4_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    where
+        human0_2_.description='father'
+14:13:58,493 DEBUG SQL:104 - 
+    select
+        nicknames0_.human as human0_0_,
+        nicknames0_.nick_name as nick2_18_0_ 
+    from
+        human_nick_names nicknames0_ 
+    where
+        nicknames0_.human=?
+14:13:58,493 DEBUG SQL:104 - 
+    select
+        friends0_.human1 as human1_0_1_,
+        friends0_.human2 as human2_6_1_,
+        human1_.mammal as id0_0_,
+        human1_2_.description as descript2_0_0_,
+        human1_2_.body_weight as body3_0_0_,
+        human1_2_.mother_id as mother4_0_0_,
+        human1_2_.father_id as father5_0_0_,
+        human1_2_.zoo_id as zoo6_0_0_,
+        human1_2_.serialNumber as serialNu7_0_0_,
+        human1_1_.pregnant as pregnant10_0_,
+        human1_1_.birthdate as birthdate10_0_,
+        human1_.name_first as name2_4_0_,
+        human1_.name_initial as name3_4_0_,
+        human1_.name_last as name4_4_0_,
+        human1_.nickName as nickName4_0_,
+        human1_.height_centimeters / 2.54E0 as height6_4_0_,
+        human1_.intValue as intValue4_0_,
+        human1_.floatValue as floatValue4_0_,
+        human1_.bigDecimalValue as bigDecim9_4_0_,
+        human1_.bigIntegerValue as bigInte10_4_0_ 
+    from
+        Human_friends friends0_ 
+    inner join
+        Human human1_ 
+            on friends0_.human2=human1_.mammal 
+    left outer join
+        Mammal human1_1_ 
+            on human1_.mammal=human1_1_.animal 
+    left outer join
+        Animal human1_2_ 
+            on human1_.mammal=human1_2_.id 
+    where
+        friends0_.human1=?
+14:13:58,502 DEBUG SQL:104 - 
+    select
+        nicknames0_.human as human0_0_,
+        nicknames0_.nick_name as nick2_18_0_ 
+    from
+        human_nick_names nicknames0_ 
+    where
+        nicknames0_.human=?
+14:13:58,502 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_friends 
+    where
+        human1=?
+14:13:58,511 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_,
+        human0_2_.description as descript2_0_,
+        human0_2_.body_weight as body3_0_,
+        human0_2_.mother_id as mother4_0_,
+        human0_2_.father_id as father5_0_,
+        human0_2_.zoo_id as zoo6_0_,
+        human0_2_.serialNumber as serialNu7_0_,
+        human0_1_.pregnant as pregnant10_,
+        human0_1_.birthdate as birthdate10_,
+        human0_.name_first as name2_4_,
+        human0_.name_initial as name3_4_,
+        human0_.name_last as name4_4_,
+        human0_.nickName as nickName4_,
+        human0_.height_centimeters / 2.54E0 as height6_4_,
+        human0_.intValue as intValue4_,
+        human0_.floatValue as floatValue4_,
+        human0_.bigDecimalValue as bigDecim9_4_,
+        human0_.bigIntegerValue as bigInte10_4_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    where
+        human0_2_.description='friend'
+14:13:58,513 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=null 
+    where
+        mother_id=?
+14:13:58,513 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_friends 
+    where
+        human1=?
+14:13:58,513 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_family 
+    where
+        human1=?
+14:13:58,513 DEBUG SQL:104 - 
+    delete 
+    from
+        addresses 
+    where
+        human=?
+14:13:58,514 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        mammal=?
+14:13:58,528 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        animal=?
+14:13:58,529 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        id=?
+14:13:58,529 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_,
+        human0_2_.description as descript2_0_,
+        human0_2_.body_weight as body3_0_,
+        human0_2_.mother_id as mother4_0_,
+        human0_2_.father_id as father5_0_,
+        human0_2_.zoo_id as zoo6_0_,
+        human0_2_.serialNumber as serialNu7_0_,
+        human0_1_.pregnant as pregnant10_,
+        human0_1_.birthdate as birthdate10_,
+        human0_.name_first as name2_4_,
+        human0_.name_initial as name3_4_,
+        human0_.name_last as name4_4_,
+        human0_.nickName as nickName4_,
+        human0_.height_centimeters / 2.54E0 as height6_4_,
+        human0_.intValue as intValue4_,
+        human0_.floatValue as floatValue4_,
+        human0_.bigDecimalValue as bigDecim9_4_,
+        human0_.bigIntegerValue as bigInte10_4_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    where
+        human0_2_.description='child1'
+14:13:58,536 DEBUG SQL:104 - 
+    select
+        nicknames0_.human as human0_0_,
+        nicknames0_.nick_name as nick2_18_0_ 
+    from
+        human_nick_names nicknames0_ 
+    where
+        nicknames0_.human=?
+14:13:58,538 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=null 
+    where
+        mother_id=?
+14:13:58,539 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_friends 
+    where
+        human1=?
+14:13:58,539 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_family 
+    where
+        human1=?
+14:13:58,556 DEBUG SQL:104 - 
+    delete 
+    from
+        addresses 
+    where
+        human=?
+14:13:58,556 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        mammal=?
+14:13:58,557 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        animal=?
+14:13:58,558 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        id=?
+14:13:58,558 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_,
+        human0_2_.description as descript2_0_,
+        human0_2_.body_weight as body3_0_,
+        human0_2_.mother_id as mother4_0_,
+        human0_2_.father_id as father5_0_,
+        human0_2_.zoo_id as zoo6_0_,
+        human0_2_.serialNumber as serialNu7_0_,
+        human0_1_.pregnant as pregnant10_,
+        human0_1_.birthdate as birthdate10_,
+        human0_.name_first as name2_4_,
+        human0_.name_initial as name3_4_,
+        human0_.name_last as name4_4_,
+        human0_.nickName as nickName4_,
+        human0_.height_centimeters / 2.54E0 as height6_4_,
+        human0_.intValue as intValue4_,
+        human0_.floatValue as floatValue4_,
+        human0_.bigDecimalValue as bigDecim9_4_,
+        human0_.bigIntegerValue as bigInte10_4_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    where
+        human0_2_.description='child2'
+14:13:58,565 DEBUG SQL:104 - 
+    select
+        nicknames0_.human as human0_0_,
+        nicknames0_.nick_name as nick2_18_0_ 
+    from
+        human_nick_names nicknames0_ 
+    where
+        nicknames0_.human=?
+14:13:58,574 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=null 
+    where
+        mother_id=?
+14:13:58,575 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_friends 
+    where
+        human1=?
+14:13:58,576 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_family 
+    where
+        human1=?
+14:13:58,576 DEBUG SQL:104 - 
+    delete 
+    from
+        addresses 
+    where
+        human=?
+14:13:58,606 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        mammal=?
+14:13:58,607 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        animal=?
+14:13:58,607 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        id=?
+14:13:58,608 DEBUG SQL:104 - 
+    select
+        human0_.mammal as id0_,
+        human0_2_.description as descript2_0_,
+        human0_2_.body_weight as body3_0_,
+        human0_2_.mother_id as mother4_0_,
+        human0_2_.father_id as father5_0_,
+        human0_2_.zoo_id as zoo6_0_,
+        human0_2_.serialNumber as serialNu7_0_,
+        human0_1_.pregnant as pregnant10_,
+        human0_1_.birthdate as birthdate10_,
+        human0_.name_first as name2_4_,
+        human0_.name_initial as name3_4_,
+        human0_.name_last as name4_4_,
+        human0_.nickName as nickName4_,
+        human0_.height_centimeters / 2.54E0 as height6_4_,
+        human0_.intValue as intValue4_,
+        human0_.floatValue as floatValue4_,
+        human0_.bigDecimalValue as bigDecim9_4_,
+        human0_.bigIntegerValue as bigInte10_4_ 
+    from
+        Human human0_ 
+    inner join
+        Mammal human0_1_ 
+            on human0_.mammal=human0_1_.animal 
+    inner join
+        Animal human0_2_ 
+            on human0_.mammal=human0_2_.id 
+    where
+        human0_2_.description='mother'
+14:13:58,609  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.hql.Human - this operation breaks ==
+14:13:58,610 DEBUG SQL:104 - 
+    select
+        nicknames0_.human as human0_0_,
+        nicknames0_.nick_name as nick2_18_0_ 
+    from
+        human_nick_names nicknames0_ 
+    where
+        nicknames0_.human=?
+14:13:58,611 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=null 
+    where
+        mother_id=?
+14:13:58,611 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_family 
+    where
+        human1=?
+14:13:58,611 DEBUG SQL:104 - 
+    delete 
+    from
+        addresses 
+    where
+        human=?
+14:13:58,611 DEBUG SQL:104 - 
+    update
+        Animal 
+    set
+        mother_id=null 
+    where
+        mother_id=?
+14:13:58,612 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_friends 
+    where
+        human1=?
+14:13:58,612 DEBUG SQL:104 - 
+    delete 
+    from
+        Human_family 
+    where
+        human1=?
+14:13:58,615 DEBUG SQL:104 - 
+    delete 
+    from
+        addresses 
+    where
+        human=?
+14:13:58,616 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        mammal=?
+14:13:58,616 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        animal=?
+14:13:58,617 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        id=?
+14:13:58,617 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        mammal=?
+14:13:58,627 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        animal=?
+14:13:58,628 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        id=?
+14:13:58,628 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Animal
+        select
+            animal0_.id as id 
+        from
+            Animal animal0_
+14:13:58,629 DEBUG SQL:104 - 
+    delete 
+    from
+        Human 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,639 DEBUG SQL:104 - 
+    delete 
+    from
+        Dog 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,639 DEBUG SQL:104 - 
+    delete 
+    from
+        Cat 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,640 DEBUG SQL:104 - 
+    delete 
+    from
+        DomesticAnimal 
+    where
+        (
+            mammal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,640 DEBUG SQL:104 - 
+    delete 
+    from
+        Mammal 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,649 DEBUG SQL:104 - 
+    delete 
+    from
+        Lizard 
+    where
+        (
+            reptile
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,656 DEBUG SQL:104 - 
+    delete 
+    from
+        Reptile 
+    where
+        (
+            animal
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,657 DEBUG SQL:104 - 
+    delete 
+    from
+        Animal 
+    where
+        (
+            id
+        ) IN (
+            select
+                id 
+            from
+                HT_Animal
+        )
+14:13:58,663 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Animal
+14:13:58,664  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:13:58,665 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:13:58,665 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4
+14:13:58,665 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B
+14:13:58,665 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79
+14:13:58,666 DEBUG SQL:104 - 
+    alter table Cat 
+        drop constraint FK107B66D384BBA
+14:13:58,666 DEBUG SQL:104 - 
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA
+14:13:58,666 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F
+14:13:58,666 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F
+14:13:58,666 DEBUG SQL:104 - 
+    alter table Human 
+        drop constraint FK42D710D1733655F
+14:13:58,666 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311
+14:13:58,667 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310
+14:13:58,667 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311
+14:13:58,667 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310
+14:13:58,688 DEBUG SQL:104 - 
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13
+14:13:58,688 DEBUG SQL:104 - 
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315
+14:13:58,688 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699
+14:13:58,689 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98
+14:13:58,689 DEBUG SQL:104 - 
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699
+14:13:58,689 DEBUG SQL:104 - 
+    alter table Zoo 
+        drop constraint FK15FBA55106523
+14:13:58,689 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719
+14:13:58,689 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705
+14:13:58,689 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2
+14:13:58,690 DEBUG SQL:104 - 
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87
+14:13:58,699 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA255106523
+14:13:58,699 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99
+14:13:58,700 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99
+14:13:58,700 DEBUG SQL:104 - 
+    drop table Animal if exists
+14:13:58,700 DEBUG SQL:104 - 
+    drop table Cat if exists
+14:13:58,700 DEBUG SQL:104 - 
+    drop table Dog if exists
+14:13:58,700 DEBUG SQL:104 - 
+    drop table DomesticAnimal if exists
+14:13:58,701 DEBUG SQL:104 - 
+    drop table Human if exists
+14:13:58,701 DEBUG SQL:104 - 
+    drop table Human_family if exists
+14:13:58,701 DEBUG SQL:104 - 
+    drop table Human_friends if exists
+14:13:58,701 DEBUG SQL:104 - 
+    drop table JOINED if exists
+14:13:58,701 DEBUG SQL:104 - 
+    drop table Joiner if exists
+14:13:58,702 DEBUG SQL:104 - 
+    drop table Lizard if exists
+14:13:58,710 DEBUG SQL:104 - 
+    drop table Mammal if exists
+14:13:58,710 DEBUG SQL:104 - 
+    drop table Reptile if exists
+14:13:58,710 DEBUG SQL:104 - 
+    drop table StateProvince if exists
+14:13:58,711 DEBUG SQL:104 - 
+    drop table Zoo if exists
+14:13:58,711 DEBUG SQL:104 - 
+    drop table Zoo_directors if exists
+14:13:58,711 DEBUG SQL:104 - 
+    drop table "User_permissions" if exists
+14:13:58,711 DEBUG SQL:104 - 
+    drop table "User" if exists
+14:13:58,711 DEBUG SQL:104 - 
+    drop table addresses if exists
+14:13:58,712 DEBUG SQL:104 - 
+    drop table human_nick_names if exists
+14:13:58,712  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:13:58,712  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

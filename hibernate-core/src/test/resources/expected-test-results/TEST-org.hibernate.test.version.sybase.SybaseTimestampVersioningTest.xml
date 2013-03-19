@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.version.sybase.SybaseTimestampVersioningTest" tests="3" time="0.036" timestamp="2013-02-28T20:19:33">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.version.sybase.SybaseTimestampVersioningTest" name="testCollectionNoVersion" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.version.sybase.SybaseTimestampVersioningTest" name="testCollectionVersion" time="0.0" />
+  <ignored-testcase classname="org.hibernate.test.version.sybase.SybaseTimestampVersioningTest" name="testLocking" time="0.0" />
+  <system-out><![CDATA[14:19:33,241  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.version.sybase.SybaseTimestampVersioningTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

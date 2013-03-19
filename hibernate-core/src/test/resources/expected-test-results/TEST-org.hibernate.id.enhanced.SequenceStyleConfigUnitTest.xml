@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.id.enhanced.SequenceStyleConfigUnitTest" tests="7" time="0.035" timestamp="2013-02-28T20:09:54">
+  <properties />
+  <testcase classname="org.hibernate.id.enhanced.SequenceStyleConfigUnitTest" name="testDefaultOptimizerBasedOnIncrementBackedBySequence" time="0.014" />
+  <testcase classname="org.hibernate.id.enhanced.SequenceStyleConfigUnitTest" name="testDefaultOptimizerBasedOnIncrementBackedByTable" time="0.002" />
+  <testcase classname="org.hibernate.id.enhanced.SequenceStyleConfigUnitTest" name="testDefaultedSequenceBackedConfiguration" time="0.001" />
+  <testcase classname="org.hibernate.id.enhanced.SequenceStyleConfigUnitTest" name="testDefaultedTableBackedConfiguration" time="0.002" />
+  <testcase classname="org.hibernate.id.enhanced.SequenceStyleConfigUnitTest" name="testExplicitOptimizerWithExplicitIncrementSize" time="0.002" />
+  <testcase classname="org.hibernate.id.enhanced.SequenceStyleConfigUnitTest" name="testForceTableUse" time="0.006" />
+  <testcase classname="org.hibernate.id.enhanced.SequenceStyleConfigUnitTest" name="testPreferPooledLoSettingHonored" time="0.001" />
+  <system-out><![CDATA[14:09:54,207  INFO CustomRunner:132 - BeforeClass: org.hibernate.id.enhanced.SequenceStyleConfigUnitTest
+14:09:54,208  INFO CustomRunner:139 - Test: testDefaultOptimizerBasedOnIncrementBackedBySequence
+14:09:54,211  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.id.enhanced.SequenceStyleConfigUnitTest$SequenceDialect
+14:09:54,219  INFO SequenceStyleGenerator:190 - HHH000107: Forcing table use for sequence-style generator due to pooled optimizer selection where db does not support pooled sequences
+14:09:54,220  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.id.enhanced.SequenceStyleConfigUnitTest$PooledSequenceDialect
+14:09:54,222  INFO CustomRunner:139 - Test: testDefaultOptimizerBasedOnIncrementBackedByTable
+14:09:54,224  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.id.enhanced.SequenceStyleConfigUnitTest$TableDialect
+14:09:54,225  INFO CustomRunner:139 - Test: testDefaultedSequenceBackedConfiguration
+14:09:54,226  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.id.enhanced.SequenceStyleConfigUnitTest$SequenceDialect
+14:09:54,226  INFO CustomRunner:139 - Test: testDefaultedTableBackedConfiguration
+14:09:54,228  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.id.enhanced.SequenceStyleConfigUnitTest$TableDialect
+14:09:54,229  INFO CustomRunner:139 - Test: testExplicitOptimizerWithExplicitIncrementSize
+14:09:54,230  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.id.enhanced.SequenceStyleConfigUnitTest$SequenceDialect
+14:09:54,230  WARN SequenceStyleGenerator:323 - HHH000116: Config specified explicit optimizer of [none], but [increment_size=20; honoring optimizer setting
+14:09:54,230  INFO SequenceStyleGenerator:190 - HHH000107: Forcing table use for sequence-style generator due to pooled optimizer selection where db does not support pooled sequences
+14:09:54,231  INFO CustomRunner:139 - Test: testForceTableUse
+14:09:54,232  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.id.enhanced.SequenceStyleConfigUnitTest$SequenceDialect
+14:09:54,238  INFO CustomRunner:139 - Test: testPreferPooledLoSettingHonored
+14:09:54,238  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.id.enhanced.SequenceStyleConfigUnitTest$PooledSequenceDialect
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

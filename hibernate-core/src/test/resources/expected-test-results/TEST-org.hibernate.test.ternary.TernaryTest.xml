@@ -1,0 +1,950 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.ternary.TernaryTest" tests="2" time="0.343" timestamp="2013-02-28T20:19:23">
+  <properties />
+  <testcase classname="org.hibernate.test.ternary.TernaryTest" name="testIndexRelatedFunctions" time="0.104" />
+  <testcase classname="org.hibernate.test.ternary.TernaryTest" name="testTernary" time="0.199" />
+  <system-out><![CDATA[14:19:23,151  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.ternary.TernaryTest
+14:19:23,153  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/ternary/Ternary.hbm.xml
+14:19:23,160  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:23,160  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:23,161  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:23,161  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:23,161  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:23,162  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:23,162  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:23,163  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:23,163  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:23,163  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:23,171  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:23,171 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:23,172 DEBUG SQL:104 - 
+    alter table employeeSite 
+        drop constraint FK98FB3315F4B6D26F
+14:19:23,172 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table employeeSite drop constraint FK98FB3315F4B6D26F
+14:19:23,172 ERROR SchemaExport:426 - Table "EMPLOYEESITE" not found; SQL statement:
+
+    alter table employeeSite 
+        drop constraint FK98FB3315F4B6D26F [42102-145]
+14:19:23,172 DEBUG SQL:104 - 
+    alter table employeeSite 
+        drop constraint FK98FB33158B5B40F0
+14:19:23,172 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table employeeSite drop constraint FK98FB33158B5B40F0
+14:19:23,172 ERROR SchemaExport:426 - Table "EMPLOYEESITE" not found; SQL statement:
+
+    alter table employeeSite 
+        drop constraint FK98FB33158B5B40F0 [42102-145]
+14:19:23,173 DEBUG SQL:104 - 
+    alter table employeeSite 
+        drop constraint FK98FB3315183CAA22
+14:19:23,173 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table employeeSite drop constraint FK98FB3315183CAA22
+14:19:23,173 ERROR SchemaExport:426 - Table "EMPLOYEESITE" not found; SQL statement:
+
+    alter table employeeSite 
+        drop constraint FK98FB3315183CAA22 [42102-145]
+14:19:23,173 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:19:23,173 DEBUG SQL:104 - 
+    drop table Site if exists
+14:19:23,173 DEBUG SQL:104 - 
+    drop table employeeSite if exists
+14:19:23,173 DEBUG SQL:104 - 
+    create table Employee (
+        name varchar(255) not null,
+        hireDate date,
+        primary key (name)
+    )
+14:19:23,174 DEBUG SQL:104 - 
+    create table Site (
+        name varchar(255) not null,
+        description varchar(255),
+        primary key (name)
+    )
+14:19:23,184 DEBUG SQL:104 - 
+    create table employeeSite (
+        employeeName varchar(255) not null,
+        managerName varchar(255) not null,
+        siteName varchar(255) not null,
+        primary key (employeeName, siteName)
+    )
+14:19:23,184 DEBUG SQL:104 - 
+    alter table employeeSite 
+        add constraint FK98FB3315F4B6D26F 
+        foreign key (managerName) 
+        references Employee
+14:19:23,185 DEBUG SQL:104 - 
+    alter table employeeSite 
+        add constraint FK98FB33158B5B40F0 
+        foreign key (employeeName) 
+        references Employee
+14:19:23,185 DEBUG SQL:104 - 
+    alter table employeeSite 
+        add constraint FK98FB3315183CAA22 
+        foreign key (siteName) 
+        references Site
+14:19:23,185  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:23,186  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:23,186  INFO CustomRunner:139 - Test: testIndexRelatedFunctions
+14:19:23,187 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.ternary.Employee e join e.managerBySite as m where index(m) is not null
+14:19:23,200 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'ternary'
+    |     |  |  \-[IDENT] Node: 'Employee'
+    |     |  \-[ALIAS] Node: 'e'
+    |     \-[JOIN] Node: 'join'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'e'
+    |        |  \-[IDENT] Node: 'managerBySite'
+    |        \-[ALIAS] Node: 'm'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[METHOD_CALL] Node: '('
+             +-[IDENT] Node: 'index'
+             \-[EXPR_LIST] Node: 'exprList'
+                \-[IDENT] Node: 'm'
+
+14:19:23,200 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,200 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (e) -> employee0_
+14:19:23,201 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.name
+14:19:23,206 DEBUG DotNode:599 - getDataType() : managerBySite -> org.hibernate.type.MapType(org.hibernate.test.ternary.Employee.managerBySite)
+14:19:23,206 DEBUG FromElementFactory:385 - createManyToMany() : path = e.managerBySite role = org.hibernate.test.ternary.Employee.managerBySite associatedEntityName = org.hibernate.test.ternary.Employee
+14:19:23,206 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (m) -> employee2_
+14:19:23,207 DEBUG FromClause:282 - addJoinByPathMap() : e.managerBySite -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+14:19:23,207 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for e.managerBySite : employeeSite employee2_
+14:19:23,207 DEBUG FromReferenceNode:74 - Resolved : e.managerBySite -> .
+14:19:23,208 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'employeeSite employee2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+
+14:19:23,208 DEBUG FromReferenceNode:74 - Resolved : m -> employee2_.name
+14:19:23,209 DEBUG MethodNode:151 - collectionProperty() :  name=index type=org.hibernate.type.ManyToOneType(org.hibernate.test.ternary.Employee)
+14:19:23,209 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Employee employee0_  ) ) ( where ( is not null ( managerbys1_.siteName index ( exprList employee2_.name ) ) ) ) )
+14:19:23,209 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:23,209 DEBUG JoinProcessor:175 - Using FROM fragment [Employee employee0_]
+14:19:23,209 DEBUG JoinProcessor:175 - Using FROM fragment [inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name]
+14:19:23,210 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (employeeSite,Employee)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.name as name0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee2_.name as name0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'employee0_.hireDate as hireDate0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'employee2_.hireDate as hireDate0_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[e, m], fromElementByTableAlias=[employee2_, employee0_], fromElementsByPath=[e.managerBySite], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[SQL_TOKEN] MethodNode: 'managerbys1_.siteName'
+             +-[METHOD_NAME] IdentNode: 'index' {originalText=index}
+             \-[EXPR_LIST] SqlNode: 'exprList'
+                \-[ALIAS_REF] IdentNode: 'employee2_.name' {alias=m, className=org.hibernate.test.ternary.Employee, tableAlias=employee2_}
+
+14:19:23,218 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,218 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.ternary.Employee e join e.managerBySite as m where index(m) is not null
+14:19:23,218 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.name as name0_0_, employee2_.name as name0_1_, employee0_.hireDate as hireDate0_0_, employee2_.hireDate as hireDate0_1_ from Employee employee0_ inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name where managerbys1_.siteName is not null
+14:19:23,218 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,219 DEBUG SQL:104 - 
+    select
+        employee0_.name as name0_0_,
+        employee2_.name as name0_1_,
+        employee0_.hireDate as hireDate0_0_,
+        employee2_.hireDate as hireDate0_1_ 
+    from
+        Employee employee0_ 
+    inner join
+        employeeSite managerbys1_ 
+            on employee0_.name=managerbys1_.employeeName 
+    inner join
+        Employee employee2_ 
+            on managerbys1_.managerName=employee2_.name 
+    where
+        managerbys1_.siteName is not null
+14:19:23,220 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.ternary.Employee e join e.managerBySite as m where minIndex(m) is not null
+14:19:23,221 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'ternary'
+    |     |  |  \-[IDENT] Node: 'Employee'
+    |     |  \-[ALIAS] Node: 'e'
+    |     \-[JOIN] Node: 'join'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'e'
+    |        |  \-[IDENT] Node: 'managerBySite'
+    |        \-[ALIAS] Node: 'm'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[METHOD_CALL] Node: '('
+             +-[IDENT] Node: 'minIndex'
+             \-[EXPR_LIST] Node: 'exprList'
+                \-[IDENT] Node: 'm'
+
+14:19:23,229 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,229 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (e) -> employee0_
+14:19:23,229 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.name
+14:19:23,230 DEBUG DotNode:599 - getDataType() : managerBySite -> org.hibernate.type.MapType(org.hibernate.test.ternary.Employee.managerBySite)
+14:19:23,230 DEBUG FromElementFactory:385 - createManyToMany() : path = e.managerBySite role = org.hibernate.test.ternary.Employee.managerBySite associatedEntityName = org.hibernate.test.ternary.Employee
+14:19:23,230 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (m) -> employee2_
+14:19:23,230 DEBUG FromClause:282 - addJoinByPathMap() : e.managerBySite -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+14:19:23,230 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for e.managerBySite : employeeSite employee2_
+14:19:23,231 DEBUG FromReferenceNode:74 - Resolved : e.managerBySite -> .
+14:19:23,231 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'employeeSite employee2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+
+14:19:23,239 DEBUG FromReferenceNode:74 - Resolved : m -> employee2_.name
+14:19:23,239 DEBUG MethodNode:151 - collectionProperty() :  name=minIndex type=org.hibernate.type.ManyToOneType(org.hibernate.test.ternary.Employee)
+14:19:23,240 DEBUG FromElementType:347 - toColumns(employee2_,minIndex) : subquery = select min(managerbys1_.siteName) from employeeSite managerbys1_, Employee employee2_ where employee0_.name=managerbys1_.employeeName and managerbys1_.managerName=employee2_.name
+14:19:23,240 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Employee employee0_  ) ) ( where ( is not null ( (select min(managerbys1_.siteName) from employeeSite managerbys1_, Employee employee2_ where employee0_.name=managerbys1_.employeeName and managerbys1_.managerName=employee2_.name) minIndex ( exprList employee2_.name ) ) ) ) )
+14:19:23,240 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:23,240 DEBUG JoinProcessor:175 - Using FROM fragment [Employee employee0_]
+14:19:23,240 DEBUG JoinProcessor:175 - Using FROM fragment [inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name]
+14:19:23,241 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (employeeSite,Employee)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.name as name0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee2_.name as name0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'employee0_.hireDate as hireDate0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'employee2_.hireDate as hireDate0_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[e, m], fromElementByTableAlias=[employee2_, employee0_], fromElementsByPath=[e.managerBySite], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[SQL_TOKEN] MethodNode: '(select min(managerbys1_.siteName) from employeeSite managerbys1_, Employee employee2_ where employee0_.name=managerbys1_.employeeName and managerbys1_.managerName=employee2_.name)'
+             +-[METHOD_NAME] IdentNode: 'minIndex' {originalText=minIndex}
+             \-[EXPR_LIST] SqlNode: 'exprList'
+                \-[ALIAS_REF] IdentNode: 'employee2_.name' {alias=m, className=org.hibernate.test.ternary.Employee, tableAlias=employee2_}
+
+14:19:23,242 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,242 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.ternary.Employee e join e.managerBySite as m where minIndex(m) is not null
+14:19:23,242 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.name as name0_0_, employee2_.name as name0_1_, employee0_.hireDate as hireDate0_0_, employee2_.hireDate as hireDate0_1_ from Employee employee0_ inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name where (select min(managerbys1_.siteName) from employeeSite managerbys1_, Employee employee2_ where employee0_.name=managerbys1_.employeeName and managerbys1_.managerName=employee2_.name) is not null
+14:19:23,242 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,243 DEBUG SQL:104 - 
+    select
+        employee0_.name as name0_0_,
+        employee2_.name as name0_1_,
+        employee0_.hireDate as hireDate0_0_,
+        employee2_.hireDate as hireDate0_1_ 
+    from
+        Employee employee0_ 
+    inner join
+        employeeSite managerbys1_ 
+            on employee0_.name=managerbys1_.employeeName 
+    inner join
+        Employee employee2_ 
+            on managerbys1_.managerName=employee2_.name 
+    where
+        (
+            select
+                min(managerbys1_.siteName) 
+            from
+                employeeSite managerbys1_,
+                Employee employee2_ 
+            where
+                employee0_.name=managerbys1_.employeeName 
+                and managerbys1_.managerName=employee2_.name
+        ) is not null
+14:19:23,244 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.ternary.Employee e join e.managerBySite as m where maxIndex(m) is not null
+14:19:23,245 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'ternary'
+    |     |  |  \-[IDENT] Node: 'Employee'
+    |     |  \-[ALIAS] Node: 'e'
+    |     \-[JOIN] Node: 'join'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'e'
+    |        |  \-[IDENT] Node: 'managerBySite'
+    |        \-[ALIAS] Node: 'm'
+    \-[WHERE] Node: 'where'
+       \-[IS_NOT_NULL] Node: 'is not null'
+          \-[METHOD_CALL] Node: '('
+             +-[IDENT] Node: 'maxIndex'
+             \-[EXPR_LIST] Node: 'exprList'
+                \-[IDENT] Node: 'm'
+
+14:19:23,254 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,254 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (e) -> employee0_
+14:19:23,254 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.name
+14:19:23,254 DEBUG DotNode:599 - getDataType() : managerBySite -> org.hibernate.type.MapType(org.hibernate.test.ternary.Employee.managerBySite)
+14:19:23,255 DEBUG FromElementFactory:385 - createManyToMany() : path = e.managerBySite role = org.hibernate.test.ternary.Employee.managerBySite associatedEntityName = org.hibernate.test.ternary.Employee
+14:19:23,255 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (m) -> employee2_
+14:19:23,255 DEBUG FromClause:282 - addJoinByPathMap() : e.managerBySite -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+14:19:23,255 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for e.managerBySite : employeeSite employee2_
+14:19:23,255 DEBUG FromReferenceNode:74 - Resolved : e.managerBySite -> .
+14:19:23,255 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'employeeSite employee2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+
+14:19:23,265 DEBUG FromReferenceNode:74 - Resolved : m -> employee2_.name
+14:19:23,265 DEBUG MethodNode:151 - collectionProperty() :  name=maxIndex type=org.hibernate.type.ManyToOneType(org.hibernate.test.ternary.Employee)
+14:19:23,265 DEBUG FromElementType:347 - toColumns(employee2_,maxIndex) : subquery = select max(managerbys1_.siteName) from employeeSite managerbys1_, Employee employee2_ where employee0_.name=managerbys1_.employeeName and managerbys1_.managerName=employee2_.name
+14:19:23,266 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Employee employee0_  ) ) ( where ( is not null ( (select max(managerbys1_.siteName) from employeeSite managerbys1_, Employee employee2_ where employee0_.name=managerbys1_.employeeName and managerbys1_.managerName=employee2_.name) maxIndex ( exprList employee2_.name ) ) ) ) )
+14:19:23,266 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:23,266 DEBUG JoinProcessor:175 - Using FROM fragment [Employee employee0_]
+14:19:23,266 DEBUG JoinProcessor:175 - Using FROM fragment [inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name]
+14:19:23,267 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (employeeSite,Employee)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.name as name0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee2_.name as name0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'employee0_.hireDate as hireDate0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'employee2_.hireDate as hireDate0_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[e, m], fromElementByTableAlias=[employee2_, employee0_], fromElementsByPath=[e.managerBySite], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[IS_NOT_NULL] IsNotNullLogicOperatorNode: 'is not null'
+          \-[SQL_TOKEN] MethodNode: '(select max(managerbys1_.siteName) from employeeSite managerbys1_, Employee employee2_ where employee0_.name=managerbys1_.employeeName and managerbys1_.managerName=employee2_.name)'
+             +-[METHOD_NAME] IdentNode: 'maxIndex' {originalText=maxIndex}
+             \-[EXPR_LIST] SqlNode: 'exprList'
+                \-[ALIAS_REF] IdentNode: 'employee2_.name' {alias=m, className=org.hibernate.test.ternary.Employee, tableAlias=employee2_}
+
+14:19:23,267 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,268 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.ternary.Employee e join e.managerBySite as m where maxIndex(m) is not null
+14:19:23,268 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.name as name0_0_, employee2_.name as name0_1_, employee0_.hireDate as hireDate0_0_, employee2_.hireDate as hireDate0_1_ from Employee employee0_ inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name where (select max(managerbys1_.siteName) from employeeSite managerbys1_, Employee employee2_ where employee0_.name=managerbys1_.employeeName and managerbys1_.managerName=employee2_.name) is not null
+14:19:23,268 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,268 DEBUG SQL:104 - 
+    select
+        employee0_.name as name0_0_,
+        employee2_.name as name0_1_,
+        employee0_.hireDate as hireDate0_0_,
+        employee2_.hireDate as hireDate0_1_ 
+    from
+        Employee employee0_ 
+    inner join
+        employeeSite managerbys1_ 
+            on employee0_.name=managerbys1_.employeeName 
+    inner join
+        Employee employee2_ 
+            on managerbys1_.managerName=employee2_.name 
+    where
+        (
+            select
+                max(managerbys1_.siteName) 
+            from
+                employeeSite managerbys1_,
+                Employee employee2_ 
+            where
+                employee0_.name=managerbys1_.employeeName 
+                and managerbys1_.managerName=employee2_.name
+        ) is not null
+14:19:23,290  INFO CustomRunner:139 - Test: testTernary
+14:19:23,292 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (hireDate, name) 
+    values
+        (?, ?)
+14:19:23,293 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (hireDate, name) 
+    values
+        (?, ?)
+14:19:23,293 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (hireDate, name) 
+    values
+        (?, ?)
+14:19:23,300 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (hireDate, name) 
+    values
+        (?, ?)
+14:19:23,301 DEBUG SQL:104 - 
+    insert 
+    into
+        Site
+        (description, name) 
+    values
+        (?, ?)
+14:19:23,301 DEBUG SQL:104 - 
+    insert 
+    into
+        Site
+        (description, name) 
+    values
+        (?, ?)
+14:19:23,302 DEBUG SQL:104 - 
+    insert 
+    into
+        employeeSite
+        (employeeName, siteName, managerName) 
+    values
+        (?, ?, ?)
+14:19:23,311 DEBUG SQL:104 - 
+    insert 
+    into
+        employeeSite
+        (employeeName, siteName, managerName) 
+    values
+        (?, ?, ?)
+14:19:23,312 DEBUG SQL:104 - 
+    insert 
+    into
+        employeeSite
+        (employeeName, siteName, managerName) 
+    values
+        (?, ?, ?)
+14:19:23,313 DEBUG SQL:104 - 
+    select
+        employee0_.name as name0_0_,
+        employee0_.hireDate as hireDate0_0_ 
+    from
+        Employee employee0_ 
+    where
+        employee0_.name=?
+14:19:23,314 DEBUG SQL:104 - 
+    select
+        underlings0_.managerName as managerN2_0_1_,
+        underlings0_.employeeName as employee1_2_1_,
+        employee1_.name as name0_0_,
+        employee1_.hireDate as hireDate0_0_ 
+    from
+        employeeSite underlings0_ 
+    inner join
+        Employee employee1_ 
+            on underlings0_.employeeName=employee1_.name 
+    where
+        underlings0_.managerName=?
+14:19:23,322 DEBUG SQL:104 - 
+    select
+        site0_.name as name1_0_,
+        site0_.description as descript2_1_0_ 
+    from
+        Site site0_ 
+    where
+        site0_.name=?
+14:19:23,323 DEBUG SQL:104 - 
+    select
+        managerbys0_.employeeName as employee1_0_1_,
+        managerbys0_.managerName as managerN2_2_1_,
+        managerbys0_.siteName as siteName1_,
+        employee1_.name as name0_0_,
+        employee1_.hireDate as hireDate0_0_ 
+    from
+        employeeSite managerbys0_ 
+    inner join
+        Employee employee1_ 
+            on managerbys0_.managerName=employee1_.name 
+    where
+        managerbys0_.employeeName=?
+14:19:23,334 DEBUG SQL:104 - 
+    select
+        employees0_.siteName as siteName1_1_,
+        employees0_.employeeName as employee1_2_1_,
+        employee1_.name as name0_0_,
+        employee1_.hireDate as hireDate0_0_ 
+    from
+        employeeSite employees0_ 
+    inner join
+        Employee employee1_ 
+            on employees0_.employeeName=employee1_.name 
+    where
+        employees0_.siteName=?
+14:19:23,334 DEBUG SQL:104 - 
+    select
+        managers0_.siteName as siteName1_1_,
+        managers0_.managerName as managerN2_2_1_,
+        employee1_.name as name0_0_,
+        employee1_.hireDate as hireDate0_0_ 
+    from
+        employeeSite managers0_ 
+    inner join
+        Employee employee1_ 
+            on managers0_.managerName=employee1_.name 
+    where
+        managers0_.siteName=?
+14:19:23,335 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.ternary.Employee e join e.managerBySite m where m.name='Bob'
+14:19:23,337 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'ternary'
+    |     |  |  \-[IDENT] Node: 'Employee'
+    |     |  \-[ALIAS] Node: 'e'
+    |     \-[JOIN] Node: 'join'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'e'
+    |        |  \-[IDENT] Node: 'managerBySite'
+    |        \-[ALIAS] Node: 'm'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'm'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Bob''
+
+14:19:23,345 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,345 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (e) -> employee0_
+14:19:23,345 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.name
+14:19:23,346 DEBUG DotNode:599 - getDataType() : managerBySite -> org.hibernate.type.MapType(org.hibernate.test.ternary.Employee.managerBySite)
+14:19:23,346 DEBUG FromElementFactory:385 - createManyToMany() : path = e.managerBySite role = org.hibernate.test.ternary.Employee.managerBySite associatedEntityName = org.hibernate.test.ternary.Employee
+14:19:23,346 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (m) -> employee2_
+14:19:23,346 DEBUG FromClause:282 - addJoinByPathMap() : e.managerBySite -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+14:19:23,354 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for e.managerBySite : employeeSite employee2_
+14:19:23,355 DEBUG FromReferenceNode:74 - Resolved : e.managerBySite -> .
+14:19:23,355 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'employeeSite employee2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+
+14:19:23,355 DEBUG FromReferenceNode:74 - Resolved : m -> employee2_.name
+14:19:23,356 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:23,356 DEBUG FromReferenceNode:74 - Resolved : m.name -> employee2_.name
+14:19:23,356 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Employee employee0_ employeeSite employee2_ ) ) ( where ( = ( employee2_.name employee2_.name name ) 'Bob' ) ) )
+14:19:23,356 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:23,356 DEBUG JoinProcessor:175 - Using FROM fragment [Employee employee0_]
+14:19:23,356 DEBUG JoinProcessor:175 - Using FROM fragment [inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name]
+14:19:23,357 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (employeeSite,Employee)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.name as name0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee2_.name as name0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'employee0_.hireDate as hireDate0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'employee2_.hireDate as hireDate0_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[e, m], fromElementByTableAlias=[employee2_, employee0_], fromElementsByPath=[e.managerBySite], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'employee2_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=m.name,tableAlias=employee2_,className=org.hibernate.test.ternary.Employee,classAlias=m}
+          |  +-[ALIAS_REF] IdentNode: 'employee2_.name' {alias=m, className=org.hibernate.test.ternary.Employee, tableAlias=employee2_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Bob''
+
+14:19:23,357 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,357 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.ternary.Employee e join e.managerBySite m where m.name='Bob'
+14:19:23,368 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.name as name0_0_, employee2_.name as name0_1_, employee0_.hireDate as hireDate0_0_, employee2_.hireDate as hireDate0_1_ from Employee employee0_ inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name where employee2_.name='Bob'
+14:19:23,369 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,369 DEBUG SQL:104 - 
+    select
+        employee0_.name as name0_0_,
+        employee2_.name as name0_1_,
+        employee0_.hireDate as hireDate0_0_,
+        employee2_.hireDate as hireDate0_1_ 
+    from
+        Employee employee0_ 
+    inner join
+        employeeSite managerbys1_ 
+            on employee0_.name=managerbys1_.employeeName 
+    inner join
+        Employee employee2_ 
+            on managerbys1_.managerName=employee2_.name 
+    where
+        employee2_.name='Bob'
+14:19:23,372 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.ternary.Employee e join e.managerBySite m where m.name='Tom'
+14:19:23,373 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  \-[IDENT] Node: 'ternary'
+    |     |  |  \-[IDENT] Node: 'Employee'
+    |     |  \-[ALIAS] Node: 'e'
+    |     \-[JOIN] Node: 'join'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'e'
+    |        |  \-[IDENT] Node: 'managerBySite'
+    |        \-[ALIAS] Node: 'm'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'm'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Tom''
+
+14:19:23,374 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,374 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (e) -> employee0_
+14:19:23,374 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.name
+14:19:23,374 DEBUG DotNode:599 - getDataType() : managerBySite -> org.hibernate.type.MapType(org.hibernate.test.ternary.Employee.managerBySite)
+14:19:23,374 DEBUG FromElementFactory:385 - createManyToMany() : path = e.managerBySite role = org.hibernate.test.ternary.Employee.managerBySite associatedEntityName = org.hibernate.test.ternary.Employee
+14:19:23,374 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (m) -> employee2_
+14:19:23,375 DEBUG FromClause:282 - addJoinByPathMap() : e.managerBySite -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+14:19:23,375 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for e.managerBySite : employeeSite employee2_
+14:19:23,375 DEBUG FromReferenceNode:74 - Resolved : e.managerBySite -> .
+14:19:23,375 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'employeeSite employee2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+
+14:19:23,375 DEBUG FromReferenceNode:74 - Resolved : m -> employee2_.name
+14:19:23,375 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:23,375 DEBUG FromReferenceNode:74 - Resolved : m.name -> employee2_.name
+14:19:23,381 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Employee employee0_ employeeSite employee2_ ) ) ( where ( = ( employee2_.name employee2_.name name ) 'Tom' ) ) )
+14:19:23,381 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:23,382 DEBUG JoinProcessor:175 - Using FROM fragment [Employee employee0_]
+14:19:23,382 DEBUG JoinProcessor:175 - Using FROM fragment [inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name]
+14:19:23,383 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (employeeSite,Employee)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.name as name0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee2_.name as name0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'employee0_.hireDate as hireDate0_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'employee2_.hireDate as hireDate0_1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[e, m], fromElementByTableAlias=[employee2_, employee0_], fromElementsByPath=[e.managerBySite], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Employee employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'employee2_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=m.name,tableAlias=employee2_,className=org.hibernate.test.ternary.Employee,classAlias=m}
+          |  +-[ALIAS_REF] IdentNode: 'employee2_.name' {alias=m, className=org.hibernate.test.ternary.Employee, tableAlias=employee2_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Tom''
+
+14:19:23,384 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,384 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.ternary.Employee e join e.managerBySite m where m.name='Tom'
+14:19:23,384 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.name as name0_0_, employee2_.name as name0_1_, employee0_.hireDate as hireDate0_0_, employee2_.hireDate as hireDate0_1_ from Employee employee0_ inner join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName inner join Employee employee2_ on managerbys1_.managerName=employee2_.name where employee2_.name='Tom'
+14:19:23,384 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,385 DEBUG SQL:104 - 
+    select
+        employee0_.name as name0_0_,
+        employee2_.name as name0_1_,
+        employee0_.hireDate as hireDate0_0_,
+        employee2_.hireDate as hireDate0_1_ 
+    from
+        Employee employee0_ 
+    inner join
+        employeeSite managerbys1_ 
+            on employee0_.name=managerbys1_.employeeName 
+    inner join
+        Employee employee2_ 
+            on managerbys1_.managerName=employee2_.name 
+    where
+        employee2_.name='Tom'
+14:19:23,392 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.ternary.Employee e left join fetch e.managerBySite
+14:19:23,393 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'ternary'
+          |  |  \-[IDENT] Node: 'Employee'
+          |  \-[ALIAS] Node: 'e'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'e'
+                \-[IDENT] Node: 'managerBySite'
+
+14:19:23,394 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,395 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (e) -> employee0_
+14:19:23,395 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.name
+14:19:23,395 DEBUG DotNode:599 - getDataType() : managerBySite -> org.hibernate.type.MapType(org.hibernate.test.ternary.Employee.managerBySite)
+14:19:23,395 DEBUG FromElementFactory:385 - createManyToMany() : path = e.managerBySite role = org.hibernate.test.ternary.Employee.managerBySite associatedEntityName = org.hibernate.test.ternary.Employee
+14:19:23,395 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (<no alias>) -> employee2_
+14:19:23,396 DEBUG FromClause:282 - addJoinByPathMap() : e.managerBySite -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+14:19:23,396 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for e.managerBySite : employeeSite employee2_
+14:19:23,396 DEBUG FromReferenceNode:74 - Resolved : e.managerBySite -> .
+14:19:23,396 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'employeeSite employee2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+
+14:19:23,413 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Employee employee0_ employeeSite employee2_ ) ) )
+14:19:23,413 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:23,413 DEBUG JoinProcessor:175 - Using FROM fragment [Employee employee0_]
+14:19:23,414 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName left outer join Employee employee2_ on managerbys1_.managerName=employee2_.name]
+14:19:23,414 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (employeeSite,Employee)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.name as name0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee2_.name as name0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'employee0_.hireDate as hireDate0_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'employee2_.hireDate as hireDate0_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'managerbys1_.employeeName as employee1_0_0__, managerbys1_.managerName as managerN2_2_0__, managerbys1_.siteName as siteName0__'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[e], fromElementByTableAlias=[employee2_, employee0_], fromElementsByPath=[e.managerBySite], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Employee employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName left outer join Employee employee2_ on managerbys1_.managerName=employee2_.name' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+
+14:19:23,414 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,414 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.ternary.Employee e left join fetch e.managerBySite
+14:19:23,414 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.name as name0_0_, employee2_.name as name0_1_, employee0_.hireDate as hireDate0_0_, employee2_.hireDate as hireDate0_1_, managerbys1_.employeeName as employee1_0_0__, managerbys1_.managerName as managerN2_2_0__, managerbys1_.siteName as siteName0__ from Employee employee0_ left outer join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName left outer join Employee employee2_ on managerbys1_.managerName=employee2_.name
+14:19:23,414 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,415 DEBUG SQL:104 - 
+    select
+        employee0_.name as name0_0_,
+        employee2_.name as name0_1_,
+        employee0_.hireDate as hireDate0_0_,
+        employee2_.hireDate as hireDate0_1_,
+        managerbys1_.employeeName as employee1_0_0__,
+        managerbys1_.managerName as managerN2_2_0__,
+        managerbys1_.siteName as siteName0__ 
+    from
+        Employee employee0_ 
+    left outer join
+        employeeSite managerbys1_ 
+            on employee0_.name=managerbys1_.employeeName 
+    left outer join
+        Employee employee2_ 
+            on managerbys1_.managerName=employee2_.name
+14:19:23,425 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.ternary.Employee e left join e.managerBySite m left join m.managerBySite m2
+14:19:23,427 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'ternary'
+          |  |  \-[IDENT] Node: 'Employee'
+          |  \-[ALIAS] Node: 'e'
+          +-[JOIN] Node: 'join'
+          |  +-[LEFT] Node: 'left'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'e'
+          |  |  \-[IDENT] Node: 'managerBySite'
+          |  \-[ALIAS] Node: 'm'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[DOT] Node: '.'
+             |  +-[IDENT] Node: 'm'
+             |  \-[IDENT] Node: 'managerBySite'
+             \-[ALIAS] Node: 'm2'
+
+14:19:23,429 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,429 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (e) -> employee0_
+14:19:23,430 DEBUG FromReferenceNode:74 - Resolved : e -> employee0_.name
+14:19:23,430 DEBUG DotNode:599 - getDataType() : managerBySite -> org.hibernate.type.MapType(org.hibernate.test.ternary.Employee.managerBySite)
+14:19:23,430 DEBUG FromElementFactory:385 - createManyToMany() : path = e.managerBySite role = org.hibernate.test.ternary.Employee.managerBySite associatedEntityName = org.hibernate.test.ternary.Employee
+14:19:23,430 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (m) -> employee2_
+14:19:23,430 DEBUG FromClause:282 - addJoinByPathMap() : e.managerBySite -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+14:19:23,430 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for e.managerBySite : employeeSite employee2_
+14:19:23,431 DEBUG FromReferenceNode:74 - Resolved : e.managerBySite -> .
+14:19:23,431 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'employeeSite employee2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+
+14:19:23,431 DEBUG FromReferenceNode:74 - Resolved : m -> employee2_.name
+14:19:23,431 DEBUG DotNode:599 - getDataType() : managerBySite -> org.hibernate.type.MapType(org.hibernate.test.ternary.Employee.managerBySite)
+14:19:23,431 DEBUG FromElementFactory:385 - createManyToMany() : path = m.managerBySite role = org.hibernate.test.ternary.Employee.managerBySite associatedEntityName = org.hibernate.test.ternary.Employee
+14:19:23,431 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Employee (m2) -> employee4_
+14:19:23,432 DEBUG FromClause:282 - addJoinByPathMap() : m.managerBySite -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m2,role=null,tableName=Employee,tableAlias=employee4_,origin=employeeSite employee2_,columns={employee2_.name ,className=org.hibernate.test.ternary.Employee}}
+14:19:23,432 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for m.managerBySite : employeeSite employee4_
+14:19:23,432 DEBUG FromReferenceNode:74 - Resolved : m.managerBySite -> .
+14:19:23,432 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'employeeSite employee4_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m2,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee4_,origin=employeeSite employee2_,columns={employee2_.name ,className=org.hibernate.test.ternary.Employee}}
+
+14:19:23,432 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Employee employee0_ ( employeeSite employee2_ employeeSite employee4_ ) ) ) )
+14:19:23,432 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:23,433 DEBUG JoinProcessor:175 - Using FROM fragment [Employee employee0_]
+14:19:23,433 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName left outer join Employee employee2_ on managerbys1_.managerName=employee2_.name]
+14:19:23,433 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join employeeSite managerbys3_ on employee2_.name=managerbys3_.employeeName left outer join Employee employee4_ on managerbys3_.managerName=employee4_.name]
+14:19:23,433 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (employeeSite,Employee)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee0_.name as name0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee2_.name as name0_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'employee4_.name as name0_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m2,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee4_,origin=left outer join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName left outer join Employee employee2_ on managerbys1_.managerName=employee2_.name,columns={employee2_.name ,className=org.hibernate.test.ternary.Employee}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'employee0_.hireDate as hireDate0_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'employee2_.hireDate as hireDate0_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'employee4_.hireDate as hireDate0_2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[e, m2, m], fromElementByTableAlias=[employee4_, employee2_, employee0_], fromElementsByPath=[m.managerBySite, e.managerBySite], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Employee employee0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=e,role=null,tableName=Employee,tableAlias=employee0_,origin=null,columns={,className=org.hibernate.test.ternary.Employee}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName left outer join Employee employee2_ on managerbys1_.managerName=employee2_.name' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee2_,origin=Employee employee0_,columns={employee0_.name ,className=org.hibernate.test.ternary.Employee}}
+             \-[JOIN_FRAGMENT] FromElement: 'left outer join employeeSite managerbys3_ on employee2_.name=managerbys3_.employeeName left outer join Employee employee4_ on managerbys3_.managerName=employee4_.name' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m2,role=org.hibernate.test.ternary.Employee.managerBySite,tableName=Employee,tableAlias=employee4_,origin=left outer join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName left outer join Employee employee2_ on managerbys1_.managerName=employee2_.name,columns={employee2_.name ,className=org.hibernate.test.ternary.Employee}}
+
+14:19:23,448 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,448 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.ternary.Employee e left join e.managerBySite m left join m.managerBySite m2
+14:19:23,448 DEBUG QueryTranslatorImpl:236 - SQL: select employee0_.name as name0_0_, employee2_.name as name0_1_, employee4_.name as name0_2_, employee0_.hireDate as hireDate0_0_, employee2_.hireDate as hireDate0_1_, employee4_.hireDate as hireDate0_2_ from Employee employee0_ left outer join employeeSite managerbys1_ on employee0_.name=managerbys1_.employeeName left outer join Employee employee2_ on managerbys1_.managerName=employee2_.name left outer join employeeSite managerbys3_ on employee2_.name=managerbys3_.employeeName left outer join Employee employee4_ on managerbys3_.managerName=employee4_.name
+14:19:23,448 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,450 DEBUG SQL:104 - 
+    select
+        employee0_.name as name0_0_,
+        employee2_.name as name0_1_,
+        employee4_.name as name0_2_,
+        employee0_.hireDate as hireDate0_0_,
+        employee2_.hireDate as hireDate0_1_,
+        employee4_.hireDate as hireDate0_2_ 
+    from
+        Employee employee0_ 
+    left outer join
+        employeeSite managerbys1_ 
+            on employee0_.name=managerbys1_.employeeName 
+    left outer join
+        Employee employee2_ 
+            on managerbys1_.managerName=employee2_.name 
+    left outer join
+        employeeSite managerbys3_ 
+            on employee2_.name=managerbys3_.employeeName 
+    left outer join
+        Employee employee4_ 
+            on managerbys3_.managerName=employee4_.name
+14:19:23,458 DEBUG SQL:104 - 
+    select
+        employee0_.name as name0_0_,
+        employee2_.name as name0_1_,
+        employee0_.hireDate as hireDate0_0_,
+        employee2_.hireDate as hireDate0_1_,
+        managerbys1_.employeeName as employee1_0_0__,
+        managerbys1_.managerName as managerN2_2_0__,
+        managerbys1_.siteName as siteName0__ 
+    from
+        Employee employee0_ 
+    left outer join
+        employeeSite managerbys1_ 
+            on employee0_.name=managerbys1_.employeeName 
+    left outer join
+        Employee employee2_ 
+            on managerbys1_.managerName=employee2_.name
+14:19:23,459 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.ternary.Site
+14:19:23,460 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'ternary'
+                \-[IDENT] Node: 'Site'
+
+14:19:23,468 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,469 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ternary.Site (<no alias>) -> site0_
+14:19:23,469 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Site site0_ ) )
+14:19:23,469 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:23,469 DEBUG JoinProcessor:175 - Using FROM fragment [Site site0_]
+14:19:23,469 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Site)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'site0_.name as name1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Site,tableAlias=site0_,origin=null,columns={,className=org.hibernate.test.ternary.Site}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'site0_.description as descript2_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[site0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Site site0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Site,tableAlias=site0_,origin=null,columns={,className=org.hibernate.test.ternary.Site}}
+
+14:19:23,470 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,470 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.ternary.Site
+14:19:23,470 DEBUG QueryTranslatorImpl:236 - SQL: select site0_.name as name1_, site0_.description as descript2_1_ from Site site0_
+14:19:23,470 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,471 DEBUG SQL:104 - 
+    select
+        site0_.name as name1_,
+        site0_.description as descript2_1_ 
+    from
+        Site site0_
+14:19:23,472 DEBUG SQL:104 - 
+    delete 
+    from
+        employeeSite 
+    where
+        employeeName=?
+14:19:23,478 DEBUG SQL:104 - 
+    delete 
+    from
+        employeeSite 
+    where
+        employeeName=?
+14:19:23,479 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        name=?
+14:19:23,479 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        name=?
+14:19:23,479 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        name=?
+14:19:23,479 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        name=?
+14:19:23,488 DEBUG SQL:104 - 
+    delete 
+    from
+        Site 
+    where
+        name=?
+14:19:23,489 DEBUG SQL:104 - 
+    delete 
+    from
+        Site 
+    where
+        name=?
+14:19:23,490  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:23,491 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:23,491 DEBUG SQL:104 - 
+    alter table employeeSite 
+        drop constraint FK98FB3315F4B6D26F
+14:19:23,491 DEBUG SQL:104 - 
+    alter table employeeSite 
+        drop constraint FK98FB33158B5B40F0
+14:19:23,491 DEBUG SQL:104 - 
+    alter table employeeSite 
+        drop constraint FK98FB3315183CAA22
+14:19:23,491 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:19:23,492 DEBUG SQL:104 - 
+    drop table Site if exists
+14:19:23,492 DEBUG SQL:104 - 
+    drop table employeeSite if exists
+14:19:23,492  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:23,492  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.metamodel.source.annotations.entity.IdentifierGeneratorTest" tests="6" time="0.116" timestamp="2013-02-28T20:09:58">
+  <properties />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.IdentifierGeneratorTest" name="testAutoGenerationType" time="0.019" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.IdentifierGeneratorTest" name="testNamedGenerator" time="0.016" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.IdentifierGeneratorTest" name="testNoIdGeneration" time="0.014" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.IdentifierGeneratorTest" name="testSequenceGenerationType" time="0.013" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.IdentifierGeneratorTest" name="testTableGenerationType" time="0.018" />
+  <testcase classname="org.hibernate.metamodel.source.annotations.entity.IdentifierGeneratorTest" name="testUndefinedGenerator" time="0.021" />
+  <system-out><![CDATA[14:09:58,578  INFO CustomRunner:132 - BeforeClass: org.hibernate.metamodel.source.annotations.entity.IdentifierGeneratorTest
+14:09:58,579  INFO CustomRunner:139 - Test: testAutoGenerationType
+14:09:58,584  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,585  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,585  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,585  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,585  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,591  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,591  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,595  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,598  INFO CustomRunner:139 - Test: testNamedGenerator
+14:09:58,602  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,603  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,603  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,603  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,603  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,607  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,608  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,609  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,612  WARN UUIDHexGenerator:59 - HHH000409: Using org.hibernate.id.UUIDHexGenerator which does not generate IETF RFC 4122 compliant UUID values; consider using org.hibernate.id.UUIDGenerator instead
+14:09:58,616  INFO CustomRunner:139 - Test: testNoIdGeneration
+14:09:58,622  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,622  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,623  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,623  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,623  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,627  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,627  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,628  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,631  INFO CustomRunner:139 - Test: testSequenceGenerationType
+14:09:58,635  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,636  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,636  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,636  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,636  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,640  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,640  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,642  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,645  INFO CustomRunner:139 - Test: testTableGenerationType
+14:09:58,653  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,654  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,654  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,654  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,654  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,658  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,659  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,661  WARN CachingRegionFactory:53 - CachingRegionFactory should be only used for testing.
+14:09:58,665  INFO CustomRunner:139 - Test: testUndefinedGenerator
+14:09:58,669  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,670  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,670  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,670  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,670  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,674  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,674  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:09:58,678  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:09:58,678  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:09:58,679  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:09:58,679  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:09:58,680  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:09:58,684  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:09:58,684  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

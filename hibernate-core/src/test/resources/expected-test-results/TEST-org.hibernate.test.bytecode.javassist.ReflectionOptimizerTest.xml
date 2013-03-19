@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.bytecode.javassist.ReflectionOptimizerTest" tests="1" time="0.046" timestamp="2013-02-28T20:11:39">
+  <properties />
+  <testcase classname="org.hibernate.test.bytecode.javassist.ReflectionOptimizerTest" name="testReflectionOptimization" time="0.043" />
+  <system-out><![CDATA[14:11:39,636  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.bytecode.javassist.ReflectionOptimizerTest
+14:11:39,636  INFO CustomRunner:139 - Test: testReflectionOptimization
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

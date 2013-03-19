@@ -1,0 +1,700 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CompositeKeyDeleteTest" tests="1" time="0.342" timestamp="2013-02-28T20:10:20">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CompositeKeyDeleteTest" name="testRemove" time="0.139" />
+  <system-out><![CDATA[14:10:20,125  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CompositeKeyDeleteTest
+14:10:20,126  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/annotations/derivedidentities/e1/b/specjmapid/lazy/order_orm.xml
+14:10:20,147  WARN JPAOverriddenAnnotationReader:449 - HHH000207: Property org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo.customerInventories not found in class but described in <mapping-file/> (possible typo error)
+14:10:20,161  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:20,161  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:20,161  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:20,161  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:20,162  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:20,164  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:20,165  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:20,165  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:20,165  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:20,165  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:20,187  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:20,188 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:20,188 DEBUG SQL:104 - 
+    alter table O_CUSTINVENTORY 
+        drop constraint FK22317459C3AA5E13
+14:10:20,188 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table O_CUSTINVENTORY drop constraint FK22317459C3AA5E13
+14:10:20,188 ERROR SchemaExport:426 - Table "O_CUSTINVENTORY" not found; SQL statement:
+
+    alter table O_CUSTINVENTORY 
+        drop constraint FK22317459C3AA5E13 [42102-145]
+14:10:20,188 DEBUG SQL:104 - 
+    alter table O_CUSTINVENTORY 
+        drop constraint FK2231745931BED547
+14:10:20,188 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table O_CUSTINVENTORY drop constraint FK2231745931BED547
+14:10:20,189 ERROR SchemaExport:426 - Table "O_CUSTINVENTORY" not found; SQL statement:
+
+    alter table O_CUSTINVENTORY 
+        drop constraint FK2231745931BED547 [42102-145]
+14:10:20,189 DEBUG SQL:104 - 
+    drop table O_CUSTINVENTORY if exists
+14:10:20,189 DEBUG SQL:104 - 
+    drop table O_CUSTOMER if exists
+14:10:20,189 DEBUG SQL:104 - 
+    drop table O_ITEM if exists
+14:10:20,189 DEBUG SQL:104 - 
+    drop table U_SEQUENCES if exists
+14:10:20,189 DEBUG SQL:104 - 
+    create table O_CUSTINVENTORY (
+        CI_CUSTOMERID integer not null,
+        CI_ID integer not null,
+        CI_QUANTITY integer,
+        CI_VALUE decimal(19,2),
+        CI_VERSION integer,
+        CI_ITEMID varchar(255),
+        primary key (CI_CUSTOMERID, CI_ID)
+    )
+14:10:20,190 DEBUG SQL:104 - 
+    create table O_CUSTOMER (
+        C_ID integer not null,
+        C_BALANCE decimal(19,2),
+        C_CONTACT varchar(255),
+        C_CREDIT varchar(255),
+        C_CREDIT_LIMIT decimal(19,2),
+        C_FIRST varchar(255),
+        C_LAST varchar(255),
+        C_SINCE date,
+        C_VERSION integer,
+        C_YTD_PAYMENT decimal(19,2),
+        primary key (C_ID)
+    )
+14:10:20,190 DEBUG SQL:104 - 
+    create table O_ITEM (
+        I_ID varchar(255) not null,
+        I_CATEGORY integer,
+        I_DESC varchar(255),
+        I_DISCOUNT decimal(19,2),
+        I_NAME varchar(255),
+        I_PRICE decimal(19,2),
+        I_VERSION integer,
+        primary key (I_ID)
+    )
+14:10:20,191 DEBUG SQL:104 - 
+    alter table O_CUSTINVENTORY 
+        add constraint FK22317459C3AA5E13 
+        foreign key (CI_CUSTOMERID) 
+        references O_CUSTOMER
+14:10:20,196 DEBUG SQL:104 - 
+    alter table O_CUSTINVENTORY 
+        add constraint FK2231745931BED547 
+        foreign key (CI_ITEMID) 
+        references O_ITEM
+14:10:20,197 DEBUG SQL:104 - 
+    create table U_SEQUENCES (
+         S_ID varchar(255) not null ,
+         S_NEXTNUM bigint,
+        primary key ( S_ID ) 
+    ) 
+14:10:20,197  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:20,198  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:20,198 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select COUNT(a) from org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo a
+14:10:20,200 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'derivedidentities'
+       |     |  |  |  |  |  \-[IDENT] Node: 'e1'
+       |     |  |  |  |  \-[IDENT] Node: 'b'
+       |     |  |  |  \-[IDENT] Node: 'specjmapid'
+       |     |  |  \-[IDENT] Node: 'lazy'
+       |     |  \-[IDENT] Node: 'CustomerTwo'
+       |     \-[ALIAS] Node: 'a'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'COUNT'
+             \-[IDENT] Node: 'a'
+
+14:10:20,218 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,219 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo (a) -> customertw0_
+14:10:20,219 DEBUG FromReferenceNode:74 - Resolved : a -> customertw0_.C_ID
+14:10:20,219 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( COUNT customertw0_.C_ID ) ) ( FromClause{level=1} O_CUSTOMER customertw0_ ) )
+14:10:20,227 DEBUG JoinProcessor:175 - Using FROM fragment [O_CUSTOMER customertw0_]
+14:10:20,228 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (O_CUSTOMER)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'COUNT'
+    |  |  \-[ALIAS_REF] IdentNode: 'customertw0_.C_ID' {alias=a, className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo, tableAlias=customertw0_}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[customertw0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'O_CUSTOMER customertw0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=O_CUSTOMER,tableAlias=customertw0_,origin=null,columns={,className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo}}
+
+14:10:20,228 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,228 DEBUG QueryTranslatorImpl:235 - HQL: select COUNT(a) from org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo a
+14:10:20,228 DEBUG QueryTranslatorImpl:236 - SQL: select count(customertw0_.C_ID) as col_0_0_ from O_CUSTOMER customertw0_
+14:10:20,228 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,229 DEBUG QueryTranslatorImpl:265 - parse() - HQL: SELECT c.id FROM org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo c WHERE c.creditLimit > :limit
+14:10:20,231 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'FROM'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  |  |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  |  |  |  |  \-[IDENT] Node: 'derivedidentities'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'e1'
+    |  |     |  |  |  |  \-[IDENT] Node: 'b'
+    |  |     |  |  |  \-[IDENT] Node: 'specjmapid'
+    |  |     |  |  \-[IDENT] Node: 'lazy'
+    |  |     |  \-[IDENT] Node: 'CustomerTwo'
+    |  |     \-[ALIAS] Node: 'c'
+    |  \-[SELECT] Node: 'SELECT'
+    |     \-[DOT] Node: '.'
+    |        +-[IDENT] Node: 'c'
+    |        \-[IDENT] Node: 'id'
+    \-[WHERE] Node: 'WHERE'
+       \-[GT] Node: '>'
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'c'
+          |  \-[IDENT] Node: 'creditLimit'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'limit'
+
+14:10:20,252 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,252 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo (c) -> customertw0_
+14:10:20,252 DEBUG FromReferenceNode:74 - Resolved : c -> customertw0_.C_ID
+14:10:20,253 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.IntegerType@42252fee
+14:10:20,253 DEBUG FromReferenceNode:74 - Resolved : c.id -> customertw0_.C_ID
+14:10:20,253 DEBUG FromReferenceNode:74 - Resolved : c -> customertw0_.C_ID
+14:10:20,253 DEBUG DotNode:599 - getDataType() : creditLimit -> org.hibernate.type.BigDecimalType@3bb4a749
+14:10:20,253 DEBUG FromReferenceNode:74 - Resolved : c.creditLimit -> customertw0_.C_CREDIT_LIMIT
+14:10:20,254 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( customertw0_.C_ID customertw0_.C_ID id ) ) ( FromClause{level=1} O_CUSTOMER customertw0_ ) ( WHERE ( > ( customertw0_.C_CREDIT_LIMIT customertw0_.C_ID creditLimit ) ? ) ) )
+14:10:20,254 DEBUG JoinProcessor:175 - Using FROM fragment [O_CUSTOMER customertw0_]
+14:10:20,254 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (O_CUSTOMER)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[DOT] DotNode: 'customertw0_.C_ID' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=c.id,tableAlias=customertw0_,className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo,classAlias=c}
+    |  |  +-[ALIAS_REF] IdentNode: 'customertw0_.C_ID' {alias=c, className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo, tableAlias=customertw0_}
+    |  |  \-[IDENT] IdentNode: 'id' {originalText=id}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[c], fromElementByTableAlias=[customertw0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'O_CUSTOMER customertw0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=O_CUSTOMER,tableAlias=customertw0_,origin=null,columns={,className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[GT] BinaryLogicOperatorNode: '>'
+          +-[DOT] DotNode: 'customertw0_.C_CREDIT_LIMIT' {propertyName=creditLimit,dereferenceType=ALL,propertyPath=creditLimit,path=c.creditLimit,tableAlias=customertw0_,className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo,classAlias=c}
+          |  +-[ALIAS_REF] IdentNode: 'customertw0_.C_ID' {alias=c, className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo, tableAlias=customertw0_}
+          |  \-[IDENT] IdentNode: 'creditLimit' {originalText=creditLimit}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=limit, expectedType=org.hibernate.type.BigDecimalType@3bb4a749}
+
+14:10:20,262 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,262 DEBUG QueryTranslatorImpl:235 - HQL: SELECT c.id FROM org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo c WHERE c.creditLimit > :limit
+14:10:20,262 DEBUG QueryTranslatorImpl:236 - SQL: select customertw0_.C_ID as col_0_0_ from O_CUSTOMER customertw0_ where customertw0_.C_CREDIT_LIMIT>?
+14:10:20,262 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,263 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select a from org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerInventoryTwo a
+14:10:20,265 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'derivedidentities'
+       |     |  |  |  |  |  \-[IDENT] Node: 'e1'
+       |     |  |  |  |  \-[IDENT] Node: 'b'
+       |     |  |  |  \-[IDENT] Node: 'specjmapid'
+       |     |  |  \-[IDENT] Node: 'lazy'
+       |     |  \-[IDENT] Node: 'CustomerInventoryTwo'
+       |     \-[ALIAS] Node: 'a'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'a'
+
+14:10:20,274 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,274 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerInventoryTwo (a) -> customerin0_
+14:10:20,274 DEBUG FromReferenceNode:74 - Resolved : a -> customerin0_.CI_ID
+14:10:20,275 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} customerin0_.CI_ID ) ( FromClause{level=1} O_CUSTINVENTORY customerin0_ ) )
+14:10:20,275 DEBUG JoinProcessor:175 - Using FROM fragment [O_CUSTINVENTORY customerin0_]
+14:10:20,275 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (O_CUSTINVENTORY)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'customerin0_.CI_CUSTOMERID as CI1_0_, customerin0_.CI_ID as CI2_0_' {alias=a, className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerInventoryTwo, tableAlias=customerin0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'customerin0_.CI_QUANTITY as CI3_0_, customerin0_.CI_VALUE as CI4_0_, customerin0_.CI_ITEMID as CI6_0_, customerin0_.CI_VERSION as CI5_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[customerin0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'O_CUSTINVENTORY customerin0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=O_CUSTINVENTORY,tableAlias=customerin0_,origin=null,columns={,className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerInventoryTwo}}
+
+14:10:20,275 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,276 DEBUG QueryTranslatorImpl:235 - HQL: select a from org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerInventoryTwo a
+14:10:20,276 DEBUG QueryTranslatorImpl:236 - SQL: select customerin0_.CI_CUSTOMERID as CI1_0_, customerin0_.CI_ID as CI2_0_, customerin0_.CI_QUANTITY as CI3_0_, customerin0_.CI_VALUE as CI4_0_, customerin0_.CI_ITEMID as CI6_0_, customerin0_.CI_VERSION as CI5_0_ from O_CUSTINVENTORY customerin0_
+14:10:20,276 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,276 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select a from org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo a
+14:10:20,278 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'derivedidentities'
+       |     |  |  |  |  |  \-[IDENT] Node: 'e1'
+       |     |  |  |  |  \-[IDENT] Node: 'b'
+       |     |  |  |  \-[IDENT] Node: 'specjmapid'
+       |     |  |  \-[IDENT] Node: 'lazy'
+       |     |  \-[IDENT] Node: 'CustomerTwo'
+       |     \-[ALIAS] Node: 'a'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'a'
+
+14:10:20,284 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,285 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo (a) -> customertw0_
+14:10:20,285 DEBUG FromReferenceNode:74 - Resolved : a -> customertw0_.C_ID
+14:10:20,285 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} customertw0_.C_ID ) ( FromClause{level=1} O_CUSTOMER customertw0_ ) )
+14:10:20,286 DEBUG JoinProcessor:175 - Using FROM fragment [O_CUSTOMER customertw0_]
+14:10:20,286 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (O_CUSTOMER)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'customertw0_.C_ID as C1_1_' {alias=a, className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo, tableAlias=customertw0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'customertw0_.C_BALANCE as C2_1_, customertw0_.C_CONTACT as C3_1_, customertw0_.C_CREDIT as C4_1_, customertw0_.C_CREDIT_LIMIT as C5_1_, customertw0_.C_FIRST as C6_1_, customertw0_.C_LAST as C7_1_, customertw0_.C_SINCE as C8_1_, customertw0_.C_VERSION as C9_1_, customertw0_.C_YTD_PAYMENT as C10_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[a], fromElementByTableAlias=[customertw0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'O_CUSTOMER customertw0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=O_CUSTOMER,tableAlias=customertw0_,origin=null,columns={,className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo}}
+
+14:10:20,295 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,296 DEBUG QueryTranslatorImpl:235 - HQL: select a from org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo a
+14:10:20,296 DEBUG QueryTranslatorImpl:236 - SQL: select customertw0_.C_ID as C1_1_, customertw0_.C_BALANCE as C2_1_, customertw0_.C_CONTACT as C3_1_, customertw0_.C_CREDIT as C4_1_, customertw0_.C_CREDIT_LIMIT as C5_1_, customertw0_.C_FIRST as C6_1_, customertw0_.C_LAST as C7_1_, customertw0_.C_SINCE as C8_1_, customertw0_.C_VERSION as C9_1_, customertw0_.C_YTD_PAYMENT as C10_1_ from O_CUSTOMER customertw0_
+14:10:20,296 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,296 DEBUG QueryTranslatorImpl:265 - parse() - HQL: SELECT i FROM org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.Item i WHERE i.category=:category ORDER BY i.id
+14:10:20,303 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'FROM'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'derivedidentities'
+    |  |     |  |  |  |  \-[IDENT] Node: 'e1'
+    |  |     |  |  |  \-[IDENT] Node: 'b'
+    |  |     |  |  \-[IDENT] Node: 'specjmapid'
+    |  |     |  \-[IDENT] Node: 'Item'
+    |  |     \-[ALIAS] Node: 'i'
+    |  \-[SELECT] Node: 'SELECT'
+    |     \-[IDENT] Node: 'i'
+    +-[WHERE] Node: 'WHERE'
+    |  \-[EQ] Node: '='
+    |     +-[DOT] Node: '.'
+    |     |  +-[IDENT] Node: 'i'
+    |     |  \-[IDENT] Node: 'category'
+    |     \-[COLON] Node: ':'
+    |        \-[IDENT] Node: 'category'
+    \-[ORDER] Node: 'ORDER'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'i'
+          \-[IDENT] Node: 'id'
+
+14:10:20,308 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,308 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.Item (i) -> item0_
+14:10:20,309 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.I_ID
+14:10:20,309 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.I_ID
+14:10:20,310 DEBUG DotNode:599 - getDataType() : category -> org.hibernate.type.IntegerType@42252fee
+14:10:20,310 DEBUG FromReferenceNode:74 - Resolved : i.category -> item0_.I_CATEGORY
+14:10:20,310 DEBUG FromReferenceNode:74 - Resolved : i -> item0_.I_ID
+14:10:20,310 DEBUG DotNode:599 - getDataType() : id -> org.hibernate.type.StringType@2dc8de40
+14:10:20,310 DEBUG FromReferenceNode:74 - Resolved : i.id -> item0_.I_ID
+14:10:20,311 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} item0_.I_ID ) ( FromClause{level=1} O_ITEM item0_ ) ( WHERE ( = ( item0_.I_CATEGORY item0_.I_ID category ) ? ) ) ( ORDER ( item0_.I_ID item0_.I_ID id ) ) )
+14:10:20,311 DEBUG JoinProcessor:175 - Using FROM fragment [O_ITEM item0_]
+14:10:20,311 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (O_ITEM)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'item0_.I_ID as I1_2_' {alias=i, className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.Item, tableAlias=item0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'item0_.I_CATEGORY as I2_2_, item0_.I_DESC as I3_2_, item0_.I_DISCOUNT as I4_2_, item0_.I_NAME as I5_2_, item0_.I_PRICE as I6_2_, item0_.I_VERSION as I7_2_'
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[i], fromElementByTableAlias=[item0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'O_ITEM item0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=i,role=null,tableName=O_ITEM,tableAlias=item0_,origin=null,columns={,className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.Item}}
+    +-[WHERE] SqlNode: 'WHERE'
+    |  \-[EQ] BinaryLogicOperatorNode: '='
+    |     +-[DOT] DotNode: 'item0_.I_CATEGORY' {propertyName=category,dereferenceType=ALL,propertyPath=category,path=i.category,tableAlias=item0_,className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.Item,classAlias=i}
+    |     |  +-[ALIAS_REF] IdentNode: 'item0_.I_ID' {alias=i, className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.Item, tableAlias=item0_}
+    |     |  \-[IDENT] IdentNode: 'category' {originalText=category}
+    |     \-[NAMED_PARAM] ParameterNode: '?' {name=category, expectedType=org.hibernate.type.IntegerType@42252fee}
+    \-[ORDER] OrderByClause: 'ORDER'
+       \-[DOT] DotNode: 'item0_.I_ID' {propertyName=id,dereferenceType=ALL,propertyPath=id,path=i.id,tableAlias=item0_,className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.Item,classAlias=i}
+          +-[ALIAS_REF] IdentNode: 'item0_.I_ID' {alias=i, className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.Item, tableAlias=item0_}
+          \-[IDENT] IdentNode: 'id' {originalText=id}
+
+14:10:20,311 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,312 DEBUG QueryTranslatorImpl:235 - HQL: SELECT i FROM org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.Item i WHERE i.category=:category ORDER BY i.id
+14:10:20,312 DEBUG QueryTranslatorImpl:236 - SQL: select item0_.I_ID as I1_2_, item0_.I_CATEGORY as I2_2_, item0_.I_DESC as I3_2_, item0_.I_DISCOUNT as I4_2_, item0_.I_NAME as I5_2_, item0_.I_PRICE as I6_2_, item0_.I_VERSION as I7_2_ from O_ITEM item0_ where item0_.I_CATEGORY=? order by item0_.I_ID
+14:10:20,312 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,312  INFO CustomRunner:139 - Test: testRemove
+14:10:20,316 DEBUG SQL:104 - 
+    insert 
+    into
+        O_CUSTOMER
+        (C_BALANCE, C_CONTACT, C_CREDIT, C_CREDIT_LIMIT, C_FIRST, C_LAST, C_SINCE, C_VERSION, C_YTD_PAYMENT, C_ID) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+14:10:20,331 DEBUG SQL:104 - 
+    insert 
+    into
+        O_ITEM
+        (I_CATEGORY, I_DESC, I_DISCOUNT, I_NAME, I_PRICE, I_VERSION, I_ID) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:10:20,332 DEBUG SQL:104 - 
+    insert 
+    into
+        O_ITEM
+        (I_CATEGORY, I_DESC, I_DISCOUNT, I_NAME, I_PRICE, I_VERSION, I_ID) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:10:20,332 DEBUG SQL:104 - 
+    select
+        customertw0_.C_ID as C1_1_2_,
+        customertw0_.C_BALANCE as C2_1_2_,
+        customertw0_.C_CONTACT as C3_1_2_,
+        customertw0_.C_CREDIT as C4_1_2_,
+        customertw0_.C_CREDIT_LIMIT as C5_1_2_,
+        customertw0_.C_FIRST as C6_1_2_,
+        customertw0_.C_LAST as C7_1_2_,
+        customertw0_.C_SINCE as C8_1_2_,
+        customertw0_.C_VERSION as C9_1_2_,
+        customertw0_.C_YTD_PAYMENT as C10_1_2_,
+        customerin1_.CI_CUSTOMERID as CI1_1_4_,
+        customerin1_.CI_CUSTOMERID as CI1_0_4_,
+        customerin1_.CI_ID as CI2_0_4_,
+        customerin1_.CI_CUSTOMERID as CI1_0_0_,
+        customerin1_.CI_ID as CI2_0_0_,
+        customerin1_.CI_QUANTITY as CI3_0_0_,
+        customerin1_.CI_VALUE as CI4_0_0_,
+        customerin1_.CI_ITEMID as CI6_0_0_,
+        customerin1_.CI_VERSION as CI5_0_0_,
+        item2_.I_ID as I1_2_1_,
+        item2_.I_CATEGORY as I2_2_1_,
+        item2_.I_DESC as I3_2_1_,
+        item2_.I_DISCOUNT as I4_2_1_,
+        item2_.I_NAME as I5_2_1_,
+        item2_.I_PRICE as I6_2_1_,
+        item2_.I_VERSION as I7_2_1_ 
+    from
+        O_CUSTOMER customertw0_ 
+    left outer join
+        O_CUSTINVENTORY customerin1_ 
+            on customertw0_.C_ID=customerin1_.CI_CUSTOMERID 
+    left outer join
+        O_ITEM item2_ 
+            on customerin1_.CI_ITEMID=item2_.I_ID 
+    where
+        customertw0_.C_ID=?
+14:10:20,350 DEBUG SQL:104 - 
+    select
+        customerin0_.CI_CUSTOMERID as CI1_0_2_,
+        customerin0_.CI_ID as CI2_0_2_,
+        customerin0_.CI_QUANTITY as CI3_0_2_,
+        customerin0_.CI_VALUE as CI4_0_2_,
+        customerin0_.CI_ITEMID as CI6_0_2_,
+        customerin0_.CI_VERSION as CI5_0_2_,
+        customertw1_.C_ID as C1_1_0_,
+        customertw1_.C_BALANCE as C2_1_0_,
+        customertw1_.C_CONTACT as C3_1_0_,
+        customertw1_.C_CREDIT as C4_1_0_,
+        customertw1_.C_CREDIT_LIMIT as C5_1_0_,
+        customertw1_.C_FIRST as C6_1_0_,
+        customertw1_.C_LAST as C7_1_0_,
+        customertw1_.C_SINCE as C8_1_0_,
+        customertw1_.C_VERSION as C9_1_0_,
+        customertw1_.C_YTD_PAYMENT as C10_1_0_,
+        item2_.I_ID as I1_2_1_,
+        item2_.I_CATEGORY as I2_2_1_,
+        item2_.I_DESC as I3_2_1_,
+        item2_.I_DISCOUNT as I4_2_1_,
+        item2_.I_NAME as I5_2_1_,
+        item2_.I_PRICE as I6_2_1_,
+        item2_.I_VERSION as I7_2_1_ 
+    from
+        O_CUSTINVENTORY customerin0_ 
+    inner join
+        O_CUSTOMER customertw1_ 
+            on customerin0_.CI_CUSTOMERID=customertw1_.C_ID 
+    left outer join
+        O_ITEM item2_ 
+            on customerin0_.CI_ITEMID=item2_.I_ID 
+    where
+        customerin0_.CI_CUSTOMERID=? 
+        and customerin0_.CI_ID=?
+14:10:20,375 DEBUG SQL:104 - 
+    select
+        item0_.I_ID as I1_2_0_,
+        item0_.I_CATEGORY as I2_2_0_,
+        item0_.I_DESC as I3_2_0_,
+        item0_.I_DISCOUNT as I4_2_0_,
+        item0_.I_NAME as I5_2_0_,
+        item0_.I_PRICE as I6_2_0_,
+        item0_.I_VERSION as I7_2_0_ 
+    from
+        O_ITEM item0_ 
+    where
+        item0_.I_ID=?
+14:10:20,376 DEBUG SQL:104 - 
+    select
+        tbl.S_NEXTNUM 
+    from
+        U_SEQUENCES tbl 
+    where
+        tbl.S_ID=? for update
+            
+14:10:20,385 DEBUG SQL:104 - 
+    insert 
+    into
+        U_SEQUENCES
+        (S_ID, S_NEXTNUM)  
+    values
+        (?,?)
+14:10:20,385 DEBUG SQL:104 - 
+    update
+        U_SEQUENCES 
+    set
+        S_NEXTNUM=?  
+    where
+        S_NEXTNUM=? 
+        and S_ID=?
+14:10:20,386 DEBUG SQL:104 - 
+    select
+        tbl.S_NEXTNUM 
+    from
+        U_SEQUENCES tbl 
+    where
+        tbl.S_ID=? for update
+            
+14:10:20,386 DEBUG SQL:104 - 
+    update
+        U_SEQUENCES 
+    set
+        S_NEXTNUM=?  
+    where
+        S_NEXTNUM=? 
+        and S_ID=?
+14:10:20,396 DEBUG SQL:104 - 
+    select
+        customerin0_.CI_CUSTOMERID as CI1_0_2_,
+        customerin0_.CI_ID as CI2_0_2_,
+        customerin0_.CI_QUANTITY as CI3_0_2_,
+        customerin0_.CI_VALUE as CI4_0_2_,
+        customerin0_.CI_ITEMID as CI6_0_2_,
+        customerin0_.CI_VERSION as CI5_0_2_,
+        customertw1_.C_ID as C1_1_0_,
+        customertw1_.C_BALANCE as C2_1_0_,
+        customertw1_.C_CONTACT as C3_1_0_,
+        customertw1_.C_CREDIT as C4_1_0_,
+        customertw1_.C_CREDIT_LIMIT as C5_1_0_,
+        customertw1_.C_FIRST as C6_1_0_,
+        customertw1_.C_LAST as C7_1_0_,
+        customertw1_.C_SINCE as C8_1_0_,
+        customertw1_.C_VERSION as C9_1_0_,
+        customertw1_.C_YTD_PAYMENT as C10_1_0_,
+        item2_.I_ID as I1_2_1_,
+        item2_.I_CATEGORY as I2_2_1_,
+        item2_.I_DESC as I3_2_1_,
+        item2_.I_DISCOUNT as I4_2_1_,
+        item2_.I_NAME as I5_2_1_,
+        item2_.I_PRICE as I6_2_1_,
+        item2_.I_VERSION as I7_2_1_ 
+    from
+        O_CUSTINVENTORY customerin0_ 
+    inner join
+        O_CUSTOMER customertw1_ 
+            on customerin0_.CI_CUSTOMERID=customertw1_.C_ID 
+    left outer join
+        O_ITEM item2_ 
+            on customerin0_.CI_ITEMID=item2_.I_ID 
+    where
+        customerin0_.CI_CUSTOMERID=? 
+        and customerin0_.CI_ID=?
+14:10:20,407 DEBUG SQL:104 - 
+    select
+        item0_.I_ID as I1_2_0_,
+        item0_.I_CATEGORY as I2_2_0_,
+        item0_.I_DESC as I3_2_0_,
+        item0_.I_DISCOUNT as I4_2_0_,
+        item0_.I_NAME as I5_2_0_,
+        item0_.I_PRICE as I6_2_0_,
+        item0_.I_VERSION as I7_2_0_ 
+    from
+        O_ITEM item0_ 
+    where
+        item0_.I_ID=?
+14:10:20,409 DEBUG SQL:104 - 
+    insert 
+    into
+        O_CUSTINVENTORY
+        (CI_QUANTITY, CI_VALUE, CI_ITEMID, CI_VERSION, CI_CUSTOMERID, CI_ID) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:20,418 DEBUG SQL:104 - 
+    insert 
+    into
+        O_CUSTINVENTORY
+        (CI_QUANTITY, CI_VALUE, CI_ITEMID, CI_VERSION, CI_CUSTOMERID, CI_ID) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:20,419 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select c from org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo c
+14:10:20,420 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'derivedidentities'
+       |     |  |  |  |  |  \-[IDENT] Node: 'e1'
+       |     |  |  |  |  \-[IDENT] Node: 'b'
+       |     |  |  |  \-[IDENT] Node: 'specjmapid'
+       |     |  |  \-[IDENT] Node: 'lazy'
+       |     |  \-[IDENT] Node: 'CustomerTwo'
+       |     \-[ALIAS] Node: 'c'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'c'
+
+14:10:20,432 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,433 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo (c) -> customertw0_
+14:10:20,433 DEBUG FromReferenceNode:74 - Resolved : c -> customertw0_.C_ID
+14:10:20,433 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} customertw0_.C_ID ) ( FromClause{level=1} O_CUSTOMER customertw0_ ) )
+14:10:20,433 DEBUG JoinProcessor:175 - Using FROM fragment [O_CUSTOMER customertw0_]
+14:10:20,433 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (O_CUSTOMER)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'customertw0_.C_ID as C1_1_' {alias=c, className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo, tableAlias=customertw0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'customertw0_.C_BALANCE as C2_1_, customertw0_.C_CONTACT as C3_1_, customertw0_.C_CREDIT as C4_1_, customertw0_.C_CREDIT_LIMIT as C5_1_, customertw0_.C_FIRST as C6_1_, customertw0_.C_LAST as C7_1_, customertw0_.C_SINCE as C8_1_, customertw0_.C_VERSION as C9_1_, customertw0_.C_YTD_PAYMENT as C10_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[c], fromElementByTableAlias=[customertw0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'O_CUSTOMER customertw0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=O_CUSTOMER,tableAlias=customertw0_,origin=null,columns={,className=org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo}}
+
+14:10:20,434 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,434 DEBUG QueryTranslatorImpl:235 - HQL: select c from org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy.CustomerTwo c
+14:10:20,434 DEBUG QueryTranslatorImpl:236 - SQL: select customertw0_.C_ID as C1_1_, customertw0_.C_BALANCE as C2_1_, customertw0_.C_CONTACT as C3_1_, customertw0_.C_CREDIT as C4_1_, customertw0_.C_CREDIT_LIMIT as C5_1_, customertw0_.C_FIRST as C6_1_, customertw0_.C_LAST as C7_1_, customertw0_.C_SINCE as C8_1_, customertw0_.C_VERSION as C9_1_, customertw0_.C_YTD_PAYMENT as C10_1_ from O_CUSTOMER customertw0_
+14:10:20,434 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:20,434 DEBUG SQL:104 - 
+    select
+        customertw0_.C_ID as C1_1_,
+        customertw0_.C_BALANCE as C2_1_,
+        customertw0_.C_CONTACT as C3_1_,
+        customertw0_.C_CREDIT as C4_1_,
+        customertw0_.C_CREDIT_LIMIT as C5_1_,
+        customertw0_.C_FIRST as C6_1_,
+        customertw0_.C_LAST as C7_1_,
+        customertw0_.C_SINCE as C8_1_,
+        customertw0_.C_VERSION as C9_1_,
+        customertw0_.C_YTD_PAYMENT as C10_1_ 
+    from
+        O_CUSTOMER customertw0_
+14:10:20,435 DEBUG SQL:104 - 
+    select
+        customerin0_.CI_CUSTOMERID as CI1_1_2_,
+        customerin0_.CI_CUSTOMERID as CI1_0_2_,
+        customerin0_.CI_ID as CI2_0_2_,
+        customerin0_.CI_CUSTOMERID as CI1_0_1_,
+        customerin0_.CI_ID as CI2_0_1_,
+        customerin0_.CI_QUANTITY as CI3_0_1_,
+        customerin0_.CI_VALUE as CI4_0_1_,
+        customerin0_.CI_ITEMID as CI6_0_1_,
+        customerin0_.CI_VERSION as CI5_0_1_,
+        item1_.I_ID as I1_2_0_,
+        item1_.I_CATEGORY as I2_2_0_,
+        item1_.I_DESC as I3_2_0_,
+        item1_.I_DISCOUNT as I4_2_0_,
+        item1_.I_NAME as I5_2_0_,
+        item1_.I_PRICE as I6_2_0_,
+        item1_.I_VERSION as I7_2_0_ 
+    from
+        O_CUSTINVENTORY customerin0_ 
+    left outer join
+        O_ITEM item1_ 
+            on customerin0_.CI_ITEMID=item1_.I_ID 
+    where
+        customerin0_.CI_CUSTOMERID=?
+14:10:20,450 DEBUG SQL:104 - 
+    delete 
+    from
+        O_CUSTINVENTORY 
+    where
+        CI_CUSTOMERID=? 
+        and CI_ID=? 
+        and CI_VERSION=?
+14:10:20,452  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:20,452 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:20,453 DEBUG SQL:104 - 
+    alter table O_CUSTINVENTORY 
+        drop constraint FK22317459C3AA5E13
+14:10:20,453 DEBUG SQL:104 - 
+    alter table O_CUSTINVENTORY 
+        drop constraint FK2231745931BED547
+14:10:20,453 DEBUG SQL:104 - 
+    drop table O_CUSTINVENTORY if exists
+14:10:20,453 DEBUG SQL:104 - 
+    drop table O_CUSTOMER if exists
+14:10:20,454 DEBUG SQL:104 - 
+    drop table O_ITEM if exists
+14:10:20,454 DEBUG SQL:104 - 
+    drop table U_SEQUENCES if exists
+14:10:20,465  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:20,465  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.namingstrategy.NamingStrategyTest" tests="2" time="0.085" timestamp="2013-02-28T20:17:31">
+  <properties />
+  <testcase classname="org.hibernate.test.namingstrategy.NamingStrategyTest" name="testDatabaseColumnNames" time="0.001" />
+  <testcase classname="org.hibernate.test.namingstrategy.NamingStrategyTest" name="testDatabaseTableNames" time="0.001" />
+  <system-out><![CDATA[14:17:31,180  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.namingstrategy.NamingStrategyTest
+14:17:31,187  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/namingstrategy/Customers.hbm.xml
+14:17:31,220  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:31,220  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:31,220  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:31,220  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:31,221  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:31,222  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:31,223  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:31,224  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:31,224  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:31,224  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:31,234  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,235 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,235 DEBUG SQL:104 - 
+    alter table TAB_ITEMS_SEC 
+        drop constraint FK68E7BEC8525CB627
+14:17:31,235 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table TAB_ITEMS_SEC drop constraint FK68E7BEC8525CB627
+14:17:31,235 ERROR SchemaExport:426 - Table "TAB_ITEMS_SEC" not found; SQL statement:
+
+    alter table TAB_ITEMS_SEC 
+        drop constraint FK68E7BEC8525CB627 [42102-145]
+14:17:31,235 DEBUG SQL:104 - 
+    drop table Customers if exists
+14:17:31,235 DEBUG SQL:104 - 
+    drop table TAB_ITEMS if exists
+14:17:31,236 DEBUG SQL:104 - 
+    drop table TAB_ITEMS_SEC if exists
+14:17:31,236 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:17:31,236 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:17:31,236 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:17:31,236 DEBUG SQL:104 - 
+    create table Customers (
+        CN_id integer not null,
+        CN_specified_column varchar(255),
+        primary key (CN_id)
+    )
+14:17:31,237 DEBUG SQL:104 - 
+    create table TAB_ITEMS (
+        PTCN_id bigint not null,
+        CN_price double,
+        primary key (PTCN_id)
+    )
+14:17:31,237 DEBUG SQL:104 - 
+    create table TAB_ITEMS_SEC (
+        CN_price double,
+        CN_LCN_id bigint not null,
+        primary key (CN_LCN_id)
+    )
+14:17:31,237 DEBUG SQL:104 - 
+    alter table TAB_ITEMS_SEC 
+        add constraint FK68E7BEC8525CB627 
+        foreign key (CN_LCN_id) 
+        references TAB_ITEMS
+14:17:31,239 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:17:31,239  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,239  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:31,240  INFO CustomRunner:139 - Test: testDatabaseColumnNames
+14:17:31,241  INFO CustomRunner:139 - Test: testDatabaseTableNames
+14:17:31,242  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,243 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,243 DEBUG SQL:104 - 
+    alter table TAB_ITEMS_SEC 
+        drop constraint FK68E7BEC8525CB627
+14:17:31,243 DEBUG SQL:104 - 
+    drop table Customers if exists
+14:17:31,244 DEBUG SQL:104 - 
+    drop table TAB_ITEMS if exists
+14:17:31,244 DEBUG SQL:104 - 
+    drop table TAB_ITEMS_SEC if exists
+14:17:31,244 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:17:31,244  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,244  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.component.cascading.collection.CascadeToComponentCollectionTest" tests="2" time="0.252" timestamp="2013-02-28T20:12:00">
+  <properties />
+  <testcase classname="org.hibernate.test.component.cascading.collection.CascadeToComponentCollectionTest" name="testMerging" time="0.086" />
+  <testcase classname="org.hibernate.test.component.cascading.collection.CascadeToComponentCollectionTest" name="testMergingOriginallyNullComponent" time="0.068" />
+  <system-out><![CDATA[14:12:00,595  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.component.cascading.collection.CascadeToComponentCollectionTest
+14:12:00,598  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/component/cascading/collection/Mappings.hbm.xml
+14:12:00,608  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:00,608  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:00,608  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:00,608  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:00,608  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:00,610  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:00,610  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:00,611  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:00,611  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:00,611  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:00,633  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:00,634 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:00,634 DEBUG SQL:104 - 
+    alter table "Value_strings" 
+        drop constraint FK1BC6099449E2259E
+14:12:00,635 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "Value_strings" drop constraint FK1BC6099449E2259E
+14:12:00,635 ERROR SchemaExport:426 - Table "Value_strings" not found; SQL statement:
+
+    alter table "Value_strings" 
+        drop constraint FK1BC6099449E2259E [42102-145]
+14:12:00,635 DEBUG SQL:104 - 
+    alter table "Value" 
+        drop constraint FK4E9A1511C1E4034
+14:12:00,635 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "Value" drop constraint FK4E9A1511C1E4034
+14:12:00,635 ERROR SchemaExport:426 - Table "Value" not found; SQL statement:
+
+    alter table "Value" 
+        drop constraint FK4E9A1511C1E4034 [42102-145]
+14:12:00,635 DEBUG SQL:104 - 
+    drop table Definition if exists
+14:12:00,635 DEBUG SQL:104 - 
+    drop table "Value_strings" if exists
+14:12:00,636 DEBUG SQL:104 - 
+    drop table "Value" if exists
+14:12:00,636 DEBUG SQL:104 - 
+    create table Definition (
+        ID bigint not null,
+        primary key (ID)
+    )
+14:12:00,636 DEBUG SQL:104 - 
+    create table "Value_strings" (
+        VAL_ID bigint not null,
+        STR_VAL varchar(255),
+        LOC varchar(255) not null,
+        primary key (VAL_ID, LOC)
+    )
+14:12:00,637 DEBUG SQL:104 - 
+    create table "Value" (
+        ID bigint not null,
+        DEF_ID bigint,
+        primary key (ID)
+    )
+14:12:00,637 DEBUG SQL:104 - 
+    alter table "Value_strings" 
+        add constraint FK1BC6099449E2259E 
+        foreign key (VAL_ID) 
+        references "Value"
+14:12:00,637 DEBUG SQL:104 - 
+    alter table "Value" 
+        add constraint FK4E9A1511C1E4034 
+        foreign key (DEF_ID) 
+        references Definition
+14:12:00,638  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:00,639  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:00,639  INFO CustomRunner:139 - Test: testMerging
+14:12:00,640 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        Definition
+14:12:00,641 DEBUG SQL:104 - 
+    select
+        max(ID) 
+    from
+        "Value"
+14:12:00,642 DEBUG SQL:104 - 
+    insert 
+    into
+        Definition
+        (ID) 
+    values
+        (?)
+14:12:00,642 DEBUG SQL:104 - 
+    insert 
+    into
+        "Value"
+        (DEF_ID, ID) 
+    values
+        (?, ?)
+14:12:00,651 DEBUG SQL:104 - 
+    insert 
+    into
+        "Value_strings"
+        (VAL_ID, LOC, STR_VAL) 
+    values
+        (?, ?, ?)
+14:12:00,651 DEBUG SQL:104 - 
+    select
+        definition0_.ID as ID0_0_ 
+    from
+        Definition definition0_ 
+    where
+        definition0_.ID=?
+14:12:00,652 DEBUG SQL:104 - 
+    select
+        values0_.DEF_ID as DEF2_0_1_,
+        values0_.ID as ID2_1_,
+        values0_.ID as ID2_0_,
+        values0_.DEF_ID as DEF2_2_0_ 
+    from
+        "Value" values0_ 
+    where
+        values0_.DEF_ID=?
+14:12:00,652 DEBUG SQL:104 - 
+    select
+        strings0_.VAL_ID as VAL1_2_0_,
+        strings0_.STR_VAL as STR2_1_0_,
+        strings0_.LOC as LOC0_ 
+    from
+        "Value_strings" strings0_ 
+    where
+        strings0_.VAL_ID=?
+14:12:00,653 DEBUG SQL:104 - 
+    select
+        definition0_.ID as ID0_1_,
+        values1_.DEF_ID as DEF2_0_3_,
+        values1_.ID as ID2_3_,
+        values1_.ID as ID2_0_,
+        values1_.DEF_ID as DEF2_2_0_ 
+    from
+        Definition definition0_ 
+    left outer join
+        "Value" values1_ 
+            on definition0_.ID=values1_.DEF_ID 
+    where
+        definition0_.ID=?
+14:12:00,686 DEBUG SQL:104 - 
+    select
+        strings0_.VAL_ID as VAL1_2_0_,
+        strings0_.STR_VAL as STR2_1_0_,
+        strings0_.LOC as LOC0_ 
+    from
+        "Value_strings" strings0_ 
+    where
+        strings0_.VAL_ID=?
+14:12:00,688 DEBUG SQL:104 - 
+    insert 
+    into
+        "Value"
+        (DEF_ID, ID) 
+    values
+        (?, ?)
+14:12:00,689 DEBUG SQL:104 - 
+    insert 
+    into
+        "Value_strings"
+        (VAL_ID, LOC, STR_VAL) 
+    values
+        (?, ?, ?)
+14:12:00,712 DEBUG SQL:104 - 
+    select
+        definition0_.ID as ID0_0_ 
+    from
+        Definition definition0_ 
+    where
+        definition0_.ID=?
+14:12:00,713 DEBUG SQL:104 - 
+    select
+        values0_.DEF_ID as DEF2_0_1_,
+        values0_.ID as ID2_1_,
+        values0_.ID as ID2_0_,
+        values0_.DEF_ID as DEF2_2_0_ 
+    from
+        "Value" values0_ 
+    where
+        values0_.DEF_ID=?
+14:12:00,714 DEBUG SQL:104 - 
+    select
+        strings0_.VAL_ID as VAL1_2_0_,
+        strings0_.STR_VAL as STR2_1_0_,
+        strings0_.LOC as LOC0_ 
+    from
+        "Value_strings" strings0_ 
+    where
+        strings0_.VAL_ID=?
+14:12:00,715 DEBUG SQL:104 - 
+    select
+        strings0_.VAL_ID as VAL1_2_0_,
+        strings0_.STR_VAL as STR2_1_0_,
+        strings0_.LOC as LOC0_ 
+    from
+        "Value_strings" strings0_ 
+    where
+        strings0_.VAL_ID=?
+14:12:00,725  INFO CustomRunner:139 - Test: testMergingOriginallyNullComponent
+14:12:00,727 DEBUG SQL:104 - 
+    insert 
+    into
+        Definition
+        (ID) 
+    values
+        (?)
+14:12:00,727 DEBUG SQL:104 - 
+    insert 
+    into
+        "Value"
+        (DEF_ID, ID) 
+    values
+        (?, ?)
+14:12:00,728 DEBUG SQL:104 - 
+    select
+        definition0_.ID as ID0_0_ 
+    from
+        Definition definition0_ 
+    where
+        definition0_.ID=?
+14:12:00,728 DEBUG SQL:104 - 
+    select
+        values0_.DEF_ID as DEF2_0_1_,
+        values0_.ID as ID2_1_,
+        values0_.ID as ID2_0_,
+        values0_.DEF_ID as DEF2_2_0_ 
+    from
+        "Value" values0_ 
+    where
+        values0_.DEF_ID=?
+14:12:00,729 DEBUG SQL:104 - 
+    select
+        strings0_.VAL_ID as VAL1_2_0_,
+        strings0_.STR_VAL as STR2_1_0_,
+        strings0_.LOC as LOC0_ 
+    from
+        "Value_strings" strings0_ 
+    where
+        strings0_.VAL_ID=?
+14:12:00,730 DEBUG SQL:104 - 
+    select
+        definition0_.ID as ID0_1_,
+        values1_.DEF_ID as DEF2_0_3_,
+        values1_.ID as ID2_3_,
+        values1_.ID as ID2_0_,
+        values1_.DEF_ID as DEF2_2_0_ 
+    from
+        Definition definition0_ 
+    left outer join
+        "Value" values1_ 
+            on definition0_.ID=values1_.DEF_ID 
+    where
+        definition0_.ID=?
+14:12:00,771 DEBUG SQL:104 - 
+    select
+        strings0_.VAL_ID as VAL1_2_0_,
+        strings0_.STR_VAL as STR2_1_0_,
+        strings0_.LOC as LOC0_ 
+    from
+        "Value_strings" strings0_ 
+    where
+        strings0_.VAL_ID=?
+14:12:00,773 DEBUG SQL:104 - 
+    insert 
+    into
+        "Value"
+        (DEF_ID, ID) 
+    values
+        (?, ?)
+14:12:00,774 DEBUG SQL:104 - 
+    insert 
+    into
+        "Value_strings"
+        (VAL_ID, LOC, STR_VAL) 
+    values
+        (?, ?, ?)
+14:12:00,775 DEBUG SQL:104 - 
+    insert 
+    into
+        "Value_strings"
+        (VAL_ID, LOC, STR_VAL) 
+    values
+        (?, ?, ?)
+14:12:00,790 DEBUG SQL:104 - 
+    select
+        definition0_.ID as ID0_0_ 
+    from
+        Definition definition0_ 
+    where
+        definition0_.ID=?
+14:12:00,791 DEBUG SQL:104 - 
+    select
+        values0_.DEF_ID as DEF2_0_1_,
+        values0_.ID as ID2_1_,
+        values0_.ID as ID2_0_,
+        values0_.DEF_ID as DEF2_2_0_ 
+    from
+        "Value" values0_ 
+    where
+        values0_.DEF_ID=?
+14:12:00,791 DEBUG SQL:104 - 
+    select
+        strings0_.VAL_ID as VAL1_2_0_,
+        strings0_.STR_VAL as STR2_1_0_,
+        strings0_.LOC as LOC0_ 
+    from
+        "Value_strings" strings0_ 
+    where
+        strings0_.VAL_ID=?
+14:12:00,792 DEBUG SQL:104 - 
+    select
+        strings0_.VAL_ID as VAL1_2_0_,
+        strings0_.STR_VAL as STR2_1_0_,
+        strings0_.LOC as LOC0_ 
+    from
+        "Value_strings" strings0_ 
+    where
+        strings0_.VAL_ID=?
+14:12:00,793  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:00,794 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:00,794 DEBUG SQL:104 - 
+    alter table "Value_strings" 
+        drop constraint FK1BC6099449E2259E
+14:12:00,794 DEBUG SQL:104 - 
+    alter table "Value" 
+        drop constraint FK4E9A1511C1E4034
+14:12:00,835 DEBUG SQL:104 - 
+    drop table Definition if exists
+14:12:00,835 DEBUG SQL:104 - 
+    drop table "Value_strings" if exists
+14:12:00,836 DEBUG SQL:104 - 
+    drop table "Value" if exists
+14:12:00,836  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:00,836  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

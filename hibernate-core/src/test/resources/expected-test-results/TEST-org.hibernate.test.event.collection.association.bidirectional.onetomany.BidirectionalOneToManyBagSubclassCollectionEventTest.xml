@@ -1,0 +1,2014 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" tests="21" time="0.983" timestamp="2013-02-28T20:12:20">
+  <properties />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testDeleteParentAndChild" time="0.041" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testDeleteParentButNotChild" time="0.045" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testDeleteParentWithNoChildren" time="0.016" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testDeleteParentWithNullChildren" time="0.028" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testMoveAllChildrenToDifferentParent" time="0.05" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testMoveChildToDifferentParent" time="0.059" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testMoveCollectionToDifferentParent" time="0.054" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testMoveCollectionToDifferentParentFlushMoveToDifferentParent" time="0.133" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testSaveParentEmptyChildren" time="0.009" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testSaveParentOneChild" time="0.039" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testUpdateParentNoneToOneChild" time="0.036" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testUpdateParentNoneToOneChildDiffCollection" time="0.018" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testUpdateParentNullToOneChild" time="0.035" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testUpdateParentNullToOneChildDiffCollection" time="0.03" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testUpdateParentOneChildDiffCollectionDiffChild" time="0.034" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testUpdateParentOneChildDiffCollectionSameChild" time="0.038" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testUpdateParentOneChildToNoneByClear" time="0.042" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testUpdateParentOneChildToNoneByRemove" time="0.034" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testUpdateParentOneToTwoChildren" time="0.035" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testUpdateParentOneToTwoSameChildren" time="0.013" />
+  <testcase classname="org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest" name="testUpdateParentTwoChildrenToOne" time="0.028" />
+  <system-out><![CDATA[14:12:20,350  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.event.collection.association.bidirectional.onetomany.BidirectionalOneToManyBagSubclassCollectionEventTest
+14:12:20,352  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/event/collection/association/bidirectional/onetomany/BidirectionalOneToManyBagSubclassMapping.hbm.xml
+14:12:20,358  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:20,358  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:20,359  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:20,359  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:20,359  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:20,360  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:20,360  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:20,361  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:20,361  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:20,361  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:20,373  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:20,374 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:20,374 DEBUG SQL:104 - 
+    alter table CHILD 
+        drop constraint FK3D1FCFCD16C7FE9
+14:12:20,375 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CHILD drop constraint FK3D1FCFCD16C7FE9
+14:12:20,375 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table CHILD 
+        drop constraint FK3D1FCFCD16C7FE9 [42102-145]
+14:12:20,375 DEBUG SQL:104 - 
+    drop table CHILD if exists
+14:12:20,375 DEBUG SQL:104 - 
+    drop table PARENT if exists
+14:12:20,375 DEBUG SQL:104 - 
+    create table CHILD (
+        ID bigint generated by default as identity,
+        NAME varchar(255),
+        parent_id bigint,
+        primary key (ID)
+    )
+14:12:20,376 DEBUG SQL:104 - 
+    create table PARENT (
+        ID bigint generated by default as identity,
+        "TYPE" varchar(1) not null,
+        primary key (ID)
+    )
+14:12:20,376 DEBUG SQL:104 - 
+    alter table CHILD 
+        add constraint FK3D1FCFCD16C7FE9 
+        foreign key (parent_id) 
+        references PARENT
+14:12:20,412  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:20,412  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:20,413  INFO CustomRunner:139 - Test: testDeleteParentAndChild
+14:12:20,414 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,415 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,416 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,417 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:20,417 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,452 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,453 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,453 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,454 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,454  INFO CustomRunner:139 - Test: testDeleteParentButNotChild
+14:12:20,455 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,470 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,471 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,480 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:20,491 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,494 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,495 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,496 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,497 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,498 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,519  INFO CustomRunner:139 - Test: testDeleteParentWithNoChildren
+14:12:20,521 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,522 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,522 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,523 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,535 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,536 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,536  INFO CustomRunner:139 - Test: testDeleteParentWithNullChildren
+14:12:20,540 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,550 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,550 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,551 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,552 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,552 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,565  INFO CustomRunner:139 - Test: testMoveAllChildrenToDifferentParent
+14:12:20,566 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,567 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,569 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,570 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,582 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,582 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,583 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:20,595 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,596 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,597 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,597  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:20,597  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:20,597 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,598 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,598 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,599 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,614 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,614 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,614 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,615 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,615  INFO CustomRunner:139 - Test: testMoveChildToDifferentParent
+14:12:20,629 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,630 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,631 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,631 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,632 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,632 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,632 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:20,654 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,656 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,657 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,674 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,674  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:20,677 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,685 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,686 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,686 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,686 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,687 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,687 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,687 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,701  INFO CustomRunner:139 - Test: testMoveCollectionToDifferentParent
+14:12:20,703 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,703 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,704 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,704 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,716 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,717 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,717 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,721 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,734 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,735 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,736 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,737 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,738 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,739 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,740 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,754 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,755 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,755 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,756  INFO CustomRunner:139 - Test: testMoveCollectionToDifferentParentFlushMoveToDifferentParent
+14:12:20,757 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,768 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,770 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,770 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,771 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,772 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,773 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,805 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,805 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,806 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,823 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,823 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,823 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,824 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,876 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,877 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,877 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,877 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,878 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,878 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,878 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,888 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,889 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,889  INFO CustomRunner:139 - Test: testSaveParentEmptyChildren
+14:12:20,890 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,891 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,897 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,898 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,898 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,899 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,902  INFO CustomRunner:139 - Test: testSaveParentOneChild
+14:12:20,903 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,904 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,927 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,928 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,928  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:20,928 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,939 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,940 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,941 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,941  INFO CustomRunner:139 - Test: testUpdateParentNoneToOneChild
+14:12:20,942 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,943 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,965 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,966 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,966 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,967  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:20,967 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,977 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:20,977 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:20,977 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:20,991  INFO CustomRunner:139 - Test: testUpdateParentNoneToOneChildDiffCollection
+14:12:20,993 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:20,994 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:20,994 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:20,995 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:20,995 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:20,996 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:20,996  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:20,996 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,009 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,009 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,010 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,010  INFO CustomRunner:139 - Test: testUpdateParentNullToOneChild
+14:12:21,011 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:21,023 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:21,024 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,025 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,025 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:21,025  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:21,026 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,026 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,044 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,044 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,045  INFO CustomRunner:139 - Test: testUpdateParentNullToOneChildDiffCollection
+14:12:21,046 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:21,046 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:21,054 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,055 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,056 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,056 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:21,064  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:21,065 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,065 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,066 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,074 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,075  INFO CustomRunner:139 - Test: testUpdateParentOneChildDiffCollectionDiffChild
+14:12:21,076 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:21,076 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,077 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:21,085 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,086 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,086 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,087 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,095 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,096 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:21,096  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:21,097 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,107 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,108 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,108 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,108 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,109  INFO CustomRunner:139 - Test: testUpdateParentOneChildDiffCollectionSameChild
+14:12:21,121 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:21,122 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,122 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:21,123 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,123 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,124 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,124 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:21,125  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:21,125 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,144 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,145 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,146 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,147  INFO CustomRunner:139 - Test: testUpdateParentOneChildToNoneByClear
+14:12:21,148 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:21,156 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,157 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:21,157 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,158 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,158 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,178 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:21,178  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:21,178 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,179 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,179 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,189 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,189  INFO CustomRunner:139 - Test: testUpdateParentOneChildToNoneByRemove
+14:12:21,190 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:21,191 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,192 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:21,200 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,201 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,202 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,212 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,212 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:21,213 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,214 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,223 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,224  INFO CustomRunner:139 - Test: testUpdateParentOneToTwoChildren
+14:12:21,225 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:21,226 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,226 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:21,234 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,235 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,236 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:21,236  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:21,236 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,245 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,246 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,246 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,246 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,259 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,260  INFO CustomRunner:139 - Test: testUpdateParentOneToTwoSameChildren
+14:12:21,261 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:21,262 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,262 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:21,263 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,264 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,264 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:21,264  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:21,265 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,273 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,274 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,274 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,283  INFO CustomRunner:139 - Test: testUpdateParentTwoChildrenToOne
+14:12:21,284 DEBUG SQL:104 - 
+    insert 
+    into
+        PARENT
+        (ID, "TYPE") 
+    values
+        (null, 'S')
+14:12:21,285 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,286 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:21,286 DEBUG SQL:104 - 
+    insert 
+    into
+        CHILD
+        (ID, NAME, parent_id) 
+    values
+        (null, ?, ?)
+14:12:21,287 DEBUG SQL:104 - 
+    select
+        parentwith0_.ID as ID1_0_ 
+    from
+        PARENT parentwith0_ 
+    where
+        parentwith0_.ID=? 
+        and parentwith0_."TYPE"='S'
+14:12:21,287 DEBUG SQL:104 - 
+    select
+        childwithm0_.ID as ID0_0_,
+        childwithm0_.NAME as NAME0_0_,
+        childwithm0_.parent_id as parent3_0_0_ 
+    from
+        CHILD childwithm0_ 
+    where
+        childwithm0_.ID=?
+14:12:21,307 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,308 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,309 DEBUG SQL:104 - 
+    select
+        this_.ID as ID0_0_,
+        this_.NAME as NAME0_0_,
+        this_.parent_id as parent3_0_0_ 
+    from
+        CHILD this_
+14:12:21,310 DEBUG SQL:104 - 
+    select
+        this_.ID as ID1_0_ 
+    from
+        PARENT this_ 
+    where
+        this_."TYPE"='S'
+14:12:21,310  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToManySubclass - this operation breaks ==
+14:12:21,310 DEBUG SQL:104 - 
+    select
+        children0_.parent_id as parent3_1_1_,
+        children0_.ID as ID0_1_,
+        children0_.ID as ID0_0_,
+        children0_.NAME as NAME0_0_,
+        children0_.parent_id as parent3_0_0_ 
+    from
+        CHILD children0_ 
+    where
+        children0_.parent_id=?
+14:12:21,311 DEBUG SQL:104 - 
+    update
+        CHILD 
+    set
+        NAME=?,
+        parent_id=? 
+    where
+        ID=?
+14:12:21,311 DEBUG SQL:104 - 
+    delete 
+    from
+        PARENT 
+    where
+        ID=?
+14:12:21,311 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,311 DEBUG SQL:104 - 
+    delete 
+    from
+        CHILD 
+    where
+        ID=?
+14:12:21,328  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:21,329 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:21,329 DEBUG SQL:104 - 
+    alter table CHILD 
+        drop constraint FK3D1FCFCD16C7FE9
+14:12:21,329 DEBUG SQL:104 - 
+    drop table CHILD if exists
+14:12:21,329 DEBUG SQL:104 - 
+    drop table PARENT if exists
+14:12:21,330  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:21,330  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

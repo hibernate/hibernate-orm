@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.type.descriptor.sql.StringValueMappingTest" tests="4" time="0.077" timestamp="2013-02-28T20:19:33">
+  <properties />
+  <testcase classname="org.hibernate.type.descriptor.sql.StringValueMappingTest" name="testNormalClobHandling" time="0.068" />
+  <testcase classname="org.hibernate.type.descriptor.sql.StringValueMappingTest" name="testNormalVarcharHandling" time="0.002" />
+  <testcase classname="org.hibernate.type.descriptor.sql.StringValueMappingTest" name="testNullClobHandling" time="0.001" />
+  <testcase classname="org.hibernate.type.descriptor.sql.StringValueMappingTest" name="testNullVarcharHandling" time="0.0" />
+  <system-out><![CDATA[14:19:33,531  INFO CustomRunner:132 - BeforeClass: org.hibernate.type.descriptor.sql.StringValueMappingTest
+14:19:33,532  INFO CustomRunner:139 - Test: testNormalClobHandling
+14:19:33,602  INFO CustomRunner:139 - Test: testNormalVarcharHandling
+14:19:33,604  INFO CustomRunner:139 - Test: testNullClobHandling
+14:19:33,605  INFO CustomRunner:139 - Test: testNullVarcharHandling
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

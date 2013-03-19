@@ -1,0 +1,669 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.onetomany.OneToManyTest" tests="2" time="0.259" timestamp="2013-02-28T20:17:36">
+  <properties />
+  <testcase classname="org.hibernate.test.onetomany.OneToManyTest" name="testManyToManySize" time="0.048" />
+  <testcase classname="org.hibernate.test.onetomany.OneToManyTest" name="testOneToManyLinkTable" time="0.179" />
+  <system-out><![CDATA[14:17:36,212  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.onetomany.OneToManyTest
+14:17:36,214  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/onetomany/Parent.hbm.xml
+14:17:36,221  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:36,221  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:36,221  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:36,222  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:36,222  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:36,223  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:36,223  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:36,224  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:36,224  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:36,224  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:36,232  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:36,233 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:36,233 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E725CF6BCF6
+14:17:36,233 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ParentChild drop constraint FK9E5C7E725CF6BCF6
+14:17:36,233 ERROR SchemaExport:426 - Table "PARENTCHILD" not found; SQL statement:
+
+    alter table ParentChild 
+        drop constraint FK9E5C7E725CF6BCF6 [42102-145]
+14:17:36,234 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E72D8BF203E
+14:17:36,234 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ParentChild drop constraint FK9E5C7E72D8BF203E
+14:17:36,234 ERROR SchemaExport:426 - Table "PARENTCHILD" not found; SQL statement:
+
+    alter table ParentChild 
+        drop constraint FK9E5C7E72D8BF203E [42102-145]
+14:17:36,234 DEBUG SQL:104 - 
+    drop table Child if exists
+14:17:36,234 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:17:36,234 DEBUG SQL:104 - 
+    drop table ParentChild if exists
+14:17:36,234 DEBUG SQL:104 - 
+    create table Child (
+        child_id bigint not null,
+        name varchar(255),
+        primary key (child_id)
+    )
+14:17:36,237 DEBUG SQL:104 - 
+    create table Parent (
+        parent_id bigint not null,
+        name varchar(255),
+        primary key (parent_id)
+    )
+14:17:36,237 DEBUG SQL:104 - 
+    create table ParentChild (
+        child_id bigint not null,
+        parent_id bigint not null,
+        primary key (child_id)
+    )
+14:17:36,237 DEBUG SQL:104 - 
+    alter table ParentChild 
+        add constraint FK9E5C7E725CF6BCF6 
+        foreign key (child_id) 
+        references Child
+14:17:36,238 DEBUG SQL:104 - 
+    alter table ParentChild 
+        add constraint FK9E5C7E72D8BF203E 
+        foreign key (parent_id) 
+        references Parent
+14:17:36,238  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:36,239  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:36,239  INFO CustomRunner:139 - Test: testManyToManySize
+14:17:36,240 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetomany.Parent p where size(p.children) = 0
+14:17:36,241 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'onetomany'
+    |        |  \-[IDENT] Node: 'Parent'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[METHOD_CALL] Node: '('
+          |  +-[IDENT] Node: 'size'
+          |  \-[EXPR_LIST] Node: 'exprList'
+          |     \-[DOT] Node: '.'
+          |        +-[IDENT] Node: 'p'
+          |        \-[IDENT] Node: 'children'
+          \-[NUM_INT] Node: '0'
+
+14:17:36,241 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,241 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Parent (p) -> parent0_
+14:17:36,242 DEBUG FromReferenceNode:74 - Resolved : p -> parent0_.parent_id
+14:17:36,242 DEBUG DotNode:599 - getDataType() : children -> org.hibernate.type.SetType(org.hibernate.test.onetomany.Parent.children)
+14:17:36,242 DEBUG FromElementFactory:385 - createManyToMany() : path = p.children role = org.hibernate.test.onetomany.Parent.children associatedEntityName = org.hibernate.test.onetomany.Child
+14:17:36,242 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Child (<no alias>) -> children1_
+14:17:36,242 DEBUG FromClause:282 - addJoinByPathMap() : p.children -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Child,tableAlias=children1_,origin=Parent parent0_,columns={parent0_.parent_id ,className=org.hibernate.test.onetomany.Child}}
+14:17:36,242 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.children : ParentChild children1_
+14:17:36,242 DEBUG MethodNode:151 - collectionProperty() :  name=size type=org.hibernate.type.SetType(org.hibernate.test.onetomany.Parent.children)
+14:17:36,243 DEBUG FromElementType:347 - toColumns(children1_,size) : subquery = select count(children1_.parent_id) from ParentChild children1_ where parent0_.parent_id=children1_.parent_id
+14:17:36,243 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Parent parent0_  ) ( where ( = ( (select count(children1_.parent_id) from ParentChild children1_ where parent0_.parent_id=children1_.parent_id) size ( exprList ( . parent0_.parent_id children ) ) ) 0 ) ) )
+14:17:36,243 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:36,243 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:17:36,243 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ParentChild,Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'parent0_.parent_id as parent1_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.onetomany.Parent}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'parent0_.name as name1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[parent0_, children1_], fromElementsByPath=[p.children], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.onetomany.Parent}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: '' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.onetomany.Parent.children,tableName=Child,tableAlias=children1_,origin=Parent parent0_,columns={parent0_.parent_id ,className=org.hibernate.test.onetomany.Child}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[SQL_TOKEN] MethodNode: '(select count(children1_.parent_id) from ParentChild children1_ where parent0_.parent_id=children1_.parent_id)'
+          |  +-[METHOD_NAME] IdentNode: 'size' {originalText=size}
+          |  \-[EXPR_LIST] SqlNode: 'exprList'
+          |     \-[DOT] DotNode: '.' {propertyName=children,dereferenceType=NULL_TREE_LOOKAHEAD,propertyPath=children,path=p.children,tableAlias=children1_,className=org.hibernate.test.onetomany.Child,classAlias=null}
+          |        +-[ALIAS_REF] IdentNode: 'parent0_.parent_id' {alias=p, className=org.hibernate.test.onetomany.Parent, tableAlias=parent0_}
+          |        \-[IDENT] IdentNode: 'children' {originalText=children}
+          \-[NUM_INT] LiteralNode: '0'
+
+14:17:36,255 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,256 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetomany.Parent p where size(p.children) = 0
+14:17:36,256 DEBUG QueryTranslatorImpl:236 - SQL: select parent0_.parent_id as parent1_1_, parent0_.name as name1_ from Parent parent0_ where (select count(children1_.parent_id) from ParentChild children1_ where parent0_.parent_id=children1_.parent_id)=0
+14:17:36,256 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,256 DEBUG SQL:104 - 
+    select
+        parent0_.parent_id as parent1_1_,
+        parent0_.name as name1_ 
+    from
+        Parent parent0_ 
+    where
+        (
+            select
+                count(children1_.parent_id) 
+            from
+                ParentChild children1_ 
+            where
+                parent0_.parent_id=children1_.parent_id
+        )=0
+14:17:36,257 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetomany.Parent p where p.children.size = 0
+14:17:36,258 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'onetomany'
+    |        |  \-[IDENT] Node: 'Parent'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'p'
+          |  |  \-[IDENT] Node: 'children'
+          |  \-[IDENT] Node: 'size'
+          \-[NUM_INT] Node: '0'
+
+14:17:36,266 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,267 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Parent (p) -> parent0_
+14:17:36,267 DEBUG FromReferenceNode:74 - Resolved : p -> parent0_.parent_id
+14:17:36,267 DEBUG DotNode:599 - getDataType() : children -> org.hibernate.type.SetType(org.hibernate.test.onetomany.Parent.children)
+14:17:36,267 DEBUG FromElementFactory:385 - createManyToMany() : path = p.children role = org.hibernate.test.onetomany.Parent.children associatedEntityName = org.hibernate.test.onetomany.Child
+14:17:36,267 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Child (<no alias>) -> children1_
+14:17:36,267 DEBUG FromClause:282 - addJoinByPathMap() : p.children -> ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Child,tableAlias=children1_,origin=Parent parent0_,columns={parent0_.parent_id ,className=org.hibernate.test.onetomany.Child}}
+14:17:36,268 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.children : ParentChild children1_
+14:17:36,276 DEBUG FromReferenceNode:74 - Resolved : p.children -> .
+14:17:36,277 DEBUG DotNode:599 - getDataType() : size -> org.hibernate.type.IntegerType@42252fee
+14:17:36,277 DEBUG FromElementType:347 - toColumns(children1_,size) : subquery = select count(children1_.parent_id) from ParentChild children1_ where parent0_.parent_id=children1_.parent_id
+14:17:36,277 DEBUG FromReferenceNode:74 - Resolved : p.children.size -> (select count(children1_.parent_id) from ParentChild children1_ where parent0_.parent_id=children1_.parent_id)
+14:17:36,277 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Parent parent0_  ) ( where ( = ( (select count(children1_.parent_id) from ParentChild children1_ where parent0_.parent_id=children1_.parent_id) ( . parent0_.parent_id children ) size ) 0 ) ) )
+14:17:36,277 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:36,277 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:17:36,278 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ParentChild,Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'parent0_.parent_id as parent1_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.onetomany.Parent}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'parent0_.name as name1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[parent0_, children1_], fromElementsByPath=[p.children], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  +-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.onetomany.Parent}}
+    |  \-[FROM_FRAGMENT] ImpliedFromElement: '' ImpliedFromElement{implied,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.onetomany.Parent.children,tableName=Child,tableAlias=children1_,origin=Parent parent0_,columns={parent0_.parent_id ,className=org.hibernate.test.onetomany.Child}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: '(select count(children1_.parent_id) from ParentChild children1_ where parent0_.parent_id=children1_.parent_id)' {propertyName=size,dereferenceType=ALL,propertyPath=size,path=p.children.size,tableAlias=children1_,className=org.hibernate.test.onetomany.Child,classAlias=null}
+          |  +-[DOT] DotNode: '.' {propertyName=children,dereferenceType=NULL_TREE_LOOKAHEAD,propertyPath=children,path=p.children,tableAlias=children1_,className=org.hibernate.test.onetomany.Child,classAlias=null}
+          |  |  +-[ALIAS_REF] IdentNode: 'parent0_.parent_id' {alias=p, className=org.hibernate.test.onetomany.Parent, tableAlias=parent0_}
+          |  |  \-[IDENT] IdentNode: 'children' {originalText=children}
+          |  \-[IDENT] IdentNode: 'size' {originalText=size}
+          \-[NUM_INT] LiteralNode: '0'
+
+14:17:36,278 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,278 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetomany.Parent p where p.children.size = 0
+14:17:36,278 DEBUG QueryTranslatorImpl:236 - SQL: select parent0_.parent_id as parent1_1_, parent0_.name as name1_ from Parent parent0_ where (select count(children1_.parent_id) from ParentChild children1_ where parent0_.parent_id=children1_.parent_id)=0
+14:17:36,278 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,278 DEBUG SQL:104 - 
+    select
+        parent0_.parent_id as parent1_1_,
+        parent0_.name as name1_ 
+    from
+        Parent parent0_ 
+    where
+        (
+            select
+                count(children1_.parent_id) 
+            from
+                ParentChild children1_ 
+            where
+                parent0_.parent_id=children1_.parent_id
+        )=0
+14:17:36,287  INFO CustomRunner:139 - Test: testOneToManyLinkTable
+14:17:36,288 DEBUG SQL:104 - 
+    select
+        max(parent_id) 
+    from
+        Parent
+14:17:36,289 DEBUG SQL:104 - 
+    select
+        max(child_id) 
+    from
+        Child
+14:17:36,290 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name, parent_id) 
+    values
+        (?, ?)
+14:17:36,299 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (name, child_id) 
+    values
+        (?, ?)
+14:17:36,299 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parent_id, child_id) 
+    values
+        (?, ?)
+14:17:36,300 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        child_id=?
+14:17:36,300 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parent_id, child_id) 
+    values
+        (?, ?)
+14:17:36,309 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        name=? 
+    where
+        child_id=?
+14:17:36,309 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        child_id=?
+14:17:36,309 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        name=? 
+    where
+        child_id=?
+14:17:36,310 DEBUG SQL:104 - 
+    update
+        ParentChild 
+    set
+        parent_id=? 
+    where
+        child_id=?
+14:17:36,310 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parent_id, child_id) 
+    values
+        (?, ?)
+14:17:36,319 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetomany.Child
+14:17:36,320 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'onetomany'
+                \-[IDENT] Node: 'Child'
+
+14:17:36,320 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,321 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Child (<no alias>) -> child0_
+14:17:36,321 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Child child0_ ) )
+14:17:36,321 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:36,321 DEBUG JoinProcessor:175 - Using FROM fragment [Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id]
+14:17:36,321 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ParentChild,Child)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'child0_.child_id as child1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.onetomany.Child}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'child0_.name as name0_, child0_1_.parent_id as parent2_2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[child0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.onetomany.Child}}
+
+14:17:36,331 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,331 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetomany.Child
+14:17:36,331 DEBUG QueryTranslatorImpl:236 - SQL: select child0_.child_id as child1_0_, child0_.name as name0_, child0_1_.parent_id as parent2_2_ from Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id
+14:17:36,331 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,331 DEBUG SQL:104 - 
+    select
+        child0_.child_id as child1_0_,
+        child0_.name as name0_,
+        child0_1_.parent_id as parent2_2_ 
+    from
+        Child child0_ 
+    left outer join
+        ParentChild child0_1_ 
+            on child0_.child_id=child0_1_.child_id
+14:17:36,332 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetomany.Child c left join fetch c.parent
+14:17:36,333 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'onetomany'
+          |  |  \-[IDENT] Node: 'Child'
+          |  \-[ALIAS] Node: 'c'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'c'
+                \-[IDENT] Node: 'parent'
+
+14:17:36,333 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,333 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Child (c) -> child0_
+14:17:36,333 DEBUG FromReferenceNode:74 - Resolved : c -> child0_.child_id
+14:17:36,334 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.onetomany.Parent)
+14:17:36,334 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for parent in org.hibernate.test.onetomany.Child (<no alias>) parent = [ {null} ]
+14:17:36,334 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Parent (<no alias>) -> parent1_
+14:17:36,334 DEBUG FromClause:282 - addJoinByPathMap() : c.parent -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent1_,origin=Child child0_,columns={child0_1_.parent_id ,className=org.hibernate.test.onetomany.Parent}}
+14:17:36,334 DEBUG FromReferenceNode:74 - Resolved : c.parent -> child0_1_.parent_id
+14:17:36,334 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Parent parent1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent1_,origin=Child child0_,columns={child0_1_.parent_id ,className=org.hibernate.test.onetomany.Parent}}
+
+14:17:36,334 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Child child0_ Parent parent1_ ) ) )
+14:17:36,335 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:36,335 DEBUG JoinProcessor:175 - Using FROM fragment [Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id]
+14:17:36,335 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Parent parent1_ on child0_1_.parent_id=parent1_.parent_id]
+14:17:36,335 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Parent,ParentChild,Child)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'child0_.child_id as child1_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.onetomany.Child}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'parent1_.parent_id as parent1_1_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent1_,origin=Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id,columns={child0_1_.parent_id ,className=org.hibernate.test.onetomany.Parent}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'child0_.name as name0_0_, child0_1_.parent_id as parent2_2_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'parent1_.name as name1_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[c], fromElementByTableAlias=[parent1_, child0_], fromElementsByPath=[c.parent], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.onetomany.Child}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join Parent parent1_ on child0_1_.parent_id=parent1_.parent_id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent1_,origin=Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id,columns={child0_1_.parent_id ,className=org.hibernate.test.onetomany.Parent}}
+
+14:17:36,343 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,343 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetomany.Child c left join fetch c.parent
+14:17:36,343 DEBUG QueryTranslatorImpl:236 - SQL: select child0_.child_id as child1_0_0_, parent1_.parent_id as parent1_1_1_, child0_.name as name0_0_, child0_1_.parent_id as parent2_2_0_, parent1_.name as name1_1_ from Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id left outer join Parent parent1_ on child0_1_.parent_id=parent1_.parent_id
+14:17:36,343 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,344 DEBUG SQL:104 - 
+    select
+        child0_.child_id as child1_0_0_,
+        parent1_.parent_id as parent1_1_1_,
+        child0_.name as name0_0_,
+        child0_1_.parent_id as parent2_2_0_,
+        parent1_.name as name1_1_ 
+    from
+        Child child0_ 
+    left outer join
+        ParentChild child0_1_ 
+            on child0_.child_id=child0_1_.child_id 
+    left outer join
+        Parent parent1_ 
+            on child0_1_.parent_id=parent1_.parent_id
+14:17:36,344 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetomany.Child c inner join fetch c.parent
+14:17:36,345 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'onetomany'
+          |  |  \-[IDENT] Node: 'Child'
+          |  \-[ALIAS] Node: 'c'
+          \-[JOIN] Node: 'join'
+             +-[INNER] Node: 'inner'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'c'
+                \-[IDENT] Node: 'parent'
+
+14:17:36,354 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,354 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Child (c) -> child0_
+14:17:36,354 DEBUG FromReferenceNode:74 - Resolved : c -> child0_.child_id
+14:17:36,354 DEBUG DotNode:599 - getDataType() : parent -> org.hibernate.type.ManyToOneType(org.hibernate.test.onetomany.Parent)
+14:17:36,354 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for parent in org.hibernate.test.onetomany.Child (<no alias>) parent = [ {null} ]
+14:17:36,355 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Parent (<no alias>) -> parent1_
+14:17:36,355 DEBUG FromClause:282 - addJoinByPathMap() : c.parent -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent1_,origin=Child child0_,columns={child0_1_.parent_id ,className=org.hibernate.test.onetomany.Parent}}
+14:17:36,355 DEBUG FromReferenceNode:74 - Resolved : c.parent -> child0_1_.parent_id
+14:17:36,355 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Parent parent1_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent1_,origin=Child child0_,columns={child0_1_.parent_id ,className=org.hibernate.test.onetomany.Parent}}
+
+14:17:36,355 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Child child0_ Parent parent1_ ) ) )
+14:17:36,355 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:36,355 DEBUG JoinProcessor:175 - Using FROM fragment [Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id]
+14:17:36,356 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Parent parent1_ on child0_1_.parent_id=parent1_.parent_id]
+14:17:36,356 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Parent,ParentChild,Child)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'child0_.child_id as child1_0_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.onetomany.Child}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'parent1_.parent_id as parent1_1_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent1_,origin=Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id,columns={child0_1_.parent_id ,className=org.hibernate.test.onetomany.Parent}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'child0_.name as name0_0_, child0_1_.parent_id as parent2_2_0_'
+    |  \-[SQL_TOKEN] SqlFragment: 'parent1_.name as name1_1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[c], fromElementByTableAlias=[parent1_, child0_], fromElementsByPath=[c.parent], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.onetomany.Child}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join Parent parent1_ on child0_1_.parent_id=parent1_.parent_id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent1_,origin=Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id,columns={child0_1_.parent_id ,className=org.hibernate.test.onetomany.Parent}}
+
+14:17:36,375 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,376 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetomany.Child c inner join fetch c.parent
+14:17:36,376 DEBUG QueryTranslatorImpl:236 - SQL: select child0_.child_id as child1_0_0_, parent1_.parent_id as parent1_1_1_, child0_.name as name0_0_, child0_1_.parent_id as parent2_2_0_, parent1_.name as name1_1_ from Child child0_ left outer join ParentChild child0_1_ on child0_.child_id=child0_1_.child_id inner join Parent parent1_ on child0_1_.parent_id=parent1_.parent_id
+14:17:36,376 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,376 DEBUG SQL:104 - 
+    select
+        child0_.child_id as child1_0_0_,
+        parent1_.parent_id as parent1_1_1_,
+        child0_.name as name0_0_,
+        child0_1_.parent_id as parent2_2_0_,
+        parent1_.name as name1_1_ 
+    from
+        Child child0_ 
+    left outer join
+        ParentChild child0_1_ 
+            on child0_.child_id=child0_1_.child_id 
+    inner join
+        Parent parent1_ 
+            on child0_1_.parent_id=parent1_.parent_id
+14:17:36,377 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.onetomany.Parent p left join fetch p.children
+14:17:36,378 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'onetomany'
+          |  |  \-[IDENT] Node: 'Parent'
+          |  \-[ALIAS] Node: 'p'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 'p'
+                \-[IDENT] Node: 'children'
+
+14:17:36,386 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,386 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Parent (p) -> parent0_
+14:17:36,386 DEBUG FromReferenceNode:74 - Resolved : p -> parent0_.parent_id
+14:17:36,387 DEBUG DotNode:599 - getDataType() : children -> org.hibernate.type.SetType(org.hibernate.test.onetomany.Parent.children)
+14:17:36,387 DEBUG FromElementFactory:385 - createManyToMany() : path = p.children role = org.hibernate.test.onetomany.Parent.children associatedEntityName = org.hibernate.test.onetomany.Child
+14:17:36,387 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Child (<no alias>) -> child2_
+14:17:36,387 DEBUG FromClause:282 - addJoinByPathMap() : p.children -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Child,tableAlias=child2_,origin=Parent parent0_,columns={parent0_.parent_id ,className=org.hibernate.test.onetomany.Child}}
+14:17:36,387 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.children : ParentChild child2_
+14:17:36,387 DEBUG FromReferenceNode:74 - Resolved : p.children -> .
+14:17:36,387 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'ParentChild child2_' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.onetomany.Parent.children,tableName=Child,tableAlias=child2_,origin=Parent parent0_,columns={parent0_.parent_id ,className=org.hibernate.test.onetomany.Child}}
+
+14:17:36,388 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( Parent parent0_ ParentChild child2_ ) ) )
+14:17:36,388 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:36,388 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:17:36,388 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join ParentChild children1_ on parent0_.parent_id=children1_.parent_id left outer join Child child2_ on children1_.child_id=child2_.child_id left outer join ParentChild child2_1_ on child2_.child_id=child2_1_.child_id]
+14:17:36,388 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (ParentChild,Parent,Child)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'parent0_.parent_id as parent1_1_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.onetomany.Parent}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'child2_.child_id as child1_0_1_' {FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.onetomany.Parent.children,tableName=Child,tableAlias=child2_,origin=Parent parent0_,columns={parent0_.parent_id ,className=org.hibernate.test.onetomany.Child}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'parent0_.name as name1_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'child2_.name as name0_1_, child2_1_.parent_id as parent2_2_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'children1_.parent_id as parent2_1_0__, children1_.child_id as child1_2_0__'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[p], fromElementByTableAlias=[child2_, parent0_], fromElementsByPath=[p.children], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.onetomany.Parent}}
+          \-[JOIN_FRAGMENT] FromElement: 'left outer join ParentChild children1_ on parent0_.parent_id=children1_.parent_id left outer join Child child2_ on children1_.child_id=child2_.child_id left outer join ParentChild child2_1_ on child2_.child_id=child2_1_.child_id' FromElement{explicit,not a collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.onetomany.Parent.children,tableName=Child,tableAlias=child2_,origin=Parent parent0_,columns={parent0_.parent_id ,className=org.hibernate.test.onetomany.Child}}
+
+14:17:36,397 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,397 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.onetomany.Parent p left join fetch p.children
+14:17:36,397 DEBUG QueryTranslatorImpl:236 - SQL: select parent0_.parent_id as parent1_1_0_, child2_.child_id as child1_0_1_, parent0_.name as name1_0_, child2_.name as name0_1_, child2_1_.parent_id as parent2_2_1_, children1_.parent_id as parent2_1_0__, children1_.child_id as child1_2_0__ from Parent parent0_ left outer join ParentChild children1_ on parent0_.parent_id=children1_.parent_id left outer join Child child2_ on children1_.child_id=child2_.child_id left outer join ParentChild child2_1_ on child2_.child_id=child2_1_.child_id
+14:17:36,398 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,398 DEBUG SQL:104 - 
+    select
+        parent0_.parent_id as parent1_1_0_,
+        child2_.child_id as child1_0_1_,
+        parent0_.name as name1_0_,
+        child2_.name as name0_1_,
+        child2_1_.parent_id as parent2_2_1_,
+        children1_.parent_id as parent2_1_0__,
+        children1_.child_id as child1_2_0__ 
+    from
+        Parent parent0_ 
+    left outer join
+        ParentChild children1_ 
+            on parent0_.parent_id=children1_.parent_id 
+    left outer join
+        Child child2_ 
+            on children1_.child_id=child2_.child_id 
+    left outer join
+        ParentChild child2_1_ 
+            on child2_.child_id=child2_1_.child_id
+14:17:36,441 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.onetomany.Child
+14:17:36,442 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'onetomany'
+             \-[IDENT] Node: 'Child'
+
+14:17:36,442 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,442 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Child (<no alias>) -> child0_
+14:17:36,443 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (ParentChild,Child)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[child0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Child' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Child,tableAlias=child0_,origin=null,columns={,className=org.hibernate.test.onetomany.Child}}
+
+14:17:36,443 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,443 DEBUG DeleteStatement:73 - getWhereClause() : Creating a new WHERE clause...
+14:17:36,443 DEBUG SQL:104 - 
+    insert 
+    into
+        HT_Child
+        select
+            child0_.child_id as child_id 
+        from
+            Child child0_ 
+        left outer join
+            ParentChild child0_1_ 
+                on child0_.child_id=child0_1_.child_id
+14:17:36,450 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        (
+            child_id
+        ) IN (
+            select
+                child_id 
+            from
+                HT_Child
+        )
+14:17:36,451 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        (
+            child_id
+        ) IN (
+            select
+                child_id 
+            from
+                HT_Child
+        )
+14:17:36,451 DEBUG SQL:104 - 
+    delete 
+    from
+        HT_Child
+14:17:36,452 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.onetomany.Parent
+14:17:36,452 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'onetomany'
+             \-[IDENT] Node: 'Parent'
+
+14:17:36,453 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,453 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.onetomany.Parent (<no alias>) -> parent0_
+14:17:36,453 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Parent)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[parent0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Parent' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.onetomany.Parent}}
+
+14:17:36,453 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,466 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:36,466 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent
+14:17:36,467  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:36,467 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:36,468 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E725CF6BCF6
+14:17:36,468 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E72D8BF203E
+14:17:36,468 DEBUG SQL:104 - 
+    drop table Child if exists
+14:17:36,468 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:17:36,468 DEBUG SQL:104 - 
+    drop table ParentChild if exists
+14:17:36,469  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:36,469  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

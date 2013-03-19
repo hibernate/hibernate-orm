@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.entitynonentity.EntityNonEntityTest" tests="1" time="0.088" timestamp="2013-02-28T20:10:24">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.entitynonentity.EntityNonEntityTest" name="testMix" time="0.03" />
+  <system-out><![CDATA[14:10:24,603  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.entitynonentity.EntityNonEntityTest
+14:10:24,607  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:24,608  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:24,608  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:24,608  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:24,609  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:24,620  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:24,621  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:24,621  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:24,621  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:24,621  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:24,631  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:24,631 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:24,632 DEBUG SQL:104 - 
+    alter table GSM 
+        drop constraint FK114E175DF4EAC
+14:10:24,632 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table GSM drop constraint FK114E175DF4EAC
+14:10:24,632 ERROR SchemaExport:426 - Table "GSM" not found; SQL statement:
+
+    alter table GSM 
+        drop constraint FK114E175DF4EAC [42102-145]
+14:10:24,632 DEBUG SQL:104 - 
+    drop table GSM if exists
+14:10:24,632 DEBUG SQL:104 - 
+    drop table Voice if exists
+14:10:24,632 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:24,633 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:24,633 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:24,633 DEBUG SQL:104 - 
+    create table GSM (
+        isNumeric boolean not null,
+        frequency integer not null,
+        id integer not null,
+        primary key (id)
+    )
+14:10:24,654 DEBUG SQL:104 - 
+    create table Voice (
+        id integer not null,
+        int_nbr integer,
+        primary key (id)
+    )
+14:10:24,654 DEBUG SQL:104 - 
+    alter table GSM 
+        add constraint FK114E175DF4EAC 
+        foreign key (id) 
+        references Voice
+14:10:24,655 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:24,655  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:24,656  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:24,656  INFO CustomRunner:139 - Test: testMix
+14:10:24,657 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:24,659 DEBUG SQL:104 - 
+    insert 
+    into
+        Voice
+        (int_nbr, id) 
+    values
+        (?, ?)
+14:10:24,660 DEBUG SQL:104 - 
+    insert 
+    into
+        GSM
+        (isNumeric, frequency, id) 
+    values
+        (?, ?, ?)
+14:10:24,660 DEBUG SQL:104 - 
+    select
+        gsm0_.id as id1_0_,
+        gsm0_1_.int_nbr as int2_1_0_,
+        gsm0_.isNumeric as isNumeric0_0_,
+        gsm0_.frequency as frequency0_0_ 
+    from
+        GSM gsm0_ 
+    inner join
+        Voice gsm0_1_ 
+            on gsm0_.id=gsm0_1_.id 
+    where
+        gsm0_.id=?
+14:10:24,685 DEBUG SQL:104 - 
+    delete 
+    from
+        GSM 
+    where
+        id=?
+14:10:24,686 DEBUG SQL:104 - 
+    delete 
+    from
+        Voice 
+    where
+        id=?
+14:10:24,686  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:24,687 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:24,687 DEBUG SQL:104 - 
+    alter table GSM 
+        drop constraint FK114E175DF4EAC
+14:10:24,687 DEBUG SQL:104 - 
+    drop table GSM if exists
+14:10:24,688 DEBUG SQL:104 - 
+    drop table Voice if exists
+14:10:24,688 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:24,688  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:24,688  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

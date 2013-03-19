@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.cascade.CascadeToEmbeddedManyToOneTest" tests="2" time="0.132" timestamp="2013-02-28T20:10:10">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.cascade.CascadeToEmbeddedManyToOneTest" name="testPersistCascadeToEmbedded" time="0.008" />
+  <testcase classname="org.hibernate.test.annotations.cascade.CascadeToEmbeddedManyToOneTest" name="testPersistCascadeToSetOfEmbedded" time="0.006" />
+  <system-out><![CDATA[14:10:10,848  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.cascade.CascadeToEmbeddedManyToOneTest
+14:10:10,862  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:10,862  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:10,874  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:10,874  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:10,875  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:10,876  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:10,877  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:10,877  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:10,878  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:10,878  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:10,905  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:10,906 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:10,906 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER 
+        drop constraint FK_LEFT_PERSON
+14:10:10,907 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CODED_PAIR_HOLDER drop constraint FK_LEFT_PERSON
+14:10:10,907 ERROR SchemaExport:426 - Table "CODED_PAIR_HOLDER" not found; SQL statement:
+
+    alter table CODED_PAIR_HOLDER 
+        drop constraint FK_LEFT_PERSON [42102-145]
+14:10:10,907 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER 
+        drop constraint FK_RIGHT_PERSON
+14:10:10,907 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CODED_PAIR_HOLDER drop constraint FK_RIGHT_PERSON
+14:10:10,907 ERROR SchemaExport:426 - Table "CODED_PAIR_HOLDER" not found; SQL statement:
+
+    alter table CODED_PAIR_HOLDER 
+        drop constraint FK_RIGHT_PERSON [42102-145]
+14:10:10,908 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        drop constraint FK_LEFT_PERSON
+14:10:10,908 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CODED_PAIR_HOLDER_PAIR_SET drop constraint FK_LEFT_PERSON
+14:10:10,908 ERROR SchemaExport:426 - Table "CODED_PAIR_HOLDER_PAIR_SET" not found; SQL statement:
+
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        drop constraint FK_LEFT_PERSON [42102-145]
+14:10:10,908 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        drop constraint FK_RIGHT_PERSON
+14:10:10,909 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CODED_PAIR_HOLDER_PAIR_SET drop constraint FK_RIGHT_PERSON
+14:10:10,909 ERROR SchemaExport:426 - Table "CODED_PAIR_HOLDER_PAIR_SET" not found; SQL statement:
+
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        drop constraint FK_RIGHT_PERSON [42102-145]
+14:10:10,909 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        drop constraint FK_PAIR_SET
+14:10:10,909 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CODED_PAIR_HOLDER_PAIR_SET drop constraint FK_PAIR_SET
+14:10:10,909 ERROR SchemaExport:426 - Table "CODED_PAIR_HOLDER_PAIR_SET" not found; SQL statement:
+
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        drop constraint FK_PAIR_SET [42102-145]
+14:10:10,910 DEBUG SQL:104 - 
+    drop table CODED_PAIR_HOLDER if exists
+14:10:10,910 DEBUG SQL:104 - 
+    drop table CODED_PAIR_HOLDER_PAIR_SET if exists
+14:10:10,910 DEBUG SQL:104 - 
+    drop table CODED_PAIR_SET_HOLDER if exists
+14:10:10,910 DEBUG SQL:104 - 
+    drop table PERSON if exists
+14:10:10,910 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:10,911 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:10,911 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:10,911 DEBUG SQL:104 - 
+    create table CODED_PAIR_HOLDER (
+        ID bigint not null,
+        CODE varchar(256) not null,
+        LEFT_PERSON_ID bigint not null,
+        RIGHT_PERSON_ID bigint not null,
+        primary key (ID)
+    )
+14:10:10,911 DEBUG SQL:104 - 
+    create table CODED_PAIR_HOLDER_PAIR_SET (
+        CODED_PAIR_HOLDER_ID bigint not null,
+        LEFT_PERSON_ID bigint not null,
+        RIGHT_PERSON_ID bigint not null,
+        primary key (CODED_PAIR_HOLDER_ID, LEFT_PERSON_ID, RIGHT_PERSON_ID)
+    )
+14:10:10,937 DEBUG SQL:104 - 
+    create table CODED_PAIR_SET_HOLDER (
+        ID bigint not null,
+        CODE varchar(256) not null,
+        primary key (ID)
+    )
+14:10:10,949 DEBUG SQL:104 - 
+    create table PERSON (
+        ID bigint not null,
+        NAME varchar(256) not null,
+        primary key (ID)
+    )
+14:10:10,949 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER 
+        add constraint uc_CODED_PAIR_HOLDER_1 unique (CODE)
+14:10:10,950 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER 
+        add constraint FK_LEFT_PERSON 
+        foreign key (LEFT_PERSON_ID) 
+        references PERSON
+14:10:10,951 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER 
+        add constraint FK_RIGHT_PERSON 
+        foreign key (RIGHT_PERSON_ID) 
+        references PERSON
+14:10:10,952 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        add constraint FK_LEFT_PERSON 
+        foreign key (LEFT_PERSON_ID) 
+        references PERSON
+14:10:10,952 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CODED_PAIR_HOLDER_PAIR_SET add constraint FK_LEFT_PERSON foreign key (LEFT_PERSON_ID) references PERSON
+14:10:10,953 ERROR SchemaExport:426 - Constraint "FK_LEFT_PERSON" already exists; SQL statement:
+
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        add constraint FK_LEFT_PERSON 
+        foreign key (LEFT_PERSON_ID) 
+        references PERSON [90045-145]
+14:10:10,953 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        add constraint FK_RIGHT_PERSON 
+        foreign key (RIGHT_PERSON_ID) 
+        references PERSON
+14:10:10,953 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CODED_PAIR_HOLDER_PAIR_SET add constraint FK_RIGHT_PERSON foreign key (RIGHT_PERSON_ID) references PERSON
+14:10:10,954 ERROR SchemaExport:426 - Constraint "FK_RIGHT_PERSON" already exists; SQL statement:
+
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        add constraint FK_RIGHT_PERSON 
+        foreign key (RIGHT_PERSON_ID) 
+        references PERSON [90045-145]
+14:10:10,954 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        add constraint FK_PAIR_SET 
+        foreign key (CODED_PAIR_HOLDER_ID) 
+        references CODED_PAIR_SET_HOLDER
+14:10:10,955 DEBUG SQL:104 - 
+    alter table CODED_PAIR_SET_HOLDER 
+        add constraint uc_CODED_PAIR_SET_HOLDER_1 unique (CODE)
+14:10:10,955 DEBUG SQL:104 - 
+    alter table PERSON 
+        add constraint uc_PERSON_1 unique (NAME)
+14:10:10,956 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:10,956  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:10,957  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:10,957  INFO CustomRunner:139 - Test: testPersistCascadeToEmbedded
+14:10:10,959 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,960 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,961 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,962 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, ID) 
+    values
+        (?, ?)
+14:10:10,963 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, ID) 
+    values
+        (?, ?)
+14:10:10,964 DEBUG SQL:104 - 
+    insert 
+    into
+        CODED_PAIR_HOLDER
+        (CODE, LEFT_PERSON_ID, RIGHT_PERSON_ID, ID) 
+    values
+        (?, ?, ?, ?)
+14:10:10,965  INFO CustomRunner:139 - Test: testPersistCascadeToSetOfEmbedded
+14:10:10,967 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,967 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,968 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:10,969 DEBUG SQL:104 - 
+    insert 
+    into
+        CODED_PAIR_SET_HOLDER
+        (CODE, ID) 
+    values
+        (?, ?)
+14:10:10,970 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, ID) 
+    values
+        (?, ?)
+14:10:10,970 DEBUG SQL:104 - 
+    insert 
+    into
+        PERSON
+        (NAME, ID) 
+    values
+        (?, ?)
+14:10:10,971 DEBUG SQL:104 - 
+    insert 
+    into
+        CODED_PAIR_HOLDER_PAIR_SET
+        (CODED_PAIR_HOLDER_ID, LEFT_PERSON_ID, RIGHT_PERSON_ID) 
+    values
+        (?, ?, ?)
+14:10:10,972  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:10,973 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:10,973 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER 
+        drop constraint FK_LEFT_PERSON
+14:10:10,973 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER 
+        drop constraint FK_RIGHT_PERSON
+14:10:10,974 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        drop constraint FK_LEFT_PERSON
+14:10:10,974 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CODED_PAIR_HOLDER_PAIR_SET drop constraint FK_LEFT_PERSON
+14:10:10,974 ERROR SchemaExport:426 - Constraint "FK_LEFT_PERSON" not found; SQL statement:
+
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        drop constraint FK_LEFT_PERSON [90057-145]
+14:10:10,974 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        drop constraint FK_RIGHT_PERSON
+14:10:10,974 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CODED_PAIR_HOLDER_PAIR_SET drop constraint FK_RIGHT_PERSON
+14:10:10,974 ERROR SchemaExport:426 - Constraint "FK_RIGHT_PERSON" not found; SQL statement:
+
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        drop constraint FK_RIGHT_PERSON [90057-145]
+14:10:10,975 DEBUG SQL:104 - 
+    alter table CODED_PAIR_HOLDER_PAIR_SET 
+        drop constraint FK_PAIR_SET
+14:10:10,975 DEBUG SQL:104 - 
+    drop table CODED_PAIR_HOLDER if exists
+14:10:10,976 DEBUG SQL:104 - 
+    drop table CODED_PAIR_HOLDER_PAIR_SET if exists
+14:10:10,976 DEBUG SQL:104 - 
+    drop table CODED_PAIR_SET_HOLDER if exists
+14:10:10,977 DEBUG SQL:104 - 
+    drop table PERSON if exists
+14:10:10,978 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:10,978  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:10,978  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

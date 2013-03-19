@@ -29,17 +29,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.jboss.logging.Logger;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.manipulation.NoTestsRemainException;
-import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.BlockJUnit4ClassRunner;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.Statement;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -52,6 +41,15 @@ import org.hibernate.testing.RequiresDialects;
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
+import org.jboss.logging.Logger;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.Statement;
 
 /**
  * The Hibernate-specific {@link org.junit.runner.Runner} implementation which layers {@link ExtendedFrameworkMethod}
@@ -64,6 +62,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 
 	private static final Logger log = Logger.getLogger( CustomRunner.class );
 	private static Dialect dialect = determineDialect();
+	public static final String TEST_PREFIX = Test.class.getSimpleName() + ": ";
 
 	private static Dialect determineDialect() {
 		try {
@@ -76,7 +75,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	}
 
 	private static class MatcherInstantiationException extends RuntimeException {
-		private MatcherInstantiationException(Class<? extends Skip.Matcher> matcherClass, Throwable cause) {
+		MatcherInstantiationException(Class<? extends Skip.Matcher> matcherClass, Throwable cause) {
 			super( "Unable to instantiate specified Matcher [" + matcherClass.getName(), cause );
 		}
 	}
@@ -159,14 +158,22 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	 */
 	@Override
 	protected Statement classBlock( RunNotifier notifier ) {
-		log.info( BeforeClass.class.getSimpleName() + ": " + getName() );
+		log.info( BeforeClass.class.getSimpleName() );
+		if ( getTestClass().getJavaClass().getAnnotation( FailureExpected.class ) != null
+				|| ( useNewMetamodel() && getTestClass().getJavaClass().getAnnotation( FailureExpectedWithNewMetamodel.class ) != null ) ) {
+			log.info( FailureExpected.class.getSimpleName() );
+	    }
 
 		return super.classBlock( notifier );
 	}
 
 	@Override
 	protected Statement methodBlock(FrameworkMethod method) {
-		log.info( Test.class.getSimpleName() + ": " + method.getName() );
+		log.info( TEST_PREFIX + method.getName() );
+		if ( method.getAnnotation( FailureExpected.class ) != null
+				|| ( useNewMetamodel() && method.getAnnotation( FailureExpectedWithNewMetamodel.class ) != null ) ) {
+			log.info( FailureExpected.class.getSimpleName() );
+		}
 
 		final Statement originalMethodBlock = super.methodBlock( method );
 		final ExtendedFrameworkMethod extendedFrameworkMethod = (ExtendedFrameworkMethod) method;
@@ -212,9 +219,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 
         // Now process that full list of test methods and build our custom result
         final List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
-		final boolean doValidation = Boolean.valueOf(
-				System.getProperty( Helper.VALIDATE_FAILURE_EXPECTED, "true" )
-		);
+		final boolean doValidation = Boolean.getBoolean( Helper.VALIDATE_FAILURE_EXPECTED );
 		int testCount = 0;
 
 		Ignore virtualIgnore;

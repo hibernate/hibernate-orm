@@ -1,0 +1,1207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.EntityTest" tests="10" time="0.45" timestamp="2013-02-28T20:10:06">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.EntityTest" name="testBasic" time="0.021" />
+  <testcase classname="org.hibernate.test.annotations.EntityTest" name="testColumn" time="0.07" />
+  <testcase classname="org.hibernate.test.annotations.EntityTest" name="testColumnUnique" time="0.032" />
+  <testcase classname="org.hibernate.test.annotations.EntityTest" name="testEntityName" time="0.04" />
+  <testcase classname="org.hibernate.test.annotations.EntityTest" name="testFieldAccess" time="0.019" />
+  <testcase classname="org.hibernate.test.annotations.EntityTest" name="testLoad" time="0.019" />
+  <testcase classname="org.hibernate.test.annotations.EntityTest" name="testNonGetter" time="0.025" />
+  <testcase classname="org.hibernate.test.annotations.EntityTest" name="testTemporalType" time="0.037" />
+  <testcase classname="org.hibernate.test.annotations.EntityTest" name="testUniqueConstraint" time="0.021" />
+  <testcase classname="org.hibernate.test.annotations.EntityTest" name="testVersion" time="0.062" />
+  <system-out><![CDATA[14:10:06,135  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.EntityTest
+14:10:06,155  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:06,157  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:06,157  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:06,158  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:06,158  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:06,162  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:06,163  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:06,164  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:06,164  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:06,164  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:06,204  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:06,208  INFO CustomRunner:139 - Test: testBasic
+14:10:06,211  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,212 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,212 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,212 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Flight drop constraint FK7D96709059315E8
+14:10:06,212 ERROR SchemaExport:426 - Table "FLIGHT" not found; SQL statement:
+
+    alter table Flight 
+        drop constraint FK7D96709059315E8 [42102-145]
+14:10:06,212 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,213 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,213 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,213 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,213 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:06,213 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:06,213 DEBUG SQL:104 - 
+    create table Corporation (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:06,214 DEBUG SQL:104 - 
+    create table Flight (
+        id bigint not null,
+        alternativeDepartureDate timestamp,
+        buyDate timestamp,
+        departureDate date,
+        duration bigint not null,
+        flight_name varchar(50) not null,
+        triggeredData varchar(255),
+        OPTLOCK integer,
+        COMP_ID integer,
+        primary key (id)
+    )
+14:10:06,215 DEBUG SQL:104 - 
+    create table tbl_sky (
+        id bigint not null,
+        color varchar(250) not null,
+        day varchar(255) not null,
+        MONTH varchar(255) not null,
+        primary key (id)
+    )
+14:10:06,215 DEBUG SQL:104 - 
+    alter table Flight 
+        add constraint FK7D96709059315E8 
+        foreign key (COMP_ID) 
+        references Corporation
+14:10:06,216 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint UK_tbl_sky_1 unique (MONTH, day)
+14:10:06,217 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint uc_tbl_sky_1 unique (color)
+14:10:06,217 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:06,217  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,221 DEBUG SQL:104 - 
+    insert 
+    into
+        Flight
+        (alternativeDepartureDate, buyDate, COMP_ID, departureDate, duration, flight_name, OPTLOCK, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:10:06,223  WARN SqlExceptionHelper:143 - SQL Error: 90006, SQLState: 90006
+14:10:06,223 ERROR SqlExceptionHelper:144 - NULL not allowed for column "DURATION"; SQL statement:
+insert into Flight (alternativeDepartureDate, buyDate, COMP_ID, departureDate, duration, flight_name, OPTLOCK, id) values (?, ?, ?, ?, ?, ?, ?, ?) [90006-145]
+14:10:06,224  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:06,225  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,226 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,226 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,226 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,227 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,227 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,228 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,228  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,230  INFO CustomRunner:139 - Test: testColumn
+14:10:06,231  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,232 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,232 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,232 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Flight drop constraint FK7D96709059315E8
+14:10:06,232 ERROR SchemaExport:426 - Table "FLIGHT" not found; SQL statement:
+
+    alter table Flight 
+        drop constraint FK7D96709059315E8 [42102-145]
+14:10:06,232 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,233 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,233 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,233 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,233 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:06,233 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:06,233 DEBUG SQL:104 - 
+    create table Corporation (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:06,234 DEBUG SQL:104 - 
+    create table Flight (
+        id bigint not null,
+        alternativeDepartureDate timestamp,
+        buyDate timestamp,
+        departureDate date,
+        duration bigint not null,
+        flight_name varchar(50) not null,
+        triggeredData varchar(255),
+        OPTLOCK integer,
+        COMP_ID integer,
+        primary key (id)
+    )
+14:10:06,235 DEBUG SQL:104 - 
+    create table tbl_sky (
+        id bigint not null,
+        color varchar(250) not null,
+        day varchar(255) not null,
+        MONTH varchar(255) not null,
+        primary key (id)
+    )
+14:10:06,235 DEBUG SQL:104 - 
+    alter table Flight 
+        add constraint FK7D96709059315E8 
+        foreign key (COMP_ID) 
+        references Corporation
+14:10:06,236 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint UK_tbl_sky_1 unique (MONTH, day)
+14:10:06,237 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint uc_tbl_sky_1 unique (color)
+14:10:06,237 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:06,237  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,238 DEBUG SQL:104 - 
+    insert 
+    into
+        Flight
+        (alternativeDepartureDate, buyDate, COMP_ID, departureDate, duration, flight_name, OPTLOCK, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:10:06,243 DEBUG SQL:104 - 
+    insert 
+    into
+        Flight
+        (alternativeDepartureDate, buyDate, COMP_ID, departureDate, duration, flight_name, OPTLOCK, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:10:06,244  WARN SqlExceptionHelper:143 - SQL Error: 90006, SQLState: 90006
+14:10:06,271 ERROR SqlExceptionHelper:144 - NULL not allowed for column "DURATION"; SQL statement:
+insert into Flight (alternativeDepartureDate, buyDate, COMP_ID, departureDate, duration, flight_name, OPTLOCK, id) values (?, ?, ?, ?, ?, ?, ?, ?) [90006-145]
+14:10:06,271  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:06,272 DEBUG SQL:104 - 
+    select
+        flight0_.id as id1_1_,
+        flight0_.alternativeDepartureDate as alternat2_1_1_,
+        flight0_.buyDate as buyDate1_1_,
+        flight0_.COMP_ID as COMP9_1_1_,
+        flight0_.departureDate as departur4_1_1_,
+        flight0_.duration as duration1_1_,
+        flight0_.flight_name as flight6_1_1_,
+        flight0_.triggeredData as triggere7_1_1_,
+        flight0_.OPTLOCK as OPTLOCK1_1_,
+        company1_.id as id0_0_,
+        company1_.name as name0_0_ 
+    from
+        Flight flight0_ 
+    left outer join
+        Corporation company1_ 
+            on flight0_.COMP_ID=company1_.id 
+    where
+        flight0_.id=?
+14:10:06,277 DEBUG SQL:104 - 
+    select
+        flight0_.id as id1_1_,
+        flight0_.alternativeDepartureDate as alternat2_1_1_,
+        flight0_.buyDate as buyDate1_1_,
+        flight0_.COMP_ID as COMP9_1_1_,
+        flight0_.departureDate as departur4_1_1_,
+        flight0_.duration as duration1_1_,
+        flight0_.flight_name as flight6_1_1_,
+        flight0_.triggeredData as triggere7_1_1_,
+        flight0_.OPTLOCK as OPTLOCK1_1_,
+        company1_.id as id0_0_,
+        company1_.name as name0_0_ 
+    from
+        Flight flight0_ 
+    left outer join
+        Corporation company1_ 
+            on flight0_.COMP_ID=company1_.id 
+    where
+        flight0_.id=?
+14:10:06,281  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,282 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,282 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,282 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,291 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,292 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,293 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,294  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,300  INFO CustomRunner:139 - Test: testColumnUnique
+14:10:06,302  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,303 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,303 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,303 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Flight drop constraint FK7D96709059315E8
+14:10:06,303 ERROR SchemaExport:426 - Table "FLIGHT" not found; SQL statement:
+
+    alter table Flight 
+        drop constraint FK7D96709059315E8 [42102-145]
+14:10:06,304 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,304 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,304 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,304 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,304 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:06,304 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:06,304 DEBUG SQL:104 - 
+    create table Corporation (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:06,305 DEBUG SQL:104 - 
+    create table Flight (
+        id bigint not null,
+        alternativeDepartureDate timestamp,
+        buyDate timestamp,
+        departureDate date,
+        duration bigint not null,
+        flight_name varchar(50) not null,
+        triggeredData varchar(255),
+        OPTLOCK integer,
+        COMP_ID integer,
+        primary key (id)
+    )
+14:10:06,305 DEBUG SQL:104 - 
+    create table tbl_sky (
+        id bigint not null,
+        color varchar(250) not null,
+        day varchar(255) not null,
+        MONTH varchar(255) not null,
+        primary key (id)
+    )
+14:10:06,306 DEBUG SQL:104 - 
+    alter table Flight 
+        add constraint FK7D96709059315E8 
+        foreign key (COMP_ID) 
+        references Corporation
+14:10:06,307 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint UK_tbl_sky_1 unique (MONTH, day)
+14:10:06,308 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint uc_tbl_sky_1 unique (color)
+14:10:06,308 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:06,308  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,310 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_sky
+        (color, day, MONTH, id) 
+    values
+        (?, ?, ?, ?)
+14:10:06,311 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_sky
+        (color, day, MONTH, id) 
+    values
+        (?, ?, ?, ?)
+14:10:06,312  WARN SqlExceptionHelper:143 - SQL Error: 90006, SQLState: 90006
+14:10:06,312 ERROR SqlExceptionHelper:144 - NULL not allowed for column "DAY"; SQL statement:
+insert into tbl_sky (color, day, MONTH, id) values (?, ?, ?, ?) [90006-145]
+14:10:06,312  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:06,313  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,314 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,314 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,314 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,315 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,316 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,317 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,327  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,333  INFO CustomRunner:139 - Test: testEntityName
+14:10:06,347  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,348 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,348 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,348 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Flight drop constraint FK7D96709059315E8
+14:10:06,349 ERROR SchemaExport:426 - Table "FLIGHT" not found; SQL statement:
+
+    alter table Flight 
+        drop constraint FK7D96709059315E8 [42102-145]
+14:10:06,349 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,349 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,349 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,349 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,349 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:06,349 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:06,349 DEBUG SQL:104 - 
+    create table Corporation (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:06,350 DEBUG SQL:104 - 
+    create table Flight (
+        id bigint not null,
+        alternativeDepartureDate timestamp,
+        buyDate timestamp,
+        departureDate date,
+        duration bigint not null,
+        flight_name varchar(50) not null,
+        triggeredData varchar(255),
+        OPTLOCK integer,
+        COMP_ID integer,
+        primary key (id)
+    )
+14:10:06,351 DEBUG SQL:104 - 
+    create table tbl_sky (
+        id bigint not null,
+        color varchar(250) not null,
+        day varchar(255) not null,
+        MONTH varchar(255) not null,
+        primary key (id)
+    )
+14:10:06,351 DEBUG SQL:104 - 
+    alter table Flight 
+        add constraint FK7D96709059315E8 
+        foreign key (COMP_ID) 
+        references Corporation
+14:10:06,352 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint UK_tbl_sky_1 unique (MONTH, day)
+14:10:06,353 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint uc_tbl_sky_1 unique (color)
+14:10:06,353 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:06,354  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,355 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:06,358 DEBUG SQL:104 - 
+    insert 
+    into
+        Corporation
+        (name, id) 
+    values
+        (?, ?)
+14:10:06,359 DEBUG SQL:104 - 
+    update
+        Corporation 
+    set
+        name=? 
+    where
+        id=?
+14:10:06,361 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.Company
+14:10:06,363 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'annotations'
+                \-[IDENT] Node: 'Company'
+
+14:10:06,363 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:06,363 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.Company (<no alias>) -> company0_
+14:10:06,364 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Corporation company0_ ) )
+14:10:06,364 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:06,365 DEBUG JoinProcessor:175 - Using FROM fragment [Corporation company0_]
+14:10:06,365 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Corporation)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'company0_.id as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Corporation,tableAlias=company0_,origin=null,columns={,className=org.hibernate.test.annotations.Company}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'company0_.name as name0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[company0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Corporation company0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Corporation,tableAlias=company0_,origin=null,columns={,className=org.hibernate.test.annotations.Company}}
+
+14:10:06,365 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:06,365 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.Company
+14:10:06,365 DEBUG QueryTranslatorImpl:236 - SQL: select company0_.id as id0_, company0_.name as name0_ from Corporation company0_
+14:10:06,366 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:06,366 DEBUG SQL:104 - 
+    select
+        company0_.id as id0_,
+        company0_.name as name0_ 
+    from
+        Corporation company0_
+14:10:06,368  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,369 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,372 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,372 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,373 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,374 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,375 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,376  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,386  INFO CustomRunner:139 - Test: testFieldAccess
+14:10:06,390  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,391 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,391 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,391 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Flight drop constraint FK7D96709059315E8
+14:10:06,391 ERROR SchemaExport:426 - Table "FLIGHT" not found; SQL statement:
+
+    alter table Flight 
+        drop constraint FK7D96709059315E8 [42102-145]
+14:10:06,391 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,392 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,392 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,392 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,392 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:06,392 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:06,392 DEBUG SQL:104 - 
+    create table Corporation (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:06,393 DEBUG SQL:104 - 
+    create table Flight (
+        id bigint not null,
+        alternativeDepartureDate timestamp,
+        buyDate timestamp,
+        departureDate date,
+        duration bigint not null,
+        flight_name varchar(50) not null,
+        triggeredData varchar(255),
+        OPTLOCK integer,
+        COMP_ID integer,
+        primary key (id)
+    )
+14:10:06,394 DEBUG SQL:104 - 
+    create table tbl_sky (
+        id bigint not null,
+        color varchar(250) not null,
+        day varchar(255) not null,
+        MONTH varchar(255) not null,
+        primary key (id)
+    )
+14:10:06,394 DEBUG SQL:104 - 
+    alter table Flight 
+        add constraint FK7D96709059315E8 
+        foreign key (COMP_ID) 
+        references Corporation
+14:10:06,396 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint UK_tbl_sky_1 unique (MONTH, day)
+14:10:06,396 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint uc_tbl_sky_1 unique (color)
+14:10:06,396 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:06,397  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,398 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_sky
+        (color, day, MONTH, id) 
+    values
+        (?, ?, ?, ?)
+14:10:06,399 DEBUG SQL:104 - 
+    select
+        sky0_.id as id2_0_,
+        sky0_.color as color2_0_,
+        sky0_.day as day2_0_,
+        sky0_.MONTH as MONTH2_0_ 
+    from
+        tbl_sky sky0_ 
+    where
+        sky0_.id=?
+14:10:06,402  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,402 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,403 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,403 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,404 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,404 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,405 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,406  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,407  INFO CustomRunner:139 - Test: testLoad
+14:10:06,408  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,409 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,409 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,410 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Flight drop constraint FK7D96709059315E8
+14:10:06,410 ERROR SchemaExport:426 - Table "FLIGHT" not found; SQL statement:
+
+    alter table Flight 
+        drop constraint FK7D96709059315E8 [42102-145]
+14:10:06,410 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,410 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,410 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,410 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,410 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:06,411 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:06,411 DEBUG SQL:104 - 
+    create table Corporation (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:06,411 DEBUG SQL:104 - 
+    create table Flight (
+        id bigint not null,
+        alternativeDepartureDate timestamp,
+        buyDate timestamp,
+        departureDate date,
+        duration bigint not null,
+        flight_name varchar(50) not null,
+        triggeredData varchar(255),
+        OPTLOCK integer,
+        COMP_ID integer,
+        primary key (id)
+    )
+14:10:06,413 DEBUG SQL:104 - 
+    create table tbl_sky (
+        id bigint not null,
+        color varchar(250) not null,
+        day varchar(255) not null,
+        MONTH varchar(255) not null,
+        primary key (id)
+    )
+14:10:06,413 DEBUG SQL:104 - 
+    alter table Flight 
+        add constraint FK7D96709059315E8 
+        foreign key (COMP_ID) 
+        references Corporation
+14:10:06,415 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint UK_tbl_sky_1 unique (MONTH, day)
+14:10:06,415 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint uc_tbl_sky_1 unique (color)
+14:10:06,415 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:06,415  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,416 DEBUG SQL:104 - 
+    insert 
+    into
+        Flight
+        (alternativeDepartureDate, buyDate, COMP_ID, departureDate, duration, flight_name, OPTLOCK, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:10:06,418 DEBUG SQL:104 - 
+    select
+        flight0_.id as id1_1_,
+        flight0_.alternativeDepartureDate as alternat2_1_1_,
+        flight0_.buyDate as buyDate1_1_,
+        flight0_.COMP_ID as COMP9_1_1_,
+        flight0_.departureDate as departur4_1_1_,
+        flight0_.duration as duration1_1_,
+        flight0_.flight_name as flight6_1_1_,
+        flight0_.triggeredData as triggere7_1_1_,
+        flight0_.OPTLOCK as OPTLOCK1_1_,
+        company1_.id as id0_0_,
+        company1_.name as name0_0_ 
+    from
+        Flight flight0_ 
+    left outer join
+        Corporation company1_ 
+            on flight0_.COMP_ID=company1_.id 
+    where
+        flight0_.id=?
+14:10:06,421  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,422 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,422 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,423 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,424 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,424 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,425 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,426  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,426  INFO CustomRunner:139 - Test: testNonGetter
+14:10:06,429  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,429 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,429 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,430 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Flight drop constraint FK7D96709059315E8
+14:10:06,430 ERROR SchemaExport:426 - Table "FLIGHT" not found; SQL statement:
+
+    alter table Flight 
+        drop constraint FK7D96709059315E8 [42102-145]
+14:10:06,430 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,430 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,430 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,430 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,430 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:06,430 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:06,431 DEBUG SQL:104 - 
+    create table Corporation (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:06,431 DEBUG SQL:104 - 
+    create table Flight (
+        id bigint not null,
+        alternativeDepartureDate timestamp,
+        buyDate timestamp,
+        departureDate date,
+        duration bigint not null,
+        flight_name varchar(50) not null,
+        triggeredData varchar(255),
+        OPTLOCK integer,
+        COMP_ID integer,
+        primary key (id)
+    )
+14:10:06,432 DEBUG SQL:104 - 
+    create table tbl_sky (
+        id bigint not null,
+        color varchar(250) not null,
+        day varchar(255) not null,
+        MONTH varchar(255) not null,
+        primary key (id)
+    )
+14:10:06,432 DEBUG SQL:104 - 
+    alter table Flight 
+        add constraint FK7D96709059315E8 
+        foreign key (COMP_ID) 
+        references Corporation
+14:10:06,434 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint UK_tbl_sky_1 unique (MONTH, day)
+14:10:06,434 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint uc_tbl_sky_1 unique (color)
+14:10:06,434 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:06,435  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,436 DEBUG SQL:104 - 
+    insert 
+    into
+        Flight
+        (alternativeDepartureDate, buyDate, COMP_ID, departureDate, duration, flight_name, OPTLOCK, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:10:06,438 DEBUG SQL:104 - 
+    select
+        flight0_.id as id1_1_,
+        flight0_.alternativeDepartureDate as alternat2_1_1_,
+        flight0_.buyDate as buyDate1_1_,
+        flight0_.COMP_ID as COMP9_1_1_,
+        flight0_.departureDate as departur4_1_1_,
+        flight0_.duration as duration1_1_,
+        flight0_.flight_name as flight6_1_1_,
+        flight0_.triggeredData as triggere7_1_1_,
+        flight0_.OPTLOCK as OPTLOCK1_1_,
+        company1_.id as id0_0_,
+        company1_.name as name0_0_ 
+    from
+        Flight flight0_ 
+    left outer join
+        Corporation company1_ 
+            on flight0_.COMP_ID=company1_.id 
+    where
+        flight0_.id=?
+14:10:06,442 DEBUG SQL:104 - 
+    delete 
+    from
+        Flight 
+    where
+        id=? 
+        and OPTLOCK=?
+14:10:06,447  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,448 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,448 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,449 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,450 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,450 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,451 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,452  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,452  INFO CustomRunner:139 - Test: testTemporalType
+14:10:06,453  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,454 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,454 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,454 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Flight drop constraint FK7D96709059315E8
+14:10:06,454 ERROR SchemaExport:426 - Table "FLIGHT" not found; SQL statement:
+
+    alter table Flight 
+        drop constraint FK7D96709059315E8 [42102-145]
+14:10:06,454 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,455 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,455 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,455 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,455 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:06,455 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:06,455 DEBUG SQL:104 - 
+    create table Corporation (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:06,456 DEBUG SQL:104 - 
+    create table Flight (
+        id bigint not null,
+        alternativeDepartureDate timestamp,
+        buyDate timestamp,
+        departureDate date,
+        duration bigint not null,
+        flight_name varchar(50) not null,
+        triggeredData varchar(255),
+        OPTLOCK integer,
+        COMP_ID integer,
+        primary key (id)
+    )
+14:10:06,456 DEBUG SQL:104 - 
+    create table tbl_sky (
+        id bigint not null,
+        color varchar(250) not null,
+        day varchar(255) not null,
+        MONTH varchar(255) not null,
+        primary key (id)
+    )
+14:10:06,457 DEBUG SQL:104 - 
+    alter table Flight 
+        add constraint FK7D96709059315E8 
+        foreign key (COMP_ID) 
+        references Corporation
+14:10:06,458 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint UK_tbl_sky_1 unique (MONTH, day)
+14:10:06,459 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint uc_tbl_sky_1 unique (color)
+14:10:06,459 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:06,459  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,461 DEBUG SQL:104 - 
+    insert 
+    into
+        Flight
+        (alternativeDepartureDate, buyDate, COMP_ID, departureDate, duration, flight_name, OPTLOCK, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:10:06,469 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.Flight f where f.departureDate = :departureDate
+14:10:06,471 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'annotations'
+    |        |  \-[IDENT] Node: 'Flight'
+    |        \-[ALIAS] Node: 'f'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'f'
+          |  \-[IDENT] Node: 'departureDate'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'departureDate'
+
+14:10:06,472 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:06,472 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.Flight (f) -> flight0_
+14:10:06,472 DEBUG FromReferenceNode:74 - Resolved : f -> flight0_.id
+14:10:06,472 DEBUG DotNode:599 - getDataType() : departureDate -> org.hibernate.type.DateType@126554a2
+14:10:06,472 DEBUG FromReferenceNode:74 - Resolved : f.departureDate -> flight0_.departureDate
+14:10:06,473 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Flight flight0_ ) ( where ( = ( flight0_.departureDate flight0_.id departureDate ) ? ) ) )
+14:10:06,473 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:06,473 DEBUG JoinProcessor:175 - Using FROM fragment [Flight flight0_]
+14:10:06,474 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Flight)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'flight0_.id as id1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=null,tableName=Flight,tableAlias=flight0_,origin=null,columns={,className=org.hibernate.test.annotations.Flight}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'flight0_.alternativeDepartureDate as alternat2_1_, flight0_.buyDate as buyDate1_, flight0_.COMP_ID as COMP9_1_, flight0_.departureDate as departur4_1_, flight0_.duration as duration1_, flight0_.flight_name as flight6_1_, flight0_.triggeredData as triggere7_1_, flight0_.OPTLOCK as OPTLOCK1_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[f], fromElementByTableAlias=[flight0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Flight flight0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=f,role=null,tableName=Flight,tableAlias=flight0_,origin=null,columns={,className=org.hibernate.test.annotations.Flight}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'flight0_.departureDate' {propertyName=departureDate,dereferenceType=ALL,propertyPath=departureDate,path=f.departureDate,tableAlias=flight0_,className=org.hibernate.test.annotations.Flight,classAlias=f}
+          |  +-[ALIAS_REF] IdentNode: 'flight0_.id' {alias=f, className=org.hibernate.test.annotations.Flight, tableAlias=flight0_}
+          |  \-[IDENT] IdentNode: 'departureDate' {originalText=departureDate}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=departureDate, expectedType=org.hibernate.type.DateType@126554a2}
+
+14:10:06,474 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:06,474 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.Flight f where f.departureDate = :departureDate
+14:10:06,474 DEBUG QueryTranslatorImpl:236 - SQL: select flight0_.id as id1_, flight0_.alternativeDepartureDate as alternat2_1_, flight0_.buyDate as buyDate1_, flight0_.COMP_ID as COMP9_1_, flight0_.departureDate as departur4_1_, flight0_.duration as duration1_, flight0_.flight_name as flight6_1_, flight0_.triggeredData as triggere7_1_, flight0_.OPTLOCK as OPTLOCK1_ from Flight flight0_ where flight0_.departureDate=?
+14:10:06,475 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:06,476 DEBUG SQL:104 - 
+    select
+        flight0_.id as id1_,
+        flight0_.alternativeDepartureDate as alternat2_1_,
+        flight0_.buyDate as buyDate1_,
+        flight0_.COMP_ID as COMP9_1_,
+        flight0_.departureDate as departur4_1_,
+        flight0_.duration as duration1_,
+        flight0_.flight_name as flight6_1_,
+        flight0_.triggeredData as triggere7_1_,
+        flight0_.OPTLOCK as OPTLOCK1_ 
+    from
+        Flight flight0_ 
+    where
+        flight0_.departureDate=?
+14:10:06,483 DEBUG SQL:104 - 
+    delete 
+    from
+        Flight 
+    where
+        id=? 
+        and OPTLOCK=?
+14:10:06,486  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,487 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,487 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,488 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,488 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,489 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,490 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,490  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,491  INFO CustomRunner:139 - Test: testUniqueConstraint
+14:10:06,498  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,499 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,499 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,499 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Flight drop constraint FK7D96709059315E8
+14:10:06,499 ERROR SchemaExport:426 - Table "FLIGHT" not found; SQL statement:
+
+    alter table Flight 
+        drop constraint FK7D96709059315E8 [42102-145]
+14:10:06,499 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,500 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,500 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,500 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,500 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:06,500 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:06,500 DEBUG SQL:104 - 
+    create table Corporation (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:06,501 DEBUG SQL:104 - 
+    create table Flight (
+        id bigint not null,
+        alternativeDepartureDate timestamp,
+        buyDate timestamp,
+        departureDate date,
+        duration bigint not null,
+        flight_name varchar(50) not null,
+        triggeredData varchar(255),
+        OPTLOCK integer,
+        COMP_ID integer,
+        primary key (id)
+    )
+14:10:06,501 DEBUG SQL:104 - 
+    create table tbl_sky (
+        id bigint not null,
+        color varchar(250) not null,
+        day varchar(255) not null,
+        MONTH varchar(255) not null,
+        primary key (id)
+    )
+14:10:06,502 DEBUG SQL:104 - 
+    alter table Flight 
+        add constraint FK7D96709059315E8 
+        foreign key (COMP_ID) 
+        references Corporation
+14:10:06,503 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint UK_tbl_sky_1 unique (MONTH, day)
+14:10:06,504 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint uc_tbl_sky_1 unique (color)
+14:10:06,504 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:06,504  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,505 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_sky
+        (color, day, MONTH, id) 
+    values
+        (?, ?, ?, ?)
+14:10:06,507 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_sky
+        (color, day, MONTH, id) 
+    values
+        (?, ?, ?, ?)
+14:10:06,509 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_sky
+        (color, day, MONTH, id) 
+    values
+        (?, ?, ?, ?)
+14:10:06,509  WARN SqlExceptionHelper:143 - SQL Error: 23001, SQLState: 23001
+14:10:06,509 ERROR SqlExceptionHelper:144 - Unique index or primary key violation: "UK_TBL_SKY_1_INDEX_D ON PUBLIC.TBL_SKY(MONTH, DAY)"; SQL statement:
+insert into tbl_sky (color, day, MONTH, id) values (?, ?, ?, ?) [23001-145]
+14:10:06,510  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:06,511  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,512 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,512 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,512 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,514 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,515 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,516 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,517  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,518  INFO CustomRunner:139 - Test: testVersion
+14:10:06,519  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,520 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,520 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,520 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Flight drop constraint FK7D96709059315E8
+14:10:06,520 ERROR SchemaExport:426 - Table "FLIGHT" not found; SQL statement:
+
+    alter table Flight 
+        drop constraint FK7D96709059315E8 [42102-145]
+14:10:06,520 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,520 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,521 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,521 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,521 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:06,521 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:06,521 DEBUG SQL:104 - 
+    create table Corporation (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:06,522 DEBUG SQL:104 - 
+    create table Flight (
+        id bigint not null,
+        alternativeDepartureDate timestamp,
+        buyDate timestamp,
+        departureDate date,
+        duration bigint not null,
+        flight_name varchar(50) not null,
+        triggeredData varchar(255),
+        OPTLOCK integer,
+        COMP_ID integer,
+        primary key (id)
+    )
+14:10:06,522 DEBUG SQL:104 - 
+    create table tbl_sky (
+        id bigint not null,
+        color varchar(250) not null,
+        day varchar(255) not null,
+        MONTH varchar(255) not null,
+        primary key (id)
+    )
+14:10:06,523 DEBUG SQL:104 - 
+    alter table Flight 
+        add constraint FK7D96709059315E8 
+        foreign key (COMP_ID) 
+        references Corporation
+14:10:06,525 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint UK_tbl_sky_1 unique (MONTH, day)
+14:10:06,525 DEBUG SQL:104 - 
+    alter table tbl_sky 
+        add constraint uc_tbl_sky_1 unique (color)
+14:10:06,525 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:06,526  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,527 DEBUG SQL:104 - 
+    insert 
+    into
+        Flight
+        (alternativeDepartureDate, buyDate, COMP_ID, departureDate, duration, flight_name, OPTLOCK, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+14:10:06,529 DEBUG SQL:104 - 
+    select
+        flight0_.id as id1_1_,
+        flight0_.alternativeDepartureDate as alternat2_1_1_,
+        flight0_.buyDate as buyDate1_1_,
+        flight0_.COMP_ID as COMP9_1_1_,
+        flight0_.departureDate as departur4_1_1_,
+        flight0_.duration as duration1_1_,
+        flight0_.flight_name as flight6_1_1_,
+        flight0_.triggeredData as triggere7_1_1_,
+        flight0_.OPTLOCK as OPTLOCK1_1_,
+        company1_.id as id0_0_,
+        company1_.name as name0_0_ 
+    from
+        Flight flight0_ 
+    left outer join
+        Corporation company1_ 
+            on flight0_.COMP_ID=company1_.id 
+    where
+        flight0_.id=?
+14:10:06,532 DEBUG SQL:104 - 
+    select
+        flight0_.id as id1_1_,
+        flight0_.alternativeDepartureDate as alternat2_1_1_,
+        flight0_.buyDate as buyDate1_1_,
+        flight0_.COMP_ID as COMP9_1_1_,
+        flight0_.departureDate as departur4_1_1_,
+        flight0_.duration as duration1_1_,
+        flight0_.flight_name as flight6_1_1_,
+        flight0_.triggeredData as triggere7_1_1_,
+        flight0_.OPTLOCK as OPTLOCK1_1_,
+        company1_.id as id0_0_,
+        company1_.name as name0_0_ 
+    from
+        Flight flight0_ 
+    left outer join
+        Corporation company1_ 
+            on flight0_.COMP_ID=company1_.id 
+    where
+        flight0_.id=?
+14:10:06,548 DEBUG SQL:104 - 
+    update
+        Flight 
+    set
+        alternativeDepartureDate=?,
+        buyDate=?,
+        COMP_ID=?,
+        departureDate=?,
+        duration=?,
+        OPTLOCK=? 
+    where
+        id=? 
+        and OPTLOCK=?
+14:10:06,551 DEBUG SQL:104 - 
+    update
+        Flight 
+    set
+        alternativeDepartureDate=?,
+        buyDate=?,
+        COMP_ID=?,
+        departureDate=?,
+        duration=?,
+        OPTLOCK=? 
+    where
+        id=? 
+        and OPTLOCK=?
+14:10:06,571  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:10:06,573  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:06,574 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:06,574 DEBUG SQL:104 - 
+    alter table Flight 
+        drop constraint FK7D96709059315E8
+14:10:06,575 DEBUG SQL:104 - 
+    drop table Corporation if exists
+14:10:06,575 DEBUG SQL:104 - 
+    drop table Flight if exists
+14:10:06,576 DEBUG SQL:104 - 
+    drop table tbl_sky if exists
+14:10:06,578 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:06,578  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:06,580  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

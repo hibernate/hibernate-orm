@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.collectionelement.deepcollectionelements.DeepCollectionElementTest" tests="1" time="0.008" timestamp="2013-02-28T20:10:17">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.collectionelement.deepcollectionelements.DeepCollectionElementTest" name="testInitialization" time="0.006" />
+  <system-out><![CDATA[14:10:17,304  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.collectionelement.deepcollectionelements.DeepCollectionElementTest
+14:10:17,305  INFO CustomRunner:139 - Test: testInitialization
+14:10:17,310  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

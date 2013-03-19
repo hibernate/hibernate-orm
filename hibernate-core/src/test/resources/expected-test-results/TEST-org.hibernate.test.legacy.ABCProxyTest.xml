@@ -1,0 +1,1491 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.ABCProxyTest" tests="6" time="0.539" timestamp="2013-02-28T20:14:52">
+  <properties />
+  <testcase classname="org.hibernate.test.legacy.ABCProxyTest" name="testDiscriminatorFiltering" time="0.01" />
+  <testcase classname="org.hibernate.test.legacy.ABCProxyTest" name="testNarrow" time="0.033" />
+  <testcase classname="org.hibernate.test.legacy.ABCProxyTest" name="testOneToOne" time="0.153" />
+  <testcase classname="org.hibernate.test.legacy.ABCProxyTest" name="testSharedColumn" time="0.111" />
+  <testcase classname="org.hibernate.test.legacy.ABCProxyTest" name="testSubclassMap" time="0.02" />
+  <testcase classname="org.hibernate.test.legacy.ABCProxyTest" name="testSubclassing" time="0.151" />
+  <system-out><![CDATA[14:14:52,933  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.ABCProxyTest
+14:14:52,935  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:52,946  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/ABCProxy.hbm.xml
+14:14:52,953  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:52,954  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:52,954  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:52,954  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:52,954  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:52,955  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:52,956  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:52,956  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:52,956  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:52,967  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:52,968 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:52,968 DEBUG SQL:104 - 
+    alter table AP 
+        drop constraint FK82F1B003A5B
+14:14:52,968 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AP drop constraint FK82F1B003A5B
+14:14:52,968 ERROR SchemaExport:426 - Table "AP" not found; SQL statement:
+
+    alter table AP 
+        drop constraint FK82F1B003A5B [42102-145]
+14:14:52,968 DEBUG SQL:104 - 
+    alter table AP 
+        drop constraint FK82F28384B81
+14:14:52,969 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AP drop constraint FK82F28384B81
+14:14:52,969 ERROR SchemaExport:426 - Table "AP" not found; SQL statement:
+
+    alter table AP 
+        drop constraint FK82F28384B81 [42102-145]
+14:14:52,969 DEBUG SQL:104 - 
+    alter table AP 
+        drop constraint FK82F28384B80
+14:14:52,969 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AP drop constraint FK82F28384B80
+14:14:52,969 ERROR SchemaExport:426 - Table "AP" not found; SQL statement:
+
+    alter table AP 
+        drop constraint FK82F28384B80 [42102-145]
+14:14:52,969 DEBUG SQL:104 - 
+    alter table AP 
+        drop constraint FK82F435CA7FB
+14:14:52,969 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AP drop constraint FK82F435CA7FB
+14:14:52,969 ERROR SchemaExport:426 - Table "AP" not found; SQL statement:
+
+    alter table AP 
+        drop constraint FK82F435CA7FB [42102-145]
+14:14:52,970 DEBUG SQL:104 - 
+    alter table "map" 
+        drop constraint FK1A55C435E2490
+14:14:52,970 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "map" drop constraint FK1A55C435E2490
+14:14:52,970 ERROR SchemaExport:426 - Table "map" not found; SQL statement:
+
+    alter table "map" 
+        drop constraint FK1A55C435E2490 [42102-145]
+14:14:52,970 DEBUG SQL:104 - 
+    drop table AP if exists
+14:14:52,970 DEBUG SQL:104 - 
+    drop table DP if exists
+14:14:52,970 DEBUG SQL:104 - 
+    drop table EP if exists
+14:14:52,970 DEBUG SQL:104 - 
+    drop table "map" if exists
+14:14:52,971 DEBUG SQL:104 - 
+    create table AP (
+        identifier_column bigint not null,
+        clazz_discriminata integer,
+        name varchar(255),
+        forward bigint,
+        count_ integer,
+        c1 varchar(255),
+        c bigint,
+        c2 varchar(255),
+        e bigint,
+        primary key (identifier_column)
+    )
+14:14:52,971 DEBUG SQL:104 - 
+    create table DP (
+        id bigint not null,
+        amount float,
+        primary key (id)
+    )
+14:14:52,971 DEBUG SQL:104 - 
+    create table EP (
+        id bigint not null,
+        amount float,
+        primary key (id)
+    )
+14:14:52,971 DEBUG SQL:104 - 
+    create table "map" (
+        BID bigint not null,
+        MAPVAL integer,
+        MAPKEY varchar(255) not null,
+        primary key (BID, MAPKEY)
+    )
+14:14:52,972 DEBUG SQL:104 - 
+    alter table AP 
+        add constraint FK82F1B003A5B 
+        foreign key (forward) 
+        references EP
+14:14:52,972 DEBUG SQL:104 - 
+    alter table AP 
+        add constraint FK82F28384B81 
+        foreign key (c) 
+        references AP
+14:14:52,973 DEBUG SQL:104 - 
+    alter table AP 
+        add constraint FK82F28384B80 
+        foreign key (c) 
+        references AP
+14:14:52,973 DEBUG SQL:104 - 
+    alter table AP 
+        add constraint FK82F435CA7FB 
+        foreign key (e) 
+        references EP
+14:14:52,973 DEBUG SQL:104 - 
+    alter table "map" 
+        add constraint FK1A55C435E2490 
+        foreign key (BID) 
+        references AP
+14:14:52,974  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:52,974  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:52,974  INFO CustomRunner:139 - Test: testDiscriminatorFiltering
+14:14:52,976 DEBUG SQL:104 - 
+    select
+        c1x0_.identifier_column as identifier1_0_0_,
+        c2s1_.identifier_column as identifier1_0_1_,
+        c1x0_.name as name0_0_,
+        c1x0_.forward as forward0_0_,
+        c1x0_.count_ as count5_0_0_,
+        c1x0_.c1 as c6_0_0_,
+        c1x0_.c as c0_0_,
+        c2s1_.name as name0_1_,
+        c2s1_.forward as forward0_1_,
+        c2s1_.count_ as count5_0_1_,
+        c2s1_.c2 as c8_0_1_,
+        c2s1_.c as c0_1_ 
+    from
+        AP c1x0_ 
+    left outer join
+        AP c2s1_ 
+            on c1x0_.identifier_column=c2s1_.c 
+            and (
+                c2s1_.identifier_column is not null
+            )  
+            and c2s1_.clazz_discriminata=2 
+    where
+        c1x0_.clazz_discriminata=1
+14:14:52,977 DEBUG SQL:104 - 
+    select
+        this_.identifier_column as identifier1_0_2_,
+        this_.name as name0_2_,
+        this_.forward as forward0_2_,
+        this_.count_ as count5_0_2_,
+        this_.c1 as c6_0_2_,
+        this_.c as c0_2_,
+        d3_.id as id1_0_,
+        d3_.amount as amount1_0_,
+        c2x1_.identifier_column as identifier1_0_1_,
+        c2x1_.name as name0_1_,
+        c2x1_.forward as forward0_1_,
+        c2x1_.count_ as count5_0_1_,
+        c2x1_.c2 as c8_0_1_,
+        c2x1_.c as c0_1_ 
+    from
+        AP this_ 
+    left outer join
+        DP d3_ 
+            on this_.identifier_column=d3_.id 
+    inner join
+        AP c2x1_ 
+            on this_.identifier_column=c2x1_.c 
+            and (
+                c2x1_.identifier_column is not null
+            )  
+            and c2x1_.clazz_discriminata=2 
+    where
+        this_.clazz_discriminata=1
+14:14:52,986  INFO CustomRunner:139 - Test: testNarrow
+14:14:52,988 DEBUG SQL:104 - 
+    select
+        e0_.id as id2_0_,
+        a1_.identifier_column as identifier1_0_1_,
+        e0_.amount as amount2_0_,
+        a1_.name as name0_1_,
+        a1_.forward as forward0_1_,
+        a1_.count_ as count5_0_1_,
+        a1_.c1 as c6_0_1_,
+        a1_.c as c0_1_,
+        a1_.c2 as c8_0_1_,
+        a1_.clazz_discriminata as clazz2_0_1_ 
+    from
+        EP e0_ 
+    inner join
+        AP a1_ 
+            on e0_.id=a1_.forward 
+            and (
+                a1_.clazz_discriminata is null 
+                or a1_.clazz_discriminata in (
+                    0,
+                1,
+                2)) 
+            where
+                (
+                    a1_.count_=1 
+                )
+14:14:53,009 DEBUG SQL:104 - 
+    select
+        e0_.id as id2_0_,
+        as1_.identifier_column as identifier1_0_1_,
+        e0_.amount as amount2_0_,
+        as1_.name as name0_1_,
+        as1_.forward as forward0_1_,
+        as1_.count_ as count5_0_1_,
+        as1_.c1 as c6_0_1_,
+        as1_.c as c0_1_,
+        as1_.c2 as c8_0_1_,
+        as1_.clazz_discriminata as clazz2_0_1_ 
+    from
+        EP e0_ 
+    inner join
+        AP as1_ 
+            on e0_.id=as1_.e 
+            and (
+                as1_.clazz_discriminata is null 
+                or as1_.clazz_discriminata in (
+                    0,
+                1,
+                2)) 
+            where
+                (
+                    as1_.count_=1 
+                )
+14:14:53,019  INFO CustomRunner:139 - Test: testOneToOne
+14:14:53,020 DEBUG SQL:104 - 
+    select
+        max(identifier_column) 
+    from
+        AP
+14:14:53,021 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        EP
+14:14:53,022 DEBUG SQL:104 - 
+    insert 
+    into
+        EP
+        (amount, id) 
+    values
+        (?, ?)
+14:14:53,029 DEBUG SQL:104 - 
+    insert 
+    into
+        AP
+        (name, forward, clazz_discriminata, identifier_column) 
+    values
+        (?, ?, 0, ?)
+14:14:53,030 DEBUG SQL:104 - 
+    insert 
+    into
+        EP
+        (amount, id) 
+    values
+        (?, ?)
+14:14:53,030 DEBUG SQL:104 - 
+    insert 
+    into
+        AP
+        (name, forward, count_, c1, c, clazz_discriminata, identifier_column) 
+    values
+        (?, ?, ?, ?, ?, 1, ?)
+14:14:53,032 DEBUG SQL:104 - 
+    select
+        e0_.id as id2_0_,
+        a1_.identifier_column as identifier1_0_1_,
+        e0_.amount as amount2_0_,
+        a1_.name as name0_1_,
+        a1_.forward as forward0_1_,
+        a1_.count_ as count5_0_1_,
+        a1_.c1 as c6_0_1_,
+        a1_.c as c0_1_,
+        a1_.c2 as c8_0_1_,
+        a1_.clazz_discriminata as clazz2_0_1_ 
+    from
+        EP e0_,
+        AP a1_ 
+    where
+        (
+            a1_.clazz_discriminata is null 
+            or a1_.clazz_discriminata in (
+                0, 1, 2
+            )
+        ) 
+        and (
+            (
+                e0_.id=a1_.forward 
+            )
+            and(
+                a1_.identifier_column=? 
+            )
+        )
+14:14:53,033 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_1_,
+        a0_.name as name0_1_,
+        a0_.forward as forward0_1_,
+        a0_.count_ as count5_0_1_,
+        a0_.c1 as c6_0_1_,
+        a0_.c as c0_1_,
+        a0_.c2 as c8_0_1_,
+        a0_.clazz_discriminata as clazz2_0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP a0_ 
+    left outer join
+        DP d1_ 
+            on a0_.identifier_column=d1_.id 
+    where
+        a0_.forward=? 
+        and (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,054 DEBUG SQL:104 - 
+    select
+        e0_.id as id2_0_,
+        a1_.identifier_column as identifier1_0_1_,
+        e0_.amount as amount2_0_,
+        a1_.name as name0_1_,
+        a1_.forward as forward0_1_,
+        a1_.count_ as count5_0_1_,
+        a1_.c1 as c6_0_1_,
+        a1_.c as c0_1_,
+        a1_.c2 as c8_0_1_,
+        a1_.clazz_discriminata as clazz2_0_1_ 
+    from
+        EP e0_ 
+    inner join
+        AP a1_ 
+            on e0_.id=a1_.forward 
+            and (
+                a1_.clazz_discriminata is null 
+                or a1_.clazz_discriminata in (
+                    0,
+                1,
+                2))
+14:14:53,054 DEBUG SQL:104 - 
+    select
+        d0_.id as id1_0_,
+        d0_.amount as amount1_0_ 
+    from
+        DP d0_ 
+    where
+        d0_.id=?
+14:14:53,062 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,062 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,074 DEBUG SQL:104 - 
+    select
+        e0_.id as id2_,
+        e0_.amount as amount2_ 
+    from
+        EP e0_
+14:14:53,074 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_1_,
+        a0_.name as name0_1_,
+        a0_.forward as forward0_1_,
+        a0_.count_ as count5_0_1_,
+        a0_.c1 as c6_0_1_,
+        a0_.c as c0_1_,
+        a0_.c2 as c8_0_1_,
+        a0_.clazz_discriminata as clazz2_0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP a0_ 
+    left outer join
+        DP d1_ 
+            on a0_.identifier_column=d1_.id 
+    where
+        a0_.forward=? 
+        and (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,084 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_1_,
+        a0_.name as name0_1_,
+        a0_.forward as forward0_1_,
+        a0_.count_ as count5_0_1_,
+        a0_.c1 as c6_0_1_,
+        a0_.c as c0_1_,
+        a0_.c2 as c8_0_1_,
+        a0_.clazz_discriminata as clazz2_0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP a0_ 
+    left outer join
+        DP d1_ 
+            on a0_.identifier_column=d1_.id 
+    where
+        a0_.forward=? 
+        and (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,084 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,085 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,086 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_1_,
+        a0_.name as name0_1_,
+        a0_.forward as forward0_1_,
+        a0_.count_ as count5_0_1_,
+        a0_.c1 as c6_0_1_,
+        a0_.c as c0_1_,
+        a0_.c2 as c8_0_1_,
+        a0_.clazz_discriminata as clazz2_0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP a0_ 
+    left outer join
+        DP d1_ 
+            on a0_.identifier_column=d1_.id 
+    where
+        a0_.identifier_column=? 
+        and (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,101 DEBUG SQL:104 - 
+    select
+        e0_.id as id2_2_,
+        e0_.amount as amount2_2_,
+        a1_.identifier_column as identifier1_0_0_,
+        a1_.name as name0_0_,
+        a1_.forward as forward0_0_,
+        a1_.count_ as count5_0_0_,
+        a1_.c1 as c6_0_0_,
+        a1_.c as c0_0_,
+        a1_.c2 as c8_0_0_,
+        a1_.clazz_discriminata as clazz2_0_0_,
+        d2_.id as id1_1_,
+        d2_.amount as amount1_1_ 
+    from
+        EP e0_ 
+    left outer join
+        AP a1_ 
+            on e0_.id=a1_.forward 
+            and (
+                a1_.clazz_discriminata is null 
+                or a1_.clazz_discriminata in (
+                    0,
+                1,
+                2)) 
+            left outer join
+                DP d2_ 
+                    on a1_.identifier_column=d2_.id 
+            where
+                e0_.id=?
+14:14:53,114 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_1_,
+        a0_.name as name0_1_,
+        a0_.forward as forward0_1_,
+        a0_.count_ as count5_0_1_,
+        a0_.c1 as c6_0_1_,
+        a0_.c as c0_1_,
+        a0_.c2 as c8_0_1_,
+        a0_.clazz_discriminata as clazz2_0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP a0_ 
+    left outer join
+        DP d1_ 
+            on a0_.identifier_column=d1_.id 
+    where
+        a0_.forward=? 
+        and (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,136 DEBUG SQL:104 - 
+    select
+        e0_.id as id2_2_,
+        e0_.amount as amount2_2_,
+        a1_.identifier_column as identifier1_0_0_,
+        a1_.name as name0_0_,
+        a1_.forward as forward0_0_,
+        a1_.count_ as count5_0_0_,
+        a1_.c1 as c6_0_0_,
+        a1_.c as c0_0_,
+        a1_.c2 as c8_0_0_,
+        a1_.clazz_discriminata as clazz2_0_0_,
+        d2_.id as id1_1_,
+        d2_.amount as amount1_1_ 
+    from
+        EP e0_ 
+    left outer join
+        AP a1_ 
+            on e0_.id=a1_.forward 
+            and (
+                a1_.clazz_discriminata is null 
+                or a1_.clazz_discriminata in (
+                    0,
+                1,
+                2)) 
+            left outer join
+                DP d2_ 
+                    on a1_.identifier_column=d2_.id 
+            where
+                e0_.id=?
+14:14:53,150 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,150 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,151 DEBUG SQL:104 - 
+    update
+        AP 
+    set
+        name=?,
+        forward=?,
+        count_=?,
+        c1=?,
+        c=? 
+    where
+        identifier_column=?
+14:14:53,161 DEBUG SQL:104 - 
+    update
+        AP 
+    set
+        e=null 
+    where
+        e=?
+14:14:53,161 DEBUG SQL:104 - 
+    update
+        AP 
+    set
+        e=null 
+    where
+        e=?
+14:14:53,161 DEBUG SQL:104 - 
+    delete 
+    from
+        AP 
+    where
+        identifier_column=?
+14:14:53,170 DEBUG SQL:104 - 
+    delete 
+    from
+        EP 
+    where
+        id=?
+14:14:53,171 DEBUG SQL:104 - 
+    delete 
+    from
+        EP 
+    where
+        id=?
+14:14:53,171 DEBUG SQL:104 - 
+    delete 
+    from
+        AP 
+    where
+        identifier_column=?
+14:14:53,172 DEBUG SQL:104 - 
+    select
+        e0_.id as id2_,
+        e0_.amount as amount2_ 
+    from
+        EP e0_
+14:14:53,173  INFO CustomRunner:139 - Test: testSharedColumn
+14:14:53,174 DEBUG SQL:104 - 
+    insert 
+    into
+        AP
+        (name, forward, count_, c1, c, clazz_discriminata, identifier_column) 
+    values
+        (?, ?, ?, ?, ?, 1, ?)
+14:14:53,182 DEBUG SQL:104 - 
+    insert 
+    into
+        AP
+        (name, forward, count_, c2, c, clazz_discriminata, identifier_column) 
+    values
+        (?, ?, ?, ?, ?, 2, ?)
+14:14:53,182 DEBUG SQL:104 - 
+    update
+        AP 
+    set
+        name=?,
+        forward=?,
+        count_=?,
+        c1=?,
+        c=? 
+    where
+        identifier_column=?
+14:14:53,183 DEBUG SQL:104 - 
+    select
+        b0_.identifier_column as identifier1_0_,
+        b0_.name as name0_,
+        b0_.forward as forward0_,
+        b0_.count_ as count5_0_,
+        b0_.c1 as c6_0_,
+        b0_.c as c0_,
+        b0_.c2 as c8_0_,
+        b0_.clazz_discriminata as clazz2_0_ 
+    from
+        AP b0_ 
+    where
+        (
+            b0_.clazz_discriminata is null 
+            or b0_.clazz_discriminata in (
+                1, 2
+            )
+        )
+14:14:53,193 DEBUG SQL:104 - 
+    select
+        d0_.id as id1_0_,
+        d0_.amount as amount1_0_ 
+    from
+        DP d0_ 
+    where
+        d0_.id=?
+14:14:53,194 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,210 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,211 DEBUG SQL:104 - 
+    select
+        c1s0_.c as c0_2_,
+        c1s0_.identifier_column as identifier1_0_2_,
+        c1s0_.identifier_column as identifier1_0_1_,
+        c1s0_.name as name0_1_,
+        c1s0_.forward as forward0_1_,
+        c1s0_.count_ as count5_0_1_,
+        c1s0_.c1 as c6_0_1_,
+        c1s0_.c as c0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP c1s0_ 
+    left outer join
+        DP d1_ 
+            on c1s0_.identifier_column=d1_.id 
+    where
+        c1s0_.clazz_discriminata=1 
+        and c1s0_.c=?
+14:14:53,211 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,212 DEBUG SQL:104 - 
+    select
+        c1x0_.identifier_column as identifier1_0_,
+        c1x0_.name as name0_,
+        c1x0_.forward as forward0_,
+        c1x0_.count_ as count5_0_,
+        c1x0_.c1 as c6_0_,
+        c1x0_.c as c0_ 
+    from
+        AP c1x0_ 
+    where
+        c1x0_.clazz_discriminata=1
+14:14:53,213 DEBUG SQL:104 - 
+    select
+        d0_.id as id1_0_,
+        d0_.amount as amount1_0_ 
+    from
+        DP d0_ 
+    where
+        d0_.id=?
+14:14:53,219 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,221 DEBUG SQL:104 - 
+    select
+        c1s0_.c as c0_2_,
+        c1s0_.identifier_column as identifier1_0_2_,
+        c1s0_.identifier_column as identifier1_0_1_,
+        c1s0_.name as name0_1_,
+        c1s0_.forward as forward0_1_,
+        c1s0_.count_ as count5_0_1_,
+        c1s0_.c1 as c6_0_1_,
+        c1s0_.c as c0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP c1s0_ 
+    left outer join
+        DP d1_ 
+            on c1s0_.identifier_column=d1_.id 
+    where
+        c1s0_.clazz_discriminata=1 
+        and c1s0_.c=?
+14:14:53,230 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,231 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,232 DEBUG SQL:104 - 
+    select
+        c2x0_.identifier_column as identifier1_0_,
+        c2x0_.name as name0_,
+        c2x0_.forward as forward0_,
+        c2x0_.count_ as count5_0_,
+        c2x0_.c2 as c8_0_,
+        c2x0_.c as c0_ 
+    from
+        AP c2x0_ 
+    where
+        c2x0_.clazz_discriminata=2
+14:14:53,254 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_1_,
+        a0_.name as name0_1_,
+        a0_.forward as forward0_1_,
+        a0_.count_ as count5_0_1_,
+        a0_.c1 as c6_0_1_,
+        a0_.c as c0_1_,
+        a0_.c2 as c8_0_1_,
+        a0_.clazz_discriminata as clazz2_0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP a0_ 
+    left outer join
+        DP d1_ 
+            on a0_.identifier_column=d1_.id 
+    where
+        a0_.identifier_column=? 
+        and (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,255 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,264 DEBUG SQL:104 - 
+    select
+        c1s0_.c as c0_2_,
+        c1s0_.identifier_column as identifier1_0_2_,
+        c1s0_.identifier_column as identifier1_0_1_,
+        c1s0_.name as name0_1_,
+        c1s0_.forward as forward0_1_,
+        c1s0_.count_ as count5_0_1_,
+        c1s0_.c1 as c6_0_1_,
+        c1s0_.c as c0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP c1s0_ 
+    left outer join
+        DP d1_ 
+            on c1s0_.identifier_column=d1_.id 
+    where
+        c1s0_.clazz_discriminata=1 
+        and c1s0_.c=?
+14:14:53,273 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,273 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,275 DEBUG SQL:104 - 
+    update
+        AP 
+    set
+        name=?,
+        forward=?,
+        count_=?,
+        c2=?,
+        c=? 
+    where
+        identifier_column=?
+14:14:53,283 DEBUG SQL:104 - 
+    delete 
+    from
+        AP 
+    where
+        identifier_column=?
+14:14:53,283 DEBUG SQL:104 - 
+    delete 
+    from
+        AP 
+    where
+        identifier_column=?
+14:14:53,284  INFO CustomRunner:139 - Test: testSubclassMap
+14:14:53,285 DEBUG SQL:104 - 
+    insert 
+    into
+        AP
+        (name, forward, count_, identifier_column) 
+    values
+        (?, ?, ?, ?)
+14:14:53,286 DEBUG SQL:104 - 
+    insert 
+    into
+        "map"
+        (BID, MAPKEY, MAPVAL) 
+    values
+        (?, ?, ?)
+14:14:53,294 DEBUG SQL:104 - 
+    delete 
+    from
+        "map" 
+    where
+        BID=?
+14:14:53,294 DEBUG SQL:104 - 
+    delete 
+    from
+        AP 
+    where
+        identifier_column=?
+14:14:53,295 DEBUG SQL:104 - 
+    insert 
+    into
+        AP
+        (name, forward, count_, identifier_column) 
+    values
+        (?, ?, ?, ?)
+14:14:53,295 DEBUG SQL:104 - 
+    insert 
+    into
+        "map"
+        (BID, MAPKEY, MAPVAL) 
+    values
+        (?, ?, ?)
+14:14:53,295 DEBUG SQL:104 - 
+    delete 
+    from
+        "map" 
+    where
+        BID=?
+14:14:53,304 DEBUG SQL:104 - 
+    delete 
+    from
+        AP 
+    where
+        identifier_column=?
+14:14:53,304  INFO CustomRunner:139 - Test: testSubclassing
+14:14:53,305 DEBUG SQL:104 - 
+    insert 
+    into
+        AP
+        (name, forward, count_, c1, c, clazz_discriminata, identifier_column) 
+    values
+        (?, ?, ?, ?, ?, 1, ?)
+14:14:53,306 DEBUG SQL:104 - 
+    insert 
+    into
+        DP
+        (amount, id) 
+    values
+        (?, ?)
+14:14:53,306 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_1_,
+        a0_.name as name0_1_,
+        a0_.forward as forward0_1_,
+        a0_.count_ as count5_0_1_,
+        a0_.c1 as c6_0_1_,
+        a0_.c as c0_1_,
+        a0_.c2 as c8_0_1_,
+        a0_.clazz_discriminata as clazz2_0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP a0_ 
+    left outer join
+        DP d1_ 
+            on a0_.identifier_column=d1_.id 
+    where
+        a0_.identifier_column=? 
+        and (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,316 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,326 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,327 DEBUG SQL:104 - 
+    select
+        b0_.identifier_column as identifier1_0_1_,
+        b0_.name as name0_1_,
+        b0_.forward as forward0_1_,
+        b0_.count_ as count5_0_1_,
+        b0_.c1 as c6_0_1_,
+        b0_.c as c0_1_,
+        b0_.c2 as c8_0_1_,
+        b0_.clazz_discriminata as clazz2_0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP b0_ 
+    left outer join
+        DP d1_ 
+            on b0_.identifier_column=d1_.id 
+    where
+        b0_.identifier_column=? 
+        and (
+            b0_.clazz_discriminata is null 
+            or b0_.clazz_discriminata in (
+                1, 2
+            )
+        )
+14:14:53,327 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,328 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,341 DEBUG SQL:104 - 
+    select
+        c1x0_.identifier_column as identifier1_0_1_,
+        c1x0_.name as name0_1_,
+        c1x0_.forward as forward0_1_,
+        c1x0_.count_ as count5_0_1_,
+        c1x0_.c1 as c6_0_1_,
+        c1x0_.c as c0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP c1x0_ 
+    left outer join
+        DP d1_ 
+            on c1x0_.identifier_column=d1_.id 
+    where
+        c1x0_.identifier_column=? 
+        and c1x0_.clazz_discriminata=1
+14:14:53,342 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,351 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,352 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_1_,
+        a0_.name as name0_1_,
+        a0_.forward as forward0_1_,
+        a0_.count_ as count5_0_1_,
+        a0_.c1 as c6_0_1_,
+        a0_.c as c0_1_,
+        a0_.c2 as c8_0_1_,
+        a0_.clazz_discriminata as clazz2_0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP a0_ 
+    left outer join
+        DP d1_ 
+            on a0_.identifier_column=d1_.id 
+    where
+        a0_.identifier_column=? 
+        and (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,374 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,374 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,375  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.legacy.C1 - this operation breaks ==
+14:14:53,375 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_1_,
+        a0_.name as name0_1_,
+        a0_.forward as forward0_1_,
+        a0_.count_ as count5_0_1_,
+        a0_.c1 as c6_0_1_,
+        a0_.c as c0_1_,
+        a0_.c2 as c8_0_1_,
+        a0_.clazz_discriminata as clazz2_0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP a0_ 
+    left outer join
+        DP d1_ 
+            on a0_.identifier_column=d1_.id 
+    where
+        a0_.identifier_column=? 
+        and (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,388 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,398 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,398 DEBUG SQL:104 - 
+    select
+        identifier_column 
+    from
+        AP 
+    where
+        identifier_column =? for update
+            
+14:14:53,399  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.legacy.C1 - this operation breaks ==
+14:14:53,399  WARN StatefulPersistenceContext:716 - HHH000179: Narrowing proxy to class org.hibernate.test.legacy.C1 - this operation breaks ==
+14:14:53,411 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_1_,
+        a0_.name as name0_1_,
+        a0_.forward as forward0_1_,
+        a0_.count_ as count5_0_1_,
+        a0_.c1 as c6_0_1_,
+        a0_.c as c0_1_,
+        a0_.c2 as c8_0_1_,
+        a0_.clazz_discriminata as clazz2_0_1_,
+        d1_.id as id1_0_,
+        d1_.amount as amount1_0_ 
+    from
+        AP a0_ 
+    left outer join
+        DP d1_ 
+            on a0_.identifier_column=d1_.id 
+    where
+        a0_.identifier_column=? 
+        and (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,412 DEBUG SQL:104 - 
+    select
+        c2s0_.c as c0_1_,
+        c2s0_.identifier_column as identifier1_0_1_,
+        c2s0_.identifier_column as identifier1_0_0_,
+        c2s0_.name as name0_0_,
+        c2s0_.forward as forward0_0_,
+        c2s0_.count_ as count5_0_0_,
+        c2s0_.c2 as c8_0_0_,
+        c2s0_.c as c0_0_ 
+    from
+        AP c2s0_ 
+    where
+        (
+            c2s0_.identifier_column is not null
+        )  
+        and c2s0_.clazz_discriminata=2 
+        and c2s0_.c=?
+14:14:53,422 DEBUG SQL:104 - 
+    select
+        map0_.BID as BID0_0_,
+        map0_.MAPVAL as MAPVAL3_0_,
+        map0_.MAPKEY as MAPKEY0_ 
+    from
+        "map" map0_ 
+    where
+        map0_.BID=?
+14:14:53,423 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_,
+        a0_.name as name0_,
+        a0_.forward as forward0_,
+        a0_.count_ as count5_0_,
+        a0_.c1 as c6_0_,
+        a0_.c as c0_,
+        a0_.c2 as c8_0_,
+        a0_.clazz_discriminata as clazz2_0_ 
+    from
+        AP a0_ 
+    where
+        (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,433 DEBUG SQL:104 - 
+    delete 
+    from
+        AP 
+    where
+        identifier_column=?
+14:14:53,434 DEBUG SQL:104 - 
+    insert 
+    into
+        AP
+        (name, forward, count_, identifier_column) 
+    values
+        (?, ?, ?, ?)
+14:14:53,434 DEBUG SQL:104 - 
+    insert 
+    into
+        AP
+        (name, forward, clazz_discriminata, identifier_column) 
+    values
+        (?, ?, 0, ?)
+14:14:53,443 DEBUG SQL:104 - 
+    select
+        b0_.identifier_column as identifier1_0_,
+        b0_.name as name0_,
+        b0_.forward as forward0_,
+        b0_.count_ as count5_0_,
+        b0_.c1 as c6_0_,
+        b0_.c as c0_,
+        b0_.c2 as c8_0_,
+        b0_.clazz_discriminata as clazz2_0_ 
+    from
+        AP b0_ 
+    where
+        (
+            b0_.clazz_discriminata is null 
+            or b0_.clazz_discriminata in (
+                1, 2
+            )
+        )
+14:14:53,445 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_,
+        a0_.name as name0_,
+        a0_.forward as forward0_,
+        a0_.count_ as count5_0_,
+        a0_.c1 as c6_0_,
+        a0_.c as c0_,
+        a0_.c2 as c8_0_,
+        a0_.clazz_discriminata as clazz2_0_ 
+    from
+        AP a0_ 
+    where
+        (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,455 DEBUG SQL:104 - 
+    select
+        a0_.identifier_column as identifier1_0_,
+        a0_.name as name0_,
+        a0_.forward as forward0_,
+        a0_.count_ as count5_0_,
+        a0_.c1 as c6_0_,
+        a0_.c as c0_,
+        a0_.c2 as c8_0_,
+        a0_.clazz_discriminata as clazz2_0_ 
+    from
+        AP a0_ 
+    where
+        (
+            a0_.clazz_discriminata is null 
+            or a0_.clazz_discriminata in (
+                0, 1, 2
+            )
+        )
+14:14:53,455 DEBUG SQL:104 - 
+    delete 
+    from
+        AP 
+    where
+        identifier_column=?
+14:14:53,456 DEBUG SQL:104 - 
+    delete 
+    from
+        AP 
+    where
+        identifier_column=?
+14:14:53,456  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:53,457 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:53,457 DEBUG SQL:104 - 
+    alter table AP 
+        drop constraint FK82F1B003A5B
+14:14:53,457 DEBUG SQL:104 - 
+    alter table AP 
+        drop constraint FK82F28384B81
+14:14:53,457 DEBUG SQL:104 - 
+    alter table AP 
+        drop constraint FK82F28384B80
+14:14:53,457 DEBUG SQL:104 - 
+    alter table AP 
+        drop constraint FK82F435CA7FB
+14:14:53,458 DEBUG SQL:104 - 
+    alter table "map" 
+        drop constraint FK1A55C435E2490
+14:14:53,458 DEBUG SQL:104 - 
+    drop table AP if exists
+14:14:53,458 DEBUG SQL:104 - 
+    drop table DP if exists
+14:14:53,458 DEBUG SQL:104 - 
+    drop table EP if exists
+14:14:53,467 DEBUG SQL:104 - 
+    drop table "map" if exists
+14:14:53,467  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:53,467  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

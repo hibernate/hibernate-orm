@@ -1,0 +1,2063 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" tests="18" time="0.904" timestamp="2013-02-28T20:10:30">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testComponentSubPropertyMapKey" time="0.056" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testDefaultMapKey" time="0.04" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testEntityKeyElementTarget" time="0.012" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testEnumKeyType" time="0.004" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testFkList" time="0.053" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testJPA2DefaultIndexColumns" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testJPA2DefaultMapColumns" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testJoinedTableList" time="0.116" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testMapKey" time="0.009" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testMapKeyAndIdClass" time="0.007" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testMapKeyEntityEntity" time="0.012" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testMapKeyLoad" time="0.012" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testMapKeyOnManyToMany" time="0.013" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testMapKeyOnManyToManyOnId" time="0.02" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testMapKeyToEntity" time="0.025" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testRealMap" time="0.039" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testSortedMap" time="0.025" />
+  <testcase classname="org.hibernate.test.annotations.indexcoll.IndexedCollectionTest" name="testTemporalKeyMap" time="0.012" />
+  <system-out><![CDATA[14:10:30,766  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.indexcoll.IndexedCollectionTest
+14:10:30,799  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.HSQLDialect
+14:10:30,802  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.HSQLDialect
+14:10:30,803  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.HSQLDialect
+14:10:30,806  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:30,806  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:30,806  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:30,806  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:30,807  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:30,808  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:30,808  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:30,809  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:30,810  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:30,810  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:30,890  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:30,891 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:30,891 DEBUG SQL:104 - 
+    alter table AddressEntry 
+        drop constraint FK181B28FEFEC3411E
+14:10:30,891 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AddressEntry drop constraint FK181B28FEFEC3411E
+14:10:30,891 ERROR SchemaExport:426 - Table "ADDRESSENTRY" not found; SQL statement:
+
+    alter table AddressEntry 
+        drop constraint FK181B28FEFEC3411E [42102-145]
+14:10:30,891 DEBUG SQL:104 - 
+    alter table AddressEntry 
+        drop constraint FK181B28FE3F865FB2
+14:10:30,892 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table AddressEntry drop constraint FK181B28FE3F865FB2
+14:10:30,892 ERROR SchemaExport:426 - Table "ADDRESSENTRY" not found; SQL statement:
+
+    alter table AddressEntry 
+        drop constraint FK181B28FE3F865FB2 [42102-145]
+14:10:30,892 DEBUG SQL:104 - 
+    alter table Atm_Gas_Def 
+        drop constraint FK84ECDC9AAB8B5865
+14:10:30,892 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Atm_Gas_Def drop constraint FK84ECDC9AAB8B5865
+14:10:30,892 ERROR SchemaExport:426 - Table "ATM_GAS_DEF" not found; SQL statement:
+
+    alter table Atm_Gas_Def 
+        drop constraint FK84ECDC9AAB8B5865 [42102-145]
+14:10:30,892 DEBUG SQL:104 - 
+    alter table Atm_Gas_Def 
+        drop constraint FK84ECDC9A3A5A1A8A
+14:10:30,892 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Atm_Gas_Def drop constraint FK84ECDC9A3A5A1A8A
+14:10:30,893 ERROR SchemaExport:426 - Table "ATM_GAS_DEF" not found; SQL statement:
+
+    alter table Atm_Gas_Def 
+        drop constraint FK84ECDC9A3A5A1A8A [42102-145]
+14:10:30,893 DEBUG SQL:104 - 
+    alter table Atm_Gas_DefLeg 
+        drop constraint FKA7DCCF14118E7C93
+14:10:30,893 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Atm_Gas_DefLeg drop constraint FKA7DCCF14118E7C93
+14:10:30,893 ERROR SchemaExport:426 - Table "ATM_GAS_DEFLEG" not found; SQL statement:
+
+    alter table Atm_Gas_DefLeg 
+        drop constraint FKA7DCCF14118E7C93 [42102-145]
+14:10:30,893 DEBUG SQL:104 - 
+    alter table Atm_Gas_DefLeg 
+        drop constraint FKA7DCCF143A5A1A8A
+14:10:30,893 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Atm_Gas_DefLeg drop constraint FKA7DCCF143A5A1A8A
+14:10:30,893 ERROR SchemaExport:426 - Table "ATM_GAS_DEFLEG" not found; SQL statement:
+
+    alter table Atm_Gas_DefLeg 
+        drop constraint FKA7DCCF143A5A1A8A [42102-145]
+14:10:30,893 DEBUG SQL:104 - 
+    alter table Atmosphere_Gas 
+        drop constraint FKB7FE0E3CCA267BDC
+14:10:30,894 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Atmosphere_Gas drop constraint FKB7FE0E3CCA267BDC
+14:10:30,894 ERROR SchemaExport:426 - Table "ATMOSPHERE_GAS" not found; SQL statement:
+
+    alter table Atmosphere_Gas 
+        drop constraint FKB7FE0E3CCA267BDC [42102-145]
+14:10:30,894 DEBUG SQL:104 - 
+    alter table Atmosphere_Gas 
+        drop constraint FKB7FE0E3C3A5A1A8A
+14:10:30,894 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Atmosphere_Gas drop constraint FKB7FE0E3C3A5A1A8A
+14:10:30,894 ERROR SchemaExport:426 - Table "ATMOSPHERE_GAS" not found; SQL statement:
+
+    alter table Atmosphere_Gas 
+        drop constraint FKB7FE0E3C3A5A1A8A [42102-145]
+14:10:30,894 DEBUG SQL:104 - 
+    alter table Atmosphere_colorPerDate 
+        drop constraint FKBFBAED653A5A1A8A
+14:10:30,894 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Atmosphere_colorPerDate drop constraint FKBFBAED653A5A1A8A
+14:10:30,894 ERROR SchemaExport:426 - Table "ATMOSPHERE_COLORPERDATE" not found; SQL statement:
+
+    alter table Atmosphere_colorPerDate 
+        drop constraint FKBFBAED653A5A1A8A [42102-145]
+14:10:30,895 DEBUG SQL:104 - 
+    alter table Atmosphere_colorPerLevel 
+        drop constraint FK381554AD3A5A1A8A
+14:10:30,895 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Atmosphere_colorPerLevel drop constraint FK381554AD3A5A1A8A
+14:10:30,895 ERROR SchemaExport:426 - Table "ATMOSPHERE_COLORPERLEVEL" not found; SQL statement:
+
+    alter table Atmosphere_colorPerLevel 
+        drop constraint FK381554AD3A5A1A8A [42102-145]
+14:10:30,895 DEBUG SQL:104 - 
+    alter table Composition 
+        drop constraint FK3168B18ADE9E750A
+14:10:30,895 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Composition drop constraint FK3168B18ADE9E750A
+14:10:30,895 ERROR SchemaExport:426 - Table "COMPOSITION" not found; SQL statement:
+
+    alter table Composition 
+        drop constraint FK3168B18ADE9E750A [42102-145]
+14:10:30,898 DEBUG SQL:104 - 
+    alter table Composition 
+        drop constraint FK3168B18A3A5A1A8A
+14:10:30,899 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Composition drop constraint FK3168B18A3A5A1A8A
+14:10:30,899 ERROR SchemaExport:426 - Table "COMPOSITION" not found; SQL statement:
+
+    alter table Composition 
+        drop constraint FK3168B18A3A5A1A8A [42102-145]
+14:10:30,899 DEBUG SQL:104 - 
+    alter table Drawer 
+        drop constraint FK7A7DE5118426204A
+14:10:30,899 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Drawer drop constraint FK7A7DE5118426204A
+14:10:30,899 ERROR SchemaExport:426 - Table "DRAWER" not found; SQL statement:
+
+    alter table Drawer 
+        drop constraint FK7A7DE5118426204A [42102-145]
+14:10:30,899 DEBUG SQL:104 - 
+    alter table Drawer_Dress 
+        drop constraint FK51811693D0ADA24
+14:10:30,899 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Drawer_Dress drop constraint FK51811693D0ADA24
+14:10:30,899 ERROR SchemaExport:426 - Table "DRAWER_DRESS" not found; SQL statement:
+
+    alter table Drawer_Dress 
+        drop constraint FK51811693D0ADA24 [42102-145]
+14:10:30,900 DEBUG SQL:104 - 
+    alter table Drawer_Dress 
+        drop constraint FK5181169FF5ADC2A
+14:10:30,900 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Drawer_Dress drop constraint FK5181169FF5ADC2A
+14:10:30,900 ERROR SchemaExport:426 - Table "DRAWER_DRESS" not found; SQL statement:
+
+    alter table Drawer_Dress 
+        drop constraint FK5181169FF5ADC2A [42102-145]
+14:10:30,900 DEBUG SQL:104 - 
+    alter table Gas_p_key_def 
+        drop constraint FKD48DFF503F2751C7
+14:10:30,900 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Gas_p_key_def drop constraint FKD48DFF503F2751C7
+14:10:30,900 ERROR SchemaExport:426 - Table "GAS_P_KEY_DEF" not found; SQL statement:
+
+    alter table Gas_p_key_def 
+        drop constraint FKD48DFF503F2751C7 [42102-145]
+14:10:30,900 DEBUG SQL:104 - 
+    alter table Gas_p_key_def 
+        drop constraint FKD48DFF509FBA5BB2
+14:10:30,900 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Gas_p_key_def drop constraint FKD48DFF509FBA5BB2
+14:10:30,901 ERROR SchemaExport:426 - Table "GAS_P_KEY_DEF" not found; SQL statement:
+
+    alter table Gas_p_key_def 
+        drop constraint FKD48DFF509FBA5BB2 [42102-145]
+14:10:30,901 DEBUG SQL:104 - 
+    alter table Gas_p_key_def 
+        drop constraint FKD48DFF503A5A1A8A
+14:10:30,901 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Gas_p_key_def drop constraint FKD48DFF503A5A1A8A
+14:10:30,901 ERROR SchemaExport:426 - Table "GAS_P_KEY_DEF" not found; SQL statement:
+
+    alter table Gas_p_key_def 
+        drop constraint FKD48DFF503A5A1A8A [42102-145]
+14:10:30,901 DEBUG SQL:104 - 
+    alter table Gas_per_key 
+        drop constraint FKDA159CB77DE1CDBA
+14:10:30,901 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Gas_per_key drop constraint FKDA159CB77DE1CDBA
+14:10:30,901 ERROR SchemaExport:426 - Table "GAS_PER_KEY" not found; SQL statement:
+
+    alter table Gas_per_key 
+        drop constraint FKDA159CB77DE1CDBA [42102-145]
+14:10:30,901 DEBUG SQL:104 - 
+    alter table Gas_per_key 
+        drop constraint FKDA159CB7AFCE2117
+14:10:30,902 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Gas_per_key drop constraint FKDA159CB7AFCE2117
+14:10:30,902 ERROR SchemaExport:426 - Table "GAS_PER_KEY" not found; SQL statement:
+
+    alter table Gas_per_key 
+        drop constraint FKDA159CB7AFCE2117 [42102-145]
+14:10:30,902 DEBUG SQL:104 - 
+    alter table Gas_per_key 
+        drop constraint FKDA159CB73A5A1A8A
+14:10:30,902 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Gas_per_key drop constraint FKDA159CB73A5A1A8A
+14:10:30,902 ERROR SchemaExport:426 - Table "GAS_PER_KEY" not found; SQL statement:
+
+    alter table Gas_per_key 
+        drop constraint FKDA159CB73A5A1A8A [42102-145]
+14:10:30,902 DEBUG SQL:104 - 
+    alter table Newspaper_News 
+        drop constraint FK88E5E8F930946B7E
+14:10:30,902 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Newspaper_News drop constraint FK88E5E8F930946B7E
+14:10:30,902 ERROR SchemaExport:426 - Table "NEWSPAPER_NEWS" not found; SQL statement:
+
+    alter table Newspaper_News 
+        drop constraint FK88E5E8F930946B7E [42102-145]
+14:10:30,903 DEBUG SQL:104 - 
+    alter table Newspaper_News 
+        drop constraint FK88E5E8F97308A90A
+14:10:30,903 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Newspaper_News drop constraint FK88E5E8F97308A90A
+14:10:30,903 ERROR SchemaExport:426 - Table "NEWSPAPER_NEWS" not found; SQL statement:
+
+    alter table Newspaper_News 
+        drop constraint FK88E5E8F97308A90A [42102-145]
+14:10:30,903 DEBUG SQL:104 - 
+    alter table Painting 
+        drop constraint FK3B0BBEE466DC1CA6
+14:10:30,903 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Painting drop constraint FK3B0BBEE466DC1CA6
+14:10:30,903 ERROR SchemaExport:426 - Table "PAINTING" not found; SQL statement:
+
+    alter table Painting 
+        drop constraint FK3B0BBEE466DC1CA6 [42102-145]
+14:10:30,903 DEBUG SQL:104 - 
+    alter table PressReleaseAgency_News 
+        drop constraint FK2CBA29E96E93BCEA
+14:10:30,904 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PressReleaseAgency_News drop constraint FK2CBA29E96E93BCEA
+14:10:30,904 ERROR SchemaExport:426 - Table "PRESSRELEASEAGENCY_NEWS" not found; SQL statement:
+
+    alter table PressReleaseAgency_News 
+        drop constraint FK2CBA29E96E93BCEA [42102-145]
+14:10:30,904 DEBUG SQL:104 - 
+    alter table PressReleaseAgency_News 
+        drop constraint FK2CBA29E964F7AD2A
+14:10:30,904 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table PressReleaseAgency_News drop constraint FK2CBA29E964F7AD2A
+14:10:30,904 ERROR SchemaExport:426 - Table "PRESSRELEASEAGENCY_NEWS" not found; SQL statement:
+
+    alter table PressReleaseAgency_News 
+        drop constraint FK2CBA29E964F7AD2A [42102-145]
+14:10:30,904 DEBUG SQL:104 - 
+    alter table Training_Trainee 
+        drop constraint FK1FBEAE4397BB03A7
+14:10:30,904 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Training_Trainee drop constraint FK1FBEAE4397BB03A7
+14:10:30,904 ERROR SchemaExport:426 - Table "TRAINING_TRAINEE" not found; SQL statement:
+
+    alter table Training_Trainee 
+        drop constraint FK1FBEAE4397BB03A7 [42102-145]
+14:10:30,905 DEBUG SQL:104 - 
+    alter table Training_Trainee 
+        drop constraint FK1FBEAE437EEFA38A
+14:10:30,905 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Training_Trainee drop constraint FK1FBEAE437EEFA38A
+14:10:30,905 ERROR SchemaExport:426 - Table "TRAINING_TRAINEE" not found; SQL statement:
+
+    alter table Training_Trainee 
+        drop constraint FK1FBEAE437EEFA38A [42102-145]
+14:10:30,905 DEBUG SQL:104 - 
+    alter table tbl_version 
+        drop constraint FK2A21E557B443BDA
+14:10:30,905 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table tbl_version drop constraint FK2A21E557B443BDA
+14:10:30,905 ERROR SchemaExport:426 - Table "TBL_VERSION" not found; SQL statement:
+
+    alter table tbl_version 
+        drop constraint FK2A21E557B443BDA [42102-145]
+14:10:30,905 DEBUG SQL:104 - 
+    drop table AddressBook if exists
+14:10:30,905 DEBUG SQL:104 - 
+    drop table AddressEntry if exists
+14:10:30,924 DEBUG SQL:104 - 
+    drop table AlphabeticalDirectory if exists
+14:10:30,925 DEBUG SQL:104 - 
+    drop table Atm_Gas_Def if exists
+14:10:30,925 DEBUG SQL:104 - 
+    drop table Atm_Gas_DefLeg if exists
+14:10:30,925 DEBUG SQL:104 - 
+    drop table Atmosphere if exists
+14:10:30,925 DEBUG SQL:104 - 
+    drop table Atmosphere_Gas if exists
+14:10:30,925 DEBUG SQL:104 - 
+    drop table Atmosphere_colorPerDate if exists
+14:10:30,925 DEBUG SQL:104 - 
+    drop table Atmosphere_colorPerLevel if exists
+14:10:30,926 DEBUG SQL:104 - 
+    drop table Composition if exists
+14:10:30,926 DEBUG SQL:104 - 
+    drop table Drawer if exists
+14:10:30,926 DEBUG SQL:104 - 
+    drop table Drawer_Dress if exists
+14:10:30,926 DEBUG SQL:104 - 
+    drop table Dress if exists
+14:10:30,926 DEBUG SQL:104 - 
+    drop table Gas if exists
+14:10:30,930 DEBUG SQL:104 - 
+    drop table GasKey if exists
+14:10:30,930 DEBUG SQL:104 - 
+    drop table Gas_p_key_def if exists
+14:10:30,930 DEBUG SQL:104 - 
+    drop table Gas_per_key if exists
+14:10:30,996 DEBUG SQL:104 - 
+    drop table News if exists
+14:10:30,997 DEBUG SQL:104 - 
+    drop table Newspaper if exists
+14:10:30,997 DEBUG SQL:104 - 
+    drop table Newspaper_News if exists
+14:10:30,997 DEBUG SQL:104 - 
+    drop table Painter if exists
+14:10:30,997 DEBUG SQL:104 - 
+    drop table Painting if exists
+14:10:30,997 DEBUG SQL:104 - 
+    drop table PressReleaseAgency if exists
+14:10:30,997 DEBUG SQL:104 - 
+    drop table PressReleaseAgency_News if exists
+14:10:30,998 DEBUG SQL:104 - 
+    drop table Software if exists
+14:10:30,999 DEBUG SQL:104 - 
+    drop table Trainee if exists
+14:10:30,999 DEBUG SQL:104 - 
+    drop table Training if exists
+14:10:30,999 DEBUG SQL:104 - 
+    drop table Training_Trainee if exists
+14:10:30,999 DEBUG SQL:104 - 
+    drop table Wardrobe if exists
+14:10:30,999 DEBUG SQL:104 - 
+    drop table tbl_version if exists
+14:10:31,000 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:31,000 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:31,000 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:31,000 DEBUG SQL:104 - 
+    create table AddressBook (
+        id integer not null,
+        owner varchar(255),
+        primary key (id)
+    )
+14:10:31,001 DEBUG SQL:104 - 
+    create table AddressEntry (
+        firstname varchar(255) not null,
+        lastname varchar(255) not null,
+        city varchar(255),
+        street varchar(255),
+        book_id integer,
+        directory_id integer,
+        primary key (firstname, lastname)
+    )
+14:10:31,001 DEBUG SQL:104 - 
+    create table AlphabeticalDirectory (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:31,002 DEBUG SQL:104 - 
+    create table Atm_Gas_Def (
+        Atmosphere_id integer not null,
+        gasesDef_id integer not null,
+        gasesDef_KEY varchar(255) not null,
+        primary key (Atmosphere_id, gasesDef_KEY)
+    )
+14:10:31,013 DEBUG SQL:104 - 
+    create table Atm_Gas_DefLeg (
+        Atmosphere_id integer not null,
+        gasesDefLeg_id integer not null,
+        gasesDefLeg_KEY varchar(255) not null,
+        primary key (Atmosphere_id, gasesDefLeg_KEY)
+    )
+14:10:31,013 DEBUG SQL:104 - 
+    create table Atmosphere (
+        id integer not null,
+        primary key (id)
+    )
+14:10:31,013 DEBUG SQL:104 - 
+    create table Atmosphere_Gas (
+        Atmosphere_id integer not null,
+        gases_id integer not null,
+        gas_name varchar(255) not null,
+        primary key (Atmosphere_id, gas_name)
+    )
+14:10:31,014 DEBUG SQL:104 - 
+    create table Atmosphere_colorPerDate (
+        Atmosphere_id integer not null,
+        colorPerDate varchar(255),
+        colorPerDate_KEY date not null,
+        primary key (Atmosphere_id, colorPerDate_KEY)
+    )
+14:10:31,014 DEBUG SQL:104 - 
+    create table Atmosphere_colorPerLevel (
+        Atmosphere_id integer not null,
+        colorPerLevel varchar(255),
+        colorPerLevel_KEY varchar(255) not null,
+        primary key (Atmosphere_id, colorPerLevel_KEY)
+    )
+14:10:31,023 DEBUG SQL:104 - 
+    create table Composition (
+        atmosphere_id integer not null,
+        composition_rate double,
+        gas_id integer not null,
+        primary key (atmosphere_id, gas_id)
+    )
+14:10:31,024 DEBUG SQL:104 - 
+    create table Drawer (
+        id bigint not null,
+        wardrobe_id bigint not null,
+        drawer_position integer,
+        primary key (id)
+    )
+14:10:31,024 DEBUG SQL:104 - 
+    create table Drawer_Dress (
+        Drawer_id bigint not null,
+        dresses_dress_id integer not null,
+        dresses_ORDER integer not null,
+        primary key (Drawer_id, dresses_ORDER)
+    )
+14:10:31,024 DEBUG SQL:104 - 
+    create table Dress (
+        dress_id integer not null,
+        primary key (dress_id)
+    )
+14:10:31,025 DEBUG SQL:104 - 
+    create table Gas (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:31,025 DEBUG SQL:104 - 
+    create table GasKey (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:10:31,025 DEBUG SQL:104 - 
+    create table Gas_p_key_def (
+        Atmosphere_id integer not null,
+        gasesPerKeyDef_id integer not null,
+        gasesPerKeyDef_KEY varchar(255) not null,
+        primary key (Atmosphere_id, gasesPerKeyDef_KEY)
+    )
+14:10:31,046 DEBUG SQL:104 - 
+    create table Gas_per_key (
+        Atmosphere_id integer not null,
+        gasesPerKey_id integer not null,
+        gas_id varchar(255) not null,
+        primary key (Atmosphere_id, gas_id)
+    )
+14:10:31,046 DEBUG SQL:104 - 
+    create table News (
+        news_id integer not null,
+        detail varchar(255),
+        title varchar(255),
+        primary key (news_id)
+    )
+14:10:31,046 DEBUG SQL:104 - 
+    create table Newspaper (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:31,047 DEBUG SQL:104 - 
+    create table Newspaper_News (
+        Newspaper_id integer not null,
+        news_news_id integer not null,
+        primary key (Newspaper_id, news_news_id)
+    )
+14:10:31,047 DEBUG SQL:104 - 
+    create table Painter (
+        id integer not null,
+        primary key (id)
+    )
+14:10:31,057 DEBUG SQL:104 - 
+    create table Painting (
+        name varchar(255) not null,
+        painter varchar(255) not null,
+        sizeX integer not null,
+        sizeY integer not null,
+        paintings_id integer,
+        primary key (name, painter)
+    )
+14:10:31,057 DEBUG SQL:104 - 
+    create table PressReleaseAgency (
+        PressReleaseAgency_id integer not null,
+        name varchar(255),
+        primary key (PressReleaseAgency_id)
+    )
+14:10:31,058 DEBUG SQL:104 - 
+    create table PressReleaseAgency_News (
+        PressReleaseAgency_id integer not null,
+        News_id integer not null,
+        primary key (PressReleaseAgency_id, News_id)
+    )
+14:10:31,058 DEBUG SQL:104 - 
+    create table Software (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:10:31,058 DEBUG SQL:104 - 
+    create table Trainee (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:31,059 DEBUG SQL:104 - 
+    create table Training (
+        id bigint not null,
+        primary key (id)
+    )
+14:10:31,059 DEBUG SQL:104 - 
+    create table Training_Trainee (
+        Training_id bigint not null,
+        trainees_id bigint not null,
+        primary key (Training_id, trainees_id)
+    )
+14:10:31,059 DEBUG SQL:104 - 
+    create table Wardrobe (
+        id bigint not null,
+        primary key (id)
+    )
+14:10:31,060 DEBUG SQL:104 - 
+    create table tbl_version (
+        id integer not null,
+        "code_name" varchar(255),
+        version_nbr varchar(255),
+        software_name varchar(255),
+        primary key (id)
+    )
+14:10:31,060 DEBUG SQL:104 - 
+    alter table AddressEntry 
+        add constraint FK181B28FEFEC3411E 
+        foreign key (book_id) 
+        references AddressBook
+14:10:31,061 DEBUG SQL:104 - 
+    alter table AddressEntry 
+        add constraint FK181B28FE3F865FB2 
+        foreign key (directory_id) 
+        references AlphabeticalDirectory
+14:10:31,062 DEBUG SQL:104 - 
+    alter table Atm_Gas_Def 
+        add constraint FK84ECDC9AAB8B5865 
+        foreign key (gasesDef_id) 
+        references Gas
+14:10:31,080 DEBUG SQL:104 - 
+    alter table Atm_Gas_Def 
+        add constraint FK84ECDC9A3A5A1A8A 
+        foreign key (Atmosphere_id) 
+        references Atmosphere
+14:10:31,081 DEBUG SQL:104 - 
+    alter table Atm_Gas_DefLeg 
+        add constraint FKA7DCCF14118E7C93 
+        foreign key (gasesDefLeg_id) 
+        references Gas
+14:10:31,082 DEBUG SQL:104 - 
+    alter table Atm_Gas_DefLeg 
+        add constraint FKA7DCCF143A5A1A8A 
+        foreign key (Atmosphere_id) 
+        references Atmosphere
+14:10:31,082 DEBUG SQL:104 - 
+    alter table Atmosphere_Gas 
+        add constraint FKB7FE0E3CCA267BDC 
+        foreign key (gases_id) 
+        references Gas
+14:10:31,083 DEBUG SQL:104 - 
+    alter table Atmosphere_Gas 
+        add constraint FKB7FE0E3C3A5A1A8A 
+        foreign key (Atmosphere_id) 
+        references Atmosphere
+14:10:31,083 DEBUG SQL:104 - 
+    alter table Atmosphere_colorPerDate 
+        add constraint FKBFBAED653A5A1A8A 
+        foreign key (Atmosphere_id) 
+        references Atmosphere
+14:10:31,093 DEBUG SQL:104 - 
+    alter table Atmosphere_colorPerLevel 
+        add constraint FK381554AD3A5A1A8A 
+        foreign key (Atmosphere_id) 
+        references Atmosphere
+14:10:31,094 DEBUG SQL:104 - 
+    alter table Composition 
+        add constraint FK3168B18ADE9E750A 
+        foreign key (gas_id) 
+        references Gas
+14:10:31,095 DEBUG SQL:104 - 
+    alter table Composition 
+        add constraint FK3168B18A3A5A1A8A 
+        foreign key (atmosphere_id) 
+        references Atmosphere
+14:10:31,095 DEBUG SQL:104 - 
+    alter table Drawer 
+        add constraint FK7A7DE5118426204A 
+        foreign key (wardrobe_id) 
+        references Wardrobe
+14:10:31,096 DEBUG SQL:104 - 
+    alter table Drawer_Dress 
+        add constraint UK_51811692CD6EDFD unique (dresses_dress_id)
+14:10:31,096 DEBUG SQL:104 - 
+    alter table Drawer_Dress 
+        add constraint FK51811693D0ADA24 
+        foreign key (dresses_dress_id) 
+        references Dress
+14:10:31,109 DEBUG SQL:104 - 
+    alter table Drawer_Dress 
+        add constraint FK5181169FF5ADC2A 
+        foreign key (Drawer_id) 
+        references Drawer
+14:10:31,110 DEBUG SQL:104 - 
+    alter table Gas_p_key_def 
+        add constraint FKD48DFF503F2751C7 
+        foreign key (gasesPerKeyDef_id) 
+        references Gas
+14:10:31,110 DEBUG SQL:104 - 
+    alter table Gas_p_key_def 
+        add constraint FKD48DFF509FBA5BB2 
+        foreign key (gasesPerKeyDef_KEY) 
+        references GasKey
+14:10:31,111 DEBUG SQL:104 - 
+    alter table Gas_p_key_def 
+        add constraint FKD48DFF503A5A1A8A 
+        foreign key (Atmosphere_id) 
+        references Atmosphere
+14:10:31,112 DEBUG SQL:104 - 
+    alter table Gas_per_key 
+        add constraint FKDA159CB77DE1CDBA 
+        foreign key (gasesPerKey_id) 
+        references Gas
+14:10:31,112 DEBUG SQL:104 - 
+    alter table Gas_per_key 
+        add constraint FKDA159CB7AFCE2117 
+        foreign key (gas_id) 
+        references GasKey
+14:10:31,122 DEBUG SQL:104 - 
+    alter table Gas_per_key 
+        add constraint FKDA159CB73A5A1A8A 
+        foreign key (Atmosphere_id) 
+        references Atmosphere
+14:10:31,123 DEBUG SQL:104 - 
+    alter table Newspaper_News 
+        add constraint FK88E5E8F930946B7E 
+        foreign key (news_news_id) 
+        references News
+14:10:31,123 DEBUG SQL:104 - 
+    alter table Newspaper_News 
+        add constraint FK88E5E8F97308A90A 
+        foreign key (Newspaper_id) 
+        references Newspaper
+14:10:31,124 DEBUG SQL:104 - 
+    alter table Painting 
+        add constraint FK3B0BBEE466DC1CA6 
+        foreign key (paintings_id) 
+        references Painter
+14:10:31,124 DEBUG SQL:104 - 
+    alter table PressReleaseAgency_News 
+        add constraint FK2CBA29E96E93BCEA 
+        foreign key (News_id) 
+        references News
+14:10:31,125 DEBUG SQL:104 - 
+    alter table PressReleaseAgency_News 
+        add constraint FK2CBA29E964F7AD2A 
+        foreign key (PressReleaseAgency_id) 
+        references PressReleaseAgency
+14:10:31,126 DEBUG SQL:104 - 
+    alter table Training_Trainee 
+        add constraint FK1FBEAE4397BB03A7 
+        foreign key (trainees_id) 
+        references Trainee
+14:10:31,126 DEBUG SQL:104 - 
+    alter table Training_Trainee 
+        add constraint FK1FBEAE437EEFA38A 
+        foreign key (Training_id) 
+        references Training
+14:10:31,127 DEBUG SQL:104 - 
+    alter table tbl_version 
+        add constraint FK2A21E557B443BDA 
+        foreign key (software_name) 
+        references Software
+14:10:31,127 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:31,128  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:31,130  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:31,130  INFO CustomRunner:139 - Test: testComponentSubPropertyMapKey
+14:10:31,132 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,134 DEBUG SQL:104 - 
+    insert 
+    into
+        AddressBook
+        (owner, id) 
+    values
+        (?, ?)
+14:10:31,148 DEBUG SQL:104 - 
+    insert 
+    into
+        AddressEntry
+        (book_id, city, directory_id, street, firstname, lastname) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:31,149 DEBUG SQL:104 - 
+    insert 
+    into
+        AddressEntry
+        (book_id, city, directory_id, street, firstname, lastname) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:31,149 DEBUG SQL:104 - 
+    select
+        addressboo0_.id as id0_0_,
+        addressboo0_.owner as owner0_0_ 
+    from
+        AddressBook addressboo0_ 
+    where
+        addressboo0_.id=?
+14:10:31,150 DEBUG SQL:104 - 
+    select
+        lastnameen0_.book_id as book5_0_2_,
+        lastnameen0_.firstname as firstname1_2_,
+        lastnameen0_.lastname as lastname1_2_,
+        lastnameen0_.lastname as formula11_2_,
+        lastnameen0_.firstname as firstname1_1_,
+        lastnameen0_.lastname as lastname1_1_,
+        lastnameen0_.book_id as book5_1_1_,
+        lastnameen0_.city as city1_1_,
+        lastnameen0_.directory_id as directory6_1_1_,
+        lastnameen0_.street as street1_1_,
+        alphabetic1_.id as id2_0_,
+        alphabetic1_.name as name2_0_ 
+    from
+        AddressEntry lastnameen0_ 
+    left outer join
+        AlphabeticalDirectory alphabetic1_ 
+            on lastnameen0_.directory_id=alphabetic1_.id 
+    where
+        lastnameen0_.book_id=?
+14:10:31,163 DEBUG SQL:104 - 
+    select
+        entries0_.book_id as book5_0_2_,
+        entries0_.firstname as firstname1_2_,
+        entries0_.lastname as lastname1_2_,
+        entries0_.firstname as formula9_2_,
+        entries0_.lastname as formula10_2_,
+        entries0_.firstname as firstname1_1_,
+        entries0_.lastname as lastname1_1_,
+        entries0_.book_id as book5_1_1_,
+        entries0_.city as city1_1_,
+        entries0_.directory_id as directory6_1_1_,
+        entries0_.street as street1_1_,
+        alphabetic1_.id as id2_0_,
+        alphabetic1_.name as name2_0_ 
+    from
+        AddressEntry entries0_ 
+    left outer join
+        AlphabeticalDirectory alphabetic1_ 
+            on entries0_.directory_id=alphabetic1_.id 
+    where
+        entries0_.book_id=?
+14:10:31,164 DEBUG SQL:104 - 
+    select
+        addressboo0_.id as id0_0_,
+        addressboo0_.owner as owner0_0_ 
+    from
+        AddressBook addressboo0_ 
+    where
+        addressboo0_.id=?
+14:10:31,165 DEBUG SQL:104 - 
+    select
+        entries0_.book_id as book5_0_2_,
+        entries0_.firstname as firstname1_2_,
+        entries0_.lastname as lastname1_2_,
+        entries0_.firstname as formula9_2_,
+        entries0_.lastname as formula10_2_,
+        entries0_.firstname as firstname1_1_,
+        entries0_.lastname as lastname1_1_,
+        entries0_.book_id as book5_1_1_,
+        entries0_.city as city1_1_,
+        entries0_.directory_id as directory6_1_1_,
+        entries0_.street as street1_1_,
+        alphabetic1_.id as id2_0_,
+        alphabetic1_.name as name2_0_ 
+    from
+        AddressEntry entries0_ 
+    left outer join
+        AlphabeticalDirectory alphabetic1_ 
+            on entries0_.directory_id=alphabetic1_.id 
+    where
+        entries0_.book_id=?
+14:10:31,186  INFO CustomRunner:139 - Test: testDefaultMapKey
+14:10:31,187 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,189 DEBUG SQL:104 - 
+    insert 
+    into
+        AddressBook
+        (owner, id) 
+    values
+        (?, ?)
+14:10:31,194 DEBUG SQL:104 - 
+    insert 
+    into
+        AddressEntry
+        (book_id, city, directory_id, street, firstname, lastname) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:31,194 DEBUG SQL:104 - 
+    insert 
+    into
+        AddressEntry
+        (book_id, city, directory_id, street, firstname, lastname) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:31,195 DEBUG SQL:104 - 
+    select
+        addressboo0_.id as id0_0_,
+        addressboo0_.owner as owner0_0_ 
+    from
+        AddressBook addressboo0_ 
+    where
+        addressboo0_.id=?
+14:10:31,196 DEBUG SQL:104 - 
+    select
+        entries0_.book_id as book5_0_2_,
+        entries0_.firstname as firstname1_2_,
+        entries0_.lastname as lastname1_2_,
+        entries0_.firstname as formula9_2_,
+        entries0_.lastname as formula10_2_,
+        entries0_.firstname as firstname1_1_,
+        entries0_.lastname as lastname1_1_,
+        entries0_.book_id as book5_1_1_,
+        entries0_.city as city1_1_,
+        entries0_.directory_id as directory6_1_1_,
+        entries0_.street as street1_1_,
+        alphabetic1_.id as id2_0_,
+        alphabetic1_.name as name2_0_ 
+    from
+        AddressEntry entries0_ 
+    left outer join
+        AlphabeticalDirectory alphabetic1_ 
+            on entries0_.directory_id=alphabetic1_.id 
+    where
+        entries0_.book_id=?
+14:10:31,207 DEBUG SQL:104 - 
+    select
+        addressboo0_.id as id0_0_,
+        addressboo0_.owner as owner0_0_ 
+    from
+        AddressBook addressboo0_ 
+    where
+        addressboo0_.id=?
+14:10:31,207 DEBUG SQL:104 - 
+    select
+        entries0_.book_id as book5_0_2_,
+        entries0_.firstname as firstname1_2_,
+        entries0_.lastname as lastname1_2_,
+        entries0_.firstname as formula9_2_,
+        entries0_.lastname as formula10_2_,
+        entries0_.firstname as firstname1_1_,
+        entries0_.lastname as lastname1_1_,
+        entries0_.book_id as book5_1_1_,
+        entries0_.city as city1_1_,
+        entries0_.directory_id as directory6_1_1_,
+        entries0_.street as street1_1_,
+        alphabetic1_.id as id2_0_,
+        alphabetic1_.name as name2_0_ 
+    from
+        AddressEntry entries0_ 
+    left outer join
+        AlphabeticalDirectory alphabetic1_ 
+            on entries0_.directory_id=alphabetic1_.id 
+    where
+        entries0_.book_id=?
+14:10:31,216 DEBUG SQL:104 - 
+    delete 
+    from
+        AddressEntry 
+    where
+        firstname=? 
+        and lastname=?
+14:10:31,217 DEBUG SQL:104 - 
+    delete 
+    from
+        AddressEntry 
+    where
+        firstname=? 
+        and lastname=?
+14:10:31,226 DEBUG SQL:104 - 
+    delete 
+    from
+        AddressBook 
+    where
+        id=?
+14:10:31,227  INFO CustomRunner:139 - Test: testEntityKeyElementTarget
+14:10:31,228 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,228 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,229 DEBUG SQL:104 - 
+    insert 
+    into
+        Gas
+        (name, id) 
+    values
+        (?, ?)
+14:10:31,231 DEBUG SQL:104 - 
+    insert 
+    into
+        Atmosphere
+        (id) 
+    values
+        (?)
+14:10:31,231 DEBUG SQL:104 - 
+    insert 
+    into
+        Composition
+        (atmosphere_id, gas_id, composition_rate) 
+    values
+        (?, ?, ?)
+14:10:31,237 DEBUG SQL:104 - 
+    select
+        atmosphere0_.id as id5_0_ 
+    from
+        Atmosphere atmosphere0_ 
+    where
+        atmosphere0_.id=?
+14:10:31,238 DEBUG SQL:104 - 
+    select
+        compositio0_.atmosphere_id as atmosphere1_5_0_,
+        compositio0_.composition_rate as composit2_9_0_,
+        compositio0_.gas_id as gas3_0_ 
+    from
+        Composition compositio0_ 
+    where
+        compositio0_.atmosphere_id=?
+14:10:31,238 DEBUG SQL:104 - 
+    select
+        gas0_.id as id13_0_,
+        gas0_.name as name13_0_ 
+    from
+        Gas gas0_ 
+    where
+        gas0_.id=?
+14:10:31,248  INFO CustomRunner:139 - Test: testEnumKeyType
+14:10:31,249 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,250 DEBUG SQL:104 - 
+    insert 
+    into
+        Atmosphere
+        (id) 
+    values
+        (?)
+14:10:31,251 DEBUG SQL:104 - 
+    insert 
+    into
+        Atmosphere_colorPerLevel
+        (Atmosphere_id, colorPerLevel_KEY, colorPerLevel) 
+    values
+        (?, ?, ?)
+14:10:31,251 DEBUG SQL:104 - 
+    select
+        atmosphere0_.id as id5_0_ 
+    from
+        Atmosphere atmosphere0_ 
+    where
+        atmosphere0_.id=?
+14:10:31,252 DEBUG SQL:104 - 
+    select
+        colorperle0_.Atmosphere_id as Atmosphere1_5_0_,
+        colorperle0_.colorPerLevel as colorPer2_8_0_,
+        colorperle0_.colorPerLevel_KEY as colorPer3_0_ 
+    from
+        Atmosphere_colorPerLevel colorperle0_ 
+    where
+        colorperle0_.Atmosphere_id=?
+14:10:31,253  INFO CustomRunner:139 - Test: testFkList
+14:10:31,254 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,254 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,255 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,256 DEBUG SQL:104 - 
+    insert 
+    into
+        Wardrobe
+        (id) 
+    values
+        (?)
+14:10:31,256 DEBUG SQL:104 - 
+    insert 
+    into
+        Drawer
+        (wardrobe_id, drawer_position, id) 
+    values
+        (?, ?, ?)
+14:10:31,256 DEBUG SQL:104 - 
+    insert 
+    into
+        Drawer
+        (wardrobe_id, drawer_position, id) 
+    values
+        (?, ?, ?)
+14:10:31,263 DEBUG SQL:104 - 
+    update
+        Drawer 
+    set
+        wardrobe_id=?,
+        drawer_position=? 
+    where
+        id=?
+14:10:31,263 DEBUG SQL:104 - 
+    update
+        Drawer 
+    set
+        wardrobe_id=?,
+        drawer_position=? 
+    where
+        id=?
+14:10:31,264 DEBUG SQL:104 - 
+    select
+        wardrobe0_.id as id28_0_ 
+    from
+        Wardrobe wardrobe0_ 
+    where
+        wardrobe0_.id=?
+14:10:31,264 DEBUG SQL:104 - 
+    select
+        drawers0_.wardrobe_id as wardrobe2_28_1_,
+        drawers0_.id as id10_1_,
+        drawers0_.drawer_position as drawer3_1_,
+        drawers0_.id as id10_0_ 
+    from
+        Drawer drawers0_ 
+    where
+        drawers0_.wardrobe_id=?
+14:10:31,275 DEBUG SQL:104 - 
+    update
+        Drawer 
+    set
+        wardrobe_id=?,
+        drawer_position=? 
+    where
+        id=?
+14:10:31,276 DEBUG SQL:104 - 
+    delete 
+    from
+        Drawer_Dress 
+    where
+        Drawer_id=?
+14:10:31,276 DEBUG SQL:104 - 
+    update
+        Drawer 
+    set
+        wardrobe_id=?,
+        drawer_position=? 
+    where
+        id=?
+14:10:31,276 DEBUG SQL:104 - 
+    select
+        wardrobe0_.id as id28_0_ 
+    from
+        Wardrobe wardrobe0_ 
+    where
+        wardrobe0_.id=?
+14:10:31,277 DEBUG SQL:104 - 
+    select
+        drawers0_.wardrobe_id as wardrobe2_28_1_,
+        drawers0_.id as id10_1_,
+        drawers0_.drawer_position as drawer3_1_,
+        drawers0_.id as id10_0_ 
+    from
+        Drawer drawers0_ 
+    where
+        drawers0_.wardrobe_id=?
+14:10:31,302 DEBUG SQL:104 - 
+    delete 
+    from
+        Drawer_Dress 
+    where
+        Drawer_id=?
+14:10:31,302 DEBUG SQL:104 - 
+    delete 
+    from
+        Drawer_Dress 
+    where
+        Drawer_id=?
+14:10:31,303 DEBUG SQL:104 - 
+    delete 
+    from
+        Drawer 
+    where
+        id=?
+14:10:31,303 DEBUG SQL:104 - 
+    delete 
+    from
+        Drawer 
+    where
+        id=?
+14:10:31,303 DEBUG SQL:104 - 
+    delete 
+    from
+        Wardrobe 
+    where
+        id=?
+14:10:31,306  INFO CustomRunner:139 - Test: testJPA2DefaultIndexColumns
+14:10:31,307  INFO CustomRunner:139 - Test: testJPA2DefaultMapColumns
+14:10:31,308  INFO CustomRunner:139 - Test: testJoinedTableList
+14:10:31,308 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,309 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,309 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,310 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,312 DEBUG SQL:104 - 
+    insert 
+    into
+        Dress
+        (dress_id) 
+    values
+        (?)
+14:10:31,312 DEBUG SQL:104 - 
+    insert 
+    into
+        Dress
+        (dress_id) 
+    values
+        (?)
+14:10:31,321 DEBUG SQL:104 - 
+    insert 
+    into
+        Wardrobe
+        (id) 
+    values
+        (?)
+14:10:31,321 DEBUG SQL:104 - 
+    insert 
+    into
+        Drawer
+        (wardrobe_id, drawer_position, id) 
+    values
+        (?, ?, ?)
+14:10:31,322 DEBUG SQL:104 - 
+    update
+        Drawer 
+    set
+        wardrobe_id=?,
+        drawer_position=? 
+    where
+        id=?
+14:10:31,322 DEBUG SQL:104 - 
+    insert 
+    into
+        Drawer_Dress
+        (Drawer_id, dresses_ORDER, dresses_dress_id) 
+    values
+        (?, ?, ?)
+14:10:31,332 DEBUG SQL:104 - 
+    insert 
+    into
+        Drawer_Dress
+        (Drawer_id, dresses_ORDER, dresses_dress_id) 
+    values
+        (?, ?, ?)
+14:10:31,333 DEBUG SQL:104 - 
+    select
+        drawer0_.id as id10_0_ 
+    from
+        Drawer drawer0_ 
+    where
+        drawer0_.id=?
+14:10:31,334 DEBUG SQL:104 - 
+    select
+        dresses0_.Drawer_id as Drawer1_10_1_,
+        dresses0_.dresses_dress_id as dresses2_11_1_,
+        dresses0_.dresses_ORDER as dresses3_1_,
+        dress1_.dress_id as dress1_12_0_ 
+    from
+        Drawer_Dress dresses0_ 
+    inner join
+        Dress dress1_ 
+            on dresses0_.dresses_dress_id=dress1_.dress_id 
+    where
+        dresses0_.Drawer_id=?
+14:10:31,335 DEBUG SQL:104 - 
+    delete 
+    from
+        Drawer_Dress 
+    where
+        Drawer_id=? 
+        and dresses_ORDER=?
+14:10:31,419 DEBUG SQL:104 - 
+    update
+        Drawer_Dress 
+    set
+        dresses_dress_id=? 
+    where
+        Drawer_id=? 
+        and dresses_ORDER=?
+14:10:31,421 DEBUG SQL:104 - 
+    insert 
+    into
+        Drawer_Dress
+        (Drawer_id, dresses_ORDER, dresses_dress_id) 
+    values
+        (?, ?, ?)
+14:10:31,421 DEBUG SQL:104 - 
+    select
+        drawer0_.id as id10_0_ 
+    from
+        Drawer drawer0_ 
+    where
+        drawer0_.id=?
+14:10:31,422 DEBUG SQL:104 - 
+    select
+        dresses0_.Drawer_id as Drawer1_10_1_,
+        dresses0_.dresses_dress_id as dresses2_11_1_,
+        dresses0_.dresses_ORDER as dresses3_1_,
+        dress1_.dress_id as dress1_12_0_ 
+    from
+        Drawer_Dress dresses0_ 
+    inner join
+        Dress dress1_ 
+            on dresses0_.dresses_dress_id=dress1_.dress_id 
+    where
+        dresses0_.Drawer_id=?
+14:10:31,423 DEBUG SQL:104 - 
+    delete 
+    from
+        Drawer_Dress 
+    where
+        Drawer_id=?
+14:10:31,423 DEBUG SQL:104 - 
+    delete 
+    from
+        Dress 
+    where
+        dress_id=?
+14:10:31,423 DEBUG SQL:104 - 
+    delete 
+    from
+        Dress 
+    where
+        dress_id=?
+14:10:31,424 DEBUG SQL:104 - 
+    delete 
+    from
+        Drawer 
+    where
+        id=?
+14:10:31,424  INFO CustomRunner:139 - Test: testMapKey
+14:10:31,425 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,426 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,426 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,427 DEBUG SQL:104 - 
+    insert 
+    into
+        Software
+        (name) 
+    values
+        (?)
+14:10:31,428 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_version
+        ("code_name", version_nbr, software_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:31,428 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_version
+        ("code_name", version_nbr, software_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:31,428 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_version
+        ("code_name", version_nbr, software_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:31,429 DEBUG SQL:104 - 
+    select
+        software0_.name as name24_0_ 
+    from
+        Software software0_ 
+    where
+        software0_.name=?
+14:10:31,429 DEBUG SQL:104 - 
+    select
+        versions0_.software_name as software4_24_1_,
+        versions0_.id as id29_1_,
+        versions0_."code_name" as formula7_1_,
+        versions0_.id as id29_0_,
+        versions0_."code_name" as code2_29_0_,
+        versions0_.version_nbr as version3_29_0_,
+        versions0_.software_name as software4_29_0_ 
+    from
+        tbl_version versions0_ 
+    where
+        versions0_.software_name=?
+14:10:31,431 DEBUG SQL:104 - 
+    select
+        software0_.name as name24_0_ 
+    from
+        Software software0_ 
+    where
+        software0_.name=?
+14:10:31,431 DEBUG SQL:104 - 
+    select
+        versions0_.software_name as software4_24_1_,
+        versions0_.id as id29_1_,
+        versions0_."code_name" as formula7_1_,
+        versions0_.id as id29_0_,
+        versions0_."code_name" as code2_29_0_,
+        versions0_.version_nbr as version3_29_0_,
+        versions0_.software_name as software4_29_0_ 
+    from
+        tbl_version versions0_ 
+    where
+        versions0_.software_name=?
+14:10:31,432 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_version 
+    where
+        id=?
+14:10:31,432 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_version 
+    where
+        id=?
+14:10:31,433 DEBUG SQL:104 - 
+    delete 
+    from
+        tbl_version 
+    where
+        id=?
+14:10:31,433 DEBUG SQL:104 - 
+    delete 
+    from
+        Software 
+    where
+        name=?
+14:10:31,434  INFO CustomRunner:139 - Test: testMapKeyAndIdClass
+14:10:31,435 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,436 DEBUG SQL:104 - 
+    insert 
+    into
+        Painter
+        (id) 
+    values
+        (?)
+14:10:31,437 DEBUG SQL:104 - 
+    insert 
+    into
+        Painting
+        (sizeX, sizeY, name, painter) 
+    values
+        (?, ?, ?, ?)
+14:10:31,437 DEBUG SQL:104 - 
+    insert 
+    into
+        Painting
+        (sizeX, sizeY, name, painter) 
+    values
+        (?, ?, ?, ?)
+14:10:31,437 DEBUG SQL:104 - 
+    update
+        Painting 
+    set
+        paintings_id=? 
+    where
+        name=? 
+        and painter=?
+14:10:31,438 DEBUG SQL:104 - 
+    update
+        Painting 
+    set
+        paintings_id=? 
+    where
+        name=? 
+        and painter=?
+14:10:31,438 DEBUG SQL:104 - 
+    select
+        painter0_.id as id20_0_ 
+    from
+        Painter painter0_ 
+    where
+        painter0_.id=?
+14:10:31,439 DEBUG SQL:104 - 
+    select
+        paintings0_.paintings_id as paintings5_20_1_,
+        paintings0_.name as name21_1_,
+        paintings0_.painter as painter21_1_,
+        paintings0_.name as formula4_1_,
+        paintings0_.name as name21_0_,
+        paintings0_.painter as painter21_0_,
+        paintings0_.sizeX as sizeX21_0_,
+        paintings0_.sizeY as sizeY21_0_ 
+    from
+        Painting paintings0_ 
+    where
+        paintings0_.paintings_id=?
+14:10:31,441  INFO CustomRunner:139 - Test: testMapKeyEntityEntity
+14:10:31,443 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,443 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,444 DEBUG SQL:104 - 
+    insert 
+    into
+        AddressBook
+        (owner, id) 
+    values
+        (?, ?)
+14:10:31,445 DEBUG SQL:104 - 
+    insert 
+    into
+        AlphabeticalDirectory
+        (name, id) 
+    values
+        (?, ?)
+14:10:31,445 DEBUG SQL:104 - 
+    insert 
+    into
+        AddressEntry
+        (book_id, city, directory_id, street, firstname, lastname) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:31,446 DEBUG SQL:104 - 
+    select
+        addressboo0_.id as id0_0_,
+        addressboo0_.owner as owner0_0_ 
+    from
+        AddressBook addressboo0_ 
+    where
+        addressboo0_.id=?
+14:10:31,446 DEBUG SQL:104 - 
+    select
+        directorye0_.book_id as book5_0_2_,
+        directorye0_.firstname as firstname1_2_,
+        directorye0_.lastname as lastname1_2_,
+        directorye0_.directory_id as formula8_2_,
+        directorye0_.firstname as firstname1_1_,
+        directorye0_.lastname as lastname1_1_,
+        directorye0_.book_id as book5_1_1_,
+        directorye0_.city as city1_1_,
+        directorye0_.directory_id as directory6_1_1_,
+        directorye0_.street as street1_1_,
+        alphabetic1_.id as id2_0_,
+        alphabetic1_.name as name2_0_ 
+    from
+        AddressEntry directorye0_ 
+    left outer join
+        AlphabeticalDirectory alphabetic1_ 
+            on directorye0_.directory_id=alphabetic1_.id 
+    where
+        directorye0_.book_id=?
+14:10:31,453  INFO CustomRunner:139 - Test: testMapKeyLoad
+14:10:31,454 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,455 DEBUG SQL:104 - 
+    insert 
+    into
+        Software
+        (name) 
+    values
+        (?)
+14:10:31,455 DEBUG SQL:104 - 
+    insert 
+    into
+        tbl_version
+        ("code_name", version_nbr, software_name, id) 
+    values
+        (?, ?, ?, ?)
+14:10:31,456 DEBUG SQL:104 - 
+    select
+        software0_.name as name24_0_ 
+    from
+        Software software0_ 
+    where
+        software0_.name=?
+14:10:31,456 DEBUG SQL:104 - 
+    select
+        versions0_.software_name as software4_24_1_,
+        versions0_.id as id29_1_,
+        versions0_."code_name" as formula7_1_,
+        versions0_.id as id29_0_,
+        versions0_."code_name" as code2_29_0_,
+        versions0_.version_nbr as version3_29_0_,
+        versions0_.software_name as software4_29_0_ 
+    from
+        tbl_version versions0_ 
+    where
+        versions0_.software_name=?
+14:10:31,465 DEBUG SQL:104 - 
+    select
+        software0_.name as name24_0_ 
+    from
+        Software software0_ 
+    where
+        software0_.name=?
+14:10:31,465 DEBUG SQL:104 - 
+    select
+        versions0_.software_name as software4_24_1_,
+        versions0_.id as id29_1_,
+        versions0_."code_name" as formula7_1_,
+        versions0_.id as id29_0_,
+        versions0_."code_name" as code2_29_0_,
+        versions0_.version_nbr as version3_29_0_,
+        versions0_.software_name as software4_29_0_ 
+    from
+        tbl_version versions0_ 
+    where
+        versions0_.software_name=?
+14:10:31,466  INFO CustomRunner:139 - Test: testMapKeyOnManyToMany
+14:10:31,477 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,478 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,479 DEBUG SQL:104 - 
+    insert 
+    into
+        News
+        (detail, title, news_id) 
+    values
+        (?, ?, ?)
+14:10:31,479 DEBUG SQL:104 - 
+    insert 
+    into
+        Newspaper
+        (name, id) 
+    values
+        (?, ?)
+14:10:31,480 DEBUG SQL:104 - 
+    insert 
+    into
+        Newspaper_News
+        (Newspaper_id, news_news_id) 
+    values
+        (?, ?)
+14:10:31,480 DEBUG SQL:104 - 
+    select
+        newspaper0_.id as id18_0_,
+        newspaper0_.name as name18_0_ 
+    from
+        Newspaper newspaper0_ 
+    where
+        newspaper0_.id=?
+14:10:31,487 DEBUG SQL:104 - 
+    select
+        news0_.Newspaper_id as Newspaper1_18_1_,
+        news0_.news_news_id as news2_19_1_,
+        (select
+            a5.title 
+        from
+            News a5 
+        where
+            a5.news_id=news0_.news_news_id) as formula6_1_,
+        news1_.news_id as news1_17_0_,
+        news1_.detail as detail17_0_,
+        news1_.title as title17_0_ 
+    from
+        Newspaper_News news0_ 
+    inner join
+        News news1_ 
+            on news0_.news_news_id=news1_.news_id 
+    where
+        news0_.Newspaper_id=?
+14:10:31,490  INFO CustomRunner:139 - Test: testMapKeyOnManyToManyOnId
+14:10:31,491 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,491 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,498 DEBUG SQL:104 - 
+    insert 
+    into
+        News
+        (detail, title, news_id) 
+    values
+        (?, ?, ?)
+14:10:31,499 DEBUG SQL:104 - 
+    insert 
+    into
+        PressReleaseAgency
+        (name, PressReleaseAgency_id) 
+    values
+        (?, ?)
+14:10:31,499 DEBUG SQL:104 - 
+    insert 
+    into
+        PressReleaseAgency_News
+        (PressReleaseAgency_id, News_id) 
+    values
+        (?, ?)
+14:10:31,500 DEBUG SQL:104 - 
+    select
+        pressrelea0_.PressReleaseAgency_id as PressRel1_22_0_,
+        pressrelea0_.name as name22_0_ 
+    from
+        PressReleaseAgency pressrelea0_ 
+    where
+        pressrelea0_.PressReleaseAgency_id=?
+14:10:31,509 DEBUG SQL:104 - 
+    select
+        providedne0_.PressReleaseAgency_id as PressRel1_22_1_,
+        providedne0_.News_id as News2_23_1_,
+        (select
+            a7.news_id 
+        from
+            News a7 
+        where
+            a7.news_id=providedne0_.News_id) as formula5_1_,
+        news1_.news_id as news1_17_0_,
+        news1_.detail as detail17_0_,
+        news1_.title as title17_0_ 
+    from
+        PressReleaseAgency_News providedne0_ 
+    inner join
+        News news1_ 
+            on providedne0_.News_id=news1_.news_id 
+    where
+        providedne0_.PressReleaseAgency_id=?
+14:10:31,510  INFO CustomRunner:139 - Test: testMapKeyToEntity
+14:10:31,511 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,511 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,512 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,514 DEBUG SQL:104 - 
+    insert 
+    into
+        AlphabeticalDirectory
+        (name, id) 
+    values
+        (?, ?)
+14:10:31,514 DEBUG SQL:104 - 
+    insert 
+    into
+        AlphabeticalDirectory
+        (name, id) 
+    values
+        (?, ?)
+14:10:31,514 DEBUG SQL:104 - 
+    insert 
+    into
+        AddressBook
+        (owner, id) 
+    values
+        (?, ?)
+14:10:31,515 DEBUG SQL:104 - 
+    insert 
+    into
+        AddressEntry
+        (book_id, city, directory_id, street, firstname, lastname) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:31,515 DEBUG SQL:104 - 
+    insert 
+    into
+        AddressEntry
+        (book_id, city, directory_id, street, firstname, lastname) 
+    values
+        (?, ?, ?, ?, ?, ?)
+14:10:31,524 DEBUG SQL:104 - 
+    select
+        addressboo0_.id as id0_0_,
+        addressboo0_.owner as owner0_0_ 
+    from
+        AddressBook addressboo0_ 
+    where
+        addressboo0_.id=?
+14:10:31,524 DEBUG SQL:104 - 
+    select
+        entries0_.book_id as book5_0_2_,
+        entries0_.firstname as firstname1_2_,
+        entries0_.lastname as lastname1_2_,
+        entries0_.firstname as formula9_2_,
+        entries0_.lastname as formula10_2_,
+        entries0_.firstname as firstname1_1_,
+        entries0_.lastname as lastname1_1_,
+        entries0_.book_id as book5_1_1_,
+        entries0_.city as city1_1_,
+        entries0_.directory_id as directory6_1_1_,
+        entries0_.street as street1_1_,
+        alphabetic1_.id as id2_0_,
+        alphabetic1_.name as name2_0_ 
+    from
+        AddressEntry entries0_ 
+    left outer join
+        AlphabeticalDirectory alphabetic1_ 
+            on entries0_.directory_id=alphabetic1_.id 
+    where
+        entries0_.book_id=?
+14:10:31,536  INFO CustomRunner:139 - Test: testRealMap
+14:10:31,537 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,538 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,538 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,539 DEBUG SQL:104 - 
+    insert 
+    into
+        GasKey
+        (name) 
+    values
+        (?)
+14:10:31,539 DEBUG SQL:104 - 
+    insert 
+    into
+        Atmosphere
+        (id) 
+    values
+        (?)
+14:10:31,540 DEBUG SQL:104 - 
+    insert 
+    into
+        Gas
+        (name, id) 
+    values
+        (?, ?)
+14:10:31,540 DEBUG SQL:104 - 
+    insert 
+    into
+        Atmosphere
+        (id) 
+    values
+        (?)
+14:10:31,540 DEBUG SQL:104 - 
+    insert 
+    into
+        Atmosphere_Gas
+        (Atmosphere_id, gas_name, gases_id) 
+    values
+        (?, ?, ?)
+14:10:31,560 DEBUG SQL:104 - 
+    insert 
+    into
+        Gas_per_key
+        (Atmosphere_id, gas_id, gasesPerKey_id) 
+    values
+        (?, ?, ?)
+14:10:31,560 DEBUG SQL:104 - 
+    insert 
+    into
+        Atmosphere_Gas
+        (Atmosphere_id, gas_name, gases_id) 
+    values
+        (?, ?, ?)
+14:10:31,560 DEBUG SQL:104 - 
+    insert 
+    into
+        Gas_per_key
+        (Atmosphere_id, gas_id, gasesPerKey_id) 
+    values
+        (?, ?, ?)
+14:10:31,561 DEBUG SQL:104 - 
+    select
+        atmosphere0_.id as id5_0_ 
+    from
+        Atmosphere atmosphere0_ 
+    where
+        atmosphere0_.id=?
+14:10:31,564 DEBUG SQL:104 - 
+    select
+        gaskey0_.name as name14_0_ 
+    from
+        GasKey gaskey0_ 
+    where
+        gaskey0_.name=?
+14:10:31,572 DEBUG SQL:104 - 
+    select
+        gases0_.Atmosphere_id as Atmosphere1_5_1_,
+        gases0_.gases_id as gases2_6_1_,
+        gases0_.gas_name as gas3_1_,
+        gas1_.id as id13_0_,
+        gas1_.name as name13_0_ 
+    from
+        Atmosphere_Gas gases0_ 
+    inner join
+        Gas gas1_ 
+            on gases0_.gases_id=gas1_.id 
+    where
+        gases0_.Atmosphere_id=?
+14:10:31,573 DEBUG SQL:104 - 
+    select
+        gasesperke0_.Atmosphere_id as Atmosphere1_5_1_,
+        gasesperke0_.gasesPerKey_id as gasesPer2_16_1_,
+        gasesperke0_.gas_id as gas3_1_,
+        gas1_.id as id13_0_,
+        gas1_.name as name13_0_ 
+    from
+        Gas_per_key gasesperke0_ 
+    inner join
+        Gas gas1_ 
+            on gasesperke0_.gasesPerKey_id=gas1_.id 
+    where
+        gasesperke0_.Atmosphere_id=?
+14:10:31,575  INFO CustomRunner:139 - Test: testSortedMap
+14:10:31,576 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,576 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,576 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,577 DEBUG SQL:104 - 
+    insert 
+    into
+        Trainee
+        (name, id) 
+    values
+        (?, ?)
+14:10:31,578 DEBUG SQL:104 - 
+    insert 
+    into
+        Trainee
+        (name, id) 
+    values
+        (?, ?)
+14:10:31,578 DEBUG SQL:104 - 
+    insert 
+    into
+        Training
+        (id) 
+    values
+        (?)
+14:10:31,578 DEBUG SQL:104 - 
+    insert 
+    into
+        Training_Trainee
+        (Training_id, trainees_id) 
+    values
+        (?, ?)
+14:10:31,579 DEBUG SQL:104 - 
+    insert 
+    into
+        Training_Trainee
+        (Training_id, trainees_id) 
+    values
+        (?, ?)
+14:10:31,597 DEBUG SQL:104 - 
+    select
+        training0_.id as id26_0_ 
+    from
+        Training training0_ 
+    where
+        training0_.id=?
+14:10:31,599 DEBUG SQL:104 - 
+    select
+        trainees0_.Training_id as Training1_26_1_,
+        trainees0_.trainees_id as trainees2_27_1_,
+        (select
+            a12.name 
+        from
+            Trainee a12 
+        where
+            a12.id=trainees0_.trainees_id) as formula3_1_,
+        trainee1_.id as id25_0_,
+        trainee1_.name as name25_0_ 
+    from
+        Training_Trainee trainees0_ 
+    inner join
+        Trainee trainee1_ 
+            on trainees0_.trainees_id=trainee1_.id 
+    where
+        trainees0_.Training_id=?
+14:10:31,609  INFO CustomRunner:139 - Test: testTemporalKeyMap
+14:10:31,610 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:31,611 DEBUG SQL:104 - 
+    insert 
+    into
+        Atmosphere
+        (id) 
+    values
+        (?)
+14:10:31,611 DEBUG SQL:104 - 
+    insert 
+    into
+        Atmosphere_colorPerDate
+        (Atmosphere_id, colorPerDate_KEY, colorPerDate) 
+    values
+        (?, ?, ?)
+14:10:31,612 DEBUG SQL:104 - 
+    select
+        atmosphere0_.id as id5_0_ 
+    from
+        Atmosphere atmosphere0_ 
+    where
+        atmosphere0_.id=?
+14:10:31,612 DEBUG SQL:104 - 
+    select
+        colorperda0_.Atmosphere_id as Atmosphere1_5_0_,
+        colorperda0_.colorPerDate as colorPer2_7_0_,
+        colorperda0_.colorPerDate_KEY as colorPer3_0_ 
+    from
+        Atmosphere_colorPerDate colorperda0_ 
+    where
+        colorperda0_.Atmosphere_id=?
+14:10:31,621  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:31,622 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:31,623 DEBUG SQL:104 - 
+    alter table AddressEntry 
+        drop constraint FK181B28FEFEC3411E
+14:10:31,623 DEBUG SQL:104 - 
+    alter table AddressEntry 
+        drop constraint FK181B28FE3F865FB2
+14:10:31,623 DEBUG SQL:104 - 
+    alter table Atm_Gas_Def 
+        drop constraint FK84ECDC9AAB8B5865
+14:10:31,623 DEBUG SQL:104 - 
+    alter table Atm_Gas_Def 
+        drop constraint FK84ECDC9A3A5A1A8A
+14:10:31,624 DEBUG SQL:104 - 
+    alter table Atm_Gas_DefLeg 
+        drop constraint FKA7DCCF14118E7C93
+14:10:31,624 DEBUG SQL:104 - 
+    alter table Atm_Gas_DefLeg 
+        drop constraint FKA7DCCF143A5A1A8A
+14:10:31,624 DEBUG SQL:104 - 
+    alter table Atmosphere_Gas 
+        drop constraint FKB7FE0E3CCA267BDC
+14:10:31,624 DEBUG SQL:104 - 
+    alter table Atmosphere_Gas 
+        drop constraint FKB7FE0E3C3A5A1A8A
+14:10:31,632 DEBUG SQL:104 - 
+    alter table Atmosphere_colorPerDate 
+        drop constraint FKBFBAED653A5A1A8A
+14:10:31,632 DEBUG SQL:104 - 
+    alter table Atmosphere_colorPerLevel 
+        drop constraint FK381554AD3A5A1A8A
+14:10:31,632 DEBUG SQL:104 - 
+    alter table Composition 
+        drop constraint FK3168B18ADE9E750A
+14:10:31,633 DEBUG SQL:104 - 
+    alter table Composition 
+        drop constraint FK3168B18A3A5A1A8A
+14:10:31,633 DEBUG SQL:104 - 
+    alter table Drawer 
+        drop constraint FK7A7DE5118426204A
+14:10:31,633 DEBUG SQL:104 - 
+    alter table Drawer_Dress 
+        drop constraint FK51811693D0ADA24
+14:10:31,634 DEBUG SQL:104 - 
+    alter table Drawer_Dress 
+        drop constraint FK5181169FF5ADC2A
+14:10:31,634 DEBUG SQL:104 - 
+    alter table Gas_p_key_def 
+        drop constraint FKD48DFF503F2751C7
+14:10:31,634 DEBUG SQL:104 - 
+    alter table Gas_p_key_def 
+        drop constraint FKD48DFF509FBA5BB2
+14:10:31,634 DEBUG SQL:104 - 
+    alter table Gas_p_key_def 
+        drop constraint FKD48DFF503A5A1A8A
+14:10:31,634 DEBUG SQL:104 - 
+    alter table Gas_per_key 
+        drop constraint FKDA159CB77DE1CDBA
+14:10:31,635 DEBUG SQL:104 - 
+    alter table Gas_per_key 
+        drop constraint FKDA159CB7AFCE2117
+14:10:31,635 DEBUG SQL:104 - 
+    alter table Gas_per_key 
+        drop constraint FKDA159CB73A5A1A8A
+14:10:31,635 DEBUG SQL:104 - 
+    alter table Newspaper_News 
+        drop constraint FK88E5E8F930946B7E
+14:10:31,635 DEBUG SQL:104 - 
+    alter table Newspaper_News 
+        drop constraint FK88E5E8F97308A90A
+14:10:31,635 DEBUG SQL:104 - 
+    alter table Painting 
+        drop constraint FK3B0BBEE466DC1CA6
+14:10:31,636 DEBUG SQL:104 - 
+    alter table PressReleaseAgency_News 
+        drop constraint FK2CBA29E96E93BCEA
+14:10:31,636 DEBUG SQL:104 - 
+    alter table PressReleaseAgency_News 
+        drop constraint FK2CBA29E964F7AD2A
+14:10:31,636 DEBUG SQL:104 - 
+    alter table Training_Trainee 
+        drop constraint FK1FBEAE4397BB03A7
+14:10:31,636 DEBUG SQL:104 - 
+    alter table Training_Trainee 
+        drop constraint FK1FBEAE437EEFA38A
+14:10:31,636 DEBUG SQL:104 - 
+    alter table tbl_version 
+        drop constraint FK2A21E557B443BDA
+14:10:31,648 DEBUG SQL:104 - 
+    drop table AddressBook if exists
+14:10:31,649 DEBUG SQL:104 - 
+    drop table AddressEntry if exists
+14:10:31,649 DEBUG SQL:104 - 
+    drop table AlphabeticalDirectory if exists
+14:10:31,649 DEBUG SQL:104 - 
+    drop table Atm_Gas_Def if exists
+14:10:31,650 DEBUG SQL:104 - 
+    drop table Atm_Gas_DefLeg if exists
+14:10:31,650 DEBUG SQL:104 - 
+    drop table Atmosphere if exists
+14:10:31,650 DEBUG SQL:104 - 
+    drop table Atmosphere_Gas if exists
+14:10:31,650 DEBUG SQL:104 - 
+    drop table Atmosphere_colorPerDate if exists
+14:10:31,650 DEBUG SQL:104 - 
+    drop table Atmosphere_colorPerLevel if exists
+14:10:31,651 DEBUG SQL:104 - 
+    drop table Composition if exists
+14:10:31,651 DEBUG SQL:104 - 
+    drop table Drawer if exists
+14:10:31,651 DEBUG SQL:104 - 
+    drop table Drawer_Dress if exists
+14:10:31,651 DEBUG SQL:104 - 
+    drop table Dress if exists
+14:10:31,652 DEBUG SQL:104 - 
+    drop table Gas if exists
+14:10:31,652 DEBUG SQL:104 - 
+    drop table GasKey if exists
+14:10:31,662 DEBUG SQL:104 - 
+    drop table Gas_p_key_def if exists
+14:10:31,662 DEBUG SQL:104 - 
+    drop table Gas_per_key if exists
+14:10:31,662 DEBUG SQL:104 - 
+    drop table News if exists
+14:10:31,662 DEBUG SQL:104 - 
+    drop table Newspaper if exists
+14:10:31,663 DEBUG SQL:104 - 
+    drop table Newspaper_News if exists
+14:10:31,663 DEBUG SQL:104 - 
+    drop table Painter if exists
+14:10:31,663 DEBUG SQL:104 - 
+    drop table Painting if exists
+14:10:31,663 DEBUG SQL:104 - 
+    drop table PressReleaseAgency if exists
+14:10:31,663 DEBUG SQL:104 - 
+    drop table PressReleaseAgency_News if exists
+14:10:31,664 DEBUG SQL:104 - 
+    drop table Software if exists
+14:10:31,664 DEBUG SQL:104 - 
+    drop table Trainee if exists
+14:10:31,664 DEBUG SQL:104 - 
+    drop table Training if exists
+14:10:31,664 DEBUG SQL:104 - 
+    drop table Training_Trainee if exists
+14:10:31,665 DEBUG SQL:104 - 
+    drop table Wardrobe if exists
+14:10:31,665 DEBUG SQL:104 - 
+    drop table tbl_version if exists
+14:10:31,665 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:31,665  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:31,665  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

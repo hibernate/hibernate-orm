@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.naturalid.inheritance.InheritedNaturalIdTest" tests="3" time="0.048" timestamp="2013-02-28T20:17:31">
+  <properties />
+  <testcase classname="org.hibernate.test.naturalid.inheritance.InheritedNaturalIdTest" name="testIt" time="0.007" />
+  <testcase classname="org.hibernate.test.naturalid.inheritance.InheritedNaturalIdTest" name="testSubclassDeleteNaturalId" time="0.003" />
+  <testcase classname="org.hibernate.test.naturalid.inheritance.InheritedNaturalIdTest" name="testSubclassModifieablNaturalId" time="0.004" />
+  <system-out><![CDATA[14:17:31,508  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.naturalid.inheritance.InheritedNaturalIdTest
+14:17:31,514  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:31,514  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:31,515  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:31,515  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:31,515  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:31,516  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:31,517  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:31,517  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:31,518  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:31,518  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:31,525  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,526 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,526 DEBUG SQL:104 - 
+    alter table GK_USER 
+        drop constraint FK31388246EC4DECA5
+14:17:31,527 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table GK_USER drop constraint FK31388246EC4DECA5
+14:17:31,527 ERROR SchemaExport:426 - Table "GK_USER" not found; SQL statement:
+
+    alter table GK_USER 
+        drop constraint FK31388246EC4DECA5 [42102-145]
+14:17:31,527 DEBUG SQL:104 - 
+    drop table GK_PRINCIPAL if exists
+14:17:31,527 DEBUG SQL:104 - 
+    drop table GK_USER if exists
+14:17:31,527 DEBUG SQL:104 - 
+    create table GK_PRINCIPAL (
+        id bigint not null,
+        P_UID varchar(255),
+        primary key (id)
+    )
+14:17:31,528 DEBUG SQL:104 - 
+    create table GK_USER (
+        id bigint not null,
+        primary key (id)
+    )
+14:17:31,528 DEBUG SQL:104 - 
+    alter table GK_PRINCIPAL 
+        add constraint _UniqueKey unique (P_UID)
+14:17:31,528 DEBUG SQL:104 - 
+    alter table GK_USER 
+        add constraint FK31388246EC4DECA5 
+        foreign key (id) 
+        references GK_PRINCIPAL
+14:17:31,529  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,529  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:31,529  INFO CustomRunner:139 - Test: testIt
+14:17:31,531 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        GK_PRINCIPAL
+14:17:31,533 DEBUG SQL:104 - 
+    insert 
+    into
+        GK_PRINCIPAL
+        (P_UID, id) 
+    values
+        (?, ?)
+14:17:31,533 DEBUG SQL:104 - 
+    insert 
+    into
+        GK_USER
+        (id) 
+    values
+        (?)
+14:17:31,534 DEBUG SQL:104 - 
+    select
+        principal_.id as id0_ 
+    from
+        GK_PRINCIPAL principal_ 
+    where
+        principal_.P_UID=?
+14:17:31,534 DEBUG SQL:104 - 
+    select
+        principal0_.id as id0_0_,
+        principal0_.P_UID as P2_0_0_,
+        case 
+            when principal0_1_.id is not null then 1 
+            when principal0_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        GK_PRINCIPAL principal0_ 
+    left outer join
+        GK_USER principal0_1_ 
+            on principal0_.id=principal0_1_.id 
+    where
+        principal0_.id=?
+14:17:31,535 DEBUG SQL:104 - 
+    select
+        principal_.id as id0_ 
+    from
+        GK_PRINCIPAL principal_ 
+    where
+        principal_.P_UID=?
+14:17:31,535 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_1_.P_UID as P2_0_0_ 
+    from
+        GK_USER user0_ 
+    inner join
+        GK_PRINCIPAL user0_1_ 
+            on user0_.id=user0_1_.id 
+    where
+        user0_.id=?
+14:17:31,535 DEBUG SQL:104 - 
+    select
+        principal_.id as id0_ 
+    from
+        GK_PRINCIPAL principal_ 
+    where
+        principal_.P_UID=?
+14:17:31,535 DEBUG SQL:104 - 
+    select
+        user0_.id as id0_0_,
+        user0_1_.P_UID as P2_0_0_ 
+    from
+        GK_USER user0_ 
+    inner join
+        GK_PRINCIPAL user0_1_ 
+            on user0_.id=user0_1_.id 
+    where
+        user0_.id=?
+14:17:31,536 DEBUG SQL:104 - 
+    delete 
+    from
+        GK_USER 
+    where
+        id=?
+14:17:31,536 DEBUG SQL:104 - 
+    delete 
+    from
+        GK_PRINCIPAL 
+    where
+        id=?
+14:17:31,537  INFO CustomRunner:139 - Test: testSubclassDeleteNaturalId
+14:17:31,538 DEBUG SQL:104 - 
+    insert 
+    into
+        GK_PRINCIPAL
+        (P_UID, id) 
+    values
+        (?, ?)
+14:17:31,538 DEBUG SQL:104 - 
+    insert 
+    into
+        GK_USER
+        (id) 
+    values
+        (?)
+14:17:31,539 DEBUG SQL:104 - 
+    select
+        principal_.id as id0_ 
+    from
+        GK_PRINCIPAL principal_ 
+    where
+        principal_.P_UID=?
+14:17:31,539 DEBUG SQL:104 - 
+    select
+        principal0_.id as id0_0_,
+        principal0_.P_UID as P2_0_0_,
+        case 
+            when principal0_1_.id is not null then 1 
+            when principal0_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        GK_PRINCIPAL principal0_ 
+    left outer join
+        GK_USER principal0_1_ 
+            on principal0_.id=principal0_1_.id 
+    where
+        principal0_.id=?
+14:17:31,540 DEBUG SQL:104 - 
+    delete 
+    from
+        GK_USER 
+    where
+        id=?
+14:17:31,540 DEBUG SQL:104 - 
+    delete 
+    from
+        GK_PRINCIPAL 
+    where
+        id=?
+14:17:31,540 DEBUG SQL:104 - 
+    select
+        principal_.id as id0_ 
+    from
+        GK_PRINCIPAL principal_ 
+    where
+        principal_.P_UID=?
+14:17:31,540  INFO CustomRunner:139 - Test: testSubclassModifieablNaturalId
+14:17:31,542 DEBUG SQL:104 - 
+    insert 
+    into
+        GK_PRINCIPAL
+        (P_UID, id) 
+    values
+        (?, ?)
+14:17:31,542 DEBUG SQL:104 - 
+    insert 
+    into
+        GK_USER
+        (id) 
+    values
+        (?)
+14:17:31,542 DEBUG SQL:104 - 
+    select
+        principal_.id as id0_ 
+    from
+        GK_PRINCIPAL principal_ 
+    where
+        principal_.P_UID=?
+14:17:31,542 DEBUG SQL:104 - 
+    select
+        principal0_.id as id0_0_,
+        principal0_.P_UID as P2_0_0_,
+        case 
+            when principal0_1_.id is not null then 1 
+            when principal0_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        GK_PRINCIPAL principal0_ 
+    left outer join
+        GK_USER principal0_1_ 
+            on principal0_.id=principal0_1_.id 
+    where
+        principal0_.id=?
+14:17:31,543 DEBUG SQL:104 - 
+    update
+        GK_PRINCIPAL 
+    set
+        P_UID=? 
+    where
+        id=?
+14:17:31,544 DEBUG SQL:104 - 
+    select
+        principal_.id as id0_ 
+    from
+        GK_PRINCIPAL principal_ 
+    where
+        principal_.P_UID=?
+14:17:31,544 DEBUG SQL:104 - 
+    select
+        principal_.id as id0_ 
+    from
+        GK_PRINCIPAL principal_ 
+    where
+        principal_.P_UID=?
+14:17:31,544 DEBUG SQL:104 - 
+    delete 
+    from
+        GK_USER 
+    where
+        id=?
+14:17:31,545 DEBUG SQL:104 - 
+    delete 
+    from
+        GK_PRINCIPAL 
+    where
+        id=?
+14:17:31,545  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:31,546 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:31,546 DEBUG SQL:104 - 
+    alter table GK_USER 
+        drop constraint FK31388246EC4DECA5
+14:17:31,553 DEBUG SQL:104 - 
+    drop table GK_PRINCIPAL if exists
+14:17:31,553 DEBUG SQL:104 - 
+    drop table GK_USER if exists
+14:17:31,554  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:31,554  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

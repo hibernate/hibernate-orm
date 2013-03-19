@@ -1,0 +1,4032 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.criteria.CriteriaQueryTest" tests="30" time="2.651" timestamp="2013-02-28T20:12:02">
+  <properties />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testAliasJoinCriterion" time="0.089" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testClassProperty" time="0.083" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testClassProperty2" time="0.054" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testCriteriaCollectionOfComponent" time="0.086" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testCriteriaCollectionOfValue" time="0.04" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testCriteriaFetchMode" time="0.082" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testDetachedCriteria" time="0.046" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testDistinctProjectionsOfComponents" time="0.102" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testEscapeCharacter" time="0.048" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testGroupByComponent" time="0.137" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testMultiplePropertiesSubquery" time="0.029" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testNestedCorrelatedSubquery" time="0.026" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testNotNot" time="0.034" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testNullCriteria" time="0.029" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testProjectedComponent" time="0.002" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testProjectedCompositeId" time="0.067" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testProjectedCompositeIdWithAlias" time="0.017" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testProjectedEmbeddedCompositeId" time="0.038" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testProjectedId" time="0.023" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testProjectedListIncludesComponent" time="0.004" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testProjectedListIncludesEmbeddedCompositeId" time="0.041" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testProjectionCache" time="0.162" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testProjections" time="0.091" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testProjectionsUsingProperty" time="0.193" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testRestrictionOnSubclassCollection" time="0.013" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testScrollCriteria" time="0.044" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testSubcriteriaJoinTypes" time="0.079" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testSubselect" time="0.075" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testSubselectWithComponent" time="0.078" />
+  <testcase classname="org.hibernate.test.criteria.CriteriaQueryTest" name="testVarargJunctionSyntax" time="0.01" />
+  <system-out><![CDATA[14:12:02,532  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.criteria.CriteriaQueryTest
+14:12:02,534  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/criteria/Enrolment.hbm.xml
+14:12:02,574  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/criteria/Foo.hbm.xml
+14:12:02,607  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/hql/Animal.hbm.xml
+14:12:02,644  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/criteria/Person.hbm.xml
+14:12:02,750  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.criteria.CourseMeetingId
+14:12:02,750  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.criteria.CourseMeetingId
+14:12:02,753  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:02,753  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:02,753  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:02,753  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:02,754  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:02,755  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:02,755  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:02,756  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:02,756  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:02,756  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:02,756  INFO UpdateTimestampsCache:61 - HHH000250: Starting update timestamps cache at region: criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache
+14:12:02,757  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: criteriaquerytest.org.hibernate.cache.internal.StandardQueryCache
+14:12:03,017  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:03,018 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:03,018 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4
+14:12:03,018 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C1F3964B4
+14:12:03,018 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4 [42102-145]
+14:12:03,019 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B
+14:12:03,019 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C6309E77B
+14:12:03,019 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B [42102-145]
+14:12:03,019 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79
+14:12:03,019 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Animal drop constraint FK752A7A1C4B485C79
+14:12:03,021 ERROR SchemaExport:426 - Table "ANIMAL" not found; SQL statement:
+
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79 [42102-145]
+14:12:03,021 DEBUG SQL:104 - 
+    alter table Cat 
+        drop constraint FK107B66D384BBA
+14:12:03,021 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Cat drop constraint FK107B66D384BBA
+14:12:03,021 ERROR SchemaExport:426 - Table "CAT" not found; SQL statement:
+
+    alter table Cat 
+        drop constraint FK107B66D384BBA [42102-145]
+14:12:03,021 DEBUG SQL:104 - 
+    alter table CourseMeeting 
+        drop constraint FKC97EED8090CDDD3C
+14:12:03,022 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CourseMeeting drop constraint FKC97EED8090CDDD3C
+14:12:03,022 ERROR SchemaExport:426 - Table "COURSEMEETING" not found; SQL statement:
+
+    alter table CourseMeeting 
+        drop constraint FKC97EED8090CDDD3C [42102-145]
+14:12:03,022 DEBUG SQL:104 - 
+    alter table Course_crossListedAs 
+        drop constraint FKCB5722BFC4FE1CF
+14:12:03,022 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Course_crossListedAs drop constraint FKCB5722BFC4FE1CF
+14:12:03,022 ERROR SchemaExport:426 - Table "COURSE_CROSSLISTEDAS" not found; SQL statement:
+
+    alter table Course_crossListedAs 
+        drop constraint FKCB5722BFC4FE1CF [42102-145]
+14:12:03,022 DEBUG SQL:104 - 
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA
+14:12:03,023 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Dog drop constraint FK10D1C6D384BBA
+14:12:03,023 ERROR SchemaExport:426 - Table "DOG" not found; SQL statement:
+
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA [42102-145]
+14:12:03,023 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F
+14:12:03,023 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DomesticAnimal drop constraint FKE02638DA1733655F
+14:12:03,023 ERROR SchemaExport:426 - Table "DOMESTICANIMAL" not found; SQL statement:
+
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F [42102-145]
+14:12:03,024 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F
+14:12:03,024 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table DomesticAnimal drop constraint FKE02638DA6C03411F
+14:12:03,024 ERROR SchemaExport:426 - Table "DOMESTICANIMAL" not found; SQL statement:
+
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F [42102-145]
+14:12:03,024 DEBUG SQL:104 - 
+    alter table Enrolment 
+        drop constraint FKEB4882C46EF70D58
+14:12:03,024 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Enrolment drop constraint FKEB4882C46EF70D58
+14:12:03,025 ERROR SchemaExport:426 - Table "ENROLMENT" not found; SQL statement:
+
+    alter table Enrolment 
+        drop constraint FKEB4882C46EF70D58 [42102-145]
+14:12:03,025 DEBUG SQL:104 - 
+    alter table Enrolment 
+        drop constraint FKEB4882C490CDDD3C
+14:12:03,026 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Enrolment drop constraint FKEB4882C490CDDD3C
+14:12:03,026 ERROR SchemaExport:426 - Table "ENROLMENT" not found; SQL statement:
+
+    alter table Enrolment 
+        drop constraint FKEB4882C490CDDD3C [42102-145]
+14:12:03,026 DEBUG SQL:104 - 
+    alter table Human 
+        drop constraint FK42D710D1733655F
+14:12:03,027 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human drop constraint FK42D710D1733655F
+14:12:03,027 ERROR SchemaExport:426 - Table "HUMAN" not found; SQL statement:
+
+    alter table Human 
+        drop constraint FK42D710D1733655F [42102-145]
+14:12:03,027 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311
+14:12:03,027 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_family drop constraint FK5F790ED61DCB1311
+14:12:03,027 ERROR SchemaExport:426 - Table "HUMAN_FAMILY" not found; SQL statement:
+
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311 [42102-145]
+14:12:03,027 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310
+14:12:03,028 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_family drop constraint FK5F790ED61DCB1310
+14:12:03,028 ERROR SchemaExport:426 - Table "HUMAN_FAMILY" not found; SQL statement:
+
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310 [42102-145]
+14:12:03,028 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311
+14:12:03,028 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_friends drop constraint FKAC7104631DCB1311
+14:12:03,028 ERROR SchemaExport:426 - Table "HUMAN_FRIENDS" not found; SQL statement:
+
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311 [42102-145]
+14:12:03,028 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310
+14:12:03,029 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Human_friends drop constraint FKAC7104631DCB1310
+14:12:03,029 ERROR SchemaExport:426 - Table "HUMAN_FRIENDS" not found; SQL statement:
+
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310 [42102-145]
+14:12:03,029 DEBUG SQL:104 - 
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13
+14:12:03,029 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table JOINED drop constraint FK82C23B49534E0F13
+14:12:03,029 ERROR SchemaExport:426 - Table "JOINED" not found; SQL statement:
+
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13 [42102-145]
+14:12:03,029 DEBUG SQL:104 - 
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315
+14:12:03,030 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Lizard drop constraint FK87B0E2B6EE398315
+14:12:03,030 ERROR SchemaExport:426 - Table "LIZARD" not found; SQL statement:
+
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315 [42102-145]
+14:12:03,030 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699
+14:12:03,030 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Mammal drop constraint FK88EF417FEFA9D699
+14:12:03,030 ERROR SchemaExport:426 - Table "MAMMAL" not found; SQL statement:
+
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699 [42102-145]
+14:12:03,030 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98
+14:12:03,030 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Mammal drop constraint FK88EF417FCE6EEE98
+14:12:03,031 ERROR SchemaExport:426 - Table "MAMMAL" not found; SQL statement:
+
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98 [42102-145]
+14:12:03,031 DEBUG SQL:104 - 
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699
+14:12:03,031 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Reptile drop constraint FKA4790CABEFA9D699
+14:12:03,031 ERROR SchemaExport:426 - Table "REPTILE" not found; SQL statement:
+
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699 [42102-145]
+14:12:03,046 DEBUG SQL:104 - 
+    alter table Student 
+        drop constraint FKF3371A1B388BFC7D
+14:12:03,046 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Student drop constraint FKF3371A1B388BFC7D
+14:12:03,046 ERROR SchemaExport:426 - Table "STUDENT" not found; SQL statement:
+
+    alter table Student 
+        drop constraint FKF3371A1B388BFC7D [42102-145]
+14:12:03,047 DEBUG SQL:104 - 
+    alter table Student_studyAbroads 
+        drop constraint FKCBF9BF6DC6C04DB3
+14:12:03,047 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Student_studyAbroads drop constraint FKCBF9BF6DC6C04DB3
+14:12:03,047 ERROR SchemaExport:426 - Table "STUDENT_STUDYABROADS" not found; SQL statement:
+
+    alter table Student_studyAbroads 
+        drop constraint FKCBF9BF6DC6C04DB3 [42102-145]
+14:12:03,047 DEBUG SQL:104 - 
+    alter table Student_studyAbroads 
+        drop constraint FKCBF9BF6D6EF70D58
+14:12:03,047 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Student_studyAbroads drop constraint FKCBF9BF6D6EF70D58
+14:12:03,047 ERROR SchemaExport:426 - Table "STUDENT_STUDYABROADS" not found; SQL statement:
+
+    alter table Student_studyAbroads 
+        drop constraint FKCBF9BF6D6EF70D58 [42102-145]
+14:12:03,048 DEBUG SQL:104 - 
+    alter table Zoo 
+        drop constraint FK15FBA55106523
+14:12:03,048 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo drop constraint FK15FBA55106523
+14:12:03,048 ERROR SchemaExport:426 - Table "ZOO" not found; SQL statement:
+
+    alter table Zoo 
+        drop constraint FK15FBA55106523 [42102-145]
+14:12:03,048 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719
+14:12:03,048 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo_directors drop constraint FK2D21982265B0D719
+14:12:03,049 ERROR SchemaExport:426 - Table "ZOO_DIRECTORS" not found; SQL statement:
+
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719 [42102-145]
+14:12:03,049 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705
+14:12:03,049 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Zoo_directors drop constraint FK2D219822C590D705
+14:12:03,050 ERROR SchemaExport:426 - Table "ZOO_DIRECTORS" not found; SQL statement:
+
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705 [42102-145]
+14:12:03,050 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2
+14:12:03,050 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "User_permissions" drop constraint FKB4582A30F2810CD2
+14:12:03,051 ERROR SchemaExport:426 - Table "User_permissions" not found; SQL statement:
+
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2 [42102-145]
+14:12:03,051 DEBUG SQL:104 - 
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87
+14:12:03,052 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table "User" drop constraint FK285FEB65AF5B87
+14:12:03,052 ERROR SchemaExport:426 - Table "User" not found; SQL statement:
+
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87 [42102-145]
+14:12:03,052 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA255106523
+14:12:03,052 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table addresses drop constraint FK34207BA255106523
+14:12:03,052 ERROR SchemaExport:426 - Table "ADDRESSES" not found; SQL statement:
+
+    alter table addresses 
+        drop constraint FK34207BA255106523 [42102-145]
+14:12:03,052 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99
+14:12:03,053 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table addresses drop constraint FK34207BA26B9FAF99
+14:12:03,053 ERROR SchemaExport:426 - Table "ADDRESSES" not found; SQL statement:
+
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99 [42102-145]
+14:12:03,053 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99
+14:12:03,053 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table human_nick_names drop constraint FK8718E1BE6B9FAF99
+14:12:03,053 ERROR SchemaExport:426 - Table "HUMAN_NICK_NAMES" not found; SQL statement:
+
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99 [42102-145]
+14:12:03,053 DEBUG SQL:104 - 
+    alter table studentAddresses 
+        drop constraint FKD1B36BA76EF70D58
+14:12:03,054 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table studentAddresses drop constraint FKD1B36BA76EF70D58
+14:12:03,054 ERROR SchemaExport:426 - Table "STUDENTADDRESSES" not found; SQL statement:
+
+    alter table studentAddresses 
+        drop constraint FKD1B36BA76EF70D58 [42102-145]
+14:12:03,054 DEBUG SQL:104 - 
+    drop table AbstractFoo if exists
+14:12:03,054 DEBUG SQL:104 - 
+    drop table Animal if exists
+14:12:03,054 DEBUG SQL:104 - 
+    drop table Bar if exists
+14:12:03,054 DEBUG SQL:104 - 
+    drop table Cat if exists
+14:12:03,055 DEBUG SQL:104 - 
+    drop table Country if exists
+14:12:03,055 DEBUG SQL:104 - 
+    drop table Course if exists
+14:12:03,055 DEBUG SQL:104 - 
+    drop table CourseMeeting if exists
+14:12:03,056 DEBUG SQL:104 - 
+    drop table Course_crossListedAs if exists
+14:12:03,056 DEBUG SQL:104 - 
+    drop table Dog if exists
+14:12:03,056 DEBUG SQL:104 - 
+    drop table DomesticAnimal if exists
+14:12:03,056 DEBUG SQL:104 - 
+    drop table Enrolment if exists
+14:12:03,056 DEBUG SQL:104 - 
+    drop table Human if exists
+14:12:03,057 DEBUG SQL:104 - 
+    drop table Human_family if exists
+14:12:03,057 DEBUG SQL:104 - 
+    drop table Human_friends if exists
+14:12:03,057 DEBUG SQL:104 - 
+    drop table JOINED if exists
+14:12:03,057 DEBUG SQL:104 - 
+    drop table Joiner if exists
+14:12:03,057 DEBUG SQL:104 - 
+    drop table Lizard if exists
+14:12:03,057 DEBUG SQL:104 - 
+    drop table Mammal if exists
+14:12:03,057 DEBUG SQL:104 - 
+    drop table Man if exists
+14:12:03,057 DEBUG SQL:104 - 
+    drop table Person if exists
+14:12:03,058 DEBUG SQL:104 - 
+    drop table Reptile if exists
+14:12:03,058 DEBUG SQL:104 - 
+    drop table StateProvince if exists
+14:12:03,058 DEBUG SQL:104 - 
+    drop table Student if exists
+14:12:03,074 DEBUG SQL:104 - 
+    drop table Student_studyAbroads if exists
+14:12:03,075 DEBUG SQL:104 - 
+    drop table Woman if exists
+14:12:03,075 DEBUG SQL:104 - 
+    drop table Zoo if exists
+14:12:03,076 DEBUG SQL:104 - 
+    drop table Zoo_directors if exists
+14:12:03,076 DEBUG SQL:104 - 
+    drop table "User_permissions" if exists
+14:12:03,076 DEBUG SQL:104 - 
+    drop table "User" if exists
+14:12:03,077 DEBUG SQL:104 - 
+    drop table addresses if exists
+14:12:03,077 DEBUG SQL:104 - 
+    drop table human_nick_names if exists
+14:12:03,077 DEBUG SQL:104 - 
+    drop table studentAddresses if exists
+14:12:03,077 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:12:03,077 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:12:03,077 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:12:03,078 DEBUG SQL:104 - 
+    create table AbstractFoo (
+        id integer not null,
+        subtype varchar(255) not null,
+        primary key (id)
+    )
+14:12:03,078 DEBUG SQL:104 - 
+    create table Animal (
+        id bigint generated by default as identity,
+        description varchar(255),
+        body_weight float,
+        mother_id bigint,
+        father_id bigint,
+        zoo_id bigint,
+        serialNumber varchar(255),
+        primary key (id)
+    )
+14:12:03,079 DEBUG SQL:104 - 
+    create table Bar (
+        id integer not null,
+        primary key (id)
+    )
+14:12:03,079 DEBUG SQL:104 - 
+    create table Cat (
+        mammal bigint not null,
+        primary key (mammal)
+    )
+14:12:03,079 DEBUG SQL:104 - 
+    create table Country (
+        code varchar(255) not null,
+        name varchar(255),
+        primary key (code)
+    )
+14:12:03,080 DEBUG SQL:104 - 
+    create table Course (
+        courseCode varchar(255) not null,
+        description varchar(255),
+        primary key (courseCode)
+    )
+14:12:03,080 DEBUG SQL:104 - 
+    create table CourseMeeting (
+        courseCode varchar(255) not null,
+        day varchar(255) not null,
+        period integer not null,
+        location varchar(255) not null,
+        primary key (courseCode, day, period, location)
+    )
+14:12:03,080 DEBUG SQL:104 - 
+    create table Course_crossListedAs (
+        id varchar(255) not null,
+        elt varchar(255)
+    )
+14:12:03,081 DEBUG SQL:104 - 
+    create table Dog (
+        mammal bigint not null,
+        primary key (mammal)
+    )
+14:12:03,081 DEBUG SQL:104 - 
+    create table DomesticAnimal (
+        mammal bigint not null,
+        owner bigint,
+        primary key (mammal)
+    )
+14:12:03,081 DEBUG SQL:104 - 
+    create table Enrolment (
+        studentId bigint not null,
+        courseCode varchar(255) not null,
+        semester smallint not null,
+        "year" smallint not null,
+        primary key (studentId, courseCode)
+    )
+14:12:03,081 DEBUG SQL:104 - 
+    create table Human (
+        mammal bigint not null,
+        name_first varchar(255),
+        name_initial char(255),
+        name_last varchar(255),
+        nickName varchar(255),
+        height_centimeters double not null,
+        intValue integer,
+        floatValue float,
+        bigDecimalValue decimal(19,2),
+        bigIntegerValue decimal(19,2),
+        primary key (mammal)
+    )
+14:12:03,082 DEBUG SQL:104 - 
+    create table Human_family (
+        human1 bigint not null,
+        human2 bigint not null,
+        relationship varchar(255) not null,
+        primary key (human1, relationship)
+    )
+14:12:03,082 DEBUG SQL:104 - 
+    create table Human_friends (
+        human1 bigint not null,
+        human2 bigint not null
+    )
+14:12:03,082 DEBUG SQL:104 - 
+    create table JOINED (
+        ID bigint not null,
+        joinedName varchar(255),
+        primary key (ID)
+    )
+14:12:03,083 DEBUG SQL:104 - 
+    create table Joiner (
+        id bigint generated by default as identity,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:03,083 DEBUG SQL:104 - 
+    create table Lizard (
+        reptile bigint not null,
+        primary key (reptile)
+    )
+14:12:03,083 DEBUG SQL:104 - 
+    create table Mammal (
+        animal bigint not null,
+        pregnant boolean,
+        birthdate date,
+        mammalZoo_id bigint,
+        name varchar(255),
+        primary key (animal)
+    )
+14:12:03,083 DEBUG SQL:104 - 
+    create table Man (
+        id bigint not null,
+        name varchar(255),
+        weight integer,
+        height integer,
+        primary key (id)
+    )
+14:12:03,084 DEBUG SQL:104 - 
+    create table Person (
+        id bigint not null,
+        name varchar(255),
+        weight integer,
+        height integer,
+        primary key (id)
+    )
+14:12:03,084 DEBUG SQL:104 - 
+    create table Reptile (
+        animal bigint not null,
+        bodyTemperature float,
+        primary key (animal)
+    )
+14:12:03,084 DEBUG SQL:104 - 
+    create table StateProvince (
+        id bigint generated by default as identity,
+        name varchar(255),
+        isoCode varchar(255),
+        primary key (id)
+    )
+14:12:03,085 DEBUG SQL:104 - 
+    create table Student (
+        studentId bigint not null,
+        name varchar(255) not null,
+        address_city varchar(255),
+        address_state varchar(255),
+        preferredCourseCode varchar(255),
+        primary key (studentId)
+    )
+14:12:03,085 DEBUG SQL:104 - 
+    create table Student_studyAbroads (
+        studentId bigint not null,
+        strt_dt timestamp,
+        country varchar(255),
+        ind integer not null,
+        primary key (studentId, ind)
+    )
+14:12:03,085 DEBUG SQL:104 - 
+    create table Woman (
+        id bigint not null,
+        name varchar(255),
+        weight integer,
+        height integer,
+        primary key (id)
+    )
+14:12:03,086 DEBUG SQL:104 - 
+    create table Zoo (
+        id bigint generated by default as identity,
+        zooType char(255) not null,
+        name varchar(255),
+        classification tinyint,
+        street varchar(255),
+        city varchar(255),
+        postalCode varchar(255),
+        country varchar(255),
+        state_prov_id bigint,
+        primary key (id)
+    )
+14:12:03,086 DEBUG SQL:104 - 
+    create table Zoo_directors (
+        directorZoo_id bigint not null,
+        elt bigint not null,
+        title varchar(255) not null,
+        primary key (directorZoo_id, title)
+    )
+14:12:03,086 DEBUG SQL:104 - 
+    create table "User_permissions" (
+        userId bigint not null,
+        permissionName varchar(255),
+        permissionId integer not null,
+        primary key (userId, permissionId)
+    )
+14:12:03,087 DEBUG SQL:104 - 
+    create table "User" (
+        id bigint not null,
+        userName varchar(255),
+        primary key (id)
+    )
+14:12:03,087 DEBUG SQL:104 - 
+    create table addresses (
+        human bigint not null,
+        street varchar(255),
+        city varchar(255),
+        postalCode varchar(255),
+        country varchar(255),
+        state_prov_id bigint,
+        "type" varchar(255) not null,
+        primary key (human, "type")
+    )
+14:12:03,087 DEBUG SQL:104 - 
+    create table human_nick_names (
+        human bigint not null,
+        nick_name varchar(255) not null,
+        primary key (human, nick_name)
+    )
+14:12:03,088 DEBUG SQL:104 - 
+    create table studentAddresses (
+        studentId bigint not null,
+        line1 varchar(255),
+        line2 varchar(255),
+        city varchar(255),
+        state varchar(255),
+        zip varchar(255),
+        addressType varchar(255) not null,
+        primary key (studentId, addressType)
+    )
+14:12:03,088 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C1F3964B4 
+        foreign key (mother_id) 
+        references Animal
+14:12:03,089 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C6309E77B 
+        foreign key (father_id) 
+        references Animal
+14:12:03,105 DEBUG SQL:104 - 
+    alter table Animal 
+        add constraint FK752A7A1C4B485C79 
+        foreign key (zoo_id) 
+        references Zoo
+14:12:03,106 DEBUG SQL:104 - 
+    alter table Cat 
+        add constraint FK107B66D384BBA 
+        foreign key (mammal) 
+        references DomesticAnimal
+14:12:03,106 DEBUG SQL:104 - 
+    alter table CourseMeeting 
+        add constraint FKC97EED8090CDDD3C 
+        foreign key (courseCode) 
+        references Course
+14:12:03,107 DEBUG SQL:104 - 
+    alter table Course_crossListedAs 
+        add constraint FKCB5722BFC4FE1CF 
+        foreign key (id) 
+        references Course
+14:12:03,107 DEBUG SQL:104 - 
+    alter table Dog 
+        add constraint FK10D1C6D384BBA 
+        foreign key (mammal) 
+        references DomesticAnimal
+14:12:03,108 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        add constraint FKE02638DA1733655F 
+        foreign key (mammal) 
+        references Mammal
+14:12:03,120 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        add constraint FKE02638DA6C03411F 
+        foreign key (owner) 
+        references Human
+14:12:03,121 DEBUG SQL:104 - 
+    alter table Enrolment 
+        add constraint FKEB4882C46EF70D58 
+        foreign key (studentId) 
+        references Student
+14:12:03,121 DEBUG SQL:104 - 
+    alter table Enrolment 
+        add constraint FKEB4882C490CDDD3C 
+        foreign key (courseCode) 
+        references Course
+14:12:03,122 DEBUG SQL:104 - 
+    alter table Human 
+        add constraint FK42D710D1733655F 
+        foreign key (mammal) 
+        references Mammal
+14:12:03,122 DEBUG SQL:104 - 
+    alter table Human_family 
+        add constraint FK5F790ED61DCB1311 
+        foreign key (human2) 
+        references Human
+14:12:03,123 DEBUG SQL:104 - 
+    alter table Human_family 
+        add constraint FK5F790ED61DCB1310 
+        foreign key (human1) 
+        references Human
+14:12:03,124 DEBUG SQL:104 - 
+    alter table Human_friends 
+        add constraint FKAC7104631DCB1311 
+        foreign key (human2) 
+        references Human
+14:12:03,124 DEBUG SQL:104 - 
+    alter table Human_friends 
+        add constraint FKAC7104631DCB1310 
+        foreign key (human1) 
+        references Human
+14:12:03,125 DEBUG SQL:104 - 
+    alter table JOINED 
+        add constraint FK82C23B49534E0F13 
+        foreign key (ID) 
+        references Joiner
+14:12:03,202 DEBUG SQL:104 - 
+    alter table Lizard 
+        add constraint FK87B0E2B6EE398315 
+        foreign key (reptile) 
+        references Reptile
+14:12:03,203 DEBUG SQL:104 - 
+    alter table Mammal 
+        add constraint FK88EF417FEFA9D699 
+        foreign key (animal) 
+        references Animal
+14:12:03,203 DEBUG SQL:104 - 
+    alter table Mammal 
+        add constraint FK88EF417FCE6EEE98 
+        foreign key (mammalZoo_id) 
+        references Zoo
+14:12:03,204 DEBUG SQL:104 - 
+    alter table Reptile 
+        add constraint FKA4790CABEFA9D699 
+        foreign key (animal) 
+        references Animal
+14:12:03,204 DEBUG SQL:104 - 
+    alter table Student 
+        add constraint FKF3371A1B388BFC7D 
+        foreign key (preferredCourseCode) 
+        references Course
+14:12:03,205 DEBUG SQL:104 - 
+    alter table Student_studyAbroads 
+        add constraint FKCBF9BF6DC6C04DB3 
+        foreign key (country) 
+        references Country
+14:12:03,205 DEBUG SQL:104 - 
+    alter table Student_studyAbroads 
+        add constraint FKCBF9BF6D6EF70D58 
+        foreign key (studentId) 
+        references Student
+14:12:03,206 DEBUG SQL:104 - 
+    alter table Zoo 
+        add constraint FK15FBA55106523 
+        foreign key (state_prov_id) 
+        references StateProvince
+14:12:03,206 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        add constraint FK2D21982265B0D719 
+        foreign key (elt) 
+        references Human
+14:12:03,207 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        add constraint FK2D219822C590D705 
+        foreign key (directorZoo_id) 
+        references Zoo
+14:12:03,207 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        add constraint FKB4582A30F2810CD2 
+        foreign key (userId) 
+        references "User"
+14:12:03,208 DEBUG SQL:104 - 
+    alter table "User" 
+        add constraint FK285FEB65AF5B87 
+        foreign key (id) 
+        references Human
+14:12:03,220 DEBUG SQL:104 - 
+    alter table addresses 
+        add constraint FK34207BA255106523 
+        foreign key (state_prov_id) 
+        references StateProvince
+14:12:03,221 DEBUG SQL:104 - 
+    alter table addresses 
+        add constraint FK34207BA26B9FAF99 
+        foreign key (human) 
+        references Human
+14:12:03,222 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        add constraint FK8718E1BE6B9FAF99 
+        foreign key (human) 
+        references Human
+14:12:03,222 DEBUG SQL:104 - 
+    alter table studentAddresses 
+        add constraint FKD1B36BA76EF70D58 
+        foreign key (studentId) 
+        references Student
+14:12:03,223 DEBUG SQL:104 - 
+    create sequence hibernate_sequence
+14:12:03,223  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:03,226  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:03,226  INFO CustomRunner:139 - Test: testAliasJoinCriterion
+14:12:03,247 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:03,248 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089441779712]
+14:12:03,248 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:03,248 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089441783808]
+14:12:03,248 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,248 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089441783809]
+14:12:03,249 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,249 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089441787904]
+14:12:03,249 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,249 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089441787905]
+14:12:03,249 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089441787906]
+14:12:03,249 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089441787907]
+14:12:03,249 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089441787908]
+14:12:03,249 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089441787909]
+14:12:03,250 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089441792000]
+14:12:03,286 DEBUG SQL:104 - 
+    select
+        pc1_.courseCode as y0_ 
+    from
+        Student this_ 
+    left outer join
+        Course pc1_ 
+            on this_.preferredCourseCode=pc1_.courseCode 
+            and (
+                pc1_.courseCode=? 
+            ) 
+    order by
+        pc1_.courseCode asc
+14:12:03,289 DEBUG SQL:104 - 
+    select
+        pc1_.courseCode as y0_ 
+    from
+        Student this_ 
+    left outer join
+        Course pc1_ 
+            on this_.preferredCourseCode=pc1_.courseCode 
+            and (
+                pc1_.courseCode=? 
+            ) 
+    order by
+        pc1_.courseCode asc
+14:12:03,292 DEBUG SQL:104 - 
+    select
+        pc1_.courseCode as y0_ 
+    from
+        Student this_ 
+    left outer join
+        Course pc1_ 
+            on this_.preferredCourseCode=pc1_.courseCode 
+            and (
+                pc1_.courseCode<>? 
+            ) 
+    order by
+        pc1_.courseCode asc
+14:12:03,302 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089442004992]
+14:12:03,303 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089442009088]
+14:12:03,303 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089442009089]
+14:12:03,303 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089442009090]
+14:12:03,303 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089442009091]
+14:12:03,303 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,304 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089442013184]
+14:12:03,304 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,304 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089442013185]
+14:12:03,312 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,313 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089442050048]
+14:12:03,313 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:03,313 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089442050049]
+14:12:03,314 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:03,314 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089442054144]
+14:12:03,314 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089196294145]
+14:12:03,314 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089196294145]
+14:12:03,314 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089196294145]
+14:12:03,314 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089196294145]
+14:12:03,315  INFO CustomRunner:139 - Test: testClassProperty
+14:12:03,317 DEBUG SQL:104 - 
+    select
+        this_.id as id1_1_,
+        this_.description as descript2_1_1_,
+        this_.body_weight as body3_1_1_,
+        this_.mother_id as mother4_1_1_,
+        this_.father_id as father5_1_1_,
+        this_.zoo_id as zoo6_1_1_,
+        this_.serialNumber as serialNu7_1_1_,
+        this_1_.bodyTemperature as bodyTemp2_20_1_,
+        this_3_.pregnant as pregnant17_1_,
+        this_3_.birthdate as birthdate17_1_,
+        this_4_.owner as owner9_1_,
+        this_7_.name_first as name2_11_1_,
+        this_7_.name_initial as name3_11_1_,
+        this_7_.name_last as name4_11_1_,
+        this_7_.nickName as nickName11_1_,
+        this_7_.height_centimeters / 2.54E0 as height6_11_1_,
+        this_7_.intValue as intValue11_1_,
+        this_7_.floatValue as floatValue11_1_,
+        this_7_.bigDecimalValue as bigDecim9_11_1_,
+        this_7_.bigIntegerValue as bigInte10_11_1_,
+        case 
+            when this_2_.reptile is not null then 2 
+            when this_5_.mammal is not null then 5 
+            when this_6_.mammal is not null then 6 
+            when this_4_.mammal is not null then 4 
+            when this_7_.mammal is not null then 7 
+            when this_1_.animal is not null then 1 
+            when this_3_.animal is not null then 3 
+            when this_.id is not null then 0 
+        end as clazz_1_,
+        m1_.id as id1_0_,
+        m1_.description as descript2_1_0_,
+        m1_.body_weight as body3_1_0_,
+        m1_.mother_id as mother4_1_0_,
+        m1_.father_id as father5_1_0_,
+        m1_.zoo_id as zoo6_1_0_,
+        m1_.serialNumber as serialNu7_1_0_,
+        m1_1_.bodyTemperature as bodyTemp2_20_0_,
+        m1_3_.pregnant as pregnant17_0_,
+        m1_3_.birthdate as birthdate17_0_,
+        m1_4_.owner as owner9_0_,
+        m1_7_.name_first as name2_11_0_,
+        m1_7_.name_initial as name3_11_0_,
+        m1_7_.name_last as name4_11_0_,
+        m1_7_.nickName as nickName11_0_,
+        m1_7_.height_centimeters / 2.54E0 as height6_11_0_,
+        m1_7_.intValue as intValue11_0_,
+        m1_7_.floatValue as floatValue11_0_,
+        m1_7_.bigDecimalValue as bigDecim9_11_0_,
+        m1_7_.bigIntegerValue as bigInte10_11_0_,
+        case 
+            when m1_2_.reptile is not null then 2 
+            when m1_5_.mammal is not null then 5 
+            when m1_6_.mammal is not null then 6 
+            when m1_4_.mammal is not null then 4 
+            when m1_7_.mammal is not null then 7 
+            when m1_1_.animal is not null then 1 
+            when m1_3_.animal is not null then 3 
+            when m1_.id is not null then 0 
+        end as clazz_0_ 
+    from
+        Animal this_ 
+    left outer join
+        Reptile this_1_ 
+            on this_.id=this_1_.animal 
+    left outer join
+        Lizard this_2_ 
+            on this_.id=this_2_.reptile 
+    left outer join
+        Mammal this_3_ 
+            on this_.id=this_3_.animal 
+    left outer join
+        DomesticAnimal this_4_ 
+            on this_.id=this_4_.mammal 
+    left outer join
+        Cat this_5_ 
+            on this_.id=this_5_.mammal 
+    left outer join
+        Dog this_6_ 
+            on this_.id=this_6_.mammal 
+    left outer join
+        Human this_7_ 
+            on this_.id=this_7_.mammal 
+    inner join
+        Animal m1_ 
+            on this_.mother_id=m1_.id 
+    left outer join
+        Reptile m1_1_ 
+            on m1_.id=m1_1_.animal 
+    left outer join
+        Lizard m1_2_ 
+            on m1_.id=m1_2_.reptile 
+    left outer join
+        Mammal m1_3_ 
+            on m1_.id=m1_3_.animal 
+    left outer join
+        DomesticAnimal m1_4_ 
+            on m1_.id=m1_4_.mammal 
+    left outer join
+        Cat m1_5_ 
+            on m1_.id=m1_5_.mammal 
+    left outer join
+        Dog m1_6_ 
+            on m1_.id=m1_6_.mammal 
+    left outer join
+        Human m1_7_ 
+            on m1_.id=m1_7_.mammal 
+    where
+        case 
+            when m1_2_.reptile is not null then 2 
+            when m1_5_.mammal is not null then 5 
+            when m1_6_.mammal is not null then 6 
+            when m1_4_.mammal is not null then 4 
+            when m1_7_.mammal is not null then 7 
+            when m1_1_.animal is not null then 1 
+            when m1_3_.animal is not null then 3 
+            when m1_.id is not null then 0 
+        end=?
+14:12:03,398  INFO CustomRunner:139 - Test: testClassProperty2
+14:12:03,400 DEBUG SQL:104 - 
+    insert 
+    into
+        Bar
+        (id) 
+    values
+        (?)
+14:12:03,400 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Bar] -> [5579089442406400]
+14:12:03,400 DEBUG SQL:104 - 
+    insert 
+    into
+        AbstractFoo
+        (subtype, id) 
+    values
+        ('KAPUT', ?)
+14:12:03,424 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [AbstractFoo] -> [5579089442504704]
+14:12:03,424 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [AbstractFoo] -> [5579089196744705]
+14:12:03,424 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Bar] -> [5579089196744705]
+14:12:03,426 DEBUG SQL:104 - 
+    select
+        this_.id as id2_1_,
+        abstractfo2_.id as id0_0_,
+        abstractfo2_.subtype as subtype0_0_ 
+    from
+        Bar this_ 
+    left outer join
+        AbstractFoo abstractfo2_ 
+            on this_.id=abstractfo2_.id
+14:12:03,427 DEBUG SQL:104 - 
+    select
+        this_.id as id2_1_,
+        m1_.id as id0_0_,
+        m1_.subtype as subtype0_0_ 
+    from
+        Bar this_ 
+    inner join
+        AbstractFoo m1_ 
+            on this_.id=m1_.id 
+    where
+        m1_.subtype=?
+14:12:03,428 DEBUG SQL:104 - 
+    select
+        this_.id as id2_1_,
+        m1_.id as id0_0_,
+        m1_.subtype as subtype0_0_ 
+    from
+        Bar this_ 
+    inner join
+        AbstractFoo m1_ 
+            on this_.id=m1_.id 
+    where
+        m1_.subtype=?
+14:12:03,453  INFO CustomRunner:139 - Test: testCriteriaCollectionOfComponent
+14:12:03,457 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,457 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089442639872]
+14:12:03,457 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,457 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089442639873]
+14:12:03,458 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089442643968]
+14:12:03,458 DEBUG SQL:104 - 
+    insert 
+    into
+        studentAddresses
+        (studentId, addressType, line1, line2, city, state, zip) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:12:03,458 DEBUG SQL:104 - 
+    insert 
+    into
+        studentAddresses
+        (studentId, addressType, line1, line2, city, state, zip) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:12:03,458 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089442643969]
+14:12:03,458 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089442643970]
+14:12:03,458 DEBUG SQL:104 - 
+    insert 
+    into
+        studentAddresses
+        (studentId, addressType, line1, line2, city, state, zip) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+14:12:03,459 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089442648064]
+14:12:03,460 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_0_,
+        this_.name as name22_0_,
+        this_.address_city as address3_22_0_,
+        this_.address_state as address4_22_0_,
+        this_.preferredCourseCode as preferre5_22_0_ 
+    from
+        Student this_ 
+    inner join
+        studentAddresses addresses1_ 
+            on this_.studentId=addresses1_.studentId 
+    where
+        addresses1_.state=?
+14:12:03,470 DEBUG SQL:104 - 
+    select
+        addresses0_.studentId as studentId22_0_,
+        addresses0_.line1 as line2_31_0_,
+        addresses0_.line2 as line3_31_0_,
+        addresses0_.city as city31_0_,
+        addresses0_.state as state31_0_,
+        addresses0_.zip as zip31_0_,
+        addresses0_.addressType as addressT7_0_ 
+    from
+        studentAddresses addresses0_ 
+    where
+        addresses0_.studentId=?
+14:12:03,471 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId22_1_,
+        enrolments0_.studentId as studentId10_1_,
+        enrolments0_.courseCode as courseCode10_1_,
+        enrolments0_.studentId as studentId10_0_,
+        enrolments0_.courseCode as courseCode10_0_,
+        enrolments0_.semester as semester10_0_,
+        enrolments0_."year" as year4_10_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:12:03,492 DEBUG SQL:104 - 
+    select
+        student_.studentId,
+        student_.name as name22_,
+        student_.address_city as address3_22_,
+        student_.address_state as address4_22_,
+        student_.preferredCourseCode as preferre5_22_ 
+    from
+        Student student_ 
+    where
+        student_.studentId=?
+14:12:03,494 DEBUG SQL:104 - 
+    delete 
+    from
+        Student_studyAbroads 
+    where
+        studentId=?
+14:12:03,495 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089442795520]
+14:12:03,495 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089442795521]
+14:12:03,495 DEBUG SQL:104 - 
+    delete 
+    from
+        studentAddresses 
+    where
+        studentId=?
+14:12:03,495 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089442795522]
+14:12:03,495 DEBUG SQL:104 - 
+    delete 
+    from
+        Student_studyAbroads 
+    where
+        studentId=?
+14:12:03,496 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089442799616]
+14:12:03,496 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089442799617]
+14:12:03,496 DEBUG SQL:104 - 
+    delete 
+    from
+        studentAddresses 
+    where
+        studentId=?
+14:12:03,496 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089442799618]
+14:12:03,496 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,539 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089442975744]
+14:12:03,539 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,540 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089442979840]
+14:12:03,540 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089197219841]
+14:12:03,540 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089197219841]
+14:12:03,540 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089197219841]
+14:12:03,540 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089197219841]
+14:12:03,541  INFO CustomRunner:139 - Test: testCriteriaCollectionOfValue
+14:12:03,542 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:03,543 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089442992128]
+14:12:03,543 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089442992129]
+14:12:03,543 DEBUG SQL:104 - 
+    insert 
+    into
+        Course_crossListedAs
+        (id, elt) 
+    values
+        (?, ?)
+14:12:03,559 DEBUG SQL:104 - 
+    insert 
+    into
+        Course_crossListedAs
+        (id, elt) 
+    values
+        (?, ?)
+14:12:03,560 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089443061760]
+14:12:03,561 DEBUG SQL:104 - 
+    select
+        this_.courseCode as courseCode5_0_,
+        this_.description as descript2_5_0_ 
+    from
+        Course this_ 
+    inner join
+        Course_crossListedAs crossliste1_ 
+            on this_.courseCode=crossliste1_.id 
+    where
+        crossliste1_.elt=?
+14:12:03,562 DEBUG SQL:104 - 
+    select
+        crossliste0_.id as id5_0_,
+        crossliste0_.elt as elt7_0_ 
+    from
+        Course_crossListedAs crossliste0_ 
+    where
+        crossliste0_.id=?
+14:12:03,578 DEBUG SQL:104 - 
+    select
+        coursemeet0_.courseCode as courseCode5_1_,
+        coursemeet0_.courseCode as courseCode6_1_,
+        coursemeet0_.day as day6_1_,
+        coursemeet0_.period as period6_1_,
+        coursemeet0_.location as location6_1_,
+        coursemeet0_.courseCode as courseCode6_0_,
+        coursemeet0_.day as day6_0_,
+        coursemeet0_.period as period6_0_,
+        coursemeet0_.location as location6_0_ 
+    from
+        CourseMeeting coursemeet0_ 
+    where
+        coursemeet0_.courseCode=?
+14:12:03,579 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089443139584]
+14:12:03,580 DEBUG SQL:104 - 
+    delete 
+    from
+        Course_crossListedAs 
+    where
+        id=?
+14:12:03,580 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089443143680]
+14:12:03,580 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:03,580 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089443143681]
+14:12:03,580 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089197383682]
+14:12:03,580 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089197383682]
+14:12:03,581 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089197383682]
+14:12:03,581  INFO CustomRunner:139 - Test: testCriteriaFetchMode
+14:12:03,590 DEBUG SQL:104 - 
+    insert 
+    into
+        Country
+        (name, code) 
+    values
+        (?, ?)
+14:12:03,591 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Country] -> [5579089443188736]
+14:12:03,591 DEBUG SQL:104 - 
+    insert 
+    into
+        Country
+        (name, code) 
+    values
+        (?, ?)
+14:12:03,592 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Country] -> [5579089443192832]
+14:12:03,592 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,596 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089443209216]
+14:12:03,597 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443213312]
+14:12:03,597 DEBUG SQL:104 - 
+    insert 
+    into
+        Student_studyAbroads
+        (studentId, ind, strt_dt, country) 
+    values
+        (?, ?, ?, ?)
+14:12:03,597 DEBUG SQL:104 - 
+    insert 
+    into
+        Student_studyAbroads
+        (studentId, ind, strt_dt, country) 
+    values
+        (?, ?, ?, ?)
+14:12:03,597 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089443213313]
+14:12:03,598 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_1_,
+        this_.name as name22_1_,
+        this_.address_city as address3_22_1_,
+        this_.address_state as address4_22_1_,
+        this_.preferredCourseCode as preferre5_22_1_,
+        studyabroa2_.studentId as studentId22_3_,
+        studyabroa2_.strt_dt as strt2_23_3_,
+        studyabroa2_.country as country23_3_,
+        studyabroa2_.ind as ind3_,
+        country3_.code as code4_0_,
+        country3_.name as name4_0_ 
+    from
+        Student this_ 
+    left outer join
+        Student_studyAbroads studyabroa2_ 
+            on this_.studentId=studyabroa2_.studentId 
+    left outer join
+        Country country3_ 
+            on studyabroa2_.country=country3_.code
+14:12:03,621 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId22_1_,
+        enrolments0_.studentId as studentId10_1_,
+        enrolments0_.courseCode as courseCode10_1_,
+        enrolments0_.studentId as studentId10_0_,
+        enrolments0_.courseCode as courseCode10_0_,
+        enrolments0_.semester as semester10_0_,
+        enrolments0_."year" as year4_10_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:12:03,627 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443336192]
+14:12:03,628 DEBUG SQL:104 - 
+    delete 
+    from
+        studentAddresses 
+    where
+        studentId=?
+14:12:03,628 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089443340288]
+14:12:03,628 DEBUG SQL:104 - 
+    delete 
+    from
+        Student_studyAbroads 
+    where
+        studentId=?
+14:12:03,628 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089443340289]
+14:12:03,628 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,629 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089443344384]
+14:12:03,629 DEBUG SQL:104 - 
+    delete 
+    from
+        Country 
+    where
+        code=?
+14:12:03,662 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Country] -> [5579089443479552]
+14:12:03,662 DEBUG SQL:104 - 
+    delete 
+    from
+        Country 
+    where
+        code=?
+14:12:03,663 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Country] -> [5579089443483648]
+14:12:03,663 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089197723649]
+14:12:03,663 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089197723649]
+14:12:03,663 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089197723649]
+14:12:03,663 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089197723649]
+14:12:03,663 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Country] -> [5579089197723649]
+14:12:03,664  INFO CustomRunner:139 - Test: testDetachedCriteria
+14:12:03,682 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,683 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089443565568]
+14:12:03,683 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,690 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089443594240]
+14:12:03,690 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443594241]
+14:12:03,690 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443594242]
+14:12:03,690 DEBUG SQL:104 - 
+    select
+        this_.studentId as y0_ 
+    from
+        Student this_ 
+    where
+        this_.name=? 
+    order by
+        this_.studentId asc limit ?
+14:12:03,691 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443598336]
+14:12:03,691 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443598337]
+14:12:03,691 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,692 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089443602432]
+14:12:03,692 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,709 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089443672064]
+14:12:03,709 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089197912065]
+14:12:03,710 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089197912065]
+14:12:03,710  INFO CustomRunner:139 - Test: testDistinctProjectionsOfComponents
+14:12:03,717 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:03,717 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089443704832]
+14:12:03,718 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,718 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089443708928]
+14:12:03,718 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,718 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089443708929]
+14:12:03,719 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:03,719 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443713024]
+14:12:03,719 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:03,719 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443713025]
+14:12:03,719 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089443713026]
+14:12:03,719 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443713027]
+14:12:03,719 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443713028]
+14:12:03,722 DEBUG SQL:104 - 
+    select
+        distinct this_.address_city as y0_,
+        this_.address_state as y1_ 
+    from
+        Student this_
+14:12:03,723 DEBUG SQL:104 - 
+    select
+        distinct this_.address_city as y0_,
+        this_.address_state as y1_ 
+    from
+        Student this_ 
+    order by
+        y0_ asc,
+        y1_ asc
+14:12:03,738 DEBUG SQL:104 - 
+    select
+        count(this_.address_city) as y0_ 
+    from
+        Student this_
+14:12:03,739 DEBUG SQL:104 - 
+    select
+        count(distinct this_.address_city) as y0_ 
+    from
+        Student this_
+14:12:03,740 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089198039040]
+14:12:03,740 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089198039040]
+14:12:03,740 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089198039040]
+14:12:03,740 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089198039040]
+14:12:03,741 DEBUG SQL:104 - 
+    select
+        count(this_.address_city,
+        this_.address_state) as y0_ 
+    from
+        Student this_
+14:12:03,741  WARN SqlExceptionHelper:143 - SQL Error: 42001, SQLState: 42001
+14:12:03,741 ERROR SqlExceptionHelper:144 - Syntax error in SQL statement "SELECT COUNT(THIS_.ADDRESS_CITY,[*] THIS_.ADDRESS_STATE) AS Y0_ FROM STUDENT THIS_ "; expected ")"; SQL statement:
+select count(this_.address_city, this_.address_state) as y0_ from Student this_ [42001-145]
+14:12:03,742 DEBUG SQL:104 - 
+    select
+        count(distinct this_.address_city,
+        this_.address_state) as y0_ 
+    from
+        Student this_
+14:12:03,748  WARN SqlExceptionHelper:143 - SQL Error: 42001, SQLState: 42001
+14:12:03,748 ERROR SqlExceptionHelper:144 - Syntax error in SQL statement "SELECT COUNT(DISTINCT THIS_.ADDRESS_CITY,[*] THIS_.ADDRESS_STATE) AS Y0_ FROM STUDENT THIS_ "; expected ")"; SQL statement:
+select count(distinct this_.address_city, this_.address_state) as y0_ from Student this_ [42001-145]
+14:12:03,748 DEBUG SQL:104 - 
+    select
+        student_.studentId,
+        student_.name as name22_,
+        student_.address_city as address3_22_,
+        student_.address_state as address4_22_,
+        student_.preferredCourseCode as preferre5_22_ 
+    from
+        Student student_ 
+    where
+        student_.studentId=?
+14:12:03,749 DEBUG SQL:104 - 
+    select
+        enrolment_.studentId,
+        enrolment_.courseCode,
+        enrolment_.semester as semester10_,
+        enrolment_."year" as year4_10_ 
+    from
+        Enrolment enrolment_ 
+    where
+        enrolment_.studentId=? 
+        and enrolment_.courseCode=?
+14:12:03,751 DEBUG SQL:104 - 
+    select
+        course_.courseCode,
+        course_.description as descript2_5_ 
+    from
+        Course course_ 
+    where
+        course_.courseCode=?
+14:12:03,751 DEBUG SQL:104 - 
+    select
+        student_.studentId,
+        student_.name as name22_,
+        student_.address_city as address3_22_,
+        student_.address_state as address4_22_,
+        student_.preferredCourseCode as preferre5_22_ 
+    from
+        Student student_ 
+    where
+        student_.studentId=?
+14:12:03,781 DEBUG SQL:104 - 
+    select
+        enrolment_.studentId,
+        enrolment_.courseCode,
+        enrolment_.semester as semester10_,
+        enrolment_."year" as year4_10_ 
+    from
+        Enrolment enrolment_ 
+    where
+        enrolment_.studentId=? 
+        and enrolment_.courseCode=?
+14:12:03,783 DEBUG SQL:104 - 
+    delete 
+    from
+        studentAddresses 
+    where
+        studentId=?
+14:12:03,783 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089443975168]
+14:12:03,783 DEBUG SQL:104 - 
+    delete 
+    from
+        Student_studyAbroads 
+    where
+        studentId=?
+14:12:03,783 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089443975169]
+14:12:03,783 DEBUG SQL:104 - 
+    delete 
+    from
+        studentAddresses 
+    where
+        studentId=?
+14:12:03,784 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089443979264]
+14:12:03,784 DEBUG SQL:104 - 
+    delete 
+    from
+        Student_studyAbroads 
+    where
+        studentId=?
+14:12:03,784 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089443979265]
+14:12:03,784 DEBUG SQL:104 - 
+    delete 
+    from
+        Course_crossListedAs 
+    where
+        id=?
+14:12:03,784 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089443979266]
+14:12:03,785 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443983360]
+14:12:03,785 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443983361]
+14:12:03,785 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089443983362]
+14:12:03,785 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:03,786 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089443987456]
+14:12:03,786 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,787 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089443991552]
+14:12:03,787 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:03,810 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089444085760]
+14:12:03,810 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,811 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089444089856]
+14:12:03,811 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:03,811 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089444089857]
+14:12:03,811 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089198329858]
+14:12:03,811 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089198329858]
+14:12:03,811 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089198329858]
+14:12:03,811 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089198329858]
+14:12:03,811 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089198329858]
+14:12:03,811 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089198329858]
+14:12:03,812 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089198329858]
+14:12:03,812  INFO CustomRunner:139 - Test: testEscapeCharacter
+14:12:03,813 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:03,842 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089444216832]
+14:12:03,843 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:03,843 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089444220928]
+14:12:03,843 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:03,843 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089444220929]
+14:12:03,844 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089444225024]
+14:12:03,844 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089444225025]
+14:12:03,844 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089444225026]
+14:12:03,850 DEBUG SQL:104 - 
+    select
+        this_.courseCode as courseCode5_0_,
+        this_.description as descript2_5_0_ 
+    from
+        Course this_ 
+    where
+        (
+            lower(this_.description) like ? escape '&'
+        )
+14:12:03,852 DEBUG SQL:104 - 
+    select
+        this_.courseCode as courseCode5_0_,
+        this_.description as descript2_5_0_ 
+    from
+        Course this_ 
+    where
+        (
+            lower(this_.description) like ? escape '&'
+        )
+14:12:03,852 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.criteria.Course
+14:12:03,853 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  \-[IDENT] Node: 'test'
+             |  \-[IDENT] Node: 'criteria'
+             \-[IDENT] Node: 'Course'
+
+14:12:03,858 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:03,858 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.criteria.Course (<no alias>) -> course0_
+14:12:03,858 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Course)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[course0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Course' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Course,tableAlias=course0_,origin=null,columns={,className=org.hibernate.test.criteria.Course}}
+
+14:12:03,859 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:03,859 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:03,859 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089444286464]
+14:12:03,859 DEBUG SQL:104 - 
+    delete 
+    from
+        Course
+14:12:03,860 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089198530560]
+14:12:03,860 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089198530560]
+14:12:03,861  INFO CustomRunner:139 - Test: testGroupByComponent
+14:12:03,866 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:03,866 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089444315136]
+14:12:03,866 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,872 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089444339712]
+14:12:03,872 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:03,872 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089444339713]
+14:12:03,873 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:03,873 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089444343808]
+14:12:03,873 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:03,873 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089444343809]
+14:12:03,873 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089444343810]
+14:12:03,873 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089444343811]
+14:12:03,873 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089444343812]
+14:12:03,874 DEBUG SQL:104 - 
+    select
+        this_.address_city as y0_,
+        this_.address_state as y1_ 
+    from
+        Student this_ 
+    group by
+        this_.address_city,
+        this_.address_state
+14:12:03,875 DEBUG SQL:104 - 
+    select
+        this_.address_city as y0_,
+        this_.address_state as y1_ 
+    from
+        Student this_ 
+    group by
+        this_.address_city,
+        this_.address_state
+14:12:03,912 DEBUG SQL:104 - 
+    select
+        this_.address_city as y0_,
+        this_.address_state as y1_ 
+    from
+        Student this_ 
+    group by
+        this_.address_city,
+        this_.address_state 
+    order by
+        this_.address_city asc,
+        this_.address_state asc
+14:12:03,914 DEBUG SQL:104 - 
+    select
+        this_.address_city as y0_,
+        this_.address_state as y1_ 
+    from
+        Student this_ 
+    group by
+        this_.address_city,
+        this_.address_state 
+    order by
+        y0_ asc,
+        y1_ asc
+14:12:03,914 DEBUG SQL:104 - 
+    select
+        this_.address_city as y0_,
+        this_.address_state as y1_ 
+    from
+        Student this_ 
+    group by
+        this_.address_city,
+        this_.address_state 
+    order by
+        y0_ asc,
+        y1_ asc
+14:12:03,931 DEBUG SQL:104 - 
+    select
+        this_.address_city as y0_,
+        this_.address_state as y1_ 
+    from
+        Student this_ 
+    where
+        (
+            this_.address_city=? 
+            and this_.address_state=?
+        ) 
+    group by
+        this_.address_city,
+        this_.address_state 
+    order by
+        y0_ asc,
+        y1_ asc
+14:12:03,934 DEBUG SQL:104 - 
+    select
+        co2_.courseCode as y0_,
+        st1_.address_city as y1_,
+        st1_.address_state as y2_,
+        this_."year" as y3_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student st1_ 
+            on this_.studentId=st1_.studentId 
+    inner join
+        Course co2_ 
+            on this_.courseCode=co2_.courseCode 
+    group by
+        co2_.courseCode,
+        st1_.address_city,
+        st1_.address_state,
+        this_."year"
+14:12:03,951 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089444663296]
+14:12:03,951 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089444663297]
+14:12:03,951 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089444663298]
+14:12:03,951 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:03,952 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089444667392]
+14:12:03,952 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,996 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089444847616]
+14:12:03,996 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:03,997 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089444851712]
+14:12:03,997 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:03,997 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089444851713]
+14:12:03,997 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:03,997 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089444851714]
+14:12:03,998 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089199095808]
+14:12:03,998 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089199095808]
+14:12:03,998 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089199095808]
+14:12:03,998 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089199095808]
+14:12:03,998  INFO CustomRunner:139 - Test: testMultiplePropertiesSubquery
+14:12:03,999 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:12:04,000 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:12:04,000 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:12:04,001 DEBUG SQL:104 - 
+    insert 
+    into
+        Man
+        (name, weight, height, id) 
+    values
+        (?, ?, ?, ?)
+14:12:04,002 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Man] -> [5579089444868096]
+14:12:04,002 DEBUG SQL:104 - 
+    insert 
+    into
+        Man
+        (name, weight, height, id) 
+    values
+        (?, ?, ?, ?)
+14:12:04,002 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Man] -> [5579089444872192]
+14:12:04,002 DEBUG SQL:104 - 
+    insert 
+    into
+        Woman
+        (name, weight, height, id) 
+    values
+        (?, ?, ?, ?)
+14:12:04,027 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Woman] -> [5579089444974592]
+14:12:04,027 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Man] -> [5579089199214593]
+14:12:04,027 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Woman] -> [5579089199214593]
+14:12:04,028  INFO CustomRunner:139 - Test: testNestedCorrelatedSubquery
+14:12:04,029 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,030 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089444986880]
+14:12:04,030 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,030 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089444986881]
+14:12:04,030 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,046 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089445052416]
+14:12:04,046 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089445052417]
+14:12:04,046 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089445052418]
+14:12:04,051 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_0_,
+        this_.name as name22_0_,
+        this_.address_city as address3_22_0_,
+        this_.address_state as address4_22_0_,
+        this_.preferredCourseCode as preferre5_22_0_ 
+    from
+        Student this_ 
+    where
+        exists (
+            select
+                enrolment_.studentId as y0_ 
+            from
+                Enrolment enrolment_ 
+            where
+                enrolment_."year" = (
+                    select
+                        max(maxStudentEnrolment_."year") as y0_ 
+                    from
+                        Enrolment maxStudentEnrolment_ 
+                    where
+                        this_.preferredCourseCode=maxStudentEnrolment_.courseCode
+                )
+            )
+14:12:04,054 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089199325184]
+14:12:04,054 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089199325184]
+14:12:04,054 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089199325184]
+14:12:04,054 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089199325184]
+14:12:04,054  INFO CustomRunner:139 - Test: testNotNot
+14:12:04,056 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,056 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089445093376]
+14:12:04,056 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,086 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089445216256]
+14:12:04,086 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089445216257]
+14:12:04,086 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089445216258]
+14:12:04,087 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_0_,
+        this_.name as name22_0_,
+        this_.address_city as address3_22_0_,
+        this_.address_state as address4_22_0_,
+        this_.preferredCourseCode as preferre5_22_0_ 
+    from
+        Student this_ 
+    where
+        not not this_.studentId=?
+14:12:04,088 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089199464448]
+14:12:04,088 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089199464448]
+14:12:04,089  INFO CustomRunner:139 - Test: testNullCriteria
+14:12:04,090 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,117 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089445343232]
+14:12:04,117 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089445343233]
+14:12:04,117 DEBUG SQL:104 - 
+    select
+        this_.courseCode as courseCode5_0_,
+        this_.description as descript2_5_0_ 
+    from
+        Course this_ 
+    where
+        this_.description is null
+14:12:04,118 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089199587328]
+14:12:04,118 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089199587328]
+14:12:04,118  INFO CustomRunner:139 - Test: testProjectedComponent
+14:12:04,120 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,120 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089445355520]
+14:12:04,120 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089445355521]
+14:12:04,121 DEBUG SQL:104 - 
+    select
+        this_.address_city as y0_,
+        this_.address_state as y1_ 
+    from
+        Student this_
+14:12:04,121 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089199599616]
+14:12:04,121 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089199599616]
+14:12:04,121  INFO CustomRunner:139 - Test: testProjectedCompositeId
+14:12:04,122 DEBUG SQL:104 - 
+    select
+        coursemeet_.courseCode,
+        coursemeet_.day,
+        coursemeet_.period,
+        coursemeet_.location 
+    from
+        CourseMeeting coursemeet_ 
+    where
+        coursemeet_.courseCode=? 
+        and coursemeet_.day=? 
+        and coursemeet_.period=? 
+        and coursemeet_.location=?
+14:12:04,123 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,123 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089445367808]
+14:12:04,124 DEBUG SQL:104 - 
+    insert 
+    into
+        CourseMeeting
+        (courseCode, day, period, location) 
+    values
+        (?, ?, ?, ?)
+14:12:04,140 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089445437440]
+14:12:04,140 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089445437441]
+14:12:04,141 DEBUG SQL:104 - 
+    select
+        this_.courseCode as y0_,
+        this_.day as y1_,
+        this_.period as y2_,
+        this_.location as y3_ 
+    from
+        CourseMeeting this_
+14:12:04,142 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089199685632]
+14:12:04,142 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089199685632]
+14:12:04,143 DEBUG SQL:104 - 
+    select
+        count(this_.courseCode,
+        this_.day,
+        this_.period,
+        this_.location) as y0_ 
+    from
+        CourseMeeting this_
+14:12:04,143  WARN SqlExceptionHelper:143 - SQL Error: 42001, SQLState: 42001
+14:12:04,143 ERROR SqlExceptionHelper:144 - Syntax error in SQL statement "SELECT COUNT(THIS_.COURSECODE,[*] THIS_.DAY, THIS_.PERIOD, THIS_.LOCATION) AS Y0_ FROM COURSEMEETING THIS_ "; expected ")"; SQL statement:
+select count(this_.courseCode, this_.day, this_.period, this_.location) as y0_ from CourseMeeting this_ [42001-145]
+14:12:04,143 DEBUG SQL:104 - 
+    select
+        count(distinct this_.courseCode,
+        this_.day,
+        this_.period,
+        this_.location) as y0_ 
+    from
+        CourseMeeting this_
+14:12:04,155  WARN SqlExceptionHelper:143 - SQL Error: 42001, SQLState: 42001
+14:12:04,155 ERROR SqlExceptionHelper:144 - Syntax error in SQL statement "SELECT COUNT(DISTINCT THIS_.COURSECODE,[*] THIS_.DAY, THIS_.PERIOD, THIS_.LOCATION) AS Y0_ FROM COURSEMEETING THIS_ "; expected ")"; SQL statement:
+select count(distinct this_.courseCode, this_.day, this_.period, this_.location) as y0_ from CourseMeeting this_ [42001-145]
+14:12:04,156 DEBUG SQL:104 - 
+    select
+        course_.courseCode,
+        course_.description as descript2_5_ 
+    from
+        Course course_ 
+    where
+        course_.courseCode=?
+14:12:04,157 DEBUG SQL:104 - 
+    select
+        coursemeet_.courseCode,
+        coursemeet_.day,
+        coursemeet_.period,
+        coursemeet_.location 
+    from
+        CourseMeeting coursemeet_ 
+    where
+        coursemeet_.courseCode=? 
+        and coursemeet_.day=? 
+        and coursemeet_.period=? 
+        and coursemeet_.location=?
+14:12:04,157 DEBUG SQL:104 - 
+    delete 
+    from
+        Course_crossListedAs 
+    where
+        id=?
+14:12:04,158 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089445511168]
+14:12:04,158 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089445511169]
+14:12:04,158 DEBUG SQL:104 - 
+    delete 
+    from
+        CourseMeeting 
+    where
+        courseCode=? 
+        and day=? 
+        and period=? 
+        and location=?
+14:12:04,187 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089445629952]
+14:12:04,188 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:04,188 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089445634048]
+14:12:04,188 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089199874049]
+14:12:04,188 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089199874049]
+14:12:04,189 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089199874049]
+14:12:04,189  INFO CustomRunner:139 - Test: testProjectedCompositeIdWithAlias
+14:12:04,192 DEBUG SQL:104 - 
+    select
+        coursemeet_.courseCode,
+        coursemeet_.day,
+        coursemeet_.period,
+        coursemeet_.location 
+    from
+        CourseMeeting coursemeet_ 
+    where
+        coursemeet_.courseCode=? 
+        and coursemeet_.day=? 
+        and coursemeet_.period=? 
+        and coursemeet_.location=?
+14:12:04,203 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,204 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089445699584]
+14:12:04,204 DEBUG SQL:104 - 
+    insert 
+    into
+        CourseMeeting
+        (courseCode, day, period, location) 
+    values
+        (?, ?, ?, ?)
+14:12:04,205 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089445703680]
+14:12:04,205 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089445703681]
+14:12:04,205 DEBUG SQL:104 - 
+    select
+        this_.courseCode as y0_,
+        this_.day as y1_,
+        this_.period as y2_,
+        this_.location as y3_ 
+    from
+        CourseMeeting this_
+14:12:04,206 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089199947776]
+14:12:04,207 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089199947776]
+14:12:04,207  INFO CustomRunner:139 - Test: testProjectedEmbeddedCompositeId
+14:12:04,242 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,242 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089445855232]
+14:12:04,243 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,243 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089445859328]
+14:12:04,243 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,243 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089445859329]
+14:12:04,243 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,244 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089445863424]
+14:12:04,244 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,244 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089445863425]
+14:12:04,244 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089445863426]
+14:12:04,244 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089445863427]
+14:12:04,244 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089445863428]
+14:12:04,245 DEBUG SQL:104 - 
+    select
+        this_.studentId as y0_,
+        this_.courseCode as y1_ 
+    from
+        Enrolment this_
+14:12:04,245 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089200107520]
+14:12:04,245 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089200107520]
+14:12:04,246 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089200107520]
+14:12:04,246 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089200107520]
+14:12:04,246  INFO CustomRunner:139 - Test: testProjectedId
+14:12:04,247 DEBUG SQL:104 - 
+    select
+        this_.courseCode as y0_ 
+    from
+        Course this_
+14:12:04,269 DEBUG SQL:104 - 
+    select
+        this_.courseCode as y0_ 
+    from
+        Course this_
+14:12:04,269  INFO CustomRunner:139 - Test: testProjectedListIncludesComponent
+14:12:04,271 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,273 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089445982208]
+14:12:04,273 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089445982209]
+14:12:04,274 DEBUG SQL:104 - 
+    select
+        this_.address_city as y0_,
+        this_.address_state as y1_,
+        this_.name as y2_ 
+    from
+        Student this_
+14:12:04,274 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089200226304]
+14:12:04,274 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089200226304]
+14:12:04,275  INFO CustomRunner:139 - Test: testProjectedListIncludesEmbeddedCompositeId
+14:12:04,282 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,283 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089446023168]
+14:12:04,283 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,283 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089446023169]
+14:12:04,284 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,284 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089446027264]
+14:12:04,284 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,284 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446027265]
+14:12:04,284 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,285 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446031360]
+14:12:04,285 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089446031361]
+14:12:04,285 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446031362]
+14:12:04,285 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446031363]
+14:12:04,286 DEBUG SQL:104 - 
+    select
+        this_.semester as y0_,
+        this_."year" as y1_,
+        this_.studentId as y2_,
+        this_.courseCode as y3_ 
+    from
+        Enrolment this_
+14:12:04,322 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089200418816]
+14:12:04,322 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089200418816]
+14:12:04,322 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089200418816]
+14:12:04,322 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089200418816]
+14:12:04,322  INFO CustomRunner:139 - Test: testProjectionCache
+14:12:04,326 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,326 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089446199296]
+14:12:04,327 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,327 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089446203392]
+14:12:04,327 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,334 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089446232064]
+14:12:04,335 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,335 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446236160]
+14:12:04,335 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,335 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446236161]
+14:12:04,335 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089446236162]
+14:12:04,335 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446236163]
+14:12:04,336 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446240256]
+14:12:04,336 DEBUG BaseGeneralDataRegion:46 - Cache[criteriaquerytest.org.hibernate.cache.internal.StandardQueryCache] lookup : key[sql: select s1_.name as y0_, c2_.description as y1_ from Enrolment this_ inner join Student s1_ on this_.studentId=s1_.studentId inner join Course c2_ on this_.courseCode=c2_.courseCode where exists (select 1 from Enrolment where s1_.studentId=studentId); parameters: ; transformer: org.hibernate.transform.CacheableResultTransformer@1406bf]
+14:12:04,336 DEBUG SQL:104 - 
+    select
+        s1_.name as y0_,
+        c2_.description as y1_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student s1_ 
+            on this_.studentId=s1_.studentId 
+    inner join
+        Course c2_ 
+            on this_.courseCode=c2_.courseCode 
+    where
+        exists (
+            select
+                1 
+            from
+                Enrolment 
+            where
+                s1_.studentId=studentId
+        )
+14:12:04,348 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.internal.StandardQueryCache] : [sql: select s1_.name as y0_, c2_.description as y1_ from Enrolment this_ inner join Student s1_ on this_.studentId=s1_.studentId inner join Course c2_ on this_.courseCode=c2_.courseCode where exists (select 1 from Enrolment where s1_.studentId=studentId); parameters: ; transformer: org.hibernate.transform.CacheableResultTransformer@1406bf] -> [[5579089200529408, [Ljava.io.Serializable;@10029ad1, [Ljava.io.Serializable;@1b02178d]]
+14:12:04,349 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089200533504]
+14:12:04,349 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089200533504]
+14:12:04,349 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089200533504]
+14:12:04,349 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089200533504]
+14:12:04,350 DEBUG BaseGeneralDataRegion:46 - Cache[criteriaquerytest.org.hibernate.cache.internal.StandardQueryCache] lookup : key[sql: select s1_.name as y0_, c2_.description as y1_ from Enrolment this_ inner join Student s1_ on this_.studentId=s1_.studentId inner join Course c2_ on this_.courseCode=c2_.courseCode where exists (select 1 from Enrolment where s1_.studentId=studentId); parameters: ; transformer: org.hibernate.transform.CacheableResultTransformer@1406bf]
+14:12:04,350 DEBUG BaseGeneralDataRegion:52 - Cache[criteriaquerytest.org.hibernate.cache.internal.StandardQueryCache] hit: sql: select s1_.name as y0_, c2_.description as y1_ from Enrolment this_ inner join Student s1_ on this_.studentId=s1_.studentId inner join Course c2_ on this_.courseCode=c2_.courseCode where exists (select 1 from Enrolment where s1_.studentId=studentId); parameters: ; transformer: org.hibernate.transform.CacheableResultTransformer@1406bf
+14:12:04,350 DEBUG BaseGeneralDataRegion:46 - Cache[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] lookup : key[Student]
+14:12:04,350 DEBUG BaseGeneralDataRegion:52 - Cache[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] hit: Student
+14:12:04,350 DEBUG SQL:104 - 
+    select
+        s1_.name as y0_,
+        c2_.description as y1_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student s1_ 
+            on this_.studentId=s1_.studentId 
+    inner join
+        Course c2_ 
+            on this_.courseCode=c2_.courseCode 
+    where
+        exists (
+            select
+                1 
+            from
+                Enrolment 
+            where
+                s1_.studentId=studentId
+        )
+14:12:04,391 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.internal.StandardQueryCache] : [sql: select s1_.name as y0_, c2_.description as y1_ from Enrolment this_ inner join Student s1_ on this_.studentId=s1_.studentId inner join Course c2_ on this_.courseCode=c2_.courseCode where exists (select 1 from Enrolment where s1_.studentId=studentId); parameters: ; transformer: org.hibernate.transform.CacheableResultTransformer@1406bf] -> [[5579089200705536, [Ljava.io.Serializable;@50d50922, [Ljava.io.Serializable;@524ac0a3]]
+14:12:04,392 DEBUG BaseGeneralDataRegion:46 - Cache[criteriaquerytest.org.hibernate.cache.internal.StandardQueryCache] lookup : key[sql: select s1_.name as y0_, c2_.description as y1_ from Enrolment this_ inner join Student s1_ on this_.studentId=s1_.studentId inner join Course c2_ on this_.courseCode=c2_.courseCode where exists (select 1 from Enrolment where s1_.studentId=studentId); parameters: ; transformer: org.hibernate.transform.CacheableResultTransformer@1406bf]
+14:12:04,392 DEBUG BaseGeneralDataRegion:52 - Cache[criteriaquerytest.org.hibernate.cache.internal.StandardQueryCache] hit: sql: select s1_.name as y0_, c2_.description as y1_ from Enrolment this_ inner join Student s1_ on this_.studentId=s1_.studentId inner join Course c2_ on this_.courseCode=c2_.courseCode where exists (select 1 from Enrolment where s1_.studentId=studentId); parameters: ; transformer: org.hibernate.transform.CacheableResultTransformer@1406bf
+14:12:04,392 DEBUG BaseGeneralDataRegion:46 - Cache[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] lookup : key[Student]
+14:12:04,392 DEBUG BaseGeneralDataRegion:52 - Cache[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] hit: Student
+14:12:04,392 DEBUG BaseGeneralDataRegion:46 - Cache[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] lookup : key[Course]
+14:12:04,392 DEBUG BaseGeneralDataRegion:52 - Cache[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] hit: Course
+14:12:04,392 DEBUG BaseGeneralDataRegion:46 - Cache[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] lookup : key[Enrolment]
+14:12:04,392 DEBUG BaseGeneralDataRegion:52 - Cache[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] hit: Enrolment
+14:12:04,392 DEBUG SQL:104 - 
+    select
+        enrolment_.studentId,
+        enrolment_.courseCode,
+        enrolment_.semester as semester10_,
+        enrolment_."year" as year4_10_ 
+    from
+        Enrolment enrolment_ 
+    where
+        enrolment_.studentId=? 
+        and enrolment_.courseCode=?
+14:12:04,393 DEBUG SQL:104 - 
+    select
+        student_.studentId,
+        student_.name as name22_,
+        student_.address_city as address3_22_,
+        student_.address_state as address4_22_,
+        student_.preferredCourseCode as preferre5_22_ 
+    from
+        Student student_ 
+    where
+        student_.studentId=?
+14:12:04,393 DEBUG SQL:104 - 
+    select
+        course_.courseCode,
+        course_.description as descript2_5_ 
+    from
+        Course course_ 
+    where
+        course_.courseCode=?
+14:12:04,394 DEBUG SQL:104 - 
+    select
+        enrolment_.studentId,
+        enrolment_.courseCode,
+        enrolment_.semester as semester10_,
+        enrolment_."year" as year4_10_ 
+    from
+        Enrolment enrolment_ 
+    where
+        enrolment_.studentId=? 
+        and enrolment_.courseCode=?
+14:12:04,409 DEBUG SQL:104 - 
+    select
+        student_.studentId,
+        student_.name as name22_,
+        student_.address_city as address3_22_,
+        student_.address_state as address4_22_,
+        student_.preferredCourseCode as preferre5_22_ 
+    from
+        Student student_ 
+    where
+        student_.studentId=?
+14:12:04,410 DEBUG SQL:104 - 
+    delete 
+    from
+        Course_crossListedAs 
+    where
+        id=?
+14:12:04,411 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089446547456]
+14:12:04,411 DEBUG SQL:104 - 
+    delete 
+    from
+        studentAddresses 
+    where
+        studentId=?
+14:12:04,450  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:04,451 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089446711296]
+14:12:04,451 DEBUG SQL:104 - 
+    delete 
+    from
+        Student_studyAbroads 
+    where
+        studentId=?
+14:12:04,451 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089446711297]
+14:12:04,451 DEBUG SQL:104 - 
+    delete 
+    from
+        studentAddresses 
+    where
+        studentId=?
+14:12:04,452 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089446715392]
+14:12:04,454 DEBUG SQL:104 - 
+    delete 
+    from
+        Student_studyAbroads 
+    where
+        studentId=?
+14:12:04,455 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089446727680]
+14:12:04,455 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089446727681]
+14:12:04,455 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446727682]
+14:12:04,455 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446727683]
+14:12:04,456 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:04,456 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446731776]
+14:12:04,456 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:04,483 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089446842368]
+14:12:04,483 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:04,484 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089446846464]
+14:12:04,484 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:04,484 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089446846465]
+14:12:04,484 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:04,484 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089446846466]
+14:12:04,484 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089201086467]
+14:12:04,484 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089201086467]
+14:12:04,485 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089201086467]
+14:12:04,485 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089201086467]
+14:12:04,485 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089201086467]
+14:12:04,485 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089201086467]
+14:12:04,485 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089201086467]
+14:12:04,515  INFO CustomRunner:139 - Test: testProjections
+14:12:04,528 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,528 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089447026688]
+14:12:04,528 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,529 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089447030784]
+14:12:04,529 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,529 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089447030785]
+14:12:04,529 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,529 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447030786]
+14:12:04,530 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,530 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447034880]
+14:12:04,530 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089447034881]
+14:12:04,530 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447034882]
+14:12:04,530 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447034883]
+14:12:04,530 DEBUG SQL:104 - 
+    select
+        count(distinct this_.studentId) as y0_ 
+    from
+        Enrolment this_
+14:12:04,531 DEBUG SQL:104 - 
+    select
+        count(distinct this_.studentId) as y0_ 
+    from
+        Enrolment this_
+14:12:04,532 DEBUG SQL:104 - 
+    select
+        count(distinct this_.courseCode) as y0_ 
+    from
+        Enrolment this_
+14:12:04,533 DEBUG SQL:104 - 
+    select
+        count(this_.studentId) as y0_,
+        max(this_.studentId) as y1_,
+        min(this_.studentId) as y2_,
+        avg(cast(this_.studentId as double)) as y3_ 
+    from
+        Enrolment this_
+14:12:04,534 DEBUG SQL:104 - 
+    select
+        distinct this_.studentId as y0_,
+        this_.courseCode as y1_ 
+    from
+        Enrolment this_ 
+    where
+        this_.studentId>? 
+        and this_.studentId<? 
+    order by
+        y0_ asc
+14:12:04,535 DEBUG SQL:104 - 
+    select
+        this_.studentId as y0_ 
+    from
+        Enrolment this_ 
+    order by
+        y0_ desc
+14:12:04,537 DEBUG SQL:104 - 
+    select
+        st1_.name as y0_,
+        co2_.description as y1_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student st1_ 
+            on this_.studentId=st1_.studentId 
+    inner join
+        Course co2_ 
+            on this_.courseCode=co2_.courseCode 
+    order by
+        y0_ desc
+14:12:04,544 DEBUG SQL:104 - 
+    select
+        this_.name as y0_,
+        e1_."year" as y1_,
+        e1_.semester as y2_,
+        c2_.courseCode as y3_,
+        c2_.description as y4_ 
+    from
+        Student this_ 
+    inner join
+        Enrolment e1_ 
+            on this_.studentId=e1_.studentId 
+    inner join
+        Course c2_ 
+            on e1_.courseCode=c2_.courseCode 
+    where
+        this_.name like ? 
+    order by
+        this_.name asc,
+        e1_."year" desc,
+        e1_.semester desc,
+        c2_.description asc
+14:12:04,547 DEBUG SQL:104 - 
+    select
+        count(this_.studentId) as y0_,
+        max(this_.studentId) as y1_,
+        count(*) as y2_,
+        min(this_.studentId) as y3_,
+        avg(cast(this_.studentId as double)) as y4_,
+        1 as constOne,
+        count(*) as countStar 
+    from
+        Enrolment this_
+14:12:04,548 DEBUG SQL:104 - 
+    select
+        co2_.courseCode as y0_,
+        count(distinct st1_.studentId) as y1_,
+        this_."year" as y2_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student st1_ 
+            on this_.studentId=st1_.studentId 
+    inner join
+        Course co2_ 
+            on this_.courseCode=co2_.courseCode 
+    group by
+        co2_.courseCode,
+        this_."year"
+14:12:04,573 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_1_,
+        this_.name as name22_1_,
+        this_.address_city as address3_22_1_,
+        this_.address_state as address4_22_1_,
+        this_.preferredCourseCode as preferre5_22_1_,
+        enrolments2_.studentId as studentId22_3_,
+        enrolments2_.studentId as studentId10_3_,
+        enrolments2_.courseCode as courseCode10_3_,
+        enrolments2_.studentId as studentId10_0_,
+        enrolments2_.courseCode as courseCode10_0_,
+        enrolments2_.semester as semester10_0_,
+        enrolments2_."year" as year4_10_0_ 
+    from
+        Student this_ 
+    left outer join
+        Enrolment enrolments2_ 
+            on this_.studentId=enrolments2_.studentId 
+    where
+        this_.studentId = ?
+14:12:04,574 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089447215104]
+14:12:04,575 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447219200]
+14:12:04,575 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447219201]
+14:12:04,575 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:04,575 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447219202]
+14:12:04,575 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:04,576 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089447223296]
+14:12:04,576 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:04,576 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447223297]
+14:12:04,576 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:04,576 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089447223298]
+14:12:04,576 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:04,605 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089447342080]
+14:12:04,605 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089201582081]
+14:12:04,605 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089201582081]
+14:12:04,605 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089201582081]
+14:12:04,605 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089201582081]
+14:12:04,606  INFO CustomRunner:139 - Test: testProjectionsUsingProperty
+14:12:04,608 DEBUG SQL:104 - 
+    select
+        coursemeet_.courseCode,
+        coursemeet_.day,
+        coursemeet_.period,
+        coursemeet_.location 
+    from
+        CourseMeeting coursemeet_ 
+    where
+        coursemeet_.courseCode=? 
+        and coursemeet_.day=? 
+        and coursemeet_.period=? 
+        and coursemeet_.location=?
+14:12:04,609 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,610 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089447362560]
+14:12:04,621 DEBUG SQL:104 - 
+    insert 
+    into
+        CourseMeeting
+        (courseCode, day, period, location) 
+    values
+        (?, ?, ?, ?)
+14:12:04,624 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089447419904]
+14:12:04,625 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,625 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089447424000]
+14:12:04,625 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,625 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089447424001]
+14:12:04,626 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,676 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447632896]
+14:12:04,677 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,677 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447636992]
+14:12:04,677 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089447636993]
+14:12:04,677 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447636994]
+14:12:04,678 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089447641088]
+14:12:04,678 DEBUG SQL:104 - 
+    select
+        this_.studentId as y0_,
+        this_.courseCode as y1_,
+        this_.semester as y2_,
+        this_."year" as y3_ 
+    from
+        Enrolment this_
+14:12:04,680 DEBUG SQL:104 - 
+    select
+        this_.studentId as y0_,
+        this_.name as y1_,
+        this_.address_city as y2_,
+        this_.address_state as y3_,
+        this_.preferredCourseCode as y4_ 
+    from
+        Student this_
+14:12:04,681 DEBUG SQL:104 - 
+    select
+        this_.studentId as y0_,
+        this_.name as y1_,
+        this_.address_city as y2_,
+        this_.address_state as y3_,
+        this_.preferredCourseCode as y4_ 
+    from
+        Student this_ 
+    where
+        this_.name=?
+14:12:04,683 DEBUG SQL:104 - 
+    select
+        this_.studentId as y0_,
+        this_.name as y1_,
+        this_.address_city as y2_,
+        this_.address_state as y3_,
+        this_.preferredCourseCode as y4_ 
+    from
+        Student this_ 
+    where
+        this_.studentId = ?
+14:12:04,684 DEBUG SQL:104 - 
+    select
+        count(distinct this_.studentId) as y0_ 
+    from
+        Enrolment this_
+14:12:04,685 DEBUG SQL:104 - 
+    select
+        count(this_.studentId) as y0_,
+        max(this_.studentId) as y1_,
+        min(this_.studentId) as y2_,
+        avg(cast(this_.studentId as double)) as y3_ 
+    from
+        Enrolment this_
+14:12:04,694 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId10_0_,
+        this_.courseCode as courseCode10_0_,
+        this_.semester as semester10_0_,
+        this_."year" as year4_10_0_ 
+    from
+        Enrolment this_ 
+    where
+        this_.studentId>? 
+        and this_.studentId<? 
+        and this_.courseCode like ? 
+        and this_."year"=? 
+    order by
+        this_.studentId asc
+14:12:04,695 DEBUG SQL:104 - 
+    select
+        this_.studentId as y0_,
+        this_.courseCode as y1_ 
+    from
+        Enrolment this_ 
+    where
+        this_.studentId>? 
+        and this_.studentId<? 
+    order by
+        this_.studentId asc
+14:12:04,713 DEBUG SQL:104 - 
+    select
+        this_.studentId as y0_ 
+    from
+        Enrolment this_ 
+    order by
+        y0_ desc
+14:12:04,714 DEBUG SQL:104 - 
+    select
+        st1_.name as y0_,
+        co2_.description as y1_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student st1_ 
+            on this_.studentId=st1_.studentId 
+    inner join
+        Course co2_ 
+            on this_.courseCode=co2_.courseCode 
+    order by
+        y0_ desc
+14:12:04,715 DEBUG SQL:104 - 
+    select
+        this_.courseCode as y0_,
+        this_.day as y1_,
+        this_.period as y2_,
+        this_.location as y3_,
+        this_.courseCode as y4_ 
+    from
+        CourseMeeting this_ 
+    order by
+        y0_ desc,
+        y1_ desc,
+        y2_ desc,
+        y3_ desc
+14:12:04,716 DEBUG SQL:104 - 
+    select
+        this_.name as y0_,
+        e1_."year" as y1_,
+        e1_.semester as y2_,
+        c2_.courseCode as y3_,
+        c2_.description as y4_ 
+    from
+        Student this_ 
+    inner join
+        Enrolment e1_ 
+            on this_.studentId=e1_.studentId 
+    inner join
+        Course c2_ 
+            on e1_.courseCode=c2_.courseCode 
+    where
+        this_.name like ? 
+    order by
+        this_.name asc,
+        e1_."year" desc,
+        e1_.semester desc,
+        c2_.description asc
+14:12:04,741 DEBUG SQL:104 - 
+    select
+        count(this_.studentId) as y0_,
+        max(this_.studentId) as y1_,
+        count(*) as y2_,
+        min(this_.studentId) as y3_,
+        avg(cast(this_.studentId as double)) as y4_,
+        1 as constOne,
+        count(*) as countStar 
+    from
+        Enrolment this_
+14:12:04,743 DEBUG SQL:104 - 
+    select
+        co2_.courseCode as y0_,
+        count(distinct st1_.studentId) as y1_,
+        this_."year" as y2_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student st1_ 
+            on this_.studentId=st1_.studentId 
+    inner join
+        Course co2_ 
+            on this_.courseCode=co2_.courseCode 
+    group by
+        co2_.courseCode,
+        this_."year"
+14:12:04,754 DEBUG SQL:104 - 
+    select
+        co2_.courseCode as y0_,
+        count(distinct st1_.studentId) as y1_,
+        this_."year" as y2_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student st1_ 
+            on this_.studentId=st1_.studentId 
+    inner join
+        Course co2_ 
+            on this_.courseCode=co2_.courseCode 
+    group by
+        co2_.courseCode,
+        this_."year" 
+    order by
+        y0_ asc,
+        y1_ asc
+14:12:04,769 DEBUG SQL:104 - 
+    select
+        co2_.courseCode as y0_,
+        count(distinct st1_.studentId) as y1_,
+        this_."year" as y2_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student st1_ 
+            on this_.studentId=st1_.studentId 
+    inner join
+        Course co2_ 
+            on this_.courseCode=co2_.courseCode 
+    group by
+        co2_.courseCode,
+        this_."year" 
+    order by
+        y0_ asc,
+        y1_ asc
+14:12:04,770 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089448017920]
+14:12:04,771 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448017921]
+14:12:04,771 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448022016]
+14:12:04,771 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:04,771 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448022017]
+14:12:04,782 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:04,783 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089448071168]
+14:12:04,783 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:04,784 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448075264]
+14:12:04,784 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:04,784 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089448075265]
+14:12:04,784 DEBUG SQL:104 - 
+    delete 
+    from
+        CourseMeeting 
+    where
+        courseCode=? 
+        and day=? 
+        and period=? 
+        and location=?
+14:12:04,798 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089448132608]
+14:12:04,798 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:04,799 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089448136704]
+14:12:04,799 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089202376705]
+14:12:04,799 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089202376705]
+14:12:04,799 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089202376705]
+14:12:04,799 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089202376705]
+14:12:04,800  INFO CustomRunner:139 - Test: testRestrictionOnSubclassCollection
+14:12:04,810 DEBUG SQL:104 - 
+    select
+        this_.animal as id1_0_,
+        this_1_.description as descript2_1_0_,
+        this_1_.body_weight as body3_1_0_,
+        this_1_.mother_id as mother4_1_0_,
+        this_1_.father_id as father5_1_0_,
+        this_1_.zoo_id as zoo6_1_0_,
+        this_1_.serialNumber as serialNu7_1_0_,
+        this_.bodyTemperature as bodyTemp2_20_0_,
+        case 
+            when this_2_.reptile is not null then 2 
+            when this_.animal is not null then 1 
+        end as clazz_0_ 
+    from
+        Reptile this_ 
+    inner join
+        Animal this_1_ 
+            on this_.animal=this_1_.id 
+    left outer join
+        Lizard this_2_ 
+            on this_.animal=this_2_.reptile 
+    where
+        not exists (
+            select
+                1 
+            from
+                Animal 
+            where
+                this_.animal=mother_id
+        )
+14:12:04,812 DEBUG SQL:104 - 
+    select
+        this_.animal as id1_0_,
+        this_1_.description as descript2_1_0_,
+        this_1_.body_weight as body3_1_0_,
+        this_1_.mother_id as mother4_1_0_,
+        this_1_.father_id as father5_1_0_,
+        this_1_.zoo_id as zoo6_1_0_,
+        this_1_.serialNumber as serialNu7_1_0_,
+        this_.bodyTemperature as bodyTemp2_20_0_,
+        case 
+            when this_2_.reptile is not null then 2 
+            when this_.animal is not null then 1 
+        end as clazz_0_ 
+    from
+        Reptile this_ 
+    inner join
+        Animal this_1_ 
+            on this_.animal=this_1_.id 
+    left outer join
+        Lizard this_2_ 
+            on this_.animal=this_2_.reptile 
+    where
+        exists (
+            select
+                1 
+            from
+                Animal 
+            where
+                this_.animal=mother_id
+        )
+14:12:04,813  INFO CustomRunner:139 - Test: testScrollCriteria
+14:12:04,815 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,830 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089448263680]
+14:12:04,831 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089448267776]
+14:12:04,831 DEBUG SQL:104 - 
+    select
+        this_.courseCode as courseCode5_0_,
+        this_.description as descript2_5_0_ 
+    from
+        Course this_
+14:12:04,832 DEBUG SQL:104 - 
+    select
+        coursemeet0_.courseCode as courseCode5_1_,
+        coursemeet0_.courseCode as courseCode6_1_,
+        coursemeet0_.day as day6_1_,
+        coursemeet0_.period as period6_1_,
+        coursemeet0_.location as location6_1_,
+        coursemeet0_.courseCode as courseCode6_0_,
+        coursemeet0_.day as day6_0_,
+        coursemeet0_.period as period6_0_,
+        coursemeet0_.location as location6_0_ 
+    from
+        CourseMeeting coursemeet0_ 
+    where
+        coursemeet0_.courseCode=?
+14:12:04,833 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089448275968]
+14:12:04,833 DEBUG SQL:104 - 
+    delete 
+    from
+        Course_crossListedAs 
+    where
+        id=?
+14:12:04,857 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089448374272]
+14:12:04,857 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:04,858 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089448378368]
+14:12:04,858 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089202618369]
+14:12:04,858 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089202618369]
+14:12:04,858 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089202618369]
+14:12:04,859  INFO CustomRunner:139 - Test: testSubcriteriaJoinTypes
+14:12:04,860 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,861 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089448390656]
+14:12:04,861 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,861 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089448390657]
+14:12:04,861 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,861 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089448390658]
+14:12:04,862 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,914 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089448607744]
+14:12:04,916 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,916 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089448615936]
+14:12:04,917 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089448620032]
+14:12:04,917 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089448620033]
+14:12:04,917 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448620034]
+14:12:04,917 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448620035]
+14:12:04,917 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448620036]
+14:12:04,917 DEBUG SQL:104 - 
+    select
+        this_.preferredCourseCode as y0_ 
+    from
+        Student this_ 
+    left outer join
+        Course course1_ 
+            on this_.preferredCourseCode=course1_.courseCode 
+    order by
+        course1_.courseCode asc
+14:12:04,919 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_1_,
+        this_.name as name22_1_,
+        this_.address_city as address3_22_1_,
+        this_.address_state as address4_22_1_,
+        this_.preferredCourseCode as preferre5_22_1_,
+        course1_.courseCode as courseCode5_0_,
+        course1_.description as descript2_5_0_ 
+    from
+        Student this_ 
+    left outer join
+        Course course1_ 
+            on this_.preferredCourseCode=course1_.courseCode 
+    order by
+        course1_.courseCode asc
+14:12:04,925 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_1_,
+        this_.name as name22_1_,
+        this_.address_city as address3_22_1_,
+        this_.address_state as address4_22_1_,
+        this_.preferredCourseCode as preferre5_22_1_,
+        pc1_.courseCode as courseCode5_0_,
+        pc1_.description as descript2_5_0_ 
+    from
+        Student this_ 
+    left outer join
+        Course pc1_ 
+            on this_.preferredCourseCode=pc1_.courseCode 
+    order by
+        pc1_.courseCode asc
+14:12:04,927 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089448660992]
+14:12:04,927 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089448660993]
+14:12:04,933 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448685568]
+14:12:04,933 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448685569]
+14:12:04,933 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448685570]
+14:12:04,934 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:04,934 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089448689664]
+14:12:04,935 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:04,935 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089448693760]
+14:12:04,935 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:04,936 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089448697856]
+14:12:04,936 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:04,937 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089448701952]
+14:12:04,937 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:04,938 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089448706048]
+14:12:04,938 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089202946049]
+14:12:04,938 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089202946049]
+14:12:04,938 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089202946049]
+14:12:04,938 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089202946049]
+14:12:04,939  INFO CustomRunner:139 - Test: testSubselect
+14:12:04,943 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:04,943 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089448726528]
+14:12:04,943 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:04,946 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089448738816]
+14:12:04,946 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:04,946 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448738817]
+14:12:04,946 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089448738818]
+14:12:04,947 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448742912]
+14:12:04,947 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_0_,
+        this_.name as name22_0_,
+        this_.address_city as address3_22_0_,
+        this_.address_state as address4_22_0_,
+        this_.preferredCourseCode as preferre5_22_0_ 
+    from
+        Student this_ 
+    where
+        this_.name = all (
+            select
+                this_.name as y0_ 
+            from
+                Student this_ 
+            where
+                this_.studentId=?
+        )
+14:12:04,958 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_0_,
+        this_.name as name22_0_,
+        this_.address_city as address3_22_0_,
+        this_.address_state as address4_22_0_,
+        this_.preferredCourseCode as preferre5_22_0_ 
+    from
+        Student this_ 
+    where
+        exists (
+            select
+                this_.name as y0_ 
+            from
+                Student this_ 
+            where
+                this_.studentId=?
+        )
+14:12:04,960 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_0_,
+        this_.name as name22_0_,
+        this_.address_city as address3_22_0_,
+        this_.address_state as address4_22_0_,
+        this_.preferredCourseCode as preferre5_22_0_ 
+    from
+        Student this_ 
+    where
+        this_.name = all (
+            select
+                this_.name as y0_ 
+            from
+                Student this_ 
+            where
+                this_.studentId=?
+        )
+14:12:04,963 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_0_,
+        this_.name as name22_0_,
+        this_.address_city as address3_22_0_,
+        this_.address_state as address4_22_0_,
+        this_.preferredCourseCode as preferre5_22_0_ 
+    from
+        Student this_ 
+    where
+        ? in (
+            select
+                this_.name as y0_ 
+            from
+                Student this_ 
+            where
+                this_.studentId=?
+        )
+14:12:04,982 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId10_0_,
+        this_.courseCode as courseCode10_0_,
+        this_.semester as semester10_0_,
+        this_."year" as year4_10_0_ 
+    from
+        Enrolment this_ 
+    where
+        ? = (
+            select
+                st_.name as y0_ 
+            from
+                Student st_ 
+            where
+                st_.studentId=this_.studentId
+        )
+14:12:04,983 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId10_0_,
+        this_.courseCode as courseCode10_0_,
+        this_.semester as semester10_0_,
+        this_."year" as year4_10_0_ 
+    from
+        Enrolment this_ 
+    where
+        ? = (
+            select
+                st_.name as y0_ 
+            from
+                Student st_ 
+            inner join
+                Enrolment enrolment1_ 
+                    on st_.studentId=enrolment1_.studentId 
+            inner join
+                Course course2_ 
+                    on enrolment1_.courseCode=course2_.courseCode 
+            where
+                course2_.description=?
+        )
+14:12:04,993 DEBUG SQL:104 - 
+    select
+        this_.name as y0_ 
+    from
+        Student this_
+14:12:04,993 DEBUG SQL:104 - 
+    select
+        this_.name as y0_ 
+    from
+        Student this_ 
+    order by
+        y0_ asc
+14:12:05,002 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId10_0_,
+        this_.courseCode as courseCode10_0_,
+        this_.semester as semester10_0_,
+        this_."year" as year4_10_0_ 
+    from
+        Enrolment this_ 
+    where
+        ? = (
+            select
+                st_.name as y0_ 
+            from
+                Student st_ 
+            order by
+                y0_ asc
+        )
+14:12:05,004 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089448976384]
+14:12:05,004 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448976385]
+14:12:05,004 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:05,004 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089448976386]
+14:12:05,004 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:05,013 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089449013248]
+14:12:05,013 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:05,013 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089449013249]
+14:12:05,013 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089203253250]
+14:12:05,013 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089203253250]
+14:12:05,014 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089203253250]
+14:12:05,014 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089203253250]
+14:12:05,014  INFO CustomRunner:139 - Test: testSubselectWithComponent
+14:12:05,016 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:12:05,016 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089449025536]
+14:12:05,016 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, address_city, address_state, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?, ?, ?)
+14:12:05,025 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089449062400]
+14:12:05,025 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:12:05,026 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089449066496]
+14:12:05,026 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089449066497]
+14:12:05,026 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089449066498]
+14:12:05,026 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_0_,
+        this_.name as name22_0_,
+        this_.address_city as address3_22_0_,
+        this_.address_state as address4_22_0_,
+        this_.preferredCourseCode as preferre5_22_0_ 
+    from
+        Student this_ 
+    where
+        exists (
+            select
+                this_.address_city as y0_,
+                this_.address_state as y1_ 
+            from
+                Student this_ 
+            where
+                (
+                    this_.address_city=? 
+                    and this_.address_state=?
+                )
+        )
+14:12:05,033 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089203335168]
+14:12:05,033 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089203335168]
+14:12:05,034 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089203335168]
+14:12:05,034 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089203335168]
+14:12:05,035 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_0_,
+        this_.name as name22_0_,
+        this_.address_city as address3_22_0_,
+        this_.address_state as address4_22_0_,
+        this_.preferredCourseCode as preferre5_22_0_ 
+    from
+        Student this_ 
+    where
+        ? in (
+            select
+                this_.address_city as y0_,
+                this_.address_state as y1_ 
+            from
+                Student this_ 
+            where
+                (
+                    this_.address_city=? 
+                    and this_.address_state=?
+                )
+        )
+14:12:05,044  WARN SqlExceptionHelper:143 - SQL Error: 90052, SQLState: 90052
+14:12:05,044 ERROR SqlExceptionHelper:144 - Subquery is not a single column query; SQL statement:
+select this_.studentId as studentId22_0_, this_.name as name22_0_, this_.address_city as address3_22_0_, this_.address_state as address4_22_0_, this_.preferredCourseCode as preferre5_22_0_ from Student this_ where ? in (select this_.address_city as y0_, this_.address_state as y1_ from Student this_ where (this_.address_city=? and this_.address_state=?)) [90052-145]
+14:12:05,045 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId22_0_,
+        this_.name as name22_0_,
+        this_.address_city as address3_22_0_,
+        this_.address_state as address4_22_0_,
+        this_.preferredCourseCode as preferre5_22_0_ 
+    from
+        Student this_ 
+    where
+        ? = (
+            select
+                st1_.address_city as y0_,
+                st1_.address_state as y1_ 
+            from
+                Student st1_ 
+            where
+                (
+                    st1_.address_city=this_.address_city 
+                    and st1_.address_state=this_.address_state
+                )
+        )
+14:12:05,045  WARN SqlExceptionHelper:143 - SQL Error: 90008, SQLState: 90008
+14:12:05,045 ERROR SqlExceptionHelper:144 - Invalid value "2" for parameter "parameterIndex" [90008-145]
+14:12:05,055 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId10_0_,
+        this_.courseCode as courseCode10_0_,
+        this_.semester as semester10_0_,
+        this_."year" as year4_10_0_ 
+    from
+        Enrolment this_ 
+    where
+        ? = (
+            select
+                st_.address_city as y0_,
+                st_.address_state as y1_ 
+            from
+                Student st_ 
+            inner join
+                Enrolment enrolment1_ 
+                    on st_.studentId=enrolment1_.studentId 
+            inner join
+                Course course2_ 
+                    on enrolment1_.courseCode=course2_.courseCode 
+            where
+                course2_.description=?
+        )
+14:12:05,056  WARN SqlExceptionHelper:143 - SQL Error: 90008, SQLState: 90008
+14:12:05,056 ERROR SqlExceptionHelper:144 - Invalid value "3" for parameter "parameterIndex" [90008-145]
+14:12:05,056 DEBUG SQL:104 - 
+    select
+        enrolment_.studentId,
+        enrolment_.courseCode,
+        enrolment_.semester as semester10_,
+        enrolment_."year" as year4_10_ 
+    from
+        Enrolment enrolment_ 
+    where
+        enrolment_.studentId=? 
+        and enrolment_.courseCode=?
+14:12:05,078 DEBUG SQL:104 - 
+    select
+        student_.studentId,
+        student_.name as name22_,
+        student_.address_city as address3_22_,
+        student_.address_state as address4_22_,
+        student_.preferredCourseCode as preferre5_22_ 
+    from
+        Student student_ 
+    where
+        student_.studentId=?
+14:12:05,078 DEBUG SQL:104 - 
+    select
+        course_.courseCode,
+        course_.description as descript2_5_ 
+    from
+        Course course_ 
+    where
+        course_.courseCode=?
+14:12:05,079 DEBUG SQL:104 - 
+    delete 
+    from
+        studentAddresses 
+    where
+        studentId=?
+14:12:05,079 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089449283584]
+14:12:05,079 DEBUG SQL:104 - 
+    delete 
+    from
+        Student_studyAbroads 
+    where
+        studentId=?
+14:12:05,080 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089449287680]
+14:12:05,080 DEBUG SQL:104 - 
+    delete 
+    from
+        Course_crossListedAs 
+    where
+        id=?
+14:12:05,080 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089449287681]
+14:12:05,080 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089449287682]
+14:12:05,080 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089449287683]
+14:12:05,080 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:12:05,080 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089449287684]
+14:12:05,081 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:12:05,090 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089449328640]
+14:12:05,091 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:12:05,091 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089449332736]
+14:12:05,091 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579089203572737]
+14:12:05,091 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579089203572737]
+14:12:05,091 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student_studyAbroads] -> [5579089203572737]
+14:12:05,091 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579089203572737]
+14:12:05,091 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [studentAddresses] -> [5579089203572737]
+14:12:05,091 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [CourseMeeting] -> [5579089203572737]
+14:12:05,092 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course_crossListedAs] -> [5579089203572737]
+14:12:05,092  INFO CustomRunner:139 - Test: testVarargJunctionSyntax
+14:12:05,095 DEBUG SQL:104 - 
+    select
+        this_.courseCode as courseCode5_0_,
+        this_.description as descript2_5_0_ 
+    from
+        Course this_ 
+    where
+        (
+            this_.description like ? 
+            and this_.description like ?
+        )
+14:12:05,102 DEBUG SQL:104 - 
+    select
+        this_.courseCode as courseCode5_0_,
+        this_.description as descript2_5_0_ 
+    from
+        Course this_ 
+    where
+        (
+            this_.description like ? 
+            and (
+                this_.description like ? 
+                or this_.description like ?
+            )
+        )
+14:12:05,103  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:05,104 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:05,104 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C1F3964B4
+14:12:05,104 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C6309E77B
+14:12:05,104 DEBUG SQL:104 - 
+    alter table Animal 
+        drop constraint FK752A7A1C4B485C79
+14:12:05,105 DEBUG SQL:104 - 
+    alter table Cat 
+        drop constraint FK107B66D384BBA
+14:12:05,105 DEBUG SQL:104 - 
+    alter table CourseMeeting 
+        drop constraint FKC97EED8090CDDD3C
+14:12:05,105 DEBUG SQL:104 - 
+    alter table Course_crossListedAs 
+        drop constraint FKCB5722BFC4FE1CF
+14:12:05,105 DEBUG SQL:104 - 
+    alter table Dog 
+        drop constraint FK10D1C6D384BBA
+14:12:05,105 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA1733655F
+14:12:05,105 DEBUG SQL:104 - 
+    alter table DomesticAnimal 
+        drop constraint FKE02638DA6C03411F
+14:12:05,106 DEBUG SQL:104 - 
+    alter table Enrolment 
+        drop constraint FKEB4882C46EF70D58
+14:12:05,124 DEBUG SQL:104 - 
+    alter table Enrolment 
+        drop constraint FKEB4882C490CDDD3C
+14:12:05,124 DEBUG SQL:104 - 
+    alter table Human 
+        drop constraint FK42D710D1733655F
+14:12:05,124 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1311
+14:12:05,124 DEBUG SQL:104 - 
+    alter table Human_family 
+        drop constraint FK5F790ED61DCB1310
+14:12:05,124 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1311
+14:12:05,125 DEBUG SQL:104 - 
+    alter table Human_friends 
+        drop constraint FKAC7104631DCB1310
+14:12:05,125 DEBUG SQL:104 - 
+    alter table JOINED 
+        drop constraint FK82C23B49534E0F13
+14:12:05,125 DEBUG SQL:104 - 
+    alter table Lizard 
+        drop constraint FK87B0E2B6EE398315
+14:12:05,125 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FEFA9D699
+14:12:05,125 DEBUG SQL:104 - 
+    alter table Mammal 
+        drop constraint FK88EF417FCE6EEE98
+14:12:05,134 DEBUG SQL:104 - 
+    alter table Reptile 
+        drop constraint FKA4790CABEFA9D699
+14:12:05,134 DEBUG SQL:104 - 
+    alter table Student 
+        drop constraint FKF3371A1B388BFC7D
+14:12:05,134 DEBUG SQL:104 - 
+    alter table Student_studyAbroads 
+        drop constraint FKCBF9BF6DC6C04DB3
+14:12:05,135 DEBUG SQL:104 - 
+    alter table Student_studyAbroads 
+        drop constraint FKCBF9BF6D6EF70D58
+14:12:05,135 DEBUG SQL:104 - 
+    alter table Zoo 
+        drop constraint FK15FBA55106523
+14:12:05,135 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D21982265B0D719
+14:12:05,135 DEBUG SQL:104 - 
+    alter table Zoo_directors 
+        drop constraint FK2D219822C590D705
+14:12:05,135 DEBUG SQL:104 - 
+    alter table "User_permissions" 
+        drop constraint FKB4582A30F2810CD2
+14:12:05,135 DEBUG SQL:104 - 
+    alter table "User" 
+        drop constraint FK285FEB65AF5B87
+14:12:05,136 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA255106523
+14:12:05,143 DEBUG SQL:104 - 
+    alter table addresses 
+        drop constraint FK34207BA26B9FAF99
+14:12:05,144 DEBUG SQL:104 - 
+    alter table human_nick_names 
+        drop constraint FK8718E1BE6B9FAF99
+14:12:05,144 DEBUG SQL:104 - 
+    alter table studentAddresses 
+        drop constraint FKD1B36BA76EF70D58
+14:12:05,144 DEBUG SQL:104 - 
+    drop table AbstractFoo if exists
+14:12:05,144 DEBUG SQL:104 - 
+    drop table Animal if exists
+14:12:05,145 DEBUG SQL:104 - 
+    drop table Bar if exists
+14:12:05,145 DEBUG SQL:104 - 
+    drop table Cat if exists
+14:12:05,145 DEBUG SQL:104 - 
+    drop table Country if exists
+14:12:05,145 DEBUG SQL:104 - 
+    drop table Course if exists
+14:12:05,145 DEBUG SQL:104 - 
+    drop table CourseMeeting if exists
+14:12:05,146 DEBUG SQL:104 - 
+    drop table Course_crossListedAs if exists
+14:12:05,146 DEBUG SQL:104 - 
+    drop table Dog if exists
+14:12:05,146 DEBUG SQL:104 - 
+    drop table DomesticAnimal if exists
+14:12:05,154 DEBUG SQL:104 - 
+    drop table Enrolment if exists
+14:12:05,155 DEBUG SQL:104 - 
+    drop table Human if exists
+14:12:05,155 DEBUG SQL:104 - 
+    drop table Human_family if exists
+14:12:05,155 DEBUG SQL:104 - 
+    drop table Human_friends if exists
+14:12:05,155 DEBUG SQL:104 - 
+    drop table JOINED if exists
+14:12:05,155 DEBUG SQL:104 - 
+    drop table Joiner if exists
+14:12:05,156 DEBUG SQL:104 - 
+    drop table Lizard if exists
+14:12:05,156 DEBUG SQL:104 - 
+    drop table Mammal if exists
+14:12:05,156 DEBUG SQL:104 - 
+    drop table Man if exists
+14:12:05,156 DEBUG SQL:104 - 
+    drop table Person if exists
+14:12:05,157 DEBUG SQL:104 - 
+    drop table Reptile if exists
+14:12:05,157 DEBUG SQL:104 - 
+    drop table StateProvince if exists
+14:12:05,157 DEBUG SQL:104 - 
+    drop table Student if exists
+14:12:05,157 DEBUG SQL:104 - 
+    drop table Student_studyAbroads if exists
+14:12:05,157 DEBUG SQL:104 - 
+    drop table Woman if exists
+14:12:05,165 DEBUG SQL:104 - 
+    drop table Zoo if exists
+14:12:05,165 DEBUG SQL:104 - 
+    drop table Zoo_directors if exists
+14:12:05,165 DEBUG SQL:104 - 
+    drop table "User_permissions" if exists
+14:12:05,166 DEBUG SQL:104 - 
+    drop table "User" if exists
+14:12:05,166 DEBUG SQL:104 - 
+    drop table addresses if exists
+14:12:05,166 DEBUG SQL:104 - 
+    drop table human_nick_names if exists
+14:12:05,166 DEBUG SQL:104 - 
+    drop table studentAddresses if exists
+14:12:05,166 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:12:05,167  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:05,167  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

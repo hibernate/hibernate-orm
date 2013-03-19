@@ -1,0 +1,554 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.idmanytoone.IdManyToOneTest" tests="3" time="0.253" timestamp="2013-02-28T20:10:30">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.idmanytoone.IdManyToOneTest" name="testCriteriaRestrictionOnIdManyToOne" time="0.049" />
+  <testcase classname="org.hibernate.test.annotations.idmanytoone.IdManyToOneTest" name="testFkCreationOrdering" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.idmanytoone.IdManyToOneTest" name="testIdClassManyToOne" time="0.033" />
+  <system-out><![CDATA[14:10:30,136  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.idmanytoone.IdManyToOneTest
+14:10:30,158  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.idmanytoone.CardField$PrimaryKey
+14:10:30,158  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.idmanytoone.CardField$PrimaryKey
+14:10:30,159  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.idmanytoone.Card$CardPrimaryKey
+14:10:30,159  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.idmanytoone.Card$CardPrimaryKey
+14:10:30,159  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.idmanytoone.StoreCustomerPK
+14:10:30,159  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.idmanytoone.StoreCustomerPK
+14:10:30,159  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.idmanytoone.CourseStudent
+14:10:30,160  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.idmanytoone.CourseStudent
+14:10:30,160  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:30,161  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:30,161  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:30,161  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:30,161  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:30,163  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:30,163  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:30,164  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:30,164  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:30,164  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:30,214  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:30,215 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:30,215 DEBUG SQL:104 - 
+    alter table ABs 
+        drop constraint FKFC72D3B130CA
+14:10:30,215 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ABs drop constraint FKFC72D3B130CA
+14:10:30,215 ERROR SchemaExport:426 - Table "ABS" not found; SQL statement:
+
+    alter table ABs 
+        drop constraint FKFC72D3B130CA [42102-145]
+14:10:30,215 DEBUG SQL:104 - 
+    alter table ABs 
+        drop constraint FKFC72DDCD4A62
+14:10:30,215 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ABs drop constraint FKFC72DDCD4A62
+14:10:30,216 ERROR SchemaExport:426 - Table "ABS" not found; SQL statement:
+
+    alter table ABs 
+        drop constraint FKFC72DDCD4A62 [42102-145]
+14:10:30,216 DEBUG SQL:104 - 
+    alter table BasketItems 
+        drop constraint FKA1A8117AAECAC722
+14:10:30,216 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table BasketItems drop constraint FKA1A8117AAECAC722
+14:10:30,216 ERROR SchemaExport:426 - Table "BASKETITEMS" not found; SQL statement:
+
+    alter table BasketItems 
+        drop constraint FKA1A8117AAECAC722 [42102-145]
+14:10:30,216 DEBUG SQL:104 - 
+    alter table Card 
+        drop constraint FK1FEF308EA64B9D
+14:10:30,216 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Card drop constraint FK1FEF308EA64B9D
+14:10:30,216 ERROR SchemaExport:426 - Table "CARD" not found; SQL statement:
+
+    alter table Card 
+        drop constraint FK1FEF308EA64B9D [42102-145]
+14:10:30,217 DEBUG SQL:104 - 
+    alter table Card 
+        drop constraint FK1FEF3048AEA2D8
+14:10:30,217 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Card drop constraint FK1FEF3048AEA2D8
+14:10:30,217 ERROR SchemaExport:426 - Table "CARD" not found; SQL statement:
+
+    alter table Card 
+        drop constraint FK1FEF3048AEA2D8 [42102-145]
+14:10:30,217 DEBUG SQL:104 - 
+    alter table CardField 
+        drop constraint FK6771BFAAF3E3B0AD
+14:10:30,217 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CardField drop constraint FK6771BFAAF3E3B0AD
+14:10:30,217 ERROR SchemaExport:426 - Table "CARDFIELD" not found; SQL statement:
+
+    alter table CardField 
+        drop constraint FK6771BFAAF3E3B0AD [42102-145]
+14:10:30,217 DEBUG SQL:104 - 
+    alter table CardField 
+        drop constraint FK6771BFAAA93319FD
+14:10:30,217 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CardField drop constraint FK6771BFAAA93319FD
+14:10:30,218 ERROR SchemaExport:426 - Table "CARDFIELD" not found; SQL statement:
+
+    alter table CardField 
+        drop constraint FK6771BFAAA93319FD [42102-145]
+14:10:30,218 DEBUG SQL:104 - 
+    alter table CardField 
+        drop constraint FK6771BFAA820578A6
+14:10:30,218 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CardField drop constraint FK6771BFAA820578A6
+14:10:30,218 ERROR SchemaExport:426 - Table "CARDFIELD" not found; SQL statement:
+
+    alter table CardField 
+        drop constraint FK6771BFAA820578A6 [42102-145]
+14:10:30,218 DEBUG SQL:104 - 
+    alter table ShoppingBasket 
+        drop constraint FKABFAB56E7D6BD191
+14:10:30,218 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ShoppingBasket drop constraint FKABFAB56E7D6BD191
+14:10:30,218 ERROR SchemaExport:426 - Table "SHOPPINGBASKET" not found; SQL statement:
+
+    alter table ShoppingBasket 
+        drop constraint FKABFAB56E7D6BD191 [42102-145]
+14:10:30,219 DEBUG SQL:104 - 
+    alter table idmanytoone_course_student 
+        drop constraint FKDBCDF7C568F6605D
+14:10:30,219 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table idmanytoone_course_student drop constraint FKDBCDF7C568F6605D
+14:10:30,219 ERROR SchemaExport:426 - Table "IDMANYTOONE_COURSE_STUDENT" not found; SQL statement:
+
+    alter table idmanytoone_course_student 
+        drop constraint FKDBCDF7C568F6605D [42102-145]
+14:10:30,219 DEBUG SQL:104 - 
+    alter table idmanytoone_course_student 
+        drop constraint FKDBCDF7C5DE113EF7
+14:10:30,219 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table idmanytoone_course_student drop constraint FKDBCDF7C5DE113EF7
+14:10:30,219 ERROR SchemaExport:426 - Table "IDMANYTOONE_COURSE_STUDENT" not found; SQL statement:
+
+    alter table idmanytoone_course_student 
+        drop constraint FKDBCDF7C5DE113EF7 [42102-145]
+14:10:30,219 DEBUG SQL:104 - 
+    drop table ABs if exists
+14:10:30,219 DEBUG SQL:104 - 
+    drop table BasketItems if exists
+14:10:30,220 DEBUG SQL:104 - 
+    drop table Bs if exists
+14:10:30,220 DEBUG SQL:104 - 
+    drop table Card if exists
+14:10:30,220 DEBUG SQL:104 - 
+    drop table CardField if exists
+14:10:30,220 DEBUG SQL:104 - 
+    drop table CardKey if exists
+14:10:30,220 DEBUG SQL:104 - 
+    drop table Customers if exists
+14:10:30,220 DEBUG SQL:104 - 
+    drop table Project if exists
+14:10:30,220 DEBUG SQL:104 - 
+    drop table ShoppingBasket if exists
+14:10:30,221 DEBUG SQL:104 - 
+    drop table "As" if exists
+14:10:30,233 DEBUG SQL:104 - 
+    drop table idmanytoone_course if exists
+14:10:30,234 DEBUG SQL:104 - 
+    drop table idmanytoone_course_student if exists
+14:10:30,234 DEBUG SQL:104 - 
+    drop table idmanytoone_student if exists
+14:10:30,234 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:30,234 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:30,235 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:30,235 DEBUG SQL:104 - 
+    create table ABs (
+        idA integer not null,
+        idB integer not null,
+        primary key (idA, idB)
+    )
+14:10:30,235 DEBUG SQL:104 - 
+    create table BasketItems (
+        cost double not null,
+        customerID integer not null,
+        basketDatetime timestamp not null,
+        primary key (customerID, basketDatetime, cost)
+    )
+14:10:30,235 DEBUG SQL:104 - 
+    create table Bs (
+        id integer not null,
+        primary key (id)
+    )
+14:10:30,236 DEBUG SQL:104 - 
+    create table Card (
+        project_id integer not null,
+        mainCardField_card_project_id integer,
+        mainCardField_key_id integer,
+        primary key (project_id)
+    )
+14:10:30,236 DEBUG SQL:104 - 
+    create table CardField (
+        key_id integer not null,
+        card_project_id integer not null,
+        cardtmp_project_id integer,
+        primary key (card_project_id, key_id)
+    )
+14:10:30,266 DEBUG SQL:104 - 
+    create table CardKey (
+        id integer not null,
+        primary key (id)
+    )
+14:10:30,266 DEBUG SQL:104 - 
+    create table Customers (
+        customerID integer not null,
+        primary key (customerID)
+    )
+14:10:30,266 DEBUG SQL:104 - 
+    create table Project (
+        id integer not null,
+        primary key (id)
+    )
+14:10:30,267 DEBUG SQL:104 - 
+    create table ShoppingBasket (
+        basketDatetime timestamp not null,
+        customerID integer not null,
+        primary key (customerID, basketDatetime)
+    )
+14:10:30,267 DEBUG SQL:104 - 
+    create table "As" (
+        id integer not null,
+        primary key (id)
+    )
+14:10:30,267 DEBUG SQL:104 - 
+    create table idmanytoone_course (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:30,272 DEBUG SQL:104 - 
+    create table idmanytoone_course_student (
+        value varchar(255),
+        student_id integer not null,
+        course_id integer not null,
+        primary key (student_id, course_id)
+    )
+14:10:30,272 DEBUG SQL:104 - 
+    create table idmanytoone_student (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:30,272 DEBUG SQL:104 - 
+    alter table ABs 
+        add constraint FKFC72D3B130CA 
+        foreign key (idA) 
+        references "As"
+14:10:30,273 DEBUG SQL:104 - 
+    alter table ABs 
+        add constraint FKFC72DDCD4A62 
+        foreign key (idB) 
+        references Bs
+14:10:30,274 DEBUG SQL:104 - 
+    alter table BasketItems 
+        add constraint FKA1A8117AAECAC722 
+        foreign key (customerID, basketDatetime) 
+        references ShoppingBasket
+14:10:30,283 DEBUG SQL:104 - 
+    alter table Card 
+        add constraint FK1FEF308EA64B9D 
+        foreign key (project_id) 
+        references Project
+14:10:30,284 DEBUG SQL:104 - 
+    alter table Card 
+        add constraint FK1FEF3048AEA2D8 
+        foreign key (mainCardField_card_project_id, mainCardField_key_id) 
+        references CardField
+14:10:30,285 DEBUG SQL:104 - 
+    alter table CardField 
+        add constraint FK6771BFAAF3E3B0AD 
+        foreign key (key_id) 
+        references CardKey
+14:10:30,286 DEBUG SQL:104 - 
+    alter table CardField 
+        add constraint FK6771BFAAA93319FD 
+        foreign key (card_project_id) 
+        references Card
+14:10:30,286 DEBUG SQL:104 - 
+    alter table CardField 
+        add constraint FK6771BFAA820578A6 
+        foreign key (cardtmp_project_id) 
+        references Card
+14:10:30,287 DEBUG SQL:104 - 
+    alter table ShoppingBasket 
+        add constraint FKABFAB56E7D6BD191 
+        foreign key (customerID) 
+        references Customers
+14:10:30,294 DEBUG SQL:104 - 
+    alter table idmanytoone_course_student 
+        add constraint FKDBCDF7C568F6605D 
+        foreign key (student_id) 
+        references idmanytoone_student
+14:10:30,294 DEBUG SQL:104 - 
+    alter table idmanytoone_course_student 
+        add constraint FKDBCDF7C5DE113EF7 
+        foreign key (course_id) 
+        references idmanytoone_course
+14:10:30,295 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:30,295  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:30,297  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:30,297  INFO CustomRunner:139 - Test: testCriteriaRestrictionOnIdManyToOne
+14:10:30,298 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.idmanytoone.Course c join c.students cs join cs.student s where s.name = 'Foo'
+14:10:30,300 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     +-[RANGE] Node: 'RANGE'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[DOT] Node: '.'
+    |     |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  +-[DOT] Node: '.'
+    |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |     |  |  |  |  |  \-[IDENT] Node: 'test'
+    |     |  |  |  |  \-[IDENT] Node: 'annotations'
+    |     |  |  |  \-[IDENT] Node: 'idmanytoone'
+    |     |  |  \-[IDENT] Node: 'Course'
+    |     |  \-[ALIAS] Node: 'c'
+    |     +-[JOIN] Node: 'join'
+    |     |  +-[DOT] Node: '.'
+    |     |  |  +-[IDENT] Node: 'c'
+    |     |  |  \-[IDENT] Node: 'students'
+    |     |  \-[ALIAS] Node: 'cs'
+    |     \-[JOIN] Node: 'join'
+    |        +-[DOT] Node: '.'
+    |        |  +-[IDENT] Node: 'cs'
+    |        |  \-[IDENT] Node: 'student'
+    |        \-[ALIAS] Node: 's'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 's'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''Foo''
+
+14:10:30,307 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:30,307 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.idmanytoone.Course (c) -> course0_
+14:10:30,307 DEBUG FromReferenceNode:74 - Resolved : c -> course0_.id
+14:10:30,308 DEBUG DotNode:599 - getDataType() : students -> org.hibernate.type.SetType(org.hibernate.test.annotations.idmanytoone.Course.students)
+14:10:30,308 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = c.students role = org.hibernate.test.annotations.idmanytoone.Course.students associatedEntityName = org.hibernate.test.annotations.idmanytoone.CourseStudent
+14:10:30,308 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.idmanytoone.CourseStudent (cs) -> students1_
+14:10:30,308 DEBUG FromClause:282 - addJoinByPathMap() : c.students -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=cs,role=null,tableName=idmanytoone_course_student,tableAlias=students1_,origin=idmanytoone_course course0_,columns={course0_.id ,className=org.hibernate.test.annotations.idmanytoone.CourseStudent}}
+14:10:30,314 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for c.students : idmanytoone_course_student students1_
+14:10:30,314 DEBUG FromReferenceNode:74 - Resolved : c.students -> .
+14:10:30,315 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'idmanytoone_course_student students1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=cs,role=org.hibernate.test.annotations.idmanytoone.Course.students,tableName=idmanytoone_course_student,tableAlias=students1_,origin=idmanytoone_course course0_,columns={course0_.id ,className=org.hibernate.test.annotations.idmanytoone.CourseStudent}}
+
+14:10:30,315 DEBUG FromReferenceNode:74 - Resolved : cs -> (students1_.student_id, students1_.course_id)
+14:10:30,315 DEBUG DotNode:599 - getDataType() : student -> org.hibernate.type.ManyToOneType(org.hibernate.test.annotations.idmanytoone.Student)
+14:10:30,315 DEBUG DotNode:389 - dereferenceEntityJoin() : generating join for student in org.hibernate.test.annotations.idmanytoone.CourseStudent (s) parent = [ {null} ]
+14:10:30,316 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.idmanytoone.Student (s) -> student2_
+14:10:30,316 DEBUG FromClause:282 - addJoinByPathMap() : cs.student -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=idmanytoone_student,tableAlias=student2_,origin=idmanytoone_course_student students1_,columns={students1_.student_id ,className=org.hibernate.test.annotations.idmanytoone.Student}}
+14:10:30,316 DEBUG FromReferenceNode:74 - Resolved : cs.student -> students1_.student_id
+14:10:30,316 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'idmanytoone_student student2_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=idmanytoone_student,tableAlias=student2_,origin=idmanytoone_course_student students1_,columns={students1_.student_id ,className=org.hibernate.test.annotations.idmanytoone.Student}}
+
+14:10:30,317 DEBUG FromReferenceNode:74 - Resolved : s -> student2_.id
+14:10:30,317 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:10:30,317 DEBUG FromReferenceNode:74 - Resolved : s.name -> student2_.name
+14:10:30,317 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} ( idmanytoone_course course0_ ( idmanytoone_course_student students1_ idmanytoone_student student2_ ) ) ) ( where ( = ( student2_.name student2_.id name ) 'Foo' ) ) )
+14:10:30,318 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:30,318 DEBUG JoinProcessor:175 - Using FROM fragment [idmanytoone_course course0_]
+14:10:30,318 DEBUG JoinProcessor:175 - Using FROM fragment [inner join idmanytoone_course_student students1_ on course0_.id=students1_.course_id]
+14:10:30,319 DEBUG JoinProcessor:175 - Using FROM fragment [inner join idmanytoone_student student2_ on students1_.student_id=student2_.id]
+14:10:30,320 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (idmanytoone_course_student,idmanytoone_course,idmanytoone_student)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'course0_.id as id10_0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=idmanytoone_course,tableAlias=course0_,origin=null,columns={,className=org.hibernate.test.annotations.idmanytoone.Course}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'students1_.student_id as student2_11_1_, students1_.course_id as course3_11_1_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=cs,role=org.hibernate.test.annotations.idmanytoone.Course.students,tableName=idmanytoone_course_student,tableAlias=students1_,origin=idmanytoone_course course0_,columns={course0_.id ,className=org.hibernate.test.annotations.idmanytoone.CourseStudent}}}
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'student2_.id as id12_2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=idmanytoone_student,tableAlias=student2_,origin=inner join idmanytoone_course_student students1_ on course0_.id=students1_.course_id,columns={students1_.student_id ,className=org.hibernate.test.annotations.idmanytoone.Student}}}
+    |  +-[SQL_TOKEN] SqlFragment: 'course0_.name as name10_0_'
+    |  +-[SQL_TOKEN] SqlFragment: 'students1_.value as value11_1_'
+    |  \-[SQL_TOKEN] SqlFragment: 'student2_.name as name12_2_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=3, fromElements=3, fromElementByClassAlias=[s, c, cs], fromElementByTableAlias=[student2_, students1_, course0_], fromElementsByPath=[c.students, cs.student], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'idmanytoone_course course0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=idmanytoone_course,tableAlias=course0_,origin=null,columns={,className=org.hibernate.test.annotations.idmanytoone.Course}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'inner join idmanytoone_course_student students1_ on course0_.id=students1_.course_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=cs,role=org.hibernate.test.annotations.idmanytoone.Course.students,tableName=idmanytoone_course_student,tableAlias=students1_,origin=idmanytoone_course course0_,columns={course0_.id ,className=org.hibernate.test.annotations.idmanytoone.CourseStudent}}
+    |        \-[JOIN_FRAGMENT] FromElement: 'inner join idmanytoone_student student2_ on students1_.student_id=student2_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=idmanytoone_student,tableAlias=student2_,origin=inner join idmanytoone_course_student students1_ on course0_.id=students1_.course_id,columns={students1_.student_id ,className=org.hibernate.test.annotations.idmanytoone.Student}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'student2_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=s.name,tableAlias=student2_,className=org.hibernate.test.annotations.idmanytoone.Student,classAlias=s}
+          |  +-[ALIAS_REF] IdentNode: 'student2_.id' {alias=s, className=org.hibernate.test.annotations.idmanytoone.Student, tableAlias=student2_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''Foo''
+
+14:10:30,321 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:30,321 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.idmanytoone.Course c join c.students cs join cs.student s where s.name = 'Foo'
+14:10:30,321 DEBUG QueryTranslatorImpl:236 - SQL: select course0_.id as id10_0_, students1_.student_id as student2_11_1_, students1_.course_id as course3_11_1_, student2_.id as id12_2_, course0_.name as name10_0_, students1_.value as value11_1_, student2_.name as name12_2_ from idmanytoone_course course0_ inner join idmanytoone_course_student students1_ on course0_.id=students1_.course_id inner join idmanytoone_student student2_ on students1_.student_id=student2_.id where student2_.name='Foo'
+14:10:30,321 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:30,322 DEBUG SQL:104 - 
+    select
+        course0_.id as id10_0_,
+        students1_.student_id as student2_11_1_,
+        students1_.course_id as course3_11_1_,
+        student2_.id as id12_2_,
+        course0_.name as name10_0_,
+        students1_.value as value11_1_,
+        student2_.name as name12_2_ 
+    from
+        idmanytoone_course course0_ 
+    inner join
+        idmanytoone_course_student students1_ 
+            on course0_.id=students1_.course_id 
+    inner join
+        idmanytoone_student student2_ 
+            on students1_.student_id=student2_.id 
+    where
+        student2_.name='Foo'
+14:10:30,333 DEBUG SQL:104 - 
+    select
+        this_.id as id10_2_,
+        this_.name as name10_2_,
+        coursestud1_.student_id as student2_11_0_,
+        coursestud1_.course_id as course3_11_0_,
+        coursestud1_.value as value11_0_,
+        student2_.id as id12_1_,
+        student2_.name as name12_1_ 
+    from
+        idmanytoone_course this_ 
+    inner join
+        idmanytoone_course_student coursestud1_ 
+            on this_.id=coursestud1_.course_id 
+    inner join
+        idmanytoone_student student2_ 
+            on coursestud1_.student_id=student2_.id 
+    where
+        student2_.name=?
+14:10:30,334 DEBUG SQL:104 - 
+    select
+        this_.id as id10_2_,
+        this_.name as name10_2_,
+        cs1_.student_id as student2_11_0_,
+        cs1_.course_id as course3_11_0_,
+        cs1_.value as value11_0_,
+        s2_.id as id12_1_,
+        s2_.name as name12_1_ 
+    from
+        idmanytoone_course this_ 
+    inner join
+        idmanytoone_course_student cs1_ 
+            on this_.id=cs1_.course_id 
+    inner join
+        idmanytoone_student s2_ 
+            on cs1_.student_id=s2_.id 
+    where
+        cs1_.value=? 
+        and s2_.name=?
+14:10:30,346  INFO CustomRunner:139 - Test: testFkCreationOrdering
+14:10:30,347  INFO CustomRunner:139 - Test: testIdClassManyToOne
+14:10:30,347 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:30,348 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:30,349 DEBUG SQL:104 - 
+    insert 
+    into
+        "As"
+        (id) 
+    values
+        (?)
+14:10:30,350 DEBUG SQL:104 - 
+    insert 
+    into
+        Bs
+        (id) 
+    values
+        (?)
+14:10:30,350 DEBUG SQL:104 - 
+    insert 
+    into
+        ABs
+        (idA, idB) 
+    values
+        (?, ?)
+14:10:30,367 DEBUG SQL:104 - 
+    select
+        store0_.id as id9_0_ 
+    from
+        "As" store0_ 
+    where
+        store0_.id=?
+14:10:30,368 DEBUG SQL:104 - 
+    select
+        customers0_.idA as idA9_2_,
+        customers0_.idA as idA0_2_,
+        customers0_.idB as idB0_2_,
+        customers0_.idA as idA0_1_,
+        customers0_.idB as idB0_1_,
+        customer1_.id as id2_0_ 
+    from
+        ABs customers0_ 
+    inner join
+        Bs customer1_ 
+            on customers0_.idB=customer1_.id 
+    where
+        customers0_.idA=?
+14:10:30,370 DEBUG SQL:104 - 
+    select
+        customer0_.id as id2_0_ 
+    from
+        Bs customer0_ 
+    where
+        customer0_.id=?
+14:10:30,380  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:30,381 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:30,381 DEBUG SQL:104 - 
+    alter table ABs 
+        drop constraint FKFC72D3B130CA
+14:10:30,382 DEBUG SQL:104 - 
+    alter table ABs 
+        drop constraint FKFC72DDCD4A62
+14:10:30,382 DEBUG SQL:104 - 
+    alter table BasketItems 
+        drop constraint FKA1A8117AAECAC722
+14:10:30,382 DEBUG SQL:104 - 
+    alter table Card 
+        drop constraint FK1FEF308EA64B9D
+14:10:30,382 DEBUG SQL:104 - 
+    alter table Card 
+        drop constraint FK1FEF3048AEA2D8
+14:10:30,382 DEBUG SQL:104 - 
+    alter table CardField 
+        drop constraint FK6771BFAAF3E3B0AD
+14:10:30,383 DEBUG SQL:104 - 
+    alter table CardField 
+        drop constraint FK6771BFAAA93319FD
+14:10:30,383 DEBUG SQL:104 - 
+    alter table CardField 
+        drop constraint FK6771BFAA820578A6
+14:10:30,383 DEBUG SQL:104 - 
+    alter table ShoppingBasket 
+        drop constraint FKABFAB56E7D6BD191
+14:10:30,383 DEBUG SQL:104 - 
+    alter table idmanytoone_course_student 
+        drop constraint FKDBCDF7C568F6605D
+14:10:30,383 DEBUG SQL:104 - 
+    alter table idmanytoone_course_student 
+        drop constraint FKDBCDF7C5DE113EF7
+14:10:30,384 DEBUG SQL:104 - 
+    drop table ABs if exists
+14:10:30,384 DEBUG SQL:104 - 
+    drop table BasketItems if exists
+14:10:30,384 DEBUG SQL:104 - 
+    drop table Bs if exists
+14:10:30,384 DEBUG SQL:104 - 
+    drop table Card if exists
+14:10:30,385 DEBUG SQL:104 - 
+    drop table CardField if exists
+14:10:30,385 DEBUG SQL:104 - 
+    drop table CardKey if exists
+14:10:30,385 DEBUG SQL:104 - 
+    drop table Customers if exists
+14:10:30,386 DEBUG SQL:104 - 
+    drop table Project if exists
+14:10:30,386 DEBUG SQL:104 - 
+    drop table ShoppingBasket if exists
+14:10:30,386 DEBUG SQL:104 - 
+    drop table "As" if exists
+14:10:30,386 DEBUG SQL:104 - 
+    drop table idmanytoone_course if exists
+14:10:30,387 DEBUG SQL:104 - 
+    drop table idmanytoone_course_student if exists
+14:10:30,387 DEBUG SQL:104 - 
+    drop table idmanytoone_student if exists
+14:10:30,387 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:30,387  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:30,387  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

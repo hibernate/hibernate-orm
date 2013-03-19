@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.idclassgeneratedvalue.IdClassGeneratedValueTest" tests="3" time="0.089" timestamp="2013-02-28T20:10:29">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.idclassgeneratedvalue.IdClassGeneratedValueTest" name="testBaseLine" time="0.009" />
+  <testcase classname="org.hibernate.test.annotations.idclassgeneratedvalue.IdClassGeneratedValueTest" name="testMultipleGeneratedValue" time="0.011" />
+  <testcase classname="org.hibernate.test.annotations.idclassgeneratedvalue.IdClassGeneratedValueTest" name="testSingleGeneratedValue" time="0.021" />
+  <system-out><![CDATA[14:10:29,925  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.idclassgeneratedvalue.IdClassGeneratedValueTest
+14:10:29,937  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:29,937  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:29,937  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:29,937  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:29,937  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:29,939  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:29,939  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:29,940  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:29,940  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:29,940  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:29,955  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:29,955 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:29,955 DEBUG SQL:104 - 
+    drop table Multiple if exists
+14:10:29,956 DEBUG SQL:104 - 
+    drop table Simple if exists
+14:10:29,956 DEBUG SQL:104 - 
+    drop table Simple2 if exists
+14:10:29,956 DEBUG SQL:104 - 
+    drop sequence MULTIPLE_SEQ
+14:10:29,956 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence MULTIPLE_SEQ
+14:10:29,956 ERROR SchemaExport:426 - Sequence "MULTIPLE_SEQ" not found; SQL statement:
+
+    drop sequence MULTIPLE_SEQ [90036-145]
+14:10:29,956 DEBUG SQL:104 - 
+    create table Multiple (
+        id1 bigint not null,
+        id2 bigint not null,
+        id3 bigint not null,
+        quantity integer not null,
+        primary key (id1, id2, id3)
+    )
+14:10:29,958 DEBUG SQL:104 - 
+    create table Simple (
+        id1 bigint not null,
+        id2 bigint not null,
+        quantity integer not null,
+        primary key (id1, id2)
+    )
+14:10:29,958 DEBUG SQL:104 - 
+    create table Simple2 (
+        id1 bigint not null,
+        id2 bigint not null,
+        quantity integer not null,
+        primary key (id1, id2)
+    )
+14:10:29,959 DEBUG SQL:104 - 
+    create sequence MULTIPLE_SEQ start with 1 increment by 50
+14:10:29,959  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:29,959  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:29,960  INFO CustomRunner:139 - Test: testBaseLine
+14:10:29,961 DEBUG SQL:104 - 
+    insert 
+    into
+        Simple
+        (quantity, id1, id2) 
+    values
+        (?, ?, ?)
+14:10:29,962 DEBUG SQL:104 - 
+    insert 
+    into
+        Simple
+        (quantity, id1, id2) 
+    values
+        (?, ?, ?)
+14:10:29,963 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select s from org.hibernate.test.annotations.idclassgeneratedvalue.Simple s
+14:10:29,964 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  \-[IDENT] Node: 'idclassgeneratedvalue'
+       |     |  \-[IDENT] Node: 'Simple'
+       |     \-[ALIAS] Node: 's'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 's'
+
+14:10:29,964 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,964 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.idclassgeneratedvalue.Simple (s) -> simple0_
+14:10:29,964 DEBUG FromReferenceNode:74 - Resolved : s -> (simple0_.id1, simple0_.id2)
+14:10:29,965 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} (simple0_.id1, simple0_.id2) ) ( FromClause{level=1} Simple simple0_ ) )
+14:10:29,965 DEBUG JoinProcessor:175 - Using FROM fragment [Simple simple0_]
+14:10:29,965 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Simple)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'simple0_.id1 as id1_1_, simple0_.id2 as id2_1_' {alias=s, className=org.hibernate.test.annotations.idclassgeneratedvalue.Simple, tableAlias=simple0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'simple0_.quantity as quantity1_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[s], fromElementByTableAlias=[simple0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Simple simple0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=Simple,tableAlias=simple0_,origin=null,columns={,className=org.hibernate.test.annotations.idclassgeneratedvalue.Simple}}
+
+14:10:29,965 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,965 DEBUG QueryTranslatorImpl:235 - HQL: select s from org.hibernate.test.annotations.idclassgeneratedvalue.Simple s
+14:10:29,965 DEBUG QueryTranslatorImpl:236 - SQL: select simple0_.id1 as id1_1_, simple0_.id2 as id2_1_, simple0_.quantity as quantity1_ from Simple simple0_
+14:10:29,965 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,966 DEBUG SQL:104 - 
+    select
+        simple0_.id1 as id1_1_,
+        simple0_.id2 as id2_1_,
+        simple0_.quantity as quantity1_ 
+    from
+        Simple simple0_
+14:10:29,967 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.annotations.idclassgeneratedvalue.Simple
+14:10:29,967 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'idclassgeneratedvalue'
+             \-[IDENT] Node: 'Simple'
+
+14:10:29,967 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,968 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.idclassgeneratedvalue.Simple (<no alias>) -> simple0_
+14:10:29,968 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Simple)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[simple0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Simple' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Simple,tableAlias=simple0_,origin=null,columns={,className=org.hibernate.test.annotations.idclassgeneratedvalue.Simple}}
+
+14:10:29,968 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,968 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,968 DEBUG SQL:104 - 
+    delete 
+    from
+        Simple
+14:10:29,969  INFO CustomRunner:139 - Test: testMultipleGeneratedValue
+14:10:29,970 DEBUG SQL:104 - 
+    select
+        max(id1) 
+    from
+        Multiple
+14:10:29,971 DEBUG SQL:104 - 
+    call next value for MULTIPLE_SEQ
+14:10:29,971 DEBUG SQL:104 - 
+    call next value for MULTIPLE_SEQ
+14:10:29,972 DEBUG SQL:104 - 
+    insert 
+    into
+        Multiple
+        (quantity, id1, id2, id3) 
+    values
+        (?, ?, ?, ?)
+14:10:29,972 DEBUG SQL:104 - 
+    insert 
+    into
+        Multiple
+        (quantity, id1, id2, id3) 
+    values
+        (?, ?, ?, ?)
+14:10:29,974 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select m from org.hibernate.test.annotations.idclassgeneratedvalue.Multiple m
+14:10:29,975 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  \-[IDENT] Node: 'idclassgeneratedvalue'
+       |     |  \-[IDENT] Node: 'Multiple'
+       |     \-[ALIAS] Node: 'm'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'm'
+
+14:10:29,975 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,975 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.idclassgeneratedvalue.Multiple (m) -> multiple0_
+14:10:29,975 DEBUG FromReferenceNode:74 - Resolved : m -> (multiple0_.id1, multiple0_.id2, multiple0_.id3)
+14:10:29,975 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} (multiple0_.id1, multiple0_.id2, multiple0_.id3) ) ( FromClause{level=1} Multiple multiple0_ ) )
+14:10:29,975 DEBUG JoinProcessor:175 - Using FROM fragment [Multiple multiple0_]
+14:10:29,976 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Multiple)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'multiple0_.id1 as id1_0_, multiple0_.id2 as id2_0_, multiple0_.id3 as id3_0_' {alias=m, className=org.hibernate.test.annotations.idclassgeneratedvalue.Multiple, tableAlias=multiple0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'multiple0_.quantity as quantity0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[m], fromElementByTableAlias=[multiple0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Multiple multiple0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Multiple,tableAlias=multiple0_,origin=null,columns={,className=org.hibernate.test.annotations.idclassgeneratedvalue.Multiple}}
+
+14:10:29,976 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,976 DEBUG QueryTranslatorImpl:235 - HQL: select m from org.hibernate.test.annotations.idclassgeneratedvalue.Multiple m
+14:10:29,976 DEBUG QueryTranslatorImpl:236 - SQL: select multiple0_.id1 as id1_0_, multiple0_.id2 as id2_0_, multiple0_.id3 as id3_0_, multiple0_.quantity as quantity0_ from Multiple multiple0_
+14:10:29,976 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,976 DEBUG SQL:104 - 
+    select
+        multiple0_.id1 as id1_0_,
+        multiple0_.id2 as id2_0_,
+        multiple0_.id3 as id3_0_,
+        multiple0_.quantity as quantity0_ 
+    from
+        Multiple multiple0_
+14:10:29,979 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.annotations.idclassgeneratedvalue.Multiple
+14:10:29,980 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'idclassgeneratedvalue'
+             \-[IDENT] Node: 'Multiple'
+
+14:10:29,980 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,980 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.idclassgeneratedvalue.Multiple (<no alias>) -> multiple0_
+14:10:29,980 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Multiple)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[multiple0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Multiple' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Multiple,tableAlias=multiple0_,origin=null,columns={,className=org.hibernate.test.annotations.idclassgeneratedvalue.Multiple}}
+
+14:10:29,980 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,980 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,981 DEBUG SQL:104 - 
+    delete 
+    from
+        Multiple
+14:10:29,982  INFO CustomRunner:139 - Test: testSingleGeneratedValue
+14:10:29,983 DEBUG SQL:104 - 
+    select
+        max(id1) 
+    from
+        Simple2
+14:10:29,984 DEBUG SQL:104 - 
+    insert 
+    into
+        Simple2
+        (quantity, id1, id2) 
+    values
+        (?, ?, ?)
+14:10:29,984 DEBUG SQL:104 - 
+    insert 
+    into
+        Simple2
+        (quantity, id1, id2) 
+    values
+        (?, ?, ?)
+14:10:29,985 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select s from org.hibernate.test.annotations.idclassgeneratedvalue.Simple2 s
+14:10:29,986 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  \-[IDENT] Node: 'idclassgeneratedvalue'
+       |     |  \-[IDENT] Node: 'Simple2'
+       |     \-[ALIAS] Node: 's'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 's'
+
+14:10:29,986 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,986 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.idclassgeneratedvalue.Simple2 (s) -> simple2x0_
+14:10:29,986 DEBUG FromReferenceNode:74 - Resolved : s -> (simple2x0_.id1, simple2x0_.id2)
+14:10:29,988 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} (simple2x0_.id1, simple2x0_.id2) ) ( FromClause{level=1} Simple2 simple2x0_ ) )
+14:10:29,988 DEBUG JoinProcessor:175 - Using FROM fragment [Simple2 simple2x0_]
+14:10:29,988 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Simple2)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'simple2x0_.id1 as id1_2_, simple2x0_.id2 as id2_2_' {alias=s, className=org.hibernate.test.annotations.idclassgeneratedvalue.Simple2, tableAlias=simple2x0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'simple2x0_.quantity as quantity2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[s], fromElementByTableAlias=[simple2x0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Simple2 simple2x0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=Simple2,tableAlias=simple2x0_,origin=null,columns={,className=org.hibernate.test.annotations.idclassgeneratedvalue.Simple2}}
+
+14:10:29,988 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,988 DEBUG QueryTranslatorImpl:235 - HQL: select s from org.hibernate.test.annotations.idclassgeneratedvalue.Simple2 s
+14:10:29,989 DEBUG QueryTranslatorImpl:236 - SQL: select simple2x0_.id1 as id1_2_, simple2x0_.id2 as id2_2_, simple2x0_.quantity as quantity2_ from Simple2 simple2x0_
+14:10:29,989 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:29,989 DEBUG SQL:104 - 
+    select
+        simple2x0_.id1 as id1_2_,
+        simple2x0_.id2 as id2_2_,
+        simple2x0_.quantity as quantity2_ 
+    from
+        Simple2 simple2x0_
+14:10:29,990 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.annotations.idclassgeneratedvalue.Simple2
+14:10:29,991 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'annotations'
+             |  \-[IDENT] Node: 'idclassgeneratedvalue'
+             \-[IDENT] Node: 'Simple2'
+
+14:10:30,001 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:30,001 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.idclassgeneratedvalue.Simple2 (<no alias>) -> simple2x0_
+14:10:30,002 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (Simple2)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[simple2x0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Simple2' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Simple2,tableAlias=simple2x0_,origin=null,columns={,className=org.hibernate.test.annotations.idclassgeneratedvalue.Simple2}}
+
+14:10:30,002 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:30,002 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:30,002 DEBUG SQL:104 - 
+    delete 
+    from
+        Simple2
+14:10:30,003  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:30,004 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:30,004 DEBUG SQL:104 - 
+    drop table Multiple if exists
+14:10:30,005 DEBUG SQL:104 - 
+    drop table Simple if exists
+14:10:30,005 DEBUG SQL:104 - 
+    drop table Simple2 if exists
+14:10:30,005 DEBUG SQL:104 - 
+    drop sequence MULTIPLE_SEQ
+14:10:30,012  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:30,012  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

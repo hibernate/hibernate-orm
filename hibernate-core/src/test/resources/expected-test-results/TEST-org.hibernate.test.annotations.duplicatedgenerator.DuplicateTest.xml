@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.duplicatedgenerator.DuplicateTest" tests="1" time="0.113" timestamp="2013-02-28T20:10:21">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.duplicatedgenerator.DuplicateTest" name="testDuplicateEntityName" time="0.112" />
+  <system-out><![CDATA[14:10:21,483  INFO Configuration:725 - HHH000221: Reading mappings from resource: org/hibernate/test/annotations/orm.xml
+14:10:21,533  INFO Configuration:725 - HHH000221: Reading mappings from resource: org/hibernate/test/annotations/duplicatedgenerator/orm.xml
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

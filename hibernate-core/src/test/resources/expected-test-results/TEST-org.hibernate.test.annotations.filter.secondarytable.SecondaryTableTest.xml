@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.filter.secondarytable.SecondaryTableTest" tests="1" time="0.148" timestamp="2013-02-28T20:10:26">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.filter.secondarytable.SecondaryTableTest" name="testFilter" time="0.092" />
+  <system-out><![CDATA[14:10:26,335  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.filter.secondarytable.SecondaryTableTest
+14:10:26,340  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:26,340  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:26,340  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:26,341  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:26,341  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:26,342  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:26,342  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:26,352  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:26,353  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:26,353  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:26,361  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:26,361 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:26,362 DEBUG SQL:104 - 
+    alter table SECURITY_USER 
+        drop constraint FK9188BD6A1CE3FBD8
+14:10:26,362 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table SECURITY_USER drop constraint FK9188BD6A1CE3FBD8
+14:10:26,362 ERROR SchemaExport:426 - Table "SECURITY_USER" not found; SQL statement:
+
+    alter table SECURITY_USER 
+        drop constraint FK9188BD6A1CE3FBD8 [42102-145]
+14:10:26,362 DEBUG SQL:104 - 
+    drop table SECURITY_USER if exists
+14:10:26,362 DEBUG SQL:104 - 
+    drop table T_USER if exists
+14:10:26,362 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:26,362 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:26,363 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:26,363 DEBUG SQL:104 - 
+    create table SECURITY_USER (
+        LOCKED_OUT integer,
+        SECURITY_PASSWORD varchar(255),
+        SECURITY_USERNAME varchar(255),
+        USER_ID integer not null,
+        primary key (USER_ID)
+    )
+14:10:26,373 DEBUG SQL:104 - 
+    create table T_USER (
+        USER_ID integer not null,
+        AGE integer,
+        EMAIL_ADDRESS varchar(255),
+        primary key (USER_ID)
+    )
+14:10:26,373 DEBUG SQL:104 - 
+    alter table SECURITY_USER 
+        add constraint FK9188BD6A1CE3FBD8 
+        foreign key (USER_ID) 
+        references T_USER
+14:10:26,374 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:26,374  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:26,375  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:26,375  INFO CustomRunner:139 - Test: testFilter
+14:10:26,376 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:26,376 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:26,377 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:26,377 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:26,378 DEBUG SQL:104 - 
+    insert 
+    into
+        T_USER
+        (AGE, EMAIL_ADDRESS, USER_ID) 
+    values
+        (?, ?, ?)
+14:10:26,379 DEBUG SQL:104 - 
+    insert 
+    into
+        SECURITY_USER
+        (LOCKED_OUT, SECURITY_PASSWORD, SECURITY_USERNAME, USER_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:26,379 DEBUG SQL:104 - 
+    insert 
+    into
+        T_USER
+        (AGE, EMAIL_ADDRESS, USER_ID) 
+    values
+        (?, ?, ?)
+14:10:26,379 DEBUG SQL:104 - 
+    insert 
+    into
+        SECURITY_USER
+        (LOCKED_OUT, SECURITY_PASSWORD, SECURITY_USERNAME, USER_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:26,379 DEBUG SQL:104 - 
+    insert 
+    into
+        T_USER
+        (AGE, EMAIL_ADDRESS, USER_ID) 
+    values
+        (?, ?, ?)
+14:10:26,407 DEBUG SQL:104 - 
+    insert 
+    into
+        SECURITY_USER
+        (LOCKED_OUT, SECURITY_PASSWORD, SECURITY_USERNAME, USER_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:26,408 DEBUG SQL:104 - 
+    insert 
+    into
+        T_USER
+        (AGE, EMAIL_ADDRESS, USER_ID) 
+    values
+        (?, ?, ?)
+14:10:26,408 DEBUG SQL:104 - 
+    insert 
+    into
+        SECURITY_USER
+        (LOCKED_OUT, SECURITY_PASSWORD, SECURITY_USERNAME, USER_ID) 
+    values
+        (?, ?, ?, ?)
+14:10:26,409 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(u) from org.hibernate.test.annotations.filter.secondarytable.User u
+14:10:26,410 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  \-[IDENT] Node: 'filter'
+       |     |  |  \-[IDENT] Node: 'secondarytable'
+       |     |  \-[IDENT] Node: 'User'
+       |     \-[ALIAS] Node: 'u'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[IDENT] Node: 'u'
+
+14:10:26,410 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:26,410 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.filter.secondarytable.User (u) -> user0_
+14:10:26,411 DEBUG FromReferenceNode:74 - Resolved : u -> user0_.USER_ID
+14:10:26,411 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count user0_.USER_ID ) ) ( FromClause{level=1} T_USER user0_ ) )
+14:10:26,411 DEBUG JoinProcessor:175 - Using FROM fragment [T_USER user0_ left outer join SECURITY_USER user0_1_ on user0_.USER_ID=user0_1_.USER_ID]
+14:10:26,411 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_USER,SECURITY_USER)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ALIAS_REF] IdentNode: 'user0_.USER_ID' {alias=u, className=org.hibernate.test.annotations.filter.secondarytable.User, tableAlias=user0_}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[u], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'T_USER user0_ left outer join SECURITY_USER user0_1_ on user0_.USER_ID=user0_1_.USER_ID' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.annotations.filter.secondarytable.User}}
+
+14:10:26,411 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:26,411 DEBUG QueryTranslatorImpl:235 - HQL: select count(u) from org.hibernate.test.annotations.filter.secondarytable.User u
+14:10:26,411 DEBUG QueryTranslatorImpl:236 - SQL: select count(user0_.USER_ID) as col_0_0_ from T_USER user0_ left outer join SECURITY_USER user0_1_ on user0_.USER_ID=user0_1_.USER_ID
+14:10:26,412 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:26,412 DEBUG SQL:104 - 
+    select
+        count(user0_.USER_ID) as col_0_0_ 
+    from
+        T_USER user0_ 
+    left outer join
+        SECURITY_USER user0_1_ 
+            on user0_.USER_ID=user0_1_.USER_ID
+14:10:26,413 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select count(u) from org.hibernate.test.annotations.filter.secondarytable.User u
+14:10:26,414 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  \-[RANGE] Node: 'RANGE'
+       |     +-[DOT] Node: '.'
+       |     |  +-[DOT] Node: '.'
+       |     |  |  +-[DOT] Node: '.'
+       |     |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  +-[DOT] Node: '.'
+       |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |     |  |  |  |  |  \-[IDENT] Node: 'test'
+       |     |  |  |  |  \-[IDENT] Node: 'annotations'
+       |     |  |  |  \-[IDENT] Node: 'filter'
+       |     |  |  \-[IDENT] Node: 'secondarytable'
+       |     |  \-[IDENT] Node: 'User'
+       |     \-[ALIAS] Node: 'u'
+       \-[SELECT] Node: 'select'
+          \-[COUNT] Node: 'count'
+             \-[IDENT] Node: 'u'
+
+14:10:26,451 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:26,451 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.filter.secondarytable.User (u) -> user0_
+14:10:26,451 DEBUG FromReferenceNode:74 - Resolved : u -> user0_.USER_ID
+14:10:26,452 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} ( count user0_.USER_ID ) ) ( FromClause{level=1} T_USER user0_ ) )
+14:10:26,452 DEBUG JoinProcessor:175 - Using FROM fragment [T_USER user0_ left outer join SECURITY_USER user0_1_ on user0_.USER_ID=user0_1_.USER_ID]
+14:10:26,452 DEBUG SyntheticAndFactory:92 - Using unprocessed WHERE-fragment [user0_.AGE < :ageFilter.age AND user0_1_.LOCKED_OUT <> 1]
+14:10:26,452 DEBUG SyntheticAndFactory:124 - Using processed WHERE-fragment [user0_.AGE < ? AND user0_1_.LOCKED_OUT <> 1]
+14:10:26,453 DEBUG QueryNode:73 - getWhereClause() : Creating a new WHERE clause...
+14:10:26,453 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (T_USER,SECURITY_USER)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[COUNT] CountNode: 'count'
+    |  |  \-[ALIAS_REF] IdentNode: 'user0_.USER_ID' {alias=u, className=org.hibernate.test.annotations.filter.secondarytable.User, tableAlias=user0_}
+    |  \-[SELECT_COLUMNS] SqlNode: ' as col_0_0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[u], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'T_USER user0_ left outer join SECURITY_USER user0_1_ on user0_.USER_ID=user0_1_.USER_ID' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=T_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.annotations.filter.secondarytable.User}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[FILTERS] SqlNode: '{filter conditions}'
+          \-[SQL_TOKEN] SqlFragment: 'user0_.AGE < ? AND user0_1_.LOCKED_OUT <> 1'
+
+14:10:26,465 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:26,466 DEBUG QueryTranslatorImpl:235 - HQL: select count(u) from org.hibernate.test.annotations.filter.secondarytable.User u
+14:10:26,466 DEBUG QueryTranslatorImpl:236 - SQL: select count(user0_.USER_ID) as col_0_0_ from T_USER user0_ left outer join SECURITY_USER user0_1_ on user0_.USER_ID=user0_1_.USER_ID where user0_.AGE < ? AND user0_1_.LOCKED_OUT <> 1
+14:10:26,466 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:26,466 DEBUG SQL:104 - 
+    select
+        count(user0_.USER_ID) as col_0_0_ 
+    from
+        T_USER user0_ 
+    left outer join
+        SECURITY_USER user0_1_ 
+            on user0_.USER_ID=user0_1_.USER_ID 
+    where
+        user0_.AGE < ? 
+        AND user0_1_.LOCKED_OUT <> 1
+14:10:26,467  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:26,468 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:26,468 DEBUG SQL:104 - 
+    alter table SECURITY_USER 
+        drop constraint FK9188BD6A1CE3FBD8
+14:10:26,468 DEBUG SQL:104 - 
+    drop table SECURITY_USER if exists
+14:10:26,481 DEBUG SQL:104 - 
+    drop table T_USER if exists
+14:10:26,481 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:26,481  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:26,482  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.manytomany.batchload.BatchedManyToManyTest" tests="1" time="0.234" timestamp="2013-02-28T20:17:26">
+  <properties />
+  <testcase classname="org.hibernate.test.manytomany.batchload.BatchedManyToManyTest" name="testLoadingNonInverseSide" time="0.063" />
+  <system-out><![CDATA[14:17:26,760  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.manytomany.batchload.BatchedManyToManyTest
+14:17:26,772  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/manytomany/batchload/UserGroupBatchLoad.hbm.xml
+14:17:26,802  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:26,802  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:26,802  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:26,803  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:26,803  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:26,821  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:26,822  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:26,823  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:26,823  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:26,918  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:26,919 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:26,919 DEBUG SQL:104 - 
+    alter table M2N_BATCHED_GROUPUSER 
+        drop constraint FKF80813CE7A03CA2D
+14:17:26,919 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table M2N_BATCHED_GROUPUSER drop constraint FKF80813CE7A03CA2D
+14:17:26,920 ERROR SchemaExport:426 - Table "M2N_BATCHED_GROUPUSER" not found; SQL statement:
+
+    alter table M2N_BATCHED_GROUPUSER 
+        drop constraint FKF80813CE7A03CA2D [42102-145]
+14:17:26,920 DEBUG SQL:104 - 
+    alter table M2N_BATCHED_GROUPUSER 
+        drop constraint FKF80813CEAFE516A7
+14:17:26,920 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table M2N_BATCHED_GROUPUSER drop constraint FKF80813CEAFE516A7
+14:17:26,920 ERROR SchemaExport:426 - Table "M2N_BATCHED_GROUPUSER" not found; SQL statement:
+
+    alter table M2N_BATCHED_GROUPUSER 
+        drop constraint FKF80813CEAFE516A7 [42102-145]
+14:17:26,920 DEBUG SQL:104 - 
+    drop table M2N_BATCHED_GROUP if exists
+14:17:26,920 DEBUG SQL:104 - 
+    drop table M2N_BATCHED_GROUPUSER if exists
+14:17:26,920 DEBUG SQL:104 - 
+    drop table M2N_BATCHED_USER if exists
+14:17:26,920 DEBUG SQL:104 - 
+    create table M2N_BATCHED_GROUP (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:17:26,921 DEBUG SQL:104 - 
+    create table M2N_BATCHED_GROUPUSER (
+        USER_ID bigint not null,
+        GROUP_ID bigint not null,
+        primary key (USER_ID, GROUP_ID)
+    )
+14:17:26,921 DEBUG SQL:104 - 
+    create table M2N_BATCHED_USER (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:17:26,921 DEBUG SQL:104 - 
+    alter table M2N_BATCHED_GROUPUSER 
+        add constraint FKF80813CE7A03CA2D 
+        foreign key (GROUP_ID) 
+        references M2N_BATCHED_GROUP
+14:17:26,922 DEBUG SQL:104 - 
+    alter table M2N_BATCHED_GROUPUSER 
+        add constraint FKF80813CEAFE516A7 
+        foreign key (USER_ID) 
+        references M2N_BATCHED_USER
+14:17:26,922  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:26,922  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:26,923  INFO CustomRunner:139 - Test: testLoadingNonInverseSide
+14:17:26,924 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        M2N_BATCHED_USER
+14:17:26,924 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        M2N_BATCHED_GROUP
+14:17:26,925 DEBUG SQL:104 - 
+    insert 
+    into
+        M2N_BATCHED_USER
+        (name, id) 
+    values
+        (?, ?)
+14:17:26,926 DEBUG SQL:104 - 
+    insert 
+    into
+        M2N_BATCHED_GROUP
+        (name, id) 
+    values
+        (?, ?)
+14:17:26,926 DEBUG SQL:104 - 
+    insert 
+    into
+        M2N_BATCHED_USER
+        (name, id) 
+    values
+        (?, ?)
+14:17:26,926 DEBUG SQL:104 - 
+    insert 
+    into
+        M2N_BATCHED_GROUP
+        (name, id) 
+    values
+        (?, ?)
+14:17:26,926 DEBUG SQL:104 - 
+    insert 
+    into
+        M2N_BATCHED_GROUP
+        (name, id) 
+    values
+        (?, ?)
+14:17:26,926 DEBUG SQL:104 - 
+    insert 
+    into
+        M2N_BATCHED_GROUPUSER
+        (USER_ID, GROUP_ID) 
+    values
+        (?, ?)
+14:17:26,927 DEBUG SQL:104 - 
+    insert 
+    into
+        M2N_BATCHED_GROUPUSER
+        (USER_ID, GROUP_ID) 
+    values
+        (?, ?)
+14:17:26,927 DEBUG SQL:104 - 
+    insert 
+    into
+        M2N_BATCHED_GROUPUSER
+        (USER_ID, GROUP_ID) 
+    values
+        (?, ?)
+14:17:26,944 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.manytomany.batchload.User u
+14:17:26,964 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  |  \-[IDENT] Node: 'test'
+             |  |  |  \-[IDENT] Node: 'manytomany'
+             |  |  \-[IDENT] Node: 'batchload'
+             |  \-[IDENT] Node: 'User'
+             \-[ALIAS] Node: 'u'
+
+14:17:26,965 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:26,965 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.manytomany.batchload.User (u) -> user0_
+14:17:26,965 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} M2N_BATCHED_USER user0_ ) )
+14:17:26,965 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:26,965 DEBUG JoinProcessor:175 - Using FROM fragment [M2N_BATCHED_USER user0_]
+14:17:26,966 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (M2N_BATCHED_USER)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user0_.id as id2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=M2N_BATCHED_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.manytomany.batchload.User}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'user0_.name as name2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[u], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'M2N_BATCHED_USER user0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=u,role=null,tableName=M2N_BATCHED_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.manytomany.batchload.User}}
+
+14:17:26,966 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:26,966 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.manytomany.batchload.User u
+14:17:26,966 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.id as id2_, user0_.name as name2_ from M2N_BATCHED_USER user0_
+14:17:26,966 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:26,966 DEBUG SQL:104 - 
+    select
+        user0_.id as id2_,
+        user0_.name as name2_ 
+    from
+        M2N_BATCHED_USER user0_
+14:17:26,967 DEBUG SQL:104 - 
+    select
+        groups0_.USER_ID as USER1_2_1_,
+        groups0_.GROUP_ID as GROUP2_1_1_,
+        group1_.id as id0_0_,
+        group1_.name as name0_0_ 
+    from
+        M2N_BATCHED_GROUPUSER groups0_ 
+    inner join
+        M2N_BATCHED_GROUP group1_ 
+            on groups0_.GROUP_ID=group1_.id 
+    where
+        groups0_.USER_ID in (
+            ?, ?
+        )
+14:17:26,968 DEBUG SQL:104 - 
+    select
+        users0_.GROUP_ID as GROUP2_0_1_,
+        users0_.USER_ID as USER1_1_1_,
+        user1_.id as id2_0_,
+        user1_.name as name2_0_ 
+    from
+        M2N_BATCHED_GROUPUSER users0_ 
+    inner join
+        M2N_BATCHED_USER user1_ 
+            on users0_.USER_ID=user1_.id 
+    where
+        users0_.GROUP_ID in (
+            ?, ?, ?
+        )
+14:17:26,969 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.manytomany.batchload.User
+14:17:26,970 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[DOT] Node: '.'
+                |  |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  |  \-[IDENT] Node: 'test'
+                |  |  \-[IDENT] Node: 'manytomany'
+                |  \-[IDENT] Node: 'batchload'
+                \-[IDENT] Node: 'User'
+
+14:17:26,970 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:26,970 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.manytomany.batchload.User (<no alias>) -> user0_
+14:17:26,970 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} M2N_BATCHED_USER user0_ ) )
+14:17:26,970 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:26,971 DEBUG JoinProcessor:175 - Using FROM fragment [M2N_BATCHED_USER user0_]
+14:17:26,971 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (M2N_BATCHED_USER)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'user0_.id as id2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=M2N_BATCHED_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.manytomany.batchload.User}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'user0_.name as name2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[user0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'M2N_BATCHED_USER user0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=M2N_BATCHED_USER,tableAlias=user0_,origin=null,columns={,className=org.hibernate.test.manytomany.batchload.User}}
+
+14:17:26,971 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:26,971 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.manytomany.batchload.User
+14:17:26,971 DEBUG QueryTranslatorImpl:236 - SQL: select user0_.id as id2_, user0_.name as name2_ from M2N_BATCHED_USER user0_
+14:17:26,971 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:26,971 DEBUG SQL:104 - 
+    select
+        user0_.id as id2_,
+        user0_.name as name2_ 
+    from
+        M2N_BATCHED_USER user0_
+14:17:26,972 DEBUG SQL:104 - 
+    select
+        groups0_.USER_ID as USER1_2_1_,
+        groups0_.GROUP_ID as GROUP2_1_1_,
+        group1_.id as id0_0_,
+        group1_.name as name0_0_ 
+    from
+        M2N_BATCHED_GROUPUSER groups0_ 
+    inner join
+        M2N_BATCHED_GROUP group1_ 
+            on groups0_.GROUP_ID=group1_.id 
+    where
+        groups0_.USER_ID in (
+            ?, ?
+        )
+14:17:26,972 DEBUG SQL:104 - 
+    select
+        users0_.GROUP_ID as GROUP2_0_1_,
+        users0_.USER_ID as USER1_1_1_,
+        user1_.id as id2_0_,
+        user1_.name as name2_0_ 
+    from
+        M2N_BATCHED_GROUPUSER users0_ 
+    inner join
+        M2N_BATCHED_USER user1_ 
+            on users0_.USER_ID=user1_.id 
+    where
+        users0_.GROUP_ID in (
+            ?, ?, ?
+        )
+14:17:26,974 DEBUG SQL:104 - 
+    delete 
+    from
+        M2N_BATCHED_GROUPUSER 
+    where
+        USER_ID=?
+14:17:26,974 DEBUG SQL:104 - 
+    delete 
+    from
+        M2N_BATCHED_GROUPUSER 
+    where
+        USER_ID=?
+14:17:26,974 DEBUG SQL:104 - 
+    delete 
+    from
+        M2N_BATCHED_GROUP 
+    where
+        id=?
+14:17:26,974 DEBUG SQL:104 - 
+    delete 
+    from
+        M2N_BATCHED_USER 
+    where
+        id=?
+14:17:26,974 DEBUG SQL:104 - 
+    delete 
+    from
+        M2N_BATCHED_GROUP 
+    where
+        id=?
+14:17:26,974 DEBUG SQL:104 - 
+    delete 
+    from
+        M2N_BATCHED_GROUP 
+    where
+        id=?
+14:17:26,975 DEBUG SQL:104 - 
+    delete 
+    from
+        M2N_BATCHED_USER 
+    where
+        id=?
+14:17:26,975 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete org.hibernate.test.manytomany.batchload.Group
+14:17:26,975 DEBUG HqlParser:347 - weakKeywords() : new LT(1) token - ["Group",<108> previously: <24>,line=1,col=48,possibleID=true]
+14:17:26,976 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'manytomany'
+             |  \-[IDENT] Node: 'batchload'
+             \-[IDENT] Node: 'Group'
+
+14:17:26,977 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:26,977 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.manytomany.batchload.Group (<no alias>) -> group0_
+14:17:26,977 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (M2N_BATCHED_GROUP)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[group0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'M2N_BATCHED_GROUP' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=M2N_BATCHED_GROUP,tableAlias=group0_,origin=null,columns={,className=org.hibernate.test.manytomany.batchload.Group}}
+
+14:17:26,977 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:26,977 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:26,985 DEBUG SQL:104 - 
+    delete 
+    from
+        M2N_BATCHED_GROUP
+14:17:26,986  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:26,986 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:26,987 DEBUG SQL:104 - 
+    alter table M2N_BATCHED_GROUPUSER 
+        drop constraint FKF80813CE7A03CA2D
+14:17:26,987 DEBUG SQL:104 - 
+    alter table M2N_BATCHED_GROUPUSER 
+        drop constraint FKF80813CEAFE516A7
+14:17:26,987 DEBUG SQL:104 - 
+    drop table M2N_BATCHED_GROUP if exists
+14:17:26,987 DEBUG SQL:104 - 
+    drop table M2N_BATCHED_GROUPUSER if exists
+14:17:26,987 DEBUG SQL:104 - 
+    drop table M2N_BATCHED_USER if exists
+14:17:26,988  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:26,988  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.derivedidentities.e2.a.DerivedIdentityIdClassParentIdClassDepTest" tests="1" time="0.069" timestamp="2013-02-28T20:10:20">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.derivedidentities.e2.a.DerivedIdentityIdClassParentIdClassDepTest" name="testManytoOne" time="0.005" />
+  <system-out><![CDATA[14:10:20,793  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.derivedidentities.e2.a.DerivedIdentityIdClassParentIdClassDepTest
+14:10:20,804  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.derivedidentities.e2.a.DependentId
+14:10:20,804  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.derivedidentities.e2.a.DependentId
+14:10:20,805  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.derivedidentities.e2.a.EmployeeId
+14:10:20,805  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.derivedidentities.e2.a.EmployeeId
+14:10:20,805  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:20,805  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:20,806  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:20,806  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:20,806  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:20,807  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:20,808  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:20,808  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:20,808  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:20,808  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:20,840  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:20,840 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:20,840 DEBUG SQL:104 - 
+    alter table Dependent 
+        drop constraint FK3554AADFC9709DC0
+14:10:20,841 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Dependent drop constraint FK3554AADFC9709DC0
+14:10:20,841 ERROR SchemaExport:426 - Table "DEPENDENT" not found; SQL statement:
+
+    alter table Dependent 
+        drop constraint FK3554AADFC9709DC0 [42102-145]
+14:10:20,841 DEBUG SQL:104 - 
+    drop table Dependent if exists
+14:10:20,841 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:10:20,841 DEBUG SQL:104 - 
+    create table Dependent (
+        name varchar(255) not null,
+        FK1 varchar(255) not null,
+        FK2 varchar(255) not null,
+        primary key (FK1, FK2, name)
+    )
+14:10:20,842 DEBUG SQL:104 - 
+    create table Employee (
+        firstName varchar(255) not null,
+        lastName varchar(255) not null,
+        primary key (firstName, lastName)
+    )
+14:10:20,842 DEBUG SQL:104 - 
+    alter table Dependent 
+        add constraint FK3554AADFC9709DC0 
+        foreign key (FK1, FK2) 
+        references Employee
+14:10:20,843  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:20,843  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:20,843  INFO CustomRunner:139 - Test: testManytoOne
+14:10:20,845 DEBUG SQL:104 - 
+    insert 
+    into
+        Employee
+        (firstName, lastName) 
+    values
+        (?, ?)
+14:10:20,846 DEBUG SQL:104 - 
+    insert 
+    into
+        Dependent
+        (FK1, FK2, name) 
+    values
+        (?, ?, ?)
+14:10:20,846 DEBUG SQL:104 - 
+    select
+        dependent0_.FK1 as FK0_0_1_,
+        dependent0_.name as name0_1_,
+        dependent0_.FK1 as FK2_0_1_,
+        dependent0_.FK2 as FK3_0_1_,
+        employee1_.firstName as firstName1_0_,
+        employee1_.lastName as lastName1_0_ 
+    from
+        Dependent dependent0_ 
+    inner join
+        Employee employee1_ 
+            on dependent0_.FK1=employee1_.firstName 
+            and dependent0_.FK2=employee1_.lastName 
+    where
+        dependent0_.FK1=? 
+        and dependent0_.FK2=? 
+        and dependent0_.name=?
+14:10:20,847 DEBUG SQL:104 - 
+    delete 
+    from
+        Dependent 
+    where
+        FK1=? 
+        and FK2=? 
+        and name=?
+14:10:20,848 DEBUG SQL:104 - 
+    delete 
+    from
+        Employee 
+    where
+        firstName=? 
+        and lastName=?
+14:10:20,848  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:20,849 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:20,849 DEBUG SQL:104 - 
+    alter table Dependent 
+        drop constraint FK3554AADFC9709DC0
+14:10:20,849 DEBUG SQL:104 - 
+    drop table Dependent if exists
+14:10:20,860 DEBUG SQL:104 - 
+    drop table Employee if exists
+14:10:20,860  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:20,860  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,953 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.onetoone.OneToOneTest" tests="11" time="0.556" timestamp="2013-02-28T20:10:40">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneTest" name="testBidirectionalFkOneToOne" time="0.024" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneTest" name="testBidirectionalTrueOneToOne" time="0.007" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneTest" name="testCompositePk" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneTest" name="testDefaultOneToOne" time="0.014" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneTest" name="testEagerFetching" time="0.077" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneTest" name="testForeignGenerator" time="0.01" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneTest" name="testJoinColumnConfiguredInXml" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneTest" name="testOneToOneWithExplicitFk" time="0.054" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneTest" name="testOneToOneWithExplicitSecondaryTableFk" time="0.005" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneTest" name="testPkOneToOneSelectStatementDoesNotGenerateExtraJoin" time="0.027" />
+  <testcase classname="org.hibernate.test.annotations.onetoone.OneToOneTest" name="testUnidirectionalTrueOneToOne" time="0.052" />
+  <system-out><![CDATA[14:10:40,259  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.onetoone.OneToOneTest
+14:10:40,315  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:40,315  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:40,315  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:40,315  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:40,315  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:40,317  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:40,317  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:40,317  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:40,318  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:40,318  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:40,425  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:40,426 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:40,426 DEBUG SQL:104 - 
+    alter table CLIENT_EXTENSION 
+        drop constraint FKC3E10CABFE8129FC
+14:10:40,426 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CLIENT_EXTENSION drop constraint FKC3E10CABFE8129FC
+14:10:40,426 ERROR SchemaExport:426 - Table "CLIENT_EXTENSION" not found; SQL statement:
+
+    alter table CLIENT_EXTENSION 
+        drop constraint FKC3E10CABFE8129FC [42102-145]
+14:10:40,426 DEBUG SQL:104 - 
+    alter table CLIENT_EXTENSION 
+        drop constraint FKC3E10CABAF8188EF
+14:10:40,426 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table CLIENT_EXTENSION drop constraint FKC3E10CABAF8188EF
+14:10:40,426 ERROR SchemaExport:426 - Table "CLIENT_EXTENSION" not found; SQL statement:
+
+    alter table CLIENT_EXTENSION 
+        drop constraint FKC3E10CABAF8188EF [42102-145]
+14:10:40,427 DEBUG SQL:104 - 
+    alter table Client 
+        drop constraint FK7877DFEB18E8F651
+14:10:40,427 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Client drop constraint FK7877DFEB18E8F651
+14:10:40,427 ERROR SchemaExport:426 - Table "CLIENT" not found; SQL statement:
+
+    alter table Client 
+        drop constraint FK7877DFEB18E8F651 [42102-145]
+14:10:40,427 DEBUG SQL:104 - 
+    alter table Computer 
+        drop constraint FKE023E33B472976E
+14:10:40,427 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Computer drop constraint FKE023E33B472976E
+14:10:40,427 ERROR SchemaExport:426 - Table "COMPUTER" not found; SQL statement:
+
+    alter table Computer 
+        drop constraint FKE023E33B472976E [42102-145]
+14:10:40,427 DEBUG SQL:104 - 
+    alter table Customer 
+        drop constraint FK27FBE3FE1E3E1F5A
+14:10:40,428 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Customer drop constraint FK27FBE3FE1E3E1F5A
+14:10:40,428 ERROR SchemaExport:426 - Table "CUSTOMER" not found; SQL statement:
+
+    alter table Customer 
+        drop constraint FK27FBE3FE1E3E1F5A [42102-145]
+14:10:40,428 DEBUG SQL:104 - 
+    alter table Discount 
+        drop constraint FK1422D961AED1FBDA
+14:10:40,428 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Discount drop constraint FK1422D961AED1FBDA
+14:10:40,428 ERROR SchemaExport:426 - Table "DISCOUNT" not found; SQL statement:
+
+    alter table Discount 
+        drop constraint FK1422D961AED1FBDA [42102-145]
+14:10:40,428 DEBUG SQL:104 - 
+    alter table Ticket 
+        drop constraint FK954D572C5BAC2545
+14:10:40,461 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Ticket drop constraint FK954D572C5BAC2545
+14:10:40,461 ERROR SchemaExport:426 - Table "TICKET" not found; SQL statement:
+
+    alter table Ticket 
+        drop constraint FK954D572C5BAC2545 [42102-145]
+14:10:40,461 DEBUG SQL:104 - 
+    alter table Trousers 
+        drop constraint FK68799717871A853A
+14:10:40,461 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Trousers drop constraint FK68799717871A853A
+14:10:40,461 ERROR SchemaExport:426 - Table "TROUSERS" not found; SQL statement:
+
+    alter table Trousers 
+        drop constraint FK68799717871A853A [42102-145]
+14:10:40,461 DEBUG SQL:104 - 
+    alter table father_son 
+        drop constraint FKC58E642FB40B8978
+14:10:40,461 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table father_son drop constraint FKC58E642FB40B8978
+14:10:40,462 ERROR SchemaExport:426 - Table "FATHER_SON" not found; SQL statement:
+
+    alter table father_son 
+        drop constraint FKC58E642FB40B8978 [42102-145]
+14:10:40,462 DEBUG SQL:104 - 
+    alter table father_son 
+        drop constraint FKC58E642FCEC3E6EF
+14:10:40,462 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table father_son drop constraint FKC58E642FCEC3E6EF
+14:10:40,462 ERROR SchemaExport:426 - Table "FATHER_SON" not found; SQL statement:
+
+    alter table father_son 
+        drop constraint FKC58E642FCEC3E6EF [42102-145]
+14:10:40,462 DEBUG SQL:104 - 
+    drop table Address if exists
+14:10:40,462 DEBUG SQL:104 - 
+    drop table Body if exists
+14:10:40,462 DEBUG SQL:104 - 
+    drop table CLIENT_EXTENSION if exists
+14:10:40,462 DEBUG SQL:104 - 
+    drop table Client if exists
+14:10:40,463 DEBUG SQL:104 - 
+    drop table Computer if exists
+14:10:40,463 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:10:40,463 DEBUG SQL:104 - 
+    drop table Discount if exists
+14:10:40,463 DEBUG SQL:104 - 
+    drop table Father if exists
+14:10:40,463 DEBUG SQL:104 - 
+    drop table Heart if exists
+14:10:40,463 DEBUG SQL:104 - 
+    drop table Owner if exists
+14:10:40,463 DEBUG SQL:104 - 
+    drop table OwnerAddress if exists
+14:10:40,463 DEBUG SQL:104 - 
+    drop table Party if exists
+14:10:40,464 DEBUG SQL:104 - 
+    drop table PartyAffiliate if exists
+14:10:40,464 DEBUG SQL:104 - 
+    drop table Passport if exists
+14:10:40,464 DEBUG SQL:104 - 
+    drop table SerialNumber if exists
+14:10:40,464 DEBUG SQL:104 - 
+    drop table Son if exists
+14:10:40,464 DEBUG SQL:104 - 
+    drop table Ticket if exists
+14:10:40,464 DEBUG SQL:104 - 
+    drop table Trousers if exists
+14:10:40,464 DEBUG SQL:104 - 
+    drop table TrousersZip if exists
+14:10:40,464 DEBUG SQL:104 - 
+    drop table father_son if exists
+14:10:40,465 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:40,465 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:40,465 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:40,465 DEBUG SQL:104 - 
+    create table Address (
+        id integer not null,
+        city varchar(255),
+        primary key (id)
+    )
+14:10:40,465 DEBUG SQL:104 - 
+    create table Body (
+        id integer not null,
+        primary key (id)
+    )
+14:10:40,466 DEBUG SQL:104 - 
+    create table CLIENT_EXTENSION (
+        SECONDARY_ADDRESS_ID integer,
+        id integer not null,
+        primary key (id)
+    )
+14:10:40,466 DEBUG SQL:104 - 
+    create table Client (
+        id integer not null,
+        name varchar(255),
+        ADDRESS_ID integer,
+        primary key (id)
+    )
+14:10:40,466 DEBUG SQL:104 - 
+    create table Computer (
+        computer_brand varchar(255) not null,
+        computer_model varchar(255) not null,
+        cpu varchar(255),
+        serialbrand varchar(255),
+        serialmodel varchar(255),
+        primary key (computer_brand, computer_model)
+    )
+14:10:40,466 DEBUG SQL:104 - 
+    create table Customer (
+        id bigint not null,
+        name varchar(255),
+        passport_id bigint,
+        primary key (id)
+    )
+14:10:40,467 DEBUG SQL:104 - 
+    create table Discount (
+        id bigint not null,
+        discount double,
+        CUSTOMER_ID bigint,
+        primary key (id)
+    )
+14:10:40,467 DEBUG SQL:104 - 
+    create table Father (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:40,467 DEBUG SQL:104 - 
+    create table Heart (
+        id integer not null,
+        primary key (id)
+    )
+14:10:40,467 DEBUG SQL:104 - 
+    create table Owner (
+        id integer not null,
+        primary key (id)
+    )
+14:10:40,468 DEBUG SQL:104 - 
+    create table OwnerAddress (
+        id integer not null,
+        primary key (id)
+    )
+14:10:40,468 DEBUG SQL:104 - 
+    create table Party (
+        partyId varchar(255) not null,
+        primary key (partyId)
+    )
+14:10:40,468 DEBUG SQL:104 - 
+    create table PartyAffiliate (
+        partyId varchar(255) not null,
+        affiliateName varchar(255),
+        primary key (partyId)
+    )
+14:10:40,468 DEBUG SQL:104 - 
+    create table Passport (
+        id bigint not null,
+        passport_number varchar(255),
+        primary key (id)
+    )
+14:10:40,469 DEBUG SQL:104 - 
+    create table SerialNumber (
+        brand varchar(255) not null,
+        model varchar(255) not null,
+        "value" varchar(255),
+        primary key (brand, model)
+    )
+14:10:40,469 DEBUG SQL:104 - 
+    create table Son (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:40,469 DEBUG SQL:104 - 
+    create table Ticket (
+        id bigint not null,
+        ticket_number varchar(255),
+        CUST_ID bigint,
+        primary key (id)
+    )
+14:10:40,469 DEBUG SQL:104 - 
+    create table Trousers (
+        id integer not null,
+        zip_id integer,
+        primary key (id)
+    )
+14:10:40,470 DEBUG SQL:104 - 
+    create table TrousersZip (
+        id integer not null,
+        primary key (id)
+    )
+14:10:40,470 DEBUG SQL:104 - 
+    create table father_son (
+        bar integer,
+        foo integer not null,
+        primary key (foo)
+    )
+14:10:40,472 DEBUG SQL:104 - 
+    alter table CLIENT_EXTENSION 
+        add constraint FKC3E10CABFE8129FC 
+        foreign key (SECONDARY_ADDRESS_ID) 
+        references Address
+14:10:40,473 DEBUG SQL:104 - 
+    alter table CLIENT_EXTENSION 
+        add constraint FKC3E10CABAF8188EF 
+        foreign key (id) 
+        references Client
+14:10:40,474 DEBUG SQL:104 - 
+    alter table Client 
+        add constraint FK7877DFEB18E8F651 
+        foreign key (ADDRESS_ID) 
+        references Address
+14:10:40,474 DEBUG SQL:104 - 
+    alter table Computer 
+        add constraint FKE023E33B472976E 
+        foreign key (serialbrand, serialmodel) 
+        references SerialNumber
+14:10:40,475 DEBUG SQL:104 - 
+    alter table Customer 
+        add constraint FK27FBE3FE1E3E1F5A 
+        foreign key (passport_id) 
+        references Passport
+14:10:40,476 DEBUG SQL:104 - 
+    alter table Discount 
+        add constraint FK1422D961AED1FBDA 
+        foreign key (CUSTOMER_ID) 
+        references Customer
+14:10:40,476 DEBUG SQL:104 - 
+    alter table Ticket 
+        add constraint FK954D572C5BAC2545 
+        foreign key (CUST_ID) 
+        references Customer
+14:10:40,477 DEBUG SQL:104 - 
+    alter table Trousers 
+        add constraint FK68799717871A853A 
+        foreign key (zip_id) 
+        references TrousersZip
+14:10:40,478 DEBUG SQL:104 - 
+    alter table father_son 
+        add constraint FKC58E642FB40B8978 
+        foreign key (bar) 
+        references Father
+14:10:40,478 DEBUG SQL:104 - 
+    alter table father_son 
+        add constraint FKC58E642FCEC3E6EF 
+        foreign key (foo) 
+        references Son
+14:10:40,480 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:40,480  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:40,482  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:40,482  INFO CustomRunner:139 - Test: testBidirectionalFkOneToOne
+14:10:40,495 DEBUG SQL:104 - 
+    select
+        trouserszi_.id 
+    from
+        TrousersZip trouserszi_ 
+    where
+        trouserszi_.id=?
+14:10:40,496 DEBUG SQL:104 - 
+    insert 
+    into
+        Trousers
+        (zip_id, id) 
+    values
+        (?, ?)
+14:10:40,497 DEBUG SQL:104 - 
+    insert 
+    into
+        TrousersZip
+        (id) 
+    values
+        (?)
+14:10:40,497 DEBUG SQL:104 - 
+    update
+        Trousers 
+    set
+        zip_id=? 
+    where
+        id=?
+14:10:40,497 DEBUG SQL:104 - 
+    select
+        trousers0_.id as id17_1_,
+        trousers0_.zip_id as zip2_17_1_,
+        trouserszi1_.id as id18_0_ 
+    from
+        Trousers trousers0_ 
+    left outer join
+        TrousersZip trouserszi1_ 
+            on trousers0_.zip_id=trouserszi1_.id 
+    where
+        trousers0_.id=?
+14:10:40,498 DEBUG SQL:104 - 
+    select
+        trousers0_.id as id17_1_,
+        trousers0_.zip_id as zip2_17_1_,
+        trouserszi1_.id as id18_0_ 
+    from
+        Trousers trousers0_ 
+    left outer join
+        TrousersZip trouserszi1_ 
+            on trousers0_.zip_id=trouserszi1_.id 
+    where
+        trousers0_.zip_id=?
+14:10:40,498 DEBUG SQL:104 - 
+    select
+        trouserszi0_.id as id18_1_,
+        trousers1_.id as id17_0_,
+        trousers1_.zip_id as zip2_17_0_ 
+    from
+        TrousersZip trouserszi0_ 
+    left outer join
+        Trousers trousers1_ 
+            on trouserszi0_.id=trousers1_.zip_id 
+    where
+        trouserszi0_.id=?
+14:10:40,499 DEBUG SQL:104 - 
+    update
+        Trousers 
+    set
+        zip_id=? 
+    where
+        id=?
+14:10:40,499 DEBUG SQL:104 - 
+    delete 
+    from
+        TrousersZip 
+    where
+        id=?
+14:10:40,500 DEBUG SQL:104 - 
+    delete 
+    from
+        Trousers 
+    where
+        id=?
+14:10:40,506  INFO CustomRunner:139 - Test: testBidirectionalTrueOneToOne
+14:10:40,511 DEBUG SQL:104 - 
+    insert 
+    into
+        Party
+        (partyId) 
+    values
+        (?)
+14:10:40,512 DEBUG SQL:104 - 
+    insert 
+    into
+        PartyAffiliate
+        (affiliateName, partyId) 
+    values
+        (?, ?)
+14:10:40,512 DEBUG SQL:104 - 
+    select
+        partyaffil0_.partyId as partyId12_1_,
+        partyaffil0_.affiliateName as affiliat2_12_1_,
+        party1_.partyId as partyId11_0_ 
+    from
+        PartyAffiliate partyaffil0_ 
+    left outer join
+        Party party1_ 
+            on partyaffil0_.partyId=party1_.partyId 
+    where
+        partyaffil0_.partyId=?
+14:10:40,513 DEBUG SQL:104 - 
+    select
+        party0_.partyId as partyId11_1_,
+        partyaffil1_.partyId as partyId12_0_,
+        partyaffil1_.affiliateName as affiliat2_12_0_ 
+    from
+        Party party0_ 
+    left outer join
+        PartyAffiliate partyaffil1_ 
+            on party0_.partyId=partyaffil1_.partyId 
+    where
+        party0_.partyId=?
+14:10:40,513 DEBUG SQL:104 - 
+    delete 
+    from
+        PartyAffiliate 
+    where
+        partyId=?
+14:10:40,514 DEBUG SQL:104 - 
+    delete 
+    from
+        Party 
+    where
+        partyId=?
+14:10:40,514  INFO CustomRunner:139 - Test: testCompositePk
+14:10:40,516 DEBUG SQL:104 - 
+    insert 
+    into
+        SerialNumber
+        ("value", brand, model) 
+    values
+        (?, ?, ?)
+14:10:40,516 DEBUG SQL:104 - 
+    insert 
+    into
+        Computer
+        (cpu, serialbrand, serialmodel, computer_brand, computer_model) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:40,517 DEBUG SQL:104 - 
+    select
+        computer0_.computer_brand as computer1_4_1_,
+        computer0_.computer_model as computer2_4_1_,
+        computer0_.cpu as cpu4_1_,
+        computer0_.serialbrand as serialbr4_4_1_,
+        computer0_.serialmodel as serialmo5_4_1_,
+        serialnumb1_.brand as brand14_0_,
+        serialnumb1_.model as model14_0_,
+        serialnumb1_."value" as value3_14_0_ 
+    from
+        Computer computer0_ 
+    left outer join
+        SerialNumber serialnumb1_ 
+            on computer0_.serialbrand=serialnumb1_.brand 
+            and computer0_.serialmodel=serialnumb1_.model 
+    where
+        computer0_.computer_brand=? 
+        and computer0_.computer_model=?
+14:10:40,518  INFO CustomRunner:139 - Test: testDefaultOneToOne
+14:10:40,520 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:40,523 DEBUG SQL:104 - 
+    select
+        passport_.id,
+        passport_.passport_number as passport2_13_ 
+    from
+        Passport passport_ 
+    where
+        passport_.id=?
+14:10:40,525 DEBUG SQL:104 - 
+    insert 
+    into
+        Customer
+        (name, passport_id, id) 
+    values
+        (?, ?, ?)
+14:10:40,525 DEBUG SQL:104 - 
+    insert 
+    into
+        Passport
+        (passport_number, id) 
+    values
+        (?, ?)
+14:10:40,526 DEBUG SQL:104 - 
+    update
+        Customer 
+    set
+        name=?,
+        passport_id=? 
+    where
+        id=?
+14:10:40,526 DEBUG SQL:104 - 
+    select
+        customer0_.id as id5_2_,
+        customer0_.name as name5_2_,
+        customer0_.passport_id as passport3_5_2_,
+        passport1_.id as id13_0_,
+        passport1_.passport_number as passport2_13_0_,
+        tickets2_.CUST_ID as CUST3_5_4_,
+        tickets2_.id as id16_4_,
+        tickets2_.id as id16_1_,
+        tickets2_.ticket_number as ticket2_16_1_ 
+    from
+        Customer customer0_ 
+    left outer join
+        Passport passport1_ 
+            on customer0_.passport_id=passport1_.id 
+    left outer join
+        Ticket tickets2_ 
+            on customer0_.id=tickets2_.CUST_ID 
+    where
+        customer0_.id=?
+14:10:40,527 DEBUG SQL:104 - 
+    select
+        customer0_.id as id5_2_,
+        customer0_.name as name5_2_,
+        customer0_.passport_id as passport3_5_2_,
+        passport1_.id as id13_0_,
+        passport1_.passport_number as passport2_13_0_,
+        tickets2_.CUST_ID as CUST3_5_4_,
+        tickets2_.id as id16_4_,
+        tickets2_.id as id16_1_,
+        tickets2_.ticket_number as ticket2_16_1_ 
+    from
+        Customer customer0_ 
+    left outer join
+        Passport passport1_ 
+            on customer0_.passport_id=passport1_.id 
+    left outer join
+        Ticket tickets2_ 
+            on customer0_.id=tickets2_.CUST_ID 
+    where
+        customer0_.passport_id=?
+14:10:40,533  INFO CustomRunner:139 - Test: testEagerFetching
+14:10:40,536 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:40,536 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:40,537 DEBUG SQL:104 - 
+    insert 
+    into
+        Address
+        (city, id) 
+    values
+        (?, ?)
+14:10:40,538 DEBUG SQL:104 - 
+    insert 
+    into
+        Client
+        (ADDRESS_ID, name, id) 
+    values
+        (?, ?, ?)
+14:10:40,538 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select c from org.hibernate.test.annotations.onetoone.Client c where c.name = :name
+14:10:40,540 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[IDENT] Node: 'onetoone'
+    |  |     |  \-[IDENT] Node: 'Client'
+    |  |     \-[ALIAS] Node: 'c'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'c'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'c'
+          |  \-[IDENT] Node: 'name'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'name'
+
+14:10:40,561 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:40,562 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.onetoone.Client (c) -> client0_
+14:10:40,562 DEBUG FromReferenceNode:74 - Resolved : c -> client0_.id
+14:10:40,562 DEBUG FromReferenceNode:74 - Resolved : c -> client0_.id
+14:10:40,562 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:10:40,563 DEBUG FromReferenceNode:74 - Resolved : c.name -> client0_.name
+14:10:40,563 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} client0_.id ) ( FromClause{level=1} Client client0_ ) ( where ( = ( client0_.name client0_.id name ) ? ) ) )
+14:10:40,563 DEBUG JoinProcessor:175 - Using FROM fragment [Client client0_ left outer join CLIENT_EXTENSION client0_1_ on client0_.id=client0_1_.id]
+14:10:40,563 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (CLIENT_EXTENSION,Client)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'client0_.id as id3_' {alias=c, className=org.hibernate.test.annotations.onetoone.Client, tableAlias=client0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'client0_.ADDRESS_ID as ADDRESS3_3_, client0_.name as name3_, client0_1_.SECONDARY_ADDRESS_ID as SECONDARY1_2_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[c], fromElementByTableAlias=[client0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Client client0_ left outer join CLIENT_EXTENSION client0_1_ on client0_.id=client0_1_.id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=c,role=null,tableName=Client,tableAlias=client0_,origin=null,columns={,className=org.hibernate.test.annotations.onetoone.Client}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'client0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=c.name,tableAlias=client0_,className=org.hibernate.test.annotations.onetoone.Client,classAlias=c}
+          |  +-[ALIAS_REF] IdentNode: 'client0_.id' {alias=c, className=org.hibernate.test.annotations.onetoone.Client, tableAlias=client0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:10:40,564 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:40,564 DEBUG QueryTranslatorImpl:235 - HQL: select c from org.hibernate.test.annotations.onetoone.Client c where c.name = :name
+14:10:40,564 DEBUG QueryTranslatorImpl:236 - SQL: select client0_.id as id3_, client0_.ADDRESS_ID as ADDRESS3_3_, client0_.name as name3_, client0_1_.SECONDARY_ADDRESS_ID as SECONDARY1_2_ from Client client0_ left outer join CLIENT_EXTENSION client0_1_ on client0_.id=client0_1_.id where client0_.name=?
+14:10:40,565 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:40,566 DEBUG SQL:104 - 
+    select
+        client0_.id as id3_,
+        client0_.ADDRESS_ID as ADDRESS3_3_,
+        client0_.name as name3_,
+        client0_1_.SECONDARY_ADDRESS_ID as SECONDARY1_2_ 
+    from
+        Client client0_ 
+    left outer join
+        CLIENT_EXTENSION client0_1_ 
+            on client0_.id=client0_1_.id 
+    where
+        client0_.name=?
+14:10:40,610 DEBUG SQL:104 - 
+    select
+        address0_.id as id0_0_,
+        address0_.city as city0_0_ 
+    from
+        Address address0_ 
+    where
+        address0_.id=?
+14:10:40,611  INFO CustomRunner:139 - Test: testForeignGenerator
+14:10:40,618 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:40,620 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (id) 
+    values
+        (?)
+14:10:40,620 DEBUG SQL:104 - 
+    insert 
+    into
+        OwnerAddress
+        (id) 
+    values
+        (?)
+14:10:40,621 DEBUG SQL:104 - 
+    select
+        owner0_.id as id9_1_,
+        owneraddre1_.id as id10_0_ 
+    from
+        Owner owner0_ 
+    left outer join
+        OwnerAddress owneraddre1_ 
+            on owner0_.id=owneraddre1_.id 
+    where
+        owner0_.id=?
+14:10:40,622  INFO CustomRunner:139 - Test: testJoinColumnConfiguredInXml
+14:10:40,623  INFO CustomRunner:139 - Test: testOneToOneWithExplicitFk
+14:10:40,623 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:40,628 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:40,629 DEBUG SQL:104 - 
+    insert 
+    into
+        Address
+        (city, id) 
+    values
+        (?, ?)
+14:10:40,629 DEBUG SQL:104 - 
+    insert 
+    into
+        Client
+        (ADDRESS_ID, name, id) 
+    values
+        (?, ?, ?)
+14:10:40,630 DEBUG SQL:104 - 
+    select
+        client0_.id as id3_2_,
+        client0_.ADDRESS_ID as ADDRESS3_3_2_,
+        client0_.name as name3_2_,
+        client0_1_.SECONDARY_ADDRESS_ID as SECONDARY1_2_2_,
+        address1_.id as id0_0_,
+        address1_.city as city0_0_,
+        address2_.id as id0_1_,
+        address2_.city as city0_1_ 
+    from
+        Client client0_ 
+    left outer join
+        CLIENT_EXTENSION client0_1_ 
+            on client0_.id=client0_1_.id 
+    left outer join
+        Address address1_ 
+            on client0_.ADDRESS_ID=address1_.id 
+    left outer join
+        Address address2_ 
+            on client0_1_.SECONDARY_ADDRESS_ID=address2_.id 
+    where
+        client0_.id=?
+14:10:40,677  INFO CustomRunner:139 - Test: testOneToOneWithExplicitSecondaryTableFk
+14:10:40,678 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:40,679 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:40,680 DEBUG SQL:104 - 
+    insert 
+    into
+        Address
+        (city, id) 
+    values
+        (?, ?)
+14:10:40,680 DEBUG SQL:104 - 
+    insert 
+    into
+        Client
+        (ADDRESS_ID, name, id) 
+    values
+        (?, ?, ?)
+14:10:40,680 DEBUG SQL:104 - 
+    insert 
+    into
+        CLIENT_EXTENSION
+        (SECONDARY_ADDRESS_ID, id) 
+    values
+        (?, ?)
+14:10:40,681 DEBUG SQL:104 - 
+    select
+        client0_.id as id3_2_,
+        client0_.ADDRESS_ID as ADDRESS3_3_2_,
+        client0_.name as name3_2_,
+        client0_1_.SECONDARY_ADDRESS_ID as SECONDARY1_2_2_,
+        address1_.id as id0_0_,
+        address1_.city as city0_0_,
+        address2_.id as id0_1_,
+        address2_.city as city0_1_ 
+    from
+        Client client0_ 
+    left outer join
+        CLIENT_EXTENSION client0_1_ 
+            on client0_.id=client0_1_.id 
+    left outer join
+        Address address1_ 
+            on client0_.ADDRESS_ID=address1_.id 
+    left outer join
+        Address address2_ 
+            on client0_1_.SECONDARY_ADDRESS_ID=address2_.id 
+    where
+        client0_.id=?
+14:10:40,700  INFO CustomRunner:139 - Test: testPkOneToOneSelectStatementDoesNotGenerateExtraJoin
+14:10:40,702 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:40,704 DEBUG SQL:104 - 
+    insert 
+    into
+        Owner
+        (id) 
+    values
+        (?)
+14:10:40,704 DEBUG SQL:104 - 
+    insert 
+    into
+        OwnerAddress
+        (id) 
+    values
+        (?)
+14:10:40,704 DEBUG SQL:104 - 
+    select
+        owner0_.id as id9_1_,
+        owneraddre1_.id as id10_0_ 
+    from
+        Owner owner0_ 
+    left outer join
+        OwnerAddress owneraddre1_ 
+            on owner0_.id=owneraddre1_.id 
+    where
+        owner0_.id=?
+14:10:40,715 DEBUG SQL:104 - 
+    select
+        owneraddre0_.id as id10_1_,
+        owner1_.id as id9_0_ 
+    from
+        OwnerAddress owneraddre0_ 
+    left outer join
+        Owner owner1_ 
+            on owneraddre0_.id=owner1_.id 
+    where
+        owneraddre0_.id=?
+14:10:40,725 DEBUG SQL:104 - 
+    select
+        this_.id as id9_1_,
+        owneraddre2_.id as id10_0_ 
+    from
+        Owner this_ 
+    left outer join
+        OwnerAddress owneraddre2_ 
+            on this_.id=owneraddre2_.id 
+    where
+        this_.id = ?
+14:10:40,726 DEBUG SQL:104 - 
+    select
+        this_.id as id10_1_,
+        owner2_.id as id9_0_ 
+    from
+        OwnerAddress this_ 
+    left outer join
+        Owner owner2_ 
+            on this_.id=owner2_.id 
+    where
+        this_.id = ?
+14:10:40,727  INFO CustomRunner:139 - Test: testUnidirectionalTrueOneToOne
+14:10:40,728 DEBUG SQL:104 - 
+    insert 
+    into
+        Heart
+        (id) 
+    values
+        (?)
+14:10:40,729 DEBUG SQL:104 - 
+    insert 
+    into
+        Body
+        (id) 
+    values
+        (?)
+14:10:40,778 DEBUG SQL:104 - 
+    select
+        body0_.id as id1_1_,
+        heart1_.id as id8_0_ 
+    from
+        Body body0_ 
+    left outer join
+        Heart heart1_ 
+            on body0_.id=heart1_.id 
+    where
+        body0_.id=?
+14:10:40,779  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:40,780 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:40,780 DEBUG SQL:104 - 
+    alter table CLIENT_EXTENSION 
+        drop constraint FKC3E10CABFE8129FC
+14:10:40,781 DEBUG SQL:104 - 
+    alter table CLIENT_EXTENSION 
+        drop constraint FKC3E10CABAF8188EF
+14:10:40,781 DEBUG SQL:104 - 
+    alter table Client 
+        drop constraint FK7877DFEB18E8F651
+14:10:40,781 DEBUG SQL:104 - 
+    alter table Computer 
+        drop constraint FKE023E33B472976E
+14:10:40,787 DEBUG SQL:104 - 
+    alter table Customer 
+        drop constraint FK27FBE3FE1E3E1F5A
+14:10:40,787 DEBUG SQL:104 - 
+    alter table Discount 
+        drop constraint FK1422D961AED1FBDA
+14:10:40,787 DEBUG SQL:104 - 
+    alter table Ticket 
+        drop constraint FK954D572C5BAC2545
+14:10:40,788 DEBUG SQL:104 - 
+    alter table Trousers 
+        drop constraint FK68799717871A853A
+14:10:40,788 DEBUG SQL:104 - 
+    alter table father_son 
+        drop constraint FKC58E642FB40B8978
+14:10:40,788 DEBUG SQL:104 - 
+    alter table father_son 
+        drop constraint FKC58E642FCEC3E6EF
+14:10:40,788 DEBUG SQL:104 - 
+    drop table Address if exists
+14:10:40,791 DEBUG SQL:104 - 
+    drop table Body if exists
+14:10:40,791 DEBUG SQL:104 - 
+    drop table CLIENT_EXTENSION if exists
+14:10:40,791 DEBUG SQL:104 - 
+    drop table Client if exists
+14:10:40,792 DEBUG SQL:104 - 
+    drop table Computer if exists
+14:10:40,792 DEBUG SQL:104 - 
+    drop table Customer if exists
+14:10:40,809 DEBUG SQL:104 - 
+    drop table Discount if exists
+14:10:40,809 DEBUG SQL:104 - 
+    drop table Father if exists
+14:10:40,809 DEBUG SQL:104 - 
+    drop table Heart if exists
+14:10:40,809 DEBUG SQL:104 - 
+    drop table Owner if exists
+14:10:40,810 DEBUG SQL:104 - 
+    drop table OwnerAddress if exists
+14:10:40,810 DEBUG SQL:104 - 
+    drop table Party if exists
+14:10:40,810 DEBUG SQL:104 - 
+    drop table PartyAffiliate if exists
+14:10:40,810 DEBUG SQL:104 - 
+    drop table Passport if exists
+14:10:40,810 DEBUG SQL:104 - 
+    drop table SerialNumber if exists
+14:10:40,811 DEBUG SQL:104 - 
+    drop table Son if exists
+14:10:40,811 DEBUG SQL:104 - 
+    drop table Ticket if exists
+14:10:40,811 DEBUG SQL:104 - 
+    drop table Trousers if exists
+14:10:40,811 DEBUG SQL:104 - 
+    drop table TrousersZip if exists
+14:10:40,811 DEBUG SQL:104 - 
+    drop table father_son if exists
+14:10:40,812 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:40,812  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:40,812  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

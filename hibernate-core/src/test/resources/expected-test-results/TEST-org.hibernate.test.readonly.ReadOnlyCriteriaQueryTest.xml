@@ -1,0 +1,2046 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" tests="16" time="0.56" timestamp="2013-02-28T20:19:02">
+  <properties />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testDetachedCriteria" time="0.009" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testModifiableCriteriaReturnsExistingReadOnlyEntity" time="0.008" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testModifiableCriteriaReturnsExistingReadOnlyProxyInit" time="0.008" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testModifiableCriteriaReturnsExistingReadOnlyProxyNotInit" time="0.007" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testModifiableSessionDefaultCriteria" time="0.007" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testModifiableSessionModifiableCriteria" time="0.007" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testModifiableSessionReadOnlyCriteria" time="0.02" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testReadOnlyCriteriaReturnsExistingModifiableProxyInit" time="0.007" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testReadOnlyCriteriaReturnsExistingModifiableProxyNotInit" time="0.009" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testReadOnlyCriteriaReturnsModifiableExistingEntity" time="0.029" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testReadOnlySessionDefaultCriteria" time="0.045" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testReadOnlySessionModifiableCriteria" time="0.04" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testReadOnlySessionReadOnlyCriteria" time="0.035" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testScrollCriteria" time="0.003" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testSubselect" time="0.088" />
+  <testcase classname="org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest" name="testTwoAliasesCache" time="0.086" />
+  <system-out><![CDATA[14:19:02,473  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest
+14:19:02,474  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/readonly/Enrolment.hbm.xml
+14:19:02,510  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:02,510  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:02,510  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:02,511  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:02,511  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:02,512  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:02,512  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:02,513  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:02,513  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:02,514  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:02,514  INFO UpdateTimestampsCache:61 - HHH000250: Starting update timestamps cache at region: criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache
+14:19:02,514  INFO StandardQueryCache:86 - HHH000248: Starting query cache at region: criteriaquerytest.org.hibernate.cache.internal.StandardQueryCache
+14:19:02,523  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:02,524 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:02,524 DEBUG SQL:104 - 
+    alter table Enrolment 
+        drop constraint FKEB4882C4DBE4593B
+14:19:02,524 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Enrolment drop constraint FKEB4882C4DBE4593B
+14:19:02,524 ERROR SchemaExport:426 - Table "ENROLMENT" not found; SQL statement:
+
+    alter table Enrolment 
+        drop constraint FKEB4882C4DBE4593B [42102-145]
+14:19:02,525 DEBUG SQL:104 - 
+    alter table Enrolment 
+        drop constraint FKEB4882C4E6E608F9
+14:19:02,525 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Enrolment drop constraint FKEB4882C4E6E608F9
+14:19:02,525 ERROR SchemaExport:426 - Table "ENROLMENT" not found; SQL statement:
+
+    alter table Enrolment 
+        drop constraint FKEB4882C4E6E608F9 [42102-145]
+14:19:02,525 DEBUG SQL:104 - 
+    alter table Student 
+        drop constraint FKF3371A1B8EA4283A
+14:19:02,526 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Student drop constraint FKF3371A1B8EA4283A
+14:19:02,526 ERROR SchemaExport:426 - Table "STUDENT" not found; SQL statement:
+
+    alter table Student 
+        drop constraint FKF3371A1B8EA4283A [42102-145]
+14:19:02,526 DEBUG SQL:104 - 
+    drop table Course if exists
+14:19:02,527 DEBUG SQL:104 - 
+    drop table Enrolment if exists
+14:19:02,527 DEBUG SQL:104 - 
+    drop table Student if exists
+14:19:02,527 DEBUG SQL:104 - 
+    create table Course (
+        courseCode varchar(255) not null,
+        description varchar(255),
+        primary key (courseCode)
+    )
+14:19:02,528 DEBUG SQL:104 - 
+    create table Enrolment (
+        studentId bigint not null,
+        courseCode varchar(255) not null,
+        semester smallint not null,
+        "year" smallint not null,
+        primary key (studentId, courseCode)
+    )
+14:19:02,528 DEBUG SQL:104 - 
+    create table Student (
+        studentId bigint not null,
+        name varchar(255) not null,
+        preferredCourseCode varchar(255),
+        primary key (studentId)
+    )
+14:19:02,529 DEBUG SQL:104 - 
+    alter table Enrolment 
+        add constraint FKEB4882C4DBE4593B 
+        foreign key (studentId) 
+        references Student
+14:19:02,530 DEBUG SQL:104 - 
+    alter table Enrolment 
+        add constraint FKEB4882C4E6E608F9 
+        foreign key (courseCode) 
+        references Course
+14:19:02,530 DEBUG SQL:104 - 
+    alter table Student 
+        add constraint FKF3371A1B8EA4283A 
+        foreign key (preferredCourseCode) 
+        references Course
+14:19:02,531  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:02,532  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:02,532  INFO CustomRunner:139 - Test: testDetachedCriteria
+14:19:02,534 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,534 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159179264]
+14:19:02,534 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,535 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159183360]
+14:19:02,535 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159183361]
+14:19:02,535 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159183362]
+14:19:02,535 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913423363]
+14:19:02,535 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913423363]
+14:19:02,536 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_ 
+    where
+        this_.name=? 
+    order by
+        this_.studentId asc limit ?
+14:19:02,536 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,537 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,537 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159191552]
+14:19:02,537 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159191553]
+14:19:02,537 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,537 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159191554]
+14:19:02,538 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,538 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159195648]
+14:19:02,538 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913435649]
+14:19:02,538 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913435649]
+14:19:02,541  INFO CustomRunner:139 - Test: testModifiableCriteriaReturnsExistingReadOnlyEntity
+14:19:02,542 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,543 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159216128]
+14:19:02,543 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,543 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159216129]
+14:19:02,543 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,543 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159216130]
+14:19:02,543 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,544 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159220224]
+14:19:02,544 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159220225]
+14:19:02,544 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913460226]
+14:19:02,544 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913460226]
+14:19:02,544 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913460226]
+14:19:02,544 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,545 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,545 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,546 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,547 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        name=?,
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,547 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159232512]
+14:19:02,547 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159232513]
+14:19:02,547 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,547 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159232514]
+14:19:02,548 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,548 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159236608]
+14:19:02,548 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,548 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159236609]
+14:19:02,548 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,548 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159236610]
+14:19:02,548 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913476611]
+14:19:02,548 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913476611]
+14:19:02,549 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913476611]
+14:19:02,549  INFO CustomRunner:139 - Test: testModifiableCriteriaReturnsExistingReadOnlyProxyInit
+14:19:02,550 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,551 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159248896]
+14:19:02,551 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,551 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159248897]
+14:19:02,551 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,551 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159248898]
+14:19:02,551 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,552 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159252992]
+14:19:02,552 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159252993]
+14:19:02,552 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913492994]
+14:19:02,552 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913492994]
+14:19:02,552 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913492994]
+14:19:02,552 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,554 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,554 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,556 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,556 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        name=?,
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,556 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159269376]
+14:19:02,557 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159273472]
+14:19:02,557 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,557 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159273473]
+14:19:02,557 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,557 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159273474]
+14:19:02,557 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,557 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159273475]
+14:19:02,557 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,558 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159277568]
+14:19:02,558 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913517569]
+14:19:02,558 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913517569]
+14:19:02,558 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913517569]
+14:19:02,558  INFO CustomRunner:139 - Test: testModifiableCriteriaReturnsExistingReadOnlyProxyNotInit
+14:19:02,560 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,561 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159289856]
+14:19:02,561 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,561 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159289857]
+14:19:02,561 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,561 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159289858]
+14:19:02,561 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,562 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159293952]
+14:19:02,562 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159293953]
+14:19:02,562 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913533954]
+14:19:02,562 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913533954]
+14:19:02,562 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913533954]
+14:19:02,562 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,563 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,563 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,563 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,564 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        name=?,
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,564 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159302144]
+14:19:02,564 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159302145]
+14:19:02,564 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,565 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159306240]
+14:19:02,565 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,565 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159306241]
+14:19:02,565 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,565 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159306242]
+14:19:02,565 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,565 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159306243]
+14:19:02,565 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913546244]
+14:19:02,566 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913546244]
+14:19:02,566 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913546244]
+14:19:02,566  INFO CustomRunner:139 - Test: testModifiableSessionDefaultCriteria
+14:19:02,568 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,569 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159322624]
+14:19:02,569 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,569 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159322625]
+14:19:02,569 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,569 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159322626]
+14:19:02,569 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,570 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159326720]
+14:19:02,570 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159326721]
+14:19:02,570 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913566722]
+14:19:02,570 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913566722]
+14:19:02,570 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913566722]
+14:19:02,570 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,571 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,571 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,572 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,572 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        name=?,
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,573 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159339008]
+14:19:02,573 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159339009]
+14:19:02,573 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,573 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159339010]
+14:19:02,573 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,573 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159339011]
+14:19:02,573 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,574 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159343104]
+14:19:02,574 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,574 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159343105]
+14:19:02,574 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913583106]
+14:19:02,574 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913583106]
+14:19:02,574 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913583106]
+14:19:02,575  INFO CustomRunner:139 - Test: testModifiableSessionModifiableCriteria
+14:19:02,576 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,576 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159351296]
+14:19:02,576 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,576 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159351297]
+14:19:02,577 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,577 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159355392]
+14:19:02,577 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,577 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159355393]
+14:19:02,577 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159355394]
+14:19:02,577 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913595395]
+14:19:02,577 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913595395]
+14:19:02,577 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913595395]
+14:19:02,578 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,578 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,578 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,579 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,579 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        name=?,
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,580 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159367680]
+14:19:02,580 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159367681]
+14:19:02,580 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,580 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159367682]
+14:19:02,580 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,580 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159367683]
+14:19:02,580 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,580 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159367684]
+14:19:02,581 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,581 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159371776]
+14:19:02,581 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913611777]
+14:19:02,581 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913611777]
+14:19:02,581 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913611777]
+14:19:02,582  INFO CustomRunner:139 - Test: testModifiableSessionReadOnlyCriteria
+14:19:02,583 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,584 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159384064]
+14:19:02,584 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,584 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159384065]
+14:19:02,584 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,584 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159384066]
+14:19:02,584 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,585 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159388160]
+14:19:02,585 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159388161]
+14:19:02,585 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913628162]
+14:19:02,585 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913628162]
+14:19:02,585 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913628162]
+14:19:02,585 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,587 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,587 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,588 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,588 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,588 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159400448]
+14:19:02,589 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159404544]
+14:19:02,589 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,589 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159404545]
+14:19:02,589 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,589 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159404546]
+14:19:02,589 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,589 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159404547]
+14:19:02,589 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,590 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159408640]
+14:19:02,590 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913648641]
+14:19:02,590 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913648641]
+14:19:02,590 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913648641]
+14:19:02,603  INFO CustomRunner:139 - Test: testReadOnlyCriteriaReturnsExistingModifiableProxyInit
+14:19:02,605 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,606 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159474176]
+14:19:02,606 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,606 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159474177]
+14:19:02,606 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,606 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159474178]
+14:19:02,606 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,606 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159474179]
+14:19:02,606 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159474180]
+14:19:02,607 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913718272]
+14:19:02,607 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913718272]
+14:19:02,607 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913718272]
+14:19:02,607 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,608 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,608 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,608 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,609 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,609 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159486464]
+14:19:02,609 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159486465]
+14:19:02,609 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,609 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159486466]
+14:19:02,609 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,610 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159490560]
+14:19:02,610 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,610 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159490561]
+14:19:02,610 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,610 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159490562]
+14:19:02,610 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913730563]
+14:19:02,610 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913730563]
+14:19:02,610 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913730563]
+14:19:02,612  INFO CustomRunner:139 - Test: testReadOnlyCriteriaReturnsExistingModifiableProxyNotInit
+14:19:02,614 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,614 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159506944]
+14:19:02,615 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,615 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159511040]
+14:19:02,615 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,615 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159511041]
+14:19:02,615 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,615 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159511042]
+14:19:02,615 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159511043]
+14:19:02,615 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913751044]
+14:19:02,616 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913751044]
+14:19:02,616 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913751044]
+14:19:02,616 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,616 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,617 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,618 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,619 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,619 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159527424]
+14:19:02,619 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159527425]
+14:19:02,619 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,619 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159527426]
+14:19:02,620 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,620 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159531520]
+14:19:02,620 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,620 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159531521]
+14:19:02,620 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,620 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159531522]
+14:19:02,620 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913771523]
+14:19:02,620 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913771523]
+14:19:02,621 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913771523]
+14:19:02,621  INFO CustomRunner:139 - Test: testReadOnlyCriteriaReturnsModifiableExistingEntity
+14:19:02,622 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,622 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159539713]
+14:19:02,623 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,623 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159543808]
+14:19:02,623 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,623 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159543809]
+14:19:02,623 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,623 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159543810]
+14:19:02,623 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159543811]
+14:19:02,624 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913787904]
+14:19:02,624 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913787904]
+14:19:02,624 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913787904]
+14:19:02,624 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,624 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,625 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,637 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,638 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,638 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159605248]
+14:19:02,638 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159605249]
+14:19:02,638 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,646 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159638016]
+14:19:02,646 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,647 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159642112]
+14:19:02,647 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,648 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159646208]
+14:19:02,648 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,649 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159650304]
+14:19:02,649 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913890305]
+14:19:02,649 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913890305]
+14:19:02,649 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913890305]
+14:19:02,650  INFO CustomRunner:139 - Test: testReadOnlySessionDefaultCriteria
+14:19:02,651 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,652 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159662592]
+14:19:02,652 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,652 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159662593]
+14:19:02,652 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,652 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159662594]
+14:19:02,652 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,659 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159691264]
+14:19:02,659 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159691265]
+14:19:02,660 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090913935360]
+14:19:02,660 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090913935360]
+14:19:02,660 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090913935360]
+14:19:02,660 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,661 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,662 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,669 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,670 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,671 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159740416]
+14:19:02,671 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159740417]
+14:19:02,671 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,672 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159744512]
+14:19:02,672 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,672 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159744513]
+14:19:02,672 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,672 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159744514]
+14:19:02,692 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,694 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159834624]
+14:19:02,694 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090914074625]
+14:19:02,694 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090914074625]
+14:19:02,694 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090914074625]
+14:19:02,696  INFO CustomRunner:139 - Test: testReadOnlySessionModifiableCriteria
+14:19:02,697 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,697 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159846913]
+14:19:02,697 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,698 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159851008]
+14:19:02,698 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,702 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159867392]
+14:19:02,703 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,703 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159871488]
+14:19:02,703 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159871489]
+14:19:02,703 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090914111490]
+14:19:02,704 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090914111490]
+14:19:02,704 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090914111490]
+14:19:02,704 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,705 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,713 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,714 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,715 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        name=?,
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,724 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159957504]
+14:19:02,724 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159957505]
+14:19:02,724 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,725 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091159961600]
+14:19:02,725 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,726 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091159965696]
+14:19:02,726 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,726 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091159965697]
+14:19:02,726 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,735 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160002560]
+14:19:02,735 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090914242561]
+14:19:02,736 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090914242561]
+14:19:02,736 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090914242561]
+14:19:02,736  INFO CustomRunner:139 - Test: testReadOnlySessionReadOnlyCriteria
+14:19:02,737 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,738 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160014848]
+14:19:02,738 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,738 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160014849]
+14:19:02,738 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,747 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091160051712]
+14:19:02,747 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,747 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160051713]
+14:19:02,747 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160051714]
+14:19:02,747 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090914291715]
+14:19:02,747 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090914291715]
+14:19:02,747 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090914291715]
+14:19:02,748 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_
+14:19:02,748 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,757 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,758 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,759 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,759 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091160100864]
+14:19:02,769 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160141824]
+14:19:02,769 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,769 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160141825]
+14:19:02,769 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,770 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160145920]
+14:19:02,770 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,770 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091160145921]
+14:19:02,770 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,770 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160145922]
+14:19:02,770 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090914385923]
+14:19:02,770 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090914385923]
+14:19:02,771 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090914385923]
+14:19:02,771  INFO CustomRunner:139 - Test: testScrollCriteria
+14:19:02,772 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,772 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160154113]
+14:19:02,772 DEBUG SQL:104 - 
+    select
+        this_.courseCode as courseCode0_0_,
+        this_.description as descript2_0_0_ 
+    from
+        Course this_
+14:19:02,773 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,773 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160158208]
+14:19:02,773 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090914398209]
+14:19:02,774  INFO CustomRunner:139 - Test: testSubselect
+14:19:02,784 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,784 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160203264]
+14:19:02,784 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,784 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160203265]
+14:19:02,785 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,785 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091160207360]
+14:19:02,785 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,792 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160236032]
+14:19:02,792 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160236033]
+14:19:02,793 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090914480128]
+14:19:02,793 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090914480128]
+14:19:02,793 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090914480128]
+14:19:02,793 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId2_0_,
+        this_.name as name2_0_,
+        this_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student this_ 
+    where
+        exists (
+            select
+                this_.name as y0_ 
+            from
+                Student this_ 
+            where
+                this_.studentId=?
+        )
+14:19:02,794 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,794 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,816 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,817 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId1_0_,
+        this_.courseCode as courseCode1_0_,
+        this_.semester as semester1_0_,
+        this_."year" as year4_1_0_ 
+    from
+        Enrolment this_ 
+    where
+        ? = (
+            select
+                st_.name as y0_ 
+            from
+                Student st_ 
+            where
+                st_.studentId=this_.studentId
+        )
+14:19:02,818 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,825 DEBUG SQL:104 - 
+    select
+        student0_.studentId as studentId2_0_,
+        student0_.name as name2_0_,
+        student0_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student student0_ 
+    where
+        student0_.studentId=?
+14:19:02,827 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,827 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId1_0_,
+        this_.courseCode as courseCode1_0_,
+        this_.semester as semester1_0_,
+        this_."year" as year4_1_0_ 
+    from
+        Enrolment this_ 
+    where
+        ? = (
+            select
+                st_.name as y0_ 
+            from
+                Student st_ 
+            inner join
+                Enrolment enrolment1_ 
+                    on st_.studentId=enrolment1_.studentId 
+            inner join
+                Course course2_ 
+                    on enrolment1_.courseCode=course2_.courseCode 
+            where
+                course2_.description=?
+        )
+14:19:02,837 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,837 DEBUG SQL:104 - 
+    select
+        student0_.studentId as studentId2_0_,
+        student0_.name as name2_0_,
+        student0_.preferredCourseCode as preferre3_2_0_ 
+    from
+        Student student0_ 
+    where
+        student0_.studentId=?
+14:19:02,847 DEBUG SQL:104 - 
+    select
+        course0_.courseCode as courseCode0_0_,
+        course0_.description as descript2_0_0_ 
+    from
+        Course course0_ 
+    where
+        course0_.courseCode=?
+14:19:02,848 DEBUG SQL:104 - 
+    select
+        course_.courseCode,
+        course_.description as descript2_0_ 
+    from
+        Course course_ 
+    where
+        course_.courseCode=?
+14:19:02,848 DEBUG SQL:104 - 
+    select
+        student_.studentId,
+        student_.name as name2_,
+        student_.preferredCourseCode as preferre3_2_ 
+    from
+        Student student_ 
+    where
+        student_.studentId=?
+14:19:02,848 DEBUG SQL:104 - 
+    select
+        enrolment_.studentId,
+        enrolment_.courseCode,
+        enrolment_.semester as semester1_,
+        enrolment_."year" as year4_1_ 
+    from
+        Enrolment enrolment_ 
+    where
+        enrolment_.studentId=? 
+        and enrolment_.courseCode=?
+14:19:02,858 DEBUG SQL:104 - 
+    select
+        course_.courseCode,
+        course_.description as descript2_0_ 
+    from
+        Course course_ 
+    where
+        course_.courseCode=?
+14:19:02,858 DEBUG SQL:104 - 
+    update
+        Student 
+    set
+        name=?,
+        preferredCourseCode=? 
+    where
+        studentId=?
+14:19:02,858 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091160506368]
+14:19:02,859 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160510464]
+14:19:02,859 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,869 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160551424]
+14:19:02,869 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,869 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160551425]
+14:19:02,870 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,870 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091160555520]
+14:19:02,870 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,870 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160555521]
+14:19:02,870 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090914795522]
+14:19:02,870 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090914795522]
+14:19:02,870 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090914795522]
+14:19:02,871  INFO CustomRunner:139 - Test: testTwoAliasesCache
+14:19:02,872 DEBUG SQL:104 - 
+    insert 
+    into
+        Course
+        (description, courseCode) 
+    values
+        (?, ?)
+14:19:02,879 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160592384]
+14:19:02,879 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,880 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091160596480]
+14:19:02,880 DEBUG SQL:104 - 
+    insert 
+    into
+        Student
+        (name, preferredCourseCode, studentId) 
+    values
+        (?, ?, ?)
+14:19:02,880 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091160596481]
+14:19:02,880 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,893 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160649728]
+14:19:02,925 DEBUG SQL:104 - 
+    insert 
+    into
+        Enrolment
+        (semester, "year", studentId, courseCode) 
+    values
+        (?, ?, ?, ?)
+14:19:02,926 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160784896]
+14:19:02,926 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160784897]
+14:19:02,926 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160784898]
+14:19:02,926 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090915024899]
+14:19:02,926 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090915024899]
+14:19:02,927 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090915024899]
+14:19:02,927 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId1_2_,
+        this_.courseCode as courseCode1_2_,
+        this_.semester as semester1_2_,
+        this_."year" as year4_1_2_,
+        s1_.studentId as studentId2_0_,
+        s1_.name as name2_0_,
+        s1_.preferredCourseCode as preferre3_2_0_,
+        c2_.courseCode as courseCode0_1_,
+        c2_.description as descript2_0_1_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student s1_ 
+            on this_.studentId=s1_.studentId 
+    inner join
+        Course c2_ 
+            on this_.courseCode=c2_.courseCode 
+    where
+        exists (
+            select
+                1 
+            from
+                Enrolment 
+            where
+                s1_.studentId=studentId
+        )
+14:19:02,929 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId1_2_,
+        this_.courseCode as courseCode1_2_,
+        this_.semester as semester1_2_,
+        this_."year" as year4_1_2_,
+        s1_.studentId as studentId2_0_,
+        s1_.name as name2_0_,
+        s1_.preferredCourseCode as preferre3_2_0_,
+        c2_.courseCode as courseCode0_1_,
+        c2_.description as descript2_0_1_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student s1_ 
+            on this_.studentId=s1_.studentId 
+    inner join
+        Course c2_ 
+            on this_.courseCode=c2_.courseCode 
+    where
+        exists (
+            select
+                1 
+            from
+                Enrolment 
+            where
+                s1_.studentId=studentId
+        )
+14:19:02,930 DEBUG SQL:104 - 
+    select
+        this_.studentId as studentId1_2_,
+        this_.courseCode as courseCode1_2_,
+        this_.semester as semester1_2_,
+        this_."year" as year4_1_2_,
+        s1_.studentId as studentId2_0_,
+        s1_.name as name2_0_,
+        s1_.preferredCourseCode as preferre3_2_0_,
+        c2_.courseCode as courseCode0_1_,
+        c2_.description as descript2_0_1_ 
+    from
+        Enrolment this_ 
+    inner join
+        Student s1_ 
+            on this_.studentId=s1_.studentId 
+    inner join
+        Course c2_ 
+            on this_.courseCode=c2_.courseCode 
+    where
+        exists (
+            select
+                1 
+            from
+                Enrolment 
+            where
+                s1_.studentId=studentId
+        )
+14:19:02,931 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,932 DEBUG SQL:104 - 
+    select
+        enrolments0_.studentId as studentId2_1_,
+        enrolments0_.studentId as studentId1_1_,
+        enrolments0_.courseCode as courseCode1_1_,
+        enrolments0_.studentId as studentId1_0_,
+        enrolments0_.courseCode as courseCode1_0_,
+        enrolments0_.semester as semester1_0_,
+        enrolments0_."year" as year4_1_0_ 
+    from
+        Enrolment enrolments0_ 
+    where
+        enrolments0_.studentId=?
+14:19:02,934 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160817664]
+14:19:02,934 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160817665]
+14:19:02,934 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,934 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160817666]
+14:19:02,934 DEBUG SQL:104 - 
+    delete 
+    from
+        Enrolment 
+    where
+        studentId=? 
+        and courseCode=?
+14:19:02,935 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579091160821760]
+14:19:02,935 DEBUG SQL:104 - 
+    delete 
+    from
+        Course 
+    where
+        courseCode=?
+14:19:02,935 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579091160821761]
+14:19:02,935 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,935 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091160821762]
+14:19:02,935 DEBUG SQL:104 - 
+    delete 
+    from
+        Student 
+    where
+        studentId=?
+14:19:02,935 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579091160821763]
+14:19:02,935 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Student] -> [5579090915061764]
+14:19:02,956 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Course] -> [5579090915061764]
+14:19:02,957 DEBUG BaseGeneralDataRegion:59 - Caching[criteriaquerytest.org.hibernate.cache.spi.UpdateTimestampsCache] : [Enrolment] -> [5579090915061764]
+14:19:02,957  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:02,958 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:02,958 DEBUG SQL:104 - 
+    alter table Enrolment 
+        drop constraint FKEB4882C4DBE4593B
+14:19:02,958 DEBUG SQL:104 - 
+    alter table Enrolment 
+        drop constraint FKEB4882C4E6E608F9
+14:19:02,959 DEBUG SQL:104 - 
+    alter table Student 
+        drop constraint FKF3371A1B8EA4283A
+14:19:02,959 DEBUG SQL:104 - 
+    drop table Course if exists
+14:19:02,959 DEBUG SQL:104 - 
+    drop table Enrolment if exists
+14:19:02,959 DEBUG SQL:104 - 
+    drop table Student if exists
+14:19:02,959  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:02,959  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

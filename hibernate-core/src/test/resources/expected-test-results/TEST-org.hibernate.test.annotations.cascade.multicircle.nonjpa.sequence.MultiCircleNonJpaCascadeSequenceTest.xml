@@ -1,0 +1,2493 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.cascade.multicircle.nonjpa.sequence.MultiCircleNonJpaCascadeSequenceTest" tests="4" time="1.111" timestamp="2013-02-28T20:10:14">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.cascade.multicircle.nonjpa.sequence.MultiCircleNonJpaCascadeSequenceTest" name="testMerge" time="0.292" />
+  <testcase classname="org.hibernate.test.annotations.cascade.multicircle.nonjpa.sequence.MultiCircleNonJpaCascadeSequenceTest" name="testPersist" time="0.222" />
+  <testcase classname="org.hibernate.test.annotations.cascade.multicircle.nonjpa.sequence.MultiCircleNonJpaCascadeSequenceTest" name="testSave" time="0.183" />
+  <testcase classname="org.hibernate.test.annotations.cascade.multicircle.nonjpa.sequence.MultiCircleNonJpaCascadeSequenceTest" name="testSaveOrUpdate" time="0.19" />
+  <system-out><![CDATA[14:10:14,527  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.cascade.multicircle.nonjpa.sequence.MultiCircleNonJpaCascadeSequenceTest
+14:10:14,542  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:14,542  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:14,542  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:14,542  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:14,543  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:14,544  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:14,545  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:14,545  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:14,545  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:14,545  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:14,594  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:14,595 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:14,595 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK42ED39ABEE
+14:10:14,595 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table B drop constraint FK42ED39ABEE
+14:10:14,595 ERROR SchemaExport:426 - Table "B" not found; SQL statement:
+
+    alter table B 
+        drop constraint FK42ED39ABEE [42102-145]
+14:10:14,595 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK42ED3A204E
+14:10:14,596 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table B drop constraint FK42ED3A204E
+14:10:14,596 ERROR SchemaExport:426 - Table "B" not found; SQL statement:
+
+    alter table B 
+        drop constraint FK42ED3A204E [42102-145]
+14:10:14,596 DEBUG SQL:104 - 
+    alter table D 
+        drop constraint FK44ED39ABEE
+14:10:14,596 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table D drop constraint FK44ED39ABEE
+14:10:14,596 ERROR SchemaExport:426 - Table "D" not found; SQL statement:
+
+    alter table D 
+        drop constraint FK44ED39ABEE [42102-145]
+14:10:14,596 DEBUG SQL:104 - 
+    alter table D 
+        drop constraint FK44ED3A94AE
+14:10:14,596 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table D drop constraint FK44ED3A94AE
+14:10:14,596 ERROR SchemaExport:426 - Table "D" not found; SQL statement:
+
+    alter table D 
+        drop constraint FK44ED3A94AE [42102-145]
+14:10:14,597 DEBUG SQL:104 - 
+    alter table E 
+        drop constraint FK45ED3B090E
+14:10:14,597 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table E drop constraint FK45ED3B090E
+14:10:14,597 ERROR SchemaExport:426 - Table "E" not found; SQL statement:
+
+    alter table E 
+        drop constraint FK45ED3B090E [42102-145]
+14:10:14,597 DEBUG SQL:104 - 
+    alter table F 
+        drop constraint FK46ED3A204E
+14:10:14,597 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table F drop constraint FK46ED3A204E
+14:10:14,597 ERROR SchemaExport:426 - Table "F" not found; SQL statement:
+
+    alter table F 
+        drop constraint FK46ED3A204E [42102-145]
+14:10:14,598 DEBUG SQL:104 - 
+    alter table F 
+        drop constraint FK46ED3B7D6E
+14:10:14,598 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table F drop constraint FK46ED3B7D6E
+14:10:14,598 ERROR SchemaExport:426 - Table "F" not found; SQL statement:
+
+    alter table F 
+        drop constraint FK46ED3B7D6E [42102-145]
+14:10:14,598 DEBUG SQL:104 - 
+    alter table G 
+        drop constraint FK47ED39378E
+14:10:14,598 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table G drop constraint FK47ED39378E
+14:10:14,598 ERROR SchemaExport:426 - Table "G" not found; SQL statement:
+
+    alter table G 
+        drop constraint FK47ED39378E [42102-145]
+14:10:14,598 DEBUG SQL:104 - 
+    drop table B if exists
+14:10:14,599 DEBUG SQL:104 - 
+    drop table C if exists
+14:10:14,599 DEBUG SQL:104 - 
+    drop table D if exists
+14:10:14,599 DEBUG SQL:104 - 
+    drop table E if exists
+14:10:14,625 DEBUG SQL:104 - 
+    drop table F if exists
+14:10:14,625 DEBUG SQL:104 - 
+    drop table G if exists
+14:10:14,626 DEBUG SQL:104 - 
+    drop sequence TIGER_SEQ
+14:10:14,626 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence TIGER_SEQ
+14:10:14,626 ERROR SchemaExport:426 - Sequence "TIGER_SEQ" not found; SQL statement:
+
+    drop sequence TIGER_SEQ [90036-145]
+14:10:14,626 DEBUG SQL:104 - 
+    create table B (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        c_id bigint not null,
+        d_id bigint not null,
+        primary key (id)
+    )
+14:10:14,627 DEBUG SQL:104 - 
+    create table C (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        primary key (id)
+    )
+14:10:14,627 DEBUG SQL:104 - 
+    create table D (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        c_id bigint not null,
+        e_id bigint not null,
+        primary key (id)
+    )
+14:10:14,627 DEBUG SQL:104 - 
+    create table E (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        f_id bigint,
+        primary key (id)
+    )
+14:10:14,628 DEBUG SQL:104 - 
+    create table F (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        d_id bigint not null,
+        g_id bigint not null,
+        primary key (id)
+    )
+14:10:14,644 DEBUG SQL:104 - 
+    create table G (
+        id bigint not null,
+        created timestamp,
+        uuid char(36),
+        b_id bigint not null,
+        primary key (id)
+    )
+14:10:14,645 DEBUG SQL:104 - 
+    alter table B 
+        add constraint uc_B_1 unique (uuid)
+14:10:14,645 DEBUG SQL:104 - 
+    alter table B 
+        add constraint FK42ED39ABEE 
+        foreign key (c_id) 
+        references C
+14:10:14,646 DEBUG SQL:104 - 
+    alter table B 
+        add constraint FK42ED3A204E 
+        foreign key (d_id) 
+        references D
+14:10:14,647 DEBUG SQL:104 - 
+    alter table C 
+        add constraint uc_C_1 unique (uuid)
+14:10:14,662 DEBUG SQL:104 - 
+    alter table D 
+        add constraint uc_D_1 unique (uuid)
+14:10:14,662 DEBUG SQL:104 - 
+    alter table D 
+        add constraint FK44ED39ABEE 
+        foreign key (c_id) 
+        references C
+14:10:14,663 DEBUG SQL:104 - 
+    alter table D 
+        add constraint FK44ED3A94AE 
+        foreign key (e_id) 
+        references E
+14:10:14,665 DEBUG SQL:104 - 
+    alter table E 
+        add constraint uc_E_1 unique (uuid)
+14:10:14,665 DEBUG SQL:104 - 
+    alter table E 
+        add constraint FK45ED3B090E 
+        foreign key (f_id) 
+        references F
+14:10:14,666 DEBUG SQL:104 - 
+    alter table F 
+        add constraint uc_F_1 unique (uuid)
+14:10:14,666 DEBUG SQL:104 - 
+    alter table F 
+        add constraint FK46ED3A204E 
+        foreign key (d_id) 
+        references D
+14:10:14,678 DEBUG SQL:104 - 
+    alter table F 
+        add constraint FK46ED3B7D6E 
+        foreign key (g_id) 
+        references G
+14:10:14,679 DEBUG SQL:104 - 
+    alter table G 
+        add constraint uc_G_1 unique (uuid)
+14:10:14,679 DEBUG SQL:104 - 
+    alter table G 
+        add constraint FK47ED39378E 
+        foreign key (b_id) 
+        references B
+14:10:14,680 DEBUG SQL:104 - 
+    create sequence TIGER_SEQ start with 1 increment by 50
+14:10:14,680  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:14,681  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:14,681  INFO CustomRunner:139 - Test: testMerge
+14:10:14,683 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:14,684 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:14,684 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:14,685 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:14,685 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:14,686 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:14,687 DEBUG SQL:104 - 
+    call next value for TIGER_SEQ
+14:10:14,690 DEBUG SQL:104 - 
+    insert 
+    into
+        C
+        (created, uuid, id) 
+    values
+        (?, ?, ?)
+14:10:14,691 DEBUG SQL:104 - 
+    insert 
+    into
+        E
+        (created, uuid, f_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:14,726 DEBUG SQL:104 - 
+    insert 
+    into
+        D
+        (created, uuid, c_id, e_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:14,728 DEBUG SQL:104 - 
+    insert 
+    into
+        B
+        (created, uuid, c_id, d_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:14,729 DEBUG SQL:104 - 
+    insert 
+    into
+        G
+        (created, uuid, b_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:14,730 DEBUG SQL:104 - 
+    insert 
+    into
+        F
+        (created, uuid, d_id, g_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:14,730 DEBUG SQL:104 - 
+    update
+        E 
+    set
+        f_id=? 
+    where
+        id=?
+14:10:14,739 DEBUG SQL:104 - 
+    select
+        b0_.id as id0_8_,
+        b0_.created as created0_8_,
+        b0_.uuid as uuid0_8_,
+        b0_.c_id as c4_0_8_,
+        b0_.d_id as d5_0_8_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_,
+        d2_.id as id2_1_,
+        d2_.created as created2_1_,
+        d2_.uuid as uuid2_1_,
+        d2_.c_id as c4_2_1_,
+        d2_.e_id as e5_2_1_,
+        c3_.id as id1_2_,
+        c3_.created as created1_2_,
+        c3_.uuid as uuid1_2_,
+        e4_.id as id3_3_,
+        e4_.created as created3_3_,
+        e4_.uuid as uuid3_3_,
+        e4_.f_id as f4_3_3_,
+        f5_.id as id4_4_,
+        f5_.created as created4_4_,
+        f5_.uuid as uuid4_4_,
+        f5_.d_id as d4_4_4_,
+        f5_.g_id as g5_4_4_,
+        d6_.id as id2_5_,
+        d6_.created as created2_5_,
+        d6_.uuid as uuid2_5_,
+        d6_.c_id as c4_2_5_,
+        d6_.e_id as e5_2_5_,
+        g7_.id as id5_6_,
+        g7_.created as created5_6_,
+        g7_.uuid as uuid5_6_,
+        g7_.b_id as b4_5_6_,
+        b8_.id as id0_7_,
+        b8_.created as created0_7_,
+        b8_.uuid as uuid0_7_,
+        b8_.c_id as c4_0_7_,
+        b8_.d_id as d5_0_7_ 
+    from
+        B b0_ 
+    inner join
+        C c1_ 
+            on b0_.c_id=c1_.id 
+    inner join
+        D d2_ 
+            on b0_.d_id=d2_.id 
+    left outer join
+        C c3_ 
+            on d2_.c_id=c3_.id 
+    left outer join
+        E e4_ 
+            on d2_.e_id=e4_.id 
+    left outer join
+        F f5_ 
+            on e4_.f_id=f5_.id 
+    left outer join
+        D d6_ 
+            on f5_.d_id=d6_.id 
+    left outer join
+        G g7_ 
+            on f5_.g_id=g7_.id 
+    left outer join
+        B b8_ 
+            on g7_.b_id=b8_.id 
+    where
+        b0_.id=?
+14:10:14,761 DEBUG SQL:104 - 
+    select
+        gcollectio0_.b_id as b4_0_1_,
+        gcollectio0_.id as id5_1_,
+        gcollectio0_.id as id5_0_,
+        gcollectio0_.created as created5_0_,
+        gcollectio0_.uuid as uuid5_0_,
+        gcollectio0_.b_id as b4_5_0_ 
+    from
+        G gcollectio0_ 
+    where
+        gcollectio0_.b_id=?
+14:10:14,761 DEBUG SQL:104 - 
+    select
+        bcollectio0_.c_id as c4_1_8_,
+        bcollectio0_.id as id0_8_,
+        bcollectio0_.id as id0_7_,
+        bcollectio0_.created as created0_7_,
+        bcollectio0_.uuid as uuid0_7_,
+        bcollectio0_.c_id as c4_0_7_,
+        bcollectio0_.d_id as d5_0_7_,
+        d1_.id as id2_0_,
+        d1_.created as created2_0_,
+        d1_.uuid as uuid2_0_,
+        d1_.c_id as c4_2_0_,
+        d1_.e_id as e5_2_0_,
+        c2_.id as id1_1_,
+        c2_.created as created1_1_,
+        c2_.uuid as uuid1_1_,
+        e3_.id as id3_2_,
+        e3_.created as created3_2_,
+        e3_.uuid as uuid3_2_,
+        e3_.f_id as f4_3_2_,
+        f4_.id as id4_3_,
+        f4_.created as created4_3_,
+        f4_.uuid as uuid4_3_,
+        f4_.d_id as d4_4_3_,
+        f4_.g_id as g5_4_3_,
+        d5_.id as id2_4_,
+        d5_.created as created2_4_,
+        d5_.uuid as uuid2_4_,
+        d5_.c_id as c4_2_4_,
+        d5_.e_id as e5_2_4_,
+        g6_.id as id5_5_,
+        g6_.created as created5_5_,
+        g6_.uuid as uuid5_5_,
+        g6_.b_id as b4_5_5_,
+        b7_.id as id0_6_,
+        b7_.created as created0_6_,
+        b7_.uuid as uuid0_6_,
+        b7_.c_id as c4_0_6_,
+        b7_.d_id as d5_0_6_ 
+    from
+        B bcollectio0_ 
+    inner join
+        D d1_ 
+            on bcollectio0_.d_id=d1_.id 
+    left outer join
+        C c2_ 
+            on d1_.c_id=c2_.id 
+    left outer join
+        E e3_ 
+            on d1_.e_id=e3_.id 
+    left outer join
+        F f4_ 
+            on e3_.f_id=f4_.id 
+    left outer join
+        D d5_ 
+            on f4_.d_id=d5_.id 
+    left outer join
+        G g6_ 
+            on f4_.g_id=g6_.id 
+    left outer join
+        B b7_ 
+            on g6_.b_id=b7_.id 
+    where
+        bcollectio0_.c_id=?
+14:10:14,786 DEBUG SQL:104 - 
+    select
+        dcollectio0_.c_id as c4_1_8_,
+        dcollectio0_.id as id2_8_,
+        dcollectio0_.id as id2_7_,
+        dcollectio0_.created as created2_7_,
+        dcollectio0_.uuid as uuid2_7_,
+        dcollectio0_.c_id as c4_2_7_,
+        dcollectio0_.e_id as e5_2_7_,
+        e1_.id as id3_0_,
+        e1_.created as created3_0_,
+        e1_.uuid as uuid3_0_,
+        e1_.f_id as f4_3_0_,
+        f2_.id as id4_1_,
+        f2_.created as created4_1_,
+        f2_.uuid as uuid4_1_,
+        f2_.d_id as d4_4_1_,
+        f2_.g_id as g5_4_1_,
+        d3_.id as id2_2_,
+        d3_.created as created2_2_,
+        d3_.uuid as uuid2_2_,
+        d3_.c_id as c4_2_2_,
+        d3_.e_id as e5_2_2_,
+        g4_.id as id5_3_,
+        g4_.created as created5_3_,
+        g4_.uuid as uuid5_3_,
+        g4_.b_id as b4_5_3_,
+        b5_.id as id0_4_,
+        b5_.created as created0_4_,
+        b5_.uuid as uuid0_4_,
+        b5_.c_id as c4_0_4_,
+        b5_.d_id as d5_0_4_,
+        c6_.id as id1_5_,
+        c6_.created as created1_5_,
+        c6_.uuid as uuid1_5_,
+        d7_.id as id2_6_,
+        d7_.created as created2_6_,
+        d7_.uuid as uuid2_6_,
+        d7_.c_id as c4_2_6_,
+        d7_.e_id as e5_2_6_ 
+    from
+        D dcollectio0_ 
+    inner join
+        E e1_ 
+            on dcollectio0_.e_id=e1_.id 
+    left outer join
+        F f2_ 
+            on e1_.f_id=f2_.id 
+    left outer join
+        D d3_ 
+            on f2_.d_id=d3_.id 
+    left outer join
+        G g4_ 
+            on f2_.g_id=g4_.id 
+    left outer join
+        B b5_ 
+            on g4_.b_id=b5_.id 
+    left outer join
+        C c6_ 
+            on b5_.c_id=c6_.id 
+    left outer join
+        D d7_ 
+            on b5_.d_id=d7_.id 
+    where
+        dcollectio0_.c_id=?
+14:10:14,797 DEBUG SQL:104 - 
+    select
+        bcollectio0_.d_id as d5_2_2_,
+        bcollectio0_.id as id0_2_,
+        bcollectio0_.id as id0_1_,
+        bcollectio0_.created as created0_1_,
+        bcollectio0_.uuid as uuid0_1_,
+        bcollectio0_.c_id as c4_0_1_,
+        bcollectio0_.d_id as d5_0_1_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_ 
+    from
+        B bcollectio0_ 
+    inner join
+        C c1_ 
+            on bcollectio0_.c_id=c1_.id 
+    where
+        bcollectio0_.d_id=?
+14:10:14,856 DEBUG SQL:104 - 
+    select
+        fcollectio0_.d_id as d4_2_8_,
+        fcollectio0_.id as id4_8_,
+        fcollectio0_.id as id4_7_,
+        fcollectio0_.created as created4_7_,
+        fcollectio0_.uuid as uuid4_7_,
+        fcollectio0_.d_id as d4_4_7_,
+        fcollectio0_.g_id as g5_4_7_,
+        g1_.id as id5_0_,
+        g1_.created as created5_0_,
+        g1_.uuid as uuid5_0_,
+        g1_.b_id as b4_5_0_,
+        b2_.id as id0_1_,
+        b2_.created as created0_1_,
+        b2_.uuid as uuid0_1_,
+        b2_.c_id as c4_0_1_,
+        b2_.d_id as d5_0_1_,
+        c3_.id as id1_2_,
+        c3_.created as created1_2_,
+        c3_.uuid as uuid1_2_,
+        d4_.id as id2_3_,
+        d4_.created as created2_3_,
+        d4_.uuid as uuid2_3_,
+        d4_.c_id as c4_2_3_,
+        d4_.e_id as e5_2_3_,
+        c5_.id as id1_4_,
+        c5_.created as created1_4_,
+        c5_.uuid as uuid1_4_,
+        e6_.id as id3_5_,
+        e6_.created as created3_5_,
+        e6_.uuid as uuid3_5_,
+        e6_.f_id as f4_3_5_,
+        f7_.id as id4_6_,
+        f7_.created as created4_6_,
+        f7_.uuid as uuid4_6_,
+        f7_.d_id as d4_4_6_,
+        f7_.g_id as g5_4_6_ 
+    from
+        F fcollectio0_ 
+    inner join
+        G g1_ 
+            on fcollectio0_.g_id=g1_.id 
+    left outer join
+        B b2_ 
+            on g1_.b_id=b2_.id 
+    left outer join
+        C c3_ 
+            on b2_.c_id=c3_.id 
+    left outer join
+        D d4_ 
+            on b2_.d_id=d4_.id 
+    left outer join
+        C c5_ 
+            on d4_.c_id=c5_.id 
+    left outer join
+        E e6_ 
+            on d4_.e_id=e6_.id 
+    left outer join
+        F f7_ 
+            on e6_.f_id=f7_.id 
+    where
+        fcollectio0_.d_id=?
+14:10:14,857 DEBUG SQL:104 - 
+    select
+        dcollectio0_.e_id as e5_3_2_,
+        dcollectio0_.id as id2_2_,
+        dcollectio0_.id as id2_1_,
+        dcollectio0_.created as created2_1_,
+        dcollectio0_.uuid as uuid2_1_,
+        dcollectio0_.c_id as c4_2_1_,
+        dcollectio0_.e_id as e5_2_1_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_ 
+    from
+        D dcollectio0_ 
+    inner join
+        C c1_ 
+            on dcollectio0_.c_id=c1_.id 
+    where
+        dcollectio0_.e_id=?
+14:10:14,858 DEBUG SQL:104 - 
+    select
+        ecollectio0_.f_id as f4_4_1_,
+        ecollectio0_.id as id3_1_,
+        ecollectio0_.id as id3_0_,
+        ecollectio0_.created as created3_0_,
+        ecollectio0_.uuid as uuid3_0_,
+        ecollectio0_.f_id as f4_3_0_ 
+    from
+        E ecollectio0_ 
+    where
+        ecollectio0_.f_id=?
+14:10:14,860 DEBUG SQL:104 - 
+    select
+        fcollectio0_.g_id as g5_5_5_,
+        fcollectio0_.id as id4_5_,
+        fcollectio0_.id as id4_4_,
+        fcollectio0_.created as created4_4_,
+        fcollectio0_.uuid as uuid4_4_,
+        fcollectio0_.d_id as d4_4_4_,
+        fcollectio0_.g_id as g5_4_4_,
+        d1_.id as id2_0_,
+        d1_.created as created2_0_,
+        d1_.uuid as uuid2_0_,
+        d1_.c_id as c4_2_0_,
+        d1_.e_id as e5_2_0_,
+        c2_.id as id1_1_,
+        c2_.created as created1_1_,
+        c2_.uuid as uuid1_1_,
+        e3_.id as id3_2_,
+        e3_.created as created3_2_,
+        e3_.uuid as uuid3_2_,
+        e3_.f_id as f4_3_2_,
+        f4_.id as id4_3_,
+        f4_.created as created4_3_,
+        f4_.uuid as uuid4_3_,
+        f4_.d_id as d4_4_3_,
+        f4_.g_id as g5_4_3_ 
+    from
+        F fcollectio0_ 
+    inner join
+        D d1_ 
+            on fcollectio0_.d_id=d1_.id 
+    left outer join
+        C c2_ 
+            on d1_.c_id=c2_.id 
+    left outer join
+        E e3_ 
+            on d1_.e_id=e3_.id 
+    left outer join
+        F f4_ 
+            on e3_.f_id=f4_.id 
+    where
+        fcollectio0_.g_id=?
+14:10:14,875 DEBUG SQL:104 - 
+    select
+        b0_.id as id0_3_,
+        b0_.created as created0_3_,
+        b0_.uuid as uuid0_3_,
+        b0_.c_id as c4_0_3_,
+        b0_.d_id as d5_0_3_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_,
+        dcollectio2_.c_id as c4_1_5_,
+        dcollectio2_.id as id2_5_,
+        dcollectio2_.id as id2_1_,
+        dcollectio2_.created as created2_1_,
+        dcollectio2_.uuid as uuid2_1_,
+        dcollectio2_.c_id as c4_2_1_,
+        dcollectio2_.e_id as e5_2_1_,
+        d3_.id as id2_2_,
+        d3_.created as created2_2_,
+        d3_.uuid as uuid2_2_,
+        d3_.c_id as c4_2_2_,
+        d3_.e_id as e5_2_2_ 
+    from
+        B b0_ 
+    inner join
+        C c1_ 
+            on b0_.c_id=c1_.id 
+    left outer join
+        D dcollectio2_ 
+            on c1_.id=dcollectio2_.c_id 
+    inner join
+        D d3_ 
+            on b0_.d_id=d3_.id 
+    where
+        b0_.id=?
+14:10:14,889 DEBUG SQL:104 - 
+    select
+        e0_.id as id3_0_,
+        e0_.created as created3_0_,
+        e0_.uuid as uuid3_0_,
+        e0_.f_id as f4_3_0_ 
+    from
+        E e0_ 
+    where
+        e0_.id=?
+14:10:14,901 DEBUG SQL:104 - 
+    select
+        f0_.id as id4_1_,
+        f0_.created as created4_1_,
+        f0_.uuid as uuid4_1_,
+        f0_.d_id as d4_4_1_,
+        f0_.g_id as g5_4_1_,
+        ecollectio1_.f_id as f4_4_3_,
+        ecollectio1_.id as id3_3_,
+        ecollectio1_.id as id3_0_,
+        ecollectio1_.created as created3_0_,
+        ecollectio1_.uuid as uuid3_0_,
+        ecollectio1_.f_id as f4_3_0_ 
+    from
+        F f0_ 
+    left outer join
+        E ecollectio1_ 
+            on f0_.id=ecollectio1_.f_id 
+    where
+        f0_.id=?
+14:10:14,902 DEBUG SQL:104 - 
+    select
+        g0_.id as id5_0_,
+        g0_.created as created5_0_,
+        g0_.uuid as uuid5_0_,
+        g0_.b_id as b4_5_0_ 
+    from
+        G g0_ 
+    where
+        g0_.id=?
+14:10:14,904 DEBUG SQL:104 - 
+    select
+        bcollectio0_.c_id as c4_1_8_,
+        bcollectio0_.id as id0_8_,
+        bcollectio0_.id as id0_7_,
+        bcollectio0_.created as created0_7_,
+        bcollectio0_.uuid as uuid0_7_,
+        bcollectio0_.c_id as c4_0_7_,
+        bcollectio0_.d_id as d5_0_7_,
+        d1_.id as id2_0_,
+        d1_.created as created2_0_,
+        d1_.uuid as uuid2_0_,
+        d1_.c_id as c4_2_0_,
+        d1_.e_id as e5_2_0_,
+        c2_.id as id1_1_,
+        c2_.created as created1_1_,
+        c2_.uuid as uuid1_1_,
+        e3_.id as id3_2_,
+        e3_.created as created3_2_,
+        e3_.uuid as uuid3_2_,
+        e3_.f_id as f4_3_2_,
+        f4_.id as id4_3_,
+        f4_.created as created4_3_,
+        f4_.uuid as uuid4_3_,
+        f4_.d_id as d4_4_3_,
+        f4_.g_id as g5_4_3_,
+        d5_.id as id2_4_,
+        d5_.created as created2_4_,
+        d5_.uuid as uuid2_4_,
+        d5_.c_id as c4_2_4_,
+        d5_.e_id as e5_2_4_,
+        g6_.id as id5_5_,
+        g6_.created as created5_5_,
+        g6_.uuid as uuid5_5_,
+        g6_.b_id as b4_5_5_,
+        b7_.id as id0_6_,
+        b7_.created as created0_6_,
+        b7_.uuid as uuid0_6_,
+        b7_.c_id as c4_0_6_,
+        b7_.d_id as d5_0_6_ 
+    from
+        B bcollectio0_ 
+    inner join
+        D d1_ 
+            on bcollectio0_.d_id=d1_.id 
+    left outer join
+        C c2_ 
+            on d1_.c_id=c2_.id 
+    left outer join
+        E e3_ 
+            on d1_.e_id=e3_.id 
+    left outer join
+        F f4_ 
+            on e3_.f_id=f4_.id 
+    left outer join
+        D d5_ 
+            on f4_.d_id=d5_.id 
+    left outer join
+        G g6_ 
+            on f4_.g_id=g6_.id 
+    left outer join
+        B b7_ 
+            on g6_.b_id=b7_.id 
+    where
+        bcollectio0_.c_id=?
+14:10:14,940 DEBUG SQL:104 - 
+    select
+        bcollectio0_.d_id as d5_2_2_,
+        bcollectio0_.id as id0_2_,
+        bcollectio0_.id as id0_1_,
+        bcollectio0_.created as created0_1_,
+        bcollectio0_.uuid as uuid0_1_,
+        bcollectio0_.c_id as c4_0_1_,
+        bcollectio0_.d_id as d5_0_1_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_ 
+    from
+        B bcollectio0_ 
+    inner join
+        C c1_ 
+            on bcollectio0_.c_id=c1_.id 
+    where
+        bcollectio0_.d_id=?
+14:10:14,943 DEBUG SQL:104 - 
+    update
+        E 
+    set
+        f_id=? 
+    where
+        id=?
+14:10:14,943 DEBUG SQL:104 - 
+    delete 
+    from
+        F 
+    where
+        id=?
+14:10:14,944 DEBUG SQL:104 - 
+    delete 
+    from
+        G 
+    where
+        id=?
+14:10:14,972 DEBUG SQL:104 - 
+    delete 
+    from
+        B 
+    where
+        id=?
+14:10:14,973 DEBUG SQL:104 - 
+    delete 
+    from
+        D 
+    where
+        id=?
+14:10:14,973 DEBUG SQL:104 - 
+    delete 
+    from
+        E 
+    where
+        id=?
+14:10:14,973 DEBUG SQL:104 - 
+    delete 
+    from
+        C 
+    where
+        id=?
+14:10:14,974  INFO CustomRunner:139 - Test: testPersist
+14:10:14,987 DEBUG SQL:104 - 
+    insert 
+    into
+        C
+        (created, uuid, id) 
+    values
+        (?, ?, ?)
+14:10:14,988 DEBUG SQL:104 - 
+    insert 
+    into
+        E
+        (created, uuid, f_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:14,988 DEBUG SQL:104 - 
+    insert 
+    into
+        D
+        (created, uuid, c_id, e_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:14,988 DEBUG SQL:104 - 
+    insert 
+    into
+        B
+        (created, uuid, c_id, d_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:14,989 DEBUG SQL:104 - 
+    insert 
+    into
+        G
+        (created, uuid, b_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:15,001 DEBUG SQL:104 - 
+    insert 
+    into
+        F
+        (created, uuid, d_id, g_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:15,002 DEBUG SQL:104 - 
+    update
+        E 
+    set
+        f_id=? 
+    where
+        id=?
+14:10:15,003 DEBUG SQL:104 - 
+    select
+        b0_.id as id0_8_,
+        b0_.created as created0_8_,
+        b0_.uuid as uuid0_8_,
+        b0_.c_id as c4_0_8_,
+        b0_.d_id as d5_0_8_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_,
+        d2_.id as id2_1_,
+        d2_.created as created2_1_,
+        d2_.uuid as uuid2_1_,
+        d2_.c_id as c4_2_1_,
+        d2_.e_id as e5_2_1_,
+        c3_.id as id1_2_,
+        c3_.created as created1_2_,
+        c3_.uuid as uuid1_2_,
+        e4_.id as id3_3_,
+        e4_.created as created3_3_,
+        e4_.uuid as uuid3_3_,
+        e4_.f_id as f4_3_3_,
+        f5_.id as id4_4_,
+        f5_.created as created4_4_,
+        f5_.uuid as uuid4_4_,
+        f5_.d_id as d4_4_4_,
+        f5_.g_id as g5_4_4_,
+        d6_.id as id2_5_,
+        d6_.created as created2_5_,
+        d6_.uuid as uuid2_5_,
+        d6_.c_id as c4_2_5_,
+        d6_.e_id as e5_2_5_,
+        g7_.id as id5_6_,
+        g7_.created as created5_6_,
+        g7_.uuid as uuid5_6_,
+        g7_.b_id as b4_5_6_,
+        b8_.id as id0_7_,
+        b8_.created as created0_7_,
+        b8_.uuid as uuid0_7_,
+        b8_.c_id as c4_0_7_,
+        b8_.d_id as d5_0_7_ 
+    from
+        B b0_ 
+    inner join
+        C c1_ 
+            on b0_.c_id=c1_.id 
+    inner join
+        D d2_ 
+            on b0_.d_id=d2_.id 
+    left outer join
+        C c3_ 
+            on d2_.c_id=c3_.id 
+    left outer join
+        E e4_ 
+            on d2_.e_id=e4_.id 
+    left outer join
+        F f5_ 
+            on e4_.f_id=f5_.id 
+    left outer join
+        D d6_ 
+            on f5_.d_id=d6_.id 
+    left outer join
+        G g7_ 
+            on f5_.g_id=g7_.id 
+    left outer join
+        B b8_ 
+            on g7_.b_id=b8_.id 
+    where
+        b0_.id=?
+14:10:15,046 DEBUG SQL:104 - 
+    select
+        gcollectio0_.b_id as b4_0_1_,
+        gcollectio0_.id as id5_1_,
+        gcollectio0_.id as id5_0_,
+        gcollectio0_.created as created5_0_,
+        gcollectio0_.uuid as uuid5_0_,
+        gcollectio0_.b_id as b4_5_0_ 
+    from
+        G gcollectio0_ 
+    where
+        gcollectio0_.b_id=?
+14:10:15,047 DEBUG SQL:104 - 
+    select
+        bcollectio0_.c_id as c4_1_8_,
+        bcollectio0_.id as id0_8_,
+        bcollectio0_.id as id0_7_,
+        bcollectio0_.created as created0_7_,
+        bcollectio0_.uuid as uuid0_7_,
+        bcollectio0_.c_id as c4_0_7_,
+        bcollectio0_.d_id as d5_0_7_,
+        d1_.id as id2_0_,
+        d1_.created as created2_0_,
+        d1_.uuid as uuid2_0_,
+        d1_.c_id as c4_2_0_,
+        d1_.e_id as e5_2_0_,
+        c2_.id as id1_1_,
+        c2_.created as created1_1_,
+        c2_.uuid as uuid1_1_,
+        e3_.id as id3_2_,
+        e3_.created as created3_2_,
+        e3_.uuid as uuid3_2_,
+        e3_.f_id as f4_3_2_,
+        f4_.id as id4_3_,
+        f4_.created as created4_3_,
+        f4_.uuid as uuid4_3_,
+        f4_.d_id as d4_4_3_,
+        f4_.g_id as g5_4_3_,
+        d5_.id as id2_4_,
+        d5_.created as created2_4_,
+        d5_.uuid as uuid2_4_,
+        d5_.c_id as c4_2_4_,
+        d5_.e_id as e5_2_4_,
+        g6_.id as id5_5_,
+        g6_.created as created5_5_,
+        g6_.uuid as uuid5_5_,
+        g6_.b_id as b4_5_5_,
+        b7_.id as id0_6_,
+        b7_.created as created0_6_,
+        b7_.uuid as uuid0_6_,
+        b7_.c_id as c4_0_6_,
+        b7_.d_id as d5_0_6_ 
+    from
+        B bcollectio0_ 
+    inner join
+        D d1_ 
+            on bcollectio0_.d_id=d1_.id 
+    left outer join
+        C c2_ 
+            on d1_.c_id=c2_.id 
+    left outer join
+        E e3_ 
+            on d1_.e_id=e3_.id 
+    left outer join
+        F f4_ 
+            on e3_.f_id=f4_.id 
+    left outer join
+        D d5_ 
+            on f4_.d_id=d5_.id 
+    left outer join
+        G g6_ 
+            on f4_.g_id=g6_.id 
+    left outer join
+        B b7_ 
+            on g6_.b_id=b7_.id 
+    where
+        bcollectio0_.c_id=?
+14:10:15,072 DEBUG SQL:104 - 
+    select
+        dcollectio0_.c_id as c4_1_8_,
+        dcollectio0_.id as id2_8_,
+        dcollectio0_.id as id2_7_,
+        dcollectio0_.created as created2_7_,
+        dcollectio0_.uuid as uuid2_7_,
+        dcollectio0_.c_id as c4_2_7_,
+        dcollectio0_.e_id as e5_2_7_,
+        e1_.id as id3_0_,
+        e1_.created as created3_0_,
+        e1_.uuid as uuid3_0_,
+        e1_.f_id as f4_3_0_,
+        f2_.id as id4_1_,
+        f2_.created as created4_1_,
+        f2_.uuid as uuid4_1_,
+        f2_.d_id as d4_4_1_,
+        f2_.g_id as g5_4_1_,
+        d3_.id as id2_2_,
+        d3_.created as created2_2_,
+        d3_.uuid as uuid2_2_,
+        d3_.c_id as c4_2_2_,
+        d3_.e_id as e5_2_2_,
+        g4_.id as id5_3_,
+        g4_.created as created5_3_,
+        g4_.uuid as uuid5_3_,
+        g4_.b_id as b4_5_3_,
+        b5_.id as id0_4_,
+        b5_.created as created0_4_,
+        b5_.uuid as uuid0_4_,
+        b5_.c_id as c4_0_4_,
+        b5_.d_id as d5_0_4_,
+        c6_.id as id1_5_,
+        c6_.created as created1_5_,
+        c6_.uuid as uuid1_5_,
+        d7_.id as id2_6_,
+        d7_.created as created2_6_,
+        d7_.uuid as uuid2_6_,
+        d7_.c_id as c4_2_6_,
+        d7_.e_id as e5_2_6_ 
+    from
+        D dcollectio0_ 
+    inner join
+        E e1_ 
+            on dcollectio0_.e_id=e1_.id 
+    left outer join
+        F f2_ 
+            on e1_.f_id=f2_.id 
+    left outer join
+        D d3_ 
+            on f2_.d_id=d3_.id 
+    left outer join
+        G g4_ 
+            on f2_.g_id=g4_.id 
+    left outer join
+        B b5_ 
+            on g4_.b_id=b5_.id 
+    left outer join
+        C c6_ 
+            on b5_.c_id=c6_.id 
+    left outer join
+        D d7_ 
+            on b5_.d_id=d7_.id 
+    where
+        dcollectio0_.c_id=?
+14:10:15,111 DEBUG SQL:104 - 
+    select
+        bcollectio0_.d_id as d5_2_2_,
+        bcollectio0_.id as id0_2_,
+        bcollectio0_.id as id0_1_,
+        bcollectio0_.created as created0_1_,
+        bcollectio0_.uuid as uuid0_1_,
+        bcollectio0_.c_id as c4_0_1_,
+        bcollectio0_.d_id as d5_0_1_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_ 
+    from
+        B bcollectio0_ 
+    inner join
+        C c1_ 
+            on bcollectio0_.c_id=c1_.id 
+    where
+        bcollectio0_.d_id=?
+14:10:15,112 DEBUG SQL:104 - 
+    select
+        fcollectio0_.d_id as d4_2_8_,
+        fcollectio0_.id as id4_8_,
+        fcollectio0_.id as id4_7_,
+        fcollectio0_.created as created4_7_,
+        fcollectio0_.uuid as uuid4_7_,
+        fcollectio0_.d_id as d4_4_7_,
+        fcollectio0_.g_id as g5_4_7_,
+        g1_.id as id5_0_,
+        g1_.created as created5_0_,
+        g1_.uuid as uuid5_0_,
+        g1_.b_id as b4_5_0_,
+        b2_.id as id0_1_,
+        b2_.created as created0_1_,
+        b2_.uuid as uuid0_1_,
+        b2_.c_id as c4_0_1_,
+        b2_.d_id as d5_0_1_,
+        c3_.id as id1_2_,
+        c3_.created as created1_2_,
+        c3_.uuid as uuid1_2_,
+        d4_.id as id2_3_,
+        d4_.created as created2_3_,
+        d4_.uuid as uuid2_3_,
+        d4_.c_id as c4_2_3_,
+        d4_.e_id as e5_2_3_,
+        c5_.id as id1_4_,
+        c5_.created as created1_4_,
+        c5_.uuid as uuid1_4_,
+        e6_.id as id3_5_,
+        e6_.created as created3_5_,
+        e6_.uuid as uuid3_5_,
+        e6_.f_id as f4_3_5_,
+        f7_.id as id4_6_,
+        f7_.created as created4_6_,
+        f7_.uuid as uuid4_6_,
+        f7_.d_id as d4_4_6_,
+        f7_.g_id as g5_4_6_ 
+    from
+        F fcollectio0_ 
+    inner join
+        G g1_ 
+            on fcollectio0_.g_id=g1_.id 
+    left outer join
+        B b2_ 
+            on g1_.b_id=b2_.id 
+    left outer join
+        C c3_ 
+            on b2_.c_id=c3_.id 
+    left outer join
+        D d4_ 
+            on b2_.d_id=d4_.id 
+    left outer join
+        C c5_ 
+            on d4_.c_id=c5_.id 
+    left outer join
+        E e6_ 
+            on d4_.e_id=e6_.id 
+    left outer join
+        F f7_ 
+            on e6_.f_id=f7_.id 
+    where
+        fcollectio0_.d_id=?
+14:10:15,135 DEBUG SQL:104 - 
+    select
+        dcollectio0_.e_id as e5_3_2_,
+        dcollectio0_.id as id2_2_,
+        dcollectio0_.id as id2_1_,
+        dcollectio0_.created as created2_1_,
+        dcollectio0_.uuid as uuid2_1_,
+        dcollectio0_.c_id as c4_2_1_,
+        dcollectio0_.e_id as e5_2_1_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_ 
+    from
+        D dcollectio0_ 
+    inner join
+        C c1_ 
+            on dcollectio0_.c_id=c1_.id 
+    where
+        dcollectio0_.e_id=?
+14:10:15,144 DEBUG SQL:104 - 
+    select
+        ecollectio0_.f_id as f4_4_1_,
+        ecollectio0_.id as id3_1_,
+        ecollectio0_.id as id3_0_,
+        ecollectio0_.created as created3_0_,
+        ecollectio0_.uuid as uuid3_0_,
+        ecollectio0_.f_id as f4_3_0_ 
+    from
+        E ecollectio0_ 
+    where
+        ecollectio0_.f_id=?
+14:10:15,145 DEBUG SQL:104 - 
+    select
+        fcollectio0_.g_id as g5_5_5_,
+        fcollectio0_.id as id4_5_,
+        fcollectio0_.id as id4_4_,
+        fcollectio0_.created as created4_4_,
+        fcollectio0_.uuid as uuid4_4_,
+        fcollectio0_.d_id as d4_4_4_,
+        fcollectio0_.g_id as g5_4_4_,
+        d1_.id as id2_0_,
+        d1_.created as created2_0_,
+        d1_.uuid as uuid2_0_,
+        d1_.c_id as c4_2_0_,
+        d1_.e_id as e5_2_0_,
+        c2_.id as id1_1_,
+        c2_.created as created1_1_,
+        c2_.uuid as uuid1_1_,
+        e3_.id as id3_2_,
+        e3_.created as created3_2_,
+        e3_.uuid as uuid3_2_,
+        e3_.f_id as f4_3_2_,
+        f4_.id as id4_3_,
+        f4_.created as created4_3_,
+        f4_.uuid as uuid4_3_,
+        f4_.d_id as d4_4_3_,
+        f4_.g_id as g5_4_3_ 
+    from
+        F fcollectio0_ 
+    inner join
+        D d1_ 
+            on fcollectio0_.d_id=d1_.id 
+    left outer join
+        C c2_ 
+            on d1_.c_id=c2_.id 
+    left outer join
+        E e3_ 
+            on d1_.e_id=e3_.id 
+    left outer join
+        F f4_ 
+            on e3_.f_id=f4_.id 
+    where
+        fcollectio0_.g_id=?
+14:10:15,176 DEBUG SQL:104 - 
+    select
+        b0_.id as id0_3_,
+        b0_.created as created0_3_,
+        b0_.uuid as uuid0_3_,
+        b0_.c_id as c4_0_3_,
+        b0_.d_id as d5_0_3_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_,
+        dcollectio2_.c_id as c4_1_5_,
+        dcollectio2_.id as id2_5_,
+        dcollectio2_.id as id2_1_,
+        dcollectio2_.created as created2_1_,
+        dcollectio2_.uuid as uuid2_1_,
+        dcollectio2_.c_id as c4_2_1_,
+        dcollectio2_.e_id as e5_2_1_,
+        d3_.id as id2_2_,
+        d3_.created as created2_2_,
+        d3_.uuid as uuid2_2_,
+        d3_.c_id as c4_2_2_,
+        d3_.e_id as e5_2_2_ 
+    from
+        B b0_ 
+    inner join
+        C c1_ 
+            on b0_.c_id=c1_.id 
+    left outer join
+        D dcollectio2_ 
+            on c1_.id=dcollectio2_.c_id 
+    inner join
+        D d3_ 
+            on b0_.d_id=d3_.id 
+    where
+        b0_.id=?
+14:10:15,177 DEBUG SQL:104 - 
+    select
+        e0_.id as id3_0_,
+        e0_.created as created3_0_,
+        e0_.uuid as uuid3_0_,
+        e0_.f_id as f4_3_0_ 
+    from
+        E e0_ 
+    where
+        e0_.id=?
+14:10:15,178 DEBUG SQL:104 - 
+    select
+        f0_.id as id4_1_,
+        f0_.created as created4_1_,
+        f0_.uuid as uuid4_1_,
+        f0_.d_id as d4_4_1_,
+        f0_.g_id as g5_4_1_,
+        ecollectio1_.f_id as f4_4_3_,
+        ecollectio1_.id as id3_3_,
+        ecollectio1_.id as id3_0_,
+        ecollectio1_.created as created3_0_,
+        ecollectio1_.uuid as uuid3_0_,
+        ecollectio1_.f_id as f4_3_0_ 
+    from
+        F f0_ 
+    left outer join
+        E ecollectio1_ 
+            on f0_.id=ecollectio1_.f_id 
+    where
+        f0_.id=?
+14:10:15,178 DEBUG SQL:104 - 
+    select
+        g0_.id as id5_0_,
+        g0_.created as created5_0_,
+        g0_.uuid as uuid5_0_,
+        g0_.b_id as b4_5_0_ 
+    from
+        G g0_ 
+    where
+        g0_.id=?
+14:10:15,191 DEBUG SQL:104 - 
+    update
+        E 
+    set
+        f_id=? 
+    where
+        id=?
+14:10:15,192 DEBUG SQL:104 - 
+    delete 
+    from
+        F 
+    where
+        id=?
+14:10:15,192 DEBUG SQL:104 - 
+    delete 
+    from
+        G 
+    where
+        id=?
+14:10:15,193 DEBUG SQL:104 - 
+    delete 
+    from
+        B 
+    where
+        id=?
+14:10:15,204 DEBUG SQL:104 - 
+    delete 
+    from
+        D 
+    where
+        id=?
+14:10:15,205 DEBUG SQL:104 - 
+    delete 
+    from
+        E 
+    where
+        id=?
+14:10:15,205 DEBUG SQL:104 - 
+    delete 
+    from
+        C 
+    where
+        id=?
+14:10:15,210  INFO CustomRunner:139 - Test: testSave
+14:10:15,214 DEBUG SQL:104 - 
+    insert 
+    into
+        C
+        (created, uuid, id) 
+    values
+        (?, ?, ?)
+14:10:15,215 DEBUG SQL:104 - 
+    insert 
+    into
+        E
+        (created, uuid, f_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:15,215 DEBUG SQL:104 - 
+    insert 
+    into
+        D
+        (created, uuid, c_id, e_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:15,225 DEBUG SQL:104 - 
+    insert 
+    into
+        B
+        (created, uuid, c_id, d_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:15,225 DEBUG SQL:104 - 
+    insert 
+    into
+        G
+        (created, uuid, b_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:15,226 DEBUG SQL:104 - 
+    insert 
+    into
+        F
+        (created, uuid, d_id, g_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:15,226 DEBUG SQL:104 - 
+    update
+        E 
+    set
+        f_id=? 
+    where
+        id=?
+14:10:15,227 DEBUG SQL:104 - 
+    select
+        b0_.id as id0_8_,
+        b0_.created as created0_8_,
+        b0_.uuid as uuid0_8_,
+        b0_.c_id as c4_0_8_,
+        b0_.d_id as d5_0_8_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_,
+        d2_.id as id2_1_,
+        d2_.created as created2_1_,
+        d2_.uuid as uuid2_1_,
+        d2_.c_id as c4_2_1_,
+        d2_.e_id as e5_2_1_,
+        c3_.id as id1_2_,
+        c3_.created as created1_2_,
+        c3_.uuid as uuid1_2_,
+        e4_.id as id3_3_,
+        e4_.created as created3_3_,
+        e4_.uuid as uuid3_3_,
+        e4_.f_id as f4_3_3_,
+        f5_.id as id4_4_,
+        f5_.created as created4_4_,
+        f5_.uuid as uuid4_4_,
+        f5_.d_id as d4_4_4_,
+        f5_.g_id as g5_4_4_,
+        d6_.id as id2_5_,
+        d6_.created as created2_5_,
+        d6_.uuid as uuid2_5_,
+        d6_.c_id as c4_2_5_,
+        d6_.e_id as e5_2_5_,
+        g7_.id as id5_6_,
+        g7_.created as created5_6_,
+        g7_.uuid as uuid5_6_,
+        g7_.b_id as b4_5_6_,
+        b8_.id as id0_7_,
+        b8_.created as created0_7_,
+        b8_.uuid as uuid0_7_,
+        b8_.c_id as c4_0_7_,
+        b8_.d_id as d5_0_7_ 
+    from
+        B b0_ 
+    inner join
+        C c1_ 
+            on b0_.c_id=c1_.id 
+    inner join
+        D d2_ 
+            on b0_.d_id=d2_.id 
+    left outer join
+        C c3_ 
+            on d2_.c_id=c3_.id 
+    left outer join
+        E e4_ 
+            on d2_.e_id=e4_.id 
+    left outer join
+        F f5_ 
+            on e4_.f_id=f5_.id 
+    left outer join
+        D d6_ 
+            on f5_.d_id=d6_.id 
+    left outer join
+        G g7_ 
+            on f5_.g_id=g7_.id 
+    left outer join
+        B b8_ 
+            on g7_.b_id=b8_.id 
+    where
+        b0_.id=?
+14:10:15,256 DEBUG SQL:104 - 
+    select
+        gcollectio0_.b_id as b4_0_1_,
+        gcollectio0_.id as id5_1_,
+        gcollectio0_.id as id5_0_,
+        gcollectio0_.created as created5_0_,
+        gcollectio0_.uuid as uuid5_0_,
+        gcollectio0_.b_id as b4_5_0_ 
+    from
+        G gcollectio0_ 
+    where
+        gcollectio0_.b_id=?
+14:10:15,257 DEBUG SQL:104 - 
+    select
+        bcollectio0_.c_id as c4_1_8_,
+        bcollectio0_.id as id0_8_,
+        bcollectio0_.id as id0_7_,
+        bcollectio0_.created as created0_7_,
+        bcollectio0_.uuid as uuid0_7_,
+        bcollectio0_.c_id as c4_0_7_,
+        bcollectio0_.d_id as d5_0_7_,
+        d1_.id as id2_0_,
+        d1_.created as created2_0_,
+        d1_.uuid as uuid2_0_,
+        d1_.c_id as c4_2_0_,
+        d1_.e_id as e5_2_0_,
+        c2_.id as id1_1_,
+        c2_.created as created1_1_,
+        c2_.uuid as uuid1_1_,
+        e3_.id as id3_2_,
+        e3_.created as created3_2_,
+        e3_.uuid as uuid3_2_,
+        e3_.f_id as f4_3_2_,
+        f4_.id as id4_3_,
+        f4_.created as created4_3_,
+        f4_.uuid as uuid4_3_,
+        f4_.d_id as d4_4_3_,
+        f4_.g_id as g5_4_3_,
+        d5_.id as id2_4_,
+        d5_.created as created2_4_,
+        d5_.uuid as uuid2_4_,
+        d5_.c_id as c4_2_4_,
+        d5_.e_id as e5_2_4_,
+        g6_.id as id5_5_,
+        g6_.created as created5_5_,
+        g6_.uuid as uuid5_5_,
+        g6_.b_id as b4_5_5_,
+        b7_.id as id0_6_,
+        b7_.created as created0_6_,
+        b7_.uuid as uuid0_6_,
+        b7_.c_id as c4_0_6_,
+        b7_.d_id as d5_0_6_ 
+    from
+        B bcollectio0_ 
+    inner join
+        D d1_ 
+            on bcollectio0_.d_id=d1_.id 
+    left outer join
+        C c2_ 
+            on d1_.c_id=c2_.id 
+    left outer join
+        E e3_ 
+            on d1_.e_id=e3_.id 
+    left outer join
+        F f4_ 
+            on e3_.f_id=f4_.id 
+    left outer join
+        D d5_ 
+            on f4_.d_id=d5_.id 
+    left outer join
+        G g6_ 
+            on f4_.g_id=g6_.id 
+    left outer join
+        B b7_ 
+            on g6_.b_id=b7_.id 
+    where
+        bcollectio0_.c_id=?
+14:10:15,274 DEBUG SQL:104 - 
+    select
+        dcollectio0_.c_id as c4_1_8_,
+        dcollectio0_.id as id2_8_,
+        dcollectio0_.id as id2_7_,
+        dcollectio0_.created as created2_7_,
+        dcollectio0_.uuid as uuid2_7_,
+        dcollectio0_.c_id as c4_2_7_,
+        dcollectio0_.e_id as e5_2_7_,
+        e1_.id as id3_0_,
+        e1_.created as created3_0_,
+        e1_.uuid as uuid3_0_,
+        e1_.f_id as f4_3_0_,
+        f2_.id as id4_1_,
+        f2_.created as created4_1_,
+        f2_.uuid as uuid4_1_,
+        f2_.d_id as d4_4_1_,
+        f2_.g_id as g5_4_1_,
+        d3_.id as id2_2_,
+        d3_.created as created2_2_,
+        d3_.uuid as uuid2_2_,
+        d3_.c_id as c4_2_2_,
+        d3_.e_id as e5_2_2_,
+        g4_.id as id5_3_,
+        g4_.created as created5_3_,
+        g4_.uuid as uuid5_3_,
+        g4_.b_id as b4_5_3_,
+        b5_.id as id0_4_,
+        b5_.created as created0_4_,
+        b5_.uuid as uuid0_4_,
+        b5_.c_id as c4_0_4_,
+        b5_.d_id as d5_0_4_,
+        c6_.id as id1_5_,
+        c6_.created as created1_5_,
+        c6_.uuid as uuid1_5_,
+        d7_.id as id2_6_,
+        d7_.created as created2_6_,
+        d7_.uuid as uuid2_6_,
+        d7_.c_id as c4_2_6_,
+        d7_.e_id as e5_2_6_ 
+    from
+        D dcollectio0_ 
+    inner join
+        E e1_ 
+            on dcollectio0_.e_id=e1_.id 
+    left outer join
+        F f2_ 
+            on e1_.f_id=f2_.id 
+    left outer join
+        D d3_ 
+            on f2_.d_id=d3_.id 
+    left outer join
+        G g4_ 
+            on f2_.g_id=g4_.id 
+    left outer join
+        B b5_ 
+            on g4_.b_id=b5_.id 
+    left outer join
+        C c6_ 
+            on b5_.c_id=c6_.id 
+    left outer join
+        D d7_ 
+            on b5_.d_id=d7_.id 
+    where
+        dcollectio0_.c_id=?
+14:10:15,293 DEBUG SQL:104 - 
+    select
+        bcollectio0_.d_id as d5_2_2_,
+        bcollectio0_.id as id0_2_,
+        bcollectio0_.id as id0_1_,
+        bcollectio0_.created as created0_1_,
+        bcollectio0_.uuid as uuid0_1_,
+        bcollectio0_.c_id as c4_0_1_,
+        bcollectio0_.d_id as d5_0_1_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_ 
+    from
+        B bcollectio0_ 
+    inner join
+        C c1_ 
+            on bcollectio0_.c_id=c1_.id 
+    where
+        bcollectio0_.d_id=?
+14:10:15,304 DEBUG SQL:104 - 
+    select
+        fcollectio0_.d_id as d4_2_8_,
+        fcollectio0_.id as id4_8_,
+        fcollectio0_.id as id4_7_,
+        fcollectio0_.created as created4_7_,
+        fcollectio0_.uuid as uuid4_7_,
+        fcollectio0_.d_id as d4_4_7_,
+        fcollectio0_.g_id as g5_4_7_,
+        g1_.id as id5_0_,
+        g1_.created as created5_0_,
+        g1_.uuid as uuid5_0_,
+        g1_.b_id as b4_5_0_,
+        b2_.id as id0_1_,
+        b2_.created as created0_1_,
+        b2_.uuid as uuid0_1_,
+        b2_.c_id as c4_0_1_,
+        b2_.d_id as d5_0_1_,
+        c3_.id as id1_2_,
+        c3_.created as created1_2_,
+        c3_.uuid as uuid1_2_,
+        d4_.id as id2_3_,
+        d4_.created as created2_3_,
+        d4_.uuid as uuid2_3_,
+        d4_.c_id as c4_2_3_,
+        d4_.e_id as e5_2_3_,
+        c5_.id as id1_4_,
+        c5_.created as created1_4_,
+        c5_.uuid as uuid1_4_,
+        e6_.id as id3_5_,
+        e6_.created as created3_5_,
+        e6_.uuid as uuid3_5_,
+        e6_.f_id as f4_3_5_,
+        f7_.id as id4_6_,
+        f7_.created as created4_6_,
+        f7_.uuid as uuid4_6_,
+        f7_.d_id as d4_4_6_,
+        f7_.g_id as g5_4_6_ 
+    from
+        F fcollectio0_ 
+    inner join
+        G g1_ 
+            on fcollectio0_.g_id=g1_.id 
+    left outer join
+        B b2_ 
+            on g1_.b_id=b2_.id 
+    left outer join
+        C c3_ 
+            on b2_.c_id=c3_.id 
+    left outer join
+        D d4_ 
+            on b2_.d_id=d4_.id 
+    left outer join
+        C c5_ 
+            on d4_.c_id=c5_.id 
+    left outer join
+        E e6_ 
+            on d4_.e_id=e6_.id 
+    left outer join
+        F f7_ 
+            on e6_.f_id=f7_.id 
+    where
+        fcollectio0_.d_id=?
+14:10:15,317 DEBUG SQL:104 - 
+    select
+        dcollectio0_.e_id as e5_3_2_,
+        dcollectio0_.id as id2_2_,
+        dcollectio0_.id as id2_1_,
+        dcollectio0_.created as created2_1_,
+        dcollectio0_.uuid as uuid2_1_,
+        dcollectio0_.c_id as c4_2_1_,
+        dcollectio0_.e_id as e5_2_1_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_ 
+    from
+        D dcollectio0_ 
+    inner join
+        C c1_ 
+            on dcollectio0_.c_id=c1_.id 
+    where
+        dcollectio0_.e_id=?
+14:10:15,329 DEBUG SQL:104 - 
+    select
+        ecollectio0_.f_id as f4_4_1_,
+        ecollectio0_.id as id3_1_,
+        ecollectio0_.id as id3_0_,
+        ecollectio0_.created as created3_0_,
+        ecollectio0_.uuid as uuid3_0_,
+        ecollectio0_.f_id as f4_3_0_ 
+    from
+        E ecollectio0_ 
+    where
+        ecollectio0_.f_id=?
+14:10:15,329 DEBUG SQL:104 - 
+    select
+        fcollectio0_.g_id as g5_5_5_,
+        fcollectio0_.id as id4_5_,
+        fcollectio0_.id as id4_4_,
+        fcollectio0_.created as created4_4_,
+        fcollectio0_.uuid as uuid4_4_,
+        fcollectio0_.d_id as d4_4_4_,
+        fcollectio0_.g_id as g5_4_4_,
+        d1_.id as id2_0_,
+        d1_.created as created2_0_,
+        d1_.uuid as uuid2_0_,
+        d1_.c_id as c4_2_0_,
+        d1_.e_id as e5_2_0_,
+        c2_.id as id1_1_,
+        c2_.created as created1_1_,
+        c2_.uuid as uuid1_1_,
+        e3_.id as id3_2_,
+        e3_.created as created3_2_,
+        e3_.uuid as uuid3_2_,
+        e3_.f_id as f4_3_2_,
+        f4_.id as id4_3_,
+        f4_.created as created4_3_,
+        f4_.uuid as uuid4_3_,
+        f4_.d_id as d4_4_3_,
+        f4_.g_id as g5_4_3_ 
+    from
+        F fcollectio0_ 
+    inner join
+        D d1_ 
+            on fcollectio0_.d_id=d1_.id 
+    left outer join
+        C c2_ 
+            on d1_.c_id=c2_.id 
+    left outer join
+        E e3_ 
+            on d1_.e_id=e3_.id 
+    left outer join
+        F f4_ 
+            on e3_.f_id=f4_.id 
+    where
+        fcollectio0_.g_id=?
+14:10:15,351 DEBUG SQL:104 - 
+    select
+        b0_.id as id0_3_,
+        b0_.created as created0_3_,
+        b0_.uuid as uuid0_3_,
+        b0_.c_id as c4_0_3_,
+        b0_.d_id as d5_0_3_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_,
+        dcollectio2_.c_id as c4_1_5_,
+        dcollectio2_.id as id2_5_,
+        dcollectio2_.id as id2_1_,
+        dcollectio2_.created as created2_1_,
+        dcollectio2_.uuid as uuid2_1_,
+        dcollectio2_.c_id as c4_2_1_,
+        dcollectio2_.e_id as e5_2_1_,
+        d3_.id as id2_2_,
+        d3_.created as created2_2_,
+        d3_.uuid as uuid2_2_,
+        d3_.c_id as c4_2_2_,
+        d3_.e_id as e5_2_2_ 
+    from
+        B b0_ 
+    inner join
+        C c1_ 
+            on b0_.c_id=c1_.id 
+    left outer join
+        D dcollectio2_ 
+            on c1_.id=dcollectio2_.c_id 
+    inner join
+        D d3_ 
+            on b0_.d_id=d3_.id 
+    where
+        b0_.id=?
+14:10:15,360 DEBUG SQL:104 - 
+    select
+        e0_.id as id3_0_,
+        e0_.created as created3_0_,
+        e0_.uuid as uuid3_0_,
+        e0_.f_id as f4_3_0_ 
+    from
+        E e0_ 
+    where
+        e0_.id=?
+14:10:15,361 DEBUG SQL:104 - 
+    select
+        f0_.id as id4_1_,
+        f0_.created as created4_1_,
+        f0_.uuid as uuid4_1_,
+        f0_.d_id as d4_4_1_,
+        f0_.g_id as g5_4_1_,
+        ecollectio1_.f_id as f4_4_3_,
+        ecollectio1_.id as id3_3_,
+        ecollectio1_.id as id3_0_,
+        ecollectio1_.created as created3_0_,
+        ecollectio1_.uuid as uuid3_0_,
+        ecollectio1_.f_id as f4_3_0_ 
+    from
+        F f0_ 
+    left outer join
+        E ecollectio1_ 
+            on f0_.id=ecollectio1_.f_id 
+    where
+        f0_.id=?
+14:10:15,371 DEBUG SQL:104 - 
+    select
+        g0_.id as id5_0_,
+        g0_.created as created5_0_,
+        g0_.uuid as uuid5_0_,
+        g0_.b_id as b4_5_0_ 
+    from
+        G g0_ 
+    where
+        g0_.id=?
+14:10:15,374 DEBUG SQL:104 - 
+    update
+        E 
+    set
+        f_id=? 
+    where
+        id=?
+14:10:15,382 DEBUG SQL:104 - 
+    delete 
+    from
+        F 
+    where
+        id=?
+14:10:15,383 DEBUG SQL:104 - 
+    delete 
+    from
+        G 
+    where
+        id=?
+14:10:15,383 DEBUG SQL:104 - 
+    delete 
+    from
+        B 
+    where
+        id=?
+14:10:15,384 DEBUG SQL:104 - 
+    delete 
+    from
+        D 
+    where
+        id=?
+14:10:15,384 DEBUG SQL:104 - 
+    delete 
+    from
+        E 
+    where
+        id=?
+14:10:15,392 DEBUG SQL:104 - 
+    delete 
+    from
+        C 
+    where
+        id=?
+14:10:15,393  INFO CustomRunner:139 - Test: testSaveOrUpdate
+14:10:15,396 DEBUG SQL:104 - 
+    insert 
+    into
+        C
+        (created, uuid, id) 
+    values
+        (?, ?, ?)
+14:10:15,396 DEBUG SQL:104 - 
+    insert 
+    into
+        E
+        (created, uuid, f_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:15,397 DEBUG SQL:104 - 
+    insert 
+    into
+        D
+        (created, uuid, c_id, e_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:15,405 DEBUG SQL:104 - 
+    insert 
+    into
+        B
+        (created, uuid, c_id, d_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:15,405 DEBUG SQL:104 - 
+    insert 
+    into
+        G
+        (created, uuid, b_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:15,406 DEBUG SQL:104 - 
+    insert 
+    into
+        F
+        (created, uuid, d_id, g_id, id) 
+    values
+        (?, ?, ?, ?, ?)
+14:10:15,406 DEBUG SQL:104 - 
+    update
+        E 
+    set
+        f_id=? 
+    where
+        id=?
+14:10:15,418 DEBUG SQL:104 - 
+    select
+        b0_.id as id0_8_,
+        b0_.created as created0_8_,
+        b0_.uuid as uuid0_8_,
+        b0_.c_id as c4_0_8_,
+        b0_.d_id as d5_0_8_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_,
+        d2_.id as id2_1_,
+        d2_.created as created2_1_,
+        d2_.uuid as uuid2_1_,
+        d2_.c_id as c4_2_1_,
+        d2_.e_id as e5_2_1_,
+        c3_.id as id1_2_,
+        c3_.created as created1_2_,
+        c3_.uuid as uuid1_2_,
+        e4_.id as id3_3_,
+        e4_.created as created3_3_,
+        e4_.uuid as uuid3_3_,
+        e4_.f_id as f4_3_3_,
+        f5_.id as id4_4_,
+        f5_.created as created4_4_,
+        f5_.uuid as uuid4_4_,
+        f5_.d_id as d4_4_4_,
+        f5_.g_id as g5_4_4_,
+        d6_.id as id2_5_,
+        d6_.created as created2_5_,
+        d6_.uuid as uuid2_5_,
+        d6_.c_id as c4_2_5_,
+        d6_.e_id as e5_2_5_,
+        g7_.id as id5_6_,
+        g7_.created as created5_6_,
+        g7_.uuid as uuid5_6_,
+        g7_.b_id as b4_5_6_,
+        b8_.id as id0_7_,
+        b8_.created as created0_7_,
+        b8_.uuid as uuid0_7_,
+        b8_.c_id as c4_0_7_,
+        b8_.d_id as d5_0_7_ 
+    from
+        B b0_ 
+    inner join
+        C c1_ 
+            on b0_.c_id=c1_.id 
+    inner join
+        D d2_ 
+            on b0_.d_id=d2_.id 
+    left outer join
+        C c3_ 
+            on d2_.c_id=c3_.id 
+    left outer join
+        E e4_ 
+            on d2_.e_id=e4_.id 
+    left outer join
+        F f5_ 
+            on e4_.f_id=f5_.id 
+    left outer join
+        D d6_ 
+            on f5_.d_id=d6_.id 
+    left outer join
+        G g7_ 
+            on f5_.g_id=g7_.id 
+    left outer join
+        B b8_ 
+            on g7_.b_id=b8_.id 
+    where
+        b0_.id=?
+14:10:15,440 DEBUG SQL:104 - 
+    select
+        gcollectio0_.b_id as b4_0_1_,
+        gcollectio0_.id as id5_1_,
+        gcollectio0_.id as id5_0_,
+        gcollectio0_.created as created5_0_,
+        gcollectio0_.uuid as uuid5_0_,
+        gcollectio0_.b_id as b4_5_0_ 
+    from
+        G gcollectio0_ 
+    where
+        gcollectio0_.b_id=?
+14:10:15,441 DEBUG SQL:104 - 
+    select
+        bcollectio0_.c_id as c4_1_8_,
+        bcollectio0_.id as id0_8_,
+        bcollectio0_.id as id0_7_,
+        bcollectio0_.created as created0_7_,
+        bcollectio0_.uuid as uuid0_7_,
+        bcollectio0_.c_id as c4_0_7_,
+        bcollectio0_.d_id as d5_0_7_,
+        d1_.id as id2_0_,
+        d1_.created as created2_0_,
+        d1_.uuid as uuid2_0_,
+        d1_.c_id as c4_2_0_,
+        d1_.e_id as e5_2_0_,
+        c2_.id as id1_1_,
+        c2_.created as created1_1_,
+        c2_.uuid as uuid1_1_,
+        e3_.id as id3_2_,
+        e3_.created as created3_2_,
+        e3_.uuid as uuid3_2_,
+        e3_.f_id as f4_3_2_,
+        f4_.id as id4_3_,
+        f4_.created as created4_3_,
+        f4_.uuid as uuid4_3_,
+        f4_.d_id as d4_4_3_,
+        f4_.g_id as g5_4_3_,
+        d5_.id as id2_4_,
+        d5_.created as created2_4_,
+        d5_.uuid as uuid2_4_,
+        d5_.c_id as c4_2_4_,
+        d5_.e_id as e5_2_4_,
+        g6_.id as id5_5_,
+        g6_.created as created5_5_,
+        g6_.uuid as uuid5_5_,
+        g6_.b_id as b4_5_5_,
+        b7_.id as id0_6_,
+        b7_.created as created0_6_,
+        b7_.uuid as uuid0_6_,
+        b7_.c_id as c4_0_6_,
+        b7_.d_id as d5_0_6_ 
+    from
+        B bcollectio0_ 
+    inner join
+        D d1_ 
+            on bcollectio0_.d_id=d1_.id 
+    left outer join
+        C c2_ 
+            on d1_.c_id=c2_.id 
+    left outer join
+        E e3_ 
+            on d1_.e_id=e3_.id 
+    left outer join
+        F f4_ 
+            on e3_.f_id=f4_.id 
+    left outer join
+        D d5_ 
+            on f4_.d_id=d5_.id 
+    left outer join
+        G g6_ 
+            on f4_.g_id=g6_.id 
+    left outer join
+        B b7_ 
+            on g6_.b_id=b7_.id 
+    where
+        bcollectio0_.c_id=?
+14:10:15,454 DEBUG SQL:104 - 
+    select
+        dcollectio0_.c_id as c4_1_8_,
+        dcollectio0_.id as id2_8_,
+        dcollectio0_.id as id2_7_,
+        dcollectio0_.created as created2_7_,
+        dcollectio0_.uuid as uuid2_7_,
+        dcollectio0_.c_id as c4_2_7_,
+        dcollectio0_.e_id as e5_2_7_,
+        e1_.id as id3_0_,
+        e1_.created as created3_0_,
+        e1_.uuid as uuid3_0_,
+        e1_.f_id as f4_3_0_,
+        f2_.id as id4_1_,
+        f2_.created as created4_1_,
+        f2_.uuid as uuid4_1_,
+        f2_.d_id as d4_4_1_,
+        f2_.g_id as g5_4_1_,
+        d3_.id as id2_2_,
+        d3_.created as created2_2_,
+        d3_.uuid as uuid2_2_,
+        d3_.c_id as c4_2_2_,
+        d3_.e_id as e5_2_2_,
+        g4_.id as id5_3_,
+        g4_.created as created5_3_,
+        g4_.uuid as uuid5_3_,
+        g4_.b_id as b4_5_3_,
+        b5_.id as id0_4_,
+        b5_.created as created0_4_,
+        b5_.uuid as uuid0_4_,
+        b5_.c_id as c4_0_4_,
+        b5_.d_id as d5_0_4_,
+        c6_.id as id1_5_,
+        c6_.created as created1_5_,
+        c6_.uuid as uuid1_5_,
+        d7_.id as id2_6_,
+        d7_.created as created2_6_,
+        d7_.uuid as uuid2_6_,
+        d7_.c_id as c4_2_6_,
+        d7_.e_id as e5_2_6_ 
+    from
+        D dcollectio0_ 
+    inner join
+        E e1_ 
+            on dcollectio0_.e_id=e1_.id 
+    left outer join
+        F f2_ 
+            on e1_.f_id=f2_.id 
+    left outer join
+        D d3_ 
+            on f2_.d_id=d3_.id 
+    left outer join
+        G g4_ 
+            on f2_.g_id=g4_.id 
+    left outer join
+        B b5_ 
+            on g4_.b_id=b5_.id 
+    left outer join
+        C c6_ 
+            on b5_.c_id=c6_.id 
+    left outer join
+        D d7_ 
+            on b5_.d_id=d7_.id 
+    where
+        dcollectio0_.c_id=?
+14:10:15,487 DEBUG SQL:104 - 
+    select
+        bcollectio0_.d_id as d5_2_2_,
+        bcollectio0_.id as id0_2_,
+        bcollectio0_.id as id0_1_,
+        bcollectio0_.created as created0_1_,
+        bcollectio0_.uuid as uuid0_1_,
+        bcollectio0_.c_id as c4_0_1_,
+        bcollectio0_.d_id as d5_0_1_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_ 
+    from
+        B bcollectio0_ 
+    inner join
+        C c1_ 
+            on bcollectio0_.c_id=c1_.id 
+    where
+        bcollectio0_.d_id=?
+14:10:15,497 DEBUG SQL:104 - 
+    select
+        fcollectio0_.d_id as d4_2_8_,
+        fcollectio0_.id as id4_8_,
+        fcollectio0_.id as id4_7_,
+        fcollectio0_.created as created4_7_,
+        fcollectio0_.uuid as uuid4_7_,
+        fcollectio0_.d_id as d4_4_7_,
+        fcollectio0_.g_id as g5_4_7_,
+        g1_.id as id5_0_,
+        g1_.created as created5_0_,
+        g1_.uuid as uuid5_0_,
+        g1_.b_id as b4_5_0_,
+        b2_.id as id0_1_,
+        b2_.created as created0_1_,
+        b2_.uuid as uuid0_1_,
+        b2_.c_id as c4_0_1_,
+        b2_.d_id as d5_0_1_,
+        c3_.id as id1_2_,
+        c3_.created as created1_2_,
+        c3_.uuid as uuid1_2_,
+        d4_.id as id2_3_,
+        d4_.created as created2_3_,
+        d4_.uuid as uuid2_3_,
+        d4_.c_id as c4_2_3_,
+        d4_.e_id as e5_2_3_,
+        c5_.id as id1_4_,
+        c5_.created as created1_4_,
+        c5_.uuid as uuid1_4_,
+        e6_.id as id3_5_,
+        e6_.created as created3_5_,
+        e6_.uuid as uuid3_5_,
+        e6_.f_id as f4_3_5_,
+        f7_.id as id4_6_,
+        f7_.created as created4_6_,
+        f7_.uuid as uuid4_6_,
+        f7_.d_id as d4_4_6_,
+        f7_.g_id as g5_4_6_ 
+    from
+        F fcollectio0_ 
+    inner join
+        G g1_ 
+            on fcollectio0_.g_id=g1_.id 
+    left outer join
+        B b2_ 
+            on g1_.b_id=b2_.id 
+    left outer join
+        C c3_ 
+            on b2_.c_id=c3_.id 
+    left outer join
+        D d4_ 
+            on b2_.d_id=d4_.id 
+    left outer join
+        C c5_ 
+            on d4_.c_id=c5_.id 
+    left outer join
+        E e6_ 
+            on d4_.e_id=e6_.id 
+    left outer join
+        F f7_ 
+            on e6_.f_id=f7_.id 
+    where
+        fcollectio0_.d_id=?
+14:10:15,519 DEBUG SQL:104 - 
+    select
+        dcollectio0_.e_id as e5_3_2_,
+        dcollectio0_.id as id2_2_,
+        dcollectio0_.id as id2_1_,
+        dcollectio0_.created as created2_1_,
+        dcollectio0_.uuid as uuid2_1_,
+        dcollectio0_.c_id as c4_2_1_,
+        dcollectio0_.e_id as e5_2_1_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_ 
+    from
+        D dcollectio0_ 
+    inner join
+        C c1_ 
+            on dcollectio0_.c_id=c1_.id 
+    where
+        dcollectio0_.e_id=?
+14:10:15,519 DEBUG SQL:104 - 
+    select
+        ecollectio0_.f_id as f4_4_1_,
+        ecollectio0_.id as id3_1_,
+        ecollectio0_.id as id3_0_,
+        ecollectio0_.created as created3_0_,
+        ecollectio0_.uuid as uuid3_0_,
+        ecollectio0_.f_id as f4_3_0_ 
+    from
+        E ecollectio0_ 
+    where
+        ecollectio0_.f_id=?
+14:10:15,573 DEBUG SQL:104 - 
+    select
+        fcollectio0_.g_id as g5_5_5_,
+        fcollectio0_.id as id4_5_,
+        fcollectio0_.id as id4_4_,
+        fcollectio0_.created as created4_4_,
+        fcollectio0_.uuid as uuid4_4_,
+        fcollectio0_.d_id as d4_4_4_,
+        fcollectio0_.g_id as g5_4_4_,
+        d1_.id as id2_0_,
+        d1_.created as created2_0_,
+        d1_.uuid as uuid2_0_,
+        d1_.c_id as c4_2_0_,
+        d1_.e_id as e5_2_0_,
+        c2_.id as id1_1_,
+        c2_.created as created1_1_,
+        c2_.uuid as uuid1_1_,
+        e3_.id as id3_2_,
+        e3_.created as created3_2_,
+        e3_.uuid as uuid3_2_,
+        e3_.f_id as f4_3_2_,
+        f4_.id as id4_3_,
+        f4_.created as created4_3_,
+        f4_.uuid as uuid4_3_,
+        f4_.d_id as d4_4_3_,
+        f4_.g_id as g5_4_3_ 
+    from
+        F fcollectio0_ 
+    inner join
+        D d1_ 
+            on fcollectio0_.d_id=d1_.id 
+    left outer join
+        C c2_ 
+            on d1_.c_id=c2_.id 
+    left outer join
+        E e3_ 
+            on d1_.e_id=e3_.id 
+    left outer join
+        F f4_ 
+            on e3_.f_id=f4_.id 
+    where
+        fcollectio0_.g_id=?
+14:10:15,575 DEBUG SQL:104 - 
+    select
+        b0_.id as id0_3_,
+        b0_.created as created0_3_,
+        b0_.uuid as uuid0_3_,
+        b0_.c_id as c4_0_3_,
+        b0_.d_id as d5_0_3_,
+        c1_.id as id1_0_,
+        c1_.created as created1_0_,
+        c1_.uuid as uuid1_0_,
+        dcollectio2_.c_id as c4_1_5_,
+        dcollectio2_.id as id2_5_,
+        dcollectio2_.id as id2_1_,
+        dcollectio2_.created as created2_1_,
+        dcollectio2_.uuid as uuid2_1_,
+        dcollectio2_.c_id as c4_2_1_,
+        dcollectio2_.e_id as e5_2_1_,
+        d3_.id as id2_2_,
+        d3_.created as created2_2_,
+        d3_.uuid as uuid2_2_,
+        d3_.c_id as c4_2_2_,
+        d3_.e_id as e5_2_2_ 
+    from
+        B b0_ 
+    inner join
+        C c1_ 
+            on b0_.c_id=c1_.id 
+    left outer join
+        D dcollectio2_ 
+            on c1_.id=dcollectio2_.c_id 
+    inner join
+        D d3_ 
+            on b0_.d_id=d3_.id 
+    where
+        b0_.id=?
+14:10:15,576 DEBUG SQL:104 - 
+    select
+        e0_.id as id3_0_,
+        e0_.created as created3_0_,
+        e0_.uuid as uuid3_0_,
+        e0_.f_id as f4_3_0_ 
+    from
+        E e0_ 
+    where
+        e0_.id=?
+14:10:15,577 DEBUG SQL:104 - 
+    select
+        f0_.id as id4_1_,
+        f0_.created as created4_1_,
+        f0_.uuid as uuid4_1_,
+        f0_.d_id as d4_4_1_,
+        f0_.g_id as g5_4_1_,
+        ecollectio1_.f_id as f4_4_3_,
+        ecollectio1_.id as id3_3_,
+        ecollectio1_.id as id3_0_,
+        ecollectio1_.created as created3_0_,
+        ecollectio1_.uuid as uuid3_0_,
+        ecollectio1_.f_id as f4_3_0_ 
+    from
+        F f0_ 
+    left outer join
+        E ecollectio1_ 
+            on f0_.id=ecollectio1_.f_id 
+    where
+        f0_.id=?
+14:10:15,577 DEBUG SQL:104 - 
+    select
+        g0_.id as id5_0_,
+        g0_.created as created5_0_,
+        g0_.uuid as uuid5_0_,
+        g0_.b_id as b4_5_0_ 
+    from
+        G g0_ 
+    where
+        g0_.id=?
+14:10:15,580 DEBUG SQL:104 - 
+    update
+        E 
+    set
+        f_id=? 
+    where
+        id=?
+14:10:15,581 DEBUG SQL:104 - 
+    delete 
+    from
+        F 
+    where
+        id=?
+14:10:15,581 DEBUG SQL:104 - 
+    delete 
+    from
+        G 
+    where
+        id=?
+14:10:15,581 DEBUG SQL:104 - 
+    delete 
+    from
+        B 
+    where
+        id=?
+14:10:15,582 DEBUG SQL:104 - 
+    delete 
+    from
+        D 
+    where
+        id=?
+14:10:15,582 DEBUG SQL:104 - 
+    delete 
+    from
+        E 
+    where
+        id=?
+14:10:15,582 DEBUG SQL:104 - 
+    delete 
+    from
+        C 
+    where
+        id=?
+14:10:15,583  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:15,584 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:15,584 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK42ED39ABEE
+14:10:15,585 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK42ED3A204E
+14:10:15,585 DEBUG SQL:104 - 
+    alter table D 
+        drop constraint FK44ED39ABEE
+14:10:15,585 DEBUG SQL:104 - 
+    alter table D 
+        drop constraint FK44ED3A94AE
+14:10:15,631 DEBUG SQL:104 - 
+    alter table E 
+        drop constraint FK45ED3B090E
+14:10:15,632 DEBUG SQL:104 - 
+    alter table F 
+        drop constraint FK46ED3A204E
+14:10:15,632 DEBUG SQL:104 - 
+    alter table F 
+        drop constraint FK46ED3B7D6E
+14:10:15,632 DEBUG SQL:104 - 
+    alter table G 
+        drop constraint FK47ED39378E
+14:10:15,632 DEBUG SQL:104 - 
+    drop table B if exists
+14:10:15,633 DEBUG SQL:104 - 
+    drop table C if exists
+14:10:15,633 DEBUG SQL:104 - 
+    drop table D if exists
+14:10:15,634 DEBUG SQL:104 - 
+    drop table E if exists
+14:10:15,634 DEBUG SQL:104 - 
+    drop table F if exists
+14:10:15,634 DEBUG SQL:104 - 
+    drop table G if exists
+14:10:15,635 DEBUG SQL:104 - 
+    drop sequence TIGER_SEQ
+14:10:15,635  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:15,635  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

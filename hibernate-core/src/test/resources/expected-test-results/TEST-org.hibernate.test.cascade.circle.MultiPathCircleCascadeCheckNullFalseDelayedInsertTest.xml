@@ -1,0 +1,2616 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" tests="26" time="1.472" timestamp="2013-02-28T20:11:41">
+  <properties />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testMergeData3Nodes" time="0.133" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testMergeDeliveryNode" time="0.048" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testMergeEntityWithNonNullableEntityNull" time="0.021" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testMergeEntityWithNonNullablePropSetToNull" time="0.025" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testMergeEntityWithNonNullableTransientEntity" time="0.043" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testMergePickupNode" time="0.085" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testMergeRoute" time="0.079" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testMergeTour" time="0.104" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testMergeTransport" time="0.095" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveData3Nodes" time="0.042" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveDeliveryNode" time="0.061" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveEntityWithNonNullableEntityNull" time="0.017" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveEntityWithNonNullablePropSetToNull" time="0.012" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveEntityWithNonNullableTransientEntity" time="0.014" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSavePickupNode" time="0.067" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveTour" time="0.07" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveTransport" time="0.054" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveUpdateData3Nodes" time="0.035" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveUpdateDeliveryNode" time="0.039" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveUpdateEntityWithNonNullableEntityNull" time="0.012" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveUpdateEntityWithNonNullablePropSetToNull" time="0.016" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveUpdateEntityWithNonNullableTransientEntity" time="0.002" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveUpdatePickupNode" time="0.047" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveUpdateRoute" time="0.059" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveUpdateTour" time="0.043" />
+  <testcase classname="org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest" name="testSaveUpdateTransport" time="0.073" />
+  <system-out><![CDATA[14:11:41,662  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.cascade.circle.MultiPathCircleCascadeCheckNullFalseDelayedInsertTest
+14:11:41,666  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/cascade/circle/MultiPathCircleCascadeDelayedInsert.hbm.xml
+14:11:41,678  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:11:41,684  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:11:41,684  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:11:41,684  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:11:41,684  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:11:41,686  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:11:41,686  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:11:41,687  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:11:41,687  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:11:41,687  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:11:41,708  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:41,708 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:41,709 DEBUG SQL:104 - 
+    alter table HB_Node 
+        drop constraint FK56C05E47493B64DF
+14:11:41,709 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table HB_Node drop constraint FK56C05E47493B64DF
+14:11:41,709 ERROR SchemaExport:426 - Table "HB_NODE" not found; SQL statement:
+
+    alter table HB_Node 
+        drop constraint FK56C05E47493B64DF [42102-145]
+14:11:41,709 DEBUG SQL:104 - 
+    alter table HB_Node 
+        drop constraint FK56C05E475C75419
+14:11:41,710 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table HB_Node drop constraint FK56C05E475C75419
+14:11:41,710 ERROR SchemaExport:426 - Table "HB_NODE" not found; SQL statement:
+
+    alter table HB_Node 
+        drop constraint FK56C05E475C75419 [42102-145]
+14:11:41,710 DEBUG SQL:104 - 
+    alter table HB_Transport 
+        drop constraint FKEA62AA047AA9D669
+14:11:41,710 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table HB_Transport drop constraint FKEA62AA047AA9D669
+14:11:41,710 ERROR SchemaExport:426 - Table "HB_TRANSPORT" not found; SQL statement:
+
+    alter table HB_Transport 
+        drop constraint FKEA62AA047AA9D669 [42102-145]
+14:11:41,710 DEBUG SQL:104 - 
+    alter table HB_Transport 
+        drop constraint FKEA62AA04FC84EDE1
+14:11:41,710 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table HB_Transport drop constraint FKEA62AA04FC84EDE1
+14:11:41,711 ERROR SchemaExport:426 - Table "HB_TRANSPORT" not found; SQL statement:
+
+    alter table HB_Transport 
+        drop constraint FKEA62AA04FC84EDE1 [42102-145]
+14:11:41,711 DEBUG SQL:104 - 
+    drop table HB_Node if exists
+14:11:41,711 DEBUG SQL:104 - 
+    drop table HB_Route if exists
+14:11:41,711 DEBUG SQL:104 - 
+    drop table HB_Tour if exists
+14:11:41,711 DEBUG SQL:104 - 
+    drop table HB_Transport if exists
+14:11:41,711 DEBUG SQL:104 - 
+    create table HB_Node (
+        nodeID bigint not null,
+        name varchar(255) not null,
+        routeID bigint not null,
+        tourID bigint,
+        primary key (nodeID)
+    )
+14:11:41,712 DEBUG SQL:104 - 
+    create table HB_Route (
+        routeID bigint not null,
+        name varchar(255) not null,
+        primary key (routeID)
+    )
+14:11:41,737 DEBUG SQL:104 - 
+    create table HB_Tour (
+        tourID bigint not null,
+        name varchar(255) not null,
+        primary key (tourID)
+    )
+14:11:41,737 DEBUG SQL:104 - 
+    create table HB_Transport (
+        transportID bigint not null,
+        name varchar(255) not null,
+        pickupNodeID bigint not null,
+        deliveryNodeID bigint not null,
+        primary key (transportID)
+    )
+14:11:41,738 DEBUG SQL:104 - 
+    alter table HB_Node 
+        add constraint FK56C05E47493B64DF 
+        foreign key (routeID) 
+        references HB_Route
+14:11:41,739 DEBUG SQL:104 - 
+    alter table HB_Node 
+        add constraint FK56C05E475C75419 
+        foreign key (tourID) 
+        references HB_Tour
+14:11:41,740 DEBUG SQL:104 - 
+    alter table HB_Transport 
+        add constraint uc_HB_Transport_1 unique (pickupNodeID)
+14:11:41,764 DEBUG SQL:104 - 
+    alter table HB_Transport 
+        add constraint uc_HB_Transport_2 unique (deliveryNodeID)
+14:11:41,765 DEBUG SQL:104 - 
+    alter table HB_Transport 
+        add constraint FKEA62AA047AA9D669 
+        foreign key (pickupNodeID) 
+        references HB_Node
+14:11:41,766 DEBUG SQL:104 - 
+    alter table HB_Transport 
+        add constraint FKEA62AA04FC84EDE1 
+        foreign key (deliveryNodeID) 
+        references HB_Node
+14:11:41,767  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:41,768  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:11:41,768  INFO CustomRunner:139 - Test: testMergeData3Nodes
+14:11:41,771 DEBUG SQL:104 - 
+    select
+        max(routeID) 
+    from
+        HB_Route
+14:11:41,773 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:41,774 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:41,774 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:41,795 DEBUG SQL:104 - 
+    select
+        max(tourID) 
+    from
+        HB_Tour
+14:11:41,795 DEBUG SQL:104 - 
+    select
+        max(nodeID) 
+    from
+        HB_Node
+14:11:41,796 DEBUG SQL:104 - 
+    select
+        max(transportID) 
+    from
+        HB_Transport
+14:11:41,799 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:41,800 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:41,822 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:41,823 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:41,824 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:41,824 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:41,824 DEBUG SQL:104 - 
+    update
+        HB_Route 
+    set
+        name=? 
+    where
+        routeID=?
+14:11:41,826 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.cascade.circle.Transport
+14:11:41,827 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'cascade'
+             |  \-[IDENT] Node: 'circle'
+             \-[IDENT] Node: 'Transport'
+
+14:11:41,827 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,828 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cascade.circle.Transport (<no alias>) -> transport0_
+14:11:41,828 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (HB_Transport)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[transport0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'HB_Transport' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=HB_Transport,tableAlias=transport0_,origin=null,columns={,className=org.hibernate.test.cascade.circle.Transport}}
+
+14:11:41,837 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,837 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,838 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.cascade.circle.Tour
+14:11:41,839 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'cascade'
+             |  \-[IDENT] Node: 'circle'
+             \-[IDENT] Node: 'Tour'
+
+14:11:41,839 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,839 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cascade.circle.Tour (<no alias>) -> tour0_
+14:11:41,840 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (HB_Tour)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[tour0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'HB_Tour' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=HB_Tour,tableAlias=tour0_,origin=null,columns={,className=org.hibernate.test.cascade.circle.Tour}}
+
+14:11:41,848 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,849 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,849 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.cascade.circle.Node
+14:11:41,851 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'cascade'
+             |  \-[IDENT] Node: 'circle'
+             \-[IDENT] Node: 'Node'
+
+14:11:41,852 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,852 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cascade.circle.Node (<no alias>) -> node0_
+14:11:41,852 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (HB_Node)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[node0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'HB_Node' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=HB_Node,tableAlias=node0_,origin=null,columns={,className=org.hibernate.test.cascade.circle.Node}}
+
+14:11:41,852 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,853 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,853 DEBUG QueryTranslatorImpl:265 - parse() - HQL: delete from org.hibernate.test.cascade.circle.Route
+14:11:41,854 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[DELETE] Node: 'delete'
+    \-[FROM] Node: 'FROM'
+       \-[RANGE] Node: 'RANGE'
+          \-[DOT] Node: '.'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'cascade'
+             |  \-[IDENT] Node: 'circle'
+             \-[IDENT] Node: 'Route'
+
+14:11:41,896 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,900 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.cascade.circle.Route (<no alias>) -> route0_
+14:11:41,901 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[DELETE] DeleteStatement: 'delete'  querySpaces (HB_Route)
+    \-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[route0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'HB_Route' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=HB_Route,tableAlias=route0_,origin=null,columns={,className=org.hibernate.test.cascade.circle.Route}}
+
+14:11:41,901 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,901 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:11:41,904  INFO CustomRunner:139 - Test: testMergeDeliveryNode
+14:11:41,908 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:41,909 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:41,911 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:41,913 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:41,914 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:41,914 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:41,914 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:41,926 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:41,927 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:41,928 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:41,947 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:41,947 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:41,948 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:41,948 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:41,953  INFO CustomRunner:139 - Test: testMergeEntityWithNonNullableEntityNull
+14:11:41,955 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:41,961 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:41,963 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:41,963 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:41,963 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:41,974  WARN SqlExceptionHelper:143 - SQL Error: 90006, SQLState: 90006
+14:11:41,974 ERROR SqlExceptionHelper:144 - NULL not allowed for column "ROUTEID"; SQL statement:
+insert into HB_Node (name, routeID, tourID, nodeID) values (?, ?, ?, ?) [90006-145]
+14:11:41,975  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:11:41,975  INFO CustomRunner:139 - Test: testMergeEntityWithNonNullablePropSetToNull
+14:11:41,977 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:41,978 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_2_,
+        route0_.name as name1_2_,
+        nodes1_.routeID as routeID1_4_,
+        nodes1_.nodeID as nodeID0_4_,
+        nodes1_.nodeID as nodeID0_0_,
+        nodes1_.name as name0_0_,
+        nodes1_.routeID as routeID0_0_,
+        nodes1_.tourID as tourID0_0_,
+        tour2_.tourID as tourID2_1_,
+        tour2_.name as name2_1_ 
+    from
+        HB_Route route0_ 
+    left outer join
+        HB_Node nodes1_ 
+            on route0_.routeID=nodes1_.routeID 
+    left outer join
+        HB_Tour tour2_ 
+            on nodes1_.tourID=tour2_.tourID 
+    where
+        route0_.routeID=?
+14:11:41,980 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:41,999 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,000 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,000  WARN SqlExceptionHelper:143 - SQL Error: 90006, SQLState: 90006
+14:11:42,000 ERROR SqlExceptionHelper:144 - NULL not allowed for column "NAME"; SQL statement:
+insert into HB_Node (name, routeID, tourID, nodeID) values (?, ?, ?, ?) [90006-145]
+14:11:42,000  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:11:42,001  INFO CustomRunner:139 - Test: testMergeEntityWithNonNullableTransientEntity
+14:11:42,003 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,004 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,042  WARN UnresolvedEntityInsertActions:163 - HHH000437: Attempting to save one or more entities that have a non-nullable association with an unsaved transient entity. The unsaved transient entity must be saved in an operation prior to saving these dependent entities.
+	Unsaved transient entity: ([org.hibernate.test.cascade.circle.Node#11])
+	Dependent entities: ([[org.hibernate.test.cascade.circle.Transport#6]])
+	Non-nullable association(s): ([org.hibernate.test.cascade.circle.Transport.deliveryNode])
+14:11:42,042  WARN UnresolvedEntityInsertActions:163 - HHH000437: Attempting to save one or more entities that have a non-nullable association with an unsaved transient entity. The unsaved transient entity must be saved in an operation prior to saving these dependent entities.
+	Unsaved transient entity: ([org.hibernate.test.cascade.circle.Route#<null>])
+	Dependent entities: ([[org.hibernate.test.cascade.circle.Node#11]])
+	Non-nullable association(s): ([org.hibernate.test.cascade.circle.Node.route])
+14:11:42,044  INFO CustomRunner:139 - Test: testMergePickupNode
+14:11:42,047 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,048 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,065 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,066 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,067 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,067 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,068 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,068 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,069 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:42,070 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,114 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,115 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,128 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,128 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:42,130  INFO CustomRunner:139 - Test: testMergeRoute
+14:11:42,131 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,132 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_2_,
+        route0_.name as name1_2_,
+        nodes1_.routeID as routeID1_4_,
+        nodes1_.nodeID as nodeID0_4_,
+        nodes1_.nodeID as nodeID0_0_,
+        nodes1_.name as name0_0_,
+        nodes1_.routeID as routeID0_0_,
+        nodes1_.tourID as tourID0_0_,
+        tour2_.tourID as tourID2_1_,
+        tour2_.name as name2_1_ 
+    from
+        HB_Route route0_ 
+    left outer join
+        HB_Node nodes1_ 
+            on route0_.routeID=nodes1_.routeID 
+    left outer join
+        HB_Tour tour2_ 
+            on nodes1_.tourID=tour2_.tourID 
+    where
+        route0_.routeID=?
+14:11:42,159 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,160 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,161 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,175 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,176 DEBUG SQL:104 - 
+    update
+        HB_Route 
+    set
+        name=? 
+    where
+        routeID=?
+14:11:42,177 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,180 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,191 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:42,193 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,193 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,194 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,194 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,207 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:42,211  INFO CustomRunner:139 - Test: testMergeTour
+14:11:42,213 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,214 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,232 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,233 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,234 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,234 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,235 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,236 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,298 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:42,301 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,304 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,312 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,313 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,314 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:42,315  INFO CustomRunner:139 - Test: testMergeTransport
+14:11:42,316 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,317 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,319 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,319 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,339 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,340 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,341 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,341 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,373 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:42,374 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,375 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,379 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,391 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,392 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:42,411  INFO CustomRunner:139 - Test: testSaveData3Nodes
+14:11:42,412 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,413 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,413 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,423 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,424 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,424 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,424 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,425 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,452 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,453 DEBUG SQL:104 - 
+    update
+        HB_Route 
+    set
+        name=? 
+    where
+        routeID=?
+14:11:42,454  INFO CustomRunner:139 - Test: testSaveDeliveryNode
+14:11:42,455 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,456 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,456 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,457 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,457 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,457 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,465 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,466 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:42,467 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,481 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,482 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,496 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,496 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:42,515  INFO CustomRunner:139 - Test: testSaveEntityWithNonNullableEntityNull
+14:11:42,516 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,518 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,518 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,532 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,532  WARN SqlExceptionHelper:143 - SQL Error: 90006, SQLState: 90006
+14:11:42,532 ERROR SqlExceptionHelper:144 - NULL not allowed for column "ROUTEID"; SQL statement:
+insert into HB_Node (name, routeID, tourID, nodeID) values (?, ?, ?, ?) [90006-145]
+14:11:42,533  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:11:42,533  INFO CustomRunner:139 - Test: testSaveEntityWithNonNullablePropSetToNull
+14:11:42,534 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,536 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,545 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,545 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,545 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,546  WARN SqlExceptionHelper:143 - SQL Error: 90006, SQLState: 90006
+14:11:42,546 ERROR SqlExceptionHelper:144 - NULL not allowed for column "NAME"; SQL statement:
+insert into HB_Node (name, routeID, tourID, nodeID) values (?, ?, ?, ?) [90006-145]
+14:11:42,546  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:11:42,547  INFO CustomRunner:139 - Test: testSaveEntityWithNonNullableTransientEntity
+14:11:42,548 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,560  WARN UnresolvedEntityInsertActions:163 - HHH000437: Attempting to save one or more entities that have a non-nullable association with an unsaved transient entity. The unsaved transient entity must be saved in an operation prior to saving these dependent entities.
+	Unsaved transient entity: ([org.hibernate.test.cascade.circle.Node#29])
+	Dependent entities: ([[org.hibernate.test.cascade.circle.Transport#16]])
+	Non-nullable association(s): ([org.hibernate.test.cascade.circle.Transport.deliveryNode])
+14:11:42,561  WARN UnresolvedEntityInsertActions:163 - HHH000437: Attempting to save one or more entities that have a non-nullable association with an unsaved transient entity. The unsaved transient entity must be saved in an operation prior to saving these dependent entities.
+	Unsaved transient entity: ([org.hibernate.test.cascade.circle.Route#<null>])
+	Dependent entities: ([[org.hibernate.test.cascade.circle.Node#29]])
+	Non-nullable association(s): ([org.hibernate.test.cascade.circle.Node.route])
+14:11:42,561  INFO CustomRunner:139 - Test: testSavePickupNode
+14:11:42,563 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,565 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,591 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,591 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,592 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,593 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,594 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,594 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:42,595 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,607 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,607 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,608 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,628 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:42,630  INFO CustomRunner:139 - Test: testSaveTour
+14:11:42,631 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,632 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,643 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,643 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,655 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,656 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,656 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,673 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:42,674 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,675 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,687 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,687 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,688 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:42,701  INFO CustomRunner:139 - Test: testSaveTransport
+14:11:42,704 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,707 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,707 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,725 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,725 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,726 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,726 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,727 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:42,727 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,728 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,747 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,748 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,755 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:42,757  INFO CustomRunner:139 - Test: testSaveUpdateData3Nodes
+14:11:42,758 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,759 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,767 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,769 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,778 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,778 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,778 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,779 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,790 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,791 DEBUG SQL:104 - 
+    update
+        HB_Route 
+    set
+        name=? 
+    where
+        routeID=?
+14:11:42,792  INFO CustomRunner:139 - Test: testSaveUpdateDeliveryNode
+14:11:42,793 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,794 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,798 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,799 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,799 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,800 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,809 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,810 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:42,810 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,819 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,819 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,820 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,829 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:42,832  INFO CustomRunner:139 - Test: testSaveUpdateEntityWithNonNullableEntityNull
+14:11:42,833 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,842 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,843 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,843 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,843  WARN SqlExceptionHelper:143 - SQL Error: 90006, SQLState: 90006
+14:11:42,843 ERROR SqlExceptionHelper:144 - NULL not allowed for column "ROUTEID"; SQL statement:
+insert into HB_Node (name, routeID, tourID, nodeID) values (?, ?, ?, ?) [90006-145]
+14:11:42,844  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:11:42,844  INFO CustomRunner:139 - Test: testSaveUpdateEntityWithNonNullablePropSetToNull
+14:11:42,846 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,851 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,852 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,852 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,852  WARN SqlExceptionHelper:143 - SQL Error: 90006, SQLState: 90006
+14:11:42,852 ERROR SqlExceptionHelper:144 - NULL not allowed for column "NAME"; SQL statement:
+insert into HB_Node (name, routeID, tourID, nodeID) values (?, ?, ?, ?) [90006-145]
+14:11:42,852  INFO AbstractBatchImpl:195 - HHH000010: On release of batch it still contained JDBC statements
+14:11:42,861  INFO CustomRunner:139 - Test: testSaveUpdateEntityWithNonNullableTransientEntity
+14:11:42,862 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,863  WARN UnresolvedEntityInsertActions:163 - HHH000437: Attempting to save one or more entities that have a non-nullable association with an unsaved transient entity. The unsaved transient entity must be saved in an operation prior to saving these dependent entities.
+	Unsaved transient entity: ([org.hibernate.test.cascade.circle.Node#46])
+	Dependent entities: ([[org.hibernate.test.cascade.circle.Transport#25]])
+	Non-nullable association(s): ([org.hibernate.test.cascade.circle.Transport.deliveryNode])
+14:11:42,864  WARN UnresolvedEntityInsertActions:163 - HHH000437: Attempting to save one or more entities that have a non-nullable association with an unsaved transient entity. The unsaved transient entity must be saved in an operation prior to saving these dependent entities.
+	Unsaved transient entity: ([org.hibernate.test.cascade.circle.Route#<null>])
+	Dependent entities: ([[org.hibernate.test.cascade.circle.Node#46]])
+	Non-nullable association(s): ([org.hibernate.test.cascade.circle.Node.route])
+14:11:42,865  INFO CustomRunner:139 - Test: testSaveUpdatePickupNode
+14:11:42,866 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,867 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,867 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,868 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,868 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,868 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,873 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,874 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:42,874 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,887 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,888 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,888 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,899 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:42,912  INFO CustomRunner:139 - Test: testSaveUpdateRoute
+14:11:42,913 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,915 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,915 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,932 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,933 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,933 DEBUG SQL:104 - 
+    update
+        HB_Route 
+    set
+        name=? 
+    where
+        routeID=?
+14:11:42,934 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,946 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,947 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:42,948 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,966 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,967 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:42,968 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:42,970 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:42,972  INFO CustomRunner:139 - Test: testSaveUpdateTour
+14:11:42,973 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:42,986 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:42,986 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,987 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,987 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:42,987 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:42,998 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:42,999 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:43,000 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:43,000 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:43,001 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:43,014 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:43,015 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:43,016  INFO CustomRunner:139 - Test: testSaveUpdateTransport
+14:11:43,018 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Route
+        (name, routeID) 
+    values
+        (?, ?)
+14:11:43,033 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Tour
+        (name, tourID) 
+    values
+        (?, ?)
+14:11:43,034 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:43,034 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Node
+        (name, routeID, tourID, nodeID) 
+    values
+        (?, ?, ?, ?)
+14:11:43,034 DEBUG SQL:104 - 
+    insert 
+    into
+        HB_Transport
+        (name, pickupNodeID, deliveryNodeID, transportID) 
+    values
+        (?, ?, ?, ?)
+14:11:43,045 DEBUG SQL:104 - 
+    select
+        route0_.routeID as routeID1_0_,
+        route0_.name as name1_0_ 
+    from
+        HB_Route route0_ 
+    where
+        route0_.routeID=?
+14:11:43,046 DEBUG SQL:104 - 
+    select
+        nodes0_.routeID as routeID1_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.routeID=?
+14:11:43,057 DEBUG SQL:104 - 
+    select
+        tour0_.tourID as tourID2_0_,
+        tour0_.name as name2_0_ 
+    from
+        HB_Tour tour0_ 
+    where
+        tour0_.tourID=?
+14:11:43,059 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:43,062 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:43,073 DEBUG SQL:104 - 
+    select
+        deliverytr0_.deliveryNodeID as delivery4_0_1_,
+        deliverytr0_.transportID as transpor1_3_1_,
+        deliverytr0_.transportID as transpor1_3_0_,
+        deliverytr0_.name as name3_0_,
+        deliverytr0_.pickupNodeID as pickupNo3_3_0_,
+        deliverytr0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport deliverytr0_ 
+    where
+        deliverytr0_.deliveryNodeID=?
+14:11:43,074 DEBUG SQL:104 - 
+    select
+        pickuptran0_.pickupNodeID as pickupNo3_0_1_,
+        pickuptran0_.transportID as transpor1_3_1_,
+        pickuptran0_.transportID as transpor1_3_0_,
+        pickuptran0_.name as name3_0_,
+        pickuptran0_.pickupNodeID as pickupNo3_3_0_,
+        pickuptran0_.deliveryNodeID as delivery4_3_0_ 
+    from
+        HB_Transport pickuptran0_ 
+    where
+        pickuptran0_.pickupNodeID=?
+14:11:43,087 DEBUG SQL:104 - 
+    select
+        nodes0_.tourID as tourID2_1_,
+        nodes0_.nodeID as nodeID0_1_,
+        nodes0_.nodeID as nodeID0_0_,
+        nodes0_.name as name0_0_,
+        nodes0_.routeID as routeID0_0_,
+        nodes0_.tourID as tourID0_0_ 
+    from
+        HB_Node nodes0_ 
+    where
+        nodes0_.tourID=?
+14:11:43,090  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:11:43,091 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:11:43,091 DEBUG SQL:104 - 
+    alter table HB_Node 
+        drop constraint FK56C05E47493B64DF
+14:11:43,091 DEBUG SQL:104 - 
+    alter table HB_Node 
+        drop constraint FK56C05E475C75419
+14:11:43,091 DEBUG SQL:104 - 
+    alter table HB_Transport 
+        drop constraint FKEA62AA047AA9D669
+14:11:43,092 DEBUG SQL:104 - 
+    alter table HB_Transport 
+        drop constraint FKEA62AA04FC84EDE1
+14:11:43,106 DEBUG SQL:104 - 
+    drop table HB_Node if exists
+14:11:43,107 DEBUG SQL:104 - 
+    drop table HB_Route if exists
+14:11:43,107 DEBUG SQL:104 - 
+    drop table HB_Tour if exists
+14:11:43,107 DEBUG SQL:104 - 
+    drop table HB_Transport if exists
+14:11:43,108  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:11:43,108  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

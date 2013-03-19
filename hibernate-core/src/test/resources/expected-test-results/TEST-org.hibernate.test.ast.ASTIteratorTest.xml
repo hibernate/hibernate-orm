@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.ast.ASTIteratorTest" tests="2" time="0.029" timestamp="2013-02-28T20:10:50">
+  <properties />
+  <testcase classname="org.hibernate.test.ast.ASTIteratorTest" name="testParentsFirstIterator" time="0.007" />
+  <testcase classname="org.hibernate.test.ast.ASTIteratorTest" name="testSimpleTree" time="0.013" />
+  <system-out><![CDATA[14:10:50,839  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.ast.ASTIteratorTest
+14:10:50,842  INFO CustomRunner:139 - Test: testParentsFirstIterator
+ ( grandparent ( parent ( child baby ) brother sister ) ( uncle cousin1 cousin2 cousin3 ) )
+--- ASTParentsFirstIterator ---
+grandparent
+parent
+child
+baby
+brother
+sister
+uncle
+cousin1
+cousin2
+cousin3
+--- ASTIterator ---
+baby
+child
+brother
+sister
+parent
+cousin1
+cousin2
+cousin3
+uncle
+grandparent
+--- ASTParentsFirstIterator (parent) ---
+parent
+child
+baby
+brother
+sister
+14:10:50,851  INFO CustomRunner:139 - Test: testSimpleTree
+14:10:50,857 DEBUG ErrorCounter:63 - Keyword  'count' is being interpreted as an identifier due to: expecting IDENT, found 'count'
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  +-[RANGE] Node: 'RANGE'
+    |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  +-[DOT] Node: '.'
+    |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |  |  |  \-[IDENT] Node: 'Foo'
+    |  |  |  \-[ALIAS] Node: 'foo'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  \-[IDENT] Node: 'test'
+    |  |     |  \-[IDENT] Node: 'Fee'
+    |  |     \-[ALIAS] Node: 'fee'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 'foo'
+    +-[WHERE] Node: 'where'
+    |  \-[EQ] Node: '='
+    |     +-[DOT] Node: '.'
+    |     |  +-[IDENT] Node: 'foo'
+    |     |  \-[IDENT] Node: 'dependent'
+    |     \-[IDENT] Node: 'fee'
+    \-[ORDER] Node: 'order'
+       +-[DOT] Node: '.'
+       |  +-[IDENT] Node: 'foo'
+       |  \-[IDENT] Node: 'string'
+       +-[DESCENDING] Node: 'desc'
+       +-[DOT] Node: '.'
+       |  +-[DOT] Node: '.'
+       |  |  +-[IDENT] Node: 'foo'
+       |  |  \-[IDENT] Node: 'component'
+       |  \-[WEIRD_IDENT] Node: 'count'
+       +-[ASCENDING] Node: 'asc'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'fee'
+          \-[IDENT] Node: 'id'
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.entityname.EntityNameFromSubClassTest" tests="1" time="0.054" timestamp="2013-02-28T20:12:16">
+  <properties />
+  <testcase classname="org.hibernate.test.entityname.EntityNameFromSubClassTest" name="testEntityName" time="0.005" />
+  <system-out><![CDATA[14:12:16,654  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.entityname.EntityNameFromSubClassTest
+14:12:16,656  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/entityname/Vehicle.hbm.xml
+14:12:16,665  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:16,666  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:16,666  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:16,666  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:16,666  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:16,667  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:16,668  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:16,668  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:16,669  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:16,669  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:16,689  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:16,689 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:16,690 DEBUG SQL:104 - 
+    alter table VEHICLE 
+        drop constraint FK3F2F1B0CCB8B8265
+14:12:16,690 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table VEHICLE drop constraint FK3F2F1B0CCB8B8265
+14:12:16,690 ERROR SchemaExport:426 - Table "VEHICLE" not found; SQL statement:
+
+    alter table VEHICLE 
+        drop constraint FK3F2F1B0CCB8B8265 [42102-145]
+14:12:16,690 DEBUG SQL:104 - 
+    drop table Person if exists
+14:12:16,690 DEBUG SQL:104 - 
+    drop table VEHICLE if exists
+14:12:16,690 DEBUG SQL:104 - 
+    create table Person (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:16,691 DEBUG SQL:104 - 
+    create table VEHICLE (
+        id bigint not null,
+        "TYPE" varchar(255) not null,
+        vin varchar(255),
+        owner varchar(255),
+        car_id bigint,
+        primary key (id)
+    )
+14:12:16,691 DEBUG SQL:104 - 
+    alter table VEHICLE 
+        add constraint FK3F2F1B0CCB8B8265 
+        foreign key (car_id) 
+        references Person
+14:12:16,692  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:16,692  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:16,693  INFO CustomRunner:139 - Test: testEntityName
+14:12:16,694 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Person
+14:12:16,694 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        VEHICLE
+14:12:16,695 DEBUG SQL:104 - 
+    insert 
+    into
+        Person
+        (name, id) 
+    values
+        (?, ?)
+14:12:16,696 DEBUG SQL:104 - 
+    insert 
+    into
+        VEHICLE
+        (vin, owner, "TYPE", id) 
+    values
+        (?, ?, 'C', ?)
+14:12:16,696 DEBUG SQL:104 - 
+    update
+        VEHICLE 
+    set
+        car_id=? 
+    where
+        id=?
+14:12:16,696 DEBUG SQL:104 - 
+    select
+        person0_.id as id0_0_,
+        person0_.name as name0_0_ 
+    from
+        Person person0_ 
+    where
+        person0_.id=?
+14:12:16,697 DEBUG SQL:104 - 
+    select
+        cars0_.car_id as car5_0_1_,
+        cars0_.id as id1_1_,
+        cars0_.id as id1_0_,
+        cars0_.vin as vin1_0_,
+        cars0_.owner as owner1_0_,
+        cars0_."TYPE" as TYPE2_1_0_ 
+    from
+        VEHICLE cars0_ 
+    where
+        cars0_.car_id=?
+14:12:16,698  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:16,699 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:16,699 DEBUG SQL:104 - 
+    alter table VEHICLE 
+        drop constraint FK3F2F1B0CCB8B8265
+14:12:16,699 DEBUG SQL:104 - 
+    drop table Person if exists
+14:12:16,699 DEBUG SQL:104 - 
+    drop table VEHICLE if exists
+14:12:16,700  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:16,700  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

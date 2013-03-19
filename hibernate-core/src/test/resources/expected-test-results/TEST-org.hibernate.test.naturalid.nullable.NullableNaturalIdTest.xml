@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.naturalid.nullable.NullableNaturalIdTest" tests="3" time="0.232" timestamp="2013-02-28T20:17:32">
+  <properties />
+  <testcase classname="org.hibernate.test.naturalid.nullable.NullableNaturalIdTest" name="testNaturalIdNullValueOnPersist" time="0.004" />
+  <testcase classname="org.hibernate.test.naturalid.nullable.NullableNaturalIdTest" name="testNaturalIdQuerySupportingNullValues" time="0.058" />
+  <testcase classname="org.hibernate.test.naturalid.nullable.NullableNaturalIdTest" name="testUniqueAssociation" time="0.041" />
+  <system-out><![CDATA[14:17:32,327  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.naturalid.nullable.NullableNaturalIdTest
+14:17:32,365  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:32,366  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:32,366  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:32,366  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:32,366  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:32,369  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:32,369  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:32,370  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:32,370  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:32,370  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:32,374  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,375  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,375  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,375  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,400  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,401  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,401  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,401  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,401  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,401  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,402  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,402  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,402  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:32,402 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:32,403 DEBUG SQL:104 - 
+    alter table A 
+        drop constraint FK4173F14363
+14:17:32,403 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table A drop constraint FK4173F14363
+14:17:32,403 ERROR SchemaExport:426 - Table "A" not found; SQL statement:
+
+    alter table A 
+        drop constraint FK4173F14363 [42102-145]
+14:17:32,403 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK4273D5145F
+14:17:32,403 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table B drop constraint FK4273D5145F
+14:17:32,403 ERROR SchemaExport:426 - Table "B" not found; SQL statement:
+
+    alter table B 
+        drop constraint FK4273D5145F [42102-145]
+14:17:32,403 DEBUG SQL:104 - 
+    alter table D 
+        drop constraint FK441D9DB3FE
+14:17:32,404 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table D drop constraint FK441D9DB3FE
+14:17:32,404 ERROR SchemaExport:426 - Table "D" not found; SQL statement:
+
+    alter table D 
+        drop constraint FK441D9DB3FE [42102-145]
+14:17:32,404 DEBUG SQL:104 - 
+    drop table A if exists
+14:17:32,404 DEBUG SQL:104 - 
+    drop table B if exists
+14:17:32,404 DEBUG SQL:104 - 
+    drop table C if exists
+14:17:32,404 DEBUG SQL:104 - 
+    drop table D if exists
+14:17:32,404 DEBUG SQL:104 - 
+    drop table hibernate_sequences if exists
+14:17:32,405 DEBUG SQL:104 - 
+    create table A (
+        oid bigint not null,
+        myname varchar(255),
+        assC_oid bigint,
+        primary key (oid)
+    )
+14:17:32,405 DEBUG SQL:104 - 
+    create table B (
+        oid bigint not null,
+        naturalid integer not null,
+        assA_oid bigint,
+        primary key (oid)
+    )
+14:17:32,405 DEBUG SQL:104 - 
+    create table C (
+        oid bigint not null,
+        name varchar(255),
+        primary key (oid)
+    )
+14:17:32,406 DEBUG SQL:104 - 
+    create table D (
+        oid bigint not null,
+        name varchar(255),
+        associatedC_oid bigint,
+        primary key (oid)
+    )
+14:17:32,406 DEBUG SQL:104 - 
+    alter table A 
+        add constraint _UniqueKey unique (assC_oid, myname)
+14:17:32,406 DEBUG SQL:104 - 
+    alter table A 
+        add constraint FK4173F14363 
+        foreign key (assC_oid) 
+        references C
+14:17:32,407 DEBUG SQL:104 - 
+    alter table B 
+        add constraint _UniqueKey unique (assA_oid, naturalid)
+14:17:32,407 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table B add constraint _UniqueKey unique (assA_oid, naturalid)
+14:17:32,407 ERROR SchemaExport:426 - Constraint "_UNIQUEKEY" already exists; SQL statement:
+
+    alter table B 
+        add constraint _UniqueKey unique (assA_oid, naturalid) [90045-145]
+14:17:32,408 DEBUG SQL:104 - 
+    alter table B 
+        add constraint FK4273D5145F 
+        foreign key (assA_oid) 
+        references A
+14:17:32,408 DEBUG SQL:104 - 
+    alter table C 
+        add constraint _UniqueKey unique (name)
+14:17:32,408 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table C add constraint _UniqueKey unique (name)
+14:17:32,408 ERROR SchemaExport:426 - Constraint "_UNIQUEKEY" already exists; SQL statement:
+
+    alter table C 
+        add constraint _UniqueKey unique (name) [90045-145]
+14:17:32,408 DEBUG SQL:104 - 
+    alter table D 
+        add constraint _UniqueKey unique (associatedC_oid, name)
+14:17:32,409 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table D add constraint _UniqueKey unique (associatedC_oid, name)
+14:17:32,409 ERROR SchemaExport:426 - Constraint "_UNIQUEKEY" already exists; SQL statement:
+
+    alter table D 
+        add constraint _UniqueKey unique (associatedC_oid, name) [90045-145]
+14:17:32,409 DEBUG SQL:104 - 
+    alter table D 
+        add constraint FK441D9DB3FE 
+        foreign key (associatedC_oid) 
+        references C
+14:17:32,409 DEBUG SQL:104 - 
+    create table hibernate_sequences (
+         sequence_name varchar(255) not null ,
+         next_val bigint,
+        primary key ( sequence_name ) 
+    ) 
+14:17:32,409  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:32,410  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,410  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,410  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,410  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,410  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,411  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,411  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,411  INFO TableGenerator:414 - HHH000398: Explicit segment value for id generator [hibernate_sequences.sequence_name] suggested; using default [default]
+14:17:32,411  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:32,411  INFO CustomRunner:139 - Test: testNaturalIdNullValueOnPersist
+14:17:32,413 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        hibernate_sequences tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:17:32,414 DEBUG SQL:104 - 
+    insert 
+    into
+        hibernate_sequences
+        (sequence_name, next_val)  
+    values
+        (?,?)
+14:17:32,414 DEBUG SQL:104 - 
+    update
+        hibernate_sequences 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:17:32,415 DEBUG SQL:104 - 
+    insert 
+    into
+        C
+        (name, oid) 
+    values
+        (?, ?)
+14:17:32,415 DEBUG SQL:104 - 
+    update
+        C 
+    set
+        name=? 
+    where
+        oid=?
+14:17:32,416 DEBUG SQL:104 - 
+    delete 
+    from
+        C 
+    where
+        oid=?
+14:17:32,417  INFO CustomRunner:139 - Test: testNaturalIdQuerySupportingNullValues
+14:17:32,418 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        hibernate_sequences tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:17:32,418 DEBUG SQL:104 - 
+    update
+        hibernate_sequences 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:17:32,418 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        hibernate_sequences tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:17:32,435 DEBUG SQL:104 - 
+    update
+        hibernate_sequences 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:17:32,435 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        hibernate_sequences tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:17:32,436 DEBUG SQL:104 - 
+    update
+        hibernate_sequences 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:17:32,445 DEBUG SQL:104 - 
+    insert 
+    into
+        D
+        (associatedC_oid, name, oid) 
+    values
+        (?, ?, ?)
+14:17:32,446 DEBUG SQL:104 - 
+    insert 
+    into
+        D
+        (associatedC_oid, name, oid) 
+    values
+        (?, ?, ?)
+14:17:32,446 DEBUG SQL:104 - 
+    insert 
+    into
+        C
+        (name, oid) 
+    values
+        (?, ?)
+14:17:32,446 DEBUG SQL:104 - 
+    update
+        D 
+    set
+        associatedC_oid=?,
+        name=? 
+    where
+        oid=?
+14:17:32,454 DEBUG SQL:104 - 
+    select
+        d_.oid as oid3_ 
+    from
+        D d_ 
+    where
+        d_.associatedC_oid=? 
+        and d_.name is null
+14:17:32,454 DEBUG SQL:104 - 
+    select
+        d0_.oid as oid3_1_,
+        d0_.associatedC_oid as associat3_3_1_,
+        d0_.name as name3_1_,
+        c1_.oid as oid2_0_,
+        c1_.name as name2_0_ 
+    from
+        D d0_ 
+    left outer join
+        C c1_ 
+            on d0_.associatedC_oid=c1_.oid 
+    where
+        d0_.oid=?
+14:17:32,455 DEBUG SQL:104 - 
+    select
+        d_.oid as oid3_ 
+    from
+        D d_ 
+    where
+        d_.associatedC_oid is null 
+        and d_.name=?
+14:17:32,464 DEBUG SQL:104 - 
+    select
+        d0_.oid as oid3_1_,
+        d0_.associatedC_oid as associat3_3_1_,
+        d0_.name as name3_1_,
+        c1_.oid as oid2_0_,
+        c1_.name as name2_0_ 
+    from
+        D d0_ 
+    left outer join
+        C c1_ 
+            on d0_.associatedC_oid=c1_.oid 
+    where
+        d0_.oid=?
+14:17:32,465 DEBUG SQL:104 - 
+    update
+        D 
+    set
+        associatedC_oid=?,
+        name=? 
+    where
+        oid=?
+14:17:32,466 DEBUG SQL:104 - 
+    delete 
+    from
+        C 
+    where
+        oid=?
+14:17:32,474 DEBUG SQL:104 - 
+    delete 
+    from
+        D 
+    where
+        oid=?
+14:17:32,474 DEBUG SQL:104 - 
+    delete 
+    from
+        D 
+    where
+        oid=?
+14:17:32,475  INFO CustomRunner:139 - Test: testUniqueAssociation
+14:17:32,476 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        hibernate_sequences tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:17:32,476 DEBUG SQL:104 - 
+    update
+        hibernate_sequences 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:17:32,484 DEBUG SQL:104 - 
+    select
+        tbl.next_val 
+    from
+        hibernate_sequences tbl 
+    where
+        tbl.sequence_name=? for update
+            
+14:17:32,485 DEBUG SQL:104 - 
+    update
+        hibernate_sequences 
+    set
+        next_val=?  
+    where
+        next_val=? 
+        and sequence_name=?
+14:17:32,486 DEBUG SQL:104 - 
+    insert 
+    into
+        A
+        (assC_oid, myname, oid) 
+    values
+        (?, ?, ?)
+14:17:32,486 DEBUG SQL:104 - 
+    insert 
+    into
+        B
+        (assA_oid, naturalid, oid) 
+    values
+        (?, ?, ?)
+14:17:32,495 DEBUG SQL:104 - 
+    update
+        B 
+    set
+        assA_oid=?,
+        naturalid=? 
+    where
+        oid=?
+14:17:32,496 DEBUG SQL:104 - 
+    select
+        b_.oid as oid1_ 
+    from
+        B b_ 
+    where
+        b_.assA_oid=? 
+        and b_.naturalid=?
+14:17:32,496 DEBUG SQL:104 - 
+    select
+        b0_.oid as oid1_2_,
+        b0_.assA_oid as assA3_1_2_,
+        b0_.naturalid as naturalid1_2_,
+        a1_.oid as oid0_0_,
+        a1_.assC_oid as assC3_0_0_,
+        a1_.myname as myname0_0_,
+        c2_.oid as oid2_1_,
+        c2_.name as name2_1_ 
+    from
+        B b0_ 
+    left outer join
+        A a1_ 
+            on b0_.assA_oid=a1_.oid 
+    left outer join
+        C c2_ 
+            on a1_.assC_oid=c2_.oid 
+    where
+        b0_.oid=?
+14:17:32,498 DEBUG SQL:104 - 
+    select
+        b_.oid as oid1_ 
+    from
+        B b_ 
+    where
+        b_.assA_oid is null 
+        and b_.naturalid=?
+14:17:32,499 DEBUG SQL:104 - 
+    delete 
+    from
+        B 
+    where
+        oid=?
+14:17:32,500 DEBUG SQL:104 - 
+    delete 
+    from
+        A 
+    where
+        oid=?
+14:17:32,516  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:32,517 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:32,517 DEBUG SQL:104 - 
+    alter table A 
+        drop constraint FK4173F14363
+14:17:32,517 DEBUG SQL:104 - 
+    alter table B 
+        drop constraint FK4273D5145F
+14:17:32,518 DEBUG SQL:104 - 
+    alter table D 
+        drop constraint FK441D9DB3FE
+14:17:32,518 DEBUG SQL:104 - 
+    drop table A if exists
+14:17:32,518 DEBUG SQL:104 - 
+    drop table B if exists
+14:17:32,518 DEBUG SQL:104 - 
+    drop table C if exists
+14:17:32,518 DEBUG SQL:104 - 
+    drop table D if exists
+14:17:32,519 DEBUG SQL:104 - 
+    drop table hibernate_sequences if exists
+14:17:32,519  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:32,519  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.onetomany.DefaultNullOrderingTest" tests="3" time="0.128" timestamp="2013-02-28T20:10:38">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.onetomany.DefaultNullOrderingTest" name="testAnnotationsDefaultNullOrdering" time="0.016" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.DefaultNullOrderingTest" name="testCriteriaDefaultNullOrdering" time="0.027" />
+  <testcase classname="org.hibernate.test.annotations.onetomany.DefaultNullOrderingTest" name="testHqlDefaultNullOrdering" time="0.039" />
+  <system-out><![CDATA[14:10:38,916  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.onetomany.DefaultNullOrderingTest
+14:10:38,922  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:38,922  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:38,922  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:38,922  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:38,922  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:38,923  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:38,924  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:38,924  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:38,924  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:38,925  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:38,935  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:38,936 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:38,936 DEBUG SQL:104 - 
+    alter table Soldier 
+        drop constraint FKEA301962A4F85B16
+14:10:38,936 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Soldier drop constraint FKEA301962A4F85B16
+14:10:38,936 ERROR SchemaExport:426 - Table "SOLDIER" not found; SQL statement:
+
+    alter table Soldier 
+        drop constraint FKEA301962A4F85B16 [42102-145]
+14:10:38,936 DEBUG SQL:104 - 
+    drop table Monkey if exists
+14:10:38,936 DEBUG SQL:104 - 
+    drop table Soldier if exists
+14:10:38,937 DEBUG SQL:104 - 
+    drop table Troop if exists
+14:10:38,937 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:38,937 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:38,937 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:38,937 DEBUG SQL:104 - 
+    create table Monkey (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:38,937 DEBUG SQL:104 - 
+    create table Soldier (
+        id integer not null,
+        name varchar(255),
+        troop_fk integer,
+        primary key (id)
+    )
+14:10:38,939 DEBUG SQL:104 - 
+    create table Troop (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:38,940 DEBUG SQL:104 - 
+    alter table Soldier 
+        add constraint FKEA301962A4F85B16 
+        foreign key (troop_fk) 
+        references Troop 
+        on delete cascade
+14:10:38,940 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:38,940  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:38,941  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:38,941  INFO CustomRunner:139 - Test: testAnnotationsDefaultNullOrdering
+14:10:38,942 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:38,943 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:38,943 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:38,952 DEBUG SQL:104 - 
+    insert 
+    into
+        Troop
+        (name, id) 
+    values
+        (?, ?)
+14:10:38,953 DEBUG SQL:104 - 
+    insert 
+    into
+        Soldier
+        (name, troop_fk, id) 
+    values
+        (?, ?, ?)
+14:10:38,954 DEBUG SQL:104 - 
+    insert 
+    into
+        Soldier
+        (name, troop_fk, id) 
+    values
+        (?, ?, ?)
+14:10:38,954 DEBUG SQL:104 - 
+    select
+        troop0_.id as id2_0_,
+        troop0_.name as name2_0_ 
+    from
+        Troop troop0_ 
+    where
+        troop0_.id=?
+14:10:38,955 DEBUG SQL:104 - 
+    select
+        soldiers0_.troop_fk as troop3_2_1_,
+        soldiers0_.id as id1_1_,
+        soldiers0_.id as id1_0_,
+        soldiers0_.name as name1_0_,
+        soldiers0_.troop_fk as troop3_1_0_ 
+    from
+        Soldier soldiers0_ 
+    where
+        soldiers0_.troop_fk=? 
+    order by
+        soldiers0_.name desc nulls last
+14:10:38,957 DEBUG SQL:104 - 
+    delete 
+    from
+        Troop 
+    where
+        id=?
+14:10:38,957  INFO CustomRunner:139 - Test: testCriteriaDefaultNullOrdering
+14:10:38,958 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:38,958 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:38,959 DEBUG SQL:104 - 
+    insert 
+    into
+        Monkey
+        (name, id) 
+    values
+        (?, ?)
+14:10:38,968 DEBUG SQL:104 - 
+    insert 
+    into
+        Monkey
+        (name, id) 
+    values
+        (?, ?)
+14:10:38,971 DEBUG SQL:104 - 
+    select
+        this_.id as id0_0_,
+        this_.name as name0_0_ 
+    from
+        Monkey this_ 
+    order by
+        this_.name asc nulls last
+14:10:38,972 DEBUG SQL:104 - 
+    delete 
+    from
+        Monkey 
+    where
+        id=?
+14:10:38,972 DEBUG SQL:104 - 
+    delete 
+    from
+        Monkey 
+    where
+        id=?
+14:10:38,985  INFO CustomRunner:139 - Test: testHqlDefaultNullOrdering
+14:10:38,985 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:38,986 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:38,987 DEBUG SQL:104 - 
+    insert 
+    into
+        Monkey
+        (name, id) 
+    values
+        (?, ?)
+14:10:38,987 DEBUG SQL:104 - 
+    insert 
+    into
+        Monkey
+        (name, id) 
+    values
+        (?, ?)
+14:10:38,987 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.annotations.onetomany.Monkey m order by m.name
+14:10:38,989 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  |  \-[IDENT] Node: 'annotations'
+    |        |  |  \-[IDENT] Node: 'onetomany'
+    |        |  \-[IDENT] Node: 'Monkey'
+    |        \-[ALIAS] Node: 'm'
+    \-[ORDER] Node: 'order'
+       \-[DOT] Node: '.'
+          +-[IDENT] Node: 'm'
+          \-[IDENT] Node: 'name'
+
+14:10:39,008 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,008 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.onetomany.Monkey (m) -> monkey0_
+14:10:39,008 DEBUG FromReferenceNode:74 - Resolved : m -> monkey0_.id
+14:10:39,008 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:10:39,008 DEBUG FromReferenceNode:74 - Resolved : m.name -> monkey0_.name
+14:10:39,009 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Monkey monkey0_ ) ( order ( monkey0_.name monkey0_.id name ) ) )
+14:10:39,009 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:10:39,009 DEBUG JoinProcessor:175 - Using FROM fragment [Monkey monkey0_]
+14:10:39,009 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Monkey)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'monkey0_.id as id0_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Monkey,tableAlias=monkey0_,origin=null,columns={,className=org.hibernate.test.annotations.onetomany.Monkey}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'monkey0_.name as name0_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[m], fromElementByTableAlias=[monkey0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Monkey monkey0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=m,role=null,tableName=Monkey,tableAlias=monkey0_,origin=null,columns={,className=org.hibernate.test.annotations.onetomany.Monkey}}
+    \-[ORDER] OrderByClause: 'order'
+       \-[DOT] DotNode: 'monkey0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=m.name,tableAlias=monkey0_,className=org.hibernate.test.annotations.onetomany.Monkey,classAlias=m}
+          +-[ALIAS_REF] IdentNode: 'monkey0_.id' {alias=m, className=org.hibernate.test.annotations.onetomany.Monkey, tableAlias=monkey0_}
+          \-[IDENT] IdentNode: 'name' {originalText=name}
+
+14:10:39,009 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,009 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.annotations.onetomany.Monkey m order by m.name
+14:10:39,009 DEBUG QueryTranslatorImpl:236 - SQL: select monkey0_.id as id0_, monkey0_.name as name0_ from Monkey monkey0_ order by monkey0_.name nulls last
+14:10:39,009 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:39,010 DEBUG SQL:104 - 
+    select
+        monkey0_.id as id0_,
+        monkey0_.name as name0_ 
+    from
+        Monkey monkey0_ 
+    order by
+        monkey0_.name nulls last
+14:10:39,023 DEBUG SQL:104 - 
+    delete 
+    from
+        Monkey 
+    where
+        id=?
+14:10:39,023 DEBUG SQL:104 - 
+    delete 
+    from
+        Monkey 
+    where
+        id=?
+14:10:39,025  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:39,025 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:39,025 DEBUG SQL:104 - 
+    alter table Soldier 
+        drop constraint FKEA301962A4F85B16
+14:10:39,035 DEBUG SQL:104 - 
+    drop table Monkey if exists
+14:10:39,035 DEBUG SQL:104 - 
+    drop table Soldier if exists
+14:10:39,035 DEBUG SQL:104 - 
+    drop table Troop if exists
+14:10:39,041 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:39,041  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:39,042  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

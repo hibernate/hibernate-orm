@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.subclassProxyInterface.SubclassProxyInterfaceTest" tests="1" time="0.299" timestamp="2013-02-28T20:10:03">
+  <properties />
+  <testcase classname="org.hibernate.subclassProxyInterface.SubclassProxyInterfaceTest" name="testSubclassProxyInterfaces" time="0.296" />
+  <system-out><![CDATA[14:10:03,898  INFO CustomRunner:132 - BeforeClass: org.hibernate.subclassProxyInterface.SubclassProxyInterfaceTest
+14:10:03,899  INFO CustomRunner:139 - Test: testSubclassProxyInterfaces
+14:10:03,901  INFO Configuration:753 - HHH000221: Reading mappings from resource: org/hibernate/subclassProxyInterface/Person.hbm.xml
+14:10:03,901  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/subclassProxyInterface/Person.hbm.xml
+14:10:04,081  WARN DTDEntityResolver:74 - HHH000223: Recognized obsolete hibernate namespace http://hibernate.sourceforge.net/. Use namespace http://www.hibernate.org/dtd/ instead. Refer to Hibernate 3.6 Migration Guide!
+14:10:04,160  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:04,161  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:04,161  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:04,161  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:04,161  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:04,175  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:04,176  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:04,177  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:04,177  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:04,177  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:04,194  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:04,195  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

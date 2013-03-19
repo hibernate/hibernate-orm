@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.legacy.CustomSQLTest" tests="2" time="0.072" timestamp="2013-02-28T20:14:53">
+  <properties />
+  <ignored-testcase classname="org.hibernate.test.legacy.CustomSQLTest" name="testInsert" time="0.0" />
+  <testcase classname="org.hibernate.test.legacy.CustomSQLTest" name="testJoinedSubclass" time="0.003" />
+  <system-out><![CDATA[14:14:53,831  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.legacy.CustomSQLTest
+14:14:53,831  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:53,833  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/legacy/CustomSQL.hbm.xml
+14:14:53,840  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:14:53,840  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:14:53,840  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:14:53,841  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:14:53,841  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:14:53,842  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:14:53,842  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:14:53,843  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:14:53,843  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:14:53,852  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:53,853 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:53,853 DEBUG SQL:104 - 
+    alter table Intervention 
+        drop constraint FKB33732F74D6B5529
+14:14:53,854 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Intervention drop constraint FKB33732F74D6B5529
+14:14:53,854 ERROR SchemaExport:426 - Table "INTERVENTION" not found; SQL statement:
+
+    alter table Intervention 
+        drop constraint FKB33732F74D6B5529 [42102-145]
+14:14:53,854 DEBUG SQL:104 - 
+    alter table Medication 
+        drop constraint FKEDF7A6EF4E611138
+14:14:53,854 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Medication drop constraint FKEDF7A6EF4E611138
+14:14:53,854 ERROR SchemaExport:426 - Table "MEDICATION" not found; SQL statement:
+
+    alter table Medication 
+        drop constraint FKEDF7A6EF4E611138 [42102-145]
+14:14:53,854 DEBUG SQL:104 - 
+    alter table Medication 
+        drop constraint FKEDF7A6EFFAEF2D86
+14:14:53,855 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Medication drop constraint FKEDF7A6EFFAEF2D86
+14:14:53,855 ERROR SchemaExport:426 - Table "MEDICATION" not found; SQL statement:
+
+    alter table Medication 
+        drop constraint FKEDF7A6EFFAEF2D86 [42102-145]
+14:14:53,855 DEBUG SQL:104 - 
+    alter table bunchOfStrings 
+        drop constraint FKB14AA86BCD71F7F
+14:14:53,855 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table bunchOfStrings drop constraint FKB14AA86BCD71F7F
+14:14:53,855 ERROR SchemaExport:426 - Table "BUNCHOFSTRINGS" not found; SQL statement:
+
+    alter table bunchOfStrings 
+        drop constraint FKB14AA86BCD71F7F [42102-145]
+14:14:53,855 DEBUG SQL:104 - 
+    alter table partyjointable 
+        drop constraint FK6FCCD0BE4078C818
+14:14:53,855 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table partyjointable drop constraint FK6FCCD0BE4078C818
+14:14:53,855 ERROR SchemaExport:426 - Table "PARTYJOINTABLE" not found; SQL statement:
+
+    alter table partyjointable 
+        drop constraint FK6FCCD0BE4078C818 [42102-145]
+14:14:53,856 DEBUG SQL:104 - 
+    drop table Intervention if exists
+14:14:53,856 DEBUG SQL:104 - 
+    drop table Medication if exists
+14:14:53,856 DEBUG SQL:104 - 
+    drop table Party if exists
+14:14:53,856 DEBUG SQL:104 - 
+    drop table Role if exists
+14:14:53,856 DEBUG SQL:104 - 
+    drop table bunchOfStrings if exists
+14:14:53,856 DEBUG SQL:104 - 
+    drop table ecruoser if exists
+14:14:53,856 DEBUG SQL:104 - 
+    drop table partyjointable if exists
+14:14:53,857 DEBUG SQL:104 - 
+    create table Intervention (
+        id varchar(255) not null,
+        version bigint not null,
+        description varchar(255),
+        role_id bigint,
+        primary key (id)
+    )
+14:14:53,857 DEBUG SQL:104 - 
+    create table Medication (
+        interventionid varchar(255) not null,
+        prescribedDrug varchar(255),
+        primary key (interventionid)
+    )
+14:14:53,857 DEBUG SQL:104 - 
+    create table Party (
+        id varchar(255) not null,
+        discriminator varchar(255) not null,
+        givenName varchar(255),
+        lastName varchar(255),
+        nationalID varchar(255),
+        president varchar(255),
+        primary key (id)
+    )
+14:14:53,857 DEBUG SQL:104 - 
+    create table Role (
+        id bigint generated by default as identity,
+        name varchar(255),
+        primary key (id)
+    )
+14:14:53,858 DEBUG SQL:104 - 
+    create table bunchOfStrings (
+        GROUPID bigint not null,
+        NAME varchar(255),
+        posn integer not null,
+        primary key (GROUPID, posn)
+    )
+14:14:53,861 DEBUG SQL:104 - 
+    create table ecruoser (
+        id varchar(255) not null,
+        discriminator varchar(255) not null,
+        name varchar(255),
+        userCode varchar(255),
+        primary key (id)
+    )
+14:14:53,861 DEBUG SQL:104 - 
+    create table partyjointable (
+        partyid varchar(255) not null,
+        xname varchar(255),
+        address varchar(255),
+        primary key (partyid)
+    )
+14:14:53,862 DEBUG SQL:104 - 
+    alter table Intervention 
+        add constraint FKB33732F74D6B5529 
+        foreign key (role_id) 
+        references Role
+14:14:53,862 DEBUG SQL:104 - 
+    alter table Medication 
+        add constraint FKEDF7A6EF4E611138 
+        foreign key (interventionid) 
+        references Intervention
+14:14:53,863 DEBUG SQL:104 - 
+    alter table Medication 
+        add constraint FKEDF7A6EFFAEF2D86 
+        foreign key (prescribedDrug) 
+        references ecruoser
+14:14:53,863 DEBUG SQL:104 - 
+    alter table Party 
+        add constraint uc_Party_1 unique (nationalID)
+14:14:53,863 DEBUG SQL:104 - 
+    alter table bunchOfStrings 
+        add constraint FKB14AA86BCD71F7F 
+        foreign key (GROUPID) 
+        references Role
+14:14:53,863 DEBUG SQL:104 - 
+    alter table partyjointable 
+        add constraint FK6FCCD0BE4078C818 
+        foreign key (partyid) 
+        references Party
+14:14:53,864  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:53,864  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:14:53,865  INFO CustomRunner:139 - Test: testJoinedSubclass
+14:14:53,866 DEBUG SQL:104 - 
+    insert 
+    into
+        ecruoser
+        (name, userCode, discriminator, id) 
+    values
+        (?, ?, 'org.hibernate.test.legacy.Drug', ?)
+14:14:53,867 DEBUG SQL:104 - 
+    insert 
+    into
+        Intervention
+        (version, description, id) 
+    values
+        (?, ?, ?)
+14:14:53,867 DEBUG SQL:104 - 
+    insert 
+    into
+        /
+        ** put weird comments here */ Medication (prescribedDrug, interventionid) 
+    values
+        (?, ?)
+14:14:53,867 DEBUG SQL:104 - 
+    select
+        medication0_.interventionid as id0_1_,
+        medication0_1_.version as version0_1_,
+        medication0_1_.description as descript3_0_1_,
+        medication0_.prescribedDrug as prescrib2_1_1_,
+        drug1_.id as id5_0_,
+        drug1_.name as name5_0_,
+        drug1_.userCode as userCode5_0_ 
+    from
+        Medication medication0_ 
+    inner join
+        Intervention medication0_1_ 
+            on medication0_.interventionid=medication0_1_.id 
+    left outer join
+        ecruoser drug1_ 
+            on medication0_.prescribedDrug=drug1_.id 
+    where
+        medication0_.interventionid=?
+14:14:53,868  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:14:53,869 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:14:53,869 DEBUG SQL:104 - 
+    alter table Intervention 
+        drop constraint FKB33732F74D6B5529
+14:14:53,869 DEBUG SQL:104 - 
+    alter table Medication 
+        drop constraint FKEDF7A6EF4E611138
+14:14:53,869 DEBUG SQL:104 - 
+    alter table Medication 
+        drop constraint FKEDF7A6EFFAEF2D86
+14:14:53,870 DEBUG SQL:104 - 
+    alter table bunchOfStrings 
+        drop constraint FKB14AA86BCD71F7F
+14:14:53,870 DEBUG SQL:104 - 
+    alter table partyjointable 
+        drop constraint FK6FCCD0BE4078C818
+14:14:53,870 DEBUG SQL:104 - 
+    drop table Intervention if exists
+14:14:53,870 DEBUG SQL:104 - 
+    drop table Medication if exists
+14:14:53,870 DEBUG SQL:104 - 
+    drop table Party if exists
+14:14:53,871 DEBUG SQL:104 - 
+    drop table Role if exists
+14:14:53,871 DEBUG SQL:104 - 
+    drop table bunchOfStrings if exists
+14:14:53,875 DEBUG SQL:104 - 
+    drop table ecruoser if exists
+14:14:53,875 DEBUG SQL:104 - 
+    drop table partyjointable if exists
+14:14:53,875  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:14:53,875  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

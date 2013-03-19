@@ -1,0 +1,676 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.any.AnyTest" tests="3" time="0.243" timestamp="2013-02-28T20:10:09">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.any.AnyTest" name="testDefaultAnyAssociation" time="0.048" />
+  <testcase classname="org.hibernate.test.annotations.any.AnyTest" name="testManyToAnyWithMap" time="0.022" />
+  <testcase classname="org.hibernate.test.annotations.any.AnyTest" name="testMetaDataUseWithManyToAny" time="0.034" />
+  <system-out><![CDATA[14:10:09,369  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.any.AnyTest
+14:10:09,402  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:09,402  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:09,402  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:09,403  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:09,403  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:09,405  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:09,405  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:09,406  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:09,406  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:09,406  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:09,445  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:09,445 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:09,446 DEBUG SQL:104 - 
+    alter table list_properties 
+        drop constraint FK378F437454BBFD18
+14:10:09,446 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table list_properties drop constraint FK378F437454BBFD18
+14:10:09,446 ERROR SchemaExport:426 - Table "LIST_PROPERTIES" not found; SQL statement:
+
+    alter table list_properties 
+        drop constraint FK378F437454BBFD18 [42102-145]
+14:10:09,446 DEBUG SQL:104 - 
+    alter table map_properties 
+        drop constraint FKF2788BF69AF4A643
+14:10:09,446 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table map_properties drop constraint FKF2788BF69AF4A643
+14:10:09,447 ERROR SchemaExport:426 - Table "MAP_PROPERTIES" not found; SQL statement:
+
+    alter table map_properties 
+        drop constraint FKF2788BF69AF4A643 [42102-145]
+14:10:09,447 DEBUG SQL:104 - 
+    alter table obj_properties 
+        drop constraint FK768D457B9E69CBCE
+14:10:09,447 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table obj_properties drop constraint FK768D457B9E69CBCE
+14:10:09,447 ERROR SchemaExport:426 - Table "OBJ_PROPERTIES" not found; SQL statement:
+
+    alter table obj_properties 
+        drop constraint FK768D457B9E69CBCE [42102-145]
+14:10:09,447 DEBUG SQL:104 - 
+    drop table char_property if exists
+14:10:09,447 DEBUG SQL:104 - 
+    drop table int_property if exists
+14:10:09,448 DEBUG SQL:104 - 
+    drop table list_properties if exists
+14:10:09,448 DEBUG SQL:104 - 
+    drop table long_property if exists
+14:10:09,448 DEBUG SQL:104 - 
+    drop table map_properties if exists
+14:10:09,448 DEBUG SQL:104 - 
+    drop table obj_properties if exists
+14:10:09,448 DEBUG SQL:104 - 
+    drop table property_list if exists
+14:10:09,448 DEBUG SQL:104 - 
+    drop table property_map if exists
+14:10:09,449 DEBUG SQL:104 - 
+    drop table property_set if exists
+14:10:09,449 DEBUG SQL:104 - 
+    drop table string_property if exists
+14:10:09,449 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:09,449 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:09,449 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:09,449 DEBUG SQL:104 - 
+    create table char_property (
+        id integer not null,
+        name varchar(255),
+        value char(255),
+        primary key (id)
+    )
+14:10:09,450 DEBUG SQL:104 - 
+    create table int_property (
+        id integer not null,
+        name varchar(255),
+        value integer,
+        primary key (id)
+    )
+14:10:09,450 DEBUG SQL:104 - 
+    create table list_properties (
+        obj_id integer not null,
+        property_type varchar(255),
+        property_id integer not null,
+        prop_index integer not null,
+        primary key (obj_id, prop_index)
+    )
+14:10:09,451 DEBUG SQL:104 - 
+    create table long_property (
+        id integer not null,
+        name varchar(255),
+        value bigint,
+        primary key (id)
+    )
+14:10:09,451 DEBUG SQL:104 - 
+    create table map_properties (
+        map_id integer not null,
+        property_type varchar(255),
+        property_id integer not null,
+        map_key varchar(255) not null,
+        primary key (map_id, map_key)
+    )
+14:10:09,452 DEBUG SQL:104 - 
+    create table obj_properties (
+        obj_id integer not null,
+        property_type varchar(255),
+        property_id integer not null
+    )
+14:10:09,452 DEBUG SQL:104 - 
+    create table property_list (
+        id integer not null,
+        name varchar(255),
+        property_type varchar(255),
+        property_id integer,
+        primary key (id)
+    )
+14:10:09,453 DEBUG SQL:104 - 
+    create table property_map (
+        id integer not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:09,453 DEBUG SQL:104 - 
+    create table property_set (
+        id integer not null,
+        name varchar(255),
+        property_type varchar(255),
+        property_id integer,
+        primary key (id)
+    )
+14:10:09,454 DEBUG SQL:104 - 
+    create table string_property (
+        id integer not null,
+        name varchar(255),
+        value varchar(255),
+        primary key (id)
+    )
+14:10:09,454 DEBUG SQL:104 - 
+    alter table list_properties 
+        add constraint FK378F437454BBFD18 
+        foreign key (obj_id) 
+        references property_list
+14:10:09,455 DEBUG SQL:104 - 
+    alter table map_properties 
+        add constraint FKF2788BF69AF4A643 
+        foreign key (map_id) 
+        references property_map
+14:10:09,481 DEBUG SQL:104 - 
+    alter table obj_properties 
+        add constraint FK768D457B9E69CBCE 
+        foreign key (obj_id) 
+        references property_set
+14:10:09,483 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:09,484  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:09,485  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:09,486  INFO CustomRunner:139 - Test: testDefaultAnyAssociation
+14:10:09,492 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,496 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,496 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,497 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,499 DEBUG SQL:104 - 
+    insert 
+    into
+        string_property
+        (name, value, id) 
+    values
+        (?, ?, ?)
+14:10:09,501 DEBUG SQL:104 - 
+    insert 
+    into
+        property_set
+        (name, property_type, property_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:09,502 DEBUG SQL:104 - 
+    insert 
+    into
+        int_property
+        (name, value, id) 
+    values
+        (?, ?, ?)
+14:10:09,502 DEBUG SQL:104 - 
+    insert 
+    into
+        property_set
+        (name, property_type, property_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:09,503 DEBUG SQL:104 - 
+    insert 
+    into
+        obj_properties
+        (obj_id, property_type, property_id) 
+    values
+        (?, ?, ?)
+14:10:09,503 DEBUG SQL:104 - 
+    insert 
+    into
+        obj_properties
+        (obj_id, property_type, property_id) 
+    values
+        (?, ?, ?)
+14:10:09,504 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select s from org.hibernate.test.annotations.any.PropertySet s where name = :name
+14:10:09,505 DEBUG ErrorCounter:63 - Keyword  'any' is being interpreted as an identifier due to: expecting IDENT, found 'any'
+14:10:09,506 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'from'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[WEIRD_IDENT] Node: 'any'
+    |  |     |  \-[IDENT] Node: 'PropertySet'
+    |  |     \-[ALIAS] Node: 's'
+    |  \-[SELECT] Node: 'select'
+    |     \-[IDENT] Node: 's'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[IDENT] Node: 'name'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'name'
+
+14:10:09,506 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:09,506 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.any.PropertySet (s) -> propertyse0_
+14:10:09,507 DEBUG FromReferenceNode:74 - Resolved : s -> propertyse0_.id
+14:10:09,507 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:10:09,507 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:10:09,507 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> propertyse0_.name
+14:10:09,507 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} propertyse0_.id ) ( FromClause{level=1} property_set propertyse0_ ) ( where ( = ( propertyse0_.name {synthetic-alias} name ) ? ) ) )
+14:10:09,508 DEBUG JoinProcessor:175 - Using FROM fragment [property_set propertyse0_]
+14:10:09,508 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (property_set)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'propertyse0_.id as id8_' {alias=s, className=org.hibernate.test.annotations.any.PropertySet, tableAlias=propertyse0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'propertyse0_.name as name8_, propertyse0_.property_type as property3_8_, propertyse0_.property_id as property4_8_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[s], fromElementByTableAlias=[propertyse0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'property_set propertyse0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=property_set,tableAlias=propertyse0_,origin=null,columns={,className=org.hibernate.test.annotations.any.PropertySet}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'propertyse0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=propertyse0_,className=org.hibernate.test.annotations.any.PropertySet,classAlias=s}
+          |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:10:09,509 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:09,509 DEBUG QueryTranslatorImpl:235 - HQL: select s from org.hibernate.test.annotations.any.PropertySet s where name = :name
+14:10:09,509 DEBUG QueryTranslatorImpl:236 - SQL: select propertyse0_.id as id8_, propertyse0_.name as name8_, propertyse0_.property_type as property3_8_, propertyse0_.property_id as property4_8_ from property_set propertyse0_ where propertyse0_.name=?
+14:10:09,509 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:09,509 DEBUG SQL:104 - 
+    select
+        propertyse0_.id as id8_,
+        propertyse0_.name as name8_,
+        propertyse0_.property_type as property3_8_,
+        propertyse0_.property_id as property4_8_ 
+    from
+        property_set propertyse0_ 
+    where
+        propertyse0_.name=?
+14:10:09,511 DEBUG SQL:104 - 
+    select
+        stringprop0_.id as id9_0_,
+        stringprop0_.name as name9_0_,
+        stringprop0_.value as value9_0_ 
+    from
+        string_property stringprop0_ 
+    where
+        stringprop0_.id=?
+14:10:09,512 DEBUG SQL:104 - 
+    select
+        generalpro0_.obj_id as obj1_8_0_,
+        generalpro0_.property_type as property2_5_0_,
+        generalpro0_.property_id as property3_5_0_ 
+    from
+        obj_properties generalpro0_ 
+    where
+        generalpro0_.obj_id=?
+14:10:09,513 DEBUG SQL:104 - 
+    select
+        propertyse0_.id as id8_,
+        propertyse0_.name as name8_,
+        propertyse0_.property_type as property3_8_,
+        propertyse0_.property_id as property4_8_ 
+    from
+        property_set propertyse0_ 
+    where
+        propertyse0_.name=?
+14:10:09,514 DEBUG SQL:104 - 
+    select
+        integerpro0_.id as id1_0_,
+        integerpro0_.name as name1_0_,
+        integerpro0_.value as value1_0_ 
+    from
+        int_property integerpro0_ 
+    where
+        integerpro0_.id=?
+14:10:09,515 DEBUG SQL:104 - 
+    select
+        generalpro0_.obj_id as obj1_8_0_,
+        generalpro0_.property_type as property2_5_0_,
+        generalpro0_.property_id as property3_5_0_ 
+    from
+        obj_properties generalpro0_ 
+    where
+        generalpro0_.obj_id=?
+14:10:09,534  INFO CustomRunner:139 - Test: testManyToAnyWithMap
+14:10:09,546 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,548 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,549 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,550 DEBUG SQL:104 - 
+    insert 
+    into
+        property_map
+        (name, id) 
+    values
+        (?, ?)
+14:10:09,551 DEBUG SQL:104 - 
+    insert 
+    into
+        int_property
+        (name, value, id) 
+    values
+        (?, ?, ?)
+14:10:09,552 DEBUG SQL:104 - 
+    insert 
+    into
+        string_property
+        (name, value, id) 
+    values
+        (?, ?, ?)
+14:10:09,552 DEBUG SQL:104 - 
+    insert 
+    into
+        map_properties
+        (map_id, map_key, property_type, property_id) 
+    values
+        (?, ?, ?, ?)
+14:10:09,552 DEBUG SQL:104 - 
+    insert 
+    into
+        map_properties
+        (map_id, map_key, property_type, property_id) 
+    values
+        (?, ?, ?, ?)
+14:10:09,553 DEBUG QueryTranslatorImpl:265 - parse() - HQL: SELECT map FROM org.hibernate.test.annotations.any.PropertyMap map WHERE map.name = :name
+14:10:09,554 DEBUG ErrorCounter:63 - Keyword  'any' is being interpreted as an identifier due to: expecting IDENT, found 'any'
+14:10:09,556 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'FROM'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[WEIRD_IDENT] Node: 'any'
+    |  |     |  \-[IDENT] Node: 'PropertyMap'
+    |  |     \-[ALIAS] Node: 'map'
+    |  \-[SELECT] Node: 'SELECT'
+    |     \-[IDENT] Node: 'map'
+    \-[WHERE] Node: 'WHERE'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'map'
+          |  \-[IDENT] Node: 'name'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'name'
+
+14:10:09,556 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:09,557 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.any.PropertyMap (map) -> propertyma0_
+14:10:09,557 DEBUG FromReferenceNode:74 - Resolved : map -> propertyma0_.id
+14:10:09,557 DEBUG FromReferenceNode:74 - Resolved : map -> propertyma0_.id
+14:10:09,557 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:10:09,557 DEBUG FromReferenceNode:74 - Resolved : map.name -> propertyma0_.name
+14:10:09,558 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} propertyma0_.id ) ( FromClause{level=1} property_map propertyma0_ ) ( WHERE ( = ( propertyma0_.name propertyma0_.id name ) ? ) ) )
+14:10:09,558 DEBUG JoinProcessor:175 - Using FROM fragment [property_map propertyma0_]
+14:10:09,558 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (property_map)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'propertyma0_.id as id7_' {alias=map, className=org.hibernate.test.annotations.any.PropertyMap, tableAlias=propertyma0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'propertyma0_.name as name7_'
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[map], fromElementByTableAlias=[propertyma0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'property_map propertyma0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=map,role=null,tableName=property_map,tableAlias=propertyma0_,origin=null,columns={,className=org.hibernate.test.annotations.any.PropertyMap}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'propertyma0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=map.name,tableAlias=propertyma0_,className=org.hibernate.test.annotations.any.PropertyMap,classAlias=map}
+          |  +-[ALIAS_REF] IdentNode: 'propertyma0_.id' {alias=map, className=org.hibernate.test.annotations.any.PropertyMap, tableAlias=propertyma0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:10:09,559 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:09,559 DEBUG QueryTranslatorImpl:235 - HQL: SELECT map FROM org.hibernate.test.annotations.any.PropertyMap map WHERE map.name = :name
+14:10:09,559 DEBUG QueryTranslatorImpl:236 - SQL: select propertyma0_.id as id7_, propertyma0_.name as name7_ from property_map propertyma0_ where propertyma0_.name=?
+14:10:09,559 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:09,560 DEBUG SQL:104 - 
+    select
+        propertyma0_.id as id7_,
+        propertyma0_.name as name7_ 
+    from
+        property_map propertyma0_ 
+    where
+        propertyma0_.name=?
+14:10:09,561 DEBUG SQL:104 - 
+    select
+        properties0_.map_id as map1_7_0_,
+        properties0_.property_type as property2_4_0_,
+        properties0_.property_id as property3_4_0_,
+        properties0_.map_key as map4_0_ 
+    from
+        map_properties properties0_ 
+    where
+        properties0_.map_id=?
+14:10:09,563 DEBUG SQL:104 - 
+    select
+        stringprop0_.id as id9_0_,
+        stringprop0_.name as name9_0_,
+        stringprop0_.value as value9_0_ 
+    from
+        string_property stringprop0_ 
+    where
+        stringprop0_.id=?
+14:10:09,564 DEBUG SQL:104 - 
+    select
+        integerpro0_.id as id1_0_,
+        integerpro0_.name as name1_0_,
+        integerpro0_.value as value1_0_ 
+    from
+        int_property integerpro0_ 
+    where
+        integerpro0_.id=?
+14:10:09,566  INFO CustomRunner:139 - Test: testMetaDataUseWithManyToAny
+14:10:09,567 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,568 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,570 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,570 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,571 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:09,572 DEBUG SQL:104 - 
+    insert 
+    into
+        long_property
+        (name, value, id) 
+    values
+        (?, ?, ?)
+14:10:09,574 DEBUG SQL:104 - 
+    insert 
+    into
+        property_list
+        (name, property_type, property_id, id) 
+    values
+        (?, ?, ?, ?)
+14:10:09,574 DEBUG SQL:104 - 
+    insert 
+    into
+        string_property
+        (name, value, id) 
+    values
+        (?, ?, ?)
+14:10:09,575 DEBUG SQL:104 - 
+    insert 
+    into
+        int_property
+        (name, value, id) 
+    values
+        (?, ?, ?)
+14:10:09,576 DEBUG SQL:104 - 
+    insert 
+    into
+        char_property
+        (name, value, id) 
+    values
+        (?, ?, ?)
+14:10:09,577 DEBUG SQL:104 - 
+    insert 
+    into
+        list_properties
+        (obj_id, prop_index, property_type, property_id) 
+    values
+        (?, ?, ?, ?)
+14:10:09,579 DEBUG SQL:104 - 
+    insert 
+    into
+        list_properties
+        (obj_id, prop_index, property_type, property_id) 
+    values
+        (?, ?, ?, ?)
+14:10:09,580 DEBUG SQL:104 - 
+    insert 
+    into
+        list_properties
+        (obj_id, prop_index, property_type, property_id) 
+    values
+        (?, ?, ?, ?)
+14:10:09,580 DEBUG SQL:104 - 
+    insert 
+    into
+        list_properties
+        (obj_id, prop_index, property_type, property_id) 
+    values
+        (?, ?, ?, ?)
+14:10:09,581 DEBUG QueryTranslatorImpl:265 - parse() - HQL: SELECT list FROM org.hibernate.test.annotations.any.PropertyList list WHERE list.name = :name
+14:10:09,582 DEBUG ErrorCounter:63 - Keyword  'any' is being interpreted as an identifier due to: expecting IDENT, found 'any'
+14:10:09,583 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'FROM'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  \-[WEIRD_IDENT] Node: 'any'
+    |  |     |  \-[IDENT] Node: 'PropertyList'
+    |  |     \-[ALIAS] Node: 'list'
+    |  \-[SELECT] Node: 'SELECT'
+    |     \-[IDENT] Node: 'list'
+    \-[WHERE] Node: 'WHERE'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'list'
+          |  \-[IDENT] Node: 'name'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'name'
+
+14:10:09,584 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:09,584 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.any.PropertyList (list) -> propertyli0_
+14:10:09,584 DEBUG FromReferenceNode:74 - Resolved : list -> propertyli0_.id
+14:10:09,584 DEBUG FromReferenceNode:74 - Resolved : list -> propertyli0_.id
+14:10:09,584 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:10:09,584 DEBUG FromReferenceNode:74 - Resolved : list.name -> propertyli0_.name
+14:10:09,585 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} propertyli0_.id ) ( FromClause{level=1} property_list propertyli0_ ) ( WHERE ( = ( propertyli0_.name propertyli0_.id name ) ? ) ) )
+14:10:09,585 DEBUG JoinProcessor:175 - Using FROM fragment [property_list propertyli0_]
+14:10:09,585 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (property_list)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'propertyli0_.id as id6_' {alias=list, className=org.hibernate.test.annotations.any.PropertyList, tableAlias=propertyli0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'propertyli0_.name as name6_, propertyli0_.property_type as property3_6_, propertyli0_.property_id as property4_6_'
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[list], fromElementByTableAlias=[propertyli0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'property_list propertyli0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=list,role=null,tableName=property_list,tableAlias=propertyli0_,origin=null,columns={,className=org.hibernate.test.annotations.any.PropertyList}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'propertyli0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=list.name,tableAlias=propertyli0_,className=org.hibernate.test.annotations.any.PropertyList,classAlias=list}
+          |  +-[ALIAS_REF] IdentNode: 'propertyli0_.id' {alias=list, className=org.hibernate.test.annotations.any.PropertyList, tableAlias=propertyli0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=name, expectedType=org.hibernate.type.StringType@2dc8de40}
+
+14:10:09,585 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:09,586 DEBUG QueryTranslatorImpl:235 - HQL: SELECT list FROM org.hibernate.test.annotations.any.PropertyList list WHERE list.name = :name
+14:10:09,586 DEBUG QueryTranslatorImpl:236 - SQL: select propertyli0_.id as id6_, propertyli0_.name as name6_, propertyli0_.property_type as property3_6_, propertyli0_.property_id as property4_6_ from property_list propertyli0_ where propertyli0_.name=?
+14:10:09,586 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:09,586 DEBUG SQL:104 - 
+    select
+        propertyli0_.id as id6_,
+        propertyli0_.name as name6_,
+        propertyli0_.property_type as property3_6_,
+        propertyli0_.property_id as property4_6_ 
+    from
+        property_list propertyli0_ 
+    where
+        propertyli0_.name=?
+14:10:09,587 DEBUG SQL:104 - 
+    select
+        generalpro0_.obj_id as obj1_6_0_,
+        generalpro0_.property_type as property2_2_0_,
+        generalpro0_.property_id as property3_2_0_,
+        generalpro0_.prop_index as prop4_0_ 
+    from
+        list_properties generalpro0_ 
+    where
+        generalpro0_.obj_id=?
+14:10:09,597 DEBUG SQL:104 - 
+    select
+        longproper0_.id as id3_0_,
+        longproper0_.name as name3_0_,
+        longproper0_.value as value3_0_ 
+    from
+        long_property longproper0_ 
+    where
+        longproper0_.id=?
+14:10:09,598 DEBUG SQL:104 - 
+    select
+        stringprop0_.id as id9_0_,
+        stringprop0_.name as name9_0_,
+        stringprop0_.value as value9_0_ 
+    from
+        string_property stringprop0_ 
+    where
+        stringprop0_.id=?
+14:10:09,599 DEBUG SQL:104 - 
+    select
+        integerpro0_.id as id1_0_,
+        integerpro0_.name as name1_0_,
+        integerpro0_.value as value1_0_ 
+    from
+        int_property integerpro0_ 
+    where
+        integerpro0_.id=?
+14:10:09,600 DEBUG SQL:104 - 
+    select
+        charproper0_.id as id0_0_,
+        charproper0_.name as name0_0_,
+        charproper0_.value as value0_0_ 
+    from
+        char_property charproper0_ 
+    where
+        charproper0_.id=?
+14:10:09,602  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:09,603 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:09,603 DEBUG SQL:104 - 
+    alter table list_properties 
+        drop constraint FK378F437454BBFD18
+14:10:09,603 DEBUG SQL:104 - 
+    alter table map_properties 
+        drop constraint FKF2788BF69AF4A643
+14:10:09,603 DEBUG SQL:104 - 
+    alter table obj_properties 
+        drop constraint FK768D457B9E69CBCE
+14:10:09,604 DEBUG SQL:104 - 
+    drop table char_property if exists
+14:10:09,604 DEBUG SQL:104 - 
+    drop table int_property if exists
+14:10:09,605 DEBUG SQL:104 - 
+    drop table list_properties if exists
+14:10:09,605 DEBUG SQL:104 - 
+    drop table long_property if exists
+14:10:09,606 DEBUG SQL:104 - 
+    drop table map_properties if exists
+14:10:09,606 DEBUG SQL:104 - 
+    drop table obj_properties if exists
+14:10:09,607 DEBUG SQL:104 - 
+    drop table property_list if exists
+14:10:09,607 DEBUG SQL:104 - 
+    drop table property_map if exists
+14:10:09,608 DEBUG SQL:104 - 
+    drop table property_set if exists
+14:10:09,608 DEBUG SQL:104 - 
+    drop table string_property if exists
+14:10:09,609 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:09,609  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:09,609  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

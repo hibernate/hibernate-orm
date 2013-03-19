@@ -1,0 +1,4238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.derivedidentities.bidirectional.OneToOneWithDerivedIdentityTest" tests="1" time="1.597" timestamp="2013-02-28T20:10:17">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.derivedidentities.bidirectional.OneToOneWithDerivedIdentityTest" name="testInsertFooAndBarWithDerivedId" time="1.566" />
+  <system-out><![CDATA[14:10:17,946  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.derivedidentities.bidirectional.OneToOneWithDerivedIdentityTest
+14:10:17,953  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.derivedidentities.bidirectional.Bar
+14:10:17,953  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.derivedidentities.bidirectional.Bar
+14:10:17,953  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:17,953  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:17,953  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:17,954  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:17,954  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:17,955  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:17,956  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:17,956  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:17,957  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:17,957  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:17,969  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:17,970 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:17,970 DEBUG SQL:104 - 
+    alter table Bar 
+        drop constraint FK103F322D7D08D
+14:10:17,970 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Bar drop constraint FK103F322D7D08D
+14:10:17,970 ERROR SchemaExport:426 - Table "BAR" not found; SQL statement:
+
+    alter table Bar 
+        drop constraint FK103F322D7D08D [42102-145]
+14:10:17,971 DEBUG SQL:104 - 
+    drop table Bar if exists
+14:10:17,971 DEBUG SQL:104 - 
+    drop table Foo if exists
+14:10:17,971 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:17,971 ERROR SchemaExport:425 - HHH000389: Unsuccessful: drop sequence hibernate_sequence
+14:10:17,971 ERROR SchemaExport:426 - Sequence "HIBERNATE_SEQUENCE" not found; SQL statement:
+
+    drop sequence hibernate_sequence [90036-145]
+14:10:17,971 DEBUG SQL:104 - 
+    create table Bar (
+        details varchar(255),
+        BAR_ID bigint not null,
+        primary key (BAR_ID)
+    )
+14:10:17,972 DEBUG SQL:104 - 
+    create table Foo (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:17,972 DEBUG SQL:104 - 
+    alter table Bar 
+        add constraint FK103F322D7D08D 
+        foreign key (BAR_ID) 
+        references Foo
+14:10:17,973 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:17,973  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:17,974  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:17,974  INFO CustomRunner:139 - Test: testInsertFooAndBarWithDerivedId
+14:10:17,975 DEBUG SQL:104 - 
+    call next value for hibernate_sequence
+14:10:17,977 DEBUG SQL:104 - 
+    insert 
+    into
+        Foo
+        (name, id) 
+    values
+        (?, ?)
+14:10:17,977 DEBUG SQL:104 - 
+    insert 
+    into
+        Bar
+        (details, BAR_ID) 
+    values
+        (?, ?)
+14:10:17,978 DEBUG QueryTranslatorImpl:265 - parse() - HQL: SELECT b FROM org.hibernate.test.annotations.derivedidentities.bidirectional.Bar b WHERE b.foo.id = :id
+14:10:17,980 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  +-[FROM] Node: 'FROM'
+    |  |  \-[RANGE] Node: 'RANGE'
+    |  |     +-[DOT] Node: '.'
+    |  |     |  +-[DOT] Node: '.'
+    |  |     |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  +-[DOT] Node: '.'
+    |  |     |  |  |  |  |  |  +-[IDENT] Node: 'org'
+    |  |     |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |  |     |  |  |  |  |  \-[IDENT] Node: 'test'
+    |  |     |  |  |  |  \-[IDENT] Node: 'annotations'
+    |  |     |  |  |  \-[IDENT] Node: 'derivedidentities'
+    |  |     |  |  \-[IDENT] Node: 'bidirectional'
+    |  |     |  \-[IDENT] Node: 'Bar'
+    |  |     \-[ALIAS] Node: 'b'
+    |  \-[SELECT] Node: 'SELECT'
+    |     \-[IDENT] Node: 'b'
+    \-[WHERE] Node: 'WHERE'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[DOT] Node: '.'
+          |  |  +-[IDENT] Node: 'b'
+          |  |  \-[IDENT] Node: 'foo'
+          |  \-[IDENT] Node: 'id'
+          \-[COLON] Node: ':'
+             \-[IDENT] Node: 'id'
+
+14:10:17,980 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,980 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.annotations.derivedidentities.bidirectional.Bar (b) -> bar0_
+14:10:17,981 DEBUG FromReferenceNode:74 - Resolved : b -> bar0_.BAR_ID
+14:10:17,981 DEBUG FromReferenceNode:74 - Resolved : b -> bar0_.BAR_ID
+14:10:17,981 DEBUG DotNode:599 - getDataType() : foo -> org.hibernate.type.ManyToOneType(org.hibernate.test.annotations.derivedidentities.bidirectional.Foo)
+14:10:17,981 DEBUG DotNode:562 - dereferenceShortcut() : property id in org.hibernate.test.annotations.derivedidentities.bidirectional.Bar does not require a join.
+14:10:17,981 DEBUG DotNode:585 - Unresolved property path is now 'foo.id'
+14:10:17,981 DEBUG FromReferenceNode:74 - Resolved : b.foo -> bar0_.BAR_ID
+14:10:17,982 DEBUG DotNode:599 - getDataType() : foo.id -> org.hibernate.type.LongType@4bf3f9d
+14:10:17,982 DEBUG FromReferenceNode:74 - Resolved : b.foo.id -> bar0_.BAR_ID
+14:10:17,982 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} bar0_.BAR_ID ) ( FromClause{level=1} Bar bar0_ ) ( WHERE ( = ( bar0_.BAR_ID ( bar0_.BAR_ID bar0_.BAR_ID foo ) id ) ? ) ) )
+14:10:17,982 DEBUG JoinProcessor:175 - Using FROM fragment [Bar bar0_]
+14:10:17,982 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Bar)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'bar0_.BAR_ID as BAR2_0_' {alias=b, className=org.hibernate.test.annotations.derivedidentities.bidirectional.Bar, tableAlias=bar0_}
+    |  \-[SQL_TOKEN] SqlFragment: 'bar0_.details as details0_'
+    +-[FROM] FromClause: 'FROM' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[b], fromElementByTableAlias=[bar0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Bar bar0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=b,role=null,tableName=Bar,tableAlias=bar0_,origin=null,columns={,className=org.hibernate.test.annotations.derivedidentities.bidirectional.Bar}}
+    \-[WHERE] SqlNode: 'WHERE'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'bar0_.BAR_ID' {propertyName=id,dereferenceType=ALL,propertyPath=foo.id,path=b.foo.id,tableAlias=bar0_,className=org.hibernate.test.annotations.derivedidentities.bidirectional.Bar,classAlias=b}
+          |  +-[DOT] DotNode: 'bar0_.BAR_ID' {propertyName=id,dereferenceType=0,propertyPath=foo.id,path=b.foo,tableAlias=bar0_,className=org.hibernate.test.annotations.derivedidentities.bidirectional.Bar,classAlias=b}
+          |  |  +-[ALIAS_REF] IdentNode: 'bar0_.BAR_ID' {alias=b, className=org.hibernate.test.annotations.derivedidentities.bidirectional.Bar, tableAlias=bar0_}
+          |  |  \-[IDENT] IdentNode: 'foo' {originalText=foo}
+          |  \-[IDENT] IdentNode: 'id' {originalText=id}
+          \-[NAMED_PARAM] ParameterNode: '?' {name=id, expectedType=org.hibernate.type.LongType@4bf3f9d}
+
+14:10:17,991 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,991 DEBUG QueryTranslatorImpl:235 - HQL: SELECT b FROM org.hibernate.test.annotations.derivedidentities.bidirectional.Bar b WHERE b.foo.id = :id
+14:10:17,991 DEBUG QueryTranslatorImpl:236 - SQL: select bar0_.BAR_ID as BAR2_0_, bar0_.details as details0_ from Bar bar0_ where bar0_.BAR_ID=?
+14:10:17,991 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:10:17,992 DEBUG SQL:104 - 
+    select
+        bar0_.BAR_ID as BAR2_0_,
+        bar0_.details as details0_ 
+    from
+        Bar bar0_ 
+    where
+        bar0_.BAR_ID=?
+14:10:17,992 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,004 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,005 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,005 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,063 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,064 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,064 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,065 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,065 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,066 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,066 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,067 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,068 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,068 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,075 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,077 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,083 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,085 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,094 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,096 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,105 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,106 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,107 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,107 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,108 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,125 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,126 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,132 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,133 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,143 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,145 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,154 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,156 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,165 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,166 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,177 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,178 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,179 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,190 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,191 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,201 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,203 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,211 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,212 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,221 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,223 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,224 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,233 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,235 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,237 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,238 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,246 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,247 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,250 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,261 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,262 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,272 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,283 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,285 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,298 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,300 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,302 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,309 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,313 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,322 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,324 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,337 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,339 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,341 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,347 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,348 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,358 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,360 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,362 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,363 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,365 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,378 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,380 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,385 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,387 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,388 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,423 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,425 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,426 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,440 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,442 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,451 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,453 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,463 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,464 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,466 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,474 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,476 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,486 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,488 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,489 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,491 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,493 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,499 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,501 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,510 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,512 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,514 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,516 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,533 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,536 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,543 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,545 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,553 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,555 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,557 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,564 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,566 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,574 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,575 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,583 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,585 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,586 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,593 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,594 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,602 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,604 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,612 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,614 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,616 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,618 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,619 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,626 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,628 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,638 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,640 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,641 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,643 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,660 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,662 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,671 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,673 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,674 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,682 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,684 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,693 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,695 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,704 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,706 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,707 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,716 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,718 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,727 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,729 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,738 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,740 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,742 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,744 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,746 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,752 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,754 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,765 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,767 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,769 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,771 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,789 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,791 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,800 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,801 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,818 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,820 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,821 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,826 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,828 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,837 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,839 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,847 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,849 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,851 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,858 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,860 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,868 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,870 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,872 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,874 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,876 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,882 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,884 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,893 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,895 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,897 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,899 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,917 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,919 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,934 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,936 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,938 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,940 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,941 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,943 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,957 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,959 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,968 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,970 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,979 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,981 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,983 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,990 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:18,992 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,001 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,003 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,004 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,006 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,008 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,014 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,016 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,024 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,026 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,028 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,029 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,048 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,050 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,059 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,061 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,070 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,072 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,074 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,081 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,082 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,091 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,093 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,102 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,103 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,105 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,112 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,113 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,122 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,124 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,134 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,135 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,137 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,139 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,143 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,149 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,151 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,161 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,163 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,164 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,166 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,184 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,186 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,195 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,197 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,199 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,206 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,208 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,220 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,222 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,231 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,232 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,234 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,242 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,243 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,253 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,255 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,266 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,268 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,269 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,271 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,273 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,280 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,281 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,290 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,292 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,294 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,296 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,314 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,316 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,325 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,327 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,336 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,338 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,340 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,347 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,349 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,357 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,359 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,367 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,369 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,371 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,378 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,380 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,389 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,391 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,401 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,403 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,405 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,407 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,408 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,410 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,416 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,417 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,419 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,429 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,431 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,440 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,450 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,452 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,461 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,463 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,465 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,472 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,474 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,483 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,485 DEBUG SQL:104 - 
+    select
+        foo0_.id as id1_1_,
+        foo0_.name as name1_1_,
+        bar1_.BAR_ID as BAR2_0_0_,
+        bar1_.details as details0_0_ 
+    from
+        Foo foo0_ 
+    left outer join
+        Bar bar1_ 
+            on foo0_.id=bar1_.BAR_ID 
+    where
+        foo0_.id=?
+14:10:19,518  INFO FailureExpectedHandler:73 - Ignoring expected failure [{}] : {}
+14:10:19,522  WARN RootClass:288 - HHH000038: Composite-id class does not override equals(): org.hibernate.test.annotations.derivedidentities.bidirectional.Bar
+14:10:19,522  WARN RootClass:289 - HHH000039: Composite-id class does not override hashCode(): org.hibernate.test.annotations.derivedidentities.bidirectional.Bar
+14:10:19,522  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:10:19,522  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:10:19,523  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:10:19,523  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:10:19,523  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:10:19,524  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:10:19,525  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:10:19,525  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:10:19,526  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:10:19,526  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:10:19,534  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:19,535 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:19,535 DEBUG SQL:104 - 
+    alter table Bar 
+        drop constraint FK103F322D7D08D
+14:10:19,535 DEBUG SQL:104 - 
+    drop table Bar if exists
+14:10:19,535 DEBUG SQL:104 - 
+    drop table Foo if exists
+14:10:19,536 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:19,536 DEBUG SQL:104 - 
+    create table Bar (
+        details varchar(255),
+        BAR_ID bigint not null,
+        primary key (BAR_ID)
+    )
+14:10:19,538 DEBUG SQL:104 - 
+    create table Foo (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:10:19,538 DEBUG SQL:104 - 
+    alter table Bar 
+        add constraint FK103F322D7D08D 
+        foreign key (BAR_ID) 
+        references Foo
+14:10:19,539 DEBUG SQL:104 - 
+    create sequence hibernate_sequence start with 1 increment by 1
+14:10:19,539  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:19,540  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:10:19,540  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:10:19,541 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:10:19,541 DEBUG SQL:104 - 
+    alter table Bar 
+        drop constraint FK103F322D7D08D
+14:10:19,541 DEBUG SQL:104 - 
+    drop table Bar if exists
+14:10:19,541 DEBUG SQL:104 - 
+    drop table Foo if exists
+14:10:19,542 DEBUG SQL:104 - 
+    drop sequence hibernate_sequence
+14:10:19,542  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:10:19,542  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

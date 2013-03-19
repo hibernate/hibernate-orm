@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.ordered.OrderByTest" tests="1" time="0.037" timestamp="2013-02-28T20:17:43">
+  <properties />
+  <testcase classname="org.hibernate.test.ordered.OrderByTest" name="testOrderBy" time="0.01" />
+  <system-out><![CDATA[14:17:43,809  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.ordered.OrderByTest
+14:17:43,811  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/ordered/Search.hbm.xml
+14:17:43,818  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:43,819  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:43,819  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:43,819  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:43,819  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:43,820  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:43,821  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:43,821  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:43,822  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:43,822  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:43,828  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:43,828 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:43,829 DEBUG SQL:104 - 
+    alter table Search_searchResults 
+        drop constraint FKC259A6F73193FDD8
+14:17:43,829 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Search_searchResults drop constraint FKC259A6F73193FDD8
+14:17:43,829 ERROR SchemaExport:426 - Table "SEARCH_SEARCHRESULTS" not found; SQL statement:
+
+    alter table Search_searchResults 
+        drop constraint FKC259A6F73193FDD8 [42102-145]
+14:17:43,829 DEBUG SQL:104 - 
+    drop table Search if exists
+14:17:43,830 DEBUG SQL:104 - 
+    drop table Search_searchResults if exists
+14:17:43,830 DEBUG SQL:104 - 
+    create table Search (
+        searchString varchar(255) not null,
+        primary key (searchString)
+    )
+14:17:43,830 DEBUG SQL:104 - 
+    create table Search_searchResults (
+        searchString varchar(255) not null,
+        text varchar(255)
+    )
+14:17:43,831 DEBUG SQL:104 - 
+    alter table Search_searchResults 
+        add constraint FKC259A6F73193FDD8 
+        foreign key (searchString) 
+        references Search
+14:17:43,831  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:43,832  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:43,832  INFO CustomRunner:139 - Test: testOrderBy
+14:17:43,833 DEBUG SQL:104 - 
+    insert 
+    into
+        Search
+        (searchString) 
+    values
+        (?)
+14:17:43,834 DEBUG SQL:104 - 
+    insert 
+    into
+        Search_searchResults
+        (searchString, text) 
+    values
+        (?, ?)
+14:17:43,834 DEBUG SQL:104 - 
+    insert 
+    into
+        Search_searchResults
+        (searchString, text) 
+    values
+        (?, ?)
+14:17:43,834 DEBUG SQL:104 - 
+    insert 
+    into
+        Search_searchResults
+        (searchString, text) 
+    values
+        (?, ?)
+14:17:43,834 DEBUG SQL:104 - 
+    select
+        this_.searchString as searchSt1_0_0_ 
+    from
+        Search this_
+14:17:43,835 DEBUG SQL:104 - 
+    select
+        searchresu0_.searchString as searchSt1_0_0_,
+        searchresu0_.text as text1_0_ 
+    from
+        Search_searchResults searchresu0_ 
+    where
+        searchresu0_.searchString=? 
+    order by
+        lower(searchresu0_.text) asc
+14:17:43,835 DEBUG SQL:104 - 
+    select
+        this_.searchString as searchSt1_0_0_,
+        searchresu2_.searchString as searchSt1_0_2_,
+        searchresu2_.text as text1_2_ 
+    from
+        Search this_ 
+    left outer join
+        Search_searchResults searchresu2_ 
+            on this_.searchString=searchresu2_.searchString 
+    order by
+        lower(searchresu2_.text) asc
+14:17:43,836 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.ordered.Search s left join fetch s.searchResults
+14:17:43,837 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          +-[RANGE] Node: 'RANGE'
+          |  +-[DOT] Node: '.'
+          |  |  +-[DOT] Node: '.'
+          |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  +-[DOT] Node: '.'
+          |  |  |  |  |  +-[IDENT] Node: 'org'
+          |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+          |  |  |  |  \-[IDENT] Node: 'test'
+          |  |  |  \-[IDENT] Node: 'ordered'
+          |  |  \-[IDENT] Node: 'Search'
+          |  \-[ALIAS] Node: 's'
+          \-[JOIN] Node: 'join'
+             +-[LEFT] Node: 'left'
+             +-[FETCH] Node: 'fetch'
+             \-[DOT] Node: '.'
+                +-[IDENT] Node: 's'
+                \-[IDENT] Node: 'searchResults'
+
+14:17:43,837 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:43,838 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.ordered.Search (s) -> search0_
+14:17:43,838 DEBUG FromReferenceNode:74 - Resolved : s -> search0_.searchString
+14:17:43,838 DEBUG DotNode:599 - getDataType() : searchResults -> org.hibernate.type.OrderedSetType(org.hibernate.test.ordered.Search.searchResults)
+14:17:43,838 DEBUG FromElement:157 - FromClause{level=1} : null (<no alias>) -> searchresu1_
+14:17:43,838 DEBUG FromClause:369 - addCollectionJoinFromElementByPath() : s.searchResults -> Search_searchResults
+14:17:43,838 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for s.searchResults : Search_searchResults searchresu1_
+14:17:43,838 DEBUG FromReferenceNode:74 - Resolved : s.searchResults -> .
+14:17:43,838 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Search_searchResults searchresu1_' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.ordered.Search.searchResults,tableName={none},tableAlias=searchresu1_,origin=null,columns={,className=null}}
+
+14:17:43,839 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} (  Search_searchResults searchresu1_ ) ) )
+14:17:43,839 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:17:43,839 DEBUG JoinProcessor:175 - Using FROM fragment [Search search0_]
+14:17:43,839 DEBUG JoinProcessor:175 - Using FROM fragment [left outer join Search_searchResults searchresu1_ on search0_.searchString=searchresu1_.searchString]
+14:17:43,839 DEBUG QueryNode:101 - getOrderByClause() : Creating a new ORDER BY clause
+14:17:43,839 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Search_searchResults,Search)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'search0_.searchString as searchSt1_0_' {FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=Search,tableAlias=search0_,origin=null,columns={,className=org.hibernate.test.ordered.Search}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'searchresu1_.searchString as searchSt1_0_0__, searchresu1_.text as text1_0__'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=2, fromElementByClassAlias=[s], fromElementByTableAlias=[searchresu1_, search0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[s.searchResults], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Search search0_' FromElement{explicit,collection join,not a fetch join,fetch non-lazy properties,classAlias=s,role=null,tableName=Search,tableAlias=search0_,origin=null,columns={,className=org.hibernate.test.ordered.Search}}
+    |     \-[JOIN_FRAGMENT] FromElement: 'left outer join Search_searchResults searchresu1_ on search0_.searchString=searchresu1_.searchString' FromElement{explicit,collection join,fetch join,fetch non-lazy properties,classAlias=null,role=org.hibernate.test.ordered.Search.searchResults,tableName={none},tableAlias=searchresu1_,origin=Search search0_,columns={,className=null}}
+    \-[ORDER] OrderByClause: 'ORDER'
+       \-[SQL_TOKEN] SqlFragment: 'lower(searchresu1_.text) asc'
+
+14:17:43,839 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:43,840 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.ordered.Search s left join fetch s.searchResults
+14:17:43,840 DEBUG QueryTranslatorImpl:236 - SQL: select search0_.searchString as searchSt1_0_, searchresu1_.searchString as searchSt1_0_0__, searchresu1_.text as text1_0__ from Search search0_ left outer join Search_searchResults searchresu1_ on search0_.searchString=searchresu1_.searchString order by lower(searchresu1_.text) asc
+14:17:43,840 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:17:43,840 DEBUG SQL:104 - 
+    select
+        search0_.searchString as searchSt1_0_,
+        searchresu1_.searchString as searchSt1_0_0__,
+        searchresu1_.text as text1_0__ 
+    from
+        Search search0_ 
+    left outer join
+        Search_searchResults searchresu1_ 
+            on search0_.searchString=searchresu1_.searchString 
+    order by
+        lower(searchresu1_.text) asc
+14:17:43,841 DEBUG SQL:104 - 
+    delete 
+    from
+        Search_searchResults 
+    where
+        searchString=?
+14:17:43,841 DEBUG SQL:104 - 
+    delete 
+    from
+        Search 
+    where
+        searchString=?
+14:17:43,842  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:43,843 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:43,843 DEBUG SQL:104 - 
+    alter table Search_searchResults 
+        drop constraint FKC259A6F73193FDD8
+14:17:43,843 DEBUG SQL:104 - 
+    drop table Search if exists
+14:17:43,844 DEBUG SQL:104 - 
+    drop table Search_searchResults if exists
+14:17:43,844  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:43,844  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,1702 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.subselectfetch.SubselectFetchTest" tests="6" time="0.677" timestamp="2013-02-28T20:19:22">
+  <properties />
+  <testcase classname="org.hibernate.test.subselectfetch.SubselectFetchTest" name="testManyToManyCriteriaJoin" time="0.222" />
+  <testcase classname="org.hibernate.test.subselectfetch.SubselectFetchTest" name="testSubselectFetchCriteria" time="0.013" />
+  <testcase classname="org.hibernate.test.subselectfetch.SubselectFetchTest" name="testSubselectFetchHql" time="0.086" />
+  <testcase classname="org.hibernate.test.subselectfetch.SubselectFetchTest" name="testSubselectFetchNamedParam" time="0.093" />
+  <testcase classname="org.hibernate.test.subselectfetch.SubselectFetchTest" name="testSubselectFetchPosParam" time="0.104" />
+  <testcase classname="org.hibernate.test.subselectfetch.SubselectFetchTest" name="testSubselectFetchWithLimit" time="0.091" />
+  <system-out><![CDATA[14:19:22,472  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.subselectfetch.SubselectFetchTest
+14:19:22,474  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/subselectfetch/ParentChild.hbm.xml
+14:19:22,482  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:19:22,482  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:19:22,482  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:19:22,482  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:19:22,483  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:19:22,484  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:19:22,484  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:19:22,485  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:19:22,485  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:19:22,485  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:19:22,492  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:22,493 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:22,493 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FCCA646179
+14:19:22,493 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Child drop constraint FK3E104FCCA646179
+14:19:22,493 ERROR SchemaExport:426 - Table "CHILD" not found; SQL statement:
+
+    alter table Child 
+        drop constraint FK3E104FCCA646179 [42102-145]
+14:19:22,493 DEBUG SQL:104 - 
+    alter table ChildChild 
+        drop constraint FKC607BD80B2B2B2AD
+14:19:22,493 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ChildChild drop constraint FKC607BD80B2B2B2AD
+14:19:22,494 ERROR SchemaExport:426 - Table "CHILDCHILD" not found; SQL statement:
+
+    alter table ChildChild 
+        drop constraint FKC607BD80B2B2B2AD [42102-145]
+14:19:22,494 DEBUG SQL:104 - 
+    alter table ChildChild 
+        drop constraint FKC607BD80B2B2B2AC
+14:19:22,494 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ChildChild drop constraint FKC607BD80B2B2B2AC
+14:19:22,494 ERROR SchemaExport:426 - Table "CHILDCHILD" not found; SQL statement:
+
+    alter table ChildChild 
+        drop constraint FKC607BD80B2B2B2AC [42102-145]
+14:19:22,494 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E725B8180E9
+14:19:22,494 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ParentChild drop constraint FK9E5C7E725B8180E9
+14:19:22,494 ERROR SchemaExport:426 - Table "PARENTCHILD" not found; SQL statement:
+
+    alter table ParentChild 
+        drop constraint FK9E5C7E725B8180E9 [42102-145]
+14:19:22,495 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E72CA646179
+14:19:22,495 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table ParentChild drop constraint FK9E5C7E72CA646179
+14:19:22,495 ERROR SchemaExport:426 - Table "PARENTCHILD" not found; SQL statement:
+
+    alter table ParentChild 
+        drop constraint FK9E5C7E72CA646179 [42102-145]
+14:19:22,495 DEBUG SQL:104 - 
+    drop table Child if exists
+14:19:22,495 DEBUG SQL:104 - 
+    drop table ChildChild if exists
+14:19:22,495 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:19:22,495 DEBUG SQL:104 - 
+    drop table ParentChild if exists
+14:19:22,496 DEBUG SQL:104 - 
+    create table Child (
+        name varchar(255) not null,
+        parentName varchar(255) not null,
+        loc integer,
+        primary key (name)
+    )
+14:19:22,496 DEBUG SQL:104 - 
+    create table ChildChild (
+        childName1 varchar(255) not null,
+        childName2 varchar(255) not null
+    )
+14:19:22,496 DEBUG SQL:104 - 
+    create table Parent (
+        name varchar(255) not null,
+        primary key (name)
+    )
+14:19:22,496 DEBUG SQL:104 - 
+    create table ParentChild (
+        parentName varchar(255) not null,
+        childName varchar(255) not null,
+        loc integer not null,
+        primary key (parentName, loc)
+    )
+14:19:22,497 DEBUG SQL:104 - 
+    alter table Child 
+        add constraint FK3E104FCCA646179 
+        foreign key (parentName) 
+        references Parent
+14:19:22,515 DEBUG SQL:104 - 
+    alter table ChildChild 
+        add constraint FKC607BD80B2B2B2AD 
+        foreign key (childName2) 
+        references Child
+14:19:22,516 DEBUG SQL:104 - 
+    alter table ChildChild 
+        add constraint FKC607BD80B2B2B2AC 
+        foreign key (childName1) 
+        references Child
+14:19:22,516 DEBUG SQL:104 - 
+    alter table ParentChild 
+        add constraint FK9E5C7E725B8180E9 
+        foreign key (childName) 
+        references Child
+14:19:22,516 DEBUG SQL:104 - 
+    alter table ParentChild 
+        add constraint FK9E5C7E72CA646179 
+        foreign key (parentName) 
+        references Parent
+14:19:22,517  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:22,517  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:19:22,517  INFO CustomRunner:139 - Test: testManyToManyCriteriaJoin
+14:19:22,520 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:22,530 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,531 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,531 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:22,531 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,531 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,531 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,558 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,559 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,583 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,583 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parentName, loc, childName) 
+    values
+        (?, ?, ?)
+14:19:22,594 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parentName, loc, childName) 
+    values
+        (?, ?, ?)
+14:19:22,596 DEBUG SQL:104 - 
+    select
+        this_.name as name2_2_,
+        morechildr4_.parentName as parentName2_,
+        child1_.name as childName3_,
+        morechildr4_.loc as loc,
+        child1_.name as name0_0_,
+        friends6_.childName1 as childName1_0_,
+        child2_.name as childName2_1_,
+        child2_.name as name0_1_ 
+    from
+        Parent this_ 
+    inner join
+        ParentChild morechildr4_ 
+            on this_.name=morechildr4_.parentName 
+    inner join
+        Child child1_ 
+            on morechildr4_.childName=child1_.name 
+    inner join
+        ChildChild friends6_ 
+            on child1_.name=friends6_.childName1 
+    inner join
+        Child child2_ 
+            on friends6_.childName2=child2_.name 
+    order by
+        child2_.name desc
+14:19:22,656 DEBUG SQL:104 - 
+    select
+        this_.name as name2_2_,
+        morechildr2_.parentName as parentName2_4_,
+        child3_.name as childName3_4_,
+        morechildr2_.loc as loc4_,
+        child3_.name as name0_0_,
+        friends4_.childName1 as childName1_0_5_,
+        child5_.name as childName2_1_5_,
+        child5_.name as name0_1_ 
+    from
+        Parent this_ 
+    left outer join
+        ParentChild morechildr2_ 
+            on this_.name=morechildr2_.parentName 
+    left outer join
+        Child child3_ 
+            on morechildr2_.childName=child3_.name 
+    left outer join
+        ChildChild friends4_ 
+            on child3_.name=friends4_.childName1 
+    left outer join
+        Child child5_ 
+            on friends4_.childName2=child5_.name 
+    order by
+        this_.name desc
+14:19:22,731 DEBUG SQL:104 - 
+    select
+        children0_.parentName as parentName2_1_,
+        children0_.name as name0_1_,
+        children0_.loc as loc1_,
+        children0_.name as name0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.parentName in (
+            select
+                this_.name 
+            from
+                Parent this_ 
+            left outer join
+                ParentChild morechildr2_ 
+                    on this_.name=morechildr2_.parentName 
+            left outer join
+                Child child3_ 
+                    on morechildr2_.childName=child3_.name 
+            left outer join
+                ChildChild friends4_ 
+                    on child3_.name=friends4_.childName1 
+            left outer join
+                Child child5_ 
+                    on friends4_.childName2=child5_.name 
+            )
+14:19:22,734 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        parentName=?
+14:19:22,735 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:22,735 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:22,735 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,736 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,736 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:22,736 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,736 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,737 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:22,740  INFO CustomRunner:139 - Test: testSubselectFetchCriteria
+14:19:22,743 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:22,743 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,744 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,744 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:22,744 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,744 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,744 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,745 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,745 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,745 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,745 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parentName, loc, childName) 
+    values
+        (?, ?, ?)
+14:19:22,745 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parentName, loc, childName) 
+    values
+        (?, ?, ?)
+14:19:22,746 DEBUG SQL:104 - 
+    select
+        this_.name as name2_0_ 
+    from
+        Parent this_ 
+    where
+        this_.name between ? and ? 
+    order by
+        this_.name desc
+14:19:22,747 DEBUG SQL:104 - 
+    select
+        children0_.parentName as parentName2_1_,
+        children0_.name as name0_1_,
+        children0_.loc as loc1_,
+        children0_.name as name0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.parentName in (
+            select
+                this_.name 
+            from
+                Parent this_ 
+            where
+                this_.name between ? and ? 
+        )
+14:19:22,749 DEBUG SQL:104 - 
+    select
+        morechildr0_.parentName as parentName2_1_,
+        morechildr0_.childName as childName3_1_,
+        morechildr0_.loc as loc1_,
+        child1_.name as name0_0_ 
+    from
+        ParentChild morechildr0_ 
+    inner join
+        Child child1_ 
+            on morechildr0_.childName=child1_.name 
+    where
+        morechildr0_.parentName in (
+            select
+                this_.name 
+            from
+                Parent this_ 
+            where
+                this_.name between ? and ? 
+        )
+14:19:22,750 DEBUG SQL:104 - 
+    select
+        friends0_.childName1 as childName1_0_1_,
+        friends0_.childName2 as childName2_1_1_,
+        child1_.name as name0_0_ 
+    from
+        ChildChild friends0_ 
+    inner join
+        Child child1_ 
+            on friends0_.childName2=child1_.name 
+    where
+        friends0_.childName1 in (
+            select
+                child1_.name 
+            from
+                ParentChild morechildr0_ 
+            inner join
+                Child child1_ 
+                    on morechildr0_.childName=child1_.name 
+            where
+                morechildr0_.parentName in (
+                    select
+                        this_.name 
+                    from
+                        Parent this_ 
+                    where
+                        this_.name between ? and ? 
+                )
+            )
+14:19:22,751 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        parentName=?
+14:19:22,751 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:22,751 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:22,752 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,752 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,752 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:22,752 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,752 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,753 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:22,753  INFO CustomRunner:139 - Test: testSubselectFetchHql
+14:19:22,755 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:22,755 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,756 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,756 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:22,756 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,756 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,756 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,757 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,757 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,757 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,760 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parentName, loc, childName) 
+    values
+        (?, ?, ?)
+14:19:22,761 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parentName, loc, childName) 
+    values
+        (?, ?, ?)
+14:19:22,761 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.subselectfetch.Parent where name between 'bar' and 'foo' order by name desc
+14:19:22,762 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'subselectfetch'
+    |           \-[IDENT] Node: 'Parent'
+    +-[WHERE] Node: 'where'
+    |  \-[BETWEEN] Node: 'between'
+    |     +-[IDENT] Node: 'name'
+    |     +-[QUOTED_STRING] Node: ''bar''
+    |     \-[QUOTED_STRING] Node: ''foo''
+    \-[ORDER] Node: 'order'
+       +-[IDENT] Node: 'name'
+       \-[DESCENDING] Node: 'desc'
+
+14:19:22,783 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,784 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.subselectfetch.Parent (<no alias>) -> parent0_
+14:19:22,784 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:22,784 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:22,784 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> parent0_.name
+14:19:22,784 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:22,785 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:22,785 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> parent0_.name
+14:19:22,785 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Parent parent0_ ) ( where ( between ( parent0_.name {synthetic-alias} name ) 'bar' 'foo' ) ) ( order ( parent0_.name {synthetic-alias} name ) desc ) )
+14:19:22,785 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:22,785 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:19:22,785 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'parent0_.name as name2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.subselectfetch.Parent}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[parent0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.subselectfetch.Parent}}
+    +-[WHERE] SqlNode: 'where'
+    |  \-[BETWEEN] BetweenOperatorNode: 'between'
+    |     +-[DOT] DotNode: 'parent0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=parent0_,className=org.hibernate.test.subselectfetch.Parent,classAlias=null}
+    |     |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     +-[QUOTED_STRING] LiteralNode: ''bar''
+    |     \-[QUOTED_STRING] LiteralNode: ''foo''
+    \-[ORDER] OrderByClause: 'order'
+       +-[DOT] DotNode: 'parent0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=parent0_,className=org.hibernate.test.subselectfetch.Parent,classAlias=null}
+       |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+       |  \-[IDENT] IdentNode: 'name' {originalText=name}
+       \-[DESCENDING] SqlNode: 'desc'
+
+14:19:22,795 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,795 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.subselectfetch.Parent where name between 'bar' and 'foo' order by name desc
+14:19:22,795 DEBUG QueryTranslatorImpl:236 - SQL: select parent0_.name as name2_ from Parent parent0_ where parent0_.name between 'bar' and 'foo' order by parent0_.name desc
+14:19:22,795 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,795 DEBUG SQL:104 - 
+    select
+        parent0_.name as name2_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.name between 'bar' and 'foo' 
+    order by
+        parent0_.name desc
+14:19:22,796 DEBUG SQL:104 - 
+    select
+        children0_.parentName as parentName2_1_,
+        children0_.name as name0_1_,
+        children0_.loc as loc1_,
+        children0_.name as name0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.parentName in (
+            select
+                parent0_.name 
+            from
+                Parent parent0_ 
+            where
+                parent0_.name between 'bar' and 'foo' 
+        )
+14:19:22,807 DEBUG SQL:104 - 
+    select
+        morechildr0_.parentName as parentName2_1_,
+        morechildr0_.childName as childName3_1_,
+        morechildr0_.loc as loc1_,
+        child1_.name as name0_0_ 
+    from
+        ParentChild morechildr0_ 
+    inner join
+        Child child1_ 
+            on morechildr0_.childName=child1_.name 
+    where
+        morechildr0_.parentName in (
+            select
+                parent0_.name 
+            from
+                Parent parent0_ 
+            where
+                parent0_.name between 'bar' and 'foo' 
+        )
+14:19:22,808 DEBUG SQL:104 - 
+    select
+        friends0_.childName1 as childName1_0_1_,
+        friends0_.childName2 as childName2_1_1_,
+        child1_.name as name0_0_ 
+    from
+        ChildChild friends0_ 
+    inner join
+        Child child1_ 
+            on friends0_.childName2=child1_.name 
+    where
+        friends0_.childName1 in (
+            select
+                child1_.name 
+            from
+                ParentChild morechildr0_ 
+            inner join
+                Child child1_ 
+                    on morechildr0_.childName=child1_.name 
+            where
+                morechildr0_.parentName in (
+                    select
+                        parent0_.name 
+                    from
+                        Parent parent0_ 
+                    where
+                        parent0_.name between 'bar' and 'foo' 
+                )
+            )
+14:19:22,819 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        parentName=?
+14:19:22,819 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:22,828 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:22,828 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,828 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,829 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:22,829 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,839 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,839 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:22,840  INFO CustomRunner:139 - Test: testSubselectFetchNamedParam
+14:19:22,842 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:22,843 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,850 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,851 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:22,852 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,852 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,853 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,861 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,862 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,862 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,863 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parentName, loc, childName) 
+    values
+        (?, ?, ?)
+14:19:22,863 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parentName, loc, childName) 
+    values
+        (?, ?, ?)
+14:19:22,864 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.subselectfetch.Parent where name between :bar and :foo order by name desc
+14:19:22,865 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'subselectfetch'
+    |           \-[IDENT] Node: 'Parent'
+    +-[WHERE] Node: 'where'
+    |  \-[BETWEEN] Node: 'between'
+    |     +-[IDENT] Node: 'name'
+    |     +-[COLON] Node: ':'
+    |     |  \-[IDENT] Node: 'bar'
+    |     \-[COLON] Node: ':'
+    |        \-[IDENT] Node: 'foo'
+    \-[ORDER] Node: 'order'
+       +-[IDENT] Node: 'name'
+       \-[DESCENDING] Node: 'desc'
+
+14:19:22,875 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,876 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.subselectfetch.Parent (<no alias>) -> parent0_
+14:19:22,876 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:22,876 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:22,876 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> parent0_.name
+14:19:22,876 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:22,877 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:22,877 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> parent0_.name
+14:19:22,877 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Parent parent0_ ) ( where ( between ( parent0_.name {synthetic-alias} name ) ? ? ) ) ( order ( parent0_.name {synthetic-alias} name ) desc ) )
+14:19:22,877 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:22,877 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:19:22,877 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'parent0_.name as name2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.subselectfetch.Parent}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[parent0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.subselectfetch.Parent}}
+    +-[WHERE] SqlNode: 'where'
+    |  \-[BETWEEN] BetweenOperatorNode: 'between'
+    |     +-[DOT] DotNode: 'parent0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=parent0_,className=org.hibernate.test.subselectfetch.Parent,classAlias=null}
+    |     |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     +-[NAMED_PARAM] ParameterNode: '?' {name=bar, expectedType=org.hibernate.type.StringType@2dc8de40}
+    |     \-[NAMED_PARAM] ParameterNode: '?' {name=foo, expectedType=org.hibernate.type.StringType@2dc8de40}
+    \-[ORDER] OrderByClause: 'order'
+       +-[DOT] DotNode: 'parent0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=parent0_,className=org.hibernate.test.subselectfetch.Parent,classAlias=null}
+       |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+       |  \-[IDENT] IdentNode: 'name' {originalText=name}
+       \-[DESCENDING] SqlNode: 'desc'
+
+14:19:22,886 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,886 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.subselectfetch.Parent where name between :bar and :foo order by name desc
+14:19:22,886 DEBUG QueryTranslatorImpl:236 - SQL: select parent0_.name as name2_ from Parent parent0_ where parent0_.name between ? and ? order by parent0_.name desc
+14:19:22,886 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,887 DEBUG SQL:104 - 
+    select
+        parent0_.name as name2_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.name between ? and ? 
+    order by
+        parent0_.name desc
+14:19:22,889 DEBUG SQL:104 - 
+    select
+        children0_.parentName as parentName2_1_,
+        children0_.name as name0_1_,
+        children0_.loc as loc1_,
+        children0_.name as name0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.parentName in (
+            select
+                parent0_.name 
+            from
+                Parent parent0_ 
+            where
+                parent0_.name between ? and ? 
+        )
+14:19:22,890 DEBUG SQL:104 - 
+    select
+        morechildr0_.parentName as parentName2_1_,
+        morechildr0_.childName as childName3_1_,
+        morechildr0_.loc as loc1_,
+        child1_.name as name0_0_ 
+    from
+        ParentChild morechildr0_ 
+    inner join
+        Child child1_ 
+            on morechildr0_.childName=child1_.name 
+    where
+        morechildr0_.parentName in (
+            select
+                parent0_.name 
+            from
+                Parent parent0_ 
+            where
+                parent0_.name between ? and ? 
+        )
+14:19:22,912 DEBUG SQL:104 - 
+    select
+        friends0_.childName1 as childName1_0_1_,
+        friends0_.childName2 as childName2_1_1_,
+        child1_.name as name0_0_ 
+    from
+        ChildChild friends0_ 
+    inner join
+        Child child1_ 
+            on friends0_.childName2=child1_.name 
+    where
+        friends0_.childName1 in (
+            select
+                child1_.name 
+            from
+                ParentChild morechildr0_ 
+            inner join
+                Child child1_ 
+                    on morechildr0_.childName=child1_.name 
+            where
+                morechildr0_.parentName in (
+                    select
+                        parent0_.name 
+                    from
+                        Parent parent0_ 
+                    where
+                        parent0_.name between ? and ? 
+                )
+            )
+14:19:22,913 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        parentName=?
+14:19:22,913 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:22,914 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:22,914 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,914 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,914 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:22,933 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,934 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:22,934 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:22,934  INFO CustomRunner:139 - Test: testSubselectFetchPosParam
+14:19:22,936 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:22,945 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,945 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,945 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:22,945 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,954 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:22,955 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,955 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,955 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,967 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:22,967 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parentName, loc, childName) 
+    values
+        (?, ?, ?)
+14:19:22,967 DEBUG SQL:104 - 
+    insert 
+    into
+        ParentChild
+        (parentName, loc, childName) 
+    values
+        (?, ?, ?)
+14:19:22,968 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.subselectfetch.Parent where name between ? and ? order by name desc
+14:19:22,969 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'subselectfetch'
+    |           \-[IDENT] Node: 'Parent'
+    +-[WHERE] Node: 'where'
+    |  \-[BETWEEN] Node: 'between'
+    |     +-[IDENT] Node: 'name'
+    |     +-[PARAM] Node: '?'
+    |     \-[PARAM] Node: '?'
+    \-[ORDER] Node: 'order'
+       +-[IDENT] Node: 'name'
+       \-[DESCENDING] Node: 'desc'
+
+14:19:22,976 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,976 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.subselectfetch.Parent (<no alias>) -> parent0_
+14:19:22,976 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:22,976 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:22,977 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> parent0_.name
+14:19:22,977  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 66.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:19:22,977  WARN HqlSqlWalker:929 - [DEPRECATION] Encountered positional parameter near line 1, column 72.  Positional parameter are considered deprecated; use named parameters or JPA-style positional parameters instead.
+14:19:22,977 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:22,977 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:22,977 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> parent0_.name
+14:19:22,977 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Parent parent0_ ) ( where ( between ( parent0_.name {synthetic-alias} name ) ? ? ) ) ( order ( parent0_.name {synthetic-alias} name ) desc ) )
+14:19:22,977 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:22,978 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:19:22,978 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'parent0_.name as name2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.subselectfetch.Parent}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[parent0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.subselectfetch.Parent}}
+    +-[WHERE] SqlNode: 'where'
+    |  \-[BETWEEN] BetweenOperatorNode: 'between'
+    |     +-[DOT] DotNode: 'parent0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=parent0_,className=org.hibernate.test.subselectfetch.Parent,classAlias=null}
+    |     |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+    |     |  \-[IDENT] IdentNode: 'name' {originalText=name}
+    |     +-[PARAM] ParameterNode: '?' {ordinal=0, expectedType=org.hibernate.type.StringType@2dc8de40}
+    |     \-[PARAM] ParameterNode: '?' {ordinal=1, expectedType=org.hibernate.type.StringType@2dc8de40}
+    \-[ORDER] OrderByClause: 'order'
+       +-[DOT] DotNode: 'parent0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=parent0_,className=org.hibernate.test.subselectfetch.Parent,classAlias=null}
+       |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+       |  \-[IDENT] IdentNode: 'name' {originalText=name}
+       \-[DESCENDING] SqlNode: 'desc'
+
+14:19:22,987 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,988 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.subselectfetch.Parent where name between ? and ? order by name desc
+14:19:22,988 DEBUG QueryTranslatorImpl:236 - SQL: select parent0_.name as name2_ from Parent parent0_ where parent0_.name between ? and ? order by parent0_.name desc
+14:19:22,988 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:22,988 DEBUG SQL:104 - 
+    select
+        parent0_.name as name2_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.name between ? and ? 
+    order by
+        parent0_.name desc
+14:19:22,989 DEBUG SQL:104 - 
+    select
+        children0_.parentName as parentName2_1_,
+        children0_.name as name0_1_,
+        children0_.loc as loc1_,
+        children0_.name as name0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.parentName in (
+            select
+                parent0_.name 
+            from
+                Parent parent0_ 
+            where
+                parent0_.name between ? and ? 
+        )
+14:19:22,990 DEBUG SQL:104 - 
+    select
+        morechildr0_.parentName as parentName2_1_,
+        morechildr0_.childName as childName3_1_,
+        morechildr0_.loc as loc1_,
+        child1_.name as name0_0_ 
+    from
+        ParentChild morechildr0_ 
+    inner join
+        Child child1_ 
+            on morechildr0_.childName=child1_.name 
+    where
+        morechildr0_.parentName in (
+            select
+                parent0_.name 
+            from
+                Parent parent0_ 
+            where
+                parent0_.name between ? and ? 
+        )
+14:19:23,004 DEBUG SQL:104 - 
+    select
+        friends0_.childName1 as childName1_0_1_,
+        friends0_.childName2 as childName2_1_1_,
+        child1_.name as name0_0_ 
+    from
+        ChildChild friends0_ 
+    inner join
+        Child child1_ 
+            on friends0_.childName2=child1_.name 
+    where
+        friends0_.childName1 in (
+            select
+                child1_.name 
+            from
+                ParentChild morechildr0_ 
+            inner join
+                Child child1_ 
+                    on morechildr0_.childName=child1_.name 
+            where
+                morechildr0_.parentName in (
+                    select
+                        parent0_.name 
+                    from
+                        Parent parent0_ 
+                    where
+                        parent0_.name between ? and ? 
+                )
+            )
+14:19:23,016 DEBUG SQL:104 - 
+    delete 
+    from
+        ParentChild 
+    where
+        parentName=?
+14:19:23,016 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:23,016 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:23,016 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:23,017 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:23,017 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:23,017 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:23,038 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:23,038 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:23,039  INFO CustomRunner:139 - Test: testSubselectFetchWithLimit
+14:19:23,041 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:23,041 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:23,041 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:23,049 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:23,049 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:23,050 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:23,050 DEBUG SQL:104 - 
+    insert 
+    into
+        Parent
+        (name) 
+    values
+        (?)
+14:19:23,059 DEBUG SQL:104 - 
+    insert 
+    into
+        Child
+        (parentName, loc, name) 
+    values
+        (?, ?, ?)
+14:19:23,060 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:23,061 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:23,062 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:23,071 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:23,071 DEBUG SQL:104 - 
+    update
+        Child 
+    set
+        parentName=?,
+        loc=? 
+    where
+        name=?
+14:19:23,072 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.subselectfetch.Parent order by name desc
+14:19:23,073 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        \-[DOT] Node: '.'
+    |           +-[DOT] Node: '.'
+    |           |  +-[DOT] Node: '.'
+    |           |  |  +-[DOT] Node: '.'
+    |           |  |  |  +-[IDENT] Node: 'org'
+    |           |  |  |  \-[IDENT] Node: 'hibernate'
+    |           |  |  \-[IDENT] Node: 'test'
+    |           |  \-[IDENT] Node: 'subselectfetch'
+    |           \-[IDENT] Node: 'Parent'
+    \-[ORDER] Node: 'order'
+       +-[IDENT] Node: 'name'
+       \-[DESCENDING] Node: 'desc'
+
+14:19:23,082 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,082 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.subselectfetch.Parent (<no alias>) -> parent0_
+14:19:23,082 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias} -> {synthetic-alias}
+14:19:23,083 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:19:23,083 DEBUG FromReferenceNode:74 - Resolved : {synthetic-alias}.name -> parent0_.name
+14:19:23,083 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Parent parent0_ ) ( order ( parent0_.name {synthetic-alias} name ) desc ) )
+14:19:23,083 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:19:23,083 DEBUG JoinProcessor:175 - Using FROM fragment [Parent parent0_]
+14:19:23,083 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Parent)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  \-[SELECT_EXPR] SelectExpressionImpl: 'parent0_.name as name2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.subselectfetch.Parent}}}
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[parent0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Parent parent0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=Parent,tableAlias=parent0_,origin=null,columns={,className=org.hibernate.test.subselectfetch.Parent}}
+    \-[ORDER] OrderByClause: 'order'
+       +-[DOT] DotNode: 'parent0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path={synthetic-alias}.name,tableAlias=parent0_,className=org.hibernate.test.subselectfetch.Parent,classAlias=null}
+       |  +-[IDENT] IdentNode: '{synthetic-alias}' {originalText={synthetic-alias}}
+       |  \-[IDENT] IdentNode: 'name' {originalText=name}
+       \-[DESCENDING] SqlNode: 'desc'
+
+14:19:23,092 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,092 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.subselectfetch.Parent order by name desc
+14:19:23,092 DEBUG QueryTranslatorImpl:236 - SQL: select parent0_.name as name2_ from Parent parent0_ order by parent0_.name desc
+14:19:23,093 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:19:23,093 DEBUG SQL:104 - 
+    select
+        parent0_.name as name2_ 
+    from
+        Parent parent0_ 
+    order by
+        parent0_.name desc limit ?
+14:19:23,094 DEBUG SQL:104 - 
+    select
+        morechildr0_.parentName as parentName2_1_,
+        morechildr0_.childName as childName3_1_,
+        morechildr0_.loc as loc1_,
+        child1_.name as name0_0_ 
+    from
+        ParentChild morechildr0_ 
+    inner join
+        Child child1_ 
+            on morechildr0_.childName=child1_.name 
+    where
+        morechildr0_.parentName in (
+            select
+                parent0_.name 
+            from
+                Parent parent0_ 
+        )
+14:19:23,104 DEBUG SQL:104 - 
+    select
+        children0_.parentName as parentName2_1_,
+        children0_.name as name0_1_,
+        children0_.loc as loc1_,
+        children0_.name as name0_0_ 
+    from
+        Child children0_ 
+    where
+        children0_.parentName in (
+            select
+                parent0_.name 
+            from
+                Parent parent0_ 
+        )
+14:19:23,105 DEBUG SQL:104 - 
+    select
+        parent0_.name as name2_0_ 
+    from
+        Parent parent0_ 
+    where
+        parent0_.name=?
+14:19:23,105 DEBUG SQL:104 - 
+    select
+        morechildr0_.parentName as parentName2_1_,
+        morechildr0_.childName as childName3_1_,
+        morechildr0_.loc as loc1_,
+        child1_.name as name0_0_ 
+    from
+        ParentChild morechildr0_ 
+    inner join
+        Child child1_ 
+            on morechildr0_.childName=child1_.name 
+    where
+        morechildr0_.parentName=?
+14:19:23,115 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:23,116 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:23,116 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:23,116 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:23,117 DEBUG SQL:104 - 
+    delete 
+    from
+        ChildChild 
+    where
+        childName1=?
+14:19:23,117 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:23,117 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:23,117 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:23,117 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:23,118 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:23,129 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:23,130 DEBUG SQL:104 - 
+    delete 
+    from
+        Child 
+    where
+        name=?
+14:19:23,130 DEBUG SQL:104 - 
+    delete 
+    from
+        Parent 
+    where
+        name=?
+14:19:23,131  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:19:23,131 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:19:23,131 DEBUG SQL:104 - 
+    alter table Child 
+        drop constraint FK3E104FCCA646179
+14:19:23,132 DEBUG SQL:104 - 
+    alter table ChildChild 
+        drop constraint FKC607BD80B2B2B2AD
+14:19:23,144 DEBUG SQL:104 - 
+    alter table ChildChild 
+        drop constraint FKC607BD80B2B2B2AC
+14:19:23,144 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E725B8180E9
+14:19:23,144 DEBUG SQL:104 - 
+    alter table ParentChild 
+        drop constraint FK9E5C7E72CA646179
+14:19:23,144 DEBUG SQL:104 - 
+    drop table Child if exists
+14:19:23,145 DEBUG SQL:104 - 
+    drop table ChildChild if exists
+14:19:23,145 DEBUG SQL:104 - 
+    drop table Parent if exists
+14:19:23,145 DEBUG SQL:104 - 
+    drop table ParentChild if exists
+14:19:23,145  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:19:23,145  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

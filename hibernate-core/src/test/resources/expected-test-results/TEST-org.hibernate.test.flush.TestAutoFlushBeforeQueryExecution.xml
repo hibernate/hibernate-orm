@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.flush.TestAutoFlushBeforeQueryExecution" tests="2" time="0.234" timestamp="2013-02-28T20:12:32">
+  <properties />
+  <testcase classname="org.hibernate.test.flush.TestAutoFlushBeforeQueryExecution" name="testAutoflushIsNotRequiredWithUnrelatedCollectionChange" time="0.109" />
+  <testcase classname="org.hibernate.test.flush.TestAutoFlushBeforeQueryExecution" name="testAutoflushIsRequired" time="0.067" />
+  <system-out><![CDATA[14:12:32,551  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.flush.TestAutoFlushBeforeQueryExecution
+14:12:32,562  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:12:32,563  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:12:32,563  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:12:32,563  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:12:32,564  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:12:32,565  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:12:32,565  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:12:32,565  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:12:32,566  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:12:32,566  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:12:32,581  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:32,582 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:32,582 DEBUG SQL:104 - 
+    alter table Author 
+        drop constraint FK75920DABF8DA94BA
+14:12:32,583 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Author drop constraint FK75920DABF8DA94BA
+14:12:32,583 ERROR SchemaExport:426 - Table "AUTHOR" not found; SQL statement:
+
+    alter table Author 
+        drop constraint FK75920DABF8DA94BA [42102-145]
+14:12:32,583 DEBUG SQL:104 - 
+    alter table Book 
+        drop constraint FK1FAF091F0B1D5A
+14:12:32,583 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Book drop constraint FK1FAF091F0B1D5A
+14:12:32,583 ERROR SchemaExport:426 - Table "BOOK" not found; SQL statement:
+
+    alter table Book 
+        drop constraint FK1FAF091F0B1D5A [42102-145]
+14:12:32,583 DEBUG SQL:104 - 
+    drop table Author if exists
+14:12:32,583 DEBUG SQL:104 - 
+    drop table Book if exists
+14:12:32,584 DEBUG SQL:104 - 
+    drop table Publisher if exists
+14:12:32,584 DEBUG SQL:104 - 
+    drop table UnrelatedEntity if exists
+14:12:32,584 DEBUG SQL:104 - 
+    create table Author (
+        id bigint not null,
+        name varchar(255),
+        publisher_id bigint,
+        primary key (id)
+    )
+14:12:32,584 DEBUG SQL:104 - 
+    create table Book (
+        id bigint not null,
+        title varchar(255),
+        author_id bigint,
+        primary key (id)
+    )
+14:12:32,584 DEBUG SQL:104 - 
+    create table Publisher (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:32,585 DEBUG SQL:104 - 
+    create table UnrelatedEntity (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+14:12:32,585 DEBUG SQL:104 - 
+    alter table Author 
+        add constraint FK75920DABF8DA94BA 
+        foreign key (publisher_id) 
+        references Publisher
+14:12:32,585 DEBUG SQL:104 - 
+    alter table Book 
+        add constraint FK1FAF091F0B1D5A 
+        foreign key (author_id) 
+        references Author
+14:12:32,586  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:32,587  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:12:32,587  INFO CustomRunner:139 - Test: testAutoflushIsNotRequiredWithUnrelatedCollectionChange
+14:12:32,588 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Publisher
+14:12:32,589 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.flush.Publisher p
+14:12:32,597 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             +-[DOT] Node: '.'
+             |  +-[DOT] Node: '.'
+             |  |  +-[DOT] Node: '.'
+             |  |  |  +-[DOT] Node: '.'
+             |  |  |  |  +-[IDENT] Node: 'org'
+             |  |  |  |  \-[IDENT] Node: 'hibernate'
+             |  |  |  \-[IDENT] Node: 'test'
+             |  |  \-[IDENT] Node: 'flush'
+             |  \-[IDENT] Node: 'Publisher'
+             \-[ALIAS] Node: 'p'
+
+14:12:32,598 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,598 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.flush.Publisher (p) -> publisher0_
+14:12:32,598 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Publisher publisher0_ ) )
+14:12:32,598 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:32,598 DEBUG JoinProcessor:175 - Using FROM fragment [Publisher publisher0_]
+14:12:32,599 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Publisher)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'publisher0_.id as id2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Publisher,tableAlias=publisher0_,origin=null,columns={,className=org.hibernate.test.flush.Publisher}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'publisher0_.name as name2_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[publisher0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Publisher publisher0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Publisher,tableAlias=publisher0_,origin=null,columns={,className=org.hibernate.test.flush.Publisher}}
+
+14:12:32,599 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,599 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.flush.Publisher p
+14:12:32,599 DEBUG QueryTranslatorImpl:236 - SQL: select publisher0_.id as id2_, publisher0_.name as name2_ from Publisher publisher0_
+14:12:32,599 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,600 DEBUG SQL:104 - 
+    insert 
+    into
+        Publisher
+        (name, id) 
+    values
+        (?, ?)
+14:12:32,601 DEBUG SQL:104 - 
+    select
+        publisher0_.id as id2_,
+        publisher0_.name as name2_ 
+    from
+        Publisher publisher0_
+14:12:32,601 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.flush.Publisher p where p.name='name'
+14:12:32,602 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    +-[SELECT_FROM] Node: 'SELECT_FROM'
+    |  \-[FROM] Node: 'from'
+    |     \-[RANGE] Node: 'RANGE'
+    |        +-[DOT] Node: '.'
+    |        |  +-[DOT] Node: '.'
+    |        |  |  +-[DOT] Node: '.'
+    |        |  |  |  +-[DOT] Node: '.'
+    |        |  |  |  |  +-[IDENT] Node: 'org'
+    |        |  |  |  |  \-[IDENT] Node: 'hibernate'
+    |        |  |  |  \-[IDENT] Node: 'test'
+    |        |  |  \-[IDENT] Node: 'flush'
+    |        |  \-[IDENT] Node: 'Publisher'
+    |        \-[ALIAS] Node: 'p'
+    \-[WHERE] Node: 'where'
+       \-[EQ] Node: '='
+          +-[DOT] Node: '.'
+          |  +-[IDENT] Node: 'p'
+          |  \-[IDENT] Node: 'name'
+          \-[QUOTED_STRING] Node: ''name''
+
+14:12:32,629 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,629 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.flush.Publisher (p) -> publisher0_
+14:12:32,629 DEBUG FromReferenceNode:74 - Resolved : p -> publisher0_.id
+14:12:32,630 DEBUG DotNode:599 - getDataType() : name -> org.hibernate.type.StringType@2dc8de40
+14:12:32,630 DEBUG FromReferenceNode:74 - Resolved : p.name -> publisher0_.name
+14:12:32,630 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} Publisher publisher0_ ) ( where ( = ( publisher0_.name publisher0_.id name ) 'name' ) ) )
+14:12:32,630 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:32,630 DEBUG JoinProcessor:175 - Using FROM fragment [Publisher publisher0_]
+14:12:32,630 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Publisher)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'publisher0_.id as id2_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Publisher,tableAlias=publisher0_,origin=null,columns={,className=org.hibernate.test.flush.Publisher}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'publisher0_.name as name2_'
+    +-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[p], fromElementByTableAlias=[publisher0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+    |  \-[FROM_FRAGMENT] FromElement: 'Publisher publisher0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Publisher,tableAlias=publisher0_,origin=null,columns={,className=org.hibernate.test.flush.Publisher}}
+    \-[WHERE] SqlNode: 'where'
+       \-[EQ] BinaryLogicOperatorNode: '='
+          +-[DOT] DotNode: 'publisher0_.name' {propertyName=name,dereferenceType=ALL,propertyPath=name,path=p.name,tableAlias=publisher0_,className=org.hibernate.test.flush.Publisher,classAlias=p}
+          |  +-[ALIAS_REF] IdentNode: 'publisher0_.id' {alias=p, className=org.hibernate.test.flush.Publisher, tableAlias=publisher0_}
+          |  \-[IDENT] IdentNode: 'name' {originalText=name}
+          \-[QUOTED_STRING] LiteralNode: ''name''
+
+14:12:32,631 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,643 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.flush.Publisher p where p.name='name'
+14:12:32,644 DEBUG QueryTranslatorImpl:236 - SQL: select publisher0_.id as id2_, publisher0_.name as name2_ from Publisher publisher0_ where publisher0_.name='name'
+14:12:32,644 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,644 DEBUG SQL:104 - 
+    select
+        publisher0_.id as id2_,
+        publisher0_.name as name2_ 
+    from
+        Publisher publisher0_ 
+    where
+        publisher0_.name='name'
+14:12:32,645 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        UnrelatedEntity
+14:12:32,645 DEBUG SQL:104 - 
+    insert 
+    into
+        UnrelatedEntity
+        (name, id) 
+    values
+        (?, ?)
+14:12:32,646 DEBUG SQL:104 - 
+    select
+        unrelatede0_.id as id3_0_,
+        unrelatede0_.name as name3_0_ 
+    from
+        UnrelatedEntity unrelatede0_ 
+    where
+        unrelatede0_.id=?
+14:12:32,653 DEBUG SQL:104 - 
+    select
+        publisher0_.id as id2_0_,
+        publisher0_.name as name2_0_ 
+    from
+        Publisher publisher0_ 
+    where
+        publisher0_.id=?
+14:12:32,654 DEBUG SQL:104 - 
+    select
+        authors0_.publisher_id as publisher3_2_1_,
+        authors0_.id as id0_1_,
+        authors0_.id as id0_0_,
+        authors0_.name as name0_0_,
+        authors0_.publisher_id as publisher3_0_0_ 
+    from
+        Author authors0_ 
+    where
+        authors0_.publisher_id=?
+14:12:32,664 DEBUG QueryTranslatorImpl:265 - parse() - HQL: from org.hibernate.test.flush.UnrelatedEntity
+14:12:32,665 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       \-[FROM] Node: 'from'
+          \-[RANGE] Node: 'RANGE'
+             \-[DOT] Node: '.'
+                +-[DOT] Node: '.'
+                |  +-[DOT] Node: '.'
+                |  |  +-[DOT] Node: '.'
+                |  |  |  +-[IDENT] Node: 'org'
+                |  |  |  \-[IDENT] Node: 'hibernate'
+                |  |  \-[IDENT] Node: 'test'
+                |  \-[IDENT] Node: 'flush'
+                \-[IDENT] Node: 'UnrelatedEntity'
+
+14:12:32,665 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,665 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.flush.UnrelatedEntity (<no alias>) -> unrelatede0_
+14:12:32,666 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( FromClause{level=1} UnrelatedEntity unrelatede0_ ) )
+14:12:32,666 DEBUG HqlSqlWalker:869 - Derived SELECT clause created.
+14:12:32,666 DEBUG JoinProcessor:175 - Using FROM fragment [UnrelatedEntity unrelatede0_]
+14:12:32,666 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (UnrelatedEntity)
+    +-[SELECT_CLAUSE] SelectClause: '{derived select clause}'
+    |  +-[SELECT_EXPR] SelectExpressionImpl: 'unrelatede0_.id as id3_' {FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=UnrelatedEntity,tableAlias=unrelatede0_,origin=null,columns={,className=org.hibernate.test.flush.UnrelatedEntity}}}
+    |  \-[SQL_TOKEN] SqlFragment: 'unrelatede0_.name as name3_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=1, fromElements=1, fromElementByClassAlias=[], fromElementByTableAlias=[unrelatede0_], fromElementsByPath=[], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'UnrelatedEntity unrelatede0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=null,role=null,tableName=UnrelatedEntity,tableAlias=unrelatede0_,origin=null,columns={,className=org.hibernate.test.flush.UnrelatedEntity}}
+
+14:12:32,674 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,674 DEBUG QueryTranslatorImpl:235 - HQL: from org.hibernate.test.flush.UnrelatedEntity
+14:12:32,674 DEBUG QueryTranslatorImpl:236 - SQL: select unrelatede0_.id as id3_, unrelatede0_.name as name3_ from UnrelatedEntity unrelatede0_
+14:12:32,674 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,675 DEBUG SQL:104 - 
+    select
+        max(id) 
+    from
+        Author
+14:12:32,676 DEBUG SQL:104 - 
+    select
+        unrelatede0_.id as id3_,
+        unrelatede0_.name as name3_ 
+    from
+        UnrelatedEntity unrelatede0_
+14:12:32,676 DEBUG SQL:104 - 
+    select
+        unrelatede0_.id as id3_,
+        unrelatede0_.name as name3_ 
+    from
+        UnrelatedEntity unrelatede0_
+14:12:32,677 DEBUG SQL:104 - 
+    select
+        unrelatede0_.id as id3_,
+        unrelatede0_.name as name3_ 
+    from
+        UnrelatedEntity unrelatede0_
+14:12:32,686 DEBUG SQL:104 - 
+    insert 
+    into
+        Author
+        (name, publisher_id, id) 
+    values
+        (?, ?, ?)
+14:12:32,687 DEBUG SQL:104 - 
+    insert 
+    into
+        Author
+        (name, publisher_id, id) 
+    values
+        (?, ?, ?)
+14:12:32,687 DEBUG SQL:104 - 
+    delete 
+    from
+        Author 
+    where
+        id=?
+14:12:32,687 DEBUG SQL:104 - 
+    select
+        unrelatede0_.id as id3_,
+        unrelatede0_.name as name3_ 
+    from
+        UnrelatedEntity unrelatede0_
+14:12:32,688 DEBUG SQL:104 - 
+    delete 
+    from
+        Author 
+    where
+        id=?
+14:12:32,695 DEBUG SQL:104 - 
+    delete 
+    from
+        Publisher 
+    where
+        id=?
+14:12:32,695 DEBUG SQL:104 - 
+    delete 
+    from
+        UnrelatedEntity 
+    where
+        id=?
+14:12:32,696  INFO CustomRunner:139 - Test: testAutoflushIsRequired
+14:12:32,697 DEBUG SQL:104 - 
+    insert 
+    into
+        Publisher
+        (name, id) 
+    values
+        (?, ?)
+14:12:32,698 DEBUG SQL:104 - 
+    select
+        publisher0_.id as id2_,
+        publisher0_.name as name2_ 
+    from
+        Publisher publisher0_
+14:12:32,707 DEBUG SQL:104 - 
+    select
+        publisher0_.id as id2_,
+        publisher0_.name as name2_ 
+    from
+        Publisher publisher0_ 
+    where
+        publisher0_.name='name'
+14:12:32,708 DEBUG SQL:104 - 
+    select
+        publisher0_.id as id2_0_,
+        publisher0_.name as name2_0_ 
+    from
+        Publisher publisher0_ 
+    where
+        publisher0_.id=?
+14:12:32,708 DEBUG SQL:104 - 
+    select
+        authors0_.publisher_id as publisher3_2_1_,
+        authors0_.id as id0_1_,
+        authors0_.id as id0_0_,
+        authors0_.name as name0_0_,
+        authors0_.publisher_id as publisher3_0_0_ 
+    from
+        Author authors0_ 
+    where
+        authors0_.publisher_id=?
+14:12:32,709 DEBUG QueryTranslatorImpl:265 - parse() - HQL: select a from org.hibernate.test.flush.Publisher p join p.authors a
+14:12:32,710 DEBUG QueryTranslatorImpl:283 - --- HQL AST ---
+ \-[QUERY] Node: 'query'
+    \-[SELECT_FROM] Node: 'SELECT_FROM'
+       +-[FROM] Node: 'from'
+       |  +-[RANGE] Node: 'RANGE'
+       |  |  +-[DOT] Node: '.'
+       |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  +-[DOT] Node: '.'
+       |  |  |  |  |  |  +-[IDENT] Node: 'org'
+       |  |  |  |  |  |  \-[IDENT] Node: 'hibernate'
+       |  |  |  |  |  \-[IDENT] Node: 'test'
+       |  |  |  |  \-[IDENT] Node: 'flush'
+       |  |  |  \-[IDENT] Node: 'Publisher'
+       |  |  \-[ALIAS] Node: 'p'
+       |  \-[JOIN] Node: 'join'
+       |     +-[DOT] Node: '.'
+       |     |  +-[IDENT] Node: 'p'
+       |     |  \-[IDENT] Node: 'authors'
+       |     \-[ALIAS] Node: 'a'
+       \-[SELECT] Node: 'select'
+          \-[IDENT] Node: 'a'
+
+14:12:32,721 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,721 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.flush.Publisher (p) -> publisher0_
+14:12:32,721 DEBUG FromReferenceNode:74 - Resolved : p -> publisher0_.id
+14:12:32,722 DEBUG DotNode:599 - getDataType() : authors -> org.hibernate.type.SetType(org.hibernate.test.flush.Publisher.authors)
+14:12:32,722 DEBUG FromElementFactory:376 - createEntityAssociation() : One to many - path = p.authors role = org.hibernate.test.flush.Publisher.authors associatedEntityName = org.hibernate.test.flush.Author
+14:12:32,722 DEBUG FromElement:157 - FromClause{level=1} : org.hibernate.test.flush.Author (a) -> authors1_
+14:12:32,722 DEBUG FromClause:282 - addJoinByPathMap() : p.authors -> FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=null,tableName=Author,tableAlias=authors1_,origin=Publisher publisher0_,columns={publisher0_.id ,className=org.hibernate.test.flush.Author}}
+14:12:32,722 DEBUG DotNode:308 - dereferenceCollection() : Created new FROM element for p.authors : Author authors1_
+14:12:32,722 DEBUG FromReferenceNode:74 - Resolved : p.authors -> .
+14:12:32,722 DEBUG HqlSqlWalker:403 - createFromJoinElement() : -- join tree --
+ \-[JOIN_FRAGMENT] FromElement: 'Author authors1_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=org.hibernate.test.flush.Publisher.authors,tableName=Author,tableAlias=authors1_,origin=Publisher publisher0_,columns={publisher0_.id ,className=org.hibernate.test.flush.Author}}
+
+14:12:32,722 DEBUG FromReferenceNode:74 - Resolved : a -> authors1_.id
+14:12:32,723 DEBUG HqlSqlWalker:629 - processQuery() :  ( SELECT ( {select clause} authors1_.id ) ( FromClause{level=1} ( Publisher publisher0_ Author authors1_ ) ) )
+14:12:32,723 DEBUG JoinProcessor:175 - Using FROM fragment [Publisher publisher0_]
+14:12:32,723 DEBUG JoinProcessor:175 - Using FROM fragment [inner join Author authors1_ on publisher0_.id=authors1_.publisher_id]
+14:12:32,723 DEBUG QueryTranslatorImpl:252 - --- SQL AST ---
+ \-[SELECT] QueryNode: 'SELECT'  querySpaces (Publisher,Author)
+    +-[SELECT_CLAUSE] SelectClause: '{select clause}'
+    |  +-[ALIAS_REF] IdentNode: 'authors1_.id as id0_' {alias=a, className=org.hibernate.test.flush.Author, tableAlias=authors1_}
+    |  \-[SQL_TOKEN] SqlFragment: 'authors1_.name as name0_, authors1_.publisher_id as publisher3_0_'
+    \-[FROM] FromClause: 'from' FromClause{level=1, fromElementCounter=2, fromElements=2, fromElementByClassAlias=[a, p], fromElementByTableAlias=[publisher0_, authors1_], fromElementsByPath=[p.authors], collectionJoinFromElementsByPath=[], impliedElements=[]}
+       \-[FROM_FRAGMENT] FromElement: 'Publisher publisher0_' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=p,role=null,tableName=Publisher,tableAlias=publisher0_,origin=null,columns={,className=org.hibernate.test.flush.Publisher}}
+          \-[JOIN_FRAGMENT] FromElement: 'inner join Author authors1_ on publisher0_.id=authors1_.publisher_id' FromElement{explicit,not a collection join,not a fetch join,fetch non-lazy properties,classAlias=a,role=org.hibernate.test.flush.Publisher.authors,tableName=Author,tableAlias=authors1_,origin=Publisher publisher0_,columns={publisher0_.id ,className=org.hibernate.test.flush.Author}}
+
+14:12:32,723 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,723 DEBUG QueryTranslatorImpl:235 - HQL: select a from org.hibernate.test.flush.Publisher p join p.authors a
+14:12:32,723 DEBUG QueryTranslatorImpl:236 - SQL: select authors1_.id as id0_, authors1_.name as name0_, authors1_.publisher_id as publisher3_0_ from Publisher publisher0_ inner join Author authors1_ on publisher0_.id=authors1_.publisher_id
+14:12:32,723 DEBUG ErrorCounter:82 - throwQueryException() : no errors
+14:12:32,725 DEBUG SQL:104 - 
+    insert 
+    into
+        Author
+        (name, publisher_id, id) 
+    values
+        (?, ?, ?)
+14:12:32,725 DEBUG SQL:104 - 
+    select
+        authors1_.id as id0_,
+        authors1_.name as name0_,
+        authors1_.publisher_id as publisher3_0_ 
+    from
+        Publisher publisher0_ 
+    inner join
+        Author authors1_ 
+            on publisher0_.id=authors1_.publisher_id
+14:12:32,749 DEBUG SQL:104 - 
+    delete 
+    from
+        Author 
+    where
+        id=?
+14:12:32,750 DEBUG SQL:104 - 
+    select
+        authors1_.id as id0_,
+        authors1_.name as name0_,
+        authors1_.publisher_id as publisher3_0_ 
+    from
+        Publisher publisher0_ 
+    inner join
+        Author authors1_ 
+            on publisher0_.id=authors1_.publisher_id
+14:12:32,750 DEBUG SQL:104 - 
+    insert 
+    into
+        Author
+        (name, publisher_id, id) 
+    values
+        (?, ?, ?)
+14:12:32,762 DEBUG SQL:104 - 
+    select
+        authors1_.id as id0_,
+        authors1_.name as name0_,
+        authors1_.publisher_id as publisher3_0_ 
+    from
+        Publisher publisher0_ 
+    inner join
+        Author authors1_ 
+            on publisher0_.id=authors1_.publisher_id
+14:12:32,762 DEBUG SQL:104 - 
+    delete 
+    from
+        Author 
+    where
+        id=?
+14:12:32,763 DEBUG SQL:104 - 
+    delete 
+    from
+        Publisher 
+    where
+        id=?
+14:12:32,763 DEBUG SQL:104 - 
+    select
+        publisher0_.id as id2_,
+        publisher0_.name as name2_ 
+    from
+        Publisher publisher0_
+14:12:32,764  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:12:32,772 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:12:32,772 DEBUG SQL:104 - 
+    alter table Author 
+        drop constraint FK75920DABF8DA94BA
+14:12:32,772 DEBUG SQL:104 - 
+    alter table Book 
+        drop constraint FK1FAF091F0B1D5A
+14:12:32,772 DEBUG SQL:104 - 
+    drop table Author if exists
+14:12:32,772 DEBUG SQL:104 - 
+    drop table Book if exists
+14:12:32,773 DEBUG SQL:104 - 
+    drop table Publisher if exists
+14:12:32,773 DEBUG SQL:104 - 
+    drop table UnrelatedEntity if exists
+14:12:32,782  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:12:32,783  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

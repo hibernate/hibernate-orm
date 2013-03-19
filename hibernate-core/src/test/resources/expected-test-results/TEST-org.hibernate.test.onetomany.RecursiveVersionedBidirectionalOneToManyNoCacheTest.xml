@@ -1,0 +1,1181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.onetomany.RecursiveVersionedBidirectionalOneToManyNoCacheTest" tests="3" time="0.585" timestamp="2013-02-28T20:17:37">
+  <properties />
+  <testcase classname="org.hibernate.test.onetomany.RecursiveVersionedBidirectionalOneToManyNoCacheTest" name="testOneToManyMoveElement" time="0.141" />
+  <testcase classname="org.hibernate.test.onetomany.RecursiveVersionedBidirectionalOneToManyNoCacheTest" name="testOneToManyMoveElementWithDirtySimpleProperty" time="0.204" />
+  <testcase classname="org.hibernate.test.onetomany.RecursiveVersionedBidirectionalOneToManyNoCacheTest" name="testOneToManyReplaceList" time="0.177" />
+  <system-out><![CDATA[14:17:37,888  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.onetomany.RecursiveVersionedBidirectionalOneToManyNoCacheTest
+14:17:37,889  INFO Configuration:706 - HHH000221: Reading mappings from resource: org/hibernate/test/onetomany/VersionedNode.hbm.xml
+14:17:37,895  INFO DriverManagerConnectionProviderImpl:99 - HHH000402: Using Hibernate built-in connection pool (not for production use!)
+14:17:37,895  INFO DriverManagerConnectionProviderImpl:135 - HHH000115: Hibernate connection pool size: 5
+14:17:37,895  INFO DriverManagerConnectionProviderImpl:138 - HHH000006: Autocommit mode: false
+14:17:37,895  INFO DriverManagerConnectionProviderImpl:153 - HHH000401: using driver [org.h2.Driver] at URL [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+14:17:37,896  INFO DriverManagerConnectionProviderImpl:158 - HHH000046: Connection properties: {user=sa}
+14:17:37,897  INFO Dialect:103 - HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+14:17:37,901  INFO LobCreatorBuilder:94 - HHH000423: Disabling contextual LOB creation as JDBC driver reported JDBC version [3] less than 4
+14:17:37,901  INFO TransactionFactoryInitiator:66 - HHH000399: Using default transaction strategy (direct JDBC transactions)
+14:17:37,902  INFO ASTQueryTranslatorFactory:48 - HHH000397: Using ASTQueryTranslatorFactory
+14:17:37,902  WARN CachingRegionFactory:58 - CachingRegionFactory should be only used for testing.
+14:17:37,906  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:37,907 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:37,907 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK2522227DDBE23E
+14:17:37,908 ERROR SchemaExport:425 - HHH000389: Unsuccessful: alter table Node drop constraint FK2522227DDBE23E
+14:17:37,908 ERROR SchemaExport:426 - Table "NODE" not found; SQL statement:
+
+    alter table Node 
+        drop constraint FK2522227DDBE23E [42102-145]
+14:17:37,908 DEBUG SQL:104 - 
+    drop table Node if exists
+14:17:37,908 DEBUG SQL:104 - 
+    create table Node (
+        id integer not null,
+        vers bigint not null,
+        description varchar(255),
+        node_id integer,
+        idx integer,
+        primary key (id)
+    )
+14:17:37,908 DEBUG SQL:104 - 
+    alter table Node 
+        add constraint FK2522227DDBE23E 
+        foreign key (node_id) 
+        references Node
+14:17:37,909  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:37,910  WARN SessionFactoryImpl:1554 - HHH000008: JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()
+14:17:37,910  INFO CustomRunner:139 - Test: testOneToManyMoveElement
+14:17:37,912 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.onetomany.Node#2] from region[hibernate.test.Node.entities]
+14:17:37,912 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:37,912 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities]
+14:17:37,912 DEBUG SQL:104 - 
+    select
+        node_.id,
+        node_.vers as vers0_,
+        node_.description as descript3_0_ 
+    from
+        Node node_ 
+    where
+        node_.id=?
+14:17:37,913 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.onetomany.Node#3] from region[hibernate.test.Node.entities]
+14:17:37,913 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:37,913 DEBUG AbstractReadWriteAccessStrategy:46 - miss key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities]
+14:17:37,913 DEBUG SQL:104 - 
+    select
+        node_.id,
+        node_.vers as vers0_,
+        node_.description as descript3_0_ 
+    from
+        Node node_ 
+    where
+        node_.id=?
+14:17:37,914 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (vers, description, id) 
+    values
+        (?, ?, ?)
+14:17:37,914 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (vers, description, id) 
+    values
+        (?, ?, ?)
+14:17:37,914 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (vers, description, id) 
+    values
+        (?, ?, ?)
+14:17:37,915 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=?,
+        idx=? 
+    where
+        id=?
+14:17:37,915 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=?,
+        idx=? 
+    where
+        id=?
+14:17:37,915 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:37,930 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:37,930 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:37,943 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:37,943 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:37,944 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities]
+14:17:37,944 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:37,944 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:0]
+14:17:37,944 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        vers=?,
+        description=? 
+    where
+        id=? 
+        and vers=?
+14:17:37,956 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities]
+14:17:37,959 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:37,959 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:1]
+14:17:37,959 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        vers=?,
+        description=? 
+    where
+        id=? 
+        and vers=?
+14:17:37,959 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#1] in region[hibernate.test.Node.entities]
+14:17:37,959 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:37,960 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:2]
+14:17:37,960 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        vers=?,
+        description=? 
+    where
+        id=? 
+        and vers=?
+14:17:37,972 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=null,
+        idx=null 
+    where
+        node_id=?
+14:17:37,972 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=?,
+        idx=? 
+    where
+        id=?
+14:17:37,972 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:37,973 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:37,973 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@73473c44]
+14:17:37,973 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:37,973 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:37,973 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@49c5cf7c]
+14:17:37,973 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:37,973 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#1
+14:17:37,973 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Item@59b8fbba]
+14:17:37,973 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:37,982 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:37,982 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:37,982 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:37,983 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:37,984 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:37,995 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:37,996 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:37,997 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,008 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,009 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,009 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,034 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=null,
+        idx=null 
+    where
+        node_id=?
+14:17:38,035 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities]
+14:17:38,035 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,035 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,035 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:3]
+14:17:38,035 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        id=? 
+        and vers=?
+14:17:38,035 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities]
+14:17:38,035 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,035 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,035 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:4]
+14:17:38,036 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        id=? 
+        and vers=?
+14:17:38,048 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#1] in region[hibernate.test.Node.entities]
+14:17:38,049 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:38,049 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#1
+14:17:38,049 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:5]
+14:17:38,049 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        id=? 
+        and vers=?
+14:17:38,049 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities]
+14:17:38,049 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,049 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,050 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:3]
+14:17:38,050 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities]
+14:17:38,050 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,050 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,050 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:4]
+14:17:38,050 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.onetomany.Node#1] in region[hibernate.test.Node.entities]
+14:17:38,050 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:38,050 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#1
+14:17:38,050 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:5]
+14:17:38,052  INFO CustomRunner:139 - Test: testOneToManyMoveElementWithDirtySimpleProperty
+14:17:38,061 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.onetomany.Node#2] from region[hibernate.test.Node.entities]
+14:17:38,061 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,062 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,062 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities], but it is unreadable
+14:17:38,062 DEBUG SQL:104 - 
+    select
+        node_.id,
+        node_.vers as vers0_,
+        node_.description as descript3_0_ 
+    from
+        Node node_ 
+    where
+        node_.id=?
+14:17:38,062 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.onetomany.Node#3] from region[hibernate.test.Node.entities]
+14:17:38,062 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,063 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,063 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities], but it is unreadable
+14:17:38,063 DEBUG SQL:104 - 
+    select
+        node_.id,
+        node_.vers as vers0_,
+        node_.description as descript3_0_ 
+    from
+        Node node_ 
+    where
+        node_.id=?
+14:17:38,063 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (vers, description, id) 
+    values
+        (?, ?, ?)
+14:17:38,074 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (vers, description, id) 
+    values
+        (?, ?, ?)
+14:17:38,075 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (vers, description, id) 
+    values
+        (?, ?, ?)
+14:17:38,076 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=?,
+        idx=? 
+    where
+        id=?
+14:17:38,077 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=?,
+        idx=? 
+    where
+        id=?
+14:17:38,085 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,086 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,086 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,097 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,098 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,152 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities]
+14:17:38,152 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,152 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,152 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:4]
+14:17:38,153 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        vers=?,
+        description=? 
+    where
+        id=? 
+        and vers=?
+14:17:38,153 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities]
+14:17:38,153 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,153 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,153 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:3]
+14:17:38,154 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        vers=?,
+        description=? 
+    where
+        id=? 
+        and vers=?
+14:17:38,154 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#1] in region[hibernate.test.Node.entities]
+14:17:38,154 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:38,154 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#1
+14:17:38,154 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:5]
+14:17:38,154 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        vers=?,
+        description=? 
+    where
+        id=? 
+        and vers=?
+14:17:38,155 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=null,
+        idx=null 
+    where
+        node_id=?
+14:17:38,155 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=?,
+        idx=? 
+    where
+        id=?
+14:17:38,155 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,171 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,171 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:4]
+14:17:38,171 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,171 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,171 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:3]
+14:17:38,171 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:38,172 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#1
+14:17:38,172 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:5]
+14:17:38,172 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,173 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,183 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,184 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,184 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,185 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,208 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,209 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,210 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,229 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,229 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,233 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,234 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=null,
+        idx=null 
+    where
+        node_id=?
+14:17:38,234 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities]
+14:17:38,234 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,234 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,235 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:3]
+14:17:38,235 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        id=? 
+        and vers=?
+14:17:38,252 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities]
+14:17:38,252 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,252 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,252 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:4]
+14:17:38,253 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        id=? 
+        and vers=?
+14:17:38,253 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#1] in region[hibernate.test.Node.entities]
+14:17:38,253 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:38,253 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#1
+14:17:38,253 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:5]
+14:17:38,253 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        id=? 
+        and vers=?
+14:17:38,253 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities]
+14:17:38,254 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,254 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,254 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:3]
+14:17:38,263 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities]
+14:17:38,263 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,263 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,263 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:4]
+14:17:38,263 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.onetomany.Node#1] in region[hibernate.test.Node.entities]
+14:17:38,263 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:38,263 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#1
+14:17:38,263 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:5]
+14:17:38,264  INFO CustomRunner:139 - Test: testOneToManyReplaceList
+14:17:38,266 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.onetomany.Node#2] from region[hibernate.test.Node.entities]
+14:17:38,266 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,266 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,266 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities], but it is unreadable
+14:17:38,266 DEBUG SQL:104 - 
+    select
+        node_.id,
+        node_.vers as vers0_,
+        node_.description as descript3_0_ 
+    from
+        Node node_ 
+    where
+        node_.id=?
+14:17:38,267 DEBUG AbstractReadWriteAccessStrategy:34 - getting key[org.hibernate.test.onetomany.Node#3] from region[hibernate.test.Node.entities]
+14:17:38,267 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,267 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,268 DEBUG AbstractReadWriteAccessStrategy:48 - hit key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities], but it is unreadable
+14:17:38,268 DEBUG SQL:104 - 
+    select
+        node_.id,
+        node_.vers as vers0_,
+        node_.description as descript3_0_ 
+    from
+        Node node_ 
+    where
+        node_.id=?
+14:17:38,280 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (vers, description, id) 
+    values
+        (?, ?, ?)
+14:17:38,280 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (vers, description, id) 
+    values
+        (?, ?, ?)
+14:17:38,281 DEBUG SQL:104 - 
+    insert 
+    into
+        Node
+        (vers, description, id) 
+    values
+        (?, ?, ?)
+14:17:38,281 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=?,
+        idx=? 
+    where
+        id=?
+14:17:38,281 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=?,
+        idx=? 
+    where
+        id=?
+14:17:38,281 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,282 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,295 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,313 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,315 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities]
+14:17:38,315 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,315 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,315 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:4]
+14:17:38,316 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        vers=?,
+        description=? 
+    where
+        id=? 
+        and vers=?
+14:17:38,317 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities]
+14:17:38,317 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,318 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,318 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:3]
+14:17:38,318 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        vers=?,
+        description=? 
+    where
+        id=? 
+        and vers=?
+14:17:38,319 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#1] in region[hibernate.test.Node.entities]
+14:17:38,319 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:38,320 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#1
+14:17:38,320 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:5]
+14:17:38,320 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        vers=?,
+        description=? 
+    where
+        id=? 
+        and vers=?
+14:17:38,320 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=null,
+        idx=null 
+    where
+        node_id=?
+14:17:38,336 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=null,
+        idx=null 
+    where
+        node_id=?
+14:17:38,341 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=?,
+        idx=? 
+    where
+        id=?
+14:17:38,370 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=?,
+        idx=? 
+    where
+        id=?
+14:17:38,370 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,371 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,371 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:4]
+14:17:38,371 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,371 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,371 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:3]
+14:17:38,371 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:38,371 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#1
+14:17:38,372 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:5]
+14:17:38,372 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,373 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,373 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,374 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,375 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,376 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,377 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,380 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,382 DEBUG SQL:104 - 
+    select
+        node0_.id as id0_0_,
+        node0_.vers as vers0_0_,
+        node0_.description as descript3_0_0_,
+        node0_.node_id as node4_0_0_ 
+    from
+        Node node0_ 
+    where
+        node0_.id=?
+14:17:38,397 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,399 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,413 DEBUG SQL:104 - 
+    select
+        subnodes0_.node_id as node4_0_1_,
+        subnodes0_.id as id0_1_,
+        subnodes0_.idx as idx1_,
+        subnodes0_.id as id0_0_,
+        subnodes0_.vers as vers0_0_,
+        subnodes0_.description as descript3_0_0_,
+        subnodes0_.node_id as node4_0_0_ 
+    from
+        Node subnodes0_ 
+    where
+        subnodes0_.node_id=?
+14:17:38,418 DEBUG SQL:104 - 
+    update
+        Node 
+    set
+        node_id=null,
+        idx=null 
+    where
+        node_id=?
+14:17:38,419 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities]
+14:17:38,419 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,419 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,419 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:3]
+14:17:38,419 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        id=? 
+        and vers=?
+14:17:38,420 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities]
+14:17:38,421 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,421 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,421 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:4]
+14:17:38,421 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        id=? 
+        and vers=?
+14:17:38,432 DEBUG AbstractReadWriteAccessStrategy:93 - locking key[org.hibernate.test.onetomany.Node#1] in region[hibernate.test.Node.entities]
+14:17:38,433 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:38,433 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#1
+14:17:38,433 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:5]
+14:17:38,433 DEBUG SQL:104 - 
+    delete 
+    from
+        Node 
+    where
+        id=? 
+        and vers=?
+14:17:38,433 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.onetomany.Node#2] in region[hibernate.test.Node.entities]
+14:17:38,434 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#2]
+14:17:38,434 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#2
+14:17:38,434 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#2] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:3]
+14:17:38,434 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.onetomany.Node#3] in region[hibernate.test.Node.entities]
+14:17:38,440 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#3]
+14:17:38,440 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#3
+14:17:38,441 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#3] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:4]
+14:17:38,441 DEBUG AbstractReadWriteAccessStrategy:116 - unlocking key[org.hibernate.test.onetomany.Node#1] in region[hibernate.test.Node.entities]
+14:17:38,441 DEBUG BaseGeneralDataRegion:46 - Cache[hibernate.test.Node.entities] lookup : key[org.hibernate.test.onetomany.Node#1]
+14:17:38,441 DEBUG BaseGeneralDataRegion:52 - Cache[hibernate.test.Node.entities] hit: org.hibernate.test.onetomany.Node#1
+14:17:38,441 DEBUG BaseGeneralDataRegion:59 - Caching[hibernate.test.Node.entities] : [org.hibernate.test.onetomany.Node#1] -> [Lock Source-UUID:01643e8b-1f69-414b-b438-29452d8cf680 Lock-ID:5]
+14:17:38,442  INFO SchemaExport:343 - HHH000227: Running hbm2ddl schema export
+14:17:38,442 DEBUG SchemaExport:353 - Import file not found: /import.sql
+14:17:38,442 DEBUG SQL:104 - 
+    alter table Node 
+        drop constraint FK2522227DDBE23E
+14:17:38,443 DEBUG SQL:104 - 
+    drop table Node if exists
+14:17:38,443  INFO SchemaExport:405 - HHH000230: Schema export complete
+14:17:38,443  INFO DriverManagerConnectionProviderImpl:162 - HHH000030: Cleaning up connection pool [jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

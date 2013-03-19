@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" hostname="dhcp-10.15.208.168.stl.redhat.com" name="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" tests="21" time="0.085" timestamp="2013-02-28T20:10:45">
+  <properties />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testAllAttributes" time="0.005" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testCascadeAll" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testCascadeAllPlusMore" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testCascadeSomeWithDefaultPersist" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testJoinTableAllChildren" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testJoinTableNoChildren" time="0.022" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testMapKeyAllAttributes" time="0.004" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testMapKeyClass" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testMapKeyColumnAllAttributes" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testMapKeyColumnNoAttributes" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testMapKeyEnumerated" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testMapKeyNoAttributes" time="0.001" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testMapKeyTemporal" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testMultipleMapKeyAttributeOverrides" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testMultipleMapKeyJoinColumns" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testNoChildren" time="0.002" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testOrderBy" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testOrderColumnAllAttributes" time="0.005" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testOrderColumnNoAttributes" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testSingleMapKeyAttributeOverride" time="0.003" />
+  <testcase classname="org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest" name="testSingleMapKeyJoinColumn" time="0.003" />
+  <system-out><![CDATA[14:10:45,317  INFO CustomRunner:132 - BeforeClass: org.hibernate.test.annotations.xml.ejb3.Ejb3XmlManyToManyTest
+14:10:45,317  INFO CustomRunner:139 - Test: testAllAttributes
+14:10:45,322  INFO CustomRunner:139 - Test: testCascadeAll
+14:10:45,325  INFO CustomRunner:139 - Test: testCascadeAllPlusMore
+14:10:45,327  INFO CustomRunner:139 - Test: testCascadeSomeWithDefaultPersist
+14:10:45,330  INFO CustomRunner:139 - Test: testJoinTableAllChildren
+14:10:45,333  INFO CustomRunner:139 - Test: testJoinTableNoChildren
+14:10:45,355  INFO CustomRunner:139 - Test: testMapKeyAllAttributes
+14:10:45,361  INFO CustomRunner:139 - Test: testMapKeyClass
+14:10:45,363  INFO CustomRunner:139 - Test: testMapKeyColumnAllAttributes
+14:10:45,365  INFO CustomRunner:139 - Test: testMapKeyColumnNoAttributes
+14:10:45,367  INFO CustomRunner:139 - Test: testMapKeyEnumerated
+14:10:45,369  INFO CustomRunner:139 - Test: testMapKeyNoAttributes
+14:10:45,371  INFO CustomRunner:139 - Test: testMapKeyTemporal
+14:10:45,373  INFO CustomRunner:139 - Test: testMultipleMapKeyAttributeOverrides
+14:10:45,376  INFO CustomRunner:139 - Test: testMultipleMapKeyJoinColumns
+14:10:45,379  INFO CustomRunner:139 - Test: testNoChildren
+14:10:45,381  INFO CustomRunner:139 - Test: testOrderBy
+14:10:45,384  INFO CustomRunner:139 - Test: testOrderColumnAllAttributes
+14:10:45,390  INFO CustomRunner:139 - Test: testOrderColumnNoAttributes
+14:10:45,393  INFO CustomRunner:139 - Test: testSingleMapKeyAttributeOverride
+14:10:45,397  INFO CustomRunner:139 - Test: testSingleMapKeyJoinColumn
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

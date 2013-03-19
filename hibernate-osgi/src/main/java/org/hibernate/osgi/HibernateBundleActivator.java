@@ -23,9 +23,10 @@
  */
 package org.hibernate.osgi;
 
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.persistence.spi.PersistenceProvider;
 
@@ -65,9 +66,10 @@ public class HibernateBundleActivator
         HibernatePersistence hp = new HibernatePersistence();
         Map map = new HashMap();
         map.put( AvailableSettings.JTA_PLATFORM, new OsgiJtaPlatform( context ) );
+        map.put( org.hibernate.ejb.AvailableSettings.SCANNER, new OsgiScanner( context, osgiClassLoader ) );
         hp.setEnvironmentProperties( map );
     	
-        Properties properties = new Properties();
+        Dictionary<String, Object> properties = new Hashtable<String, Object>();
         properties.put( "javax.persistence.provider", HibernatePersistence.class.getName() );
         context.registerService( PersistenceProvider.class.getName(), hp, properties );
     }

@@ -27,7 +27,8 @@ import javax.persistence.PersistenceException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+
 
 /**
  * Defines access to a JDBC Connection for use in Schema generation

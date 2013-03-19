@@ -24,6 +24,7 @@
 
 apply plugin: 'groovy'
 apply plugin: 'idea'
+apply from: '../libraries.gradle'
 
 buildDir = "target"
 
@@ -40,9 +41,10 @@ dependencies {
     compile gradleApi()
     compile localGroovy()
     groovy localGroovy()
-    compile 'org.apache.ant:ant:1.8.2'
+    compile(libraries.ant)
     // injection plugin
-    compile 'org.javassist:javassist:3.15.0-GA'
+    compile(libraries.javassist)
+    compile(libraries.jandex)
 
     
 }

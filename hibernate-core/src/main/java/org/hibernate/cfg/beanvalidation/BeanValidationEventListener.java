@@ -82,10 +82,9 @@ public class BeanValidationEventListener
 		init( factory, properties );
 	}
 
-	public void initialize(Configuration cfg) {
+	public void initialize(Properties props) {
 		if ( !initialized ) {
 			ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-			Properties props = cfg.getProperties();
 			init( factory, props );
 		}
 	}

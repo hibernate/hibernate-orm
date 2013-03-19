@@ -49,13 +49,13 @@ import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.engine.jndi.JndiException;
-import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.loading.internal.CollectionLoadContext;
 import org.hibernate.engine.loading.internal.EntityLoadContext;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.engine.jndi.JndiException;
+import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
@@ -1576,62 +1576,20 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "NaturalId queries executed to database: %s", id = 442)
 	void naturalIdQueriesExecuted(long naturalIdQueriesExecutionCount);
 
-	@Message(value = "Unable to find mapping information for %s. Are you sure all annotated classes and configuration files are added?", id = 443)
-	String missingEntitySource(String entityName);
-
-	@Message(value = "@JoinTable annotation without an association. Check %s#%s", id = 444)
-	String joinTableForNonAssociationAttribute(String entityName, String propertyName);
-
-	@Message(value = "@CollectionTable annotation without a @ElementCollection. Check %s#%s", id = 445)
-	String collectionTableWithoutElementCollection(String entityName, String propertyName);
-
-	@Message(value = "@CollectionTable and @JoinTable specified on the same attribute. Check %s#%s", id = 446)
-	String collectionTableAndJoinTableUsedTogether(String entityName, String propertyName);
-
 	@LogMessage(level = WARN)
 	@Message(
 			value = "Dialect [%s] limits the number of elements in an IN predicate to %s entries.  " +
 					"However, the given parameter list [%s] contained %s entries, which will likely cause failures " +
 					"to execute the query in the database",
-			id = 447
+			id = 443
 	)
 	void tooManyInExpressions(String dialectName, int limit, String paramName, int size);
-
-	@LogMessage( level = ERROR )
-	@Message( value = "Illegal argument on static metamodel field injection : %s#%s; expected type :  %s; encountered type : %s", id = 448 )
-	void illegalArgumentOnStaticMetamodelFieldInjection( String metamodelClassName,
-														 String attributeName,
-														 String attributeJavaType,
-														 String metamodelFieldJavaType );
-
-	@LogMessage( level = ERROR )
-	@Message( value = "Unable to locate static metamodel field : %s#%s", id = 449 )
-	void unableToLocateStaticMetamodelField( String metamodelClassName,
-											 String attributeName );
-
-	@Message(value = "The access type of class %s is AccessType.FIELD. To override the access for an attribute " +
-			"@Access has to be placed on the property (getter)", id = 450)
-	String accessTypeOverrideShouldBeAnnotatedOnProperty( String className );
-
-	@Message(value = "The access type of class %s is AccessType.FIELD. To override the access for an attribute " +
-			"@Access has to be placed on the property (getter) with an access type of AccessType.PROPERTY. " +
-			"Using AccessType.FIELD on the property has no effect", id = 451)
-	String accessTypeOverrideShouldBeProperty( String className );
-
-	@Message(value = "The access type of class %s is AccessType.PROPERTY. To override the access for a field " +
-			"@Access has to be placed on the field ", id = 452)
-	String accessTypeOverrideShouldBeAnnotatedOnField( String className );
-
-	@Message(value = "The access type of class %s is AccessType.PROPERTY. To override the access for a field " +
-			"@Access has to be placed on the field with an access type of AccessType.FIELD. " +
-			"Using AccessType.PROPERTY on the field has no effect", id = 453)
-	String accessTypeOverrideShouldBeField( String className );
 
 	@LogMessage(level = WARN)
 	@Message(
 			value = "Encountered request for locking however dialect reports that database prefers locking be done in a " +
 					"separate select (follow-on locking); results will be locked after initial query executes",
-			id = 454
+			id = 444
 	)
 	void usingFollowOnLocking();
 
@@ -1639,7 +1597,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(
 			value = "Alias-specific lock modes requested, which is not currently supported with follow-on locking; " +
 					"all acquired locks will be [%s]",
-			id = 455
+			id = 445
 	)
 	void aliasSpecificLockingWithFollowOnLocking(LockMode lockMode);
 
@@ -1647,7 +1605,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(
 			value = "embed-xml attributes were intended to be used for DOM4J entity mode. Since that entity mode has been " +
 					"removed, embed-xml attributes are no longer supported and should be removed from mappings.",
-			id = 456
+			id = 446
 	)
 	void embedXmlAttributesNoLongerSupported();
 
@@ -1661,4 +1619,44 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message( value = "'javax.persistence.validation.mode' named multiple values : %s", id = 448 )
 	void multipleValidationModes(String modes);
+
+	@Message(value = "@CollectionTable and @JoinTable specified on the same attribute. Check %s#%s", id = 449)
+	String collectionTableAndJoinTableUsedTogether(String entityName, String propertyName);
+
+	@Message(value = "@CollectionTable annotation without a @ElementCollection. Check %s#%s", id = 450)
+	String collectionTableWithoutElementCollection(String entityName, String propertyName);
+
+	@Message(value = "@JoinTable annotation without an association. Check %s#%s", id = 451)
+	String joinTableForNonAssociationAttribute(String entityName, String propertyName);
+
+	@LogMessage( level = ERROR )
+	@Message( value = "Illegal argument on static metamodel field injection : %s#%s; expected type :  %s; encountered type : %s", id = 452 )
+	void illegalArgumentOnStaticMetamodelFieldInjection( String metamodelClassName,
+														 String attributeName,
+														 String attributeJavaType,
+														 String metamodelFieldJavaType );
+
+	@LogMessage( level = ERROR )
+	@Message( value = "Unable to locate static metamodel field : %s#%s", id = 453 )
+	void unableToLocateStaticMetamodelField( String metamodelClassName,
+											 String attributeName );
+
+
+	@Message(value = "The access type of class %s is AccessType.FIELD. To override the access for an attribute " +
+			"@Access has to be placed on the property (getter)", id = 454)
+	String accessTypeOverrideShouldBeAnnotatedOnProperty( String className );
+
+	@Message(value = "The access type of class %s is AccessType.FIELD. To override the access for an attribute " +
+			"@Access has to be placed on the property (getter) with an access type of AccessType.PROPERTY. " +
+			"Using AccessType.FIELD on the property has no effect", id = 455)
+	String accessTypeOverrideShouldBeProperty( String className );
+
+	@Message(value = "The access type of class %s is AccessType.PROPERTY. To override the access for a field " +
+			"@Access has to be placed on the field ", id = 456)
+	String accessTypeOverrideShouldBeAnnotatedOnField( String className );
+
+	@Message(value = "The access type of class %s is AccessType.PROPERTY. To override the access for a field " +
+			"@Access has to be placed on the field with an access type of AccessType.FIELD. " +
+			"Using AccessType.PROPERTY on the field has no effect", id = 457)
+	String accessTypeOverrideShouldBeField( String className );
 }

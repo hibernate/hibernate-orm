@@ -34,7 +34,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -75,7 +74,6 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
-	@FailureExpectedWithNewMetamodel
 	public void testRangeChecksGetApplied() {
 		Range range = new Range( 1 );
 		assertDatabaseConstraintViolationThrown( range );

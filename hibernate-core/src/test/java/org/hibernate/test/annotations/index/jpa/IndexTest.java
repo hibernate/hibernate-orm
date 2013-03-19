@@ -44,6 +44,7 @@ import org.hibernate.test.annotations.embedded.Person;
 import org.hibernate.test.annotations.embedded.Summary;
 import org.hibernate.test.annotations.embedded.WealthyPerson;
 import org.hibernate.test.event.collection.detached.Alias;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -54,6 +55,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
+@FailureExpectedWithNewMetamodel
 public class IndexTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -157,7 +159,7 @@ public class IndexTest extends BaseCoreFunctionalTestCase {
 		assertSame( collectionTable, index.getTable() );
 	}
 
-	@Test
+//	@Test
 	public void testTableGeneratorIndex(){
 	   //todo
 	}

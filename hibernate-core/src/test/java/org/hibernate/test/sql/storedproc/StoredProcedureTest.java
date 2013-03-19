@@ -35,6 +35,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureResult;
 import org.hibernate.result.ResultSetReturn;
@@ -53,115 +55,250 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialect( H2Dialect.class )
 public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
+
 	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.addAuxiliaryDatabaseObject(
-				new AuxiliaryDatabaseObject() {
-					@Override
-					public void addDialectScope(String dialectName) {
-					}
+	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
+		Database database = metadataImplementor.getDatabase();
+		database.addAuxiliaryDatabaseObject( new org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject() {
+			@Override
+			public boolean appliesToDialect(Dialect dialect) {
+				return H2Dialect.class.isInstance( dialect );
+			}
 
-					@Override
-					public boolean appliesToDialect(Dialect dialect) {
-						return H2Dialect.class.isInstance( dialect );
-					}
+			@Override
+			public boolean beforeTablesOnCreation() {
+				return true;
+			}
 
-					@Override
-					public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-						return "CREATE ALIAS findOneUser AS $$\n" +
-								"import org.h2.tools.SimpleResultSet;\n" +
-								"import java.sql.*;\n" +
-								"@CODE\n" +
-								"ResultSet findOneUser() {\n" +
-								"    SimpleResultSet rs = new SimpleResultSet();\n" +
-								"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
-								"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
-								"    rs.addRow(1, \"Steve\");\n" +
-								"    return rs;\n" +
-								"}\n" +
-								"$$";
-					}
+			@Override
+			public String[] sqlCreateStrings(Dialect dialect) {
+				String [] strings = new String[1];
+				strings[0] =  "CREATE ALIAS findOneUser AS $$\n" +
+						"import org.h2.tools.SimpleResultSet;\n" +
+						"import java.sql.*;\n" +
+						"@CODE\n" +
+						"ResultSet findOneUser() {\n" +
+						"    SimpleResultSet rs = new SimpleResultSet();\n" +
+						"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
+						"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
+						"    rs.addRow(1, \"Steve\");\n" +
+						"    return rs;\n" +
+						"}\n" +
+						"$$";
+				return strings;
+			}
 
-					@Override
-					public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-						return "DROP ALIAS findUser IF EXISTS";
-					}
-				}
-		);
+			@Override
+			public String[] sqlDropStrings(Dialect dialect) {
+				String [] strings = new String[1];
+				strings[0]= "DROP ALIAS findUser IF EXISTS";
+				return strings;
+			}
 
-		configuration.addAuxiliaryDatabaseObject(
-				new AuxiliaryDatabaseObject() {
-					@Override
-					public void addDialectScope(String dialectName) {
-					}
+			@Override
+			public String getExportIdentifier() {
+				return "findOneUser";
+			}
+		} );
 
-					@Override
-					public boolean appliesToDialect(Dialect dialect) {
-						return H2Dialect.class.isInstance( dialect );
-					}
+		database.addAuxiliaryDatabaseObject( new org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject() {
+			@Override
+			public boolean appliesToDialect(Dialect dialect) {
+				return H2Dialect.class.isInstance( dialect );
+			}
 
-					@Override
-					public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-						return "CREATE ALIAS findUsers AS $$\n" +
-								"import org.h2.tools.SimpleResultSet;\n" +
-								"import java.sql.*;\n" +
-								"@CODE\n" +
-								"ResultSet findUsers() {\n" +
-								"    SimpleResultSet rs = new SimpleResultSet();\n" +
-								"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
-								"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
-								"    rs.addRow(1, \"Steve\");\n" +
-								"    rs.addRow(2, \"John\");\n" +
-								"    rs.addRow(3, \"Jane\");\n" +
-								"    return rs;\n" +
-								"}\n" +
-								"$$";
-					}
+			@Override
+			public boolean beforeTablesOnCreation() {
+				return true;
+			}
 
-					@Override
-					public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-						return "DROP ALIAS findUser IF EXISTS";
-					}
-				}
-		);
+			@Override
+			public String[] sqlCreateStrings(Dialect dialect) {
+				String [] strings = new String[1];
+				strings[0] =  "CREATE ALIAS findUsers AS $$\n" +
+						"import org.h2.tools.SimpleResultSet;\n" +
+						"import java.sql.*;\n" +
+						"@CODE\n" +
+						"ResultSet findUsers() {\n" +
+						"    SimpleResultSet rs = new SimpleResultSet();\n" +
+						"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
+						"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
+						"    rs.addRow(1, \"Steve\");\n" +
+						"    rs.addRow(2, \"John\");\n" +
+						"    rs.addRow(3, \"Jane\");\n" +
+						"    return rs;\n" +
+						"}\n" +
+						"$$";
+				return strings;
+			}
 
-		configuration.addAuxiliaryDatabaseObject(
-				new AuxiliaryDatabaseObject() {
-					@Override
-					public void addDialectScope(String dialectName) {
-					}
+			@Override
+			public String[] sqlDropStrings(Dialect dialect) {
+				String [] strings = new String[1];
+				strings[0]= "DROP ALIAS findUser IF EXISTS";
+				return strings;
+			}
 
-					@Override
-					public boolean appliesToDialect(Dialect dialect) {
-						return H2Dialect.class.isInstance( dialect );
-					}
+			@Override
+			public String getExportIdentifier() {
+				return "findUser2";
+			}
+		} );
 
-					@Override
-					public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-						return "CREATE ALIAS findUserRange AS $$\n" +
-								"import org.h2.tools.SimpleResultSet;\n" +
-								"import java.sql.*;\n" +
-								"@CODE\n" +
-								"ResultSet findUserRange(int start, int end) {\n" +
-								"    SimpleResultSet rs = new SimpleResultSet();\n" +
-								"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
-								"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
-								"    for ( int i = start; i < end; i++ ) {\n" +
-								"        rs.addRow(1, \"User \" + i );\n" +
-								"    }\n" +
-								"    return rs;\n" +
-								"}\n" +
-								"$$";
-					}
+		database.addAuxiliaryDatabaseObject( new org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject() {
+			@Override
+			public boolean appliesToDialect(Dialect dialect) {
+				return H2Dialect.class.isInstance( dialect );
+			}
 
-					@Override
-					public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-						return "DROP ALIAS findUser IF EXISTS";
-					}
-				}
-		);
+			@Override
+			public boolean beforeTablesOnCreation() {
+				return true;
+			}
+
+			@Override
+			public String[] sqlCreateStrings(Dialect dialect) {
+				String [] strings = new String[1];
+				strings[0] =  "CREATE ALIAS findUserRange AS $$\n" +
+						"import org.h2.tools.SimpleResultSet;\n" +
+						"import java.sql.*;\n" +
+						"@CODE\n" +
+						"ResultSet findUserRange(int start, int end) {\n" +
+						"    SimpleResultSet rs = new SimpleResultSet();\n" +
+						"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
+						"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
+						"    for ( int i = start; i < end; i++ ) {\n" +
+						"        rs.addRow(1, \"User \" + i );\n" +
+						"    }\n" +
+						"    return rs;\n" +
+						"}\n" +
+						"$$";
+				return strings;
+			}
+
+			@Override
+			public String[] sqlDropStrings(Dialect dialect) {
+				String [] strings = new String[1];
+				strings[0]=  "DROP ALIAS findUser IF EXISTS";
+				return strings;
+			}
+
+			@Override
+			public String getExportIdentifier() {
+				return "findUser";
+			}
+		} );
 	}
+
+//	@Override
+//	protected void configure(Configuration configuration) {
+//		super.configure( configuration );
+//		configuration.addAuxiliaryDatabaseObject(
+//				new AuxiliaryDatabaseObject() {
+//					@Override
+//					public void addDialectScope(String dialectName) {
+//					}
+//
+//					@Override
+//					public boolean appliesToDialect(Dialect dialect) {
+//						return H2Dialect.class.isInstance( dialect );
+//					}
+//
+//					@Override
+//					public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
+//						return "CREATE ALIAS findOneUser AS $$\n" +
+//								"import org.h2.tools.SimpleResultSet;\n" +
+//								"import java.sql.*;\n" +
+//								"@CODE\n" +
+//								"ResultSet findOneUser() {\n" +
+//								"    SimpleResultSet rs = new SimpleResultSet();\n" +
+//								"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
+//								"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
+//								"    rs.addRow(1, \"Steve\");\n" +
+//								"    return rs;\n" +
+//								"}\n" +
+//								"$$";
+//					}
+//
+//					@Override
+//					public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
+//						return "DROP ALIAS findUser IF EXISTS";
+//					}
+//				}
+//		);
+//
+//		configuration.addAuxiliaryDatabaseObject(
+//				new AuxiliaryDatabaseObject() {
+//					@Override
+//					public void addDialectScope(String dialectName) {
+//					}
+//
+//					@Override
+//					public boolean appliesToDialect(Dialect dialect) {
+//						return H2Dialect.class.isInstance( dialect );
+//					}
+//
+//					@Override
+//					public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
+//						return "CREATE ALIAS findUsers AS $$\n" +
+//								"import org.h2.tools.SimpleResultSet;\n" +
+//								"import java.sql.*;\n" +
+//								"@CODE\n" +
+//								"ResultSet findUsers() {\n" +
+//								"    SimpleResultSet rs = new SimpleResultSet();\n" +
+//								"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
+//								"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
+//								"    rs.addRow(1, \"Steve\");\n" +
+//								"    rs.addRow(2, \"John\");\n" +
+//								"    rs.addRow(3, \"Jane\");\n" +
+//								"    return rs;\n" +
+//								"}\n" +
+//								"$$";
+//					}
+//
+//					@Override
+//					public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
+//						return "DROP ALIAS findUser IF EXISTS";
+//					}
+//				}
+//		);
+//
+//		configuration.addAuxiliaryDatabaseObject(
+//				new AuxiliaryDatabaseObject() {
+//					@Override
+//					public void addDialectScope(String dialectName) {
+//					}
+//
+//					@Override
+//					public boolean appliesToDialect(Dialect dialect) {
+//						return H2Dialect.class.isInstance( dialect );
+//					}
+//
+//					@Override
+//					public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
+//						return "CREATE ALIAS findUserRange AS $$\n" +
+//								"import org.h2.tools.SimpleResultSet;\n" +
+//								"import java.sql.*;\n" +
+//								"@CODE\n" +
+//								"ResultSet findUserRange(int start, int end) {\n" +
+//								"    SimpleResultSet rs = new SimpleResultSet();\n" +
+//								"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
+//								"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
+//								"    for ( int i = start; i < end; i++ ) {\n" +
+//								"        rs.addRow(1, \"User \" + i );\n" +
+//								"    }\n" +
+//								"    return rs;\n" +
+//								"}\n" +
+//								"$$";
+//					}
+//
+//					@Override
+//					public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
+//						return "DROP ALIAS findUser IF EXISTS";
+//					}
+//				}
+//		);
+//	}
 
 	@Test
 	public void baseTest() {

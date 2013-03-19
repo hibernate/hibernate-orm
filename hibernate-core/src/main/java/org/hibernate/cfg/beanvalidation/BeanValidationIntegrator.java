@@ -139,6 +139,11 @@ public class BeanValidationIntegrator implements Integrator {
 					}
 
 					@Override
+					public MetadataImplementor getMetadata() {
+						return metadata;
+					}
+
+					@Override
 					public SessionFactoryImplementor getSessionFactory() {
 						return sessionFactory;
 					}
@@ -217,6 +222,11 @@ public class BeanValidationIntegrator implements Integrator {
 					@Override
 					public SessionFactoryServiceRegistry getServiceRegistry() {
 						return serviceRegistry;
+					}
+
+					@Override
+					public MetadataImplementor getMetadata() {
+						return null;
 					}
 				};
 

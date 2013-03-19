@@ -127,8 +127,11 @@ public class EnumConversionHelper {
 			case LOCK: {
 				return CascadeStyles.LOCK;
 			}
+			case DELETE_ORPHAN: {
+				return CascadeStyles.DELETE_ORPHAN;
+			}
 			default: {
-				throw new AssertionFailure( "Unknown cascade type" );
+				throw new AssertionFailure( "Unknown cascade type: " + cascadeType );
 			}
 		}
 	}

@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
@@ -53,6 +54,13 @@ public interface ActivationContext {
 	 * @return The Hibernate Configuration object
 	 */
 	public Configuration getConfiguration();
+
+	/**
+	 * Access the Metadata
+	 *
+	 * @return The Hibernate Metadata object
+	 */
+	public MetadataImplementor getMetadata();
 
 	/**
 	 * Access the SessionFactory being built to trigger this BV activation

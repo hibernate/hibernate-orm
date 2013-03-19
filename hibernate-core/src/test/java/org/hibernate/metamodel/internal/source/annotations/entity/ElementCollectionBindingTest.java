@@ -82,7 +82,7 @@ public class ElementCollectionBindingTest extends BaseAnnotationBindingTestCase 
 		catch ( MappingException e ) {
 			assertEquals( "Unexpected error origin", TestEntity.class.getName(), e.getOrigin().getName() );
 			assertEquals( "Unexpected type", SourceType.ANNOTATION, e.getOrigin().getType() );
-			assertTrue( "Wrong error message", e.getMessage().startsWith( "HHH000444" ) );
+			assertTrue( "Wrong error message", e.getMessage().startsWith( "HHH000451" ) );
 		}
 	}
 
@@ -115,7 +115,7 @@ public class ElementCollectionBindingTest extends BaseAnnotationBindingTestCase 
 		catch ( MappingException e ) {
 			assertEquals( "Unexpected error origin", TestEntity2.class.getName(), e.getOrigin().getName() );
 			assertEquals( "Unexpected type", SourceType.ANNOTATION, e.getOrigin().getType() );
-			assertTrue( "Wrong error message", e.getMessage().startsWith( "HHH000446" ) );
+			assertTrue( "Wrong error message", e.getMessage().startsWith( "HHH000449" ) );
 		}
 	}
 

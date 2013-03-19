@@ -30,6 +30,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Janario Oliveira
  */
+@FailureExpectedWithNewMetamodel
 public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 
 	private FromEntity createFrom(String name, String lastName) {

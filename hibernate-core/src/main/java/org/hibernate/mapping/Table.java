@@ -35,6 +35,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 
@@ -394,8 +395,6 @@ public class Table implements RelationalModel, Serializable {
 		Iterator iter = getColumnIterator();
 		List results = new ArrayList();
 		
-		int uniqueIndexInteger = 0;
-		
 		while ( iter.hasNext() ) {
 			Column column = (Column) iter.next();
 
@@ -422,9 +421,8 @@ public class Table implements RelationalModel, Serializable {
 				}
 
 				if ( column.isUnique() ) {
-					uniqueIndexInteger++;
 					UniqueKey uk = getOrCreateUniqueKey( 
-							"UK_" + name + "_" + uniqueIndexInteger);
+							StringHelper.randomFixedLengthHex("UK_"));
 					uk.addColumn( column );
 					alter.append( dialect.getUniqueDelegate()
 							.applyUniqueToColumn( column ) );
@@ -493,7 +491,6 @@ public class Table implements RelationalModel, Serializable {
 		}
 
 		Iterator iter = getColumnIterator();
-		int uniqueIndexInteger = 0;
 		while ( iter.hasNext() ) {
 			Column col = (Column) iter.next();
 
@@ -527,9 +524,8 @@ public class Table implements RelationalModel, Serializable {
 			}
 			
 			if ( col.isUnique() ) {
-				uniqueIndexInteger++;
 				UniqueKey uk = getOrCreateUniqueKey( 
-						"uc_" + name + "_" + uniqueIndexInteger);
+						StringHelper.randomFixedLengthHex("UK_"));
 				uk.addColumn( col );
 				buf.append( dialect.getUniqueDelegate()
 						.applyUniqueToColumn( col ) );
@@ -625,7 +621,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public UniqueKey createUniqueKey(List keyColumns) {
-		String keyName = "UK_" + uniqueColumnString( keyColumns.iterator() );
+		String keyName = StringHelper.randomFixedLengthHex("UK_");
 		UniqueKey uk = getOrCreateUniqueKey( keyName );
 		uk.addColumns( keyColumns.iterator() );
 		return uk;
@@ -665,9 +661,7 @@ public class Table implements RelationalModel, Serializable {
 				fk.setName( keyName );
 			}
 			else {
-				fk.setName( "FK" + uniqueColumnString( keyColumns.iterator(), referencedEntityName ) );
-				//TODO: add referencedClass to disambiguate to FKs on the same
-				//      columns, pointing to different tables
+				fk.setName( StringHelper.randomFixedLengthHex("FK_") );
 			}
 			fk.setTable( this );
 			foreignKeys.put( key, fk );
@@ -683,22 +677,6 @@ public class Table implements RelationalModel, Serializable {
 		}
 
 		return fk;
-	}
-
-
-	public String uniqueColumnString(Iterator iterator) {
-		return uniqueColumnString( iterator, null );
-	}
-
-	public String uniqueColumnString(Iterator iterator, String referencedEntityName) {
-		int result = 0;
-		if ( referencedEntityName != null ) {
-			result += referencedEntityName.hashCode();
-		}
-		while ( iterator.hasNext() ) {
-			result += iterator.next().hashCode();
-		}
-		return ( Integer.toHexString( name.hashCode() ) + Integer.toHexString( result ) ).toUpperCase();
 	}
 
 

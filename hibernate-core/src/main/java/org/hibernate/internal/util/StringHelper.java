@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.StringTokenizer;
+import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -757,5 +758,19 @@ public final class StringHelper {
 	 */
 	public static String[] toArrayElement(String s) {
 		return ( s == null || s.length() == 0 ) ? new String[0] : new String[] { s };
+	}
+
+	// Oracle restricts identifier lengths to 30.  Rather than tie this to
+	// Dialect, simply restrict randomly-generated constrain names across
+	// the board.
+	private static final int MAX_NAME_LENGTH = 30;
+	public static String randomFixedLengthHex(String prefix) {
+		int length = MAX_NAME_LENGTH - prefix.length();
+		String s = UUID.randomUUID().toString();
+		s = s.replace( "-", "" );
+		if (s.length() > length) {
+			s = s.substring( 0, length );
+		}
+		return prefix + s;
 	}
 }

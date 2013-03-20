@@ -1378,11 +1378,9 @@ public class Configuration implements Serializable {
 		for ( Map.Entry<Table, List<UniqueConstraintHolder>> tableListEntry : uniqueConstraintHoldersByTable.entrySet() ) {
 			final Table table = tableListEntry.getKey();
 			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
-			int uniqueIndexPerTable = 0;
 			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
-				uniqueIndexPerTable++;
 				final String keyName = StringHelper.isEmpty( holder.getName() )
-						? "UK_" + table.getName() + "_" + uniqueIndexPerTable
+						? StringHelper.randomFixedLengthHex("UK_")
 						: holder.getName();
 				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns() );
 			}

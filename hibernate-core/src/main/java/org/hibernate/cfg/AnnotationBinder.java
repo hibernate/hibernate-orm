@@ -1472,7 +1472,8 @@ public final class AnnotationBinder {
 		 * ordering does not matter
 		 */
 
-		if ( LOG.isTraceEnabled() ) {
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled ) {
 			LOG.tracev( "Processing annotations of {0}.{1}" , propertyHolder.getEntityName(), inferredData.getPropertyName() );
 		}
 
@@ -1538,7 +1539,7 @@ public final class AnnotationBinder {
 								+ propertyHolder.getEntityName()
 				);
 			}
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "{0} is a version property", inferredData.getPropertyName() );
 			}
 			RootClass rootClass = ( RootClass ) propertyHolder.getPersistentClass();
@@ -1564,7 +1565,7 @@ public final class AnnotationBinder {
 			SimpleValue simpleValue = ( SimpleValue ) prop.getValue();
 			simpleValue.setNullValue( "undefined" );
 			rootClass.setOptimisticLockMode( Versioning.OPTIMISTIC_LOCK_VERSION );
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Version name: {0}, unsavedValue: {1}", rootClass.getVersion().getName(),
 						( (SimpleValue) rootClass.getVersion().getValue() ).getNullValue() );
 			}

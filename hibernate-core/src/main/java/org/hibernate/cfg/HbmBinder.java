@@ -2657,6 +2657,7 @@ public final class HbmBinder {
 			        "not valid within collection using join fetching [" + collection.getRole() + "]"
 				);
 		}
+		final boolean debugEnabled = LOG.isDebugEnabled();
 		while ( filters.hasNext() ) {
 			final Element filterElement = ( Element ) filters.next();
 			final String name = filterElement.attributeValue( "name" );
@@ -2674,7 +2675,7 @@ public final class HbmBinder {
 				Element alias = (Element) aliasesIterator.next();
 				aliasTables.put(alias.attributeValue("alias"), alias.attributeValue("table"));
 			}
-			if ( LOG.isDebugEnabled() ) {
+			if ( debugEnabled ) {
 				LOG.debugf( "Applying many-to-many filter [%s] as [%s] to role [%s]", name, condition, collection.getRole() );
 			}
 			String autoAliasInjectionText = filterElement.attributeValue("autoAliasInjection");

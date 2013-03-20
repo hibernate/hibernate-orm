@@ -59,12 +59,13 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		CollectionEntry ce = source.getPersistenceContext().getCollectionEntry(collection);
 		if (ce==null) throw new HibernateException("collection was evicted");
 		if ( !collection.wasInitialized() ) {
-			if ( LOG.isTraceEnabled() ) {
+			final boolean traceEnabled = LOG.isTraceEnabled();
+			if ( traceEnabled ) {
 				LOG.tracev( "Initializing collection {0}",
 						MessageHelper.collectionInfoString( ce.getLoadedPersister(), collection, ce.getLoadedKey(), source ) );
+				LOG.trace( "Checking second-level cache" );
 			}
 
-			LOG.trace( "Checking second-level cache" );
 			final boolean foundInCache = initializeCollectionFromCache(
 					ce.getLoadedKey(),
 					ce.getLoadedPersister(),
@@ -72,13 +73,17 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 					source
 				);
 
-			if ( foundInCache ) {
+			if ( foundInCache && traceEnabled ) {
 				LOG.trace( "Collection initialized from cache" );
 			}
 			else {
-				LOG.trace( "Collection not cached" );
+				if ( traceEnabled ) {
+					LOG.trace( "Collection not cached" );
+				}
 				ce.getLoadedPersister().initialize( ce.getLoadedKey(), source );
-				LOG.trace( "Collection initialized" );
+				if ( traceEnabled ) {
+					LOG.trace( "Collection initialized" );
+				}
 
 				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 					source.getFactory().getStatisticsImplementor().fetchCollection(

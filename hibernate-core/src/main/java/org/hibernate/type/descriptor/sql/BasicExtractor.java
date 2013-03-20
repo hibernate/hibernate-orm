@@ -62,12 +62,15 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	@Override
 	public J extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 		final J value = doExtract( rs, name, options );
+		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( value == null || rs.wasNull() ) {
-			LOG.tracev( "Found [null] as column [{0}]", name );
+			if ( traceEnabled ) {
+				LOG.tracev( "Found [null] as column [{0}]", name );
+			}
 			return null;
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Found [{0}] as column [{1}]", getJavaDescriptor().extractLoggableRepresentation( value ), name );
 			}
 			return value;
@@ -93,12 +96,15 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	@Override
 	public J extract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 		final J value = doExtract( statement, index, options );
+		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( value == null || statement.wasNull() ) {
-			LOG.tracev( "Found [null] as procedure output  parameter [{0}]", index );
+			if ( traceEnabled ) {
+				LOG.tracev( "Found [null] as procedure output  parameter [{0}]", index );
+			}
 			return null;
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Found [{0}] as procedure output parameter [{1}]", getJavaDescriptor().extractLoggableRepresentation( value ), index );
 			}
 			return value;
@@ -128,12 +134,15 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 		}
 		final String paramName = paramNames[0];
 		final J value = doExtract( statement, paramName, options );
+		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( value == null || statement.wasNull() ) {
-			LOG.tracev( "Found [null] as procedure output  parameter [{0}]", paramName );
+			if ( traceEnabled ) {
+				LOG.tracev( "Found [null] as procedure output  parameter [{0}]", paramName );
+			}
 			return null;
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Found [{0}] as procedure output parameter [{1}]", getJavaDescriptor().extractLoggableRepresentation( value ), paramName );
 			}
 			return value;

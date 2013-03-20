@@ -117,8 +117,10 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	}
 
 	protected Serializable entityIsPersistent(SaveOrUpdateEvent event) throws HibernateException {
-		LOG.trace( "Ignoring persistent instance" );
-
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled ) {
+			LOG.trace( "Ignoring persistent instance" );
+		}
 		EntityEntry entityEntry = event.getEntry();
 		if ( entityEntry == null ) {
 			throw new AssertionFailure( "entity was transient or detached" );
@@ -153,7 +155,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 			}
 
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Object already associated with session: {0}", MessageHelper.infoString( entityEntry.getPersister(), savedId, factory ) );
 			}
 
@@ -279,11 +281,12 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			Object entity,
 			EntityPersister persister) throws HibernateException {
 
-		if ( !persister.isMutable() ) {
+        final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled && !persister.isMutable() ) {
 			LOG.trace( "Immutable instance passed to performUpdate()" );
 		}
 
-		if ( LOG.isTraceEnabled() ) {
+		if ( traceEnabled ) {
 			LOG.tracev( "Updating {0}",
 					MessageHelper.infoString( persister, event.getRequestedId(), event.getSession().getFactory() ) );
 		}
@@ -329,7 +332,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 		persister.afterReassociate(entity, source);
 
-		if ( LOG.isTraceEnabled() ) {
+		if ( traceEnabled ) {
 			LOG.tracev( "Updating {0}", MessageHelper.infoString( persister, event.getRequestedId(), source.getFactory() ) );
 		}
 

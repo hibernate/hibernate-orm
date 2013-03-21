@@ -25,8 +25,8 @@ package org.hibernate.test.annotations.xml.ejb3;
 
 import java.io.InputStream;
 
+import org.hibernate.InvalidMappingException;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.internal.util.xml.UnsupportedOrmXsdVersionException;
 
 import org.junit.Test;
 
@@ -47,7 +47,7 @@ public class NonExistentOrmVersionTest extends BaseCoreFunctionalTestCase {
 			config.buildMappings();
 			fail( "Expecting failure due to unsupported xsd version" );
 		}
-		catch ( UnsupportedOrmXsdVersionException expected ) {
+		catch ( InvalidMappingException expected ) {
 		}
 	}
 }

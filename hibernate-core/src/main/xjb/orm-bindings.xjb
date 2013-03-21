@@ -4,7 +4,7 @@
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
         version="2.1">
 
-    <jaxb:bindings schemaLocation="../resources/org/hibernate/ejb/orm_2_0.xsd" node="/xsd:schema">
+    <jaxb:bindings schemaLocation="../resources/org/hibernate/jpa/orm_2_0.xsd" node="/xsd:schema">
         <jaxb:schemaBindings>
             <jaxb:nameXmlTransform>
                 <jaxb:typeName prefix="Jaxb"/>

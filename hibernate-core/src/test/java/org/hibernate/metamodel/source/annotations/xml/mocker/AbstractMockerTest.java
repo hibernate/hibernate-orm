@@ -50,8 +50,9 @@ import static org.junit.Assert.fail;
  * @author Strong Liu
  */
 public abstract class AbstractMockerTest {
-	private static final String ORM1_MAPPING_XSD = "org/hibernate/ejb/orm_1_0.xsd";
-	private static final String ORM2_MAPPING_XSD = "org/hibernate/ejb/orm_2_0.xsd";
+	private static final String ORM1_MAPPING_XSD = "org/hibernate/jpa/orm_1_0.xsd";
+	private static final String ORM2_MAPPING_XSD = "org/hibernate/jpa/orm_2_0.xsd";
+
 	private IndexBuilder indexBuilder;
 	private Index index;
 	private ServiceRegistry serviceRegistry;

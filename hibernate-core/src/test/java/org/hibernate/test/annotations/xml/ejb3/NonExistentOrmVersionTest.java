@@ -25,14 +25,15 @@ package org.hibernate.test.annotations.xml.ejb3;
 
 import java.io.InputStream;
 
+import org.hibernate.cfg.Configuration;
+import org.hibernate.internal.util.xml.UnsupportedOrmXsdVersionException;
+
 import org.junit.Test;
 
-import org.hibernate.MappingException;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @TestForIssue(jiraKey = "HHH-6271")
 public class NonExistentOrmVersionTest extends BaseCoreFunctionalTestCase {
@@ -44,14 +45,9 @@ public class NonExistentOrmVersionTest extends BaseCoreFunctionalTestCase {
 			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFileName );
 			config.addInputStream( is );
 			config.buildMappings();
+			fail( "Expecting failure due to unsupported xsd version" );
 		}
-		catch ( MappingException mappingException ) {
-			Throwable cause = mappingException.getCause();
-			assertTrue(
-					cause.getMessage().contains(
-							"Value '3.0' of attribute 'version' of element 'entity-mappings' is not valid"
-					)
-			);
+		catch ( UnsupportedOrmXsdVersionException expected ) {
 		}
 	}
 }

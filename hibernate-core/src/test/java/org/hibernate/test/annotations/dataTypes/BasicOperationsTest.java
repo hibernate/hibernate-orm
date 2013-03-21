@@ -129,7 +129,7 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 			String columnNamePattern = generateFinalNamePattern( meta, columnName );
 
 			ResultSet columnInfo = meta.getColumns( null, null, tableNamePattern, columnNamePattern );
-			s.getTransactionCoordinator().getJdbcCoordinator().register(columnInfo);
+			s.getTransactionCoordinator().getJdbcCoordinator().register(columnInfo, columnInfo.getStatement());
 			assertTrue( columnInfo.next() );
 			int dataType = columnInfo.getInt( "DATA_TYPE" );
 			s.getTransactionCoordinator().getJdbcCoordinator().release( columnInfo );

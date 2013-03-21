@@ -54,7 +54,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			ResultSet rs = statement.executeQuery();
-			postExtract( rs );
+			postExtract( rs, statement );
 			return rs;
 		}
 		catch ( SQLException e ) {
@@ -68,7 +68,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			// sql logged by StatementPreparerImpl
 			ResultSet rs = jdbcCoordinator.getLogicalConnection().getJdbcServices()
 					.getDialect().getResultSet( statement );
-			postExtract( rs );
+			postExtract( rs, statement );
 			return rs;
 		}
 		catch ( SQLException e ) {
@@ -82,7 +82,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				.getSqlStatementLogger().logStatement( sql );
 		try {
 			ResultSet rs = statement.executeQuery( sql );
-			postExtract( rs );
+			postExtract( rs, statement );
 			return rs;
 		}
 		catch ( SQLException e ) {
@@ -100,7 +100,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				}
 			}
 			ResultSet rs = statement.getResultSet();
-			postExtract( rs );
+			postExtract( rs, statement );
 			return rs;
 		}
 		catch ( SQLException e ) {
@@ -119,7 +119,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				}
 			}
 			ResultSet rs = statement.getResultSet();
-			postExtract( rs );
+			postExtract( rs, statement );
 			return rs;
 		}
 		catch ( SQLException e ) {
@@ -157,8 +157,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				.getSqlExceptionHelper();
 	}
 
-	private void postExtract(ResultSet rs) {
-		if ( rs != null ) jdbcCoordinator.register( rs );
+	private void postExtract(ResultSet rs, Statement st) {
+		if ( rs != null ) jdbcCoordinator.register( rs, st );
 	}
 
 }

@@ -1186,6 +1186,21 @@ public class Configuration implements Serializable {
 						table.isQuoted()
 					);
 
+				Iterator uniqueIter = table.getUniqueKeyIterator();
+				while ( uniqueIter.hasNext() ) {
+					final UniqueKey uniqueKey = (UniqueKey) uniqueIter.next();
+					// Skip if index already exists
+					if ( tableInfo != null && StringHelper.isNotEmpty( uniqueKey.getName() ) ) {
+						final IndexMetadata meta = tableInfo.getIndexMetadata( uniqueKey.getName() );
+						if ( meta != null ) {
+							continue;
+						}
+					}
+					String constraintString = uniqueKey.sqlCreateString( dialect,
+							mapping, tableCatalog, tableSchema );
+					if (constraintString != null) script.add( constraintString );
+				}
+
 				if ( dialect.hasAlterTable() ) {
 					Iterator subIter = table.getForeignKeyIterator();
 					while ( subIter.hasNext() ) {

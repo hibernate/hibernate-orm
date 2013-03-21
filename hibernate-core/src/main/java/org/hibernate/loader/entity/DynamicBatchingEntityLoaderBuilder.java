@@ -255,8 +255,9 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					Integer.MAX_VALUE;
 
 			final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
-			final ResultSet rs = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
-			final Statement st = rs.getStatement();
+			final SqlStatementWrapper wrapper = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
+			final ResultSet rs = wrapper.getResultSet();
+			final Statement st = wrapper.getStatement();
 			try {
 				return processResultSet( rs, queryParameters, session, false, null, maxRows, afterLoadActions );
 			}

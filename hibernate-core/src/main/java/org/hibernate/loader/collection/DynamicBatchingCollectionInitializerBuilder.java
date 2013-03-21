@@ -253,8 +253,9 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 					Integer.MAX_VALUE;
 
 			final List<AfterLoadAction> afterLoadActions = Collections.emptyList();
-			final ResultSet rs = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
-			final Statement st = rs.getStatement();
+			final SqlStatementWrapper wrapper = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
+			final ResultSet rs = wrapper.getResultSet();
+			final Statement st = wrapper.getStatement();
 			try {
 				processResultSet( rs, queryParameters, session, true, null, maxRows, afterLoadActions );
 			}

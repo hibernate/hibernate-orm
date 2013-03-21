@@ -155,6 +155,7 @@ import org.hibernate.id.SequenceHiLoGenerator;
 import org.hibernate.id.TableHiLoGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
@@ -2097,12 +2098,12 @@ public final class AnnotationBinder {
 		if ( naturalIdAnn != null ) {
 			if ( joinColumns != null ) {
 				for ( Ejb3Column column : joinColumns ) {
-					column.addUniqueKey( "_UniqueKey", inSecondPass );
+					column.addUniqueKey( StringHelper.randomFixedLengthHex("UK_"), inSecondPass );
 				}
 			}
 			else {
 				for ( Ejb3Column column : columns ) {
-					column.addUniqueKey( "_UniqueKey", inSecondPass );
+					column.addUniqueKey( StringHelper.randomFixedLengthHex("UK_"), inSecondPass );
 				}
 			}
 		}

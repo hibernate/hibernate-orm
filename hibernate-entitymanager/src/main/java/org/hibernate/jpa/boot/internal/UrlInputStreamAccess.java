@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,34 +21,42 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.packaging.spi;
+package org.hibernate.jpa.boot.internal;
+
 import java.io.InputStream;
+import java.net.URL;
+
+import org.hibernate.HibernateException;
+import org.hibernate.jpa.boot.spi.InputStreamAccess;
+import org.hibernate.jpa.boot.spi.NamedInputStream;
 
 /**
- * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public class NamedInputStream {
-	public NamedInputStream(String name, InputStream stream) {
-		this.name = name;
-		this.stream = stream;
+public class UrlInputStreamAccess implements InputStreamAccess {
+	private final URL url;
+
+	public UrlInputStreamAccess(URL url) {
+		this.url = url;
 	}
 
-	private String name;
-	private InputStream stream;
-
-	public InputStream getStream() {
-		return stream;
+	@Override
+	public String getStreamName() {
+		return url.toExternalForm();
 	}
 
-	public void setStream(InputStream stream) {
-		this.stream = stream;
+	@Override
+	public InputStream accessInputStream() {
+		try {
+			return url.openStream();
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not open url stream : " + url.toExternalForm() );
+		}
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+	@Override
+	public NamedInputStream asNamedInputStream() {
+		return new NamedInputStream( getStreamName(), accessInputStream() );
 	}
 }

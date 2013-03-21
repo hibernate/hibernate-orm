@@ -54,8 +54,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.archive.internal.ArchiveHelper;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
-import org.hibernate.jpa.packaging.internal.JarVisitorFactory;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.XsdException;
@@ -121,7 +121,7 @@ public class PersistenceXmlParser {
 				final Element element = (Element) children.item( i );
 				final String tag = element.getTagName();
 				if ( tag.equals( "persistence-unit" ) ) {
-					final URL puRootUrl = JarVisitorFactory.getJarURLFromURLEntry( xmlUrl, "/META-INF/persistence.xml" );
+					final URL puRootUrl = ArchiveHelper.getJarURLFromURLEntry( xmlUrl, "/META-INF/persistence.xml" );
 					ParsedPersistenceXmlDescriptor persistenceUnit = new ParsedPersistenceXmlDescriptor( puRootUrl );
 					bindPersistenceUnit( persistenceUnit, element );
 
@@ -214,7 +214,7 @@ public class PersistenceXmlParser {
 					persistenceUnit.addMappingFiles( extractContent( element ) );
 				}
 				else if ( tag.equals( "jar-file" ) ) {
-					persistenceUnit.addJarFileUrl( JarVisitorFactory.getURLFromPath( extractContent( element ) ) );
+					persistenceUnit.addJarFileUrl( ArchiveHelper.getURLFromPath( extractContent( element ) ) );
 				}
 				else if ( tag.equals( "exclude-unlisted-classes" ) ) {
 					persistenceUnit.setExcludeUnlistedClasses( true );

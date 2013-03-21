@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -19,29 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.packaging.internal;
+package org.hibernate.jpa.boot.archive.internal;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.jboss.logging.Logger;
+
+import org.hibernate.jpa.boot.archive.spi.ArchiveException;
 
 /**
  * @author Emmanuel Bernard
- * @author Brett Meyer
+ * @author Steve Ebersole
  */
-public class JarVisitorFactory {
-
-    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
-                                                                           JarVisitorFactory.class.getName());
+public class ArchiveHelper {
+	private static final Logger log = Logger.getLogger( ArchiveHelper.class );
 
 	/**
 	 * Get the JAR URL of the JAR containing the given entry
@@ -51,7 +50,6 @@ public class JarVisitorFactory {
 	 * @param entry file known to be in the JAR
 	 * @return the JAR URL
 	 * @throws IllegalArgumentException if none URL is found
-	 * TODO move to a ScannerHelper service?
 	 */
 	public static URL getJarURLFromURLEntry(URL url, String entry) throws IllegalArgumentException {
 		URL jarUrl;
@@ -106,7 +104,7 @@ public class JarVisitorFactory {
 					"Unable to determine JAR Url from " + url + ". Cause: " + e.getMessage()
 			);
 		}
-        LOG.trace("JAR URL from URL Entry: " + url + " >> " + jarUrl);
+		log.trace("JAR URL from URL Entry: " + url + " >> " + jarUrl);
 		return jarUrl;
 	}
 
@@ -114,7 +112,6 @@ public class JarVisitorFactory {
 	 * get the URL from a given path string
 	 *
 	 * @throws IllegalArgumentException is something goes wrong
-	 * TODO move to a ScannerHelper service?
 	 */
 	public static URL getURLFromPath(String jarPath) {
 		URL jarUrl;
@@ -134,70 +131,40 @@ public class JarVisitorFactory {
 		return jarUrl;
 	}
 
-	/**
-	 * Get a JarVisitor to the jar <code>jarPath</code> applying the given filters
-	 *
-	 * Method used in a non-managed environment
-	 *
-	 * @throws IllegalArgumentException if the jarPath is incorrect
-	 */
-	public static JarVisitor getVisitor(String jarPath, Filter[] filters) throws IllegalArgumentException {
-		File file = new File( jarPath );
-		if ( file.isFile() ) {
-			return new InputStreamZippedJarVisitor( jarPath, filters );
+	public static String unqualifiedJarFileName(URL jarUrl) {
+		// todo : weak algorithm subject to AOOBE
+		String fileName = jarUrl.getFile();
+		int exclamation = fileName.lastIndexOf( "!" );
+		if (exclamation != -1) {
+			fileName = fileName.substring( 0, exclamation );
 		}
-		else {
-			return new ExplodedJarVisitor( jarPath, filters );
+
+		int slash = fileName.lastIndexOf( "/" );
+		if ( slash != -1 ) {
+			fileName = fileName.substring(
+					fileName.lastIndexOf( "/" ) + 1,
+					fileName.length()
+			);
+		}
+
+		if ( fileName.length() > 4 && fileName.endsWith( "ar" ) && fileName.charAt( fileName.length() - 4 ) == '.' ) {
+			fileName = fileName.substring( 0, fileName.length() - 4 );
+		}
+
+		return fileName;
+	}
+
+	public static byte[] getBytesFromInputStreamSafely(InputStream inputStream) {
+		try {
+			return getBytesFromInputStream( inputStream );
+		}
+		catch (IOException e) {
+			throw new ArchiveException( "Unable to extract bytes from InputStream", e );
 		}
 	}
 
-	/**
-	 * Build a JarVisitor on the given JAR URL applying the given filters
-	 *
-	 * @throws IllegalArgumentException if the URL is malformed
-	 */
-	public static JarVisitor getVisitor(URL jarUrl, Filter[] filters) throws IllegalArgumentException {
-		return getVisitor( jarUrl, filters, "" );
-	}
-
-	public static JarVisitor getVisitor(URL jarUrl, Filter[] filters, String entry) throws IllegalArgumentException {
-		String protocol = jarUrl.getProtocol();
-		if ( "jar".equals( protocol ) ) {
-			return new JarProtocolVisitor( jarUrl, filters, entry );
-		}
-		else if ( StringHelper.isEmpty( protocol ) || "file".equals( protocol ) || "vfszip".equals( protocol ) || "vfsfile".equals( protocol ) ) {
-			File file;
-			try {
-				final String filePart = jarUrl.getFile();
-				if ( filePart != null && filePart.indexOf( ' ' ) != -1 ) {
-					//unescaped (from the container), keep as is
-					file = new File( jarUrl.getFile() );
-				}
-				else {
-					file = new File( jarUrl.toURI().getSchemeSpecificPart() );
-				}
-			}
-			catch (URISyntaxException e) {
-				throw new IllegalArgumentException(
-						"Unable to visit JAR " + jarUrl + ". Cause: " + e.getMessage(), e
-				);
-			}
-
-			if ( file.isDirectory() ) {
-				return new ExplodedJarVisitor( jarUrl, filters, entry );
-			}
-			else {
-				return new FileZippedJarVisitor( jarUrl, filters, entry );
-			}
-		}
-		else {
-			//let's assume the url can return the jar as a zip stream
-			return new InputStreamZippedJarVisitor( jarUrl, filters, entry );
-		}
-	}
-
-	// Optimized by HHH-7835
 	public static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
+		// Optimized by HHH-7835
 		int size;
 		List<byte[]> data = new LinkedList<byte[]>();
 		int bufferSize = 4096;

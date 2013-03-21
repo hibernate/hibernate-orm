@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,18 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.packaging;
+package org.hibernate.jpa.boot.scan.spi;
 
-import java.io.InputStream;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 /**
- * @deprecated Doubly deprecated actually :) Moved to {@link org.hibernate.jpa.boot.spi.NamedInputStream}
- * due to package renaming (org.hibernate.ejb -> org.hibernate.jpa).  But also, the role fulfilled by this class
- * was moved to the new {@link org.hibernate.jpa.boot.spi.InputStreamAccess} contract.
+ * Defines the contract for Hibernate to be able to scan for classes, packages and resources inside a
+ * persistence unit.
+ *
+ * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-@Deprecated
-public class NamedInputStream extends org.hibernate.jpa.boot.spi.NamedInputStream {
-	public NamedInputStream(String name, InputStream stream) {
-		super( name, stream );
-	}
+public interface Scanner {
+	/**
+	 * Perform the scanning against the described persistence unit using the defined options, and return the scan
+	 * results.
+	 *
+	 * @param persistenceUnit THe description of the persistence unit.
+	 * @param options The scan options
+	 *
+	 * @return The scan results.
+	 */
+	public ScanResult scan(PersistenceUnitDescriptor persistenceUnit, ScanOptions options);
 }

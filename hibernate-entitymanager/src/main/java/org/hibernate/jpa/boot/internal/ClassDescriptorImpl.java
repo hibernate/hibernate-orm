@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,18 +21,48 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.packaging;
+package org.hibernate.jpa.boot.internal;
 
-import java.io.InputStream;
+import org.hibernate.jpa.boot.spi.ClassDescriptor;
+import org.hibernate.jpa.boot.spi.InputStreamAccess;
 
 /**
- * @deprecated Doubly deprecated actually :) Moved to {@link org.hibernate.jpa.boot.spi.NamedInputStream}
- * due to package renaming (org.hibernate.ejb -> org.hibernate.jpa).  But also, the role fulfilled by this class
- * was moved to the new {@link org.hibernate.jpa.boot.spi.InputStreamAccess} contract.
+ * @author Steve Ebersole
  */
-@Deprecated
-public class NamedInputStream extends org.hibernate.jpa.boot.spi.NamedInputStream {
-	public NamedInputStream(String name, InputStream stream) {
-		super( name, stream );
+public class ClassDescriptorImpl implements ClassDescriptor {
+	private final String name;
+	private final InputStreamAccess streamAccess;
+
+	public ClassDescriptorImpl(String name, InputStreamAccess streamAccess) {
+		this.name = name;
+		this.streamAccess = streamAccess;
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public InputStreamAccess getStreamAccess() {
+		return streamAccess;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		ClassDescriptorImpl that = (ClassDescriptorImpl) o;
+		return name.equals( that.name );
+	}
+
+	@Override
+	public int hashCode() {
+		return name.hashCode();
 	}
 }

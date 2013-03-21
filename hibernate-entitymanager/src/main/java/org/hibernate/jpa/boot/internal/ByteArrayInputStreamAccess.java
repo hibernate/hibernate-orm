@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,18 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.packaging;
+package org.hibernate.jpa.boot.internal;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
+import org.hibernate.jpa.boot.spi.InputStreamAccess;
+import org.hibernate.jpa.boot.spi.NamedInputStream;
+
 /**
- * @deprecated Doubly deprecated actually :) Moved to {@link org.hibernate.jpa.boot.spi.NamedInputStream}
- * due to package renaming (org.hibernate.ejb -> org.hibernate.jpa).  But also, the role fulfilled by this class
- * was moved to the new {@link org.hibernate.jpa.boot.spi.InputStreamAccess} contract.
+ * An InputStreamAccess implementation based on a byte array
+ *
+ * @author Steve Ebersole
  */
-@Deprecated
-public class NamedInputStream extends org.hibernate.jpa.boot.spi.NamedInputStream {
-	public NamedInputStream(String name, InputStream stream) {
-		super( name, stream );
+public class ByteArrayInputStreamAccess implements InputStreamAccess {
+	private final String name;
+	private final byte[] bytes;
+
+	public ByteArrayInputStreamAccess(String name, byte[] bytes) {
+		this.name = name;
+		this.bytes = bytes;
+	}
+
+	@Override
+	public String getStreamName() {
+		return name;
+	}
+
+	@Override
+	public InputStream accessInputStream() {
+		return new ByteArrayInputStream( bytes );
+	}
+
+	@Override
+	public NamedInputStream asNamedInputStream() {
+		return new NamedInputStream( getStreamName(), accessInputStream() );
 	}
 }

@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -19,44 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.packaging.internal;
-import java.io.InputStream;
+package org.hibernate.jpa.boot.archive.spi;
+
+import org.hibernate.HibernateException;
 
 /**
- * Represent a JAR entry
- * Contains a name and an optional Input stream to the entry
- *
- * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public class Entry {
-	private String name;
-	private InputStream is;
-
-	public Entry(String name, InputStream is) {
-		this.name = name;
-		this.is = is;
+public class ArchiveException extends HibernateException {
+	public ArchiveException(String message) {
+		super( message );
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public InputStream getInputStream() {
-		return is;
-	}
-
-	public boolean equals(Object o) {
-		if ( this == o ) return true;
-		if ( o == null || getClass() != o.getClass() ) return false;
-
-		final Entry entry = (Entry) o;
-
-		if ( !name.equals( entry.name ) ) return false;
-
-		return true;
-	}
-
-	public int hashCode() {
-		return name.hashCode();
+	public ArchiveException(String message, Throwable root) {
+		super( message, root );
 	}
 }

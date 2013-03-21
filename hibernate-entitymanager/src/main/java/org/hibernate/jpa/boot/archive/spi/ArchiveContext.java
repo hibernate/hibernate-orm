@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,18 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.packaging;
+package org.hibernate.jpa.boot.archive.spi;
 
-import java.io.InputStream;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 /**
- * @deprecated Doubly deprecated actually :) Moved to {@link org.hibernate.jpa.boot.spi.NamedInputStream}
- * due to package renaming (org.hibernate.ejb -> org.hibernate.jpa).  But also, the role fulfilled by this class
- * was moved to the new {@link org.hibernate.jpa.boot.spi.InputStreamAccess} contract.
- */
-@Deprecated
-public class NamedInputStream extends org.hibernate.jpa.boot.spi.NamedInputStream {
-	public NamedInputStream(String name, InputStream stream) {
-		super( name, stream );
-	}
+* @author Steve Ebersole
+*/
+public interface ArchiveContext {
+	public PersistenceUnitDescriptor getPersistenceUnitDescriptor();
+
+	public boolean isRootUrl();
+
+	public ArchiveEntryHandler obtainArchiveEntryHandler(ArchiveEntry entry);
 }

@@ -51,7 +51,7 @@ public class EnversPreCollectionRemoveEventListenerImpl
 			Serializable oldColl = collectionEntry.getSnapshot();
 			if ( !event.getCollection().wasInitialized() && shouldGenerateRevision( event ) ) {
 				// In case of uninitialized collection we need a fresh snapshot to properly calculate audit data.
-				oldColl = getInitializedCollection( event );
+				oldColl = initializeCollection( event );
 			}
             onCollectionAction( event, null, oldColl, collectionEntry );
         }

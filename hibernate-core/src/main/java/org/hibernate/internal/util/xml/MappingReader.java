@@ -133,10 +133,18 @@ public class MappingReader {
 		try {
 			saxReader.setFeature( "http://apache.org/xml/features/validation/schema", true );
 			// saxReader.setFeature( "http://apache.org/xml/features/validation/dynamic", true );
-			saxReader.setProperty(
-					"http://apache.org/xml/properties/schema/external-schemaLocation",
-					"http://java.sun.com/xml/ns/persistence/orm " + xsd
-			);
+			if ( "orm_2_1.xsd".equals( xsd ) ) {
+				saxReader.setProperty(
+						"http://apache.org/xml/properties/schema/external-schemaLocation",
+						"http://xmlns.jcp.org/xml/ns/persistence/orm " + xsd
+				);
+			}
+			else {
+				saxReader.setProperty(
+						"http://apache.org/xml/properties/schema/external-schemaLocation",
+						"http://java.sun.com/xml/ns/persistence/orm " + xsd
+				);
+			}
 		}
 		catch ( SAXException e ) {
 			saxReader.setValidation( false );

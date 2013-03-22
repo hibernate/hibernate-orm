@@ -53,111 +53,15 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-public class IndexTest extends BaseCoreFunctionalTestCase {
+public class IndexTest extends AbstractJPAIndexTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Car.class,
-				Book.class,
-				Summary.class,
-				WealthyPerson.class,
-				Person.class,
-				AddressType.class,
-				Address.class,
-				Alias.class,
-				org.hibernate.test.event.collection.detached.Character.class
+		return new Class[] {
+				Car.class,
+				Dealer.class,
+				Importer.class
 		};
 	}
 
-	@Test
-	public void testTableIndex() {
-		PersistentClass entity = configuration().getClassMapping( Car.class.getName() );
-		Iterator itr = entity.getTable().getUniqueKeyIterator();
-		assertTrue( itr.hasNext() );
-		UniqueKey uk = (UniqueKey) itr.next();
-		assertFalse( itr.hasNext() );
-		assertTrue( StringHelper.isNotEmpty( uk.getName() ) );
-		assertEquals( 2, uk.getColumnSpan() );
-		Column column = (Column) uk.getColumns().get( 0 );
-		assertEquals( "brand", column.getName() );
-		column = (Column) uk.getColumns().get( 1 );
-		assertEquals( "producer", column.getName() );
-		assertSame( entity.getTable(), uk.getTable() );
 
-
-		itr = entity.getTable().getIndexIterator();
-		assertTrue( itr.hasNext() );
-		Index index = (Index)itr.next();
-		assertFalse( itr.hasNext() );
-		assertEquals( "Car_idx", index.getName() );
-		assertEquals( 1, index.getColumnSpan() );
-		column = index.getColumnIterator().next();
-		assertEquals( "since", column.getName() );
-		assertSame( entity.getTable(), index.getTable() );
-	}
-
-	@Test
-	public void testSecondaryTableIndex(){
-		PersistentClass entity = configuration().getClassMapping( Book.class.getName() );
-
-		Join join = (Join)entity.getJoinIterator().next();
-		Iterator<Index> itr = join.getTable().getIndexIterator();
-		assertTrue( itr.hasNext() );
-		Index index = itr.next();
-		assertFalse( itr.hasNext() );
-		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
-		assertEquals( 2, index.getColumnSpan() );
-		Iterator<Column> columnIterator = index.getColumnIterator();
-		Column column = columnIterator.next();
-		assertEquals( "summ_size", column.getName() );
-		column = columnIterator.next();
-		assertEquals( "text", column.getName() );
-		assertSame( join.getTable(), index.getTable() );
-
-	}
-
-	@Test
-	public void testCollectionTableIndex(){
-		PersistentClass entity = configuration().getClassMapping( WealthyPerson.class.getName() );
-		Property property = entity.getProperty( "explicitVacationHomes" );
-		Set set = (Set)property.getValue();
-		Table collectionTable = set.getCollectionTable();
-
-		Iterator<Index> itr = collectionTable.getIndexIterator();
-		assertTrue( itr.hasNext() );
-		Index index = itr.next();
-		assertFalse( itr.hasNext() );
-		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
-		assertEquals( 2, index.getColumnSpan() );
-		Iterator<Column> columnIterator = index.getColumnIterator();
-		Column column = columnIterator.next();
-		assertEquals( "countryName", column.getName() );
-		column = columnIterator.next();
-		assertEquals( "type_id", column.getName() );
-		assertSame( collectionTable, index.getTable() );
-
-	}
-
-	@Test
-	public void testJoinTableIndex(){
-		PersistentClass entity = configuration().getClassMapping( Alias.class.getName() );
-		Property property = entity.getProperty( "characters" );
-		Bag set = (Bag)property.getValue();
-		Table collectionTable = set.getCollectionTable();
-
-		Iterator<Index> itr = collectionTable.getIndexIterator();
-		assertTrue( itr.hasNext() );
-		Index index = itr.next();
-		assertFalse( itr.hasNext() );
-		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
-		assertEquals( 1, index.getColumnSpan() );
-		Iterator<Column> columnIterator = index.getColumnIterator();
-		Column column = columnIterator.next();
-		assertEquals( "characters_id", column.getName() );
-		assertSame( collectionTable, index.getTable() );
-	}
-
-	@Test
-	public void testTableGeneratorIndex(){
-	   //todo
-	}
 }

@@ -212,7 +212,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public void setRole(String role) {
-		this.role = role==null ? null : role.intern();
+		this.role = role;
 	}
 
 	public void setSorted(boolean sorted) {
@@ -549,7 +549,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public void setLoaderName(String name) {
-		this.loaderName = name==null ? null : name.intern();
+		this.loaderName = name;
 	}
 
 	public String getReferencedPropertyName() {
@@ -557,7 +557,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public void setReferencedPropertyName(String propertyRef) {
-		this.referencedPropertyName = propertyRef==null ? null : propertyRef.intern();
+		this.referencedPropertyName = propertyRef;
 	}
 
 	public boolean isOptimisticLocked() {

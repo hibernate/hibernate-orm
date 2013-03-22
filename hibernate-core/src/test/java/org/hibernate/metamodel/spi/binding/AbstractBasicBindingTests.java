@@ -208,7 +208,6 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertTrue( relationalValueBinding.getValue() instanceof Column );
 		Column column = ( Column ) relationalValueBinding.getValue();
 		Assert.assertEquals( Identifier.toIdentifier( manyToOneColumnName ), column.getColumnName() );
-		assertFalse( column.isUnique() );
 		JdbcDataType jdbcDataType = column.getJdbcDataType();
 		assertEquals( referencedJdbcDataType.getTypeCode(), jdbcDataType.getTypeCode() );
 		assertEquals( referencedJdbcDataType.getJavaType(), jdbcDataType.getJavaType() );

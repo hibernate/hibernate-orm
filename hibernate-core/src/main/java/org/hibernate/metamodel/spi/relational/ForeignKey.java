@@ -44,12 +44,13 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class ForeignKey extends AbstractConstraint {
+
+	public static final String GENERATED_NAME_PREFIX = "FK";
+	
     private static final Logger LOG = Logger.getLogger( ForeignKey.class );
 
 	private static final String ON_DELETE = " on delete ";
 	private static final String ON_UPDATE = " on update ";
-
-	private static final String GENERATED_NAME_PREFIX = "FK";
 
 	private final TableSpecification targetTable;
 	private List<Column> targetColumns;
@@ -87,11 +88,6 @@ public class ForeignKey extends AbstractConstraint {
 				: Collections.unmodifiableList( targetColumns );
 	}
 
-	@Override
-	protected String getGeneratedNamePrefix() {
-		return GENERATED_NAME_PREFIX;
-	}
-
 	protected int generateConstraintColumnListId() {
 		return 31 * super.generateConstraintColumnListId() + targetTable.generateColumnListId( getTargetColumns() );
 	}
@@ -107,7 +103,7 @@ public class ForeignKey extends AbstractConstraint {
 				LOG.debugf(
 						"Attempt to map column [%s] to no target column after explicit target column(s) named for FK [name=%s]",
 						sourceColumn.toLoggableString(),
-						getOrGenerateName()
+						getName()
 				);
 			}
 		}
@@ -118,7 +114,7 @@ public class ForeignKey extends AbstractConstraint {
 					LOG.debugf(
 							"Value mapping mismatch as part of FK [table=%s, name=%s] while adding source column [%s]",
 							getTable().toLoggableString(),
-							getOrGenerateName(),
+							getName(),
 							sourceColumn.toLoggableString()
 					);
 				}
@@ -143,7 +139,7 @@ public class ForeignKey extends AbstractConstraint {
 
 	@Override
 	public String getExportIdentifier() {
-		return getSourceTable().getLoggableValueQualifier() + ".FK-" + getOrGenerateName();
+		return getSourceTable().getLoggableValueQualifier() + ".FK-" + getName();
 	}
 
 	public ReferentialAction getDeleteRule() {
@@ -168,7 +164,7 @@ public class ForeignKey extends AbstractConstraint {
 				"alter table " +
 						getTable().getQualifiedName( dialect ) +
 						dialect.getDropForeignKeyString() +
-						getOrGenerateName()
+						getName()
 		};
 	}
 
@@ -191,7 +187,7 @@ public class ForeignKey extends AbstractConstraint {
 		StringBuilder sb =
 				new StringBuilder(
 						dialect.getAddForeignKeyConstraintString(
-								getOrGenerateName(),
+								getName(),
 								columnNames,
 								targetTable.getQualifiedName( dialect ),
 								targetColumnNames,

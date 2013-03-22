@@ -88,26 +88,6 @@ public abstract class AbstractConstraint implements Constraint {
 		this.name = name;
 	}
 
-	protected abstract String getGeneratedNamePrefix();
-
-
-	public String getExportedName() {
-		// should really generate names (if not supplied) after metamodel is complete rather than waiting like this.
-		return name != null ? name : generateName();
-	}
-
-	protected String getOrGenerateName() {
-		return getExportedName();
-	}
-
-	protected String generateName() {
-		return new StringBuilder()
-				.append( getGeneratedNamePrefix() )
-				.append( Integer.toHexString( table.getLogicalName().hashCode() ).toUpperCase() )
-				.append( Integer.toHexString( generateConstraintColumnListId() ).toUpperCase() )
-				.toString();
-	}
-
 	protected int generateConstraintColumnListId() {
 		return table.generateColumnListId( getColumns() );
 	}
@@ -118,6 +98,10 @@ public abstract class AbstractConstraint implements Constraint {
 
 	public int getColumnSpan() {
 		return columnMap.size();
+	}
+	
+	public boolean hasColumn(Column column) {
+		return columnMap.containsKey( column.getColumnName() );
 	}
 
 	protected Map<Identifier, Column> internalColumnAccess() {
@@ -157,7 +141,7 @@ public abstract class AbstractConstraint implements Constraint {
 						.append( "alter table " )
 						.append( getTable().getQualifiedName( dialect ) )
 						.append( " drop constraint " )
-						.append( dialect.quote( getOrGenerateName() ) )
+						.append( dialect.quote( name ) )
 						.toString()
 			};
 		}

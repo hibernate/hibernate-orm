@@ -16,6 +16,7 @@ import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
 
@@ -90,14 +91,8 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 
 //		assertFalse( "natural id column should not be nullable", column.isNullable() );
 		// -----------------------------------------------------------------------------------------------------
-		Iterable<UniqueKey> uniqueKeys = entityBinding.getPrimaryTable().getUniqueKeys();
-		assertTrue( uniqueKeys.iterator().hasNext() );
-		UniqueKey uniqueKey = uniqueKeys.iterator().next();
-		assertEquals( 2, uniqueKey.getColumns().size() );
-		for ( final Column c : uniqueKey.getColumns() ) {
-			String name = c.getColumnName().getText();
-			assertTrue( "age".equals( name ) || "name".equals( name ) );
-		}
+		
+		assertTrue( SchemaUtil.hasUniqueKeys( entityBinding.getPrimaryTable(), "age", "name" ) );
 	}
 
 	@Entity
@@ -139,14 +134,8 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 			Column column = Column.class.cast( valueBinding.getValue() );
 //			assertFalse( "natural id column should not be nullable", column.isNullable() );
 		}
-		Iterable<UniqueKey> uniqueKeys = entityBinding.getPrimaryTable().getUniqueKeys();
-		assertTrue( uniqueKeys.iterator().hasNext() );
-		UniqueKey uniqueKey = uniqueKeys.iterator().next();
-		assertEquals( 2, uniqueKey.getColumns().size() );
-		for ( final Column c : uniqueKey.getColumns() ) {
-			String name = c.getColumnName().getText();
-			assertTrue( "age".equals( name ) || "name".equals( name ) );
-		}
+		
+		assertTrue( SchemaUtil.hasUniqueKeys( entityBinding.getPrimaryTable(), "age", "name" ) );
 	}
 
 	@Entity
@@ -196,14 +185,8 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 
 //		assertFalse( "natural id column should not be nullable", column.isNullable() );
 		// -----------------------------------------------------------------------------------------------------
-		Iterable<UniqueKey> uniqueKeys = entityBinding.getPrimaryTable().getUniqueKeys();
-		assertTrue( uniqueKeys.iterator().hasNext() );
-		UniqueKey uniqueKey = uniqueKeys.iterator().next();
-		assertEquals( 2, uniqueKey.getColumns().size() );
-		for ( final Column c : uniqueKey.getColumns() ) {
-			String name = c.getColumnName().getText();
-			assertTrue( "name".equals( name ) || "simpleEntity_id".equals( name ) );
-		}
+		
+		assertTrue( SchemaUtil.hasUniqueKeys( entityBinding.getPrimaryTable(), "name", "simpleEntity_id" ) );
 
 	}
 }

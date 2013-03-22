@@ -23,6 +23,9 @@
  */
 package org.hibernate.test.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Iterator;
 
 import org.hibernate.AssertionFailure;
@@ -37,6 +40,7 @@ import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
 
 /**
  * Check that the Hibernate metamodel contains some database objects
@@ -136,5 +140,14 @@ public abstract class SchemaUtil {
 			}
 		}
 		return null;
+	}
+	
+	public static boolean hasUniqueKeys(TableSpecification table, String... columnNames) {
+		for (String columnName : columnNames) {
+			if (!table.hasUniqueKey( table.locateColumn( columnName ) ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

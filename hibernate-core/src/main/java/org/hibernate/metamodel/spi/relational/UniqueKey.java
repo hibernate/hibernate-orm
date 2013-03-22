@@ -32,7 +32,8 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class UniqueKey extends AbstractConstraint {
-	private static final String GENERATED_NAME_PREFIX = "UK";
+
+	public static final String GENERATED_NAME_PREFIX = "UK";
 
 	protected UniqueKey(Table table, String name) {
 		super( table, name );
@@ -46,11 +47,6 @@ public class UniqueKey extends AbstractConstraint {
 			sb.append( '_' ).append( column.getColumnName().getText() );
 		}
 		return sb.toString();
-	}
-
-	@Override
-	protected String getGeneratedNamePrefix() {
-		return GENERATED_NAME_PREFIX;
 	}
 
 	@Override

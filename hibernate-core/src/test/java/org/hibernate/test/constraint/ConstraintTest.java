@@ -58,16 +58,19 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 	
+	@Test
 	@TestForIssue( jiraKey = "HHH-7797" )
 	public void testUniqueConstraints() {
 		
+		TableSpecification table = SchemaUtil.getTable( DataPoint.class, metadata() );
+		
 		Column column = SchemaUtil.getColumn( DataPoint.class, "foo1", metadata() );
 		assertFalse( column.isNullable() );
-		assertTrue( column.isUnique() );
+		assertTrue( table.hasUniqueKey( column ) );
 
 		column = SchemaUtil.getColumn( DataPoint.class, "foo2", metadata() );
 		assertTrue( column.isNullable() );
-		assertTrue( column.isUnique() );
+		assertTrue( table.hasUniqueKey( column ) );
 
 		column = SchemaUtil.getColumn( DataPoint.class, "id", metadata() );
 	}

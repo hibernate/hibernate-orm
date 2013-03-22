@@ -84,6 +84,11 @@ public class InLineView extends AbstractTableSpecification {
 	}
 
 	@Override
+	public boolean hasUniqueKey(Column column) {
+		return false;
+	}
+
+	@Override
 	public Iterable<CheckConstraint> getCheckConstraints() {
 		return Collections.emptyList();
 	}

@@ -37,8 +37,7 @@ import org.hibernate.sql.Template;
  */
 public class Column extends AbstractValue {
 	private final Identifier columnName;
-	private boolean nullable = true;
-	private boolean unique;
+	private boolean nullable = true; 
 
 	private String defaultValue;
 	private String checkCondition;
@@ -68,14 +67,6 @@ public class Column extends AbstractValue {
 
 	public void setNullable(boolean nullable) {
 		this.nullable = nullable;
-	}
-
-	public boolean isUnique() {
-		return unique;
-	}
-
-	public void setUnique(boolean unique) {
-		this.unique = unique;
 	}
 
 	public String getDefaultValue() {

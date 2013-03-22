@@ -29,6 +29,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -49,7 +50,7 @@ public class ForeignKeyHelper {
 	}
 
 	public ForeignKey locateOrCreateForeignKey(
-			final String foreignKeyName,
+			String foreignKeyName,
 			final TableSpecification sourceTable,
 			final List<Column> sourceColumns,
 			final TableSpecification targetTable,
@@ -57,6 +58,9 @@ public class ForeignKeyHelper {
 		ForeignKey foreignKey = null;
 		if ( foreignKeyName != null ) {
 			foreignKey = locateAndBindForeignKeyByName( foreignKeyName, sourceTable, sourceColumns, targetTable, targetColumns );
+		}
+		else {
+			foreignKeyName = StringHelper.randomFixedLengthHex( ForeignKey.GENERATED_NAME_PREFIX );
 		}
 		if ( foreignKey == null ) {
 			foreignKey = locateForeignKeyByColumnMapping( sourceTable, sourceColumns, targetTable, targetColumns );

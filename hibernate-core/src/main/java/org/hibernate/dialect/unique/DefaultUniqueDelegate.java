@@ -82,7 +82,7 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 		return new StringBuilder( "alter table " )
 				.append( uniqueKey.getTable().getQualifiedName( dialect ) )
 				.append( " add constraint " )
-				.append( uniqueKey.getExportedName() )
+				.append( uniqueKey.getName() )
 				.append( uniqueConstraintSql( uniqueKey ) )
 				.toString();
 	}
@@ -107,7 +107,7 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 		return new StringBuilder( "alter table " )
 				.append( uniqueKey.getTable().getQualifiedName( dialect ) )
 				.append( " drop constraint " )
-				.append( dialect.quote( uniqueKey.getExportedName() ) )
+				.append( dialect.quote( uniqueKey.getName() ) )
 				.toString();
 	}
 	

@@ -51,7 +51,7 @@ public class StandardIndexExporter implements Exporter<Index> {
 		);
 		StringBuilder buf = new StringBuilder()
 				.append( "create index " )
-				.append( dialect.qualifyIndexName() ? index.getExportedName() : StringHelper.unqualify( index.getExportedName() ) )
+				.append( dialect.qualifyIndexName() ? index.getName() : StringHelper.unqualify( index.getName() ) )
 				.append( " on " )
 				.append( tableName )
 				.append( " (" );
@@ -80,7 +80,7 @@ public class StandardIndexExporter implements Exporter<Index> {
 				( (Table) index.getTable() ).getTableName()
 		);
 		return new String[] {
-				"drop index " + StringHelper.qualify( tableName, index.getExportedName() )
+				"drop index " + StringHelper.qualify( tableName, index.getName() )
 		};
 	}
 }

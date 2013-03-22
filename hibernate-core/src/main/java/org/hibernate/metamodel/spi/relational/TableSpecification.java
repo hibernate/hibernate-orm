@@ -141,6 +141,8 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	public Iterable<UniqueKey> getUniqueKeys();
 
 	public UniqueKey getOrCreateUniqueKey(String name);
+	
+	public boolean hasUniqueKey(Column column);
 
 	public Iterable<CheckConstraint> getCheckConstraints();
 

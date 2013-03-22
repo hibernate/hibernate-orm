@@ -68,7 +68,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				.append( sourceTableName )
 				.append(
 						dialect.getAddForeignKeyConstraintString(
-								foreignKey.getExportedName(),
+								foreignKey.getName(),
 								columnNames,
 								targetTableName,
 								targetColumnNames,
@@ -100,7 +100,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				( (Table) foreignKey.getSourceTable() ).getTableName()
 		);
 		return new String[] {
-				"alter table " + sourceTableName + dialect.getDropForeignKeyString() + foreignKey.getExportedName()
+				"alter table " + sourceTableName + dialect.getDropForeignKeyString() + foreignKey.getName()
 		};
 	}
 }

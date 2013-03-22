@@ -212,6 +212,7 @@ public class Binder {
 	private final EntityHierarchyHelper entityHierarchyHelper;
 	private final HibernateTypeHelper typeHelper; // todo: refactor helper and remove redundant methods in this class
 	private final ForeignKeyHelper foreignKeyHelper;
+	private final UniqueKeyHelper uniqueKeyHelper;
 
 	public Binder(final MetadataImplementor metadata,
 				  final IdentifierGeneratorFactory identifierGeneratorFactory) {
@@ -220,6 +221,7 @@ public class Binder {
 		this.entityHierarchyHelper = new EntityHierarchyHelper( metadata );
 		this.typeHelper = new HibernateTypeHelper( this, metadata );
 		this.foreignKeyHelper = new ForeignKeyHelper( this );
+		this.uniqueKeyHelper = new UniqueKeyHelper();
 		this.nameNormalizer = metadata.getObjectNameNormalizer();
 	}
 
@@ -2081,9 +2083,11 @@ public class Binder {
 				)
 		);
 		if ( elementSource.isUnique() ) {
+			UniqueKey uk = collectionTable.getOrCreateUniqueKey( StringHelper.randomFixedLengthHex(
+					UniqueKey.GENERATED_NAME_PREFIX ) );
 			for ( RelationalValueBinding relationalValueBinding : elementBinding.getRelationalValueBindings() ) {
 				if ( ! relationalValueBinding.isDerived() )  {
-					( (Column) relationalValueBinding.getValue() ).setUnique( true );
+					uk.addColumn( (Column) relationalValueBinding.getValue() );
 				}
 			}
 		}
@@ -2690,7 +2694,6 @@ public class Binder {
 				column.setNullable( superEntityBindingPrimaryKeyColumn.isNullable() );
 				column.setReadFragment( superEntityBindingPrimaryKeyColumn.getReadFragment() );
 				column.setWriteFragment( superEntityBindingPrimaryKeyColumn.getWriteFragment() );
-				column.setUnique( superEntityBindingPrimaryKeyColumn.isUnique() );
 				final String sqlType = primaryKeyJoinColumnSource != null && primaryKeyJoinColumnSource.getSqlType() != null ? primaryKeyJoinColumnSource
 						.getSqlType() : superEntityBindingPrimaryKeyColumn.getSqlType();
 				column.setSqlType( sqlType );
@@ -2698,6 +2701,8 @@ public class Binder {
 				column.setJdbcDataType( superEntityBindingPrimaryKeyColumn.getJdbcDataType() );
 				entityBinding.getPrimaryTable().getPrimaryKey().addColumn( column );
 				sourceColumns.add( column );
+				
+				// TODO: Does a UniqueKey need created here?
 			}
 			List<Column> targetColumns =
 					determineForeignKeyTargetColumns(
@@ -2734,13 +2739,11 @@ public class Binder {
 	private void bindUniqueConstraints(
 			final EntityBinding entityBinding,
 			final EntitySource entitySource) {
-		int uniqueIndexPerTable = 0;
 		for ( final ConstraintSource constraintSource : entitySource.getConstraints() ) {
 			if ( UniqueConstraintSource.class.isInstance( constraintSource ) ) {
 				final TableSpecification table = entityBinding.locateTable( constraintSource.getTableName() );
-				uniqueIndexPerTable++;
 				final String constraintName = StringHelper.isEmpty( constraintSource.name() )
-						? "key" + uniqueIndexPerTable
+						? StringHelper.randomFixedLengthHex( UniqueKey.GENERATED_NAME_PREFIX )
 						: constraintSource.name();
 				final UniqueKey uniqueKey = table.getOrCreateUniqueKey( constraintName );
 				for ( final String columnName : constraintSource.columnNames() ) {
@@ -2801,7 +2804,7 @@ public class Binder {
 
 				column.setNullable( !reallyForceNonNullable && valueSourceContainer.areValuesNullableByDefault() );
 				if ( isNaturalId ) {
-					addUniqueConstraintForNaturalIdColumn( defaultTable, column );
+					uniqueKeyHelper.addUniqueConstraintForNaturalIdColumn( defaultTable, column );
 				}
 				valueBindings.add(
 						new RelationalValueBinding(
@@ -2833,7 +2836,7 @@ public class Binder {
 							true
 					);
 					if ( isNaturalId ) {
-						addUniqueConstraintForNaturalIdColumn( table, column );
+						uniqueKeyHelper.addUniqueConstraintForNaturalIdColumn( table, column );
 					}
 					final boolean isIncludedInInsert =
 							TruthValue.toBoolean(
@@ -2918,9 +2921,13 @@ public class Binder {
 		column.setJdbcDataType( columnSource.getDatatype() );
 		column.setReadFragment( columnSource.getReadFragment() );
 		column.setWriteFragment( columnSource.getWriteFragment() );
-		column.setUnique( columnSource.isUnique() );
 		column.setCheckCondition( columnSource.getCheckCondition() );
 		column.setComment( columnSource.getComment() );
+		
+		if (columnSource.isUnique()) {
+			table.getOrCreateUniqueKey( StringHelper.randomFixedLengthHex(
+					UniqueKey.GENERATED_NAME_PREFIX ) ).addColumn( column );
+		}
 		return column;
 	}
 
@@ -3300,13 +3307,6 @@ public class Binder {
 			}
 		}
 		return unsavedValue;
-	}
-
-	private static void addUniqueConstraintForNaturalIdColumn(
-			final TableSpecification table,
-			final Column column) {
-		final UniqueKey uniqueKey = table.getOrCreateUniqueKey( table.getLogicalName().getText() + "_UNIQUEKEY" );
-		uniqueKey.addColumn( column );
 	}
 
 	public static interface DefaultNamingStrategy {

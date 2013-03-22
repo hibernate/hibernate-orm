@@ -954,15 +954,11 @@ public final class SessionFactoryImpl
 
 		LOG.debug("Instantiated session factory");
 
-		if ( settings.isAutoCreateSchema() ) {
-			new SchemaExport( metadata )
-					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
-					.create( false, true );
-		}
+		schemaExport = new SchemaExport( metadata ).setImportSqlCommandExtractor( serviceRegistry
+				.getService( ImportSqlCommandExtractor.class ) );
 
-		if ( settings.isAutoDropSchema() ) {
-			schemaExport = new SchemaExport( metadata )
-					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) );
+		if ( settings.isAutoCreateSchema() ) {
+			schemaExport.create( false, true );
 		}
 
 		currentSessionContext = buildCurrentSessionContext();

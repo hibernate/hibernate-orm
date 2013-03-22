@@ -32,7 +32,6 @@ import org.hibernate.metamodel.spi.relational.CheckConstraint;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -104,10 +103,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 			}
 			//only create unique constraint for non-pk column
-			if ( col.isUnique() && !colName.equals( pkColName )) {
-				UniqueKey uk = table.getOrCreateUniqueKey(
-						col.getColumnName().getText( dialect ) + '_' );
-				uk.addColumn( col );
+			if ( table.hasUniqueKey( col ) && !colName.equals( pkColName )) {
 				buf.append( dialect.getUniqueDelegate().applyUniqueToColumn(
 						col ) );
 			}

@@ -164,6 +164,8 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		return Collections.unmodifiableSet( uniqueKeys );
 	}
 
+	// TODO: The "get" part of this should probably go away -- all callers
+	// should now be creating only.
 	@Override
 	public UniqueKey getOrCreateUniqueKey(String name) {
 		UniqueKey result = null;
@@ -175,6 +177,16 @@ public class Table extends AbstractTableSpecification implements Exportable {
 			uniqueKeys.add( result );
 		}
 		return result;
+	}
+	
+	@Override
+	public boolean hasUniqueKey(Column column) {
+		for ( UniqueKey uniqueKey : uniqueKeys ) {
+			if ( uniqueKey.hasColumn( column ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -270,10 +282,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 			String nullablePostfix = column.isNullable() ? dialect.getNullColumnString() : " not null";
 			alter.append( nullablePostfix );
 
-			if ( column.isUnique() ) {
-				UniqueKey uk = getOrCreateUniqueKey(
-						column.getColumnName().getText( dialect ) + '_' );
-				uk.addColumn( column );
+			if ( hasUniqueKey(column) ) {
 				alter.append( dialect.getUniqueDelegate().applyUniqueToColumn(
 						column ) );
 			}

@@ -32,6 +32,9 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class Index extends AbstractConstraint{
+
+	public static final String GENERATED_NAME_PREFIX = "IDX";
+	
 	protected Index(Table table, String name) {
 		super( table, name );
 	}
@@ -44,11 +47,6 @@ public class Index extends AbstractConstraint{
 			sb.append( '_' ).append( column.getColumnName().getText() );
 		}
 		return sb.toString();
-	}
-
-	@Override
-	protected String getGeneratedNamePrefix() {
-		return "IDX";
 	}
 	
 	@Override

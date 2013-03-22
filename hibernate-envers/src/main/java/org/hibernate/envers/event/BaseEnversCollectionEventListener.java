@@ -122,10 +122,11 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
     }
 
 	/**
+	 * Forces persistent collection initialization.
 	 * @param event Collection event.
-	 * @return Initialized persistent collection.
+	 * @return Stored snapshot.
 	 */
-	protected Serializable getInitializedCollection(AbstractCollectionEvent event) {
+	protected Serializable initializeCollection(AbstractCollectionEvent event) {
 		event.getCollection().forceInitialization();
 		return event.getCollection().getStoredSnapshot();
 	}

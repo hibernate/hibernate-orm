@@ -23,6 +23,8 @@
  */
 package org.hibernate.envers.event;
 
+import java.io.Serializable;
+
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
@@ -32,6 +34,7 @@ import org.hibernate.event.spi.PreCollectionRemoveEventListener;
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class EnversPreCollectionRemoveEventListenerImpl
 		extends BaseEnversCollectionEventListener
@@ -45,7 +48,12 @@ public class EnversPreCollectionRemoveEventListenerImpl
 	public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
         CollectionEntry collectionEntry = getCollectionEntry( event );
         if ( collectionEntry != null && !collectionEntry.getLoadedPersister().isInverse() ) {
-            onCollectionAction( event, null, collectionEntry.getSnapshot(), collectionEntry );
+			Serializable oldColl = collectionEntry.getSnapshot();
+			if ( !event.getCollection().wasInitialized() && shouldGenerateRevision( event ) ) {
+				// In case of uninitialized collection we need a fresh snapshot to properly calculate audit data.
+				oldColl = getInitializedCollection( event );
+			}
+            onCollectionAction( event, null, oldColl, collectionEntry );
         }
 	}
 }

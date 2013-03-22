@@ -50,6 +50,7 @@ import org.hibernate.persister.collection.AbstractCollectionPersister;
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class BaseEnversCollectionEventListener extends BaseEnversEventListener {
 	protected BaseEnversCollectionEventListener(AuditConfiguration enversConfiguration) {
@@ -65,15 +66,12 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			PersistentCollection newColl,
 			Serializable oldColl,
 			CollectionEntry collectionEntry) {
-        String entityName = event.getAffectedOwnerEntityName();
-        if ( ! getAuditConfiguration().getGlobalCfg().isGenerateRevisionsForCollections() ) {
-            return;
-        }
-        if ( getAuditConfiguration().getEntCfg().isVersioned( entityName ) ) {
+        if ( shouldGenerateRevision( event ) ) {
             checkIfTransactionInProgress(event.getSession());
             
             AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get(event.getSession());
 
+			String entityName = event.getAffectedOwnerEntityName();
             String ownerEntityName = ((AbstractCollectionPersister) collectionEntry.getLoadedPersister()).getOwnerEntityName();
             String referencingPropertyName = collectionEntry.getRole().substring(ownerEntityName.length() + 1);
 
@@ -122,6 +120,26 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
             }
         }
     }
+
+	/**
+	 * @param event Collection event.
+	 * @return Initialized persistent collection.
+	 */
+	protected Serializable getInitializedCollection(AbstractCollectionEvent event) {
+		event.getCollection().forceInitialization();
+		return event.getCollection().getStoredSnapshot();
+	}
+
+	/**
+	 * Checks whether modification of not-owned relation field triggers new revision and owner entity is versioned.
+	 * @param event Collection event.
+	 * @return {@code true} if revision based on given event should be generated, {@code false} otherwise.
+	 */
+	protected boolean shouldGenerateRevision(AbstractCollectionEvent event) {
+		final String entityName = event.getAffectedOwnerEntityName();
+		return getAuditConfiguration().getGlobalCfg().isGenerateRevisionsForCollections()
+				&& getAuditConfiguration().getEntCfg().isVersioned( entityName );
+	}
 
     /**
      * Looks up a relation description corresponding to the given property in the given entity. If no description is

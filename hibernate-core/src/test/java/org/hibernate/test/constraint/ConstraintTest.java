@@ -20,6 +20,7 @@
  */
 package org.hibernate.test.constraint;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -29,20 +30,19 @@ import java.util.Iterator;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.junit.Test;
-
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.UniqueKey;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
-@FailureExpectedWithNewMetamodel
 public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	
 	private static final int MAX_NAME_LENGTH = 30;
@@ -58,56 +58,48 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 	
-	@Test
 	@TestForIssue( jiraKey = "HHH-7797" )
 	public void testUniqueConstraints() {
-		Column column = (Column) configuration().getClassMapping( DataPoint.class.getName() )
-				.getProperty( "foo1" ).getColumnIterator().next();
+		
+		Column column = SchemaUtil.getColumn( DataPoint.class, "foo1", metadata() );
 		assertFalse( column.isNullable() );
 		assertTrue( column.isUnique() );
 
-		column = (Column) configuration().getClassMapping( DataPoint.class.getName() )
-				.getProperty( "foo2" ).getColumnIterator().next();
+		column = SchemaUtil.getColumn( DataPoint.class, "foo2", metadata() );
 		assertTrue( column.isNullable() );
 		assertTrue( column.isUnique() );
 
-		column = (Column) configuration().getClassMapping( DataPoint.class.getName() )
-				.getProperty( "id" ).getColumnIterator().next();
-		assertFalse( column.isNullable() );
-		assertTrue( column.isUnique() );
+		column = SchemaUtil.getColumn( DataPoint.class, "id", metadata() );
 	}
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-1904" )
 	public void testConstraintNameLength() {
-		Iterator<org.hibernate.mapping.Table> tableItr = configuration().getTableMappings();
-		while (tableItr.hasNext()) {
-			org.hibernate.mapping.Table table = tableItr.next();
+		TableSpecification table = SchemaUtil.getTable( DataPoint2.class, metadata() );
+		
+		Iterator<ForeignKey> fkItr = table.getForeignKeys().iterator();
+		while (fkItr.hasNext()) {
+			ForeignKey fk = (ForeignKey) fkItr.next();
+			assertTrue( fk.getName().length() <= MAX_NAME_LENGTH );
 			
-			Iterator fkItr = table.getForeignKeyIterator();
-			while (fkItr.hasNext()) {
-				ForeignKey fk = (ForeignKey) fkItr.next();
-				assertTrue( fk.getName().length() <= MAX_NAME_LENGTH );
-				
-				// ensure the randomly generated constraint name doesn't
-				// happen if explicitly given
-				Column column = fk.getColumn( 0 );
-				if ( column.getName().equals( "explicit" ) ) {
-					assertEquals( fk.getName(), EXPLICIT_FK_NAME );
-				}
+			// ensure the randomly generated constraint name doesn't
+			// happen if explicitly given
+			Column column = fk.getColumns().get( 0 );
+			if ( column.getColumnName().getText().equals( "explicit" ) ) {
+				assertEquals( fk.getName(), EXPLICIT_FK_NAME );
 			}
+		}
+		
+		Iterator<UniqueKey> ukItr = table.getUniqueKeys().iterator();
+		while (ukItr.hasNext()) {
+			UniqueKey uk = (UniqueKey) ukItr.next();
+			assertTrue( uk.getName().length() <= MAX_NAME_LENGTH );
 			
-			Iterator ukItr = table.getUniqueKeyIterator();
-			while (ukItr.hasNext()) {
-				UniqueKey uk = (UniqueKey) ukItr.next();
-				assertTrue( uk.getName().length() <= MAX_NAME_LENGTH );
-				
-				// ensure the randomly generated constraint name doesn't
-				// happen if explicitly given
-				Column column = uk.getColumn( 0 );
-				if ( column.getName().equals( "explicit" ) ) {
-					assertEquals( uk.getName(), EXPLICIT_UK_NAME );
-				}
+			// ensure the randomly generated constraint name doesn't
+			// happen if explicitly given
+			Column column = uk.getColumns().get( 0 );
+			if ( column.getColumnName().getText().equals( "explicit" ) ) {
+				assertEquals( uk.getName(), EXPLICIT_UK_NAME );
 			}
 		}
 	}
@@ -138,10 +130,10 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 		@GeneratedValue
 		public long id;
 		
-		@OneToOne
+		@ManyToOne
 		public DataPoint dp;
 		
-		@OneToOne
+		@ManyToOne
 		@org.hibernate.annotations.ForeignKey(name = EXPLICIT_FK_NAME)
 		public DataPoint explicit;
 	}

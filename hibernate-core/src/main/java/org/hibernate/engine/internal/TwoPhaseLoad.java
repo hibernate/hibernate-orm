@@ -101,7 +101,7 @@ public final class TwoPhaseLoad {
 				lazyPropertiesAreUnfetched
 			);
 
-		if ( LOG.isTraceEnabled() && version != null ) {
+		if ( version != null && LOG.isTraceEnabled() ) {
 			String versionStr = persister.isVersioned()
 					? persister.getVersionType().toLoggableString( version, session.getFactory() )
 					: "null";
@@ -153,7 +153,8 @@ public final class TwoPhaseLoad {
 		Serializable id = entityEntry.getId();
 		Object[] hydratedState = entityEntry.getLoadedState();
 
-		if ( LOG.isDebugEnabled() ) {
+		final boolean debugEnabled = LOG.isDebugEnabled();
+		if ( debugEnabled ) {
 			LOG.debugf(
 					"Resolving associations for %s",
 					MessageHelper.infoString( persister, id, session.getFactory() )
@@ -187,7 +188,7 @@ public final class TwoPhaseLoad {
 		final SessionFactoryImplementor factory = session.getFactory();
 		if ( persister.hasCache() && session.getCacheMode().isPutEnabled() ) {
 
-			if ( LOG.isDebugEnabled() ) {
+			if ( debugEnabled ) {
 				LOG.debugf(
 						"Adding entity to second-level cache: %s",
 						MessageHelper.infoString( persister, id, session.getFactory() )
@@ -272,7 +273,7 @@ public final class TwoPhaseLoad {
 				session
 		);
 
-		if ( LOG.isDebugEnabled() ) {
+		if ( debugEnabled ) {
 			LOG.debugf(
 					"Done materializing entity %s",
 					MessageHelper.infoString( persister, id, session.getFactory() )

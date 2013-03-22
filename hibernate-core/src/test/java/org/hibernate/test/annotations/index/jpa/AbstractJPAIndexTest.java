@@ -37,9 +37,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Set;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.test.annotations.embedded.Book;
-import org.hibernate.test.annotations.embedded.WealthyPerson;
-import org.hibernate.test.event.collection.detached.Alias;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -50,7 +47,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-public class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
+public abstract class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testTableIndex() {
 		PersistentClass entity = configuration().getClassMapping( Car.class.getName() );

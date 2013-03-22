@@ -69,6 +69,14 @@ public class InvalidMappingException extends MappingException {
 		this("Could not parse mapping document from " + type + (path==null?"":" " + path), type, path, cause);		
 	}
 
+	public InvalidMappingException(String message, org.hibernate.internal.util.xml.Origin origin, Exception cause) {
+		this( message, origin.getType(), origin.getName(), cause );
+	}
+
+	public InvalidMappingException(String message, org.hibernate.internal.util.xml.Origin origin) {
+		this( message, origin, null );
+	}
+
 	public String getType() {
 		return type;
 	}

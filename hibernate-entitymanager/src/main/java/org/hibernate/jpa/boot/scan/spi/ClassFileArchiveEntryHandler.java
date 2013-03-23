@@ -36,25 +36,27 @@ import javassist.bytecode.ClassFile;
 
 import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
 import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
-import org.hibernate.jpa.boot.archive.spi.ArchiveEntryHandler;
 import org.hibernate.jpa.boot.archive.spi.ArchiveException;
 import org.hibernate.jpa.boot.internal.ClassDescriptorImpl;
-import org.hibernate.jpa.boot.scan.spi.ScanOptions;
 import org.hibernate.jpa.boot.spi.ClassDescriptor;
 
 /**
-* @author Steve Ebersole
-*/
-public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
-	private final ScanOptions scanOptions;
+ * Defines handling and filtering for class file entries within an archive
+ *
+ * @author Steve Ebersole
+ */
+public class ClassFileArchiveEntryHandler extends AbstractJavaArtifactArchiveEntryHandler {
 	private final Callback callback;
 
+	/**
+	 * Contract for the thing interested in being notified about accepted class descriptors.
+	 */
 	public static interface Callback {
 		public void locatedClass(ClassDescriptor classDescriptor);
 	}
 
 	public ClassFileArchiveEntryHandler(ScanOptions scanOptions, Callback callback) {
-		this.scanOptions = scanOptions;
+		super( scanOptions );
 		this.callback = callback;
 	}
 
@@ -63,17 +65,8 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 		final ClassFile classFile = toClassFile( entry );
 		final ClassDescriptor classDescriptor = toClassDescriptor( classFile, entry );
 
-		if ( ! context.getPersistenceUnitDescriptor().getManagedClassNames().contains( classDescriptor.getName() ) ) {
-			if ( context.isRootUrl() ) {
-				if ( ! scanOptions.canDetectUnlistedClassesInRoot() ) {
-					return;
-				}
-			}
-			else {
-				if ( ! scanOptions.canDetectUnlistedClassesInNonRoot() ) {
-					return;
-				}
-			}
+		if ( ! isListedOrDetectable( context, classDescriptor.getName() ) ) {
+			return;
 		}
 
 		// we are only interested in classes with certain annotations, so see if the ClassDescriptor

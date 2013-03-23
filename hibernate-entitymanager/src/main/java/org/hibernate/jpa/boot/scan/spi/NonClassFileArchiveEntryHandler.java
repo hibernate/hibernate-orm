@@ -30,12 +30,17 @@ import org.hibernate.jpa.boot.internal.MappingFileDescriptorImpl;
 import org.hibernate.jpa.boot.spi.MappingFileDescriptor;
 
 /**
-* @author Steve Ebersole
-*/
+ * Defines handling and filtering for all non-class file (package-info is also a class file...) entries within an archive
+ *
+ * @author Steve Ebersole
+ */
 public class NonClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 	private final ScanOptions scanOptions;
 	private final Callback callback;
 
+	/**
+	 * Contract for the thing interested in being notified about accepted mapping file descriptors.
+	 */
 	public static interface Callback {
 		public void locatedMappingFile(MappingFileDescriptor mappingFileDescriptor);
 	}

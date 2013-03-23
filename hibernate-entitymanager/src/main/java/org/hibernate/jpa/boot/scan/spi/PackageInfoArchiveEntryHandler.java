@@ -25,26 +25,28 @@ package org.hibernate.jpa.boot.scan.spi;
 
 import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
 import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
-import org.hibernate.jpa.boot.archive.spi.ArchiveEntryHandler;
 import org.hibernate.jpa.boot.internal.PackageDescriptorImpl;
 import org.hibernate.jpa.boot.spi.PackageDescriptor;
 
 import static java.io.File.separatorChar;
 
 /**
+ * Defines handling and filtering for package-info file entries within an archive
+ *
  * @author Steve Ebersole
  */
-public class PackageInfoArchiveEntryHandler implements ArchiveEntryHandler {
-	@SuppressWarnings({"FieldCanBeLocal", "UnusedDeclaration"})
-	private final ScanOptions scanOptions;
+public class PackageInfoArchiveEntryHandler extends AbstractJavaArtifactArchiveEntryHandler  {
 	private final Callback callback;
 
+	/**
+	 * Contract for the thing interested in being notified about accepted package-info descriptors.
+	 */
 	public static interface Callback {
 		public void locatedPackage(PackageDescriptor packageDescriptor);
 	}
 
 	public PackageInfoArchiveEntryHandler(ScanOptions scanOptions, Callback callback) {
-		this.scanOptions = scanOptions;
+		super( scanOptions );
 		this.callback = callback;
 	}
 
@@ -54,6 +56,12 @@ public class PackageInfoArchiveEntryHandler implements ArchiveEntryHandler {
 			// the old code skipped package-info in the root package/dir...
 			return;
 		}
+
+		if ( ! isListedOrDetectable( context, entry.getName() ) ) {
+			// the package is not explicitly listed, and we are not allowed to detect it.
+			return;
+		}
+
 		notifyMatchedPackage( toPackageDescriptor( entry ) );
 	}
 

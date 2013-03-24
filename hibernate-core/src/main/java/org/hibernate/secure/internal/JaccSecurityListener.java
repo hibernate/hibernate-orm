@@ -24,9 +24,10 @@
 package org.hibernate.secure.internal;
 
 /**
- * Marker interface for JACC event listeners
+ * Marker interface for JACC event listeners.  Used in event listener duplication strategy checks; see
+ * {@link org.hibernate.secure.spi.JaccIntegrator} for details.
  * 
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
-public interface JACCSecurityListener {
+public interface JaccSecurityListener {
 }

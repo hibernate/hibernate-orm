@@ -134,7 +134,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.secure.internal.JACCConfiguration;
+import org.hibernate.secure.spi.GrantedPermission;
+import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
@@ -2198,23 +2199,42 @@ public class Configuration implements Serializable {
 		}
 	}
 
+	private JaccPermissionDeclarations jaccPermissionDeclarations;
+
 	private void parseSecurity(Element secNode) {
-		String contextId = secNode.attributeValue( "context" );
-		setProperty( Environment.JACC_CONTEXTID, contextId );
-		LOG.jaccContextId( contextId );
-		JACCConfiguration jcfg = new JACCConfiguration( contextId );
-		Iterator grantElements = secNode.elementIterator();
-		while ( grantElements.hasNext() ) {
-			Element grantElement = (Element) grantElements.next();
-			String elementName = grantElement.getName();
-			if ( "grant".equals( elementName ) ) {
-				jcfg.addPermission(
-						grantElement.attributeValue( "role" ),
-						grantElement.attributeValue( "entity-name" ),
-						grantElement.attributeValue( "actions" )
-					);
+		final String nodeContextId = secNode.attributeValue( "context" );
+
+		final String explicitContextId = getProperty( AvailableSettings.JACC_CONTEXT_ID );
+		if ( explicitContextId == null ) {
+			setProperty( AvailableSettings.JACC_CONTEXT_ID, nodeContextId );
+			LOG.jaccContextId( nodeContextId );
+		}
+		else {
+			// if they dont match, throw an error
+			if ( ! nodeContextId.equals( explicitContextId ) ) {
+				throw new HibernateException( "Non-matching JACC context ids" );
 			}
 		}
+		jaccPermissionDeclarations = new JaccPermissionDeclarations( nodeContextId );
+
+		Iterator grantElements = secNode.elementIterator();
+		while ( grantElements.hasNext() ) {
+			final Element grantElement = (Element) grantElements.next();
+			final String elementName = grantElement.getName();
+			if ( "grant".equals( elementName ) ) {
+				jaccPermissionDeclarations.addPermissionDeclaration(
+						new GrantedPermission(
+								grantElement.attributeValue( "role" ),
+								grantElement.attributeValue( "entity-name" ),
+								grantElement.attributeValue( "actions" )
+						)
+				);
+			}
+		}
+	}
+
+	public JaccPermissionDeclarations getJaccPermissionDeclarations() {
+		return jaccPermissionDeclarations;
 	}
 
 	RootClass getRootClassMapping(String clazz) throws MappingException {

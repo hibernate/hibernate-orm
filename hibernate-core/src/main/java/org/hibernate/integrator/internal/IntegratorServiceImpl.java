@@ -31,6 +31,7 @@ import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.secure.spi.JaccIntegrator;
 
 /**
  * @author Steve Ebersole
@@ -44,6 +45,7 @@ public class IntegratorServiceImpl implements IntegratorService {
 		// register standard integrators.  Envers and JPA, for example, need to be handled by discovery because in
 		// separate project/jars.
 		addIntegrator( new BeanValidationIntegrator() );
+		addIntegrator( new JaccIntegrator() );
 
 		// register provided integrators
 		for ( Integrator integrator : providedIntegrators ) {

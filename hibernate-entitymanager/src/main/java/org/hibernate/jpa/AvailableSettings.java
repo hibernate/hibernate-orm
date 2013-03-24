@@ -509,9 +509,9 @@ public interface AvailableSettings {
 	public static final String XML_FILE_NAMES = "hibernate.ejb.xml_files";
 	public static final String HBXML_FILES = "hibernate.hbmxml.files";
 	public static final String LOADED_CLASSES = "hibernate.ejb.loaded.classes";
-	public static final String JACC_CONTEXT_ID = "hibernate.jacc.ctx.id";
-	public static final String JACC_PREFIX = "hibernate.jacc";
-	public static final String JACC_ENABLED = "hibernate.jacc.enabled";
+	public static final String JACC_CONTEXT_ID = org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
+	public static final String JACC_PREFIX = org.hibernate.cfg.AvailableSettings.JACC_PREFIX;
+	public static final String JACC_ENABLED = org.hibernate.cfg.AvailableSettings.JACC_ENABLED;
 	public static final String PERSISTENCE_UNIT_NAME = "hibernate.ejb.persistenceUnitName";
 
 }

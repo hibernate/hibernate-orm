@@ -30,7 +30,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
@@ -65,11 +64,6 @@ import org.hibernate.jpa.event.internal.jpa.StandardListenerFactory;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.secure.internal.JACCPreDeleteEventListener;
-import org.hibernate.secure.internal.JACCPreInsertEventListener;
-import org.hibernate.secure.internal.JACCPreLoadEventListener;
-import org.hibernate.secure.internal.JACCPreUpdateEventListener;
-import org.hibernate.secure.internal.JACCSecurityListener;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -89,19 +83,6 @@ public class JpaIntegrator implements Integrator {
 		public boolean areMatch(Object listener, Object original) {
 			return listener.getClass().equals( original.getClass() ) &&
 					HibernateEntityManagerEventListener.class.isInstance( original );
-		}
-
-		@Override
-		public Action getAction() {
-			return Action.KEEP_ORIGINAL;
-		}
-	};
-
-	private static final DuplicationStrategy JACC_DUPLICATION_STRATEGY = new DuplicationStrategy() {
-		@Override
-		public boolean areMatch(Object listener, Object original) {
-			return listener.getClass().equals( original.getClass() ) &&
-					JACCSecurityListener.class.isInstance( original );
 		}
 
 		@Override
@@ -137,10 +118,7 @@ public class JpaIntegrator implements Integrator {
 		// then prepare listeners
 		final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 
-		boolean isSecurityEnabled = configuration.getProperties().containsKey( AvailableSettings.JACC_ENABLED );
-
 		eventListenerRegistry.addDuplicationStrategy( JPA_DUPLICATION_STRATEGY );
-		eventListenerRegistry.addDuplicationStrategy( JACC_DUPLICATION_STRATEGY );
 
 		// op listeners
 		eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, JpaAutoFlushEventListener.INSTANCE );
@@ -152,15 +130,6 @@ public class JpaIntegrator implements Integrator {
 		eventListenerRegistry.setListeners( EventType.PERSIST_ONFLUSH, new JpaPersistOnFlushEventListener() );
 		eventListenerRegistry.setListeners( EventType.SAVE, new JpaSaveEventListener() );
 		eventListenerRegistry.setListeners( EventType.SAVE_UPDATE, new JpaSaveOrUpdateEventListener() );
-
-		// pre op listeners
-		if ( isSecurityEnabled ) {
-			final String jaccContextId = configuration.getProperty( Environment.JACC_CONTEXTID );
-			eventListenerRegistry.prependListeners( EventType.PRE_DELETE, new JACCPreDeleteEventListener(jaccContextId) );
-			eventListenerRegistry.prependListeners( EventType.PRE_INSERT, new JACCPreInsertEventListener(jaccContextId) );
-			eventListenerRegistry.prependListeners( EventType.PRE_UPDATE, new JACCPreUpdateEventListener(jaccContextId) );
-			eventListenerRegistry.prependListeners( EventType.PRE_LOAD, new JACCPreLoadEventListener(jaccContextId) );
-		}
 
 		// post op listeners
 		eventListenerRegistry.prependListeners( EventType.POST_DELETE, new JpaPostDeleteEventListener() );
@@ -268,10 +237,7 @@ public class JpaIntegrator implements Integrator {
 		// then prepare listeners
         final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 
-        boolean isSecurityEnabled = sessionFactory.getProperties().containsKey( AvailableSettings.JACC_ENABLED );
-
         eventListenerRegistry.addDuplicationStrategy( JPA_DUPLICATION_STRATEGY );
-        eventListenerRegistry.addDuplicationStrategy( JACC_DUPLICATION_STRATEGY );
 
         // op listeners
         eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, JpaAutoFlushEventListener.INSTANCE );
@@ -283,15 +249,6 @@ public class JpaIntegrator implements Integrator {
         eventListenerRegistry.setListeners( EventType.PERSIST_ONFLUSH, new JpaPersistOnFlushEventListener() );
         eventListenerRegistry.setListeners( EventType.SAVE, new JpaSaveEventListener() );
         eventListenerRegistry.setListeners( EventType.SAVE_UPDATE, new JpaSaveOrUpdateEventListener() );
-
-        // pre op listeners
-        if ( isSecurityEnabled ) {
-            final String jaccContextId = sessionFactory.getProperties().getProperty( Environment.JACC_CONTEXTID );
-            eventListenerRegistry.prependListeners( EventType.PRE_DELETE, new JACCPreDeleteEventListener(jaccContextId) );
-            eventListenerRegistry.prependListeners( EventType.PRE_INSERT, new JACCPreInsertEventListener(jaccContextId) );
-            eventListenerRegistry.prependListeners( EventType.PRE_UPDATE, new JACCPreUpdateEventListener(jaccContextId) );
-            eventListenerRegistry.prependListeners( EventType.PRE_LOAD, new JACCPreLoadEventListener(jaccContextId) );
-        }
 
         // post op listeners
         eventListenerRegistry.prependListeners( EventType.POST_DELETE, new JpaPostDeleteEventListener() );

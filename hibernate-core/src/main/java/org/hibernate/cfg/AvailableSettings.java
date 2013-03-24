@@ -417,11 +417,6 @@ public interface AvailableSettings {
 	 */
     public static final String DEFAULT_ENTITY_MODE = "hibernate.default_entity_mode";
 
-    /**
-     * The jacc context id of the deployment
-     */
-    public static final String JACC_CONTEXTID = "hibernate.jacc_context_id";
-
 	/**
 	 * Should all database identifiers be quoted.
 	 */
@@ -639,4 +634,8 @@ public interface AvailableSettings {
 	 * Default is <code>true</code> (enabled).
 	 */
 	public static final String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
+
+	public static final String JACC_CONTEXT_ID = "hibernate.jacc_context_id";
+	public static final String JACC_PREFIX = "hibernate.jacc";
+	public static final String JACC_ENABLED = "hibernate.jacc.enabled";
 }

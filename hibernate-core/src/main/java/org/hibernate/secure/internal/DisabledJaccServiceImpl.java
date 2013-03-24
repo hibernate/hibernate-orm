@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,30 +23,26 @@
  */
 package org.hibernate.secure.internal;
 
-import javax.security.jacc.EJBMethodPermission;
+import org.jboss.logging.Logger;
 
-import org.hibernate.event.spi.PreLoadEvent;
-import org.hibernate.event.spi.PreLoadEventListener;
+import org.hibernate.secure.spi.GrantedPermission;
+import org.hibernate.secure.spi.JaccService;
+import org.hibernate.secure.spi.PermissibleAction;
+import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 /**
- * Check security before any load
- *
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Steve Ebersole
  */
-public class JACCPreLoadEventListener implements PreLoadEventListener, JACCSecurityListener {
-	private final String contextId;
+public class DisabledJaccServiceImpl implements JaccService {
+	private static final Logger log = Logger.getLogger( DisabledJaccServiceImpl.class );
 
-	public JACCPreLoadEventListener(String contextId) {
-		this.contextId = contextId;
+	@Override
+	public void addPermission(GrantedPermission permissionDeclaration) {
+		log.debug( "Ignoring call to addPermission on disabled JACC service" );
 	}
 
-	public void onPreLoad(PreLoadEvent event) {
-		final EJBMethodPermission loadPermission = new EJBMethodPermission(
-				event.getPersister().getEntityName(),
-				HibernatePermission.READ,
-				null,
-				null
-		);
-		JACCPermissions.checkPermission( event.getEntity().getClass(), contextId, loadPermission );
+	@Override
+	public void checkPermission(PermissionCheckEntityInformation entityInformation, PermissibleAction action) {
+		log.debug( "Ignoring call to checkPermission on disabled JACC service" );
 	}
 }

@@ -26,13 +26,17 @@ package org.hibernate.event.spi;
 import java.io.Serializable;
 
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 /**
  * Represents an operation we are about to perform against the database.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractPreDatabaseOperationEvent extends AbstractEvent {
+public abstract class AbstractPreDatabaseOperationEvent
+		extends AbstractEvent
+		implements PermissionCheckEntityInformation {
+
 	private final Object entity;
 	private final Serializable id;
 	private final EntityPersister persister;
@@ -61,6 +65,7 @@ public abstract class AbstractPreDatabaseOperationEvent extends AbstractEvent {
 	 *
 	 * @return The entity.
 	 */
+	@Override
 	public Object getEntity() {
 		return entity;
 	}
@@ -96,5 +101,15 @@ public abstract class AbstractPreDatabaseOperationEvent extends AbstractEvent {
 	 */
 	public EventSource getSource() {
 		return getSession();
+	}
+
+	@Override
+	public String getEntityName() {
+		return persister.getEntityName();
+	}
+
+	@Override
+	public Serializable getIdentifier() {
+		return id;
 	}
 }

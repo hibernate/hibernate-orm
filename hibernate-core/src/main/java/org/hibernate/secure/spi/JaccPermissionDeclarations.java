@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,33 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.secure.internal;
+package org.hibernate.secure.spi;
 
-import javax.security.jacc.EJBMethodPermission;
-
-import org.hibernate.event.spi.PreUpdateEvent;
-import org.hibernate.event.spi.PreUpdateEventListener;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Check security before any update
- *
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Steve Ebersole
  */
-public class JACCPreUpdateEventListener implements PreUpdateEventListener, JACCSecurityListener {
+public class JaccPermissionDeclarations {
 	private final String contextId;
+	private List<GrantedPermission> permissionDeclarations;
 
-	public JACCPreUpdateEventListener(String contextId) {
+	public JaccPermissionDeclarations(String contextId) {
 		this.contextId = contextId;
 	}
 
-	public boolean onPreUpdate(PreUpdateEvent event) {
-		final EJBMethodPermission updatePermission = new EJBMethodPermission(
-				event.getPersister().getEntityName(),
-				HibernatePermission.UPDATE,
-				null,
-				null
-		);
-		JACCPermissions.checkPermission( event.getEntity().getClass(), contextId, updatePermission );
-		return false;
+	public void addPermissionDeclaration(GrantedPermission permissionDeclaration) {
+		if ( permissionDeclarations == null ) {
+			permissionDeclarations = new ArrayList<GrantedPermission>();
+		}
+		permissionDeclarations.add( permissionDeclaration );
+	}
+
+	public Iterable<GrantedPermission> getPermissionDeclarations() {
+		return permissionDeclarations;
 	}
 }

@@ -65,9 +65,7 @@ public class NamespaceAddingEventReader extends EventReaderDelegate {
 		Iterator<?> originalNamespaces = startElement.getNamespaces();
 		while ( originalNamespaces.hasNext() ) {
 			Namespace ns = (Namespace) originalNamespaces.next();
-			if ( !LocalXmlResourceResolver.INITIAL_JPA_ORM_NS.equals( ns.getNamespaceURI() ) ) {
-				namespaces.add( ns );
-			}
+			namespaces.add( ns );
 		}
 		return xmlEventFactory.createStartElement(
 				new QName( namespaceUri, startElement.getName().getLocalPart() ),

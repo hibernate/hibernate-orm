@@ -52,7 +52,7 @@ public class ConfigLoader {
 			new ValueHolder.DeferredInitializer<JaxbConfigurationProcessor>() {
 				@Override
 				public JaxbConfigurationProcessor initialize() {
-					return new JaxbConfigurationProcessor( bootstrapServiceRegistry.getService( ClassLoaderService.class ) );
+					return new JaxbConfigurationProcessor( bootstrapServiceRegistry );
 				}
 			}
 	);
@@ -66,7 +66,7 @@ public class ConfigLoader {
 		if ( stream == null ) {
 			throw new ConfigurationException( "Could not locate cfg.xml resource [" + cfgXmlResourceName + "]" );
 		}
-		return jaxbProcessorHolder.getValue().unmarshal( stream, new Origin( SourceType.RESOURCE, cfgXmlResourceName ) );
+		return (JaxbHibernateConfiguration)jaxbProcessorHolder.getValue().unmarshal( stream, new Origin( SourceType.RESOURCE, cfgXmlResourceName ) ).getRoot();
 	}
 
 	public Properties loadProperties(String resourceName) {

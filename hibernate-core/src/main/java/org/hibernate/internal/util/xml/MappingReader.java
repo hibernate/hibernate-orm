@@ -265,16 +265,19 @@ public class MappingReader {
 			return schema;
 		}
 	}
-
-	private static URL resolveLocalSchemaUrl(String schemaName) {
+	//these should move to a helper class
+	public static URL resolveLocalSchemaUrl(String schemaName) {
 		URL url = MappingReader.class.getClassLoader().getResource( schemaName );
 		if ( url == null ) {
 			throw new XmlInfrastructureException( "Unable to locate schema [" + schemaName + "] via classpath" );
 		}
 		return url;
 	}
+	public static Schema resolveLocalSchema(String schemaName){
+		return resolveLocalSchema( resolveLocalSchemaUrl( schemaName ) );
 
-	private static Schema resolveLocalSchema(URL schemaUrl) {
+	}
+	public static Schema resolveLocalSchema(URL schemaUrl) {
 
 		try {
 			InputStream schemaStream = schemaUrl.openStream();

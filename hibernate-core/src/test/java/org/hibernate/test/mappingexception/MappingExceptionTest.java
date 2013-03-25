@@ -18,6 +18,7 @@ import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -30,6 +31,7 @@ import static org.junit.Assert.fail;
  *
  * @author Max Rydahl Andersen
  */
+@FailureExpectedWithNewMetamodel
 public class MappingExceptionTest extends BaseUnitTestCase {
 	@Test
 	public void testNotFound() throws MappingException, MalformedURLException {

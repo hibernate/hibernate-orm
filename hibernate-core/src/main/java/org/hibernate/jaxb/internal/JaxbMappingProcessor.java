@@ -23,10 +23,7 @@
  */
 package org.hibernate.jaxb.internal;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -41,19 +38,11 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stax.StAXSource;
-import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
-
-import org.hibernate.InvalidMappingException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.xml.LocalXmlResourceResolver;
 import org.hibernate.internal.util.xml.MappingReader;
@@ -62,7 +51,6 @@ import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
 import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.spi.source.XsdException;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -71,15 +59,12 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
-public class JaxbMappingProcessor {
+public class JaxbMappingProcessor extends AbstractJaxbProcessor{
 	private static final Logger log = Logger.getLogger( JaxbMappingProcessor.class );
 
 	public static final String ASSUMED_ORM_XSD_VERSION = "2.1";
 	public static final String VALIDATE_XML_SETTING = "hibernate.xml.validate";
 	public static final String HIBERNATE_MAPPING_URI = "http://www.hibernate.org/xsd/hibernate-mapping";
-
-	private final ServiceRegistry serviceRegistry;
-	private final boolean validateXml;
 
 	public JaxbMappingProcessor(ServiceRegistry serviceRegistry) {
 		this( serviceRegistry, true );
@@ -94,130 +79,78 @@ public class JaxbMappingProcessor {
 	}
 
 	public JaxbMappingProcessor(ServiceRegistry serviceRegistry, boolean validateXml) {
-		this.serviceRegistry = serviceRegistry;
-		this.validateXml = validateXml;
+		super(serviceRegistry, validateXml);
 	}
 
-	public JaxbRoot unmarshal(InputStream stream, Origin origin) {
-		try {
-			XMLEventReader staxReader = staxFactory().createXMLEventReader( stream );
-			try {
-				return unmarshal( staxReader, origin );
-			}
-			finally {
-				try {
-					staxReader.close();
-				}
-				catch ( Exception ignore ) {
-				}
-			}
-		}
-		catch ( XMLStreamException e ) {
-			throw new MappingException( "Unable to create stax reader", e, origin );
-		}
-	}
-
-	private XMLInputFactory staxFactory;
-
-	private XMLInputFactory staxFactory() {
-		if ( staxFactory == null ) {
-			staxFactory = buildStaxFactory();
-		}
-		return staxFactory;
-	}
-
-	@SuppressWarnings( { "UnnecessaryLocalVariable" })
-	private XMLInputFactory buildStaxFactory() {
-		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
-		staxFactory.setXMLResolver( LocalXmlResourceResolver.INSTANCE );
-		return staxFactory;
-	}
-
-	private static final QName ORM_VERSION_ATTRIBUTE_QNAME = new QName( "version" );
-
-	@SuppressWarnings( { "unchecked" })
-	private JaxbRoot unmarshal(XMLEventReader staxEventReader, final Origin origin) {
-		XMLEvent event;
-		try {
-			event = staxEventReader.peek();
-			while ( event != null && !event.isStartElement() ) {
-				staxEventReader.nextEvent();
-				event = staxEventReader.peek();
-			}
-		}
-		catch ( Exception e ) {
-			throw new MappingException( "Error accessing stax stream", e, origin );
-		}
-
-		if ( event == null ) {
-			throw new MappingException( "Could not locate root element", origin );
-		}
-
-		final Schema validationSchema;
-		final Class jaxbTarget;
-
+	@Override
+	protected JAXBContext getJaxbContext(XMLEvent event) throws JAXBException {
 		final String elementName = event.asStartElement().getName().getLocalPart();
+		final Class jaxbTarget;
+		if ( "entity-mappings".equals( elementName ) ) {
+			jaxbTarget = JaxbEntityMappings.class;
+		}
+		else {
+			jaxbTarget = JaxbHibernateMapping.class;
+		}
+		return JAXBContext.newInstance( jaxbTarget );
+	}
 
+	@Override
+	protected Schema getSchema(XMLEvent event, Origin origin) throws JAXBException {
+		final String elementName = event.asStartElement().getName().getLocalPart();
+		final Schema validationSchema;
 		if ( "entity-mappings".equals( elementName ) ) {
 			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
 			final String explicitVersion = attribute == null ? null : attribute.getValue();
 			if ( !"2.1".equals( explicitVersion ) ) {
-				if ( validateXml ) {
-					MappingReader.validateMapping(
-							MappingReader.SupportedOrmXsdVersion.parse( explicitVersion, origin ),
-							staxEventReader,
-							origin
-					);
-				}
-				staxEventReader = new LegacyJPAEventReader(
-						staxEventReader,
-						LocalXmlResourceResolver.SECOND_JPA_ORM_NS
-				);
+				//xsd validation for non jpa 2.1 orm.xml is currently disabled
+//				if ( validateXml ) {
+//					MappingReader.validateMapping(
+//							MappingReader.SupportedOrmXsdVersion.parse( explicitVersion, origin ),
+//							staxEventReader,
+//							origin
+//					);
+//				}
 				validationSchema = null; //disable JAXB validation
 			}
 			else {
 				validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion, origin ) : null;
 			}
-			jaxbTarget = JaxbEntityMappings.class;
+		}
+		else {
+			validationSchema = validateXml ? MappingReader.SupportedOrmXsdVersion.HBM_4_0.getSchema() : null;
+		}
+		return validationSchema;
+	}
+
+	@Override
+	protected XMLEventReader wrapReader(XMLEventReader staxEventReader, XMLEvent event) {
+		final String elementName = event.asStartElement().getName().getLocalPart();
+		if ( "entity-mappings".equals( elementName ) ) {
+			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
+			final String explicitVersion = attribute == null ? null : attribute.getValue();
+			if ( !"2.1".equals( explicitVersion ) ) {
+				return new LegacyJPAEventReader(
+						staxEventReader,
+						LocalXmlResourceResolver.SECOND_JPA_ORM_NS
+				);
+			}
 		}
 		else {
 			if ( !isNamespaced( event.asStartElement() ) ) {
 				// if the elements are not namespaced, wrap the reader in a reader which will namespace them as pulled.
 				log.debug( "HBM mapping document did not define namespaces; wrapping in custom event reader to introduce namespace information" );
-				staxEventReader = new NamespaceAddingEventReader( staxEventReader, HIBERNATE_MAPPING_URI );
+				return  new NamespaceAddingEventReader( staxEventReader, HIBERNATE_MAPPING_URI );
 			}
-			validationSchema = validateXml ? MappingReader.SupportedOrmXsdVersion.HBM_4_0.getSchema() : null;
-			jaxbTarget = JaxbHibernateMapping.class;
 		}
-
-		final Object target;
-		final ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
-		try {
-			JAXBContext jaxbContext = JAXBContext.newInstance( jaxbTarget );
-			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-			unmarshaller.setSchema( validationSchema );
-			unmarshaller.setEventHandler( handler );
-			target = unmarshaller.unmarshal( staxEventReader );
-		}
-		catch ( JAXBException e ) {
-			e.printStackTrace();
-			StringBuilder builder = new StringBuilder();
-			builder.append( "Unable to perform unmarshalling at line number " );
-			builder.append( handler.getLineNumber() );
-			builder.append( " and column " );
-			builder.append( handler.getColumnNumber() );
-			builder.append( ". Message: " );
-			builder.append( handler.getMessage() );
-			throw new MappingException( builder.toString(), e, origin );
-		}
-
-		return new JaxbRoot( target, origin );
+		return super.wrapReader( staxEventReader, event );
 	}
 
+	private static final QName ORM_VERSION_ATTRIBUTE_QNAME = new QName( "version" );
 
-	private boolean isNamespaced(StartElement startElement) {
-		return ! "".equals( startElement.getName().getNamespaceURI() );
-	}
+
+
+
 
 	@SuppressWarnings( { "unchecked" })
 	public JaxbRoot unmarshal(Document document, Origin origin) {
@@ -235,7 +168,7 @@ public class JaxbMappingProcessor {
 			jaxbTarget = JaxbEntityMappings.class;
 		}
 		else {
-			validationSchema = validateXml ? hbmSchema() : null;
+			validationSchema = validateXml ? MappingReader.SupportedOrmXsdVersion.HBM_4_0.getSchema() : null;
 			jaxbTarget = JaxbHibernateMapping.class;
 		}
 
@@ -258,80 +191,5 @@ public class JaxbMappingProcessor {
 			return MappingReader.SupportedOrmXsdVersion.ORM_2_1.getSchema();
 		}
 		return MappingReader.SupportedOrmXsdVersion.parse( explicitVersion, origin ).getSchema();
-	}
-
-	public static final String HBM_SCHEMA_NAME = "org/hibernate/hibernate-mapping-4.0.xsd";
-
-	private Schema hbmSchema;
-
-	private Schema hbmSchema() {
-		if ( hbmSchema == null ) {
-			hbmSchema = resolveLocalSchema( HBM_SCHEMA_NAME );
-		}
-		return hbmSchema;
-	}
-
-
-	private Schema resolveLocalSchema(String schemaName) {
-		return resolveLocalSchema( schemaName, XMLConstants.W3C_XML_SCHEMA_NS_URI );
-	}
-
-	private Schema resolveLocalSchema(String schemaName, String schemaLanguage) {
-		URL url = serviceRegistry.getService( ClassLoaderService.class ).locateResource( schemaName );
-		if ( url == null ) {
-			throw new XsdException( "Unable to locate schema [" + schemaName + "] via classpath", schemaName );
-		}
-		try {
-			InputStream schemaStream = url.openStream();
-			try {
-				StreamSource source = new StreamSource( url.openStream() );
-				SchemaFactory schemaFactory = SchemaFactory.newInstance( schemaLanguage );
-				return schemaFactory.newSchema( source );
-			}
-			catch ( SAXException e ) {
-				throw new XsdException( "Unable to load schema [" + schemaName + "]", e, schemaName );
-			}
-			catch ( IOException e ) {
-				throw new XsdException( "Unable to load schema [" + schemaName + "]", e, schemaName );
-			}
-			finally {
-				try {
-					schemaStream.close();
-				}
-				catch ( IOException e ) {
-					log.debugf( "Problem closing schema stream [%s]", e.toString() );
-				}
-			}
-		}
-		catch ( IOException e ) {
-			throw new XsdException( "Stream error handling schema url [" + url.toExternalForm() + "]", schemaName );
-		}
-	}
-
-	static class ContextProvidingValidationEventHandler implements ValidationEventHandler {
-		private int lineNumber;
-		private int columnNumber;
-		private String message;
-
-		@Override
-		public boolean handleEvent(ValidationEvent validationEvent) {
-			ValidationEventLocator locator = validationEvent.getLocator();
-			lineNumber = locator.getLineNumber();
-			columnNumber = locator.getColumnNumber();
-			message = validationEvent.getMessage();
-			return false;
-		}
-
-		public int getLineNumber() {
-			return lineNumber;
-		}
-
-		public int getColumnNumber() {
-			return columnNumber;
-		}
-
-		public String getMessage() {
-			return message;
-		}
 	}
 }

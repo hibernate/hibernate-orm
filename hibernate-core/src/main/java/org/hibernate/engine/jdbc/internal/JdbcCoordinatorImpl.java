@@ -370,14 +370,15 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public void register(ResultSet resultSet) {
+	public void register(ResultSet resultSet, Statement statement) {
 		LOG.tracev( "Registering result set [{0}]", resultSet );
-		Statement statement;
-		try {
-			statement = resultSet.getStatement();
-		}
-		catch ( SQLException e ) {
-			throw exceptionHelper.convert( e, "unable to access statement from resultset" );
+		if ( statement == null ) {
+			try {
+				statement = resultSet.getStatement(); // best guess
+			}
+			catch ( SQLException e ) {
+				throw exceptionHelper.convert( e, "unable to access statement from resultset" );
+			}
 		}
 		if ( statement != null ) {
 			if ( LOG.isEnabled( Level.WARN ) && !xref.containsKey( statement ) ) {

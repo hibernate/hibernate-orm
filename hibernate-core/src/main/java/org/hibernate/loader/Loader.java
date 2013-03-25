@@ -896,9 +896,9 @@ public abstract class Loader {
 
 		final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
 
-		final ResultSet rs = executeQueryStatement( queryParameters, false, afterLoadActions, session );
-		final Statement st = rs.getStatement();
-		final int entitySpan = getEntityPersisters().length;
+		final SqlStatementWrapper wrapper = executeQueryStatement( queryParameters, false, afterLoadActions, session );
+		final ResultSet rs = wrapper.getResultSet();
+		final Statement st = wrapper.getStatement();
 
 // would be great to move all this below here into another method that could also be used
 // from the new scrolling stuff.
@@ -1803,7 +1803,7 @@ public abstract class Loader {
 	 * Process query string by applying filters, LIMIT clause, locks and comments if necessary.
 	 * Finally execute SQL statement and advance to the first row.
 	 */
-	protected ResultSet executeQueryStatement(
+	protected SqlStatementWrapper executeQueryStatement(
 			final QueryParameters queryParameters,
 			final boolean scroll,
 			List<AfterLoadAction> afterLoadActions,
@@ -1811,10 +1811,10 @@ public abstract class Loader {
 		return executeQueryStatement( getSQLString(), queryParameters, scroll, afterLoadActions, session );
 	}
 
-	protected ResultSet executeQueryStatement(
-			final String sqlStatement,
-			final QueryParameters queryParameters,
-			final boolean scroll,
+	protected SqlStatementWrapper executeQueryStatement(
+			String sqlStatement,
+			QueryParameters queryParameters,
+			boolean scroll,
 			List<AfterLoadAction> afterLoadActions,
 			final SessionImplementor session) throws SQLException {
 
@@ -1829,7 +1829,7 @@ public abstract class Loader {
 		sql = preprocessSQL( sql, queryParameters, getFactory().getDialect(), afterLoadActions );
 
 		final PreparedStatement st = prepareQueryStatement( sql, queryParameters, limitHandler, scroll, session );
-		return getResultSet( st, queryParameters.getRowSelection(), limitHandler, queryParameters.hasAutoDiscoverScalarTypes(), session );
+		return new SqlStatementWrapper( st, getResultSet( st, queryParameters.getRowSelection(), limitHandler, queryParameters.hasAutoDiscoverScalarTypes(), session ) );
 	}
 
 	/**
@@ -2583,8 +2583,9 @@ public abstract class Loader {
 		if ( stats ) startTime = System.currentTimeMillis();
 
 		try {
-			final ResultSet rs = executeQueryStatement( queryParameters, true, Collections.<AfterLoadAction>emptyList(), session );
-			final PreparedStatement st = (PreparedStatement) rs.getStatement();
+			final SqlStatementWrapper wrapper = executeQueryStatement( queryParameters, true, Collections.<AfterLoadAction>emptyList(), session );
+			final ResultSet rs = wrapper.getResultSet();
+			final PreparedStatement st = (PreparedStatement) wrapper.getStatement();
 
 			if ( stats ) {
 				getFactory().getStatisticsImplementor().queryExecuted(
@@ -2656,5 +2657,26 @@ public abstract class Loader {
 	@Override
     public String toString() {
 		return getClass().getName() + '(' + getSQLString() + ')';
+	}
+
+	/**
+	 * Wrapper class for {@link Statement} and associated {@link ResultSet}.
+	 */
+	protected static class SqlStatementWrapper {
+		private final Statement statement;
+		private final ResultSet resultSet;
+
+		private SqlStatementWrapper(Statement statement, ResultSet resultSet) {
+			this.resultSet = resultSet;
+			this.statement = statement;
+		}
+
+		public ResultSet getResultSet() {
+			return resultSet;
+		}
+
+		public Statement getStatement() {
+			return statement;
+		}
 	}
 }

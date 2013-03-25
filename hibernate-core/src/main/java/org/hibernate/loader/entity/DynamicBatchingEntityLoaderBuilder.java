@@ -27,10 +27,8 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -45,6 +43,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A BatchingEntityLoaderBuilder that builds UniqueEntityLoader instances capable of dynamically building
@@ -254,9 +253,10 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					selection.getMaxRows() :
 					Integer.MAX_VALUE;
 
-			final List<AfterLoadAction> afterLoadActions = Collections.emptyList();
-			final ResultSet rs = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
-			final Statement st = rs.getStatement();
+			final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
+			final SqlStatementWrapper wrapper = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
+			final ResultSet rs = wrapper.getResultSet();
+			final Statement st = wrapper.getStatement();
 			try {
 				return processResultSet( rs, queryParameters, session, false, null, maxRows, afterLoadActions );
 			}

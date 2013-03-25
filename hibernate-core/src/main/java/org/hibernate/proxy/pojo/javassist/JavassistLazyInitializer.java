@@ -197,7 +197,16 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 						}
 						returnValue = thisMethod.invoke( target, args );
 					}
-					return returnValue == target && returnValue.getClass().isInstance(proxy) ? proxy : returnValue;
+					
+					if ( returnValue == target ) {
+						if ( returnValue.getClass().isInstance(proxy) ) {
+							return proxy;
+						}
+						else {
+							LOG.narrowingProxy( returnValue.getClass() );
+						}
+					}
+					return returnValue;
 				}
 				catch ( InvocationTargetException ite ) {
 					throw ite.getTargetException();

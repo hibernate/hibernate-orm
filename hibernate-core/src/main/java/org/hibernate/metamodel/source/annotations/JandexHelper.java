@@ -46,6 +46,7 @@ import org.jboss.jandex.Type;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 
 /**
  * Utility methods for working with the jandex annotation index.
@@ -95,6 +96,10 @@ public class JandexHelper {
 			);
 		}
 
+		if ( type.isPrimitive() ) {
+			type = PrimitiveWrapperHelper.getDescriptorByPrimitiveType( type ).getWrapperClass();
+		}
+
 		// try getting the untyped value from Jandex
 		AnnotationValue annotationValue = annotation.value( element );
 
@@ -113,7 +118,8 @@ public class JandexHelper {
 							element,
 							annotation.name(),
 							type.getName()
-					)
+					),
+					e
 			);
 		}
 	}

@@ -23,11 +23,15 @@
  */
 package org.hibernate.metamodel.source.annotations.util;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.AttributeConverter;
 import javax.persistence.AttributeOverride;
 import javax.persistence.Basic;
 import javax.persistence.Column;
+import javax.persistence.Converter;
 import javax.persistence.Entity;
 import javax.persistence.LockModeType;
 import javax.persistence.NamedQuery;
@@ -42,6 +46,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
@@ -244,6 +249,36 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		}
 	}
 
+
+	@Test
+	public void testPrimitiveAnnotationAttributeTypes() {
+		@Converter( autoApply = true )
+		class MyConverter implements AttributeConverter<URL,String> {
+
+			@Override
+			public String convertToDatabaseColumn(URL attribute) {
+				return attribute.toExternalForm();
+			}
+
+			@Override
+			public URL convertToEntityAttribute(String dbData) {
+				try {
+					return new URL( dbData );
+				}
+				catch (MalformedURLException e) {
+					throw new HibernateException( "Could not convert string [" + dbData + "] to url", e );
+				}
+			}
+		}
+
+		Index index = JandexHelper.indexForClass( classLoaderService, MyConverter.class );
+		List<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.CONVERTER );
+		assertTrue( annotationInstances.size() == 1 );
+		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+
+		boolean value = JandexHelper.getValue( annotationInstance, "autoApply", boolean.class );
+		Assert.assertTrue( value );
+	}
 }
 
 

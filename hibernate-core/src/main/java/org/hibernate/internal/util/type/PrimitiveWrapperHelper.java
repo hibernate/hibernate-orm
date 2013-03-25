@@ -1,0 +1,269 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.internal.util.type;
+
+/**
+ * Helper for primitive/wrapper utilities.
+ *
+ * @author Steve Ebersole
+ */
+public class PrimitiveWrapperHelper {
+	/**
+	 * Describes a particular primitive/wrapper combo
+	 */
+	public static interface PrimitiveWrapperDescriptor<T> {
+		public Class<T> getPrimitiveClass();
+		public Class<T> getWrapperClass();
+	}
+
+	public static class BooleanDescriptor implements PrimitiveWrapperDescriptor<Boolean> {
+		public static final BooleanDescriptor INSTANCE = new BooleanDescriptor();
+
+		private BooleanDescriptor() {
+		}
+
+		@Override
+		public Class<Boolean> getPrimitiveClass() {
+			return boolean.class;
+		}
+
+		@Override
+		public Class<Boolean> getWrapperClass() {
+			return Boolean.class;
+		}
+	}
+
+	public static class CharacterDescriptor implements PrimitiveWrapperDescriptor<Character> {
+		public static final CharacterDescriptor INSTANCE = new CharacterDescriptor();
+
+		private CharacterDescriptor() {
+		}
+
+		@Override
+		public Class<Character> getPrimitiveClass() {
+			return char.class;
+		}
+
+		@Override
+		public Class<Character> getWrapperClass() {
+			return Character.class;
+		}
+	}
+
+	public static class ByteDescriptor implements PrimitiveWrapperDescriptor<Byte> {
+		public static final ByteDescriptor INSTANCE = new ByteDescriptor();
+
+		private ByteDescriptor() {
+		}
+
+		@Override
+		public Class<Byte> getPrimitiveClass() {
+			return byte.class;
+		}
+
+		@Override
+		public Class<Byte> getWrapperClass() {
+			return Byte.class;
+		}
+	}
+
+	public static class ShortDescriptor implements PrimitiveWrapperDescriptor<Short> {
+		public static final ShortDescriptor INSTANCE = new ShortDescriptor();
+
+		private ShortDescriptor() {
+		}
+
+		@Override
+		public Class<Short> getPrimitiveClass() {
+			return short.class;
+		}
+
+		@Override
+		public Class<Short> getWrapperClass() {
+			return Short.class;
+		}
+	}
+
+	public static class IntegerDescriptor implements PrimitiveWrapperDescriptor<Integer> {
+		public static final IntegerDescriptor INSTANCE = new IntegerDescriptor();
+
+		private IntegerDescriptor() {
+		}
+
+		@Override
+		public Class<Integer> getPrimitiveClass() {
+			return int.class;
+		}
+
+		@Override
+		public Class<Integer> getWrapperClass() {
+			return Integer.class;
+		}
+	}
+
+	public static class LongDescriptor implements PrimitiveWrapperDescriptor<Long> {
+		public static final LongDescriptor INSTANCE = new LongDescriptor();
+
+		private LongDescriptor() {
+		}
+
+		@Override
+		public Class<Long> getPrimitiveClass() {
+			return long.class;
+		}
+
+		@Override
+		public Class<Long> getWrapperClass() {
+			return Long.class;
+		}
+	}
+
+	public static class FloatDescriptor implements PrimitiveWrapperDescriptor<Float> {
+		public static final FloatDescriptor INSTANCE = new FloatDescriptor();
+
+		private FloatDescriptor() {
+		}
+
+		@Override
+		public Class<Float> getPrimitiveClass() {
+			return float.class;
+		}
+
+		@Override
+		public Class<Float> getWrapperClass() {
+			return Float.class;
+		}
+	}
+
+	public static class DoubleDescriptor implements PrimitiveWrapperDescriptor<Double> {
+		public static final DoubleDescriptor INSTANCE = new DoubleDescriptor();
+
+		private DoubleDescriptor() {
+		}
+
+		@Override
+		public Class<Double> getPrimitiveClass() {
+			return double.class;
+		}
+
+		@Override
+		public Class<Double> getWrapperClass() {
+			return Double.class;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <X> PrimitiveWrapperDescriptor<X> getDescriptorByPrimitiveType(Class<X> primitiveClazz) {
+		if ( ! primitiveClazz.isPrimitive() ) {
+			throw new IllegalArgumentException( "Given class is not a primitive type : " + primitiveClazz.getName() );
+		}
+
+		if ( boolean.class == primitiveClazz ) {
+			return (PrimitiveWrapperDescriptor<X>) BooleanDescriptor.INSTANCE;
+		}
+
+		if ( char.class == primitiveClazz ) {
+			return (PrimitiveWrapperDescriptor<X>) CharacterDescriptor.INSTANCE;
+		}
+
+		if ( byte.class == primitiveClazz ) {
+			return (PrimitiveWrapperDescriptor<X>) ByteDescriptor.INSTANCE;
+		}
+
+		if ( short.class == primitiveClazz ) {
+			return (PrimitiveWrapperDescriptor<X>) ShortDescriptor.INSTANCE;
+		}
+
+		if ( int.class == primitiveClazz ) {
+			return (PrimitiveWrapperDescriptor<X>) IntegerDescriptor.INSTANCE;
+		}
+
+		if ( long.class == primitiveClazz ) {
+			return (PrimitiveWrapperDescriptor<X>) LongDescriptor.INSTANCE;
+		}
+
+		if ( float.class == primitiveClazz ) {
+			return (PrimitiveWrapperDescriptor<X>) FloatDescriptor.INSTANCE;
+		}
+
+		if ( double.class == primitiveClazz ) {
+			return (PrimitiveWrapperDescriptor<X>) DoubleDescriptor.INSTANCE;
+		}
+
+		// most likely void.class, which we can't really handle here
+		throw new IllegalArgumentException( "Unrecognized primitive type class : " + primitiveClazz.getName() );
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <X> PrimitiveWrapperDescriptor<X> getDescriptorByWrapperType(Class<X> wrapperClass) {
+		if ( wrapperClass.isPrimitive() ) {
+			throw new IllegalArgumentException( "Given class is a primitive type : " + wrapperClass.getName() );
+		}
+
+		if ( Boolean.class.equals( wrapperClass ) ) {
+			return (PrimitiveWrapperDescriptor<X>) BooleanDescriptor.INSTANCE;
+		}
+
+		if ( Character.class == wrapperClass ) {
+			return (PrimitiveWrapperDescriptor<X>) CharacterDescriptor.INSTANCE;
+		}
+
+		if ( Byte.class == wrapperClass ) {
+			return (PrimitiveWrapperDescriptor<X>) ByteDescriptor.INSTANCE;
+		}
+
+		if ( Short.class == wrapperClass ) {
+			return (PrimitiveWrapperDescriptor<X>) ShortDescriptor.INSTANCE;
+		}
+
+		if ( Integer.class == wrapperClass ) {
+			return (PrimitiveWrapperDescriptor<X>) IntegerDescriptor.INSTANCE;
+		}
+
+		if ( Long.class == wrapperClass ) {
+			return (PrimitiveWrapperDescriptor<X>) LongDescriptor.INSTANCE;
+		}
+
+		if ( Float.class == wrapperClass ) {
+			return (PrimitiveWrapperDescriptor<X>) FloatDescriptor.INSTANCE;
+		}
+
+		if ( Double.class == wrapperClass ) {
+			return (PrimitiveWrapperDescriptor<X>) DoubleDescriptor.INSTANCE;
+		}
+
+		// most likely void.class, which we can't really handle here
+		throw new IllegalArgumentException( "Unrecognized wrapper type class : " + wrapperClass.getName() );
+	}
+
+	public static boolean isWrapper(Class<?> clazz) {
+		try {
+			getDescriptorByWrapperType( clazz );
+			return true;
+		}
+		catch (Exception e) {
+			return false;
+		}
+	}
+}

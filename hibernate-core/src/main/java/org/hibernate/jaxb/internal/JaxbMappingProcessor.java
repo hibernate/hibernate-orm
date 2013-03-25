@@ -41,16 +41,22 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
+import org.hibernate.InvalidMappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.xml.LocalXmlResourceResolver;
+import org.hibernate.internal.util.xml.MappingReader;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
@@ -68,7 +74,7 @@ import org.hibernate.service.ServiceRegistry;
 public class JaxbMappingProcessor {
 	private static final Logger log = Logger.getLogger( JaxbMappingProcessor.class );
 
-	public static final String ASSUMED_ORM_XSD_VERSION = "2.0";
+	public static final String ASSUMED_ORM_XSD_VERSION = "2.1";
 	public static final String VALIDATE_XML_SETTING = "hibernate.xml.validate";
 	public static final String HIBERNATE_MAPPING_URI = "http://www.hibernate.org/xsd/hibernate-mapping";
 
@@ -123,6 +129,7 @@ public class JaxbMappingProcessor {
 	@SuppressWarnings( { "UnnecessaryLocalVariable" })
 	private XMLInputFactory buildStaxFactory() {
 		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
+		staxFactory.setXMLResolver( LocalXmlResourceResolver.INSTANCE );
 		return staxFactory;
 	}
 
@@ -154,7 +161,23 @@ public class JaxbMappingProcessor {
 		if ( "entity-mappings".equals( elementName ) ) {
 			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
 			final String explicitVersion = attribute == null ? null : attribute.getValue();
-			validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion ) : null;
+			if ( !"2.1".equals( explicitVersion ) ) {
+				if ( validateXml ) {
+					MappingReader.validateMapping(
+							MappingReader.SupportedOrmXsdVersion.parse( explicitVersion, origin ),
+							staxEventReader,
+							origin
+					);
+				}
+				staxEventReader = new LegacyJPAEventReader(
+						staxEventReader,
+						LocalXmlResourceResolver.SECOND_JPA_ORM_NS
+				);
+				validationSchema = null; //disable JAXB validation
+			}
+			else {
+				validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion, origin ) : null;
+			}
 			jaxbTarget = JaxbEntityMappings.class;
 		}
 		else {
@@ -163,7 +186,7 @@ public class JaxbMappingProcessor {
 				log.debug( "HBM mapping document did not define namespaces; wrapping in custom event reader to introduce namespace information" );
 				staxEventReader = new NamespaceAddingEventReader( staxEventReader, HIBERNATE_MAPPING_URI );
 			}
-			validationSchema = validateXml ? hbmSchema() : null;
+			validationSchema = validateXml ? MappingReader.SupportedOrmXsdVersion.HBM_4_0.getSchema() : null;
 			jaxbTarget = JaxbHibernateMapping.class;
 		}
 
@@ -177,6 +200,7 @@ public class JaxbMappingProcessor {
 			target = unmarshaller.unmarshal( staxEventReader );
 		}
 		catch ( JAXBException e ) {
+			e.printStackTrace();
 			StringBuilder builder = new StringBuilder();
 			builder.append( "Unable to perform unmarshalling at line number " );
 			builder.append( handler.getLineNumber() );
@@ -189,6 +213,7 @@ public class JaxbMappingProcessor {
 
 		return new JaxbRoot( target, origin );
 	}
+
 
 	private boolean isNamespaced(StartElement startElement) {
 		return ! "".equals( startElement.getName().getNamespaceURI() );
@@ -206,7 +231,7 @@ public class JaxbMappingProcessor {
 
 		if ( "entity-mappings".equals( rootElement.getNodeName() ) ) {
 			final String explicitVersion = rootElement.getAttribute( "version" );
-			validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion ) : null;
+			validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion, origin ) : null;
 			jaxbTarget = JaxbEntityMappings.class;
 		}
 		else {
@@ -228,20 +253,14 @@ public class JaxbMappingProcessor {
 		return new JaxbRoot( target, origin );
 	}
 
-	private Schema resolveSupportedOrmXsd(String explicitVersion) {
-		final String xsdVersionString = explicitVersion == null ? ASSUMED_ORM_XSD_VERSION : explicitVersion;
-		if ( "1.0".equals( xsdVersionString ) ) {
-			return orm1Schema();
+	private Schema resolveSupportedOrmXsd(String explicitVersion, Origin origin) {
+		if( StringHelper.isEmpty(explicitVersion)){
+			return MappingReader.SupportedOrmXsdVersion.ORM_2_1.getSchema();
 		}
-		else if ( "2.0".equals( xsdVersionString ) ) {
-			return orm2Schema();
-		}
-		throw new IllegalArgumentException( "Unsupported orm.xml XSD version encountered [" + xsdVersionString + "]" );
+		return MappingReader.SupportedOrmXsdVersion.parse( explicitVersion, origin ).getSchema();
 	}
 
 	public static final String HBM_SCHEMA_NAME = "org/hibernate/hibernate-mapping-4.0.xsd";
-	public static final String ORM_1_SCHEMA_NAME = "org/hibernate/ejb/orm_1_0.xsd";
-	public static final String ORM_2_SCHEMA_NAME = "org/hibernate/ejb/orm_2_0.xsd";
 
 	private Schema hbmSchema;
 
@@ -252,23 +271,6 @@ public class JaxbMappingProcessor {
 		return hbmSchema;
 	}
 
-	private Schema orm1Schema;
-
-	private Schema orm1Schema() {
-		if ( orm1Schema == null ) {
-			orm1Schema = resolveLocalSchema( ORM_1_SCHEMA_NAME );
-		}
-		return orm1Schema;
-	}
-
-	private Schema orm2Schema;
-
-	private Schema orm2Schema() {
-		if ( orm2Schema == null ) {
-			orm2Schema = resolveLocalSchema( ORM_2_SCHEMA_NAME );
-		}
-		return orm2Schema;
-	}
 
 	private Schema resolveLocalSchema(String schemaName) {
 		return resolveLocalSchema( schemaName, XMLConstants.W3C_XML_SCHEMA_NS_URI );

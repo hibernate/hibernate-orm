@@ -65,10 +65,12 @@ import javax.persistence.ExcludeDefaultListeners;
 import javax.persistence.ExcludeSuperclassListeners;
 import javax.persistence.FetchType;
 import javax.persistence.FieldResult;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.Index;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
@@ -227,6 +229,8 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( MapKeyJoinColumns.class, "map-key-join-column" );
 		annotationToXml.put( OrderColumn.class, "order-column" );
 		annotationToXml.put( Cacheable.class, "cacheable" );
+		annotationToXml.put( Index.class, "index" );
+		annotationToXml.put( ForeignKey.class, "foreign-key" );
 	}
 
 	private XMLContext xmlContext;
@@ -659,6 +663,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			annotation.setValue( "schema", defaults.getSchema() );
 		}
 		buildUniqueConstraints( annotation, subelement );
+		buildIndex( annotation, subelement );
 		annotation.setValue( "joinColumns", getJoinColumns( subelement, false ) );
 		annotation.setValue( "inverseJoinColumns", getJoinColumns( subelement, true ) );
 		return AnnotationFactory.create( annotation );
@@ -1069,6 +1074,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				annotation.setValue( "joinColumns", joinColumns );
 			}
 			buildUniqueConstraints( annotation, subelement );
+			buildIndex( annotation, subelement );
 			annotationList.add( AnnotationFactory.create( annotation ) );
 		}
 	}
@@ -2298,6 +2304,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				annotation.setValue( "schema", defaults.getSchema() );
 			}
 			buildUniqueConstraints( annotation, subelement );
+			buildIndex( annotation, subelement );
 			return AnnotationFactory.create( annotation );
 		}
 	}
@@ -2321,6 +2328,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				annotation.setValue( "schema", defaults.getSchema() );
 			}
 			buildUniqueConstraints( annotation, element );
+			buildIndex( annotation, element );
 			annotation.setValue( "pkJoinColumns", buildPrimaryKeyJoinColumns( element ) );
 			secondaryTables.add( (SecondaryTable) AnnotationFactory.create( annotation ) );
 		}
@@ -2376,7 +2384,19 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			}
 		}
 	}
-
+	private static void buildIndex(AnnotationDescriptor annotation, Element element){
+		List indexElementList = element.elements( "index" );
+		Index[] indexes = new Index[indexElementList.size()];
+		for(int i=0;i<indexElementList.size();i++){
+			Element subelement = (Element)indexElementList.get( i );
+			AnnotationDescriptor indexAnn = new AnnotationDescriptor( Index.class );
+			copyStringAttribute( indexAnn, subelement, "name", false );
+			copyStringAttribute( indexAnn, subelement, "column-list", true );
+			copyBooleanAttribute( indexAnn, subelement, "unique" );
+			indexes[i] = AnnotationFactory.create( indexAnn );
+		}
+		annotation.setValue( "indexes", indexes );
+	}
 	private static void buildUniqueConstraints(AnnotationDescriptor annotation, Element element) {
 		List uniqueConstraintElementList = element.elements( "unique-constraint" );
 		UniqueConstraint[] uniqueConstraints = new UniqueConstraint[uniqueConstraintElementList.size()];

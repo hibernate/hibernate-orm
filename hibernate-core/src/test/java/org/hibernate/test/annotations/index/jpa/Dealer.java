@@ -23,11 +23,30 @@
  */
 package org.hibernate.test.annotations.index.jpa;
 
-import javax.persistence.Entity;
+import java.io.Serializable;
+import javax.persistence.Embeddable;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-@Entity
-public class Dealer {
+@Embeddable
+public class Dealer implements Serializable {
+	private String name;
+	private long rate;
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public long getRate() {
+		return rate;
+	}
+
+	public void setRate(long rate) {
+		this.rate = rate;
+	}
 }

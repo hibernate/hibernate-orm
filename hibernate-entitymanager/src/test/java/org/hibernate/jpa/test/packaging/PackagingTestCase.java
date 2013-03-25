@@ -45,6 +45,7 @@ import org.hibernate.jpa.test.Cat;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Kitten;
+import org.hibernate.jpa.test.TestHelper;
 import org.hibernate.jpa.test.pack.cfgxmlpar.Morito;
 import org.hibernate.jpa.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.jpa.test.pack.defaultpar.IncrementListener;
@@ -204,6 +205,10 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 	}
 
 	protected File buildExplicitPar() {
+		// explicitpar/persistence.xml references externaljar.jar so build that from here.
+		// this is the reason for tests failing after clean at least on my (Steve) local system
+		buildExternalJar();
+
 		String fileName = "explicitpar.par";
 		JavaArchive archive = ShrinkWrap.create( JavaArchive.class, fileName );
 		archive.addClasses(
@@ -342,8 +347,10 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 		// Build a large jar by adding a lorem ipsum file repeatedly.
 		for ( int i = 0; i < 100; i++ ) {
 			ArchivePath path = ArchivePaths.create( "META-INF/file" + i );
-			archive.addAsResource( new File( "src/test/resources/org/hibernate/jpa/test/packaging/loremipsum.txt" ),
-					path );
+			archive.addAsResource(
+					"org/hibernate/jpa/test/packaging/loremipsum.txt",
+					path
+			);
 		}
 
 		File testPackage = new File( packageTargetDir, fileName );

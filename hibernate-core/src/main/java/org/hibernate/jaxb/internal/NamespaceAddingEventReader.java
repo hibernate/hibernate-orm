@@ -35,6 +35,8 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 
+import org.hibernate.internal.util.xml.LocalXmlResourceResolver;
+
 /**
  * Used to wrap a StAX {@link XMLEventReader} in order to introduce namespaces into the underlying document.  This
  * is intended for temporary migration feature to allow legacy HBM mapping documents (DTD-based) to continue to
@@ -62,7 +64,10 @@ public class NamespaceAddingEventReader extends EventReaderDelegate {
 		namespaces.add( xmlEventFactory.createNamespace( "", namespaceUri ) );
 		Iterator<?> originalNamespaces = startElement.getNamespaces();
 		while ( originalNamespaces.hasNext() ) {
-			namespaces.add( (Namespace) originalNamespaces.next() );
+			Namespace ns = (Namespace) originalNamespaces.next();
+			if ( !LocalXmlResourceResolver.INITIAL_JPA_ORM_NS.equals( ns.getNamespaceURI() ) ) {
+				namespaces.add( ns );
+			}
 		}
 		return xmlEventFactory.createStartElement(
 				new QName( namespaceUri, startElement.getName().getLocalPart() ),
@@ -73,7 +78,10 @@ public class NamespaceAddingEventReader extends EventReaderDelegate {
 
 	@Override
 	public XMLEvent nextEvent() throws XMLStreamException {
-		XMLEvent event = super.nextEvent();
+		return wrap( super.nextEvent() );
+	}
+
+	private XMLEvent wrap(XMLEvent event) {
 		if ( event.isStartElement() ) {
 			return withNamespace( event.asStartElement() );
 		}
@@ -82,12 +90,6 @@ public class NamespaceAddingEventReader extends EventReaderDelegate {
 
 	@Override
 	public XMLEvent peek() throws XMLStreamException {
-		XMLEvent event = super.peek();
-		if ( event.isStartElement() ) {
-			return withNamespace( event.asStartElement() );
-		}
-		else {
-			return event;
-		}
+		return wrap( super.peek() );
 	}
 }

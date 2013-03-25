@@ -58,9 +58,7 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 		this.file = file;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void error(SAXParseException error) {
 		if ( this.errors == null ) {
 			errors = new ArrayList<SAXParseException>();
@@ -68,23 +66,16 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 		errors.add( error );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void fatalError(SAXParseException error) {
 		error( error );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void warning(SAXParseException warn) {
 		LOG.parsingXmlWarning( warn.getLineNumber(), warn.getMessage() );
 	}
 
-	/**
-	 * @return returns a list of encountered xml parsing errors, or the empty list if there was no error
-	 */
 	public List<SAXParseException> getErrors() {
 		return errors;
 	}

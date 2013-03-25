@@ -112,11 +112,11 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.internal.util.xml.ErrorLogger;
 import org.hibernate.internal.util.xml.MappingReader;
-import org.hibernate.internal.util.xml.Origin;
-import org.hibernate.internal.util.xml.OriginImpl;
 import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.internal.util.xml.XmlDocumentImpl;
+import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -473,12 +473,12 @@ public class Configuration implements Serializable {
 		catch ( FileNotFoundException e ) {
 			throw new MappingNotFoundException( "file", xmlFile.toString() );
 		}
-		add( inputSource, "file", name );
+		add( inputSource, SourceType.FILE, name );
 		return this;
 	}
 
-	private XmlDocument add(InputSource inputSource, String originType, String originName) {
-		return add( inputSource, new OriginImpl( originType, originName ) );
+	private XmlDocument add(InputSource inputSource, SourceType originType, String originName) {
+		return add( inputSource, new Origin( originType, originName ) );
 	}
 
 	private XmlDocument add(InputSource inputSource, Origin origin) {
@@ -549,7 +549,7 @@ public class Configuration implements Serializable {
 		}
 
 		LOG.readingMappingsFromFile( xmlFile.getPath() );
-		XmlDocument metadataXml = add( inputSource, "file", name );
+		XmlDocument metadataXml = add( inputSource, SourceType.FILE, name );
 
 		try {
 			LOG.debugf( "Writing cache file for: %s to: %s", xmlFile, cachedFile );
@@ -592,7 +592,7 @@ public class Configuration implements Serializable {
 
 		LOG.readingCachedMappings( cachedFile );
 		Document document = ( Document ) SerializationHelper.deserialize( new FileInputStream( cachedFile ) );
-		add( new XmlDocumentImpl( document, "file", xmlFile.getAbsolutePath() ) );
+		add( new XmlDocumentImpl( document, SourceType.FILE, xmlFile.getAbsolutePath() ) );
 		return this;
 	}
 
@@ -622,7 +622,7 @@ public class Configuration implements Serializable {
 	public Configuration addXML(String xml) throws MappingException {
 		LOG.debugf( "Mapping XML:\n%s", xml );
 		final InputSource inputSource = new InputSource( new StringReader( xml ) );
-		add( inputSource, "string", "XML String" );
+		add( inputSource, SourceType.STRING, "XML String" );
 		return this;
 	}
 
@@ -640,7 +640,7 @@ public class Configuration implements Serializable {
 		LOG.debugf( "Reading mapping document from URL : %s", urlExternalForm );
 
 		try {
-			add( url.openStream(), "URL", urlExternalForm );
+			add( url.openStream(), SourceType.URL, urlExternalForm );
 		}
 		catch ( IOException e ) {
 			throw new InvalidMappingException( "Unable to open url stream [" + urlExternalForm + "]", "URL", urlExternalForm, e );
@@ -648,7 +648,7 @@ public class Configuration implements Serializable {
 		return this;
 	}
 
-	private XmlDocument add(InputStream inputStream, final String type, final String name) {
+	private XmlDocument add(InputStream inputStream, final SourceType type, final String name) {
 		final InputSource inputSource = new InputSource( inputStream );
 		try {
 			return add( inputSource, type, name );
@@ -675,7 +675,7 @@ public class Configuration implements Serializable {
 		LOG.debugf( "Mapping Document:\n%s", doc );
 
 		final Document document = xmlHelper.createDOMReader().read( doc );
-		add( new XmlDocumentImpl( document, "unknown", null ) );
+		add( new XmlDocumentImpl( document, SourceType.DOM, null ) );
 
 		return this;
 	}
@@ -689,7 +689,7 @@ public class Configuration implements Serializable {
 	 * processing the contained mapping document.
 	 */
 	public Configuration addInputStream(InputStream xmlInputStream) throws MappingException {
-		add( xmlInputStream, "input stream", null );
+		add( xmlInputStream, SourceType.INPUT_STREAM, null );
 		return this;
 	}
 
@@ -708,7 +708,7 @@ public class Configuration implements Serializable {
 		if ( resourceInputStream == null ) {
 			throw new MappingNotFoundException( "resource", resourceName );
 		}
-		add( resourceInputStream, "resource", resourceName );
+		add( resourceInputStream, SourceType.RESOURCE, resourceName );
 		return this;
 	}
 
@@ -734,7 +734,7 @@ public class Configuration implements Serializable {
 		if ( resourceInputStream == null ) {
 			throw new MappingNotFoundException( "resource", resourceName );
 		}
-		add( resourceInputStream, "resource", resourceName );
+		add( resourceInputStream, SourceType.RESOURCE, resourceName );
 		return this;
 	}
 
@@ -1186,6 +1186,21 @@ public class Configuration implements Serializable {
 						table.isQuoted()
 					);
 
+				Iterator uniqueIter = table.getUniqueKeyIterator();
+				while ( uniqueIter.hasNext() ) {
+					final UniqueKey uniqueKey = (UniqueKey) uniqueIter.next();
+					// Skip if index already exists
+					if ( tableInfo != null && StringHelper.isNotEmpty( uniqueKey.getName() ) ) {
+						final IndexMetadata meta = tableInfo.getIndexMetadata( uniqueKey.getName() );
+						if ( meta != null ) {
+							continue;
+						}
+					}
+					String constraintString = uniqueKey.sqlCreateString( dialect,
+							mapping, tableCatalog, tableSchema );
+					if (constraintString != null) script.add( constraintString );
+				}
+
 				if ( dialect.hasAlterTable() ) {
 					Iterator subIter = table.getForeignKeyIterator();
 					while ( subIter.hasNext() ) {
@@ -1378,11 +1393,9 @@ public class Configuration implements Serializable {
 		for ( Map.Entry<Table, List<UniqueConstraintHolder>> tableListEntry : uniqueConstraintHoldersByTable.entrySet() ) {
 			final Table table = tableListEntry.getKey();
 			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
-			int uniqueIndexPerTable = 0;
 			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
-				uniqueIndexPerTable++;
 				final String keyName = StringHelper.isEmpty( holder.getName() )
-						? "UK_" + table.getName() + "_" + uniqueIndexPerTable
+						? StringHelper.randomFixedLengthHex("UK_")
 						: holder.getName();
 				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns() );
 			}
@@ -3537,7 +3550,7 @@ public class Configuration implements Serializable {
 			}
 			catch ( MappingException me ) {
 				throw new InvalidMappingException(
-						metadataXml.getOrigin().getType(),
+						metadataXml.getOrigin().getType().name(),
 						metadataXml.getOrigin().getName(),
 						me
 				);

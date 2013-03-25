@@ -30,6 +30,7 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertNotNull;
@@ -58,6 +59,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 	}
 
 	@Test(expected = MappingException.class)
+	@FailureExpectedWithNewMetamodel(message = "JAXB validation is disabled ATM to support both JPA 2.1 and previous orm.xml")
 	public void testInvalidOrmXmlThrowsException() {
 		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 		sources.addResource( "org/hibernate/metamodel/internal/source/annotations/xml/orm-invalid.xml" );

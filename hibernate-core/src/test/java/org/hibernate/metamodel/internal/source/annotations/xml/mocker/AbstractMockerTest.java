@@ -39,6 +39,10 @@ import org.jboss.jandex.Indexer;
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.jaxb.internal.JaxbMappingProcessor;
+import org.hibernate.jaxb.spi.JaxbRoot;
+import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -50,8 +54,9 @@ import static org.junit.Assert.fail;
  * @author Strong Liu
  */
 public abstract class AbstractMockerTest {
-	private static final String ORM1_MAPPING_XSD = "org/hibernate/ejb/orm_1_0.xsd";
-	private static final String ORM2_MAPPING_XSD = "org/hibernate/ejb/orm_2_0.xsd";
+	private static final String ORM1_MAPPING_XSD = "org/hibernate/jpa/orm_1_0.xsd";
+	private static final String ORM2_MAPPING_XSD = "org/hibernate/jpa/orm_2_0.xsd";
+	private static final String ORM2_1_MAPPING_XSD = "org/hibernate/jpa/orm_2_1.xsd";
 	private IndexBuilder indexBuilder;
 	private Index index;
 	private ServiceRegistry serviceRegistry;
@@ -69,23 +74,14 @@ public abstract class AbstractMockerTest {
 		ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
 		List<JaxbEntityMappings> xmlEntityMappingsList = new ArrayList<JaxbEntityMappings>();
 		for ( String fileName : mappingFiles ) {
-			JaxbEntityMappings entityMappings;
-			try {
-				entityMappings = XmlHelper.unmarshallXml(
-						packagePrefix + fileName, ORM2_MAPPING_XSD, JaxbEntityMappings.class, classLoaderService
-				).getRoot();
-			}
-			catch ( JAXBException orm2Exception ) {
-				// if we cannot parse against orm_2_0.xsd we try orm_1_0.xsd for backwards compatibility
-				try {
-					entityMappings = XmlHelper.unmarshallXml(
-							packagePrefix + fileName, ORM1_MAPPING_XSD, JaxbEntityMappings.class, classLoaderService
-					).getRoot();
-				}
-				catch ( JAXBException orm1Exception ) {
-					throw new AnnotationException( "Unable to parse xml configuration.", orm1Exception );
-				}
-			}
+			JaxbMappingProcessor processor = new JaxbMappingProcessor( getServiceRegistry() );
+			JaxbRoot jaxbRoot = processor.unmarshal(
+					classLoaderService.locateResourceStream( packagePrefix + fileName ),
+					new Origin( SourceType.FILE, packagePrefix + fileName )
+			);
+			JaxbEntityMappings entityMappings = (JaxbEntityMappings)jaxbRoot.getRoot();
+
+
 			xmlEntityMappingsList.add( entityMappings );
 		}
 		return new EntityMappingsMocker( xmlEntityMappingsList, getIndex(), getServiceRegistry() );

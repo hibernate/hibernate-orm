@@ -27,6 +27,9 @@ import java.io.Serializable;
 
 import org.dom4j.Document;
 
+import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.jaxb.spi.SourceType;
+
 /**
  * Basic implemementation of {@link XmlDocument}
  *
@@ -36,8 +39,8 @@ public class XmlDocumentImpl implements XmlDocument, Serializable {
 	private final Document documentTree;
 	private final Origin origin;
 
-	public XmlDocumentImpl(Document documentTree, String originType, String originName) {
-		this( documentTree, new OriginImpl( originType, originName ) );
+	public XmlDocumentImpl(Document documentTree, SourceType originType, String originName) {
+		this( documentTree, new Origin( originType, originName ) );
 	}
 
 	public XmlDocumentImpl(Document documentTree, Origin origin) {

@@ -27,6 +27,8 @@ import java.io.Serializable;
 
 import org.dom4j.Document;
 
+import org.hibernate.jaxb.spi.Origin;
+
 /**
  * Describes a parsed xml document.
  *

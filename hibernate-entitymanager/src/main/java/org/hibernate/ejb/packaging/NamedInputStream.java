@@ -26,10 +26,12 @@ package org.hibernate.ejb.packaging;
 import java.io.InputStream;
 
 /**
- * @deprecated Use {@link org.hibernate.jpa.packaging.spi.NamedInputStream} instead
+ * @deprecated Doubly deprecated actually :) Moved to {@link org.hibernate.jpa.boot.spi.NamedInputStream}
+ * due to package renaming (org.hibernate.ejb -> org.hibernate.jpa).  But also, the role fulfilled by this class
+ * was moved to the new {@link org.hibernate.jpa.boot.spi.InputStreamAccess} contract.
  */
 @Deprecated
-public class NamedInputStream extends org.hibernate.jpa.packaging.spi.NamedInputStream {
+public class NamedInputStream extends org.hibernate.jpa.boot.spi.NamedInputStream {
 	public NamedInputStream(String name, InputStream stream) {
 		super( name, stream );
 	}

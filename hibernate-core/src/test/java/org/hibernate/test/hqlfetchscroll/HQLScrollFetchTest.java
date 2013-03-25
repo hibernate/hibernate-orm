@@ -12,6 +12,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -42,7 +43,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( { SQLServerDialect.class,  Oracle8iDialect.class, H2Dialect.class } )
+	@SkipForDialect( { SQLServerDialect.class,  Oracle8iDialect.class, H2Dialect.class, DB2Dialect.class } )
 	public void testScroll() {
 		Session s = openSession();
 		ScrollableResults results = s.createQuery( QUERY ).scroll();

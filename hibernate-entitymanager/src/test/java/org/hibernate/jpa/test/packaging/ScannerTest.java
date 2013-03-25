@@ -23,31 +23,32 @@
  */
 package org.hibernate.jpa.test.packaging;
 
-import java.io.File;
-import java.lang.annotation.Annotation;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import javax.persistence.Converter;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.Persistence;
-
-import org.junit.Test;
+import java.io.File;
+import java.io.InputStream;
+import java.util.HashMap;
 
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.packaging.internal.NativeScanner;
-
+import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.boot.scan.internal.StandardScanOptions;
+import org.hibernate.jpa.boot.scan.internal.StandardScanner;
+import org.hibernate.jpa.boot.spi.ClassDescriptor;
+import org.hibernate.jpa.boot.spi.MappingFileDescriptor;
+import org.hibernate.jpa.boot.spi.NamedInputStream;
+import org.hibernate.jpa.boot.scan.spi.ScanOptions;
+import org.hibernate.jpa.boot.scan.spi.ScanResult;
+import org.hibernate.jpa.boot.scan.spi.Scanner;
 import org.hibernate.jpa.test.pack.defaultpar.ApplicationServer;
-import org.hibernate.jpa.packaging.spi.NamedInputStream;
-import org.hibernate.jpa.packaging.spi.Scanner;
 import org.hibernate.jpa.test.pack.defaultpar.Version;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
@@ -59,30 +60,37 @@ public class ScannerTest extends PackagingTestCase {
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
 
-		Scanner scanner = new NativeScanner();
-		assertEquals( "defaultpar", scanner.getUnqualifiedJarName( defaultPar.toURL() ) );
+		PersistenceUnitDescriptor descriptor = new ParsedPersistenceXmlDescriptor( defaultPar.toURL() );
+		ScanOptions options = new StandardScanOptions( "hbm,class", descriptor.isExcludeUnlistedClasses() );
+		Scanner scanner = new StandardScanner();
+		ScanResult scanResult = scanner.scan( descriptor, options );
 
-		Set<Class<? extends Annotation>> annotationsToLookFor = new HashSet<Class<? extends Annotation>>( 3 );
-		annotationsToLookFor.add( Entity.class );
-		annotationsToLookFor.add( MappedSuperclass.class );
-		annotationsToLookFor.add( Embeddable.class );
-		annotationsToLookFor.add( Converter.class );
-		final Set<Class<?>> classes = scanner.getClassesInJar( defaultPar.toURL(), annotationsToLookFor );
+		assertEquals( 3, scanResult.getLocatedClasses().size() );
+		assertClassesContained( scanResult, ApplicationServer.class );
+		assertClassesContained( scanResult, Version.class );
 
-		assertEquals( 3, classes.size() );
-		assertTrue( classes.contains( ApplicationServer.class ) );
-		assertTrue( classes.contains( Version.class ) );
-
-		Set<String> filePatterns = new HashSet<String>( 2 );
-		filePatterns.add( "**/*.hbm.xml" );
-		filePatterns.add( "META-INF/orm.xml" );
-		final Set<NamedInputStream> files = scanner.getFilesInJar( defaultPar.toURL(), filePatterns );
-
-		assertEquals( 2, files.size() );
-		for ( NamedInputStream file : files ) {
-			assertNotNull( file.getStream() );
-			file.getStream().close();
+		assertEquals( 2, scanResult.getLocatedMappingFiles().size() );
+		for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
+			assertNotNull( mappingFileDescriptor.getName() );
+			assertNotNull( mappingFileDescriptor.getStreamAccess() );
+			InputStream stream = mappingFileDescriptor.getStreamAccess().accessInputStream();
+			assertNotNull( stream );
+			stream.close();
+			NamedInputStream namedInputStream = mappingFileDescriptor.getStreamAccess().asNamedInputStream();
+			assertNotNull( namedInputStream );
+			stream = namedInputStream.getStream();
+			assertNotNull( stream );
+			stream.close();
 		}
+	}
+
+	private void assertClassesContained(ScanResult scanResult, Class classToCheckFor) {
+		for ( ClassDescriptor classDescriptor : scanResult.getLocatedClasses() ) {
+			if ( classDescriptor.getName().equals( classToCheckFor.getName() ) ) {
+				return;
+			}
+		}
+		fail( "ScanResult did not contain expected Class : " + classToCheckFor.getName() );
 	}
 
 	@Test

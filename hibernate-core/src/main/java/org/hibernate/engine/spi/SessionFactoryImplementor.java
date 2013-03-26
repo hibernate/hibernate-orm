@@ -48,6 +48,7 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.NamedQueryRepository;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -281,4 +282,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 
 	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
+
+	/**
+	 * Provides access to the named query repository
+	 *
+	 * @return
+	 */
+	public NamedQueryRepository getNamedQueryRepository();
 }

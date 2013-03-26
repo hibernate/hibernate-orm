@@ -191,9 +191,7 @@ public final class SessionFactoryImpl
 	private final transient Map<String,CollectionMetadata> collectionMetadata;
 	private final transient Map<String,Set<String>> collectionRolesByEntityParticipant;
 	private final transient Map<String,IdentifierGenerator> identifierGenerators;
-	private final transient Map<String, NamedQueryDefinition> namedQueries;
-	private final transient Map<String, NamedSQLQueryDefinition> namedSqlQueries;
-	private final transient Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
+	private final transient NamedQueryRepository namedQueryRepository;
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map<String, FetchProfile> fetchProfiles;
 	private final transient Map<String,String> imports;
@@ -456,9 +454,11 @@ public final class SessionFactoryImpl
 		collectionRolesByEntityParticipant = Collections.unmodifiableMap( tmpEntityToCollectionRoleMap );
 
 		//Named Queries:
-		namedQueries = new HashMap<String, NamedQueryDefinition>( cfg.getNamedQueries() );
-		namedSqlQueries = new HashMap<String, NamedSQLQueryDefinition>( cfg.getNamedSQLQueries() );
-		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>( cfg.getSqlResultSetMappings() );
+		this.namedQueryRepository = new NamedQueryRepository(
+				cfg.getNamedQueries().values(),
+				cfg.getNamedSQLQueries().values(),
+				cfg.getSqlResultSetMappings().values()
+		);
 		imports = new HashMap<String,String>( cfg.getImports() );
 
 		// after *all* persisters and named queries are registered
@@ -845,19 +845,14 @@ public final class SessionFactoryImpl
 		}
 		collectionRolesByEntityParticipant = Collections.unmodifiableMap( tmpEntityToCollectionRoleMap );
 
+
 		//Named Queries:
-		namedQueries = new HashMap<String,NamedQueryDefinition>();
-		for ( NamedQueryDefinition namedQueryDefinition :  metadata.getNamedQueryDefinitions() ) {
-			namedQueries.put( namedQueryDefinition.getName(), namedQueryDefinition );
-		}
-		namedSqlQueries = new HashMap<String, NamedSQLQueryDefinition>();
-		for ( NamedSQLQueryDefinition namedNativeQueryDefinition: metadata.getNamedNativeQueryDefinitions() ) {
-			namedSqlQueries.put( namedNativeQueryDefinition.getName(), namedNativeQueryDefinition );
-		}
-		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
-		for( ResultSetMappingDefinition resultSetMappingDefinition : metadata.getResultSetMappingDefinitions() ) {
-			sqlResultSetMappings.put( resultSetMappingDefinition.getName(), resultSetMappingDefinition );
-		}
+		namedQueryRepository = new NamedQueryRepository(
+				metadata.getNamedQueryDefinitions(),
+				metadata.getNamedNativeQueryDefinitions(),
+				metadata.getResultSetMappingDefinitions()
+		);
+
 		imports = new HashMap<String,String>();
 		for ( Map.Entry<String,String> importEntry : metadata.getImports() ) {
 			imports.put( importEntry.getKey(), importEntry.getValue() );
@@ -1058,78 +1053,8 @@ public final class SessionFactoryImpl
 		return queryPlanCache;
 	}
 
-	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
 	private Map<String,HibernateException> checkNamedQueries() throws HibernateException {
-		Map<String,HibernateException> errors = new HashMap<String,HibernateException>();
-
-		// Check named HQL queries
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Checking %s named HQL queries", namedQueries.size() );
-		}
-		Iterator itr = namedQueries.entrySet().iterator();
-		while ( itr.hasNext() ) {
-			final Map.Entry entry = ( Map.Entry ) itr.next();
-			final String queryName = ( String ) entry.getKey();
-			final NamedQueryDefinition qd = ( NamedQueryDefinition ) entry.getValue();
-			// this will throw an error if there's something wrong.
-			try {
-				LOG.debugf( "Checking named query: %s", queryName );
-				//TODO: BUG! this currently fails for named queries for non-POJO entities
-				queryPlanCache.getHQLQueryPlan( qd.getQueryString(), false, Collections.EMPTY_MAP );
-			}
-			catch ( QueryException e ) {
-				errors.put( queryName, e );
-			}
-			catch ( MappingException e ) {
-				errors.put( queryName, e );
-			}
-
-
-		}
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Checking %s named SQL queries", namedSqlQueries.size() );
-		}
-		itr = namedSqlQueries.entrySet().iterator();
-		while ( itr.hasNext() ) {
-			final Map.Entry entry = ( Map.Entry ) itr.next();
-			final String queryName = ( String ) entry.getKey();
-			final NamedSQLQueryDefinition qd = ( NamedSQLQueryDefinition ) entry.getValue();
-			// this will throw an error if there's something wrong.
-			try {
-				LOG.debugf( "Checking named SQL query: %s", queryName );
-				// TODO : would be really nice to cache the spec on the query-def so as to not have to re-calc the hash;
-				// currently not doable though because of the resultset-ref stuff...
-				NativeSQLQuerySpecification spec;
-				if ( qd.getResultSetRef() != null ) {
-					ResultSetMappingDefinition definition = sqlResultSetMappings.get( qd.getResultSetRef() );
-					if ( definition == null ) {
-						throw new MappingException( "Unable to find resultset-ref definition: " + qd.getResultSetRef() );
-					}
-					spec = new NativeSQLQuerySpecification(
-							qd.getQueryString(),
-					        definition.getQueryReturns(),
-					        qd.getQuerySpaces()
-					);
-				}
-				else {
-					spec =  new NativeSQLQuerySpecification(
-							qd.getQueryString(),
-					        qd.getQueryReturns(),
-					        qd.getQuerySpaces()
-					);
-				}
-				queryPlanCache.getNativeSQLQueryPlan( spec );
-			}
-			catch ( QueryException e ) {
-				errors.put( queryName, e );
-			}
-			catch ( MappingException e ) {
-				errors.put( queryName, e );
-			}
-
-		}
-
-		return errors;
+		return namedQueryRepository.checkNamedQueries( queryPlanCache );
 	}
 
 	public EntityPersister getEntityPersister(String entityName) throws MappingException {
@@ -1206,41 +1131,29 @@ public final class SessionFactoryImpl
 		);
 	}
 
+	@Override
+	public NamedQueryRepository getNamedQueryRepository() {
+		return namedQueryRepository;
+	}
+
 	public void registerNamedQueryDefinition(String name, NamedQueryDefinition definition) {
-		if ( NamedSQLQueryDefinition.class.isInstance( definition ) ) {
-			throw new IllegalArgumentException( "NamedSQLQueryDefinition instance incorrectly passed to registerNamedQueryDefinition" );
-		}
-		final NamedQueryDefinition previous = namedQueries.put( name, definition );
-		if ( previous != null ) {
-			LOG.debugf(
-					"registering named query definition [%s] overriding previously registered definition [%s]",
-					name,
-					previous
-			);
-		}
+		namedQueryRepository.registerNamedQueryDefinition( name, definition );
 	}
 
 	public NamedQueryDefinition getNamedQuery(String queryName) {
-		return namedQueries.get( queryName );
+		return namedQueryRepository.getNamedQueryDefinition( queryName );
 	}
 
 	public void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
-		final NamedSQLQueryDefinition previous = namedSqlQueries.put( name, definition );
-		if ( previous != null ) {
-			LOG.debugf(
-					"registering named SQL query definition [%s] overriding previously registered definition [%s]",
-					name,
-					previous
-			);
-		}
+		namedQueryRepository.registerNamedSQLQueryDefinition( name, definition );
 	}
 
 	public NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {
-		return namedSqlQueries.get( queryName );
+		return namedQueryRepository.getNamedSQLQueryDefinition( queryName );
 	}
 
-	public ResultSetMappingDefinition getResultSetMapping(String resultSetName) {
-		return sqlResultSetMappings.get( resultSetName );
+	public ResultSetMappingDefinition getResultSetMapping(String mappingName) {
+		return namedQueryRepository.getResultSetMappingDefinition( mappingName );
 	}
 
 	public Type getIdentifierType(String className) throws MappingException {

@@ -71,7 +71,26 @@ public interface AuditReader {
 	<T> T find(Class<T> cls, String entityName, Object primaryKey,
 			Number revision) throws IllegalArgumentException,
 			NotAuditedException, IllegalStateException;
-
+    
+    /**
+     * Find an entity by primary key at the given revision with the specified entityName,
+     * possibly including deleted entities in the search.
+     * @param cls Class of the entity.
+     * @param entityName Name of the entity (if can't be guessed basing on the {@code cls}).
+     * @param primaryKey Primary key of the entity.
+     * @param revision Revision in which to get the entity.
+     * @param includeDeletions Whether to include deleted entities in the search.
+     * @return The found entity instance at the given revision (its properties may be partially filled
+     * if not all properties are audited) or null, if an entity with that id didn't exist at that
+     * revision.
+     * @throws IllegalArgumentException If cls or primaryKey is null or revision is less or equal to 0.
+     * @throws NotAuditedException When entities of the given class are not audited.
+     * @throws IllegalStateException If the associated entity manager is closed.
+     */
+	<T> T find(Class<T> cls, String entityName, Object primaryKey,
+			Number revision, boolean includeDeletions) throws IllegalArgumentException,
+			NotAuditedException, IllegalStateException;
+    
     /**
      * Get a list of revision numbers, at which an entity was modified.
      * @param cls Class of the entity.

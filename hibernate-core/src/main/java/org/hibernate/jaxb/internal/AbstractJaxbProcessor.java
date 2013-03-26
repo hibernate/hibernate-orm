@@ -30,27 +30,19 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
 import javax.xml.bind.ValidationEventLocator;
-import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
-import javax.xml.transform.dom.DOMSource;
 import javax.xml.validation.Schema;
 
 import org.jboss.logging.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.xml.BufferedXMLEventReader;
 import org.hibernate.internal.util.xml.LocalXmlResourceResolver;
-import org.hibernate.internal.util.xml.MappingReader;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.Origin;
-import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
-import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.service.ServiceRegistry;
 
@@ -84,7 +76,7 @@ abstract class AbstractJaxbProcessor {
 
 	public JaxbRoot unmarshal(InputStream stream, Origin origin) {
 		try {
-			XMLEventReader staxReader = staxFactory().createXMLEventReader( stream );
+			BufferedXMLEventReader staxReader = new BufferedXMLEventReader(staxFactory().createXMLEventReader( stream ), 100);
 			try {
 				return unmarshal( staxReader, origin );
 			}
@@ -117,8 +109,6 @@ abstract class AbstractJaxbProcessor {
 		return staxFactory;
 	}
 
-	private static final QName ORM_VERSION_ATTRIBUTE_QNAME = new QName( "version" );
-
 	@SuppressWarnings( { "unchecked" })
 	private JaxbRoot unmarshal(XMLEventReader staxEventReader, final Origin origin) {
 		XMLEvent event;
@@ -137,16 +127,18 @@ abstract class AbstractJaxbProcessor {
 			throw new MappingException( "Could not locate root element", origin );
 		}
 
-		staxEventReader = wrapReader( staxEventReader, event );
 
-		final Object target;
+
 		final ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 		try {
+			Schema schema = getSchema(event, origin);
+			staxEventReader = wrapReader( staxEventReader, event );
 			JAXBContext jaxbContext =getJaxbContext(event);
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-			unmarshaller.setSchema( getSchema(event, origin) );
+			unmarshaller.setSchema( schema );
 			unmarshaller.setEventHandler( handler );
-			target = unmarshaller.unmarshal( staxEventReader );
+			final Object target = unmarshaller.unmarshal( staxEventReader );
+			return new JaxbRoot( target, origin );
 		}
 		catch ( JAXBException e ) {
 			StringBuilder builder = new StringBuilder();
@@ -158,8 +150,6 @@ abstract class AbstractJaxbProcessor {
 			builder.append( handler.getMessage() );
 			throw new MappingException( builder.toString(), e, origin );
 		}
-
-		return new JaxbRoot( target, origin );
 	}
 	protected abstract JAXBContext getJaxbContext(XMLEvent event) throws JAXBException;
 	protected abstract Schema getSchema(XMLEvent event, Origin origin) throws JAXBException;

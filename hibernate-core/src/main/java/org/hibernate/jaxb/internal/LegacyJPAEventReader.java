@@ -56,19 +56,11 @@ public class LegacyJPAEventReader   extends EventReaderDelegate {
 	}
 
 	private StartElement withNamespace(StartElement startElement) {
-		// otherwise, wrap the start element event to provide a default namespace mapping
-		final List<Namespace> namespaces = new ArrayList<Namespace>();
-		namespaces.add( xmlEventFactory.createNamespace( "", namespaceUri ) );
-		Iterator<?> originalNamespaces = startElement.getNamespaces();
-		while ( originalNamespaces.hasNext() ) {
-			Namespace ns = (Namespace) originalNamespaces.next();
-			if ( !LocalXmlResourceResolver.INITIAL_JPA_ORM_NS.equals( ns.getNamespaceURI() ) ) {
-				namespaces.add( ns );
-			}
-		}
+
 		Iterator<?> attributes;
+		Iterator<?> namespacesItr;
 		if ( "entity-mappings".equals( startElement.getName().getLocalPart() ) ) {
-			List st = new ArrayList();
+			List<Attribute> st = new ArrayList<Attribute>();
 			Iterator itr = startElement.getAttributes();
 			while ( itr.hasNext() ) {
 				Attribute obj = (Attribute) itr.next();
@@ -82,24 +74,36 @@ public class LegacyJPAEventReader   extends EventReaderDelegate {
 				}
 			}
 			attributes = st.iterator();
+			// otherwise, wrap the start element event to provide a default namespace mapping
+			final List<Namespace> namespaces = new ArrayList<Namespace>();
+			namespaces.add( xmlEventFactory.createNamespace( "", namespaceUri ) );
+			Iterator<?> originalNamespaces = startElement.getNamespaces();
+			while ( originalNamespaces.hasNext() ) {
+				Namespace ns = (Namespace) originalNamespaces.next();
+				if ( !LocalXmlResourceResolver.INITIAL_JPA_ORM_NS.equals( ns.getNamespaceURI() ) ) {
+					namespaces.add( ns );
+				}
+			}
+			namespacesItr = namespaces.iterator();
 		} else {
 			attributes = startElement.getAttributes();
+			namespacesItr = startElement.getNamespaces();
 		}
 
 		return xmlEventFactory.createStartElement(
 				new QName( namespaceUri, startElement.getName().getLocalPart() ),
 				attributes,
-				namespaces.iterator()
+				namespacesItr
 		);
 	}
+
 
 	@Override
 	public XMLEvent nextEvent() throws XMLStreamException {
 		return wrap( super.nextEvent() );
 	}
-
 	private XMLEvent wrap(XMLEvent event) {
-		if ( event.isStartElement() ) {
+		if ( event!=null &&  event.isStartElement() ) {
 			return withNamespace( event.asStartElement() );
 		}
 		return event;

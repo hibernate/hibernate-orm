@@ -23,19 +23,12 @@
  */
 package org.hibernate.jaxb.internal;
 
-import java.io.InputStream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.ValidationEvent;
-import javax.xml.bind.ValidationEventHandler;
-import javax.xml.bind.ValidationEventLocator;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
-import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.validation.Schema;
@@ -61,21 +54,10 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class JaxbMappingProcessor extends AbstractJaxbProcessor{
 	private static final Logger log = Logger.getLogger( JaxbMappingProcessor.class );
-
-	public static final String ASSUMED_ORM_XSD_VERSION = "2.1";
-	public static final String VALIDATE_XML_SETTING = "hibernate.xml.validate";
 	public static final String HIBERNATE_MAPPING_URI = "http://www.hibernate.org/xsd/hibernate-mapping";
 
 	public JaxbMappingProcessor(ServiceRegistry serviceRegistry) {
 		this( serviceRegistry, true );
-//		this(
-//				serviceRegistry,
-//				serviceRegistry.getService( ConfigurationService.class ).getSetting(
-//						VALIDATE_XML_SETTING,
-//						StandardConverters.BOOLEAN,
-//						true
-//				)
-//		);
 	}
 
 	public JaxbMappingProcessor(ServiceRegistry serviceRegistry, boolean validateXml) {
@@ -100,22 +82,19 @@ public class JaxbMappingProcessor extends AbstractJaxbProcessor{
 		final String elementName = event.asStartElement().getName().getLocalPart();
 		final Schema validationSchema;
 		if ( "entity-mappings".equals( elementName ) ) {
-			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
-			final String explicitVersion = attribute == null ? null : attribute.getValue();
-			if ( !"2.1".equals( explicitVersion ) ) {
-				//xsd validation for non jpa 2.1 orm.xml is currently disabled
-//				if ( validateXml ) {
-//					MappingReader.validateMapping(
-//							MappingReader.SupportedOrmXsdVersion.parse( explicitVersion, origin ),
-//							staxEventReader,
-//							origin
-//					);
-//				}
-				validationSchema = null; //disable JAXB validation
-			}
-			else {
-				validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion, origin ) : null;
-			}
+//			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
+//			final String explicitVersion = attribute == null ? null : attribute.getValue();
+//			validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion, origin ) : null;
+
+			/**
+			 * here we always use JPA 2.1 schema to do the validation, since the {@link LegacyJPAEventReader} already
+			 * transform the legacy orm.xml to JPA 2.1 namespace and version.
+			 *
+			 * This may causing some problems, like a jpa 1.0 orm.xml has some element which only available in the later
+			 * version, which is "invalid" but due to the fact of we're using the latest schema to do the validation, then
+			 * it is "valid". don't know if this will cause any problem, but let's do it for now.
+			 */
+			validationSchema = validateXml ? MappingReader.SupportedOrmXsdVersion.ORM_2_1.getSchema() : null;
 		}
 		else {
 			validationSchema = validateXml ? MappingReader.SupportedOrmXsdVersion.HBM_4_0.getSchema() : null;
@@ -187,7 +166,7 @@ public class JaxbMappingProcessor extends AbstractJaxbProcessor{
 	}
 
 	private Schema resolveSupportedOrmXsd(String explicitVersion, Origin origin) {
-		if( StringHelper.isEmpty(explicitVersion)){
+		if ( StringHelper.isEmpty( explicitVersion ) ) {
 			return MappingReader.SupportedOrmXsdVersion.ORM_2_1.getSchema();
 		}
 		return MappingReader.SupportedOrmXsdVersion.parse( explicitVersion, origin ).getSchema();

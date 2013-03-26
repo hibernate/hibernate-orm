@@ -177,10 +177,6 @@ public abstract class AbstractStandardBasicType<T>
 		return false;
 	}
 
-	public final boolean isXMLElement() {
-		return false;
-	}
-
 	@SuppressWarnings({ "unchecked" })
 	public final boolean isSame(Object x, Object y) {
 		return isEqual( x, y );

@@ -79,29 +79,11 @@ public abstract class CollectionType extends AbstractType implements Association
 	private final TypeFactory.TypeScope typeScope;
 	private final String role;
 	private final String foreignKeyPropertyName;
-	private final boolean isEmbeddedInXML;
-
-	/**
-	 * @deprecated Use {@link #CollectionType(TypeFactory.TypeScope, String, String)} instead
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public CollectionType(TypeFactory.TypeScope typeScope, String role, String foreignKeyPropertyName, boolean isEmbeddedInXML) {
-		this.typeScope = typeScope;
-		this.role = role;
-		this.foreignKeyPropertyName = foreignKeyPropertyName;
-		this.isEmbeddedInXML = isEmbeddedInXML;
-	}
 
 	public CollectionType(TypeFactory.TypeScope typeScope, String role, String foreignKeyPropertyName) {
 		this.typeScope = typeScope;
 		this.role = role;
 		this.foreignKeyPropertyName = foreignKeyPropertyName;
-		this.isEmbeddedInXML = true;
-	}
-
-	public boolean isEmbeddedInXML() {
-		return isEmbeddedInXML;
 	}
 
 	public String getRole() {
@@ -766,10 +748,6 @@ public abstract class CollectionType extends AbstractType implements Association
 		return foreignKeyPropertyName;
 	}
 
-	public boolean isXMLElement() {
-		return true;
-	}
-	
 	/**
 	 * We always need to dirty check the collection because we sometimes 
 	 * need to incremement version number of owner and also because of 

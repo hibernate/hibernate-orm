@@ -47,17 +47,6 @@ public class ArrayType extends CollectionType {
 	private final Class elementClass;
 	private final Class arrayClass;
 
-	/**
-	 * @deprecated Use {@link #ArrayType(TypeFactory.TypeScope, String, String, Class )} instead.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public ArrayType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Class elementClass, boolean isEmbeddedInXML) {
-		super( typeScope, role, propertyRef, isEmbeddedInXML );
-		this.elementClass = elementClass;
-		arrayClass = Array.newInstance(elementClass, 0).getClass();
-	}
-
 	public Class getElementClass() {
 		return elementClass;
 	}

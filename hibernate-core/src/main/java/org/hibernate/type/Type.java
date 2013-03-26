@@ -166,14 +166,6 @@ public interface Type extends Serializable {
 	public Class getReturnedClass();
 
 	/**
-	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	@Deprecated
-	public boolean isXMLElement();
-
-	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
 	 * state) taking a shortcut for entity references.
 	 * <p/>

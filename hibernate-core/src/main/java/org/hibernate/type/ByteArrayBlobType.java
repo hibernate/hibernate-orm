@@ -145,21 +145,6 @@ public class ByteArrayBlobType extends AbstractLobType {
 		return value == null ? "null" : toString( value );
 	}
 
-	private Object fromString(String xmlText) {
-		if ( xmlText == null ) {
-			return null;
-		}
-		if ( xmlText.length() % 2 != 0 ) {
-			throw new IllegalArgumentException( "The string is not a valid xml representation of a binary content." );
-		}
-		byte[] bytes = new byte[xmlText.length() / 2];
-		for ( int i = 0; i < bytes.length ; i++ ) {
-			String hexStr = xmlText.substring( i * 2, ( i + 1 ) * 2 );
-			bytes[i] = (byte) ( Integer.parseInt( hexStr, 16 ) + Byte.MIN_VALUE );
-		}
-		return wrap( bytes );
-	}
-
 	protected Object wrap(byte[] bytes) {
 		return wrapPrimitive( bytes );
 	}

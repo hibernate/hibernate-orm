@@ -77,7 +77,7 @@ public class SizeExpression implements Criterion {
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) 
 	throws HibernateException {
 		return new TypedValue[] {
-			new TypedValue( StandardBasicTypes.INTEGER, size, EntityMode.POJO )
+			new TypedValue( StandardBasicTypes.INTEGER, size )
 		};
 	}
 

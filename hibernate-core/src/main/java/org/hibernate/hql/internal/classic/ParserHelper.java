@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.internal.classic;
+
 import java.util.BitSet;
 import java.util.StringTokenizer;
 
@@ -34,17 +35,19 @@ public final class ParserHelper {
 	public static final String HQL_VARIABLE_PREFIX = ":";
 
 	public static final String HQL_SEPARATORS = " \n\r\f\t,()=<>&|+-=/*'^![]#~\\";
-	public static final BitSet HQL_SEPARATORS_BITSET = new BitSet(  );
+	public static final BitSet HQL_SEPARATORS_BITSET = new BitSet();
+
 	static {
-		for(int i=0;i<HQL_SEPARATORS.length();i++){
+		for ( int i = 0; i < HQL_SEPARATORS.length(); i++ ) {
 			HQL_SEPARATORS_BITSET.set( HQL_SEPARATORS.charAt( i ) );
 		}
 	}
+
 	//NOTICE: no " or . since they are part of (compound) identifiers
 	public static final String PATH_SEPARATORS = ".";
 
 	public static boolean isWhitespace(String str) {
-		return StringHelper.WHITESPACE.indexOf( str ) > -1;
+		return StringHelper.WHITESPACE.contains( str );
 	}
 
 	private ParserHelper() {
@@ -54,7 +57,9 @@ public final class ParserHelper {
 	public static void parse(Parser p, String text, String seperators, QueryTranslatorImpl q) throws QueryException {
 		StringTokenizer tokens = new StringTokenizer( text, seperators, true );
 		p.start( q );
-		while ( tokens.hasMoreElements() ) p.token( tokens.nextToken(), q );
+		while ( tokens.hasMoreElements() ) {
+			p.token( tokens.nextToken(), q );
+		}
 		p.end( q );
 	}
 

@@ -158,14 +158,6 @@ public class MetaType extends AbstractType {
 		return false;
 	}
 
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		return fromXMLString( xml.getText(), factory );
-	}
-
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) throws HibernateException {
-		node.setText( toXMLString(value, factory) );
-	}
-
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		throw new UnsupportedOperationException();
 	}

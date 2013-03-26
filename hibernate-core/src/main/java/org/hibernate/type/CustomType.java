@@ -207,15 +207,6 @@ public class CustomType
 		return ( (UserVersionType) userType ).seed( session );
 	}
 
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		return fromXMLString( xml.getText(), factory );
-	}
-
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory)
-			throws HibernateException {
-		node.setText( toXMLString(value, factory) );
-	}
-
 	public String toLoggableString(Object value, SessionFactoryImplementor factory)
 			throws HibernateException {
 		if ( value == null ) {

@@ -59,7 +59,6 @@ public class SpecialOneToOneType extends OneToOneType {
 				uniqueKeyPropertyName, 
 				lazy,
 				unwrapProxy,
-				true, 
 				entityName, 
 				propertyName
 			);
@@ -97,11 +96,6 @@ public class SpecialOneToOneType extends OneToOneType {
 
 	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
 	throws HibernateException {
-
-		if ( isNotEmbedded(session) ) {
-			return getIdentifierType(session).disassemble(value, session, owner);
-		}
-		
 		if (value==null) {
 			return null;
 		}
@@ -125,8 +119,6 @@ public class SpecialOneToOneType extends OneToOneType {
 		//      change to unique key property of the associated object)
 		Serializable id = (Serializable) getIdentifierType(session).assemble(oid, session, null); //the owner of the association is not the owner of the id
 
-		if ( isNotEmbedded(session) ) return id;
-		
 		if (id==null) {
 			return null;
 		}

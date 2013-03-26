@@ -1403,15 +1403,6 @@ public final class HbmBinder {
 		String nodeName = node.attributeValue( "node" );
 		if ( nodeName == null ) nodeName = node.attributeValue( "name" );
 		collection.setNodeName( nodeName );
-		String embed = node.attributeValue( "embed-xml" );
-		// sometimes embed is set to the default value when not specified in the mapping,
-		// so can't seem to determine if an attribute was explicitly set;
-		// log a warning if embed has a value different from the default.
-		if ( !StringHelper.isEmpty( embed ) &&  !"true".equals( embed ) ) {
-			LOG.embedXmlAttributesNoLongerSupported();
-		}
-		collection.setEmbedded( embed==null || "true".equals(embed) );
-
 
 		// PERSISTER
 		Attribute persisterNode = node.attribute( "persister" );
@@ -1632,15 +1623,6 @@ public final class HbmBinder {
 
 		manyToOne.setReferencedEntityName( getEntityName( node, mappings ) );
 
-		String embed = node.attributeValue( "embed-xml" );
-		// sometimes embed is set to the default value when not specified in the mapping,
-		// so can't seem to determine if an attribute was explicitly set;
-		// log a warning if embed has a value different from the default.
-		if ( !StringHelper.isEmpty( embed ) &&  !"true".equals( embed ) ) {
-			LOG.embedXmlAttributesNoLongerSupported();
-		}
-		manyToOne.setEmbedded( embed == null || "true".equals( embed ) );
-
 		String notFound = node.attributeValue( "not-found" );
 		manyToOne.setIgnoreNotFound( "ignore".equals( notFound ) );
 
@@ -1714,15 +1696,6 @@ public final class HbmBinder {
 		initOuterJoinFetchSetting( node, oneToOne );
 		initLaziness( node, oneToOne, mappings, true );
 
-		String embed = node.attributeValue( "embed-xml" );
-		// sometimes embed is set to the default value when not specified in the mapping,
-		// so can't seem to determine if an attribute was explicitly set;
-		// log a warning if embed has a value different from the default.
-		if ( !StringHelper.isEmpty( embed ) &&  !"true".equals( embed ) ) {
-			LOG.embedXmlAttributesNoLongerSupported();
-		}
-		oneToOne.setEmbedded( "true".equals( embed ) );
-
 		Attribute fkNode = node.attribute( "foreign-key" );
 		if ( fkNode != null ) oneToOne.setForeignKeyName( fkNode.getValue() );
 
@@ -1747,15 +1720,6 @@ public final class HbmBinder {
 			throws MappingException {
 
 		oneToMany.setReferencedEntityName( getEntityName( node, mappings ) );
-
-		String embed = node.attributeValue( "embed-xml" );
-		// sometimes embed is set to the default value when not specified in the mapping,
-		// so can't seem to determine if an attribute was explicitly set;
-		// log a warning if embed has a value different from the default.
-		if ( !StringHelper.isEmpty( embed ) &&  !"true".equals( embed ) ) {
-			LOG.embedXmlAttributesNoLongerSupported();
-		}
-		oneToMany.setEmbedded( embed == null || "true".equals( embed ) );
 
 		String notFound = node.attributeValue( "not-found" );
 		oneToMany.setIgnoreNotFound( "ignore".equals( notFound ) );

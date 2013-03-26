@@ -29,23 +29,6 @@ import java.util.LinkedHashMap;
  */
 public class OrderedMapType extends MapType {
 
-	/**
-	 * Constructs a map type capable of creating ordered maps of the given
-	 * role.
-	 *
-	 * @param role The collection role name.
-	 * @param propertyRef The property ref name.
-	 * @param isEmbeddedInXML Is this collection to embed itself in xml
-	 *
-	 * @deprecated Use {@link #OrderedMapType(TypeFactory.TypeScope, String, String)} instead.
-	 *  instead.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public OrderedMapType(TypeFactory.TypeScope typeScope, String role, String propertyRef, boolean isEmbeddedInXML) {
-		super( typeScope, role, propertyRef, isEmbeddedInXML );
-	}
-
 	public OrderedMapType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
 		super( typeScope, role, propertyRef );
 	}

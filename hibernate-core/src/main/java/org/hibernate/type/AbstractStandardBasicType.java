@@ -187,10 +187,6 @@ public abstract class AbstractStandardBasicType<T>
 		return false;
 	}
 
-	public final boolean isXMLElement() {
-		return false;
-	}
-
 	@SuppressWarnings({ "unchecked" })
 	public final boolean isSame(Object x, Object y) {
 		return isEqual( x, y );
@@ -292,15 +288,6 @@ public abstract class AbstractStandardBasicType<T>
 	@SuppressWarnings({ "unchecked" })
 	public final String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		return javaTypeDescriptor.extractLoggableRepresentation( (T) value );
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	public final void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) {
-		node.setText( toString( (T) value ) );
-	}
-
-	public final Object fromXMLNode(Node xml, Mapping factory) {
-		return fromString( xml.getText() );
 	}
 
 	public final boolean isMutable() {

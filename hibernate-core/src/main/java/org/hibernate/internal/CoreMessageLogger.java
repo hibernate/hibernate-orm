@@ -1601,13 +1601,13 @@ public interface CoreMessageLogger extends BasicLogger {
 	)
 	void aliasSpecificLockingWithFollowOnLocking(LockMode lockMode);
 
-	@LogMessage(level = WARN)
-	@Message(
-			value = "embed-xml attributes were intended to be used for DOM4J entity mode. Since that entity mode has been " +
-					"removed, embed-xml attributes are no longer supported and should be removed from mappings.",
-			id = 446
-	)
-	void embedXmlAttributesNoLongerSupported();
+//	@LogMessage(level = WARN)
+//	@Message(
+//			value = "embed-xml attributes were intended to be used for DOM4J entity mode. Since that entity mode has been " +
+//					"removed, embed-xml attributes are no longer supported and should be removed from mappings.",
+//			id = 446
+//	)
+//	void embedXmlAttributesNoLongerSupported();
 
 	@LogMessage(level = WARN)
 	@Message(

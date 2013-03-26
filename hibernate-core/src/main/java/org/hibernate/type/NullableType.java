@@ -243,15 +243,6 @@ public abstract class NullableType extends AbstractType implements StringReprese
 		return value == null ? "null" : toString(value);
 	}
 
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		return fromXMLString( xml.getText(), factory );
-	}
-
-	public void setToXMLNode(Node xml, Object value, SessionFactoryImplementor factory)
-	throws HibernateException {
-		xml.setText( toXMLString(value, factory) );
-	}
-
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		return value==null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}

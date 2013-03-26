@@ -48,22 +48,6 @@ public class CustomCollectionType extends CollectionType {
 	private final UserCollectionType userType;
 	private final boolean customLogging;
 
-	/**
-	 * @deprecated Use {@link #CustomCollectionType(TypeFactory.TypeScope, Class, String, String )} instead.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public CustomCollectionType(
-			TypeFactory.TypeScope typeScope,
-			Class userTypeClass,
-			String role,
-			String foreignKeyPropertyName,
-			boolean isEmbeddedInXML) {
-		super( typeScope, role, foreignKeyPropertyName, isEmbeddedInXML );
-		userType = createUserCollectionType( userTypeClass );
-		customLogging = LoggableUserType.class.isAssignableFrom( userTypeClass );
-	}
-
 	public CustomCollectionType(
 			TypeFactory.TypeScope typeScope,
 			Class userTypeClass,

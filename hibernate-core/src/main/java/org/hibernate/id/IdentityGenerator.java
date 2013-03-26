@@ -105,7 +105,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			}
 			finally {
 				if ( rs != null ) {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, insert );
 				}
 			}
 		}
@@ -150,7 +150,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 				);
 			}
 			finally {
-				session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+				session.getTransactionCoordinator().getJdbcCoordinator().release( rs, insert );
 			}
 		}
 

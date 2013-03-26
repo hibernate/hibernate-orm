@@ -374,7 +374,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		LOG.tracev( "Registering result set [{0}]", resultSet );
 		if ( statement == null ) {
 			try {
-				statement = resultSet.getStatement(); // best guess
+				statement = resultSet.getStatement();
 			}
 			catch ( SQLException e ) {
 				throw exceptionHelper.convert( e, "unable to access statement from resultset" );
@@ -399,14 +399,15 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public void release(ResultSet resultSet) {
+	public void release(ResultSet resultSet, Statement statement) {
 		LOG.tracev( "Releasing result set [{0}]", resultSet );
-		Statement statement;
-		try {
-			statement = resultSet.getStatement();
-		}
-		catch ( SQLException e ) {
-			throw exceptionHelper.convert( e, "unable to access statement from resultset" );
+		if ( statement == null ) {
+			try {
+				statement = resultSet.getStatement();
+			}
+			catch ( SQLException e ) {
+				throw exceptionHelper.convert( e, "unable to access statement from resultset" );
+			}
 		}
 		if ( statement != null ) {
 			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a

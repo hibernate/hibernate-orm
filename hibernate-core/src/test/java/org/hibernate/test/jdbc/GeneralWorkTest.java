@@ -72,13 +72,13 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 								resultSet = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_PERSON" );
 							}
 							finally {
-								releaseQuietly( ((SessionImplementor)session), resultSet );
+								releaseQuietly( ((SessionImplementor)session), resultSet, statement );
 							}
 							try {
 								((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_BOAT" );
 							}
 							finally {
-								releaseQuietly( ((SessionImplementor)session), resultSet );
+								releaseQuietly( ((SessionImplementor)session), resultSet, statement );
 							}
 						}
 						finally {
@@ -145,7 +145,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 								assertEquals( 1L, personCount );
 							}
 							finally {
-								releaseQuietly( ((SessionImplementor)session2), resultSet );
+								releaseQuietly( ((SessionImplementor)session2), resultSet, statement );
 							}
 						}
 						finally {
@@ -178,12 +178,12 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	private void releaseQuietly(SessionImplementor s, ResultSet resultSet) {
+	private void releaseQuietly(SessionImplementor s, ResultSet resultSet, Statement statement) {
 		if ( resultSet == null ) {
 			return;
 		}
 		try {
-			s.getTransactionCoordinator().getJdbcCoordinator().release( resultSet );
+			s.getTransactionCoordinator().getJdbcCoordinator().release( resultSet, statement );
 		}
 		catch (Exception e) {
 			// ignore

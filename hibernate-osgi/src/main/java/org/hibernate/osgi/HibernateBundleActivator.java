@@ -23,11 +23,14 @@
  */
 package org.hibernate.osgi;
 
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
 
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
+import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.ejb.HibernatePersistence;
@@ -37,10 +40,12 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.BundleReference;
 
 /**
  * @author Brett Meyer
  * @author Martin Neimeier
+ * @author Tim Ward
  */
 public class HibernateBundleActivator
 		implements BundleActivator, /*ServiceListener,*/ BundleListener {
@@ -62,13 +67,26 @@ public class HibernateBundleActivator
         	handleBundleChange( bundle );
         }
         
-        HibernatePersistence hp = new HibernatePersistence();
+        HibernatePersistence hp = new HibernatePersistence(){
+
+			@Override
+			public EntityManagerFactory createContainerEntityManagerFactory(
+					PersistenceUnitInfo info, Map properties) {
+				//OSGi ClassLoaders must implement BundleReference
+				properties.put( org.hibernate.ejb.AvailableSettings.SCANNER, 
+						new OsgiScanner(((BundleReference) info.getClassLoader()).getBundle()));
+				return super.createContainerEntityManagerFactory(info, properties);
+			}
+        };
+        
         Map map = new HashMap();
         map.put( AvailableSettings.JTA_PLATFORM, new OsgiJtaPlatform( context ) );
         hp.setEnvironmentProperties( map );
     	
-        Properties properties = new Properties();
-        properties.put( "javax.persistence.provider", HibernatePersistence.class.getName() );
+        Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        properties.put( "javax.persistence.provider", HibernatePersistence.class.getName());
+        
+        
         context.registerService( PersistenceProvider.class.getName(), hp, properties );
     }
 

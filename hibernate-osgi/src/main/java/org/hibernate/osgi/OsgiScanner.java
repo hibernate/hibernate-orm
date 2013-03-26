@@ -34,24 +34,30 @@ import javassist.bytecode.ClassFile;
 
 import org.hibernate.ejb.packaging.NamedInputStream;
 import org.hibernate.ejb.packaging.Scanner;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * @author Brett Meyer
+ * @author Tim Ward
  */
 public class OsgiScanner implements Scanner {
 	
 	private BundleWiring bundleWiring;
 	
-	private OsgiClassLoader classLoader;
+	private Bundle persistenceBundle;
 	
-	public OsgiScanner( BundleContext context, OsgiClassLoader classLoader ) {
+	/**
+	 * Create a scanner for searching the client bundle
+	 * @param persistenceBundle
+	 */
+	public OsgiScanner(Bundle persistenceBundle) {
 		// TODO: The (BundleWiring) cast shouldn't be necessary.  My jdk7
 		// compiler was complaining that adapt returns an Object, even though
 		// it doesn't...
-		bundleWiring = (BundleWiring) context.getBundle().adapt( BundleWiring.class );
-		this.classLoader = classLoader;
+		bundleWiring = (BundleWiring) persistenceBundle.adapt( BundleWiring.class );
+		this.persistenceBundle = persistenceBundle;
 	}
 
 	@Override
@@ -68,7 +74,7 @@ public class OsgiScanner implements Scanner {
 				"/", "*.class", BundleWiring.LISTRESOURCES_RECURSE );
 		for (String className : classNames) {
 			try {
-				URL classUrl = classLoader.getResource( className );
+				URL classUrl = persistenceBundle.getResource( className );
 				InputStream is = classUrl.openStream();
 				DataInputStream dis = new DataInputStream( is );
 
@@ -77,7 +83,7 @@ public class OsgiScanner implements Scanner {
 				if ( visible != null ) {
 					for ( Class annotation : annotationsToLookFor ) {
 						if ( visible.getAnnotation( annotation.getName() ) != null ) {
-							classes.add( classLoader.loadClass( cf.getName() ));
+							classes.add( persistenceBundle.loadClass( cf.getName() ));
 							System.out.println("GETCLASSESINJAR: " + className);
 							break;
 						}
@@ -105,7 +111,7 @@ public class OsgiScanner implements Scanner {
 			for (String resource : resources) {
 				try {
 					// TODO: Is using 'resource' as the name correct?  Check what NativeScanner uses.
-					files.add( new NamedInputStream( resource, classLoader.getResource( resource ).openStream() ) );
+					files.add( new NamedInputStream( resource, persistenceBundle.getResource( resource ).openStream() ) );
 					System.out.println("GETFILESINJAR: " + resource);
 				}
 				catch (Exception e) {

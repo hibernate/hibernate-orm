@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.entities;
 
+import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
@@ -77,7 +78,7 @@ public class EntityInstantiator {
         // Fixes HHH-4751 issue (@IdClass with @ManyToOne relation mapping inside)
         // Note that identifiers are always audited
         // Replace identifier proxies if do not point to audit tables
-        replaceNonAuditIdProxies(originalId, revision);
+        replaceNonAuditIdProxies(versionsEntity, revision);
 
         Object primaryKey = idMapper.mapToIdFromMap(originalId);
 
@@ -116,7 +117,8 @@ public class EntityInstantiator {
     }
 
     @SuppressWarnings({"unchecked"})
-    private void replaceNonAuditIdProxies(Map originalId, Number revision) {
+    private void replaceNonAuditIdProxies(Map versionsEntity, Number revision) {
+        final Map originalId = (Map) versionsEntity.get( verCfg.getAuditEntCfg().getOriginalIdPropName() );
         for (Object key : originalId.keySet()) {
             Object value = originalId.get(key);
             if (value instanceof HibernateProxy) {
@@ -133,7 +135,10 @@ public class EntityInstantiator {
 					catch ( ClassNotFoundException e ) {
 						throw new AuditException( e );
 					}
-                    final ToOneDelegateSessionImplementor delegate = new ToOneDelegateSessionImplementor(versionsReader, entityClass, entityId, revision, verCfg);
+                    final ToOneDelegateSessionImplementor delegate = new ToOneDelegateSessionImplementor(
+                            versionsReader, entityClass, entityId, revision,
+                            RevisionType.DEL.equals( versionsEntity.get( verCfg.getAuditEntCfg().getRevisionTypePropName() ) ),
+                            verCfg);
                     originalId.put(key,
                             versionsReader.getSessionImplementor().getFactory().getEntityPersister(entityName).createProxy(entityId, delegate));
                 }

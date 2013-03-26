@@ -184,8 +184,9 @@ public interface JdbcCoordinator extends Serializable {
 	 * Release a previously registered result set.
 	 *
 	 * @param resultSet The result set to release.
+	 * @param statement Statement from which {@link ResultSet} has been generated.
 	 */
-	public void release(ResultSet resultSet);
+	public void release(ResultSet resultSet, Statement statement);
 
 	/**
 	 * Does this registry currently have any registered resources?

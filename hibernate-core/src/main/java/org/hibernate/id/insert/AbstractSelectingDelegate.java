@@ -87,7 +87,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 					return getResult( session, rs, binder.getEntity() );
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, idSelect );
 				}
 			}
 			finally {

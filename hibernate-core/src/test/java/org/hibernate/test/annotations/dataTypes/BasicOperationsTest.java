@@ -132,7 +132,7 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 			s.getTransactionCoordinator().getJdbcCoordinator().register(columnInfo, columnInfo.getStatement());
 			assertTrue( columnInfo.next() );
 			int dataType = columnInfo.getInt( "DATA_TYPE" );
-			s.getTransactionCoordinator().getJdbcCoordinator().release( columnInfo );
+			s.getTransactionCoordinator().getJdbcCoordinator().release( columnInfo, columnInfo.getStatement() );
 			assertEquals(
 					columnName,
 					JdbcTypeNameMapper.getTypeName( expectedJdbcTypeCode ),

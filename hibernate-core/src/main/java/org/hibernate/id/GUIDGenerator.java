@@ -64,7 +64,7 @@ public class GUIDGenerator implements IdentifierGenerator {
 					result = rs.getString(1);
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, st );
 				}
                 LOG.guidGenerated(result);
 				return result;

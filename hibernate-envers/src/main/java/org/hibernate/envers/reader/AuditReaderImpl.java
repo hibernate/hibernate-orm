@@ -95,9 +95,15 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     	cls = getTargetClassIfProxied(cls);
     	return this.find(cls, cls.getName(), primaryKey, revision);
     }
-    
+
+    public <T> T find(Class<T> cls, String entityName, Object primaryKey, Number revision)
+            throws IllegalArgumentException, NotAuditedException, IllegalStateException {
+        return this.find(cls, entityName, primaryKey, revision, false);
+    }
+
     @SuppressWarnings({"unchecked"})
-    public <T> T find(Class<T> cls, String entityName, Object primaryKey, Number revision) throws
+    public <T> T find(Class<T> cls, String entityName, Object primaryKey, Number revision,
+        boolean includeDeletions) throws
             IllegalArgumentException, NotAuditedException, IllegalStateException {
         cls = getTargetClassIfProxied(cls);
         checkNotNull(cls, "Entity class");
@@ -118,7 +124,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         Object result;
         try {
             // The result is put into the cache by the entity instantiator called from the query
-            result = createQuery().forEntitiesAtRevision(cls, entityName, revision)
+            result = createQuery().forEntitiesAtRevision(cls, entityName, revision, includeDeletions)
                 .add(AuditEntity.id().eq(primaryKey)).getSingleResult();
         } catch (NoResultException e) {
             result = null;

@@ -77,6 +77,10 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 		EntityFetch entityFetch = ExtraAssertions.assertTyping( EntityFetch.class, fetch );
 		assertNotNull( entityFetch.getFetches() );
 		assertEquals( 0, entityFetch.getFetches().length );
+
+		String loadSql = plan.getLoadQuery().generateSql( 1 );
+		// TODO: assert that aliases used in loadSql match up with those in entityReturn and entityFetch
+		//       (they currently do not match up)
 	}
 
 	@Test

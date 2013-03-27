@@ -1,5 +1,5 @@
 /*
- * jDocBook, processing of DocBook sources
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
  * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
@@ -23,46 +23,44 @@
  */
 package org.hibernate.loader.plan.internal;
 
-import java.util.Collections;
-import java.util.List;
-
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.loader.plan.spi.LoadPlan;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.entity.EntityJoinWalker;
 import org.hibernate.loader.plan.spi.LoadQuery;
-import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.persister.entity.OuterJoinLoadable;
 
 /**
- * Implementation of LoadPlan.
- *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class LoadPlanImpl implements LoadPlan {
-	private final boolean hasScalars;
-	private final List<Return> returns;
-	private final LoadQuery loadQuery;
+public class EntityLoadQueryImpl implements LoadQuery {
+	final SessionFactoryImplementor sessionFactory;
+	final LoadQueryInfluencers loadQueryInfluencers;
+	final LockMode lockMode;
+	final OuterJoinLoadable entityPersister;
 
-	public LoadPlanImpl(LoadQuery loadQuery, boolean hasScalars, List<Return> returns) {
-		this.loadQuery = loadQuery;
-		this.hasScalars = hasScalars;
-		this.returns = returns;
-	}
+	public EntityLoadQueryImpl(
+			SessionFactoryImplementor sessionFactory,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockMode lockMode,
+			OuterJoinLoadable entityPersister) {
+		this.sessionFactory = sessionFactory;
+		this.loadQueryInfluencers = loadQueryInfluencers;
+		this.lockMode = lockMode;
+		this.entityPersister = entityPersister;
 
-	public LoadPlanImpl(LoadQuery loadQuery, boolean hasScalars, Return rootReturn) {
-		this( loadQuery, hasScalars, Collections.singletonList( rootReturn ) );
-	}
-
-	@Override
-	public boolean hasAnyScalarReturns() {
-		return hasScalars;
-	}
-
-	@Override
-	public List<Return> getReturns() {
-		return returns;
 	}
 
 	@Override
-	public LoadQuery getLoadQuery() {
-		return loadQuery;
+	public String generateSql(int batchSize) {
+		final EntityJoinWalker entityJoinWalker = new EntityJoinWalker(
+				entityPersister,
+				entityPersister.getIdentifierColumnNames(),
+				batchSize,
+				lockMode,
+				sessionFactory,
+				loadQueryInfluencers
+		);
+		return entityJoinWalker.getSQLString();
 	}
 }

@@ -323,7 +323,8 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		}
 
 		Root root = getRoots().iterator().next();
-		if ( root.getModel().getJavaType() != returnType ) {
+        Class<?> javaType = root.getModel().getJavaType();
+        if ( javaType != null && javaType != returnType ) {
 			return false;
 		}
 

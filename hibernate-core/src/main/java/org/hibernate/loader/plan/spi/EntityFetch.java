@@ -80,6 +80,11 @@ public class EntityFetch extends AbstractFetch implements EntityReference, Fetch
 	}
 
 	@Override
+	public EntityAliases getEntityAliases() {
+		return entityAliases;
+	}
+
+	@Override
 	public EntityPersister retrieveFetchSourcePersister() {
 		return persister;
 	}

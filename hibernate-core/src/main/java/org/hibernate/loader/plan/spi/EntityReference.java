@@ -24,6 +24,7 @@
 package org.hibernate.loader.plan.spi;
 
 import org.hibernate.LockMode;
+import org.hibernate.loader.EntityAliases;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -54,4 +55,11 @@ public interface EntityReference extends IdentifierDescriptionInjectable {
 	public EntityPersister getEntityPersister();
 
 	public IdentifierDescription getIdentifierDescription();
+
+	/**
+	 * Ugh.  *Really* hate this here.
+	 *
+	 * @return
+	 */
+	public EntityAliases getEntityAliases();
 }

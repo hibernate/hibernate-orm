@@ -630,6 +630,11 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		}
 
 		@Override
+		public EntityAliases getEntityAliases() {
+			return entityReference.getEntityAliases();
+		}
+
+		@Override
 		public void injectIdentifierDescription(IdentifierDescription identifierDescription) {
 			throw new WalkingException(
 					"IdentifierDescription collector should not get injected with IdentifierDescription"
@@ -689,27 +694,38 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
 			final IdentifierResolutionContext ownerIdentifierResolutionContext =
 					context.getIdentifierResolutionContext( entityReference );
-			final Serializable ownerIdentifierHydratedState = ownerIdentifierResolutionContext.getHydratedForm();
+			final Object ownerIdentifierHydratedState = ownerIdentifierResolutionContext.getHydratedForm();
 
-			for ( EntityFetch fetch : identifierFetches ) {
-				final IdentifierResolutionContext identifierResolutionContext =
-						context.getIdentifierResolutionContext( fetch );
-				// if the identifier was already hydrated, nothing to do
-				if ( identifierResolutionContext.getHydratedForm() != null ) {
-					continue;
+			if ( ownerIdentifierHydratedState != null ) {
+				for ( EntityFetch fetch : identifierFetches ) {
+					final IdentifierResolutionContext identifierResolutionContext =
+							context.getIdentifierResolutionContext( fetch );
+					// if the identifier was already hydrated, nothing to do
+					if ( identifierResolutionContext.getHydratedForm() != null ) {
+						continue;
+					}
+
+					// try to extract the sub-hydrated value from the owners tuple array
+					if ( fetchToHydratedStateExtractorMap != null && ownerIdentifierHydratedState != null ) {
+						Serializable extracted = (Serializable) fetchToHydratedStateExtractorMap.get( fetch )
+								.extract( ownerIdentifierHydratedState );
+						identifierResolutionContext.registerHydratedForm( extracted );
+						continue;
+					}
+
+					// if we can't, then read from result set
+					fetch.hydrate( resultSet, context );
 				}
-
-				// try to extract the sub-hydrated value from the owners tuple array
-				if ( fetchToHydratedStateExtractorMap != null && ownerIdentifierHydratedState != null ) {
-					Serializable extracted = (Serializable) fetchToHydratedStateExtractorMap.get( fetch )
-							.extract( ownerIdentifierHydratedState );
-					identifierResolutionContext.registerHydratedForm( extracted );
-					continue;
-				}
-
-				// if we can't, then read from result set
-				fetch.hydrate( resultSet, context );
+				return;
 			}
+
+			final Object hydratedIdentifierState = entityReference.getEntityPersister().getIdentifierType().hydrate(
+					resultSet,
+					entityReference.getEntityAliases().getSuffixedKeyAliases(),
+					context.getSession(),
+					null
+			);
+			context.getIdentifierResolutionContext( entityReference ).registerHydratedForm( hydratedIdentifierState );
 		}
 
 		@Override
@@ -727,7 +743,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 			final IdentifierResolutionContext ownerIdentifierResolutionContext =
 					context.getIdentifierResolutionContext( entityReference );
-			Serializable hydratedState = ownerIdentifierResolutionContext.getHydratedForm();
+			Object hydratedState = ownerIdentifierResolutionContext.getHydratedForm();
 			Serializable resolvedId = (Serializable) entityReference.getEntityPersister()
 					.getIdentifierType()
 					.resolve( hydratedState, context.getSession(), null );

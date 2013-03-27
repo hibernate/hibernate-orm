@@ -141,7 +141,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		IdentifierResolutionContext context = identifierResolutionContextMap.get( entityReference );
 		if ( context == null ) {
 			context = new IdentifierResolutionContext() {
-				private Serializable hydratedForm;
+				private Object hydratedForm;
 				private EntityKey entityKey;
 
 				@Override
@@ -150,7 +150,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 				}
 
 				@Override
-				public void registerHydratedForm(Serializable hydratedForm) {
+				public void registerHydratedForm(Object hydratedForm) {
 					if ( this.hydratedForm != null ) {
 						// this could be bad...
 					}
@@ -158,7 +158,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 				}
 
 				@Override
-				public Serializable getHydratedForm() {
+				public Object getHydratedForm() {
 					return hydratedForm;
 				}
 
@@ -514,7 +514,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	}
 
 	private void createSubselects() {
-		if ( subselectLoadableEntityKeyMap.size() <= 1 ) {
+		if ( subselectLoadableEntityKeyMap == null || subselectLoadableEntityKeyMap.size() <= 1 ) {
 			// if we only returned one entity, query by key is more efficient; so do nothing here
 			return;
 		}

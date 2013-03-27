@@ -54,9 +54,9 @@ public interface ResultSetProcessingContext {
 	public static interface IdentifierResolutionContext {
 		public EntityReference getEntityReference();
 
-		public void registerHydratedForm(Serializable hydratedForm);
+		public void registerHydratedForm(Object hydratedForm);
 
-		public Serializable getHydratedForm();
+		public Object getHydratedForm();
 
 		public void registerEntityKey(EntityKey entityKey);
 

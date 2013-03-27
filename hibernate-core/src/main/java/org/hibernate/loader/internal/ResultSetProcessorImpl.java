@@ -104,7 +104,8 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 				session,
 				loadPlan,
 				readOnly,
-				true, // use optional entity key?  for now, always say yes
+//				true, // use optional entity key?  for now, always say yes
+				false, // use optional entity key?  actually for now always say no since in the simple test cases true causes failures because there is no optional key
 				queryParameters,
 				namedParameterContext,
 				hadSubselectFetches

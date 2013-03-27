@@ -29,6 +29,7 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -81,6 +82,11 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchOwner, En
 	@Override
 	public IdentifierDescription getIdentifierDescription() {
 		return identifierDescription;
+	}
+
+	@Override
+	public EntityAliases getEntityAliases() {
+		return null;
 	}
 
 	@Override

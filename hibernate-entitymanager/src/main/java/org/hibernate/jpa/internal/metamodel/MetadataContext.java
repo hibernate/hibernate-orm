@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,6 +23,10 @@
  */
 package org.hibernate.jpa.internal.metamodel;
 
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.MappedSuperclassType;
+import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,17 +36,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.MappedSuperclassType;
-import javax.persistence.metamodel.SingularAttribute;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.common.AssertionFailure;
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
@@ -183,7 +185,11 @@ class MetadataContext {
 		return entityTypesByEntityName.get( entityName );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+    public Map<String, EntityTypeImpl<?>> getEntityTypesByEntityName() {
+        return Collections.unmodifiableMap( entityTypesByEntityName );
+    }
+
+    @SuppressWarnings({ "unchecked" })
 	public void wrapUp() {
         LOG.trace("Wrapping up metadata context...");
 		//we need to process types from superclasses to subclasses

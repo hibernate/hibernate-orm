@@ -119,8 +119,9 @@ public class InPredicate<T>
 		super( criteriaBuilder );
 		this.expression = expression;
 		this.values = new ArrayList<Expression<? extends T>>( values.size() );
-		ValueHandlerFactory.ValueHandler<? extends T> valueHandler = ValueHandlerFactory.isNumeric( expression.getJavaType() )
-				? ValueHandlerFactory.determineAppropriateHandler( (Class<? extends T>) expression.getJavaType() )
+        final Class<? extends T> javaType = expression.getJavaType();
+        ValueHandlerFactory.ValueHandler<? extends T> valueHandler = javaType != null && ValueHandlerFactory.isNumeric(javaType)
+            ? ValueHandlerFactory.determineAppropriateHandler((Class<? extends T>) javaType)
 				: new ValueHandlerFactory.NoOpValueHandler<T>();
 		for ( T value : values ) {
 			this.values.add(

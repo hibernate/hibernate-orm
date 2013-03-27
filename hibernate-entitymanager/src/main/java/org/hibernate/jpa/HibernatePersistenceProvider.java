@@ -56,16 +56,6 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 	
 	/**
-	 * Used for environment-supplied properties.  Ex: hibernate-osgi's
-	 * HibernateBundleActivator needs to set a custom JtaPlatform.
-	 */
-	private Map environmentProperties;
-	
-	public void setEnvironmentProperties( Map environmentProperties ) {
-		this.environmentProperties = environmentProperties;
-	}
-
-	/**
 	 * {@inheritDoc}
 	 * <p/>
 	 * Note: per-spec, the values passed as {@code properties} override values found in {@code persistence.xml}
@@ -73,10 +63,6 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
 		log.tracef( "Starting createEntityManagerFactory for persistenceUnitName %s", persistenceUnitName );
-
-		if ( environmentProperties != null ) {
-			properties.putAll( environmentProperties );
-		}
 
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
 		if ( builder == null ) {
@@ -88,7 +74,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		}
 	}
 
-	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties) {
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties) {
 		log.tracef( "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s", persistenceUnitName );
 
 		final Map integration = wrap( properties );
@@ -153,9 +139,6 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
 		log.tracef( "Starting createContainerEntityManagerFactory : %s", info.getPersistenceUnitName() );
 
-		if ( environmentProperties != null ) {
-			properties.putAll( environmentProperties );
-		}
 		return Bootstrap.getEntityManagerFactoryBuilder( info, properties ).build();
 	}
 

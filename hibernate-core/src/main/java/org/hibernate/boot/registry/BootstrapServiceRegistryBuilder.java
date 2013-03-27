@@ -37,7 +37,6 @@ import org.hibernate.boot.registry.selector.AvailabilityAnnouncer;
 import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.internal.util.ClassLoaderHelper;
 
 /**
  * Builder for bootstrap {@link org.hibernate.service.ServiceRegistry} instances.
@@ -198,9 +197,6 @@ public class BootstrapServiceRegistryBuilder {
 
             if ( providedClassLoaders != null )  {
                 classLoaders.addAll( providedClassLoaders );
-            }
-			if ( ClassLoaderHelper.overridenClassLoader != null ) {
-                classLoaders.add( ClassLoaderHelper.overridenClassLoader );
             }
 			
 			classLoaderService = new ClassLoaderServiceImpl( classLoaders );

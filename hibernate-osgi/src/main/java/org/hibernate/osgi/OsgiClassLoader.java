@@ -24,22 +24,27 @@
 package org.hibernate.osgi;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.osgi.framework.Bundle;
 
 /**
- * Custom OSGI ClassLoader helper which knows all the "interesting" bundles and
- * encapsulates the OSGi related capabilities.
+ * Custom OSGI ClassLoader helper which knows all the "interesting"
+ * class loaders and bundles.  Encapsulates the OSGi related CL capabilities.
  * 
  * @author Brett Meyer
+ * @author Tim Ward
  */
 public class OsgiClassLoader extends ClassLoader {
 
-	private Map<String, CachedBundle> bundles = new HashMap<String, CachedBundle>();
+	private List<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
+	
+	private List<Bundle> bundles = new ArrayList<Bundle>();
 	
 	private Map<String, Class<?>> classCache = new HashMap<String, Class<?>>();
 	
@@ -59,9 +64,21 @@ public class OsgiClassLoader extends ClassLoader {
 			return classCache.get( name );
 		}
 		
-		for ( CachedBundle bundle : bundles.values() ) {
+		for ( Bundle bundle : bundles ) {
 			try {
 				Class clazz = bundle.loadClass( name );
+				if ( clazz != null ) {
+					classCache.put( name, clazz );
+					return clazz;
+				}
+			}
+			catch ( Exception ignore ) {
+			}
+		}
+		
+		for ( ClassLoader classLoader : classLoaders ) {
+			try {
+				Class clazz = classLoader.loadClass( name );
 				if ( clazz != null ) {
 					classCache.put( name, clazz );
 					return clazz;
@@ -85,7 +102,7 @@ public class OsgiClassLoader extends ClassLoader {
 			return resourceCache.get( name );
 		}
 		
-		for ( CachedBundle bundle : bundles.values() ) {
+		for ( Bundle bundle : bundles ) {
 			try {
 				URL resource = bundle.getResource( name );
 				if ( resource != null ) {
@@ -96,6 +113,19 @@ public class OsgiClassLoader extends ClassLoader {
 			catch ( Exception ignore ) {
 			}
 		}
+		
+		for ( ClassLoader classLoader : classLoaders ) {
+			try {
+				URL resource = classLoader.getResource( name );
+				if ( resource != null ) {
+					resourceCache.put( name, resource );
+					return resource;
+				}
+			}
+			catch ( Exception ignore ) {
+			}
+		}
+		
 		// TODO: Error?
 		return null;
 	}
@@ -112,67 +142,69 @@ public class OsgiClassLoader extends ClassLoader {
 			return resourceListCache.get( name );
 		}
 		
-		for ( CachedBundle bundle : bundles.values() ) {
+		final List<Enumeration<URL>> enumerations = new ArrayList<Enumeration<URL>>();
+		
+		for ( Bundle bundle : bundles ) {
 			try {
 				Enumeration<URL> resources = bundle.getResources( name );
 				if ( resources != null ) {
-					resourceListCache.put( name, resources );
-					return resources;
+					enumerations.add( resources );
 				}
 			}
 			catch ( Exception ignore ) {
 			}
 		}
-		// TODO: Error?
-		return null;
-	}
-
-	/**
-	 * Register the bundle with this class loader
-	 */
-	public void registerBundle(Bundle bundle) {
-		if ( bundle != null ) {
-			synchronized ( bundles ) {
-				String key = getBundleKey( bundle );
-				if ( !bundles.containsKey( key ) ) {
-					bundles.put( key, new CachedBundle( bundle, key ) );
+		
+		for ( ClassLoader classLoader : classLoaders ) {
+			try {
+				Enumeration<URL> resources = classLoader.getResources( name );
+				if ( resources != null ) {
+					enumerations.add( resources );
 				}
 			}
-		}
-	}
-
-	/**
-	 * Unregister the bundle from this class loader
-	 */
-	public void unregisterBundle(Bundle bundle) {
-		if ( bundle != null ) {
-			synchronized ( bundles ) {
-				String key = getBundleKey( bundle );
-				if ( bundles.containsKey( key ) ) {
-					CachedBundle cachedBundle = bundles.remove( key );
-					clearCache( classCache, cachedBundle.getClassNames() );
-					clearCache( resourceCache, cachedBundle.getResourceNames() );
-					clearCache( resourceListCache, cachedBundle.getResourceListNames() );
-				}
+			catch ( Exception ignore ) {
 			}
 		}
+		
+		Enumeration<URL> aggEnumeration = new Enumeration<URL>() {
+			@Override
+			public boolean hasMoreElements() {
+				for ( Enumeration<URL> enumeration : enumerations ) {
+					if ( enumeration != null && enumeration.hasMoreElements() ) {
+						return true;
+					}
+				}
+				return false;
+			}
+
+			@Override
+			public URL nextElement() {
+				for ( Enumeration<URL> enumeration : enumerations ) {
+					if ( enumeration != null && enumeration.hasMoreElements() ) {
+						return enumeration.nextElement();
+					}
+				}
+				throw new NoSuchElementException();
+			}
+		};
+		
+		resourceListCache.put( name, aggEnumeration );
+		
+		return aggEnumeration;
 	}
-	
-	private void clearCache( Map cache, List<String> names ) {
-		for ( String name : names ) {
-			cache.remove( name );
-		}
+
+	public void addClassLoader( ClassLoader classLoader ) {
+		classLoaders.add( classLoader );
+	}
+
+	public void addBundle( Bundle bundle ) {
+		bundles.add( bundle );
 	}
 	
 	public void clear() {
-		bundles.clear();
 		classCache.clear();
 		resourceCache.clear();
 		resourceListCache.clear();
-	}
-
-	protected static String getBundleKey(Bundle bundle) {
-		return bundle.getSymbolicName() + " " + bundle.getVersion().toString();
 	}
 
 }

@@ -187,22 +187,31 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 			EntityPersister persister,
 			EntityAliases entityAliases,
 			EntityKey entityKey,
-			Object entityInstance) throws SQLException {
+			Object entityInstance) {
 		final Object version = session.getPersistenceContext().getEntry( entityInstance ).getVersion();
 
 		if ( version != null ) {
 			//null version means the object is in the process of being loaded somewhere else in the ResultSet
 			VersionType versionType = persister.getVersionType();
-			Object currentVersion = versionType.nullSafeGet(
-					resultSet,
-					entityAliases.getSuffixedVersionAliases(),
-					session,
-					null
-			);
-			if ( !versionType.isEqual(version, currentVersion) ) {
+			final Object currentVersion;
+			try {
+				currentVersion = versionType.nullSafeGet(
+						resultSet,
+						entityAliases.getSuffixedVersionAliases(),
+						session,
+						null
+				);
+			}
+			catch (SQLException e) {
+				throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+						e,
+						"Could not read version value from result set"
+				);
+			}
+
+			if ( !versionType.isEqual( version, currentVersion ) ) {
 				if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-					session.getFactory().getStatisticsImplementor()
-							.optimisticFailure( persister.getEntityName() );
+					session.getFactory().getStatisticsImplementor().optimisticFailure( persister.getEntityName() );
 				}
 				throw new StaleObjectStateException( persister.getEntityName(), entityKey.getIdentifier() );
 			}
@@ -214,19 +223,28 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 			final ResultSet rs,
 			final EntityPersister persister,
 			final EntityAliases entityAliases,
-			final EntityKey entityKey) throws SQLException {
+			final EntityKey entityKey) {
 
 		final Loadable loadable = (Loadable) persister;
 		if ( ! loadable.hasSubclasses() ) {
 			return persister.getEntityName();
 		}
 
-		final Object discriminatorValue = loadable.getDiscriminatorType().nullSafeGet(
-				rs,
-				entityAliases.getSuffixedDiscriminatorAlias(),
-				session,
-				null
-		);
+		final Object discriminatorValue;
+		try {
+			discriminatorValue = loadable.getDiscriminatorType().nullSafeGet(
+					rs,
+					entityAliases.getSuffixedDiscriminatorAlias(),
+					session,
+					null
+			);
+		}
+		catch (SQLException e) {
+			throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+					e,
+					"Could not read discriminator value from ResultSet"
+			);
+		}
 
 		final String result = loadable.getSubclassForDiscriminatorValue( discriminatorValue );
 
@@ -243,6 +261,90 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	}
 
 	@Override
+	public Object resolveEntityKey(EntityKey entityKey, EntityKeyResolutionContext entityKeyContext) {
+		final Object existing = getSession().getEntityUsingInterceptor( entityKey );
+
+		if ( existing != null ) {
+			if ( !entityKeyContext.getEntityPersister().isInstance( existing ) ) {
+				throw new WrongClassException(
+						"loaded object was of wrong class " + existing.getClass(),
+						entityKey.getIdentifier(),
+						entityKeyContext.getEntityPersister().getEntityName()
+				);
+			}
+
+			final LockMode requestedLockMode = entityKeyContext.getLockMode() == null
+					? LockMode.NONE
+					: entityKeyContext.getLockMode();
+
+			if ( requestedLockMode != LockMode.NONE ) {
+				final LockMode currentLockMode = getSession().getPersistenceContext().getEntry( existing ).getLockMode();
+				final boolean isVersionCheckNeeded = entityKeyContext.getEntityPersister().isVersioned()
+						&& currentLockMode.lessThan( requestedLockMode );
+
+				// we don't need to worry about existing version being uninitialized because this block isn't called
+				// by a re-entrant load (re-entrant loads *always* have lock mode NONE)
+				if ( isVersionCheckNeeded ) {
+					//we only check the version when *upgrading* lock modes
+					checkVersion(
+							resultSet,
+							entityKeyContext.getEntityPersister(),
+							entityKeyContext.getEntityAliases(),
+							entityKey,
+							existing
+					);
+					//we need to upgrade the lock mode to the mode requested
+					getSession().getPersistenceContext().getEntry( existing ).setLockMode( requestedLockMode );
+				}
+			}
+
+			return existing;
+		}
+		else {
+			final String concreteEntityTypeName = getConcreteEntityTypeName(
+					resultSet,
+					entityKeyContext.getEntityPersister(),
+					entityKeyContext.getEntityAliases(),
+					entityKey
+			);
+
+			final Object entityInstance = getSession().instantiate(
+					concreteEntityTypeName,
+					entityKey.getIdentifier()
+			);
+
+			//need to hydrate it.
+
+			// grab its state from the ResultSet and keep it in the Session
+			// (but don't yet initialize the object itself)
+			// note that we acquire LockMode.READ even if it was not requested
+			final LockMode requestedLockMode = entityKeyContext.getLockMode() == null
+					? LockMode.NONE
+					: entityKeyContext.getLockMode();
+			final LockMode acquiredLockMode = requestedLockMode == LockMode.NONE
+					? LockMode.READ
+					: requestedLockMode;
+
+			loadFromResultSet(
+					resultSet,
+					entityInstance,
+					concreteEntityTypeName,
+					entityKey,
+					entityKeyContext.getEntityAliases(),
+					acquiredLockMode,
+					entityKeyContext.getEntityPersister(),
+					true,
+					entityKeyContext.getEntityPersister().getEntityMetamodel().getEntityType()
+			);
+
+			// materialize associations (and initialize the object) later
+			registerHydratedEntity( entityKeyContext.getEntityPersister(), entityKey, entityInstance );
+
+			return entityInstance;
+		}
+	}
+
+	@Override
 	public void loadFromResultSet(
 			ResultSet resultSet,
 			Object entityInstance,
@@ -252,7 +354,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 			LockMode acquiredLockMode,
 			EntityPersister rootPersister,
 			boolean eagerFetch,
-			EntityType associationType) throws SQLException {
+			EntityType associationType) {
 
 		final Serializable id = entityKey.getIdentifier();
 
@@ -287,17 +389,35 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 				entityAliases.getSuffixedPropertyAliases() :
 				entityAliases.getSuffixedPropertyAliases(persister);
 
-		final Object[] values = persister.hydrate(
-				resultSet,
-				id,
-				entityInstance,
-				(Loadable) rootPersister,
-				cols,
-				eagerFetch,
-				session
-		);
+		final Object[] values;
+		try {
+			values = persister.hydrate(
+					resultSet,
+					id,
+					entityInstance,
+					(Loadable) rootPersister,
+					cols,
+					eagerFetch,
+					session
+			);
+		}
+		catch (SQLException e) {
+			throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+					e,
+					"Could not read entity state from ResultSet : " + entityKey
+			);
+		}
 
-		final Object rowId = persister.hasRowId() ? resultSet.getObject( entityAliases.getRowIdAlias() ) : null;
+		final Object rowId;
+		try {
+			rowId = persister.hasRowId() ? resultSet.getObject( entityAliases.getRowIdAlias() ) : null;
+		}
+		catch (SQLException e) {
+			throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+					e,
+					"Could not read entity row-id from ResultSet : " + entityKey
+			);
+		}
 
 		if ( associationType != null ) {
 			String ukName = associationType.getRHSUniqueKeyPropertyName();

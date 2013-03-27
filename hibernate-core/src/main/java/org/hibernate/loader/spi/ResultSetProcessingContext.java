@@ -23,10 +23,8 @@
  */
 package org.hibernate.loader.spi;
 
-import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityKey;
@@ -34,9 +32,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.plan.spi.EntityReference;
-import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
 
 /**
@@ -48,8 +44,6 @@ public interface ResultSetProcessingContext {
 	public QueryParameters getQueryParameters();
 
 	public EntityKey getDictatedRootEntityKey();
-
-	public IdentifierResolutionContext getIdentifierResolutionContext(EntityReference entityReference);
 
 	public static interface IdentifierResolutionContext {
 		public EntityReference getEntityReference();
@@ -63,7 +57,20 @@ public interface ResultSetProcessingContext {
 		public EntityKey getEntityKey();
 	}
 
+	public IdentifierResolutionContext getIdentifierResolutionContext(EntityReference entityReference);
+
 	public void registerHydratedEntity(EntityPersister persister, EntityKey entityKey, Object entityInstance);
+
+	public static interface EntityKeyResolutionContext {
+		public EntityPersister getEntityPersister();
+		public LockMode getLockMode();
+		public EntityAliases getEntityAliases();
+	}
+
+	public Object resolveEntityKey(EntityKey entityKey, EntityKeyResolutionContext entityKeyContext);
+
+
+	// should be able to get rid of the methods below here from the interface ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public void checkVersion(
 			ResultSet resultSet,

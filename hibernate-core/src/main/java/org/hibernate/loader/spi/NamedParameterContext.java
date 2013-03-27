@@ -27,7 +27,7 @@ package org.hibernate.loader.spi;
  * The context for named parameters.
  * <p/>
  * NOTE : the hope with the SQL-redesign stuff is that this whole concept goes away, the idea being that
- * the parameters are encoded into the query tree and "bind themselves".
+ * the parameters are encoded into the query tree and "bind themselves"; see {@link org.hibernate.param.ParameterSpecification}.
  *
  * @author Steve Ebersole
  */

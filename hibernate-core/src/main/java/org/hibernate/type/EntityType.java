@@ -23,30 +23,25 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Map;
-
 import org.dom4j.Element;
 import org.dom4j.Node;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.*;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.tuple.ElementWrapper;
+
+import java.io.Serializable;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * Base for types which map associations to persistent entities.
@@ -236,14 +231,16 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return returnedClass;
 	}
 
-	private Class determineAssociatedEntityClass() {
-		try {
-			return ReflectHelper.classForName( getAssociatedEntityName() );
-		}
-		catch ( ClassNotFoundException cnfe ) {
-			return java.util.Map.class;
-		}
-	}
+    private Class determineAssociatedEntityClass() {
+        final String entityName = getAssociatedEntityName();
+        try {
+            return ReflectHelper.classForName(entityName);
+        }
+        catch ( ClassNotFoundException cnfe ) {
+            return this.scope.resolveFactory().getEntityPersister(entityName).
+                getEntityTuplizer().getMappedClass();
+        }
+    }
 
 	/**
 	 * {@inheritDoc}

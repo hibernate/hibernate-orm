@@ -21,12 +21,15 @@
  */
 package org.hibernate.ejb.metamodel;
 
+import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.*;
+import org.jboss.logging.Logger;
+
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,18 +37,6 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.SingularAttribute;
-
-import org.jboss.logging.Logger;
-
-import org.hibernate.annotations.common.AssertionFailure;
-import org.hibernate.ejb.internal.EntityManagerMessageLogger;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.
@@ -183,7 +174,11 @@ class MetadataContext {
 		return entityTypesByEntityName.get( entityName );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+    public Map<String, EntityTypeImpl<?>> getEntityTypesByEntityName() {
+        return Collections.unmodifiableMap( entityTypesByEntityName );
+    }
+
+    @SuppressWarnings({ "unchecked" })
 	public void wrapUp() {
         LOG.trace("Wrapping up metadata context...");
 		//we need to process types from superclasses to subclasses

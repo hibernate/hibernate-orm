@@ -44,6 +44,7 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.internal.ResultSetProcessorImpl;
+import org.hibernate.loader.plan.internal.EntityLoadQueryImpl;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.LoadPlanBuilder;
@@ -71,6 +72,8 @@ public class SimpleResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testSimpleEntityProcessing() throws Exception {
+		final EntityPersister entityPersister = sessionFactory().getEntityPersister( SimpleEntity.class.getName() );
+
 		// create some test data
 		Session session = openSession();
 		session.beginTransaction();
@@ -79,12 +82,14 @@ public class SimpleResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 		session.close();
 
 		{
-			final Session workSession = openSession();
-			workSession.beginTransaction();
-			final EntityPersister entityPersister = sessionFactory().getEntityPersister( SimpleEntity.class.getName() );
-			final EntityLoader loader = (EntityLoader) BatchingEntityLoaderBuilder.getBuilder( sessionFactory() )
-					.buildLoader( (OuterJoinLoadable) entityPersister, -1, LockMode.NONE, sessionFactory(), LoadQueryInfluencers.NONE );
-			final String sql = loader.getSQLString();
+			final EntityLoadQueryImpl queryBuilder = new EntityLoadQueryImpl(
+					sessionFactory(),
+					LoadQueryInfluencers.NONE,
+					LockMode.NONE,
+					(OuterJoinLoadable) entityPersister
+			);
+			final String sql = queryBuilder.generateSql( 1 );
+
 			final SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy(
 					sessionFactory(),
 					LoadQueryInfluencers.NONE,
@@ -94,6 +99,9 @@ public class SimpleResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 			final LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
 			final ResultSetProcessorImpl resultSetProcessor = new ResultSetProcessorImpl( plan );
 			final List results = new ArrayList();
+
+			final Session workSession = openSession();
+			workSession.beginTransaction();
 			workSession.doWork(
 					new Work() {
 						@Override

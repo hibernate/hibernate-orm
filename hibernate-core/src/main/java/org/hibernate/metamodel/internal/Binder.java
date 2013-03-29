@@ -252,9 +252,10 @@ public class Binder {
 
 	public void bindEntityHierarchies() {
 
-		applyToAllEntityHierarchies( resolveAssociationSourcesExecutor() );
-
 		bindEntityHierarchiesExcludingNonIdAttributeBindings();
+
+		// cannot resolve associations until after entity identifiers are defined.
+		applyToAllEntityHierarchies( resolveAssociationSourcesExecutor() );
 
 		applyToAllEntityHierarchies( bindSingularAttributesExecutor( SingularAttributeSource.Nature.COMPOSITE ) );
 
@@ -345,8 +346,23 @@ public class Binder {
 			}
 		}
 
-		for ( EntityHierarchy entityHierarchy : unresolvedEntityHierarchies ) {
-			entityHierarchyHelper.applyToEntityHierarchy( entityHierarchy, rootEntityCallback, subEntityCallback );
+		int oldSize = Integer.MAX_VALUE;
+		while( !unresolvedEntityHierarchies.isEmpty() && unresolvedEntityHierarchies.size() < oldSize ) {
+			oldSize = unresolvedEntityHierarchies.size();
+			for ( Iterator<EntityHierarchy> it = unresolvedEntityHierarchies.iterator(); it.hasNext(); ) {
+				final EntityHierarchy entityHierarchy = it.next();
+				try {
+					entityHierarchyHelper.applyToEntityHierarchy( entityHierarchy, rootEntityCallback, subEntityCallback );
+					// succeeded, so the entityHierarchy is no longer unresolved.
+					it.remove();
+				}
+				catch (Exception ex) {
+					// to nothing;
+				}
+			}
+		}
+		if ( ! unresolvedEntityHierarchies.isEmpty() ) {
+			throw new IllegalStateException( "could not resolve all EntityHierarchies." );
 		}
 	}
 
@@ -390,7 +406,7 @@ public class Binder {
 		return new LocalBindingContextExecutor() {
 			@Override
 			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
-				sourceIndex.resolveAssociationSources( bindingContextContext.getEntitySource().getEntityName() );
+				sourceIndex.resolveAssociationSources( bindingContextContext.getEntityBinding() );
 			}
 		};
 	}
@@ -1502,23 +1518,25 @@ public class Binder {
 				toOneAttributeBindingContext
 		);
 		if ( attributeSource.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT ) {
-			List<RelationalValueBinding> foreignKeyRelationalValueBindings =
-					attributeBinding
-							.getContainer()
-							.seekEntityBinding()
-							.getHierarchyDetails()
-							.getEntityIdentifier()
-							.getAttributeBinding()
-							.getRelationalValueBindings();
+			List<Column> foreignKeyColumns =
+					attributeBinding.getContainer().getPrimaryTable().getPrimaryKey().getColumns();
+			//List<RelationalValueBinding> foreignKeyRelationalValueBindings =
+			//		attributeBinding
+			//				.getContainer()
+			//				.seekEntityBinding()
+			//				.getHierarchyDetails()
+			//				.getEntityIdentifier()
+			//				.getAttributeBinding()
+			//				.getRelationalValueBindings();
 
 			final List<Column> targetColumns = determineForeignKeyTargetColumns(
 					attributeBinding.getReferencedEntityBinding(),
 					attributeSource
 			);
-			locateOrCreateForeignKey(
+			foreignKeyHelper.locateOrCreateForeignKey(
 					quotedIdentifier( attributeSource.getExplicitForeignKeyName() ),
-					foreignKeyRelationalValueBindings.get( 0 ).getTable(),
-					foreignKeyRelationalValueBindings,
+					attributeBinding.getContainer().getPrimaryTable(),// foreignKeyRelationalValueBindings.get( 0 ).getTable(),
+					foreignKeyColumns, // foreignKeyRelationalValueBindings,
 					determineForeignKeyTargetTable( attributeBinding.getReferencedEntityBinding(), attributeSource ),
 					targetColumns
 			);
@@ -2083,8 +2101,12 @@ public class Binder {
 				)
 		);
 		if ( elementSource.isUnique() ) {
+<<<<<<< HEAD
 			UniqueKey uk = collectionTable.getOrCreateUniqueKey( StringHelper.randomFixedLengthHex(
 					UniqueKey.GENERATED_NAME_PREFIX ) );
+=======
+			// TODO: this should create a unique constrraint instead of marking each individual column unique.
+>>>>>>> HHH-7843 : Add support for one-to-one to new metamodel
 			for ( RelationalValueBinding relationalValueBinding : elementBinding.getRelationalValueBindings() ) {
 				if ( ! relationalValueBinding.isDerived() )  {
 					uk.addColumn( (Column) relationalValueBinding.getValue() );

@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,8 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
@@ -45,6 +48,8 @@ import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
+import org.hibernate.metamodel.spi.source.ToOneAttributeSourceNatureResolver;
 
 /**
  * @author Gail Badner
@@ -69,8 +74,8 @@ public class SourceIndex {
 		indexAttributes( entitySourceIndex );
 	}
 
-	public void resolveAssociationSources(String entityName) {
-		entitySourceIndexByEntityName.get( entityName ).resolveAssociationSources();
+	public void resolveAssociationSources(EntityBinding entityBinding) {
+		entitySourceIndexByEntityName.get( entityBinding.getEntityName() ).resolveAssociationSources( entityBinding );
 	}
 
 	public Map<AttributeSourceKey, SingularAttributeSource> getSingularAttributeSources(
@@ -283,16 +288,24 @@ public class SourceIndex {
 				String pathBase,
 				SingularAttributeSource attributeSource,
 				boolean isInIdentifier) {
+			final AttributeSourceKey attributeSourceKey =
+					new AttributeSourceKey( entitySource.getEntityName(), pathBase, attributeSource.getName() );
+			final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> map;
+			if ( isInIdentifier ) {
+				map = identifierAttributeSourcesByNature;
+			}
+			else {
+				map = singularAttributeSourcesByNature;
+			}
 			indexSingularAttributeSource(
-					entitySource.getEntityName(),
-					pathBase,
+					attributeSourceKey,
 					attributeSource,
-					isInIdentifier ? identifierAttributeSourcesByNature : singularAttributeSourcesByNature );
+					map
+			);
 		}
 
 		private static void indexSingularAttributeSource(
-				String entityName,
-				String pathBase,
+				AttributeSourceKey attributeSourceKey,
 				SingularAttributeSource attributeSource,
 				Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> map) {
 			final Map<AttributeSourceKey, SingularAttributeSource> singularAttributeSources;
@@ -303,10 +316,9 @@ public class SourceIndex {
 				singularAttributeSources = new LinkedHashMap<AttributeSourceKey,SingularAttributeSource>();
 				map.put( attributeSource.getNature(), singularAttributeSources );
 			}
-			AttributeSourceKey key = new AttributeSourceKey( entityName, pathBase, attributeSource.getName() );
-			if ( singularAttributeSources.put( key, attributeSource ) != null ) {
+			if ( singularAttributeSources.put( attributeSourceKey, attributeSource ) != null ) {
 				throw new AssertionFailure(
-						String.format( "Attempt to reindex attribute source for: [%s]",  key )
+						String.format( "Attempt to reindex attribute source for: [%s]",  attributeSourceKey )
 				);
 			}
 		}
@@ -351,7 +363,7 @@ public class SourceIndex {
 			return Collections.unmodifiableMap( map );
 		}
 
-		private void resolveAssociationSources() {
+		private void resolveAssociationSources(final EntityBinding entityBinding) {
 			for ( Map.Entry<AttributeSourceKey,PluralAttributeSource> entry : inversePluralAttributeSourcesByKey.entrySet() ) {
 				final AttributeSourceKey pluralAttributeSourceKey = entry.getKey();
 				final PluralAttributeSource pluralAttributeSource = entry.getValue();
@@ -370,6 +382,44 @@ public class SourceIndex {
 								}
 							}
 						);
+				}
+			}
+			final Map<AttributeSourceKey,SingularAttributeSource> unresolvedSingularAttributeSourceMap =
+					singularAttributeSourcesByNature.get( null );
+			if ( unresolvedSingularAttributeSourceMap != null ) {
+				for ( Iterator<Map.Entry<AttributeSourceKey,SingularAttributeSource>> it = unresolvedSingularAttributeSourceMap.entrySet().iterator(); it.hasNext(); ) {
+					final Map.Entry<AttributeSourceKey,SingularAttributeSource> entry = it.next();
+					final AttributeSourceKey attributeSourceKey = entry.getKey();
+					final SingularAttributeSource attributeSource = entry.getValue();
+					if ( !ToOneAttributeSource.class.isInstance( attributeSource ) ) {
+						throw new AssertionFailure(
+								String.format( "Only a ToOneAttributeSource is expected to have a null nature; attribute: %s ", attributeSourceKey )
+						);
+					}
+					ToOneAttributeSource toOneAttributeSource = (ToOneAttributeSource) attributeSource;
+					toOneAttributeSource.resolveToOneAttributeSourceNature(
+							new ToOneAttributeSourceNatureResolver.ToOneAttributeSourceNatureResolutionContext() {
+
+								@Override
+								public boolean areIdentifierColumnsDefined() {
+									return false;
+								}
+
+								@Override
+								public List<Column> getIdentifierColumns() {
+									// TODO: should this return columns from EntityIdentifier???
+									//       (broken for joined-subclass)
+									return entityBinding.getPrimaryTable().getPrimaryKey().getColumns();
+								}
+							}
+					);
+					if ( toOneAttributeSource.getNature() == null ) {
+						throw new AssertionFailure(
+								String.format( "Null nature should have been resolved: %s ", attributeSourceKey )
+						);
+					}
+					it.remove();
+					indexSingularAttributeSource( attributeSourceKey,attributeSource, singularAttributeSourcesByNature );
 				}
 			}
 		}

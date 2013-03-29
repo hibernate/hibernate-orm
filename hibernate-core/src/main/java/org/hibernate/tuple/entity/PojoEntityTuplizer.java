@@ -116,7 +116,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	public PojoEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding mappedEntity) {
 		super( entityMetamodel, mappedEntity );
 		this.mappedClass = mappedEntity.getEntity().getClassReference();
-		this.proxyInterface = mappedEntity.getProxyInterfaceType().getValue();
+		this.proxyInterface = mappedEntity.getProxyInterfaceType() == null ? null : mappedEntity.getProxyInterfaceType().getValue();
 		//with Jandex, if this entity is mapped by annotation, then we already get this info from jandex.
 		//but i don't know if this mirror improvement worth it.
 		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedClass );

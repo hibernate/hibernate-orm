@@ -42,7 +42,6 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class JoinedSubclassOneToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

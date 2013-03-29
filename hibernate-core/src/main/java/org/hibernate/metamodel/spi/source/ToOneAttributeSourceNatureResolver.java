@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -25,27 +25,18 @@ package org.hibernate.metamodel.spi.source;
 
 import java.util.List;
 
-import org.hibernate.metamodel.internal.Binder;
-import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
+import org.hibernate.metamodel.spi.relational.Column;
 
 /**
- * Further contract for sources of {@code *-to-one} style associations.
- *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public interface ToOneAttributeSource
-		extends SingularAttributeSource, ToOneAttributeSourceNatureResolver, ForeignKeyContributingSource, FetchableAttributeSource, CascadeStyleSource {
+public interface ToOneAttributeSourceNatureResolver {
 
-	/**
-	 * Obtain the name of the referenced entity.
-	 *
-	 * @return The name of the referenced entity
-	 */
-	public String getReferencedEntityName();
-	public boolean isUnique();
-	public boolean isNotFoundAnException();
-	public boolean isUnWrapProxy();
-	ForeignKeyDirection getForeignKeyDirection();
-	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding);
+	SingularAttributeSource.Nature resolveToOneAttributeSourceNature(ToOneAttributeSourceNatureResolutionContext context);
+
+	public static interface ToOneAttributeSourceNatureResolutionContext {
+		boolean areIdentifierColumnsDefined();
+		List<org.hibernate.metamodel.spi.relational.Column> getIdentifierColumns();
+	}
 }

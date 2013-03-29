@@ -55,6 +55,14 @@ public interface SingularAttributeBinding extends AttributeBinding {
 	public boolean isNullable();
 
 	/**
+	 * Convenience method to determine if all tables (primary and secondary) involved with this attribute
+	 * binding are optional.
+	 *
+	 * @return true, if all tables involved with this attribute are optional; false, otherwise.
+	 */
+	public boolean isOptional();
+
+	/**
 	 * Convenience method to determine if any {@link RelationalValueBinding simple value bindings} are inserted.
 	 *
 	 * @return {@code true} indicates that at least one value is inserted; {@code false} indicates none are inserted.

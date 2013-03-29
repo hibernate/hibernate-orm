@@ -42,7 +42,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 /**
  * @author Guenther Demetz
  */
-@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel( message = "@OneToOne with mappedBy specified is not supported yet" )
 public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 
 	@TestForIssue(jiraKey = "HHH-4838")

@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -50,6 +51,7 @@ import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
+import org.hibernate.metamodel.spi.source.ToOneAttributeSourceNatureResolver;
 import org.hibernate.type.ForeignKeyDirection;
 
 /**
@@ -59,7 +61,6 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	private final AssociationAttribute associationAttribute;
 	private final Set<CascadeStyle> cascadeStyles;
 	private SingularAttributeSource.Nature nature;
-	private SingularAttributeSource ownerAttributeSource;
 
 	public ToOneAttributeSourceImpl(SingularAssociationAttribute associationAttribute) {
 
@@ -70,25 +71,35 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 				associationAttribute.getHibernateCascadeTypes(),
 				associationAttribute.getContext()
 		);
-		this.nature = getNature( associationAttribute );
+		this.nature = determineNatureIfPossible( associationAttribute );
 	}
 
-	private static Nature getNature(SingularAssociationAttribute associationAttribute) {
+	private static Nature determineNatureIfPossible(SingularAssociationAttribute associationAttribute) {
 		if ( MappedAttribute.Nature.MANY_TO_ONE.equals( associationAttribute.getNature() ) ) {
 			return Nature.MANY_TO_ONE;
 		}
 		else if ( MappedAttribute.Nature.ONE_TO_ONE.equals( associationAttribute.getNature() ) ) {
-			if ( associationAttribute.getMappedBy() != null || associationAttribute.hasPrimaryKeyJoinColumn()) {
+			if ( associationAttribute.getMappedBy() != null ) {
+				// This means it is a one-to-one, but it is not working yet.
+				//return Nature.ONE_TO_ONE;
+				throw new NotYetImplementedException( "@OneToOne with mappedBy specified is not supported yet." );
+			}
+			else if ( associationAttribute.hasPrimaryKeyJoinColumn() ) {
 				return Nature.ONE_TO_ONE;
 			}
 			else if ( associationAttribute.getJoinTableAnnotation() != null ) {
 				return Nature.MANY_TO_ONE;
 			}
+			else if ( associationAttribute.isId() ) {
+				// if this association is part of the ID then this can't be a one-to-one
+				return Nature.MANY_TO_ONE;
+			}
+			else if ( associationAttribute.getJoinColumnValues() == null  ||
+					associationAttribute.getJoinColumnValues().isEmpty() ) {
+				return Nature.MANY_TO_ONE;
+			}
 			else {
-			//if ( associationAttribute.getJoinColumnValues() ) {
-				throw new NotYetImplementedException( "One-to-one without mappedBy configured using annotations is not supported yet." );
-				// if ID is not initialized, then this can't be a one-to-one   (mapToPk == false)
-				// if join columns are the entity's ID, then it is a one-to-one (mapToPk == true)
+				return null;
 			}
 		}
 		else {
@@ -97,24 +108,29 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 		}
 	}
 
-	/*
-	private static Nature determineNature(
-			ToOneAttributeSource currentAttributeSource
-			ToOneAttributeSource ownerAttributeSource,
-			AssociationAttribute associationAttribute) {
-		switch ( associationAttribute.getNature() ) {
-			case ONE_TO_ONE:
-				throw new NotYetImplementedException(  );
-			case MANY_TO_ONE:
-				return new ManyToAnyPluralAttributeElementSourceImpl( associationAttribute );
-//			case ONE_TO_MANY:
-//				return usesJoinTable( ownerAttributeSource ) ?
-//						new ManyToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, true ) :
-//						new OneToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute );
+	public Nature resolveToOneAttributeSourceNature(ToOneAttributeSourceNatureResolver.ToOneAttributeSourceNatureResolutionContext context) {
+		if ( nature != null ) { return nature; }
+		final List<org.hibernate.metamodel.spi.relational.Column> idColumns = context.getIdentifierColumns();
+		if ( associationAttribute.getJoinColumnValues().size() != idColumns.size() ) {
+			nature = Nature.MANY_TO_ONE;
 		}
-		throw new AssertionError( "Unexpected attribute nature for a to-one association attribute:" + associationAttribute.getNature() );
+		else {
+			Set<String> joinColumnNames = new HashSet<String>( associationAttribute.getJoinColumnValues().size() );
+			for ( Column joinColumn : associationAttribute.getJoinColumnValues() ) {
+				joinColumnNames.add( joinColumn.getName() );
+			}
+			// if join columns are the entity's ID, then it is a one-to-one (mapToPk == true)
+			boolean areJoinColumnsSameAsIdColumns = true;
+			for ( org.hibernate.metamodel.spi.relational.Column idColumn : idColumns ) {
+				if ( ! joinColumnNames.contains( idColumn.getColumnName().getText() ) ) {
+					areJoinColumnsSameAsIdColumns = false;
+					break;
+				}
+			}
+			nature = areJoinColumnsSameAsIdColumns ? Nature.ONE_TO_ONE : Nature.MANY_TO_ONE;
+		}
+		return nature;
 	}
-	*/
 
 	@Override
 	public Nature getNature() {

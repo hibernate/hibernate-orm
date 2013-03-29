@@ -25,8 +25,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Iterator;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -77,6 +75,7 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-1904" )
+	@FailureExpectedWithNewMetamodel
 	public void testConstraintNameLength() {
 		TableSpecification table = SchemaUtil.getTable( DataPoint2.class, metadata() );
 		

@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1057,21 +1058,24 @@ public abstract class AbstractEntityPersister
 			classes.add( ( (EntityBinding) attributeBinding.getContainer() ).getEntity().getName() );
 			boolean isDefinedBySubclass = ! thisClassProperties.contains( attributeBinding );
 			definedBySubclass.add( isDefinedBySubclass );
-			// TODOFix this when join tables are supported...
-			//propNullables.add( attributeBinding.isOptional() || isDefinedBySubclass );
-			propNullables.add(
-					! attributeBinding.getAttribute().isSingular() ||
-							( (SingularAttributeBinding) attributeBinding).isNullable() ||
-							isDefinedBySubclass
-			);
+			final boolean propIsNullable;
+			final List<RelationalValueBinding> relationalValueBindings;
+			if ( attributeBinding.getAttribute().isSingular() ) {
+				final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+				propIsNullable =
+						singularAttributeBinding.isOptional() ||
+								singularAttributeBinding.isNullable() ||
+								isDefinedBySubclass;
+				relationalValueBindings = singularAttributeBinding.getRelationalValueBindings();
+			}
+			else {
+				// plural attributes are considered nullable
+				propIsNullable = true;
+				relationalValueBindings = Collections.emptyList();
+			}
+			propNullables.add( propIsNullable );
 			types.add( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
-
-
-			List<RelationalValueBinding> relationalValueBindings =
-					attributeBinding.getAttribute().isSingular() ?
-							( (SingularAttributeBinding) attributeBinding ).getRelationalValueBindings() :
-							null;
-			final int span = relationalValueBindings == null ? 0 : relationalValueBindings.size();
+			final int span = relationalValueBindings.size();
 			String[] cols = new String[ span ];
 			String[] readers = new String[ span ];
 			String[] readerTemplates = new String[ span ];
@@ -1081,45 +1085,43 @@ public abstract class AbstractEntityPersister
 			int l = 0;
 			Boolean lazy = attributeBinding.isLazy() && lazyAvailable;
 
-			if ( relationalValueBindings != null ) {
-				for ( RelationalValueBinding valueBinding : relationalValueBindings ) {
-					if ( valueBinding.isDerived() ) {
-						DerivedValue derivedValue = DerivedValue.class.cast( valueBinding.getValue() );
-						String template = getTemplateFromString( derivedValue.getExpression(), factory );
-						formnos[l] = formulaTemplates.size();
-						colnos[l] = -1;
-						formulaTemplates.add( template );
-						forms[l] = template;
-						formulas.add( derivedValue.getExpression() );
-						formulaAliases.add( derivedValue.getAlias( factory.getDialect(), null ) );
-						formulasLazy.add( lazy );
-					}
-					else {
-						org.hibernate.metamodel.spi.relational.Column col = org.hibernate.metamodel.spi.relational.Column.class.cast( valueBinding.getValue() );
-						String colName = col.getColumnName().getText( factory.getDialect() );
-						colnos[l] = columns.size(); //before add :-)
-						formnos[l] = -1;
-						columns.add( colName );
-						cols[l] = colName;
-						aliases.add(
-								col.getAlias(
-										factory.getDialect(),
-										valueBinding.getTable()
-								)
-						);
-						columnsLazy.add( lazy );
-						columnSelectables.add( ! attributeBinding.isBackRef() );
-
-						readers[l] =
-								col.getReadFragment() == null ?
-										col.getColumnName().getText( factory.getDialect() ) :
-										col.getReadFragment();
-						String readerTemplate = getTemplateFromColumn( col, factory );
-						readerTemplates[l] = readerTemplate;
-						columnReaderTemplates.add( readerTemplate );
-					}
-					l++;
+			for ( RelationalValueBinding valueBinding : relationalValueBindings ) {
+				if ( valueBinding.isDerived() ) {
+					DerivedValue derivedValue = DerivedValue.class.cast( valueBinding.getValue() );
+					String template = getTemplateFromString( derivedValue.getExpression(), factory );
+					formnos[l] = formulaTemplates.size();
+					colnos[l] = -1;
+					formulaTemplates.add( template );
+					forms[l] = template;
+					formulas.add( derivedValue.getExpression() );
+					formulaAliases.add( derivedValue.getAlias( factory.getDialect(), null ) );
+					formulasLazy.add( lazy );
 				}
+				else {
+					org.hibernate.metamodel.spi.relational.Column col = org.hibernate.metamodel.spi.relational.Column.class.cast( valueBinding.getValue() );
+					String colName = col.getColumnName().getText( factory.getDialect() );
+					colnos[l] = columns.size(); //before add :-)
+					formnos[l] = -1;
+					columns.add( colName );
+					cols[l] = colName;
+					aliases.add(
+							col.getAlias(
+									factory.getDialect(),
+									valueBinding.getTable()
+							)
+					);
+					columnsLazy.add( lazy );
+					columnSelectables.add( ! attributeBinding.isBackRef() );
+
+					readers[l] =
+							col.getReadFragment() == null ?
+									col.getColumnName().getText( factory.getDialect() ) :
+									col.getReadFragment();
+					String readerTemplate = getTemplateFromColumn( col, factory );
+					readerTemplates[l] = readerTemplate;
+					columnReaderTemplates.add( readerTemplate );
+				}
+				l++;
 			}
 			propColumns.add( cols );
 			propColumnReaders.add( readers );
@@ -1308,7 +1310,9 @@ public abstract class AbstractEntityPersister
 			final Serializable id,
 			final EntityEntry entry) {
 
-		if ( !hasLazyProperties() ) throw new AssertionFailure( "no lazy properties" );
+		if ( !hasLazyProperties() ) {
+			throw new AssertionFailure( "no lazy properties" );
+		}
 
 		LOG.trace( "Initializing lazy properties from datastore" );
 

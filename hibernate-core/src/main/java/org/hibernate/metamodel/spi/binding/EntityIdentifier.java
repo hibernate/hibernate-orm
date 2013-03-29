@@ -195,7 +195,8 @@ public class EntityIdentifier {
 	}
 
 	protected boolean isBound() {
-		return entityIdentifierBinding != null;	}
+		return entityIdentifierBinding != null;
+	}
 
 	public int getColumnCount() {
 		ensureBound();

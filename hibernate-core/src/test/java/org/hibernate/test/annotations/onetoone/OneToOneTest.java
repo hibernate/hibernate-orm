@@ -51,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel( message = "requires support for @OneToOne with mappedBy" )
 public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEagerFetching() throws Exception {

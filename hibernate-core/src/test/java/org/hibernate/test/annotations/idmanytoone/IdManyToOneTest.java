@@ -38,7 +38,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testFkCreationOrdering() throws Exception {

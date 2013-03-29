@@ -141,6 +141,11 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
+	public Nature resolveToOneAttributeSourceNature(ToOneAttributeSourceNatureResolutionContext context) {
+		return getNature();
+	}
+
+	@Override
 	public boolean isVirtualAttribute() {
 		return false;
 	}

@@ -33,7 +33,6 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-@FailureExpectedWithNewMetamodel
 public class CascadeCircleIdentityIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-5472" )

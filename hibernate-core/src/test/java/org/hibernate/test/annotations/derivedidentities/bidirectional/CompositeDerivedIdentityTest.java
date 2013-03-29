@@ -31,7 +31,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 
-@FailureExpectedWithNewMetamodel
 public class CompositeDerivedIdentityTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

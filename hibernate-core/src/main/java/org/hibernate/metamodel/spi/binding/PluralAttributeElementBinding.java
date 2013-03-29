@@ -25,6 +25,8 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.List;
 
+import org.hibernate.metamodel.spi.relational.Column;
+
 /**
  * Common information pertaining to the binding of the various plural attribute natures (one-to-many, basic, etc).
  *

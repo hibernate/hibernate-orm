@@ -10,11 +10,9 @@ import org.jboss.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
@@ -30,7 +28,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementTool;
  * @author Hardy Ferentschik
  *
  */
-@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel( message = "requires support for @OneToOne with mappedBy" )
 public class NullablePrimaryKeyTest extends BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( NullablePrimaryKeyTest.class );
     @Test

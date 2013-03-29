@@ -45,7 +45,6 @@ import static org.junit.Assert.assertTrue;
  * @author Emmanuel Bernard
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-//@FailureExpectedWithNewMetamodel
 public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {

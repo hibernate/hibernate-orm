@@ -2,6 +2,7 @@
 package org.hibernate.test.annotations.idmanytoone;
 import java.io.Serializable;
 import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -12,7 +13,7 @@ import javax.persistence.ManyToOne;
 @Entity
 public class CardField {
 
-	@Id
+	@EmbeddedId
 	private PrimaryKey primaryKey = new PrimaryKey();
 
 	@ManyToOne

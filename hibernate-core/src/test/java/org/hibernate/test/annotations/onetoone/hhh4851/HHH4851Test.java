@@ -40,7 +40,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 @TestForIssue( jiraKey = "HHH-4851" )
-@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel( message = "requires support for @OneToOne with mappedBy" )
 public class HHH4851Test extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testHHH4851() throws Exception {

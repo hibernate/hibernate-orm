@@ -42,7 +42,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel(message = "Needs one to one mapping support. See Binder#bindSingularAttribute")
+@FailureExpectedWithNewMetamodel( message = "requires support for @OneToOne with mappedBy" )
 public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 
 	@Test

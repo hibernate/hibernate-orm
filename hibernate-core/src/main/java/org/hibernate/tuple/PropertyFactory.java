@@ -243,7 +243,7 @@ public class PropertyFactory {
 		        property.getGeneration() == PropertyGeneration.INSERT
 						|| property.getGeneration() == PropertyGeneration.ALWAYS,
 				property.getGeneration() == PropertyGeneration.ALWAYS,
-				property.isNullable(),
+				property.isNullable() || property.isOptional(),
 				!lazy,
 				property.isIncludedInOptimisticLocking(),
 				cascadeStyle,
@@ -333,7 +333,7 @@ public class PropertyFactory {
 					propertyGeneration == PropertyGeneration.INSERT
 							|| propertyGeneration == PropertyGeneration.ALWAYS,
 					propertyGeneration == PropertyGeneration.ALWAYS,
-					singularAttributeBinding.isNullable(),
+					singularAttributeBinding.isNullable() || singularAttributeBinding.isOptional(),
 					alwaysDirtyCheck || singularAttributeBinding.isIncludedInUpdate(),
 					singularAttributeBinding.isIncludedInOptimisticLocking(),
 					cascadeStyle,

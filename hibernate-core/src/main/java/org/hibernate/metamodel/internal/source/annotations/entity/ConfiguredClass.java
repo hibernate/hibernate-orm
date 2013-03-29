@@ -106,7 +106,7 @@ public class ConfiguredClass {
 	/**
 	 * The id attributes
 	 */
-	private final Map<String, BasicAttribute> idAttributeMap;
+	private final Map<String, MappedAttribute> idAttributeMap;
 
 	/**
 	 * The mapped association attributes for this entity
@@ -164,7 +164,7 @@ public class ConfiguredClass {
 		this.customTuplizer = determineCustomTuplizer();
 
 		this.simpleAttributeMap = new TreeMap<String, BasicAttribute>();
-		this.idAttributeMap = new TreeMap<String, BasicAttribute>();
+		this.idAttributeMap = new TreeMap<String, MappedAttribute>();
 		this.associationAttributeMap = new TreeMap<String, AssociationAttribute>();
 
 		this.localBindingContext = new EntityBindingContext( context, this );
@@ -210,7 +210,7 @@ public class ConfiguredClass {
 		return idAttributeMap.containsKey( attributeName );
 	}
 
-	public Collection<BasicAttribute> getIdAttributes() {
+	public Collection<MappedAttribute> getIdAttributes() {
 		return idAttributeMap.values();
 	}
 
@@ -520,7 +520,12 @@ public class ConfiguredClass {
 						annotations,
 						getLocalBindingContext()
 				);
-				associationAttributeMap.put( attributeName, attribute );
+				if ( attribute.isId() ) {
+					idAttributeMap.put( attributeName, attribute );
+				}
+				else {
+					associationAttributeMap.put( attributeName, attribute );
+				}
 				break;
 			}
 			case ELEMENT_COLLECTION_EMBEDDABLE:

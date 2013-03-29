@@ -26,6 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
@@ -66,6 +67,25 @@ public abstract class AbstractSingularAttributeBinding
 	@Override
 	public boolean isNullable() {
 		return !getRelationalValueBindingContainer().hasNonNullableRelationalValueBinding();
+	}
+
+	@Override
+	public boolean isOptional() {
+		final EntityBinding entityBinding = getContainer().seekEntityBinding();
+		final TableSpecification entityPrimaryTable = entityBinding.getPrimaryTable();
+		for (RelationalValueBinding relationalValueBinding : getRelationalValueBindings() ) {
+			final TableSpecification table = relationalValueBinding.getTable();
+			if ( table.equals( entityPrimaryTable ) ) {
+				// primary table is not optional.
+				return false;
+			}
+			final SecondaryTable secondaryTable = entityBinding.getSecondaryTables().get( table.getLogicalName() );
+			// a secondaryTable can be null if it is a non-joined, collection/association table
+			if ( secondaryTable == null || ! secondaryTable.isOptional() ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override

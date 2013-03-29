@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.manytoone;
 import java.io.Serializable;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -11,7 +12,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "tbl_parent")
 public class Parent implements Serializable {
-	@Id
+	@EmbeddedId
 	public ParentPk id;
 	public int age;
 

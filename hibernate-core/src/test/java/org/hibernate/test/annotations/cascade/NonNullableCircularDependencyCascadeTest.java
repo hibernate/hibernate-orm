@@ -40,7 +40,6 @@ import static org.junit.Assert.fail;
  * @author Gail Badner
  */
 @SuppressWarnings("unchecked")
-@FailureExpectedWithNewMetamodel
 public class NonNullableCircularDependencyCascadeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testIdClassInSuperclass() throws Exception {

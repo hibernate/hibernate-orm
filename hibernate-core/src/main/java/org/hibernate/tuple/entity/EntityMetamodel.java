@@ -385,7 +385,7 @@ public class EntityMetamodel implements Serializable {
 		Class<?> mappedClass = null;
 		if ( hasPojoRepresentation ) {
 			mappedClass = entityBinding.getEntity().getClassReference();
-			proxyInterfaceClass = entityBinding.getProxyInterfaceType().getValue();
+			proxyInterfaceClass = entityBinding.getProxyInterfaceType() == null ? null : entityBinding.getProxyInterfaceType().getValue();
 			instrumentationMetadata = Environment.getBytecodeProvider().getEntityInstrumentationMetadata( mappedClass );
 		}
 		else {

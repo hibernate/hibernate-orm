@@ -42,6 +42,7 @@ import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingCont
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -163,8 +164,8 @@ public class RootEntityClass extends EntityClass {
 		return attributes;
 	}
 
-	public Collection<BasicAttribute> getIdAttributes() {
-		List<BasicAttribute> attributes = new ArrayList<BasicAttribute>();
+	public Collection<MappedAttribute> getIdAttributes() {
+		List<MappedAttribute> attributes = new ArrayList<MappedAttribute>();
 
 		// get all id attributes defined on this entity
 		attributes.addAll( super.getIdAttributes() );

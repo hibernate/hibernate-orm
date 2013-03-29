@@ -37,6 +37,8 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.IdType;
@@ -72,9 +74,9 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		IdType idType = rootEntityClass.getIdType();
 		switch ( idType ) {
 			case SIMPLE: {
-				BasicAttribute attribute = getEntityClass().getIdAttributes().iterator().next();
+				MappedAttribute attribute = getEntityClass().getIdAttributes().iterator().next();
 				return new SimpleIdentifierSourceImpl(
-						attribute,
+						(BasicAttribute) attribute,
 						getEntityClass().getAttributeOverrideMap().get(attribute.getName())
 				);
 			}
@@ -162,7 +164,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 		public AggregatedCompositeIdentifierSourceImpl(RootEntitySourceImpl rootEntitySource) {
 			// the entity class reference should contain one single id attribute...
-			Iterator<BasicAttribute> idAttributes = rootEntitySource.getEntityClass().getIdAttributes().iterator();
+			Iterator<MappedAttribute> idAttributes = rootEntitySource.getEntityClass().getIdAttributes().iterator();
 			if ( !idAttributes.hasNext() ) {
 				throw rootEntitySource.getLocalBindingContext().makeMappingException(
 						String.format(
@@ -171,7 +173,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 						)
 				);
 			}
-			final BasicAttribute idAttribute = idAttributes.next();
+			final MappedAttribute idAttribute = idAttributes.next();
 			if ( idAttributes.hasNext() ) {
 				throw rootEntitySource.getLocalBindingContext().makeMappingException(
 						String.format(
@@ -261,8 +263,12 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		@Override
 		public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
 			List<SingularAttributeSource> attributeSources = new ArrayList<SingularAttributeSource>();
-			for ( BasicAttribute attr : rootEntitySource.getEntityClass().getIdAttributes() ) {
-				attributeSources.add( new SingularAttributeSourceImpl( attr ) );
+			for ( MappedAttribute attr : rootEntitySource.getEntityClass().getIdAttributes() ) {
+				SingularAttributeSource attributeSource  =
+						attr instanceof SingularAssociationAttribute ?
+								new ToOneAttributeSourceImpl( (SingularAssociationAttribute) attr ) :
+								new SingularAttributeSourceImpl( attr );
+				attributeSources.add( attributeSource );
 			}
 			return attributeSources;
 		}

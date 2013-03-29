@@ -33,7 +33,6 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-@FailureExpectedWithNewMetamodel
 public class CascadeCircleSequenceIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-5472" )

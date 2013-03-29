@@ -55,7 +55,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel( message = "@OneToOne with mappedBy specified is not supported yet" )
 public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {
@@ -101,6 +101,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
+	@FailureExpectedWithNewMetamodel
 	public void testVersioning() throws Exception {
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
@@ -327,6 +328,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCascadedDeleteOfChildEntitiesBug2() {
 		// Relationship is one SoccerTeam to many Players.
 		// Create a SoccerTeam (parent) and three Players (child).
@@ -377,6 +379,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCascadedDeleteOfChildOneToOne() {
 		// create two single player teams (for one versus one match of soccer)
 		// and associate teams with players via the special OneVOne methods.
@@ -463,6 +466,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	 * defined on a parent MappedSuperclass(s)
 	 */
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInheritFiltersFromMappedSuperclass() throws Exception {
 		Session s;
 		Transaction tx;

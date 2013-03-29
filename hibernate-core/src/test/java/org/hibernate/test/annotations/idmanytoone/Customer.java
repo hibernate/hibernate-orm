@@ -15,7 +15,7 @@ import javax.persistence.Table;
 
 
 @Entity
-@Table(name = "Bs")
+@Table(name = "`Bs`")
 public class Customer implements Serializable {
     @Id @GeneratedValue
 	public Integer id;
